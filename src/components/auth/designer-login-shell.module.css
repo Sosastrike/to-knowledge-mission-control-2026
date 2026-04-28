@@ -1,0 +1,490 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * src/components/auth/designer-login-shell.module.css
+ *
+ * 1:1 port of the styling from ~/claudeclaw/mc-ui-new/Login.html.
+ * Class names follow Login.html: auth-shell, auth-hero, auth-panel,
+ * auth-tabs, auth-input, auth-submit, auth-sso, auth-honest, etc.
+ *
+ * Color/spacing tokens match the canonical exactly:
+ *   bg:    #070912 (page),  #0b1020→#0a0d1c (shell), #0a0e1e (input)
+ *   fg:    #f3f5f8 (fg-0),  #c9ced9 (fg-1),  #8b93a3 (fg-2),  #5a6272 (fg-3)
+ *   accent:#6bb3ff → #4d8eff (submit gradient)
+ *   warn:  rgba(255,204,58,0.08) bg, rgba(255,204,58,0.2) border
+ * ─────────────────────────────────────────────────────────────────── */
+
+.root {
+  --auth-bg-0: #070912;
+  --auth-bg-1: #0b1020;
+  --auth-bg-2: #0a0e1e;
+  --auth-bg-3: #0d1227;
+  --auth-fg-0: #f3f5f8;
+  --auth-fg-1: #c9ced9;
+  --auth-fg-2: #8b93a3;
+  --auth-fg-3: #5a6272;
+  --auth-accent: #6bb3ff;
+  --auth-accent-2: #4d8eff;
+  --auth-warn: #ffcc3a;
+  --auth-error: #ff4f8a;
+  --auth-info: #6bb3ff;
+
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--auth-bg-0);
+  color: var(--auth-fg-0);
+  font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 48px;
+  width: min(1100px, 100%);
+  min-height: 640px;
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Hero / left panel ──────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(107, 179, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(161, 107, 255, 0.1), transparent 50%);
+  overflow: hidden;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.heroGraph {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--auth-fg-0);
+}
+
+.brand > span > span {
+  color: var(--auth-fg-2);
+  font-weight: 400;
+}
+
+.brandMark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #5b8cff, #a16bff, #ff4f8a, #ffcc3a, #3ddc84, #5b8cff);
+  box-shadow: 0 0 18px rgba(139, 124, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.heroBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.heroBody h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--auth-fg-0);
+}
+
+.heroBody p {
+  color: var(--auth-fg-2);
+  font-size: 14px;
+  margin: 10px 0 0 0;
+  line-height: 1.5;
+  max-width: 380px;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--auth-fg-0);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--auth-fg-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.footer {
+  font-size: 11px;
+  color: var(--auth-fg-3);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.footerLink {
+  color: var(--auth-fg-3);
+  text-decoration: none;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--auth-fg-3);
+  flex-shrink: 0;
+}
+
+/* ── Right panel ────────────────────────────────────────────────── */
+
+.panel {
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.tab,
+.activeTab {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  color: var(--auth-fg-2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.activeTab {
+  background: rgba(107, 179, 255, 0.15);
+  color: var(--auth-accent);
+}
+
+.heading {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--auth-fg-0);
+}
+
+.subheading {
+  color: var(--auth-fg-2);
+  font-size: 12px;
+  margin: 2px 0 0 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mutedForm {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 11px;
+  color: var(--auth-fg-2);
+  letter-spacing: 0.03em;
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  background: var(--auth-bg-2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  padding: 9px 12px;
+  color: var(--auth-fg-0);
+  font-size: 13px;
+  outline: 0;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: var(--auth-accent);
+  background: #0c1124;
+}
+
+.input::placeholder {
+  color: var(--auth-fg-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--auth-fg-1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.check input {
+  accent-color: var(--auth-accent);
+}
+
+.linkInline {
+  border: 0;
+  background: transparent;
+  color: var(--auth-accent);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.linkInline:hover {
+  text-decoration: underline;
+}
+
+.submit {
+  width: 100%;
+  background: linear-gradient(180deg, var(--auth-accent), var(--auth-accent-2));
+  color: white;
+  border: 0;
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(77, 142, 255, 0.4);
+  transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  font-family: inherit;
+}
+
+.submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(77, 142, 255, 0.55);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--auth-fg-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sso {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sso button {
+  background: var(--auth-bg-2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--auth-fg-1);
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  font-family: inherit;
+}
+
+.sso button:hover:not(:disabled) {
+  background: var(--auth-bg-3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.sso button:disabled {
+  opacity: 0.7;            /* up from 0.5 — disabled buttons stay readable */
+  cursor: not-allowed;
+}
+
+/* When an SSO provider is unavailable (Google missing client id, Microsoft
+   placeholder, SAML placeholder), we surface that state with a visible pill
+   on the right of the button instead of silently graying it out. The button
+   layout shifts from centered to space-between to make room. */
+.sso button.ssoUnavailable {
+  justify-content: space-between;
+}
+
+.ssoLabel {
+  flex: 1;
+  text-align: center;
+}
+
+.ssoBadge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(255, 204, 58, 0.12);
+  color: var(--auth-warn);
+  border: 1px solid rgba(255, 204, 58, 0.32);
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.glyph {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom {
+  margin-top: auto;
+  text-align: center;
+  color: var(--auth-fg-2);
+  font-size: 12px;
+}
+
+/* ── Inline notice (real backend states; styled like .auth-honest) ─ */
+
+.notice {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notice strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.noticeWarn {
+  background: rgba(255, 204, 58, 0.08);
+  border: 1px solid rgba(255, 204, 58, 0.2);
+  color: var(--auth-warn);
+}
+
+.noticeError {
+  background: rgba(255, 79, 138, 0.08);
+  border: 1px solid rgba(255, 79, 138, 0.2);
+  color: var(--auth-error);
+}
+
+.noticeInfo {
+  background: rgba(107, 179, 255, 0.08);
+  border: 1px solid rgba(107, 179, 255, 0.2);
+  color: var(--auth-info);
+}
+
+/* ── Responsive (matches Login.html @media (max-width: 880px)) ─── */
+
+@media (max-width: 880px) {
+  .root {
+    padding: 18px;
+    align-items: flex-start;
+  }
+
+  .shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    margin-top: 24px;
+  }
+
+  .hero {
+    display: none;
+  }
+
+  .panel {
+    padding: 32px 24px;
+  }
+}

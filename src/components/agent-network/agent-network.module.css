@@ -1,0 +1,633 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * src/components/agent-network/agent-network.module.css
+ *
+ * Phase A canonical-aligned styling for the Agent Network read-only page.
+ * Color tokens match mc-ui-new/styles.css design language:
+ *   bg:    #070912 (page) · #0b1020→#0a0d1c (panel) · #0a0e1e (input)
+ *   fg:    #f3f5f8 · #c9ced9 · #8b93a3 · #5a6272
+ *   accent: #6bb3ff → #4d8eff
+ *   warn:  #ffcc3a (Phase B pill)
+ *
+ * Scoped under [data-theme="mc"] so it doesn't bleed into other routes.
+ * ─────────────────────────────────────────────────────────────────── */
+
+.root {
+  --auth-bg-0: #070912;
+  --auth-bg-1: #0b1020;
+  --auth-bg-2: #0a0e1e;
+  --auth-bg-3: #0d1227;
+  --auth-fg-0: #f3f5f8;
+  --auth-fg-1: #c9ced9;
+  --auth-fg-2: #8b93a3;
+  --auth-fg-3: #5a6272;
+  --auth-accent: #6bb3ff;
+  --auth-accent-2: #4d8eff;
+  --auth-warn: #ffcc3a;
+  --auth-error: #ff4f8a;
+  --auth-info: #6bb3ff;
+  --auth-ok: #3ddc84;
+
+  min-height: 100vh;
+  background: var(--auth-bg-0);
+  color: var(--auth-fg-0);
+  padding: 32px;
+  font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+}
+
+/* ── page header ──────────────────────────────────────────────── */
+
+.pageHeader {
+  max-width: 1280px;
+  margin: 0 auto 24px auto;
+}
+
+.pageHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--auth-fg-0);
+}
+
+.phaseChip {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 204, 58, 0.12);
+  color: var(--auth-warn);
+  border: 1px solid rgba(255, 204, 58, 0.32);
+  border-radius: 999px;
+}
+
+.pageSub {
+  margin: 8px 0 0 0;
+  color: var(--auth-fg-2);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 880px;
+}
+
+.pageSub code {
+  font-family: var(--font-mono, ui-monospace, 'JetBrains Mono', monospace);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--auth-fg-1);
+}
+
+/* ── stats strip ──────────────────────────────────────────────── */
+
+.statsStrip {
+  display: flex;
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto 24px auto;
+  flex-wrap: wrap;
+}
+
+.statBox {
+  flex: 1;
+  min-width: 180px;
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, 'JetBrains Mono', monospace);
+  color: var(--auth-fg-0);
+}
+
+.statLabel {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--auth-fg-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── banner (loading / error) ─────────────────────────────────── */
+
+.banner {
+  max-width: 1280px;
+  margin: 0 auto 16px auto;
+  padding: 10px 14px;
+  background: rgba(107, 179, 255, 0.08);
+  border: 1px solid rgba(107, 179, 255, 0.2);
+  border-radius: 8px;
+  color: var(--auth-info);
+  font-size: 12px;
+}
+
+.bannerError {
+  background: rgba(255, 79, 138, 0.08);
+  border-color: rgba(255, 79, 138, 0.2);
+  color: var(--auth-error);
+}
+
+/* ── canvas (tier lanes) ──────────────────────────────────────── */
+
+.canvas {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tierSection {
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.tierHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 10px;
+}
+
+.tierTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--auth-fg-0);
+  letter-spacing: -0.01em;
+}
+
+.tierSub {
+  font-size: 12px;
+  color: var(--auth-fg-2);
+}
+
+.tierCount {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--auth-fg-2);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.emptyTier {
+  color: var(--auth-fg-3);
+  font-size: 12px;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.tierGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+/* ── agent card ──────────────────────────────────────────────── */
+
+.agentCard {
+  background: var(--auth-bg-2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.agentCard:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--auth-bg-3);
+}
+
+.agentCardProtected {
+  border-color: rgba(255, 204, 58, 0.32);
+  background: linear-gradient(180deg, var(--auth-bg-2), rgba(255, 204, 58, 0.03));
+}
+
+.agentCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.agentName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--auth-fg-0);
+}
+
+.lockChip {
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(255, 204, 58, 0.12);
+  color: var(--auth-warn);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 204, 58, 0.32);
+  margin-left: auto;
+}
+
+/* status dot */
+.dotOnline,
+.dotIdle,
+.dotDegraded,
+.dotOffline {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotOnline {
+  background: var(--auth-ok);
+  box-shadow: 0 0 6px rgba(61, 220, 132, 0.5);
+}
+
+.dotIdle {
+  background: var(--auth-fg-2);
+}
+
+.dotDegraded {
+  background: var(--auth-warn);
+}
+
+.dotOffline {
+  background: var(--auth-fg-3);
+}
+
+.agentMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.metaItem {
+  font-size: 11px;
+  color: var(--auth-fg-2);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.agentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* ── disabled Phase B button ──────────────────────────────────── */
+
+.btnDisabled {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--auth-fg-3);
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btnDisabled:hover {
+  /* no-op — disabled */
+}
+
+/* ── Phase B pill (always visible inside disabled buttons) ───── */
+
+.phaseBPill {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(255, 204, 58, 0.12);
+  color: var(--auth-warn);
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 204, 58, 0.3);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* ── bridge provider registry ─────────────────────────────────── */
+
+.providerSection {
+  max-width: 1280px;
+  margin: 24px auto 0 auto;
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.providerSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.providerSummary span {
+  color: var(--auth-fg-2);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  font-size: 11px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  padding: 4px 8px;
+}
+
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.providerCard {
+  background: var(--auth-bg-2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.providerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.providerTitleWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.providerName {
+  color: var(--auth-fg-0);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.providerState {
+  color: var(--auth-fg-2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.providerState_active {
+  color: var(--auth-ok);
+  background: rgba(61, 220, 132, 0.1);
+  border-color: rgba(61, 220, 132, 0.3);
+}
+
+.providerState_configured {
+  color: var(--auth-info);
+  background: rgba(107, 179, 255, 0.1);
+  border-color: rgba(107, 179, 255, 0.3);
+}
+
+.providerState_missing_credential {
+  color: var(--auth-error);
+  background: rgba(255, 79, 138, 0.08);
+  border-color: rgba(255, 79, 138, 0.26);
+}
+
+.providerState_degraded {
+  color: var(--auth-warn);
+  background: rgba(255, 204, 58, 0.1);
+  border-color: rgba(255, 204, 58, 0.3);
+}
+
+.providerState_sandbox,
+.providerState_backup,
+.providerState_unknown {
+  color: var(--auth-fg-2);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.providerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.providerMeta span {
+  color: var(--auth-fg-2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.providerEndpoint {
+  color: var(--auth-fg-2);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.providerNotes,
+.providerAction {
+  margin: 0;
+  color: var(--auth-fg-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.providerAction {
+  color: var(--auth-fg-1);
+}
+
+/* ── external section ────────────────────────────────────────── */
+
+.externalSection {
+  max-width: 1280px;
+  margin: 24px auto 0 auto;
+}
+
+.externalSectionHeader {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.externalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 14px;
+}
+
+.externalCard {
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.externalHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.externalTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--auth-fg-0);
+}
+
+.externalBadge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(107, 179, 255, 0.12);
+  color: var(--auth-info);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(107, 179, 255, 0.3);
+}
+
+.externalDescription {
+  margin: 0;
+  color: var(--auth-fg-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.externalDetails {
+  margin: 6px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.externalDetailRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.externalDetailRow dt {
+  color: var(--auth-fg-2);
+  flex-shrink: 0;
+  width: 130px;
+}
+
+.externalDetailRow dd {
+  color: var(--auth-fg-1);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* ── footer ──────────────────────────────────────────────────── */
+
+.footer {
+  max-width: 1280px;
+  margin: 32px auto 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 18px;
+}
+
+.footerNote {
+  background: rgba(255, 204, 58, 0.05);
+  border: 1px solid rgba(255, 204, 58, 0.18);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--auth-fg-1);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+.footerNote code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.footerMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--auth-fg-3);
+}
+
+.footerDot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--auth-fg-3);
+}
+
+/* ── responsive ──────────────────────────────────────────────── */
+
+@media (max-width: 880px) {
+  .root {
+    padding: 18px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .statsStrip {
+    flex-direction: column;
+  }
+
+  .tierGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .externalGrid {
+    grid-template-columns: 1fr;
+  }
+}

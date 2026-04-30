@@ -444,6 +444,34 @@ interface BridgeOwnerGatesPayload {
   error?: string
 }
 
+interface ExecutionCycleStep {
+  id: string
+  order: number
+  title: string
+  requirement: string
+  current_state: string
+  endpoint?: string
+  template_doc?: string
+}
+
+interface BridgeExecutionCyclePayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  no_execution_enabled?: boolean
+  no_connector_writes_enabled?: boolean
+  no_memory_writes_enabled?: boolean
+  no_governance_writes_enabled?: boolean
+  no_fake_approval_requests?: boolean
+  persistence?: string
+  approval_request_created?: boolean
+  required_cycle?: ExecutionCycleStep[]
+  validation_checks_required?: string[]
+  enforcement_state?: Record<string, boolean | string | number>
+  next_safe_batch?: string[]
+  error?: string
+}
+
 interface Props {
   hermes: HermesInfo
   bridge: BridgeInfo
@@ -1171,6 +1199,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [ownerGates, setOwnerGates] = useState<BridgeOwnerGatesPayload | null>(null)
   const [ownerGatesState, setOwnerGatesState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [ownerGatesError, setOwnerGatesError] = useState<string>('')
+  const [executionCycle, setExecutionCycle] = useState<BridgeExecutionCyclePayload | null>(null)
+  const [executionCycleState, setExecutionCycleState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [executionCycleError, setExecutionCycleError] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
@@ -1341,6 +1372,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setOwnerGatesError((err as Error).message || 'fetch failed')
         setOwnerGatesState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/execution-cycle', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as BridgeExecutionCyclePayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setExecutionCycle(data)
+        setExecutionCycleState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setExecutionCycleError((err as Error).message || 'fetch failed')
+        setExecutionCycleState('error')
       })
     return () => {
       cancelled = true
@@ -1741,6 +1797,60 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             </div>
             {ownerGates?.canonical_next_step && (
               <div className={styles.preflightNotice}>{ownerGates.canonical_next_step}</div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Mission Control Agent Execution Cycle — read-only protocol visibility */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Agent Execution Cycle</h2>
+          <span className={styles.tierSub}>
+            Mandatory Bridge Mode operating protocol from <code>/api/bridge/execution-cycle</code>
+          </span>
+        </header>
+        {executionCycleState === 'loading' && (
+          <div className={styles.banner}>Loading execution cycle from <code>/api/bridge/execution-cycle</code>…</div>
+        )}
+        {executionCycleState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load execution cycle:</strong> {executionCycleError}
+          </div>
+        )}
+        {executionCycleState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {executionCycle?.mode || 'agent_execution_cycle_read_only_contract'}</span>
+              <span>{executionCycle?.required_cycle?.length ?? 0} steps</span>
+              <span>{executionCycle?.validation_checks_required?.length ?? 0} validation checks</span>
+              <span>persistence: {executionCycle?.persistence || 'not_connected'}</span>
+              <span>execution: {executionCycle?.no_execution_enabled ? 'locked' : 'unknown'}</span>
+              <span>approval created: {executionCycle?.approval_request_created ? 'yes' : 'no'}</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              Every agent must pass through Bridge Mode before acting. This panel is read-only: it does not execute tasks, write memory, change governance, send Telegram approvals, or create approval records.
+            </div>
+            <div className={styles.providerGrid}>
+              {(executionCycle?.required_cycle || []).map((step) => (
+                <div className={styles.providerCard} key={step.id}>
+                  <div className={styles.providerHead}>
+                    <div className={styles.providerTitleWrap}>
+                      <StatusDot status={step.current_state === 'LIVE_READ_ONLY' ? 'active' : 'degraded'} />
+                      <strong className={styles.providerName}>{step.order}. {step.title}</strong>
+                    </div>
+                    <span className={styles.providerState}>{step.current_state.replace(/_/g, ' ')}</span>
+                  </div>
+                  <p className={styles.providerNotes}>{step.requirement}</p>
+                  {step.endpoint && <div className={styles.providerEndpoint}>{step.endpoint}</div>}
+                  {step.template_doc && <p className={styles.providerNotes}>Template: {step.template_doc}</p>}
+                </div>
+              ))}
+            </div>
+            {executionCycle?.validation_checks_required && (
+              <div className={styles.preflightNotice}>
+                10-check validation: {executionCycle.validation_checks_required.join(' · ')}
+              </div>
             )}
           </>
         )}

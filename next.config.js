@@ -10,6 +10,7 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  allowedDevOrigins: ['100.116.35.95', '76.13.126.188', 'knowledge-vs-ai.com', 'tkmc.knowledge-vs-ai.com', 'mc.knowledge-vs-ai.com'],
   // Transpile ESM-only packages so they resolve correctly in all environments
   transpilePackages: ['react-markdown', 'remark-gfm'],
   

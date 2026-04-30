@@ -100,6 +100,24 @@ function nextResponseWithNonce(request: NextRequest): { response: NextResponse; 
   return { response, nonce }
 }
 
+function buildDesignerMissionControlCsp(): string {
+  return [
+    `default-src 'self'`,
+    `base-uri 'self'`,
+    `object-src 'none'`,
+    `frame-ancestors 'none'`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+    `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+    `style-src-attr 'unsafe-inline'`,
+    `connect-src 'self' ws: wss: http://127.0.0.1:* http://localhost:* https://cdn.jsdelivr.net`,
+    `img-src 'self' data: blob:`,
+    `font-src 'self' data: https://fonts.gstatic.com`,
+    `frame-src 'self'`,
+    `worker-src 'self' blob:`,
+  ].join('; ')
+}
+
 function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce?: string): NextResponse {
   const requestId = crypto.randomUUID()
   response.headers.set('X-Request-Id', requestId)
@@ -107,9 +125,14 @@ function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  const googleEnabled = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)
-  const effectiveNonce = nonce || crypto.randomBytes(16).toString('base64')
-  response.headers.set('Content-Security-Policy', buildMissionControlCsp({ nonce: effectiveNonce, googleEnabled }))
+  const pathname = _request.nextUrl.pathname
+  if (pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')) {
+    response.headers.set('Content-Security-Policy', buildDesignerMissionControlCsp())
+  } else {
+    const googleEnabled = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)
+    const effectiveNonce = nonce || crypto.randomBytes(16).toString('base64')
+    response.headers.set('Content-Security-Policy', buildMissionControlCsp({ nonce: effectiveNonce, googleEnabled }))
+  }
 
   return response
 }
@@ -199,10 +222,23 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), request)
   }
 
-  // Page routes: redirect to login if no session
+  // Page routes: allow if session cookie present
   if (sessionToken) {
     const { response, nonce } = nextResponseWithNonce(request)
     return addSecurityHeaders(response, request, nonce)
+  }
+
+  // Proxy auth: allow if request comes from a trusted proxy with a username header
+  const proxyAuthHeader = (process.env.MC_PROXY_AUTH_HEADER || '').trim()
+  const trustedIpsRaw = (process.env.MC_PROXY_AUTH_TRUSTED_IPS || '').trim()
+  if (proxyAuthHeader && trustedIpsRaw) {
+    const trustedIps = new Set(trustedIpsRaw.split(',').map(s => s.trim()).filter(Boolean))
+    const proxyUsername = (request.headers.get(proxyAuthHeader) || '').trim()
+    const realIp = (request.headers.get('x-real-ip') || '').trim()
+    if (proxyUsername && realIp && trustedIps.has(realIp)) {
+      const { response, nonce } = nextResponseWithNonce(request)
+      return addSecurityHeaders(response, request, nonce)
+    }
   }
 
   // Redirect to login

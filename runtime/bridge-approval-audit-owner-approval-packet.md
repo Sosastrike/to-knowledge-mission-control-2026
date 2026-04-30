@@ -14,7 +14,7 @@ Purpose: prepare the next owner-gated step for Mission Control protected actions
 - Connector execution: disabled.
 - Zapier writes: disabled.
 - Production DB migration: not applied.
-- Current Mission Control branch/head: `to-knowledge-mc` at `fd14f1d`.
+- Runtime safety was verified at `fd14f1d`; this packet refresh adds documentation only and does not change runtime code.
 - Current safety posture: 23 overnight read-only checks passing, 0 failures.
 - Full unit tests: 82 files, 931 tests passing.
 

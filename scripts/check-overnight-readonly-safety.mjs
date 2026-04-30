@@ -13,6 +13,7 @@ const checks = [
   ['connector_readiness_live', ['node', ['scripts/check-connector-readiness-live.mjs', baseUrl]]],
   ['connector_action_contracts', ['node', ['scripts/check-connector-action-contracts.mjs', baseUrl]]],
   ['mcp_status_consistency', ['node', ['scripts/check-mcp-status-consistency.mjs', baseUrl]]],
+  ['viral_firecrawl_readiness', ['node', ['scripts/check-viral-firecrawl-readiness.mjs', baseUrl]]],
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
@@ -72,6 +73,9 @@ function summarize(name, parsed) {
   }
   if (name === 'mcp_status_consistency') {
     return { counts: parsed.counts, server_list_count: parsed.server_list_count, note: parsed.note }
+  }
+  if (name === 'viral_firecrawl_readiness') {
+    return { video: parsed.video, firecrawl: parsed.firecrawl }
   }
   if (name === 'approval_readiness_live') {
     return {

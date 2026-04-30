@@ -1,6 +1,6 @@
 # Overnight 8h Execution Final Report
 
-Generated: 2026-04-30T10:22:28-04:00
+Generated: 2026-04-30T10:34:00-04:00
 
 ## Executive Summary
 
@@ -13,12 +13,12 @@ True 90% operational is blocked until the owner approves the production approval
 ## Current Live State
 
 - Branch: to-knowledge-mc
-- Current pushed HEAD: 5f63ee7
+- Current pushed HEAD: 5e73f2e
 - mission-control.service: active
 - Listener: 127.0.0.1:3337
 - TKMC public login: HTTP 200
-- Safety suite: 25 checks, 0 failures
-- Route rendering smoke: 45 routes, 8 designer pages, 0 failures
+- Safety suite: 26 checks, 0 failures
+- Route rendering smoke: 46 routes, 8 designer pages, 0 failures
 - Full unit tests: 82 files, 931 tests passing on last full run
 - Provider registry: 9 providers
 - Capability matrix: 4 agents, 6 tools
@@ -46,9 +46,11 @@ True 90% operational is blocked until the owner approves the production approval
 | P8 Connector Readiness / Button Contracts | Strong read-only | 88% | 37 API button endpoints, route-level summaries, 6 connector contracts, and protected-action probes pass; no writes enabled. |
 | P9 Auth / SSO / Invite | Partial | 72% | Login stable and SAML hidden. Microsoft/Google real provider completion remains credential/config gated. |
 | P10 Viral Crawl / FireCrawl | Read-only backend visible | 84% | Video wrapper/vendor/Obsidian/skill registry present; status endpoint and locked request-run path live. FireCrawl Mission Control env/package mismatch is surfaced. |
-| P11 Agent Execution Cycle / Enforcement | Partial wiring | 80% | Mandatory Bridge preflight endpoint is live and visible; Telegram one-click approval, PDF generation, persistence/audit, and runtime enforcement remain owner-gated. |
+| P11 Agent Execution Cycle / Enforcement | Partial wiring | 82% | Mandatory Bridge preflight endpoint is live and visible; Telegram one-click approval, PDF generation, persistence/audit, and runtime enforcement remain owner-gated. |
 
 ## Commits Pushed In This Later Overnight Segment
+- 5e73f2e feat(bridge): surface execution cycle in agent network
+- b3bad9d feat(bridge): add read-only execution cycle contract
 
 - 5f63ee7 feat(bridge): expand connector readiness details
 - 659dd76 test(bridge): verify agent network status contracts
@@ -93,8 +95,8 @@ True 90% operational is blocked until the owner approves the production approval
 - /api/bridge/connector-readiness: detailed connector contracts for FireCrawl, Viral Crawl Video, Zapier, n8n, MCP Tools, and Skills Registry; Agent Network cards now show canonical paths, button state, approval/audit requirements, credential status by name, locked actions, and next action.
 - /api/skills/tool-skills and /api/skills/finder/search: read-only skill discovery guarded by live safety tests.
 - /api/zapier/tools: read-only MCP tool inventory path; no tool invocation.
-- Route smoke now covers Bridge costs, owner gates, executive preview, Telegram approval preview, Zapier status/tools, and n8n status.
-- Agent Network UI contract guard verifies the shell consumes core Bridge contracts and does not expose protected execution controls.
+- Route smoke now covers Bridge costs, owner gates, execution cycle, executive preview, Telegram approval preview, Zapier status/tools, and n8n status.
+- Agent Network UI contract guard verifies the shell consumes core Bridge contracts, including Owner Gates and Execution Cycle, and does not expose protected execution controls.
 
 ## Connector Readiness Status
 

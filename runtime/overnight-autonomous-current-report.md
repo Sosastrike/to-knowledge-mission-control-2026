@@ -1,21 +1,22 @@
 # Overnight Autonomous Current Report
 
-Generated: 2026-04-30T10:22:28-04:00
+Generated: 2026-04-30T10:34:00-04:00
 
 ## Current HEAD
-- Current pushed HEAD: 5f63ee7
+- Current pushed HEAD: 5e73f2e
 
 ## Live checks
 - mission-control.service: active
 - TKMC login: 200
 - Full unit tests: 82 files, 931 tests passing on last full run
-- Safety suite: 25 checks passing, 0 failures
-- Route smoke coverage: 45 routes, 8 designer pages
+- Safety suite: 26 checks passing, 0 failures
+- Route smoke coverage: 46 routes, 8 designer pages
 - Bridge Mode: read-only MVP live; protected execution locked
 - Bridge Mode preflight: live read-only; no approval request persistence
 - Bridge cost/rate governance: live read-only; no budget enforcement or provider route changes
 - Bridge owner gates: live read-only; 9 gates visible in the Agent Network UI, 0 execution, 0 writes
 - Connector readiness cards: expanded with canonical paths, button state, approval/audit requirements, credential status by name, locked actions, and next action
+- Agent Execution Cycle: live read-only contract and Agent Network UI surface; 9 steps, 10 validation checks, no execution
 - Connector writes: 0 enabled
 - Zapier writes: locked
 - Production approval/audit migration: not applied
@@ -25,6 +26,8 @@ Generated: 2026-04-30T10:22:28-04:00
 - MCP inventory: live discovery restored, 20 servers visible
 
 ## Commits pushed in this continuation
+- 5e73f2e feat(bridge): surface execution cycle in agent network
+- b3bad9d feat(bridge): add read-only execution cycle contract
 - 5f63ee7 feat(bridge): expand connector readiness details
 - 659dd76 test(bridge): verify agent network status contracts
 - b86c3b2 feat(bridge): surface owner gates in agent network
@@ -71,6 +74,6 @@ Generated: 2026-04-30T10:22:28-04:00
 
 ## Next safe queue
 1. Keep widening read-only route/button QA where new endpoints appear.
-2. Keep connector readiness detailed and honest without execution; UI is now expanded and guarded by `scripts/check-agent-network-ui-contracts.mjs`.
+2. Keep connector readiness and Execution Cycle visibility detailed and honest without execution; UI is now expanded and guarded by `scripts/check-agent-network-ui-contracts.mjs`.
 3. Keep cleanup inventory current without deleting/quarantining.
 4. Prepare final overnight report when the safe queue is exhausted or owner returns.

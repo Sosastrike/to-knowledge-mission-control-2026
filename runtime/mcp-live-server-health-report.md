@@ -1,0 +1,178 @@
+# MCP Live Server Health Report
+
+Generated: 2026-04-30T06:17:09.694Z
+Endpoint: http://127.0.0.1:3337/api/mcp/servers
+
+## Summary
+- HTTP status: 200
+- Total MCP servers: 20
+- connected: 8
+- failed: 8
+- needs_auth: 4
+
+## Servers
+- claude.ai ClickUp
+  - status: connected
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- claude.ai Firecrawl for Tny Brain
+  - status: connected
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- claude.ai FireCrawl for Tony
+  - status: connected
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- claude.ai Google Drive
+  - status: connected
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- plugin:asana:asana
+  - status: needs_auth
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: authentication_required
+- plugin:context7:context7
+  - status: connected
+  - transport: stdio
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- plugin:discord:discord
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:fakechat:fakechat
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:firebase:firebase
+  - status: connected
+  - transport: stdio
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- plugin:github:github
+  - status: failed
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:gitlab:gitlab
+  - status: needs_auth
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: authentication_required
+- plugin:greptile:greptile
+  - status: failed
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:imessage:imessage
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:laravel-boost:laravel-boost
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:linear:linear
+  - status: needs_auth
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: authentication_required
+- plugin:playwright:playwright
+  - status: connected
+  - transport: stdio
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+- plugin:serena:serena
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:supabase:supabase
+  - status: needs_auth
+  - transport: http
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: authentication_required
+- plugin:telegram:telegram
+  - status: failed
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: failed_to_connect
+- plugin:terraform:terraform
+  - status: connected
+  - transport: unknown
+  - source: claude-cli
+  - auth: unknown
+  - visible to Tony: yes
+  - visible to sub-agents: no/unknown
+  - error: none
+
+## Safety
+- Report is read-only.
+- No MCP tools were invoked.
+- No credentials or tokens are printed.

@@ -3,6 +3,7 @@ import {
   authJson,
   backendRequired,
   CatchAllParams,
+  credentialRequired,
   hasEnv,
   ownerApprovalRequired,
   pingUrl,
@@ -14,6 +15,13 @@ export const dynamic = 'force-dynamic'
 
 function n8nBase() {
   return (process.env.N8N_BASE_URL || '').replace(/\/+$/, '')
+}
+
+function missingN8nCredentials() {
+  const missing: string[] = []
+  if (!n8nBase()) missing.push('N8N_BASE_URL')
+  if (!hasEnv('N8N_API_KEY')) missing.push('N8N_API_KEY')
+  return missing
 }
 
 async function statusPayload() {
@@ -48,16 +56,18 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   const path = routePath((await params).path)
   if (!path || path === 'status') return NextResponse.json(await statusPayload())
   if (path === 'workflows') {
-    if (!n8nBase()) return backendRequired({ missing: 'N8N_BASE_URL' })
-    if (!hasEnv('N8N_API_KEY')) return backendRequired({ missing: 'N8N_API_KEY' })
+    const missingCreds = missingN8nCredentials()
+    if (missingCreds.length) return credentialRequired('n8n', missingCreds)
     return backendRequired({ note: 'n8n workflow REST passthrough not implemented.' })
   }
   if (path === 'executions') {
-    if (!n8nBase()) return backendRequired({ missing: 'N8N_BASE_URL' })
+    const missingCreds = missingN8nCredentials()
+    if (missingCreds.length) return credentialRequired('n8n', missingCreds)
     return backendRequired({ note: 'n8n execution REST passthrough not implemented.' })
   }
   if (path === 'webhooks') {
-    if (!n8nBase()) return backendRequired({ missing: 'N8N_BASE_URL' })
+    const missingCreds = missingN8nCredentials()
+    if (missingCreds.length) return credentialRequired('n8n', missingCreds)
     return backendRequired({ note: 'n8n webhook list passthrough not implemented.' })
   }
 
@@ -71,13 +81,21 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
   const path = routePath((await params).path)
   if (path === 'test') {
     const base = n8nBase()
-    if (!base) return backendRequired({ missing: 'N8N_BASE_URL' })
+    const missingCreds = missingN8nCredentials()
+    if (missingCreds.length) return credentialRequired('n8n', missingCreds)
     const result = await pingUrl(`${base}/healthz`)
     return NextResponse.json({ ok: result.reachable, ...result })
   }
 
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'workflows' && parts[1] && ['activate', 'deactivate', 'execute'].includes(parts[2] || '')) {
+    const missingCreds = missingN8nCredentials()
+    if (missingCreds.length) {
+      return credentialRequired('n8n', missingCreds, {
+        workflow_id: parts[1],
+        action: parts[2],
+      })
+    }
     return ownerApprovalRequired({
       workflow_id: parts[1],
       action: parts[2],

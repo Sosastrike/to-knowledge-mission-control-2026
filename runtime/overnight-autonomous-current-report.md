@@ -3,8 +3,8 @@
 Generated: 2026-04-30T09:33:04-04:00
 
 ## Current HEAD
-- local HEAD: ae43161
-- remote to-knowledge-mc: ae43161
+- Verified app code base before later report-only commits: ae43161
+- For latest docs/report commit, run `git rev-parse --short HEAD`.
 
 ## Live checks
 - mission-control.service: active

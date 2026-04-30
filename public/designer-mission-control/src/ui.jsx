@@ -96,25 +96,25 @@ const NotWiredBadge = ({ label, title }) => (
 
 // Live-readiness banner — sticky under topbar, dismissible
 function DemoBanner() {
-  const [dismissed, setDismissed] = React.useState(() => sessionStorage.getItem('cc.liveReadOnlyBannerV2Dismissed') === '1');
+  const [dismissed, setDismissed] = React.useState(() => sessionStorage.getItem('cc.liveReadOnlyBannerV3Dismissed') === '1');
   if (dismissed) return null;
   return (
     <div className="demo-banner">
       <I.Info size={13} style={{color:'oklch(0.82 0.14 85)', flexShrink:0}}/>
       <div className="demo-banner-main">
         <span>
-          <b style={{color:'var(--fg-0)'}}>Live read-only mode.</b> Status data is live. Protected actions are locked. Approval request queue is not connected yet, so buttons will show <code>OWNER_APPROVAL_REQUIRED</code> or HTTP 423 until approval persistence is implemented.
+          <b style={{color:'var(--fg-0)'}}>Live read-only mode.</b> Status data is live. Execution approvals go through <b>Tony in Telegram</b> with Approve/Deny buttons. Mission Control shows status and history only; broad protected writes stay locked as <code>OWNER_APPROVAL_REQUIRED</code> or HTTP 423.
         </span>
-        <div className="approval-queue-placeholder" role="status" aria-label="Approval Queue placeholder">
+        <div className="approval-queue-placeholder" role="status" aria-label="Approval Queue status">
           <div>
-            <strong>Approval Queue</strong>
-            <span className="mock-badge">Backend required</span>
+            <strong>Approval Queue — Tony → Telegram</strong>
+            <span className="mock-badge">Read-only</span>
           </div>
-          <p>Approval persistence is being prepared. Protected actions cannot execute yet.</p>
-          <small>Next backend step: approval/audit persistence migration + queue API.</small>
+          <p>Telegram one-click approvals are live for supported scoped actions. Use Telegram buttons for decisions; this screen does not approve or execute actions directly.</p>
+          <small>Next backend step: extend the same approval/audit path to more protected actions without enabling broad connector execution.</small>
         </div>
       </div>
-      <button className="close-x" onClick={()=>{ sessionStorage.setItem('cc.liveReadOnlyBannerV2Dismissed','1'); setDismissed(true); }} aria-label="Dismiss">✕</button>
+      <button className="close-x" onClick={()=>{ sessionStorage.setItem('cc.liveReadOnlyBannerV3Dismissed','1'); setDismissed(true); }} aria-label="Dismiss">✕</button>
     </div>
   );
 }

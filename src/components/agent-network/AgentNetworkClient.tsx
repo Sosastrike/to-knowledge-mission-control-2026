@@ -2360,7 +2360,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       {/* Approval/audit readiness — no migration */}
       <section className={styles.providerSection}>
         <header className={styles.externalSectionHeader}>
-          <h2 className={styles.tierTitle}>Approval Queue (Tony → Telegram)</h2>
+          <h2 className={styles.tierTitle}>Approval Queue — Tony → Telegram</h2>
           <span className={styles.tierSub}>
             Read-only readiness. Approval channel is <strong>Tony → Telegram</strong>; Mission Control records the decision.
           </span>
@@ -2384,9 +2384,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             </div>
             <div className={styles.preflightNotice}>
               <p>
-                Approval Queue is being prepared. Protected actions cannot execute yet. When enabled,
-                agents will send approval requests to <strong>Tony</strong>, and Tony will send the
-                owner one-click <strong>Approve / Deny</strong> messages in <strong>Telegram</strong>.
+                Approval Queue is handled by <strong>Tony → Telegram</strong> for supported scoped actions.
+                Mission Control shows status and history here; owner decisions still happen with one-click
+                <strong>Approve / Deny</strong> messages in <strong>Telegram</strong>.
               </p>
               <p>
                 Tony is the approval representative to the owner. Agents do not contact the owner directly
@@ -2396,9 +2396,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 <li>Current state: <strong>{approvalReadiness?.production_migration_applied ? 'READ_ONLY' : 'BACKEND_REQUIRED'}</strong></li>
                 <li>Approval channel: <strong>Tony → Telegram</strong></li>
                 <li>Execution state: <strong>locked</strong></li>
-                <li>What is missing: {approvalReadiness?.production_migration_applied ? 'Telegram approval callback + owner-approved execution runners' : 'approval/audit DB persistence + Telegram approval callback'}</li>
-                <li>Pending approvals: <strong>{approvalQueue?.summary?.pending ?? 0}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (queue not connected)'}</li>
-                <li>Next backend step: approval/audit migration + Telegram approval queue API</li>
+                <li>What is missing: {approvalReadiness?.production_migration_applied ? 'more owner-approved scoped execution runners' : 'production bridge approval/audit migration for broad connector actions'}</li>
+                <li>Pending approvals: <strong>{approvalQueue?.summary?.pending ?? 0}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (Tony Telegram queue fallback)'}</li>
+                <li>Next backend step: extend the existing Tony Telegram approval path to more protected actions.</li>
               </ul>
               <p style={{ marginTop: 8 }}>
                 This panel does not apply migrations, send approvals, or unlock connector execution.

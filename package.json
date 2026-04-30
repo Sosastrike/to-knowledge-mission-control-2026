@@ -16,6 +16,7 @@
     "start:standalone": "pnpm run verify:node && bash scripts/start-standalone.sh",
     "deploy:standalone": "pnpm run verify:node && bash scripts/deploy-standalone.sh",
     "lint": "pnpm run verify:node && eslint .",
+    "safety:overnight": "pnpm run verify:node && node scripts/check-overnight-readonly-safety.mjs",
     "typecheck": "pnpm run verify:node && tsc --noEmit",
     "test": "pnpm run verify:node && vitest run",
     "test:watch": "vitest",

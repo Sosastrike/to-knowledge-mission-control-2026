@@ -1,8 +1,8 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T02:03:00-04:00
+Generated: 2026-04-30T02:18:00-04:00
 Branch: to-knowledge-mc
-HEAD before this report refresh: 6c9b099
+HEAD before this report refresh: 1c2203e
 
 ## Current Production Health
 - mission-control.service: active
@@ -16,6 +16,7 @@ HEAD before this report refresh: 6c9b099
 - Authenticated read-only Bridge APIs: HTTP 200 in route smoke
 - Button contract route summary: 11 owner-facing route groups visible
 - Connector action contracts: credentials/approval/backend blockers verified with no execution
+- Overnight read-only safety suite: 11 checks passing
 - Approval queue/persistence: not connected
 - Connector execution: disabled
 - Zapier writes: locked
@@ -26,6 +27,7 @@ HEAD before this report refresh: 6c9b099
 
 ## Commits Pushed In This Block
 ```text
+1c2203e test(bridge): require route-level button summaries
 6c9b099 test(connectors): verify action blockers stay locked
 b235eba feat(bridge): summarize button states by route
 09a7e9d test(routes): authenticate bridge route smoke
@@ -80,6 +82,7 @@ c779648 chore(config): document azure auth and sync lockfile
 - Aligned n8n list/test/execute routes so missing n8n config returns `CREDENTIAL_REQUIRED` before owner-approval execution gates.
 - Added connector action contract smoke coverage for Zapier, FireCrawl, n8n, Viral Crawl Video, and Skills install request paths.
 - Tightened button-contract static verification so route summaries, missing-backend counts, and missing-credential counts cannot silently disappear.
+- Added an overnight read-only safety suite that runs the core static/live Bridge, connector, protected-action, route rendering, provider, preflight, and public login checks from one command.
 
 ## Checks Run
 - `pnpm run typecheck`.
@@ -95,6 +98,7 @@ c779648 chore(config): document azure auth and sync lockfile
 - `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337` with local API-key auth for Bridge API routes.
 - Route-summary smoke check for `/api/bridge/button-contracts`: 11 route groups, 55 mapped actions.
 - `node scripts/check-connector-action-contracts.mjs http://127.0.0.1:3337`.
+- `node scripts/check-overnight-readonly-safety.mjs http://127.0.0.1:3337`.
 - `bash scripts/test-bridge-approval-migration.sh` against copied DB only.
 - Public smoke check for `https://tkmc.knowledge-vs-ai.com/login`.
 - mission-control.service restart after runtime UI/API change: active.

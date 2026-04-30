@@ -163,6 +163,7 @@ interface ConnectorReadiness {
     detail?: string
     endpoint?: string | null
   }>
+  verification_commands?: string[]
   blocker?: string | null
   next_action?: string
 }
@@ -334,6 +335,16 @@ interface BuildWikiRunNowPayload {
   approval_id?: string
   approval_state?: string
   telegram_message_id?: number | null
+  approval?: {
+    id?: string
+    approval_state?: string
+    telegram_message_id?: number | null
+  } | null
+  run?: {
+    run_state?: string
+    run_exit_code?: number | null
+    run_summary?: string | null
+  } | null
   linked_task?: {
     id?: string
     current_status?: string
@@ -387,6 +398,62 @@ interface BuildWikiLogsPayload {
   requested_lines?: number
   secrets_redacted?: boolean
   error?: string
+}
+
+interface BuildWikiStatusPayload {
+  ok?: boolean
+  read_only?: boolean
+  generated_at?: string
+  sync?: {
+    state?: string
+    auto_sync_enabled?: boolean
+    health?: string | null
+    backend_status?: string | null
+  }
+  active_farmer?: {
+    name?: string
+    enabled?: boolean
+    cadence?: string | null
+    systemd_service?: string | null
+    systemd_timer?: string | null
+    timer_active?: boolean
+    next_run_at?: string | null
+    last_run_at?: string | null
+    last_result?: string | null
+    last_exit_status?: number | null
+    last_error?: string | null
+    sources_count?: number
+  } | null
+  destination?: {
+    obsidian_path?: string
+    raw_count?: number
+    wiki_count?: number
+    archive_count?: number
+  }
+  active_sources?: string[]
+  available_source_expansions?: string[]
+  controls?: Record<string, string>
+  run_now?: {
+    ui_state?: string
+    is_terminal?: boolean
+    target_service?: string
+    approval?: { id?: string; approval_state?: string } | null
+    run?: { run_state?: string; run_exit_code?: number | null } | null
+  }
+  timer_control?: {
+    ui_state?: string
+    offered_action?: string | null
+    timer_active?: boolean
+    approval?: { id?: string; approval_state?: string } | null
+    run?: { run_state?: string; run_exit_code?: number | null } | null
+  }
+  add_source?: {
+    ui_state?: string
+    latest_proposed_path?: string | null
+    approval?: { id?: string; approval_state?: string } | null
+    run?: { run_state?: string; run_exit_code?: number | null } | null
+  }
+  notices?: Record<string, unknown>
 }
 
 interface ExecutiveReportPreviewPayload {
@@ -760,7 +827,7 @@ function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
       )}
       {connector.detail_checks && connector.detail_checks.length > 0 && (
         <ul className={styles.connectorList}>
-          {connector.detail_checks.slice(0, 4).map((check, index) => (
+          {connector.detail_checks.slice(0, 5).map((check, index) => (
             <li key={`${connector.id}-detail-${index}`}>
               <span>
                 {check.label || 'Detail check'}
@@ -771,6 +838,9 @@ function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
             </li>
           ))}
         </ul>
+      )}
+      {connector.verification_commands && connector.verification_commands.length > 0 && (
+        <p className={styles.providerNotes}>Verify: {joinPreview(connector.verification_commands, 3)}</p>
       )}
       {connector.blocker && <p className={styles.providerAction}>Blocked: {connector.blocker}</p>}
       {connector.next_action && <p className={styles.providerNotes}>{connector.next_action}</p>}
@@ -893,7 +963,7 @@ function ApprovalReadinessCard({ payload }: { payload: ApprovalReadinessPayload 
   )
 }
 
-function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }) {
+function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePayload | null; refreshedAt?: string }) {
   if (!payload) {
     return (
       <div className={styles.providerCard}>
@@ -929,6 +999,7 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
         <span>linked tasks: {linkedTaskCount}</span>
         <span>audit events: {auditEventCount}</span>
         <span>HTTP blocked: {placeholder.protected_action_http_status || 423}</span>
+        {refreshedAt && <span>refreshed: {refreshedAt}</span>}
       </div>
       {placeholder.message && <p className={styles.providerNotes}>{placeholder.message}</p>}
       <p className={styles.providerNotes}>
@@ -977,10 +1048,63 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
           ))}
         </ul>
       ) : (
-        <p className={styles.providerNotes}>No Telegram approval requests are visible yet.</p>
+        <p className={styles.providerNotes}>No Telegram approval requests are visible yet. When Tony sends an Approve/Deny request, it will appear here with the linked task id and audit events.</p>
       )}
       {placeholder.next_backend_step && <p className={styles.providerAction}>Next backend step: {placeholder.next_backend_step}</p>}
       {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
+function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Build-Wiki Live Status</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No Build-Wiki status loaded yet.</p>
+      </div>
+    )
+  }
+
+  const controls = payload.controls || {}
+  const farmer = payload.active_farmer
+  const destination = payload.destination || {}
+  const runNow = payload.run_now
+  const timerControl = payload.timer_control
+  const addSource = payload.add_source
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={payload.sync?.state === 'active' ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>Build-Wiki Live Status</strong>
+        </div>
+        <span className={styles.providerState}>{payload.sync?.state || 'unknown'}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>timer: {farmer?.timer_active ? 'active' : 'inactive'}</span>
+        <span>cadence: {farmer?.cadence || 'unknown'}</span>
+        <span>raw: {destination.raw_count ?? 0}</span>
+        <span>wiki: {destination.wiki_count ?? 0}</span>
+        <span>archive: {destination.archive_count ?? 0}</span>
+      </div>
+      <p className={styles.providerNotes}>Service: {farmer?.systemd_service || 'opencloud-docs-farmer.service'} · Timer: {farmer?.systemd_timer || 'opencloud-docs-farmer.timer'}</p>
+      <p className={styles.providerNotes}>Next run: {farmer?.next_run_at || 'unknown'} · Last run: {farmer?.last_run_at || 'unknown'} · Result: {farmer?.last_result || 'unknown'}{farmer?.last_exit_status != null ? ` (${farmer.last_exit_status})` : ''}</p>
+      {farmer?.last_error && <p className={styles.providerAction}>Last farmer warning/error: {farmer.last_error}</p>}
+      <p className={styles.providerNotes}>Sources: {payload.active_sources?.length ?? farmer?.sources_count ?? 0} active · {payload.available_source_expansions?.length ?? 0} available local additions</p>
+      <p className={styles.providerNotes}>Destination: {destination.obsidian_path || '/home/tony/obsidian-vault/08-Wiki/OpenCloud/'}</p>
+      <ul className={styles.connectorList}>
+        <li><span>Run Now<br /><small>Creates Tony → Telegram approval only; dispatch stays exact-scope.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
+        <li><span>Pause / Resume<br /><small>Timer-only control; no service rewrite from this card.</small></span><strong>{timerControl?.offered_action ? `${timerControl.offered_action}: ${controls[`${timerControl.offered_action}_sync`] || 'OWNER_APPROVAL_REQUIRED'}` : 'not applicable'}</strong></li>
+        <li><span>Add Local Source<br /><small>Approval-driven source-list change; SMB/external farmers stay disabled.</small></span><strong>{controls.add_local_source || addSource?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
+        <li><span>Latest files/logs<br /><small>Read-only browser visibility, secret-scanned.</small></span><strong>READ_ONLY</strong></li>
+      </ul>
+      <p className={styles.providerNotes}>Run state: {runNow?.ui_state || 'idle'} · Timer-control state: {timerControl?.ui_state || 'idle'} · Add-source state: {addSource?.ui_state || 'idle'}</p>
+      <p className={styles.providerNotes}>Invariants: no .env writes, no Zapier writes, no Tony routing changes, no external farmer enablement.</p>
     </div>
   )
 }
@@ -1016,10 +1140,13 @@ function BuildWikiRunNowCard({
       <button type="button" className={styles.btnPrimary} disabled={busy} onClick={onRequest}>
         {busy ? 'Sending Telegram request…' : 'Request Run Now Approval'}
       </button>
-      {result?.approval_id && (
+      {(result?.approval_id || result?.approval?.id) && (
         <p className={styles.providerNotes}>
-          Request: {result.approval_id} · state: {result.approval_state || 'pending'} · Telegram message: {result.telegram_message_id || 'pending'}
+          Request: {result.approval_id || result.approval?.id} · state: {result.approval_state || result.approval?.approval_state || 'pending'} · Telegram message: {result.telegram_message_id || result.approval?.telegram_message_id || 'pending'}
         </p>
+      )}
+      {result?.run?.run_state && (
+        <p className={styles.providerNotes}>Run: {result.run.run_state}{result.run.run_exit_code != null ? ` (${result.run.run_exit_code})` : ''}{result.run.run_summary ? ` · ${result.run.run_summary}` : ''}</p>
       )}
       {result?.linked_task?.id && (
         <p className={styles.providerNotes}>
@@ -1072,6 +1199,12 @@ function BuildWikiArtifactsCard({
                 {item.name || 'file'}
                 <br />
                 <small>{item.type} · {item.modified_at || 'mtime unknown'} · {item.size_bytes ?? 0} bytes</small>
+                {item.name && (
+                  <>
+                    <br />
+                    <small><a href={`/api/bridge/brain-sync/build-wiki/files/${item.type}/${encodeURIComponent(item.name)}`} target="_blank" rel="noreferrer">Open read-only JSON</a></small>
+                  </>
+                )}
               </span>
               <strong>{item.secrets_present ? 'REDACTED' : 'SAFE'}</strong>
             </li>
@@ -1446,6 +1579,10 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [approvalQueue, setApprovalQueue] = useState<ApprovalQueuePayload | null>(null)
   const [approvalQueueState, setApprovalQueueState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [approvalQueueError, setApprovalQueueError] = useState<string>('')
+  const [approvalQueueRefreshedAt, setApprovalQueueRefreshedAt] = useState<string>('')
+  const [buildWikiStatus, setBuildWikiStatus] = useState<BuildWikiStatusPayload | null>(null)
+  const [buildWikiStatusState, setBuildWikiStatusState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [buildWikiStatusError, setBuildWikiStatusError] = useState<string>('')
   const [buildWikiRunNow, setBuildWikiRunNow] = useState<BuildWikiRunNowPayload | null>(null)
   const [buildWikiRunNowState, setBuildWikiRunNowState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [buildWikiFiles, setBuildWikiFiles] = useState<BuildWikiFilesPayload | null>(null)
@@ -1746,8 +1883,8 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     }
   }, [])
 
-  function refreshApprovalQueue(cancelledRef?: { cancelled: boolean }) {
-    setApprovalQueueState('loading')
+  function refreshApprovalQueue(cancelledRef?: { cancelled: boolean }, opts: { silent?: boolean } = {}) {
+    if (!opts.silent) setApprovalQueueState('loading')
     return fetch('/api/bridge/approval-requests', { cache: 'no-store', credentials: 'same-origin' })
       .then(async (r) => {
         const data = await r.json().catch(() => ({}))
@@ -1759,6 +1896,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       .then((data) => {
         if (cancelledRef?.cancelled) return
         setApprovalQueue(data)
+        setApprovalQueueRefreshedAt(new Date().toLocaleTimeString())
         setApprovalQueueState('ok')
       })
       .catch((err) => {
@@ -1771,8 +1909,69 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   useEffect(() => {
     const cancelledRef = { cancelled: false }
     refreshApprovalQueue(cancelledRef)
+    const timer = window.setInterval(() => {
+      refreshApprovalQueue(cancelledRef, { silent: true })
+    }, 10000)
     return () => {
       cancelledRef.cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [])
+
+  function refreshBuildWikiRunNow(cancelledRef?: { cancelled: boolean }, opts: { silent?: boolean } = {}) {
+    return fetch('/api/bridge/brain-sync/build-wiki/run-now', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data?.error || `run-now HTTP ${r.status}`)
+        return data as BuildWikiRunNowPayload
+      })
+      .then((data) => {
+        if (cancelledRef?.cancelled) return
+        setBuildWikiRunNow(data)
+        if (!opts.silent && (data.approval_id || data.approval?.id)) setBuildWikiRunNowState('sent')
+      })
+      .catch((err) => {
+        if (cancelledRef?.cancelled) return
+        if (!opts.silent) {
+          setBuildWikiRunNow({ ok: false, error: (err as Error).message || 'run-now fetch failed' })
+          setBuildWikiRunNowState('error')
+        }
+      })
+  }
+
+  useEffect(() => {
+    const cancelledRef = { cancelled: false }
+    refreshBuildWikiRunNow(cancelledRef)
+    const timer = window.setInterval(() => {
+      refreshBuildWikiRunNow(cancelledRef, { silent: true })
+    }, 10000)
+    return () => {
+      cancelledRef.cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setBuildWikiStatusState('loading')
+    fetch('/api/bridge/brain-sync/build-wiki/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data?.error || `status HTTP ${r.status}`)
+        return data as BuildWikiStatusPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setBuildWikiStatus(data)
+        setBuildWikiStatusState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setBuildWikiStatusError((err as Error).message || 'fetch failed')
+        setBuildWikiStatusState('error')
+      })
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -1928,7 +2127,8 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         return
       }
       setBuildWikiRunNowState('sent')
-      refreshApprovalQueue()
+      refreshApprovalQueue(undefined, { silent: true })
+      refreshBuildWikiRunNow(undefined, { silent: true })
     } catch (err) {
       setBuildWikiRunNow({
         ok: false,
@@ -2406,6 +2606,25 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               </p>
             </div>
             <div className={styles.providerGrid}>
+              {buildWikiStatusState === 'loading' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Build-Wiki Live Status</strong>
+                    <span className={styles.providerState}>loading</span>
+                  </div>
+                  <p className={styles.providerNotes}>Loading live Build-Wiki status and approval-driven controls…</p>
+                </div>
+              )}
+              {buildWikiStatusState === 'error' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Build-Wiki Live Status</strong>
+                    <span className={styles.providerState}>error</span>
+                  </div>
+                  <p className={styles.providerAction}>Could not load Build-Wiki status: {buildWikiStatusError}</p>
+                </div>
+              )}
+              {buildWikiStatusState === 'ok' && <BuildWikiStatusCard payload={buildWikiStatus} />}
               <BuildWikiRunNowCard
                 state={buildWikiRunNowState}
                 result={buildWikiRunNow}
@@ -2451,7 +2670,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                   <p className={styles.providerAction}>Could not load approval queue: {approvalQueueError}</p>
                 </div>
               )}
-              {approvalQueueState === 'ok' && <ApprovalQueueCard payload={approvalQueue} />}
+              {approvalQueueState === 'ok' && <ApprovalQueueCard payload={approvalQueue} refreshedAt={approvalQueueRefreshedAt} />}
             </div>
           </>
         )}

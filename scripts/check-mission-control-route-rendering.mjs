@@ -27,7 +27,7 @@ const designerPages = [
 ]
 
 const coreRoutes = [
-  { path: '/login', label: 'Designer login', allowedStatuses: [200], required: ['Mission Control', 'Microsoft 365'] },
+  { path: '/login', label: 'Designer login', allowedStatuses: [200], required: ['Mission Control', 'Microsoft 365'], forbidden: ['Single sign-on (SAML)', '>SAML<'] },
   { path: '/agents', label: 'Auth-gated agents route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
   { path: '/api/bridge/button-contracts', label: 'Button contracts API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/capability-matrix', label: 'Bridge capability matrix API', allowedStatuses: apiKey ? [200] : [401], json: true },
@@ -56,6 +56,9 @@ async function fetchRoute(path, options = {}) {
   const missing = response.status === 200
     ? (options.required || []).filter((needle) => !body.includes(needle))
     : []
+  const forbidden_present = response.status === 200
+    ? (options.forbidden || []).filter((needle) => body.includes(needle))
+    : []
   let jsonOk = true
   if (options.json) {
     try {
@@ -71,6 +74,7 @@ async function fetchRoute(path, options = {}) {
     auth_gated: authRedirect || authBlocked,
     body_bytes: body.length,
     missing,
+    forbidden_present,
     json_ok: jsonOk,
   }
 }
@@ -87,6 +91,9 @@ for (const route of coreRoutes) {
     }
     if (route.required?.length && result.missing.length > 0) {
       failures.push({ path: route.path, label: route.label, error: 'required_text_missing', missing: result.missing })
+    }
+    if (result.forbidden_present.length > 0) {
+      failures.push({ path: route.path, label: route.label, error: 'forbidden_text_present', forbidden_present: result.forbidden_present })
     }
     if (route.json && !result.json_ok) {
       failures.push({ path: route.path, label: route.label, error: 'invalid_json' })

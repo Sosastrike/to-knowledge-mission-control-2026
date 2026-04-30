@@ -1,8 +1,8 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T02:18:00-04:00
+Generated: 2026-04-30T02:28:00-04:00
 Branch: to-knowledge-mc
-HEAD before this report refresh: 1c2203e
+HEAD before this report refresh: a27d239
 
 ## Current Production Health
 - mission-control.service: active
@@ -27,6 +27,7 @@ HEAD before this report refresh: 1c2203e
 
 ## Commits Pushed In This Block
 ```text
+a27d239 test(runtime): add overnight read-only safety suite
 1c2203e test(bridge): require route-level button summaries
 6c9b099 test(connectors): verify action blockers stay locked
 b235eba feat(bridge): summarize button states by route
@@ -83,6 +84,7 @@ c779648 chore(config): document azure auth and sync lockfile
 - Added connector action contract smoke coverage for Zapier, FireCrawl, n8n, Viral Crawl Video, and Skills install request paths.
 - Tightened button-contract static verification so route summaries, missing-backend counts, and missing-credential counts cannot silently disappear.
 - Added an overnight read-only safety suite that runs the core static/live Bridge, connector, protected-action, route rendering, provider, preflight, and public login checks from one command.
+- Added login route smoke coverage confirming Microsoft 365 is visible and SAML setup text is absent.
 
 ## Checks Run
 - `pnpm run typecheck`.

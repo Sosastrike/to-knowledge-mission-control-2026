@@ -77,6 +77,16 @@ function getSourceLabel(source: string): string {
   return source
 }
 
+function skillActionMessage(body: any, fallback: string): string {
+  if (body?.owner_approval_required) {
+    return body?.next_action || 'Owner approval is required before this skill action can run.'
+  }
+  if (body?.backend_required) {
+    return body?.next_action || 'Backend support is required before this skill action can run.'
+  }
+  return body?.message || body?.error || fallback
+}
+
 export function SkillsPanel() {
   const t = useTranslations('skills')
   const { dashboardMode, skillsList, skillGroups, skillsTotal, setSkillsData } = useMissionControl()
@@ -238,7 +248,7 @@ export function SkillsPanel() {
         }),
       })
       const body = await res.json()
-      if (!res.ok) throw new Error(body?.error || 'Failed to create skill')
+      if (!res.ok) throw new Error(skillActionMessage(body, 'Failed to create skill'))
       setCreateName('')
       await loadSkills()
     } catch (err: any) {
@@ -263,7 +273,7 @@ export function SkillsPanel() {
         }),
       })
       const body = await res.json()
-      if (!res.ok) throw new Error(body?.error || 'Failed to save skill')
+      if (!res.ok) throw new Error(skillActionMessage(body, 'Failed to save skill'))
       await loadSkills()
       setSelectedContent((prev) => prev ? { ...prev, content: draftContent } : prev)
     } catch (err: any) {
@@ -283,7 +293,7 @@ export function SkillsPanel() {
       const params = new URLSearchParams({ source: selectedSkill.source, name: selectedSkill.name })
       const res = await fetch(`/api/skills?${params.toString()}`, { method: 'DELETE' })
       const body = await res.json()
-      if (!res.ok) throw new Error(body?.error || 'Failed to delete skill')
+      if (!res.ok) throw new Error(skillActionMessage(body, 'Failed to delete skill'))
       setSelectedSkill(null)
       setSelectedContent(null)
       await loadSkills()
@@ -337,7 +347,7 @@ export function SkillsPanel() {
       clearTimeout(writeTimer)
 
       if (!res.ok) {
-        const msg = body?.message || body?.error || 'Install failed'
+        const msg = skillActionMessage(body, 'Install failed')
         setInstallModal({ slug, name: displayName, step: 'error', message: msg, securityStatus: body?.securityReport?.status })
       } else {
         setInstallModal({ slug, name: displayName, step: 'done', message: body?.message || 'Installed successfully', securityStatus: body?.securityReport?.status })

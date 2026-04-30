@@ -24,6 +24,7 @@ const checks = [
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['bridge_costs_live', ['node', ['scripts/check-bridge-costs-live.mjs', baseUrl]]],
+  ['bridge_owner_gates_live', ['node', ['scripts/check-bridge-owner-gates-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
   ['route_rendering_live', ['node', ['scripts/check-mission-control-route-rendering.mjs', baseUrl]]],
   ['approval_migration_temp_db', ['bash', ['-lc', "MISSION_CONTROL_DB_PATH=/home/tony/mission-control/.data/mission-control.db bash scripts/test-bridge-approval-migration.sh >/tmp/bridge-approval-migration-overnight.txt && printf '{\"ok\":true,\"mode\":\"copied_db_only\",\"production_db_modified\":false,\"execution_enabled\":false}\\n'"]]],
@@ -135,6 +136,15 @@ function summarize(name, parsed) {
       no_execution_enabled: parsed.no_execution_enabled,
       no_budget_enforcement_enabled: parsed.no_budget_enforcement_enabled,
       no_provider_routing_changes_enabled: parsed.no_provider_routing_changes_enabled,
+    }
+  }
+  if (name === 'bridge_owner_gates_live') {
+    return {
+      mode: parsed.mode,
+      gates_total: parsed.gates_total,
+      summary: parsed.summary,
+      no_execution_enabled: parsed.no_execution_enabled,
+      no_connector_writes_enabled: parsed.no_connector_writes_enabled,
     }
   }
   if (name === 'provider_registry_live') {

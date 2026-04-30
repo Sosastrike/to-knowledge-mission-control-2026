@@ -52,6 +52,7 @@ const coreRoutes = [
   { path: '/api/bridge/connector-readiness', label: 'Connector readiness API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/preflight', label: 'Bridge preflight contract API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/costs', label: 'Bridge cost/rate governance API', allowedStatuses: apiKey ? [200] : [401], json: true },
+  { path: '/api/bridge/owner-gates', label: 'Bridge owner gates API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/executive-report-preview', label: 'Executive report preview API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/telegram-approval-preview', label: 'Telegram approval preview API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/providers', label: 'Provider registry API', allowedStatuses: apiKey ? [200] : [401], json: true },

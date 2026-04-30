@@ -61,8 +61,34 @@ if (connectors.length < 6) {
   failures.push({ path: readiness.path, error: 'expected_at_least_6_connectors', count: connectors.length })
 }
 
+const requiredConnectorIds = new Set(['firecrawl', 'viral_crawl_video', 'zapier', 'n8n', 'mcp_tools', 'skills_registry'])
+const connectorById = new Map(connectors.map((connector) => [connector.id, connector]))
+for (const id of requiredConnectorIds) {
+  if (!connectorById.has(id)) failures.push({ id, path: readiness.path, error: 'required_connector_missing' })
+}
+
 const endpointResults = []
 for (const connector of connectors) {
+  for (const field of ['id', 'label', 'state', 'risk_level', 'canonical_paths', 'ui_contract', 'blocker', 'next_action']) {
+    if (connector[field] === undefined || connector[field] === null || connector[field] === '') {
+      failures.push({ id: connector.id, path: readiness.path, field, error: 'connector_contract_field_missing' })
+    }
+  }
+  if (connector.approval_required_for_execution !== true || connector.audit_required_for_execution !== true) {
+    failures.push({ id: connector.id, path: readiness.path, error: 'connector_missing_execution_approval_or_audit_gate' })
+  }
+  if (connector.canonical_paths?.approval !== '/api/bridge/approval-requests') {
+    failures.push({ id: connector.id, path: readiness.path, error: 'connector_approval_path_not_canonical' })
+  }
+  if (!Array.isArray(connector.blocked_actions) || connector.blocked_actions.length === 0) {
+    failures.push({ id: connector.id, path: readiness.path, error: 'connector_blocked_actions_missing' })
+  }
+  if (!Array.isArray(connector.current_safe_actions) || connector.current_safe_actions.length === 0) {
+    failures.push({ id: connector.id, path: readiness.path, error: 'connector_safe_actions_missing' })
+  }
+  if (connector.ui_contract?.primary_button_state === 'LIVE') {
+    failures.push({ id: connector.id, path: readiness.path, error: 'connector_primary_button_live_before_execution_approval' })
+  }
   if (!connector.read_only_endpoint) continue
   const result = await getJson(connector.read_only_endpoint)
   endpointResults.push({

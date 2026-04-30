@@ -45,6 +45,12 @@ type ConnectorReadiness = {
   blocked_actions: string[]
   owner_approval_required_before: string[]
   deferred_or_redundant_paths: string[]
+  detail_checks: Array<{
+    label: string
+    state: ReadinessState
+    detail: string
+    endpoint?: string | null
+  }>
   verification_commands: string[]
   blocker: string | null
   next_action: string
@@ -136,6 +142,28 @@ export async function GET(request: NextRequest) {
         'direct crawl runner is deferred until FireCrawl credential/package alignment is approved',
         'Brain/Obsidian ingestion from FireCrawl is deferred until approval persistence exists',
       ],
+      detail_checks: [
+        {
+          label: 'Mission Control credential',
+          state: missionControlEnvHasFirecrawl ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+          detail: missionControlEnvHasFirecrawl
+            ? 'FIRECRAWL_API_KEY is present by name in Mission Control.'
+            : 'FIRECRAWL_API_KEY is missing from Mission Control; ClaudeClaw/OpenClaw presence does not make this app executable.',
+          endpoint: '/api/firecrawl/status',
+        },
+        {
+          label: 'ClaudeClaw/OpenClaw credential visibility',
+          state: claudeClawEnvHasFirecrawl || openClawEnvHasFirecrawl ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+          detail: `ClaudeClaw env name: ${claudeClawEnvHasFirecrawl ? 'present' : 'missing'}; OpenClaw env name: ${openClawEnvHasFirecrawl ? 'present' : 'missing'}. Values are never exposed.`,
+        },
+        {
+          label: 'Mission Control SDK package',
+          state: firecrawlSdkPresent ? 'READ_ONLY' : 'BACKEND_REQUIRED',
+          detail: firecrawlSdkPresent
+            ? '@mendable/firecrawl-js is installed; execution remains locked.'
+            : '@mendable/firecrawl-js is not installed in Mission Control, so UI job execution cannot run.',
+        },
+      ],
       verification_commands: [
         'curl -fsS /api/firecrawl/status',
         'GET /api/bridge/connector-readiness',
@@ -189,6 +217,20 @@ export async function GET(request: NextRequest) {
         'manual CLI wrapper remains the canonical non-UI execution path until the safe runner is approved',
         'UI execution is deliberately represented by request-run and returns HTTP 423/owner approval required',
       ],
+      detail_checks: [
+        {
+          label: 'Status endpoint',
+          state: 'READ_ONLY',
+          detail: 'GET /api/viral-crawl/video/status exposes wrapper/vendor/Obsidian/skill registry status only.',
+          endpoint: '/api/viral-crawl/video/status',
+        },
+        {
+          label: 'Execution endpoint',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'POST /api/viral-crawl/video/request-run remains locked and must not run downloads or wrapper execution.',
+          endpoint: '/api/viral-crawl/video/request-run',
+        },
+      ],
       verification_commands: [
         'GET /api/viral-crawl/video/status',
         'POST /api/viral-crawl/video/request-run must remain locked',
@@ -235,6 +277,28 @@ export async function GET(request: NextRequest) {
       deferred_or_redundant_paths: [
         'direct provider API setup rows should remain deferred when Zapier is the canonical automation path',
         'ad hoc Zapier calls are not canonical; use /api/zapier/tools for inventory and /api/zapier/request-write-approval for protected writes',
+      ],
+      detail_checks: [
+        {
+          label: 'Zapier status',
+          state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
+          detail: !zapierHasTransport || !zapierHasToken
+            ? 'Zapier MCP transport/token is missing by name in the Mission Control environment.'
+            : 'Zapier MCP credential names are present. Tool inventory may be listed read-only; tools are not invoked.',
+          endpoint: '/api/zapier/status',
+        },
+        {
+          label: 'Tool inventory',
+          state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
+          detail: 'GET /api/zapier/tools classifies read/write/unknown where possible and never invokes a tool.',
+          endpoint: '/api/zapier/tools',
+        },
+        {
+          label: 'Write path',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'Write-classified Zapier tools remain locked behind Telegram approval/audit persistence and exact-scope runners.',
+          endpoint: '/api/zapier/request-write-approval',
+        },
       ],
       verification_commands: [
         'GET /api/zapier/tools',
@@ -285,6 +349,28 @@ export async function GET(request: NextRequest) {
         'n8n is a separate workflow runner and should not duplicate Zapier setup flows',
         'workflow execution UI remains deferred until approval/audit persistence exists',
       ],
+      detail_checks: [
+        {
+          label: 'n8n credential names',
+          state: n8nMissing.length ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
+          detail: n8nMissing.length
+            ? `Missing by name: ${n8nMissing.join(', ')}.`
+            : 'N8N_BASE_URL and N8N_API_KEY are present by name; execution still locked.',
+          endpoint: '/api/n8n/status',
+        },
+        {
+          label: 'Workflow inventory',
+          state: n8nMissing.length ? 'CREDENTIAL_REQUIRED' : 'BACKEND_REQUIRED',
+          detail: 'Read-only workflow inventory is the next safe step before any workflow execution.',
+          endpoint: '/api/n8n/workflows',
+        },
+        {
+          label: 'Workflow execution',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'No n8n workflow executes until scoped Telegram approval, audit chain, and runner are wired.',
+          endpoint: '/api/n8n/workflows/:id/:action',
+        },
+      ],
       verification_commands: [
         'GET /api/n8n/status',
         'POST /api/n8n/workflows/:id/execute must remain owner-approval-required',
@@ -332,6 +418,20 @@ export async function GET(request: NextRequest) {
         '/api/mcp/status and /api/mcp/servers are intentionally both kept: summary vs detailed inventory',
         'per-tool passthrough is deferred until tool read/write classification exists',
       ],
+      detail_checks: [
+        {
+          label: 'MCP status summary',
+          state: 'READ_ONLY',
+          detail: '/api/mcp/status remains the canonical summary endpoint.',
+          endpoint: '/api/mcp/status',
+        },
+        {
+          label: 'MCP server details',
+          state: 'READ_ONLY',
+          detail: '/api/mcp/servers remains the canonical detailed server list.',
+          endpoint: '/api/mcp/servers',
+        },
+      ],
       verification_commands: [
         'GET /api/mcp/status',
         'GET /api/mcp/servers',
@@ -378,6 +478,20 @@ export async function GET(request: NextRequest) {
         'POST /api/skills/registry remains approval-required and points to canonical install request flow',
         '/api/skills/tool-skills is the read-only ClaudeClaw agent skill inventory path',
         'canonical install path is /api/skills/finder/request-install',
+      ],
+      detail_checks: [
+        {
+          label: 'Skill inventory',
+          state: 'READ_ONLY',
+          detail: 'Skills can be listed/searched. Install/enable/disable actions remain protected.',
+          endpoint: '/api/skills/tool-skills',
+        },
+        {
+          label: 'Canonical install request',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'Install requests must use /api/skills/finder/request-install and approval/audit gates.',
+          endpoint: '/api/skills/finder/request-install',
+        },
       ],
       verification_commands: [
         'GET /api/skills',

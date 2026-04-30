@@ -157,6 +157,12 @@ interface ConnectorReadiness {
   blocked_actions?: string[]
   owner_approval_required_before?: string[]
   deferred_or_redundant_paths?: string[]
+  detail_checks?: Array<{
+    label?: string
+    state?: string
+    detail?: string
+    endpoint?: string | null
+  }>
   blocker?: string | null
   next_action?: string
 }
@@ -336,6 +342,44 @@ interface BuildWikiRunNowPayload {
   next_action?: string
   error?: string
   detail?: string
+}
+
+interface BuildWikiFileMeta {
+  name?: string
+  size_bytes?: number
+  modified_at?: string
+  path?: string
+  sha256?: string
+  secrets_present?: boolean
+}
+
+interface BuildWikiFilesPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  raw?: {
+    dir?: string
+    count?: number
+    items?: BuildWikiFileMeta[]
+  }
+  wiki?: {
+    dir?: string
+    count?: number
+    items?: BuildWikiFileMeta[]
+  }
+  error?: string
+}
+
+interface BuildWikiLogsPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  log_path?: string
+  lines?: string[]
+  line_count?: number
+  requested_lines?: number
+  secrets_redacted?: boolean
+  error?: string
 }
 
 interface ExecutiveReportPreviewPayload {
@@ -707,6 +751,20 @@ function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
       {connector.deferred_or_redundant_paths && connector.deferred_or_redundant_paths.length > 0 && (
         <p className={styles.providerNotes}>Deferred/redundant: {joinPreview(connector.deferred_or_redundant_paths, 2)}</p>
       )}
+      {connector.detail_checks && connector.detail_checks.length > 0 && (
+        <ul className={styles.connectorList}>
+          {connector.detail_checks.slice(0, 4).map((check, index) => (
+            <li key={`${connector.id}-detail-${index}`}>
+              <span>
+                {check.label || 'Detail check'}
+                <br />
+                <small>{check.detail || 'No detail provided'}{check.endpoint ? ` · ${check.endpoint}` : ''}</small>
+              </span>
+              <strong>{check.state || 'READ_ONLY'}</strong>
+            </li>
+          ))}
+        </ul>
+      )}
       {connector.blocker && <p className={styles.providerAction}>Blocked: {connector.blocker}</p>}
       {connector.next_action && <p className={styles.providerNotes}>{connector.next_action}</p>}
     </div>
@@ -844,6 +902,9 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
   const placeholder = payload.ui_placeholder || {}
   const summary = payload.summary || {}
   const approvals = payload.approvals || []
+  const latest = approvals[0]
+  const linkedTaskCount = approvals.reduce((total, approval) => total + (approval.linked_tasks?.length || 0), 0)
+  const auditEventCount = approvals.reduce((total, approval) => total + (approval.audit_events?.length || 0), 0)
 
   return (
     <div className={styles.providerCard}>
@@ -858,12 +919,20 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
         <span>persistence: {payload.persistence || 'not applied'}</span>
         <span>pending: {summary.pending ?? 0}</span>
         <span>total: {summary.total ?? approvals.length}</span>
+        <span>linked tasks: {linkedTaskCount}</span>
+        <span>audit events: {auditEventCount}</span>
         <span>HTTP blocked: {placeholder.protected_action_http_status || 423}</span>
       </div>
       {placeholder.message && <p className={styles.providerNotes}>{placeholder.message}</p>}
       <p className={styles.providerNotes}>
         Protected actions locked: {placeholder.protected_actions_locked ? 'yes' : 'unknown'} · fake approvals: {placeholder.no_fake_approval_requests ? 'blocked' : 'unknown'} · approval created: {placeholder.approval_request_created ? 'yes' : 'no'}
       </p>
+      {latest && (
+        <p className={styles.providerNotes}>
+          Latest: {latest.id} · {latest.status || latest.approval_state || 'unknown'} · owner decision through Telegram only
+          {latest.expires_at ? ` · expires ${latest.expires_at}` : ''}
+        </p>
+      )}
       {approvals.length > 0 ? (
         <ul className={styles.connectorList}>
           {approvals.slice(0, 5).map((approval) => (
@@ -879,11 +948,19 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
                   Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'}
                   {approval.run_exit_code != null ? ` (${approval.run_exit_code})` : ''}
                 </small>
+                <br />
+                <small>
+                  Created: {approval.created_at || 'unknown'} · Decision: {approval.decision_at || 'pending'} · Audit events: {approval.audit_events?.length || 0}
+                </small>
                 {approval.linked_tasks && approval.linked_tasks.length > 0 && (
                   <>
                     <br />
                     <small>
-                      Task: {approval.linked_tasks[0].id || 'unknown'} · {approval.linked_tasks[0].current_status || 'unknown'} · {approval.linked_tasks[0].execution_state || 'unknown'}
+                      Task: {approval.linked_tasks[0].id || 'unknown'} · {approval.linked_tasks[0].assigned_agent || 'agent'} · {approval.linked_tasks[0].current_status || 'unknown'} · {approval.linked_tasks[0].execution_state || 'unknown'}
+                    </small>
+                    <br />
+                    <small>
+                      Checkpoint: {approval.linked_tasks[0].last_checkpoint || 'none'}
                     </small>
                   </>
                 )}
@@ -939,6 +1016,65 @@ function BuildWikiRunNowCard({
       )}
       {result?.next_action && <p className={styles.providerAction}>{result.next_action}</p>}
       {result?.error && <p className={styles.providerAction}>Request failed: {result.error}{result.detail ? ` · ${result.detail}` : ''}</p>}
+    </div>
+  )
+}
+
+function BuildWikiArtifactsCard({
+  files,
+  logs,
+}: {
+  files: BuildWikiFilesPayload | null
+  logs: BuildWikiLogsPayload | null
+}) {
+  const rawItems = files?.raw?.items || []
+  const wikiItems = files?.wiki?.items || []
+  const logLines = logs?.lines || []
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={files?.ok || logs?.ok ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>Build-Wiki Files / Logs</strong>
+        </div>
+        <span className={styles.providerState}>READ_ONLY</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>raw: {files?.raw?.count ?? rawItems.length}</span>
+        <span>wiki: {files?.wiki?.count ?? wikiItems.length}</span>
+        <span>log lines: {logs?.line_count ?? logLines.length}</span>
+        <span>writes: locked</span>
+      </div>
+      <p className={styles.providerNotes}>
+        Latest files and farmer logs are read-only. Contents are fetched through guarded endpoints; no sync, write, delete, or dispatch happens here.
+      </p>
+      <div className={styles.providerEndpoint}>files: /api/bridge/brain-sync/build-wiki/files</div>
+      <div className={styles.providerEndpoint}>logs: /api/bridge/brain-sync/build-wiki/logs</div>
+      {(rawItems.length > 0 || wikiItems.length > 0) ? (
+        <ul className={styles.connectorList}>
+          {[...rawItems.slice(0, 2).map((item) => ({ ...item, type: 'raw' })), ...wikiItems.slice(0, 2).map((item) => ({ ...item, type: 'wiki' }))].map((item, index) => (
+            <li key={`${item.type}-${item.name || index}`}>
+              <span>
+                {item.name || 'file'}
+                <br />
+                <small>{item.type} · {item.modified_at || 'mtime unknown'} · {item.size_bytes ?? 0} bytes</small>
+              </span>
+              <strong>{item.secrets_present ? 'REDACTED' : 'SAFE'}</strong>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.providerNotes}>No Build-Wiki files loaded yet.</p>
+      )}
+      {logLines.length > 0 ? (
+        <p className={styles.providerNotes}>Latest log: {logLines[logLines.length - 1]?.slice(0, 220) || 'empty'}</p>
+      ) : (
+        <p className={styles.providerNotes}>No farmer log tail loaded yet.</p>
+      )}
+      {(files?.error || logs?.error) && (
+        <p className={styles.providerAction}>Viewer status: {files?.error || logs?.error}</p>
+      )}
     </div>
   )
 }
@@ -1299,6 +1435,10 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [approvalQueueError, setApprovalQueueError] = useState<string>('')
   const [buildWikiRunNow, setBuildWikiRunNow] = useState<BuildWikiRunNowPayload | null>(null)
   const [buildWikiRunNowState, setBuildWikiRunNowState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [buildWikiFiles, setBuildWikiFiles] = useState<BuildWikiFilesPayload | null>(null)
+  const [buildWikiLogs, setBuildWikiLogs] = useState<BuildWikiLogsPayload | null>(null)
+  const [buildWikiArtifactsState, setBuildWikiArtifactsState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [buildWikiArtifactsError, setBuildWikiArtifactsError] = useState<string>('')
   const [executivePreview, setExecutivePreview] = useState<ExecutiveReportPreviewPayload | null>(null)
   const [executivePreviewState, setExecutivePreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
   const [executivePreviewError, setExecutivePreviewError] = useState<string>('')
@@ -1620,6 +1760,41 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     refreshApprovalQueue(cancelledRef)
     return () => {
       cancelledRef.cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setBuildWikiArtifactsState('loading')
+
+    Promise.all([
+      fetch('/api/bridge/brain-sync/build-wiki/files?type=all&limit=5', { cache: 'no-store', credentials: 'same-origin' })
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({}))
+          if (!r.ok) throw new Error(data?.error || `files HTTP ${r.status}`)
+          return data as BuildWikiFilesPayload
+        }),
+      fetch('/api/bridge/brain-sync/build-wiki/logs?lines=30', { cache: 'no-store', credentials: 'same-origin' })
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({}))
+          if (!r.ok) throw new Error(data?.error || `logs HTTP ${r.status}`)
+          return data as BuildWikiLogsPayload
+        }),
+    ])
+      .then(([filesPayload, logsPayload]) => {
+        if (cancelled) return
+        setBuildWikiFiles(filesPayload)
+        setBuildWikiLogs(logsPayload)
+        setBuildWikiArtifactsState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setBuildWikiArtifactsError((err as Error).message || 'fetch failed')
+        setBuildWikiArtifactsState('error')
+      })
+
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -2223,6 +2398,27 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 result={buildWikiRunNow}
                 onRequest={requestBuildWikiRunNowApproval}
               />
+              {buildWikiArtifactsState === 'loading' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Build-Wiki Files / Logs</strong>
+                    <span className={styles.providerState}>loading</span>
+                  </div>
+                  <p className={styles.providerNotes}>Loading latest files and farmer log tail…</p>
+                </div>
+              )}
+              {buildWikiArtifactsState === 'error' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Build-Wiki Files / Logs</strong>
+                    <span className={styles.providerState}>error</span>
+                  </div>
+                  <p className={styles.providerAction}>Could not load Build-Wiki artifacts: {buildWikiArtifactsError}</p>
+                </div>
+              )}
+              {buildWikiArtifactsState === 'ok' && (
+                <BuildWikiArtifactsCard files={buildWikiFiles} logs={buildWikiLogs} />
+              )}
               <ApprovalReadinessCard payload={approvalReadiness} />
               {approvalQueueState === 'loading' && (
                 <div className={styles.providerCard}>

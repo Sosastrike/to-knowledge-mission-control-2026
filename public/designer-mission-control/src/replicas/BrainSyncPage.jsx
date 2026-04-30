@@ -1856,6 +1856,11 @@ function BrainSyncPage(){
             </div>
           </div>
         </div>
+
+        {/* Build-Wiki / Farmer Sync — read-only Brain Sync surface.
+            Live status from /api/bridge/brain-sync/build-wiki/status.
+            All controls are locked (OWNER_APPROVAL_REQUIRED / CREDENTIAL_REQUIRED). */}
+        {typeof BuildWikiFarmerSyncPanel !== 'undefined' && <BuildWikiFarmerSyncPanel/>}
       </div>
 
       {expanded && <BrainExpandOverlay onClose={()=>setExpanded(false)} pulse={pulse} history={history}/>}

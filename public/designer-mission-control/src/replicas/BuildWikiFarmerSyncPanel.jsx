@@ -1,0 +1,352 @@
+// ============================================================
+// BuildWikiFarmerSyncPanel — read-only Brain Sync surface for
+// the OpenCloud Build-Wiki / farmer sync.
+//
+// Live source: GET /api/bridge/brain-sync/build-wiki/status
+// (Mission Control proxies claudeclaw.db.integration_connections
+//  + systemctl --user timer + filesystem counts in the Obsidian
+//  vault.) No execution, no secrets, no .env writes.
+//
+// Every control on this panel is a read-only contract until
+// Owner Approval / Credential schemas are wired through Bridge.
+// Buttons are disabled and show their lock state directly.
+// ============================================================
+
+const BUILD_WIKI_STATUS_URL = '/api/bridge/brain-sync/build-wiki/status';
+
+const CONTROL_LABELS = {
+  run_now:                'Run now',
+  pause_sync:             'Pause sync',
+  resume_sync:            'Resume sync',
+  add_local_source:       'Add local source',
+  enable_external_farmer: 'Enable external farmer',
+  view_logs:              'View logs',
+  view_latest_raw:        'View latest raw files',
+  view_latest_wiki:       'View latest wiki pages',
+};
+
+const CONTROL_ORDER = [
+  'run_now', 'pause_sync', 'resume_sync',
+  'add_local_source', 'enable_external_farmer',
+  'view_logs', 'view_latest_raw', 'view_latest_wiki',
+];
+
+function buildWikiPillKind(state) {
+  switch (state) {
+    case 'OWNER_APPROVAL_REQUIRED':
+      return { color: '#ffb547', label: 'OWNER APPROVAL' };
+    case 'CREDENTIAL_REQUIRED':
+      return { color: '#ff6a9e', label: 'CREDENTIAL' };
+    case 'BACKEND_REQUIRED':
+      return { color: '#ff7777', label: 'BACKEND' };
+    case 'READ_ONLY':
+      return { color: '#6bb3ff', label: 'READ ONLY' };
+    default:
+      return { color: '#888', label: String(state || 'LOCKED').toUpperCase() };
+  }
+}
+
+function buildWikiSyncKind(state) {
+  switch (state) {
+    case 'active': return { tone: '#3ddc84', label: 'ACTIVE' };
+    case 'paused': return { tone: '#ffb547', label: 'PAUSED' };
+    case 'failed': return { tone: '#ff6a9e', label: 'FAILED' };
+    default:       return { tone: '#888',    label: 'UNKNOWN' };
+  }
+}
+
+function useBuildWikiStatus() {
+  const [state, setState] = React.useState({ loading: true, data: null, error: null });
+
+  const fetchStatus = React.useCallback(async () => {
+    try {
+      const res = await fetch(BUILD_WIKI_STATUS_URL, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${text ? ': ' + text.slice(0, 120) : ''}`);
+      }
+      const data = await res.json();
+      setState({ loading: false, data, error: null });
+    } catch (err) {
+      setState({ loading: false, data: null, error: String(err && err.message || err) });
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchStatus();
+    const id = setInterval(fetchStatus, 60_000);
+    return () => clearInterval(id);
+  }, [fetchStatus]);
+
+  return { ...state, refetch: fetchStatus };
+}
+
+function BWPill({ tone, children, title }) {
+  return (
+    <span title={title} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '2px 8px', borderRadius: 999,
+      background: `${tone}1A`, color: tone,
+      border: `1px solid ${tone}55`,
+      fontSize: 10, letterSpacing: '0.06em', fontWeight: 600,
+      textTransform: 'uppercase',
+    }}>{children}</span>
+  );
+}
+
+function BWStat({ label, value, sub }) {
+  return (
+    <div style={{
+      flex: 1, padding: '8px 10px', background: 'var(--bg-2)',
+      borderRadius: 8, border: '1px solid var(--line-1)',
+      minWidth: 0,
+    }}>
+      <div className="stat-label" style={{ fontSize: 10 }}>{label}</div>
+      <div className="mono" style={{ fontSize: 14, color: 'var(--fg-0)', overflowWrap: 'anywhere' }}>{value}</div>
+      {sub ? <div className="muted xsmall">{sub}</div> : null}
+    </div>
+  );
+}
+
+function BWLockedButton({ controlKey, state, title }) {
+  const k = buildWikiPillKind(state);
+  return (
+    <button
+      type="button"
+      className="btn sm"
+      disabled
+      title={title || `Locked — ${state}`}
+      style={{
+        opacity: 0.6,
+        cursor: 'not-allowed',
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+      }}
+    >
+      <span>{CONTROL_LABELS[controlKey] || controlKey}</span>
+      <BWPill tone={k.color}>{k.label}</BWPill>
+    </button>
+  );
+}
+
+function BuildWikiFarmerSyncPanel() {
+  const { loading, data, error, refetch } = useBuildWikiStatus();
+
+  if (loading) {
+    return (
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="card-head">
+          <div className="card-title">
+            <span style={{ color: 'var(--accent)' }}>📚</span>
+            Build-Wiki · Farmer Sync
+            <span className="card-subtitle">opencloud-docs-farmer · Obsidian</span>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="muted xsmall">Loading live status from /api/bridge/brain-sync/build-wiki/status…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="card-head">
+          <div className="card-title">
+            <span style={{ color: 'var(--accent)' }}>📚</span>
+            Build-Wiki · Farmer Sync
+          </div>
+          <div className="hstack">
+            <BWPill tone="#ff7777">BACKEND</BWPill>
+            <button className="btn sm" onClick={refetch} title="Retry"><I.Refresh size={11}/> Retry</button>
+          </div>
+        </div>
+        <div className="card-body">
+          <div className="muted xsmall">
+            Live status endpoint not reachable yet — UI is ready, backend route at <code>{BUILD_WIKI_STATUS_URL}</code> requires a Mission Control rebuild + restart to take effect.
+          </div>
+          {error ? <pre style={{ marginTop: 8, fontSize: 11, color: 'var(--fg-2)', whiteSpace: 'pre-wrap' }}>{error}</pre> : null}
+        </div>
+      </div>
+    );
+  }
+
+  const sync = data.sync || {};
+  const farmer = data.active_farmer || {};
+  const dest = data.destination || {};
+  const controls = data.controls || {};
+  const drafts = Array.isArray(data.draft_external_farmers) ? data.draft_external_farmers : [];
+  const activeSources = Array.isArray(data.active_sources) ? data.active_sources : [];
+  const availableExpansions = Array.isArray(data.available_source_expansions) ? data.available_source_expansions : [];
+  const assignedAgents = Array.isArray(data.assigned_agents) ? data.assigned_agents : [];
+
+  const syncBadge = buildWikiSyncKind(sync.state);
+
+  return (
+    <div className="card" style={{ marginTop: 12 }}>
+      <div className="card-head">
+        <div className="card-title">
+          <span style={{ color: 'var(--accent)' }}>📚</span>
+          Build-Wiki · Farmer Sync
+          <span className="card-subtitle">opencloud-docs-farmer · Obsidian · stage A</span>
+        </div>
+        <div className="hstack" style={{ gap: 6 }}>
+          <BWPill tone={syncBadge.tone} title={`Live state: ${sync.state || 'unknown'}`}>
+            {syncBadge.label}
+          </BWPill>
+          {sync.tool_state ? <BWPill tone="#6bb3ff" title="Registry tool_state">{String(sync.tool_state).replace(/_/g, ' ')}</BWPill> : null}
+          {sync.auto_sync_enabled ? <BWPill tone="#3ddc84">AUTO-SYNC</BWPill> : <BWPill tone="#888">AUTO-SYNC OFF</BWPill>}
+          <button className="btn sm" onClick={refetch} title="Refetch live status"><I.Refresh size={11}/> Refresh</button>
+        </div>
+      </div>
+
+      <div className="card-body vstack" style={{ gap: 12 }}>
+
+        {/* 1 — Sync status row */}
+        <div className="hstack" style={{ gap: 8, alignItems: 'stretch', flexWrap: 'wrap' }}>
+          <BWStat label="Farmer" value={farmer.name || '—'} sub={farmer.cadence || '—'} />
+          <BWStat label="Next run" value={farmer.next_run_at || '—'} sub={farmer.timer_active ? 'timer active' : 'timer inactive'} />
+          <BWStat label="Last run" value={farmer.last_run_at || '—'} sub={`result: ${farmer.last_result || 'unknown'}`} />
+          <BWStat label="Service state" value={`${farmer.service_active_state || '—'} · ${farmer.service_sub_state || '—'}`} sub={`exit ${farmer.last_exit_status === null || farmer.last_exit_status === undefined ? '—' : farmer.last_exit_status}`} />
+        </div>
+
+        {farmer.last_error ? (
+          <div style={{
+            padding: '8px 10px', borderRadius: 8,
+            background: 'oklch(0.3 0.1 20 / 0.25)',
+            border: '1px solid #ff6a9e55', color: '#ffb3c8',
+            fontSize: 12,
+          }}>
+            <strong>Last error / warning:</strong> <span style={{ fontFamily: 'var(--mono)' }}>{farmer.last_error}</span>
+          </div>
+        ) : null}
+
+        {/* 2 — Obsidian destination */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Obsidian destination</div>
+          <div className="mono xsmall" style={{ color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>{dest.obsidian_path || '—'}</div>
+          <div className="hstack" style={{ gap: 8 }}>
+            <BWStat label="Raw files" value={String(dest.raw_count ?? '—')} />
+            <BWStat label="Wiki pages" value={String(dest.wiki_count ?? '—')} />
+            <BWStat label="Archived versions" value={String(dest.archive_count ?? '—')} />
+          </div>
+        </div>
+
+        {/* 3 — Active local sources */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="hstack">
+            <div className="stat-label">Active local sources</div>
+            <span className="spacer"/>
+            <span className="mono xsmall muted">{activeSources.length} wired</span>
+          </div>
+          <div className="vstack" style={{ gap: 4 }}>
+            {activeSources.length === 0 ? (
+              <div className="muted xsmall">No sources wired.</div>
+            ) : activeSources.map((src) => (
+              <div key={src} className="hstack" style={{
+                padding: '5px 8px', background: 'var(--bg-2)',
+                borderRadius: 6, border: '1px solid var(--line-1)',
+                fontSize: 12,
+              }}>
+                <BWPill tone="#3ddc84">LOCAL</BWPill>
+                <span className="mono xsmall" style={{ overflowWrap: 'anywhere', color: 'var(--fg-1)' }}>{src}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 4 — Available local source expansions */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="hstack">
+            <div className="stat-label">Available source expansions</div>
+            <span className="spacer"/>
+            <span className="mono xsmall muted">{availableExpansions.length} pending</span>
+          </div>
+          {availableExpansions.length === 0 ? (
+            <div className="muted xsmall">All known local sources are already wired into the active farmer.</div>
+          ) : (
+            <div className="vstack" style={{ gap: 4 }}>
+              {availableExpansions.map((src) => (
+                <div key={src} className="hstack" style={{
+                  padding: '5px 8px', background: 'var(--bg-2)',
+                  borderRadius: 6, border: '1px dashed var(--line-2)',
+                  fontSize: 12,
+                }}>
+                  <BWPill tone="#ffb547">PROPOSE</BWPill>
+                  <span className="mono xsmall" style={{ overflowWrap: 'anywhere', color: 'var(--fg-2)' }}>{src}</span>
+                  <span className="spacer"/>
+                  <BWLockedButton controlKey="add_local_source" state={controls.add_local_source || 'OWNER_APPROVAL_REQUIRED'} title="Adding a source requires owner approval through the Brain-Sync rebuild contract."/>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 5 — External farmer drafts */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="hstack">
+            <div className="stat-label">External farmer drafts</div>
+            <span className="spacer"/>
+            <span className="mono xsmall muted">{drafts.length} disabled</span>
+          </div>
+          <div className="vstack" style={{ gap: 4 }}>
+            {drafts.length === 0 ? (
+              <div className="muted xsmall">No external farmer drafts registered.</div>
+            ) : drafts.map((d) => (
+              <div key={d.name} className="hstack" style={{
+                padding: '6px 10px', background: 'var(--bg-2)',
+                borderRadius: 6, border: '1px solid var(--line-1)',
+                fontSize: 12, alignItems: 'flex-start', gap: 8, flexWrap: 'wrap',
+              }}>
+                <div className="vstack" style={{ gap: 2, minWidth: 200, flex: 1 }}>
+                  <div className="hstack" style={{ gap: 6 }}>
+                    <BWPill tone="#ffb547">{(d.state || 'DRAFT').replace(/_/g, ' ')}</BWPill>
+                    <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{d.name}</span>
+                  </div>
+                  {d.source ? <div className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>{d.source}</div> : null}
+                  {Array.isArray(d.blockers) && d.blockers.length ? (
+                    <div className="muted xsmall">blockers: {d.blockers.map((b) => <code key={b} style={{ marginRight: 6, fontSize: 10 }}>{b}</code>)}</div>
+                  ) : null}
+                </div>
+                <BWLockedButton controlKey="enable_external_farmer" state={controls.enable_external_farmer || 'CREDENTIAL_REQUIRED'} title="Each external farmer requires its credentials + owner approval before enable."/>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 6 — Controls (all locked) */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Controls</div>
+          <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>
+            {CONTROL_ORDER.map((key) => (
+              <BWLockedButton
+                key={key}
+                controlKey={key}
+                state={controls[key] || 'OWNER_APPROVAL_REQUIRED'}
+                title={`Control "${CONTROL_LABELS[key]}" is currently locked: ${controls[key] || 'OWNER_APPROVAL_REQUIRED'}. No execution is wired from the UI.`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Footer — assigned agents + provenance */}
+        <div className="hstack" style={{ gap: 8, flexWrap: 'wrap', borderTop: '1px solid var(--line-1)', paddingTop: 8 }}>
+          <div className="muted xsmall">
+            <strong style={{ color: 'var(--fg-1)' }}>Assigned agents:</strong>{' '}
+            {assignedAgents.length ? assignedAgents.join(', ') : '—'}
+          </div>
+          <span className="spacer"/>
+          <div className="muted xsmall mono" title={`Source DB: ${data.source_db || 'claudeclaw'} · Generated ${data.generated_at}`}>
+            live · {data.canonical_route || BUILD_WIKI_STATUS_URL}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { BuildWikiFarmerSyncPanel });

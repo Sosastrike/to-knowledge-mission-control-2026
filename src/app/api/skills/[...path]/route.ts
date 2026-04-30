@@ -144,11 +144,61 @@ function searchSkills(query: string): SkillSearchRow[] {
   return Array.from(byKey.values()).slice(0, 100)
 }
 
+function skillSearchPayload(query: string) {
+  const normalizedQuery = query.trim()
+  const results = searchSkills(normalizedQuery).map((skill) => ({
+    name: skill.name || '',
+    source: skill.source || null,
+    path: skill.path || null,
+    description: skill.description || null,
+    registry_slug: skill.registry_slug || null,
+    security_status: skill.security_status || 'unknown',
+    enabled: skill.enabled === 1,
+    command_or_api: skill.command_or_api || null,
+    category: skill.category || null,
+    health: skill.health || null,
+    credential_names: parseCredentialNames(skill.required_credentials),
+    state: 'READ_ONLY',
+    executable: false,
+    install_state: 'OWNER_APPROVAL_REQUIRED',
+    test_state: 'BACKEND_REQUIRED',
+  }))
+
+  return {
+    ok: true,
+    state: 'READ_ONLY',
+    query: normalizedQuery,
+    total: results.length,
+    results,
+    actions: {
+      search: 'READ_ONLY',
+      request_install: 'OWNER_APPROVAL_REQUIRED',
+      enable_disable: 'OWNER_APPROVAL_REQUIRED',
+      test: 'BACKEND_REQUIRED',
+    },
+    sources: {
+      mission_control_skills_table: true,
+      claudeclaw_agent_skills_table: true,
+      claudeclaw_db_path: CLAUDECLAW_DB_PATH,
+    },
+    execution_enabled: false,
+    writes_enabled: false,
+    approval_request_created: false,
+    note: 'Search/list only. No skill install, enable/disable, or execution was performed.',
+  }
+}
+
 export async function GET(request: NextRequest, { params }: { params: CatchAllParams }) {
   const auth = authJson(request, 'viewer')
   if (auth) return auth
 
   const path = routePath((await params).path)
+  if (path === 'finder/search') {
+    const { searchParams } = new URL(request.url)
+    const query = String(searchParams.get('q') || searchParams.get('query') || '').trim()
+    return NextResponse.json(skillSearchPayload(query))
+  }
+
   if (path === 'tool-skills') {
     const tools = listClaudeClawAgentSkills().map((skill) => ({
       name: skill.name || '',
@@ -201,43 +251,7 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
     const body = await request.json().catch(() => ({}))
     const query = String(body?.query || '').trim()
     if (!query) return NextResponse.json({ ok: false, error: 'query required' }, { status: 400 })
-    const results = searchSkills(query).map((skill) => ({
-      name: skill.name || '',
-      source: skill.source || null,
-      path: skill.path || null,
-      description: skill.description || null,
-      registry_slug: skill.registry_slug || null,
-      security_status: skill.security_status || 'unknown',
-      enabled: skill.enabled === 1,
-      command_or_api: skill.command_or_api || null,
-      category: skill.category || null,
-      health: skill.health || null,
-      credential_names: parseCredentialNames(skill.required_credentials),
-      state: 'READ_ONLY',
-      executable: false,
-      install_state: 'OWNER_APPROVAL_REQUIRED',
-      test_state: 'BACKEND_REQUIRED',
-    }))
-
-    return NextResponse.json({
-      ok: true,
-      state: 'READ_ONLY',
-      query,
-      total: results.length,
-      results,
-      actions: {
-        search: 'READ_ONLY',
-        request_install: 'OWNER_APPROVAL_REQUIRED',
-        enable_disable: 'OWNER_APPROVAL_REQUIRED',
-        test: 'BACKEND_REQUIRED',
-      },
-      sources: {
-        mission_control_skills_table: true,
-        claudeclaw_agent_skills_table: true,
-        claudeclaw_db_path: CLAUDECLAW_DB_PATH,
-      },
-      note: 'Search/list only. No skill install, enable/disable, or execution was performed.',
-    })
+    return NextResponse.json(skillSearchPayload(query))
   }
 
   const auth = authJson(request, 'operator')

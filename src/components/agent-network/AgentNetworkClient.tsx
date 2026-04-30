@@ -297,6 +297,17 @@ interface ButtonContractsPayload {
   no_fake_success?: boolean
   protected_execution_enabled?: boolean
   buttons?: ButtonContractItem[]
+  route_summary?: Array<{
+    route: string
+    total: number
+    by_state?: Record<string, number>
+    protected_actions?: number
+    audit_required?: number
+    blocked_buttons?: number
+    executable_now?: number
+    missing_backend?: number
+    missing_credentials?: number
+  }>
   summary?: {
     total?: number
     by_state?: Record<string, number>
@@ -760,6 +771,40 @@ function ButtonContractCard({ button }: { button: ButtonContractItem }) {
       )}
       {button.safe_ui_behavior && <p className={styles.providerNotes}>{button.safe_ui_behavior}</p>}
       {button.note && <p className={styles.providerAction}>{button.note}</p>}
+    </div>
+  )
+}
+
+function ButtonRouteSummaryCard({ route }: { route: NonNullable<ButtonContractsPayload['route_summary']>[number] }) {
+  const blocked = route.blocked_buttons ?? 0
+  const missingBackend = route.missing_backend ?? 0
+  const missingCredentials = route.missing_credentials ?? 0
+  const stateBits = Object.entries(route.by_state || {})
+    .filter(([, count]) => count > 0)
+    .map(([state, count]) => `${state.replace(/_/g, ' ')} ${count}`)
+    .join(' · ')
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={blocked > 0 ? 'degraded' : 'active'} />
+          <strong className={styles.providerName}>{route.route}</strong>
+        </div>
+        <span className={styles.providerState}>{route.total} actions</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>safe now: {route.executable_now ?? 0}</span>
+        <span>blocked: {blocked}</span>
+        <span>protected: {route.protected_actions ?? 0}</span>
+        <span>audit: {route.audit_required ?? 0}</span>
+      </div>
+      {stateBits && <p className={styles.providerNotes}>{stateBits}</p>}
+      {(missingBackend > 0 || missingCredentials > 0) && (
+        <p className={styles.providerAction}>
+          Needs backend: {missingBackend} · needs credential: {missingCredentials}
+        </p>
+      )}
     </div>
   )
 }
@@ -1301,6 +1346,17 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             <div className={styles.preflightNotice}>
               Every visible action must map to exactly one state: LIVE, READ_ONLY, BACKEND_REQUIRED, CREDENTIAL_REQUIRED, OWNER_APPROVAL_REQUIRED, or DISABLED. Missing backend, missing credential, and owner-approval states must be visible and must not fake success.
             </div>
+            {buttonContracts?.route_summary && buttonContracts.route_summary.length > 0 && (
+              <>
+                <h3 className={styles.subhead}>Route coverage</h3>
+                <div className={styles.providerGrid}>
+                  {buttonContracts.route_summary.map((route) => (
+                    <ButtonRouteSummaryCard key={route.route} route={route} />
+                  ))}
+                </div>
+              </>
+            )}
+            <h3 className={styles.subhead}>Blocked or read-only action details</h3>
             <div className={styles.providerGrid}>
               {(buttonContracts?.buttons || [])
                 .filter((button) => button.state !== 'LIVE')

@@ -147,6 +147,40 @@ export async function GET(request: NextRequest) {
     return acc
   }, {} as Record<ButtonState, number>)
 
+  const byRoute = BUTTONS.reduce((acc, button) => {
+    const existing = acc[button.route] || {
+      route: button.route,
+      total: 0,
+      by_state: {} as Record<ButtonState, number>,
+      protected_actions: 0,
+      audit_required: 0,
+      blocked_buttons: 0,
+      executable_now: 0,
+      missing_backend: 0,
+      missing_credentials: 0,
+    }
+    existing.total += 1
+    existing.by_state[button.state] = (existing.by_state[button.state] || 0) + 1
+    if (button.approval_required) existing.protected_actions += 1
+    if (button.audit_required) existing.audit_required += 1
+    if (blockedHttpStatus(button)) existing.blocked_buttons += 1
+    if (canExecuteNow(button)) existing.executable_now += 1
+    if (button.state === 'BACKEND_REQUIRED') existing.missing_backend += 1
+    if (button.state === 'CREDENTIAL_REQUIRED') existing.missing_credentials += 1
+    acc[button.route] = existing
+    return acc
+  }, {} as Record<string, {
+    route: string
+    total: number
+    by_state: Record<ButtonState, number>
+    protected_actions: number
+    audit_required: number
+    blocked_buttons: number
+    executable_now: number
+    missing_backend: number
+    missing_credentials: number
+  }>)
+
   return NextResponse.json({
     ok: true,
     generated_at: new Date().toISOString(),
@@ -154,6 +188,7 @@ export async function GET(request: NextRequest) {
     no_fake_success: true,
     protected_execution_enabled: false,
     buttons: BUTTONS.map(buttonWithRuntimeContract),
+    route_summary: Object.values(byRoute).sort((a, b) => a.route.localeCompare(b.route)),
     summary: {
       total: BUTTONS.length,
       by_state: byState,

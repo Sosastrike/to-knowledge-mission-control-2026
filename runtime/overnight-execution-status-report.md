@@ -1,8 +1,8 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T01:20:00-04:00
+Generated: 2026-04-30T01:36:00-04:00
 Branch: to-knowledge-mc
-HEAD before this report refresh: 794b554
+HEAD before this report refresh: 09a7e9d
 
 ## Current Production Health
 - mission-control.service: active
@@ -14,6 +14,7 @@ HEAD before this report refresh: 794b554
 - Bridge preflight: read-only live
 - Connector readiness: read-only live
 - Authenticated read-only Bridge APIs: HTTP 200 in route smoke
+- Button contract route summary: 11 owner-facing route groups visible
 - Approval queue/persistence: not connected
 - Connector execution: disabled
 - Zapier writes: locked
@@ -24,6 +25,7 @@ HEAD before this report refresh: 794b554
 
 ## Commits Pushed In This Block
 ```text
+09a7e9d test(routes): authenticate bridge route smoke
 794b554 test(routes): verify mission control route rendering
 15f3f0f fix(bridge): classify missing connector config accurately
 476ece2 feat(bridge): surface button contract states
@@ -70,6 +72,8 @@ c779648 chore(config): document azure auth and sync lockfile
 - Added a route rendering smoke script for the official Mission Control login, auth-gated shell routes, and read-only Bridge APIs.
 - Confirmed unauthenticated owner-facing designer routes redirect to login instead of exposing the shell.
 - Upgraded the route smoke script to use the local API key from the Mission Control DB for authenticated API status checks without printing the secret.
+- Added route-level button contract summaries to `/api/bridge/button-contracts`.
+- Surfaced route coverage cards in Agent Network / Bridge Mode so each section shows total actions, safe actions, blocked actions, protected actions, missing backend, and missing credentials.
 
 ## Checks Run
 - `pnpm run typecheck`.
@@ -83,8 +87,10 @@ c779648 chore(config): document azure auth and sync lockfile
 - `node scripts/check-bridge-preflight-live.mjs http://127.0.0.1:3337`.
 - `node scripts/check-provider-registry-live.mjs http://127.0.0.1:3337`.
 - `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337` with local API-key auth for Bridge API routes.
+- Route-summary smoke check for `/api/bridge/button-contracts`: 11 route groups, 55 mapped actions.
 - `bash scripts/test-bridge-approval-migration.sh` against copied DB only.
 - Public smoke check for `https://tkmc.knowledge-vs-ai.com/login`.
+- mission-control.service restart after runtime UI/API change: active.
 - Secret-pattern diff scans before commits.
 - `.env` diff checks before commits.
 

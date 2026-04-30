@@ -3,7 +3,8 @@
 Generated: 2026-04-30T10:34:00-04:00
 
 ## Current HEAD
-- Current pushed HEAD: 5e73f2e
+- Latest verified runtime code commit: 5e73f2e
+- Later report-only commits may advance HEAD; run `git rev-parse --short HEAD` for the literal latest commit.
 
 ## Live checks
 - mission-control.service: active

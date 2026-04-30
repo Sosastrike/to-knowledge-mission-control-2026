@@ -13,7 +13,8 @@ True 90% operational is blocked until the owner approves the production approval
 ## Current Live State
 
 - Branch: to-knowledge-mc
-- Current pushed HEAD: 5e73f2e
+- Latest verified runtime code commit: 5e73f2e
+- Later report-only commits may advance HEAD; run `git rev-parse --short HEAD` for the literal latest commit.
 - mission-control.service: active
 - Listener: 127.0.0.1:3337
 - TKMC public login: HTTP 200

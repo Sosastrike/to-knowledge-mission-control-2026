@@ -52,8 +52,14 @@ function MCPToolsPage() {
     }
   }
   async function approval(id, action) {
-    await fetch(`/api/mcp/servers/${id}/${action}`, { method: 'POST' });
-    setToast({ kind: 'warn', msg: `${action} on ${id} requires owner approval — request logged.` });
+    const res = await fetch(`/api/mcp/servers/${id}/${action}`, { method: 'POST' });
+    const body = await res.json().catch(() => ({}));
+    setToast({
+      kind: 'warn',
+      msg: body.approval_request_created
+        ? `${action} on ${id} queued for owner approval.`
+        : `${action} on ${id} requires owner approval. Approval queue is not connected yet; no request was sent.`,
+    });
     setTimeout(() => setToast(null), 5000);
   }
 

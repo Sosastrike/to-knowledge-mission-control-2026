@@ -42,10 +42,18 @@ function N8NPage() {
   }
 
   async function approval(action, id = 'all') {
-    setToast({ kind: 'warn', msg: `${action} requires owner approval — request logged with backend_required.` });
     try {
-      await fetch(`/api/n8n/workflows/${id}/${action}`, { method: 'POST' });
-    } catch (_) {}
+      const res = await fetch(`/api/n8n/workflows/${id}/${action}`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      setToast({
+        kind: 'warn',
+        msg: body.approval_request_created
+          ? `${action} queued for owner approval.`
+          : `${action} requires owner approval. Approval queue is not connected yet; no request was sent.`,
+      });
+    } catch (_) {
+      setToast({ kind: 'warn', msg: `${action} requires owner approval. Approval queue is unavailable; no request was sent.` });
+    }
     setTimeout(() => setToast(null), 6000);
   }
 

@@ -11,6 +11,12 @@ import {
   pickPublicRunView,
   readLatestRunNow,
 } from '@/lib/build-wiki-run-now'
+import {
+  BUILDWIKI_TIMER_UNIT,
+  deriveTimerUiState,
+  readLatestTimerControl,
+  TIMER_PUBLIC_VIEW,
+} from '@/lib/build-wiki-timer-control'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -415,8 +421,8 @@ export async function GET(request: NextRequest) {
     },
     controls: {
       run_now: 'OWNER_APPROVAL_REQUIRED',
-      pause_sync: 'OWNER_APPROVAL_REQUIRED',
-      resume_sync: 'OWNER_APPROVAL_REQUIRED',
+      pause_sync: timer.timer_active ? 'OWNER_APPROVAL_REQUIRED' : 'NOT_APPLICABLE_TIMER_INACTIVE',
+      resume_sync: timer.timer_active ? 'NOT_APPLICABLE_TIMER_ACTIVE' : 'OWNER_APPROVAL_REQUIRED',
       add_local_source: 'OWNER_APPROVAL_REQUIRED',
       enable_external_farmer: 'CREDENTIAL_REQUIRED',
       view_logs: 'READ_ONLY',
@@ -439,6 +445,28 @@ export async function GET(request: NextRequest) {
           read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/run-now/{id}' },
           approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
           deny:     { method: 'POST', path: '/api/bridge/approval-requests/{id}/deny' },
+        },
+      }
+    })(),
+    timer_control: (() => {
+      const latest = readLatestTimerControl()
+      const ui = deriveTimerUiState(latest.approval, latest.run)
+      const timerActive = timer.timer_active
+      return {
+        persistence_ready: latest.persistence_ready,
+        target_unit: BUILDWIKI_TIMER_UNIT,
+        timer_active: timerActive,
+        offered_action: timerActive ? 'pause' : 'resume',
+        ui_state: ui.ui_state,
+        is_terminal: ui.is_terminal,
+        action_id: ui.action_id,
+        approval: TIMER_PUBLIC_VIEW.pickApproval(latest.approval),
+        run: TIMER_PUBLIC_VIEW.pickRun(latest.run),
+        endpoints: {
+          create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/timer-control' },
+          dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/timer-control/{id}/dispatch' },
+          read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/timer-control/{id}' },
+          approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
         },
       }
     })(),

@@ -20,18 +20,17 @@ const APPROVE_URL           = (id) => `/api/bridge/approval-requests/${encodeURI
 const FILES_LIST_URL        = (type, limit) => `/api/bridge/brain-sync/build-wiki/files?type=${encodeURIComponent(type)}&limit=${encodeURIComponent(limit)}`;
 const FILE_READ_URL         = (type, name) => `/api/bridge/brain-sync/build-wiki/files/${encodeURIComponent(type)}/${encodeURIComponent(name)}`;
 const LOGS_URL              = (lines) => `/api/bridge/brain-sync/build-wiki/logs?lines=${encodeURIComponent(lines)}`;
+const TIMER_CTRL_CREATE_URL = '/api/bridge/brain-sync/build-wiki/timer-control';
+const TIMER_CTRL_DISPATCH_URL = (id) => `/api/bridge/brain-sync/build-wiki/timer-control/${encodeURIComponent(id)}/dispatch`;
 
 const CONTROL_LABELS = {
-  pause_sync:             'Pause sync',
-  resume_sync:            'Resume sync',
   add_local_source:       'Add local source',
   enable_external_farmer: 'Enable external farmer',
 };
 
-// Run Now + the two file browsers + the log viewer are wired (approval-driven
-// and read-only respectively). The remaining 4 controls stay locked.
+// Run Now + Pause/Resume (timer-control) + the two file browsers + the log
+// viewer are wired. The remaining 2 controls stay locked.
 const LOCKED_CONTROL_ORDER = [
-  'pause_sync', 'resume_sync',
   'add_local_source', 'enable_external_farmer',
 ];
 
@@ -630,6 +629,144 @@ function BWLogViewer({ defaultLines = 200 }) {
   );
 }
 
+// ============================================================
+// Timer control — Pause / Resume sync, approval-driven.
+// Same uiStateLabel + BWPill helpers reused from the Run Now panel.
+// ============================================================
+function BWTimerControl({ timerControl, onAction }) {
+  const [busy, setBusy] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState(null);
+
+  const tc = timerControl || {};
+  const offered = tc.offered_action;          // 'pause' | 'resume' | null
+  const timerActive = !!tc.timer_active;
+  const state = tc.ui_state || 'idle';
+  const approvalId = tc.approval && tc.approval.id;
+  const approval = tc.approval;
+  const run = tc.run;
+  const k = uiStateLabel(state);
+
+  const wrap = async (fn) => {
+    setBusy(true); setErrorMsg(null);
+    try {
+      await fn();
+      if (typeof onAction === 'function') onAction();
+    } catch (err) {
+      setErrorMsg(String(err && err.message || err).slice(0, 240));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestAction = (actionId) => wrap(async () => {
+    const res = await fetch(TIMER_CTRL_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ action: actionId }),
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  const dispatchNow = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(TIMER_CTRL_DISPATCH_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  const approveSelf = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(APPROVE_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  // Action button selection — depends on UI state.
+  let actionBtn = null;
+  if (state === 'idle' || state === 'completed' || state === 'denied' || state === 'expired' || state === 'failed') {
+    if (offered === 'pause') {
+      actionBtn = (
+        <button className="btn sm" disabled={busy} onClick={() => requestAction('pause')} title="Request approval to stop the farmer timer (calendar). Service unaffected.">
+          {busy ? 'Submitting…' : 'Request pause'}
+        </button>
+      );
+    } else if (offered === 'resume') {
+      actionBtn = (
+        <button className="btn sm" disabled={busy} onClick={() => requestAction('resume')} title="Request approval to start the farmer timer (re-arms calendar).">
+          {busy ? 'Submitting…' : 'Request resume'}
+        </button>
+      );
+    } else {
+      actionBtn = <span className="muted xsmall">timer state unknown</span>;
+    }
+  } else if (state === 'pending_approval') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={approveSelf} title="Owner / operator approval. Server enforces role + audit.">
+        {busy ? 'Approving…' : 'Approve (owner)'}
+      </button>
+    );
+  } else if (state === 'approved') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={dispatchNow} title="Dispatch the approved request → systemctl on the timer unit.">
+        {busy ? 'Dispatching…' : 'Dispatch'}
+      </button>
+    );
+  } else if (state === 'dispatching') {
+    actionBtn = <button className="btn sm" disabled title="Applying — wait for completion.">Dispatching…</button>;
+  }
+
+  const actionLabel = approval && approval.action === 'buildwiki.pause_sync'
+    ? 'Pause sync'
+    : approval && approval.action === 'buildwiki.resume_sync'
+    ? 'Resume sync'
+    : 'Pause / Resume sync';
+
+  return (
+    <div className="vstack" style={{
+      gap: 6, padding: '10px 12px',
+      background: 'var(--bg-2)', borderRadius: 8, border: '1px solid var(--line-1)',
+    }}>
+      <div className="hstack" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <BWPill tone={timerActive ? '#3ddc84' : '#ffb547'}>
+          TIMER {timerActive ? 'ACTIVE' : 'INACTIVE'}
+        </BWPill>
+        <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{actionLabel}</span>
+        {approval ? <BWPill tone={k.tone}>{k.label}</BWPill> : null}
+        {approval ? <span className="mono xsmall muted">{approval.id}</span> : null}
+        <span className="spacer"/>
+        {actionBtn}
+      </div>
+
+      {approval ? (
+        <div className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>
+          {approval.action} · requested {approval.created_at}
+          {approval.resolved_at ? <> · {approval.approval_state} {approval.resolved_at} by {approval.resolved_by || '—'}</> : null}
+          {run && run.started_at ? <> · started {run.started_at}</> : null}
+          {run && run.finished_at ? <> · finished {run.finished_at}</> : null}
+        </div>
+      ) : (
+        <div className="muted xsmall">
+          Timer is currently <strong>{timerActive ? 'ACTIVE' : 'INACTIVE'}</strong>.
+          Request <strong>{offered === 'pause' ? 'Pause' : offered === 'resume' ? 'Resume' : 'an action'}</strong> to change it (approval required).
+          Affects <code style={{ fontSize: 11 }}>opencloud-docs-farmer.timer</code> only — the service unit and the manual Run Now path are unaffected.
+        </div>
+      )}
+
+      {errorMsg ? <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {errorMsg}</div> : null}
+    </div>
+  );
+}
+
 function BuildWikiFarmerSyncPanel() {
   const { loading, data, error, refetch } = useBuildWikiStatus();
 
@@ -816,10 +953,16 @@ function BuildWikiFarmerSyncPanel() {
           </div>
         </div>
 
-        {/* 6 — Run Now (wired, approval-driven) */}
+        {/* 6a — Run Now (wired, approval-driven) */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Run now</div>
           <BWRunNowControl runNow={data.run_now} onAction={refetch}/>
+        </div>
+
+        {/* 6b — Pause / Resume sync (wired, approval-driven) */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Pause / Resume sync</div>
+          <BWTimerControl timerControl={data.timer_control} onAction={refetch}/>
         </div>
 
         {/* 7 — File visibility (read-only) */}

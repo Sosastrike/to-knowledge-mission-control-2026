@@ -16,13 +16,21 @@ function readApiKeyFromDb() {
 }
 
 async function getJson(path) {
-  const response = await fetch(`${baseUrl}${path}`, {
-    headers: apiKey ? { 'x-api-key': apiKey } : {},
-    cache: 'no-store',
-    signal: AbortSignal.timeout(7000),
-  })
-  const body = await response.json().catch(() => ({}))
-  return { status: response.status, body }
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      headers: apiKey ? { 'x-api-key': apiKey } : {},
+      cache: 'no-store',
+      signal: AbortSignal.timeout(30000),
+    })
+    const body = await response.json().catch(() => ({}))
+    return { status: response.status, body }
+  } catch (error) {
+    return {
+      status: 0,
+      body: {},
+      error: error instanceof Error ? error.message : 'request_failed',
+    }
+  }
 }
 
 const failures = []
@@ -70,6 +78,15 @@ if (serverCounts.total !== serverListCount) {
     error: 'server_total_does_not_match_list_length',
     total: serverCounts.total,
     server_list_count: serverListCount,
+  })
+}
+
+if (serverCounts.total === 0 && process.env.ALLOW_EMPTY_MCP_SERVERS !== '1') {
+  failures.push({
+    endpoint: '/api/mcp/servers',
+    error: 'no_mcp_servers_detected',
+    note: servers.body?.note || null,
+    next_action: 'Mission Control should surface the live Claude MCP inventory. Set ALLOW_EMPTY_MCP_SERVERS=1 only for isolated test environments.',
   })
 }
 

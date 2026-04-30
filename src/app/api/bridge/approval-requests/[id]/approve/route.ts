@@ -18,6 +18,13 @@ function tableExists(db: Database.Database, name: string): boolean {
   return row?.name === name
 }
 
+function realUserIdOrNull(db: Database.Database, value: unknown): number | null {
+  const id = Number(value)
+  if (!Number.isInteger(id) || id <= 0) return null
+  const row = db.prepare('SELECT id FROM users WHERE id = ? LIMIT 1').get(id) as { id?: number } | undefined
+  return row?.id || null
+}
+
 export async function POST(request: NextRequest, { params }: { params: Params }) {
   void request
   const auth = requireRole(request, 'operator')
@@ -72,6 +79,8 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       }, { status: 409 })
     }
 
+    const actorUserId = realUserIdOrNull(db, auth.user.id)
+
     db.transaction(() => {
       db!.prepare(`
         UPDATE bridge_approval_requests
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
             resolved_by_user_id = ?,
             resolution_reason = ?
         WHERE id = ? AND approval_state = 'pending'
-      `).run(auth.user.username || auth.user.display_name || 'owner', auth.user.id, 'Approved by owner/operator in Mission Control. Execution remains separately locked.', id)
+      `).run(auth.user.username || auth.user.display_name || 'owner', actorUserId, 'Approved by owner/operator in Mission Control. Execution remains separately locked.', id)
 
       db!.prepare(`
         INSERT INTO bridge_audit_events (
@@ -94,7 +103,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         row.tenant_id,
         id,
         auth.user.username || auth.user.display_name || 'owner',
-        auth.user.id,
+        actorUserId,
         row.connector,
         row.action,
         row.target,

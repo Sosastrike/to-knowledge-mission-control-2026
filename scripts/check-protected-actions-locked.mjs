@@ -57,25 +57,34 @@ const cases = [
     acceptedStatuses: [423],
   },
   {
-    name: 'approval_request_create_without_persistence',
+    name: 'approval_request_create_locked_or_persisted',
     method: 'POST',
     path: '/api/bridge/approval-requests',
-    body: { connector: 'zapier', action: 'write', target: 'protected-action-check', risk_level: 'high' },
-    acceptedStatuses: [423],
+    body: {
+      connector: 'zapier',
+      action: 'write',
+      target: 'protected-action-check',
+      protected_category: 'external_automation',
+      risk_level: 'high',
+      reason: 'Status-only protected action check. Execution must remain locked.',
+      idempotency_key: 'protected-action-check-approval-request',
+    },
+    acceptedStatuses: [200, 201, 423],
+    allowApprovalRequestPersistence: true,
   },
   {
-    name: 'approval_request_approve_without_persistence',
+    name: 'approval_request_approve_locked_or_missing',
     method: 'POST',
     path: '/api/bridge/approval-requests/sample/approve',
     body: { reason: 'status-only protected action check' },
-    acceptedStatuses: [423],
+    acceptedStatuses: [423, 404],
   },
   {
-    name: 'approval_request_deny_without_persistence',
+    name: 'approval_request_deny_locked_or_missing',
     method: 'POST',
     path: '/api/bridge/approval-requests/sample/deny',
     body: { reason: 'status-only protected action check' },
-    acceptedStatuses: [423],
+    acceptedStatuses: [423, 404],
   },
   {
     name: 'mcp_disable_request',
@@ -137,8 +146,12 @@ for (const check of cases) {
   if (!check.acceptedStatuses.includes(response.status)) {
     failures.push({ ...result, error: `expected ${check.acceptedStatuses.join(' or ')}` })
   }
-  if (result.execution_enabled || result.writes_enabled || result.approval_request_created) {
-    failures.push({ ...result, error: 'protected action unexpectedly enabled execution, writes, or approval persistence' })
+  const approvalPersistenceAllowed = check.allowApprovalRequestPersistence === true &&
+    result.approval_request_created &&
+    !result.execution_enabled &&
+    !result.writes_enabled
+  if (result.execution_enabled || result.writes_enabled || (result.approval_request_created && !approvalPersistenceAllowed)) {
+    failures.push({ ...result, error: 'protected action unexpectedly enabled execution, writes, or unapproved approval persistence' })
   }
 }
 
@@ -151,6 +164,6 @@ console.log(JSON.stringify({
   ok: true,
   base_url: baseUrl,
   checked: results.length,
-  expectation: 'All protected action probes remain locked; no execution, writes, or approval request persistence.',
+  expectation: 'All protected action probes remain locked; execution and writes stay disabled. Approval request creation may persist only through the owner-approved approval queue path.',
   results,
 }, null, 2))

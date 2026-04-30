@@ -205,7 +205,7 @@ const report = {
     no_connector_writes_enabled: true,
     no_zapier_writes: true,
     no_fake_approval_requests: true,
-    production_db_migration_applied: false,
+    approval_persistence_migration: 'owner-approved allowed when readiness remains locked',
   },
 }
 

@@ -15,6 +15,7 @@ const allowedReferencePatterns = [
   /(^|\/)\.env\.production\.sample$/i,
   /^\.designer-review\//,
   /^\.designer-retirement-backups\//,
+  /^runtime\/db-backups\/mission-control-before-bridge-approval-audit-\d{8}-\d{6}\.db$/,
 ]
 
 function isAllowedReference(path) {

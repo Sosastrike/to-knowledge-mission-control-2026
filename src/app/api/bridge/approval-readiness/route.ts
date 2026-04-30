@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       proposed_sql_present: migrationReady,
       temp_db_test_script_path: 'scripts/test-bridge-approval-migration.sh',
       temp_db_test_script_present: testScriptReady,
-      production_apply_requires_owner_approval: true,
+      production_apply_requires_owner_approval: !persistenceReady,
       production_apply_command_later: 'sqlite3 /home/tony/mission-control/.data/mission-control.db < /home/tony/mission-control/docs/migrations/proposed-bridge-approval-audit-20260429.sql',
       temp_db_test_command_now: 'MISSION_CONTROL_DB_PATH=/home/tony/mission-control/.data/mission-control.db bash /home/tony/mission-control/scripts/test-bridge-approval-migration.sh',
     },
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     dependencies: {
       bridge_preflight: '/api/bridge/preflight',
       approval_contract: '/api/bridge/approval-contract',
-      approval_requests_stub: '/api/bridge/approval-requests',
+      approval_requests_queue: '/api/bridge/approval-requests',
       button_contracts: '/api/bridge/button-contracts',
     },
     next_action: persistenceReady

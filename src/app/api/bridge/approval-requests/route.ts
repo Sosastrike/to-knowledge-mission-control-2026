@@ -86,6 +86,13 @@ function tableExists(db: Database.Database, name: string): boolean {
   return row?.name === name
 }
 
+function realUserIdOrNull(db: Database.Database, value: unknown): number | null {
+  const id = Number(value)
+  if (!Number.isInteger(id) || id <= 0) return null
+  const row = db.prepare('SELECT id FROM users WHERE id = ? LIMIT 1').get(id) as { id?: number } | undefined
+  return row?.id || null
+}
+
 function readApprovalQueue() {
   let db: Database.Database | null = null
   try {
@@ -216,6 +223,7 @@ export async function POST(request: NextRequest) {
     const scopeHash = hashScope({ workspaceId, tenantId, connector, action, targetKey, approvalScopeJson })
     const idempotencyKey = cleanText(body.idempotency_key || '', '') || null
     const requester = auth.user.username || auth.user.display_name || 'mission-control'
+    const requesterUserId = realUserIdOrNull(db, auth.user.id)
     const reason = cleanText(body.reason || body.owner_goal || body.summary || 'Protected action requires owner approval.', 'Protected action requires owner approval.')
 
     const created = db.transaction(() => {
@@ -247,7 +255,7 @@ export async function POST(request: NextRequest) {
         target || null,
         targetKey,
         requester,
-        auth.user.id,
+        requesterUserId,
         riskLevel,
         protectedCategory,
         approvalScopeJson,
@@ -271,7 +279,7 @@ export async function POST(request: NextRequest) {
         tenantId,
         id,
         requester,
-        auth.user.id,
+        requesterUserId,
         connector,
         action,
         target || null,

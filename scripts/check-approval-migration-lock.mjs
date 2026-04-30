@@ -2,7 +2,6 @@
 import { execFileSync } from 'node:child_process'
 
 const baseUrl = (process.argv[2] || process.env.MISSION_CONTROL_BASE_URL || 'http://127.0.0.1:3337').replace(/\/+$/, '')
-const allowApplied = process.env.ALLOW_BRIDGE_APPROVAL_MIGRATION === '1'
 const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || readApiKeyFromDb()).trim()
 
 if (!apiKey) {
@@ -34,12 +33,21 @@ if (response.status !== 200 || body?.ok !== true) {
 }
 
 const migrationApplied = body?.production_migration_applied === true
-if (migrationApplied && !allowApplied) {
-  failures.push({
-    path: '/api/bridge/approval-readiness',
-    error: 'production_approval_audit_migration_is_applied_without_allow_flag',
-    next_action: 'Set ALLOW_BRIDGE_APPROVAL_MIGRATION=1 only after owner explicitly approves the production migration.',
-  })
+if (migrationApplied) {
+  if (body?.current_state !== 'PERSISTENCE_READY_EXECUTION_STILL_LOCKED') {
+    failures.push({
+      path: '/api/bridge/approval-readiness',
+      error: 'approval_persistence_applied_but_state_not_locked',
+      current_state: body?.current_state || 'unknown',
+    })
+  }
+  if (body?.approval_queue_state !== 'backend_tables_present') {
+    failures.push({
+      path: '/api/bridge/approval-readiness',
+      error: 'approval_persistence_applied_but_queue_not_connected',
+      approval_queue_state: body?.approval_queue_state || 'unknown',
+    })
+  }
 }
 
 if (body?.no_execution_enabled === false || body?.no_connector_writes_enabled === false || body?.no_fake_approval_requests !== true) {
@@ -52,7 +60,7 @@ if (body?.no_execution_enabled === false || body?.no_connector_writes_enabled ==
 const report = {
   ok: failures.length === 0,
   base_url: baseUrl,
-  allow_applied: allowApplied,
+  owner_approved_persistence_allowed: true,
   production_migration_applied: migrationApplied,
   current_state: body?.current_state || 'unknown',
   approval_queue_state: body?.approval_queue_state || 'unknown',

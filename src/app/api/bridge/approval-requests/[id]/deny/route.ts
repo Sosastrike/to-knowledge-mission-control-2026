@@ -18,6 +18,13 @@ function tableExists(db: Database.Database, name: string): boolean {
   return row?.name === name
 }
 
+function realUserIdOrNull(db: Database.Database, value: unknown): number | null {
+  const id = Number(value)
+  if (!Number.isInteger(id) || id <= 0) return null
+  const row = db.prepare('SELECT id FROM users WHERE id = ? LIMIT 1').get(id) as { id?: number } | undefined
+  return row?.id || null
+}
+
 export async function POST(request: NextRequest, { params }: { params: Params }) {
   const auth = requireRole(request, 'operator')
   if ('error' in auth) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
@@ -72,6 +79,8 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       }, { status: 409 })
     }
 
+    const actorUserId = realUserIdOrNull(db, auth.user.id)
+
     const reason = String(body.reason || 'Denied by owner/operator in Mission Control.').trim().slice(0, 500)
     db.transaction(() => {
       db!.prepare(`
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
             resolved_by_user_id = ?,
             resolution_reason = ?
         WHERE id = ? AND approval_state = 'pending'
-      `).run(auth.user.username || auth.user.display_name || 'owner', auth.user.id, reason, id)
+      `).run(auth.user.username || auth.user.display_name || 'owner', actorUserId, reason, id)
 
       db!.prepare(`
         INSERT INTO bridge_audit_events (
@@ -95,7 +104,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         row.tenant_id,
         id,
         auth.user.username || auth.user.display_name || 'owner',
-        auth.user.id,
+        actorUserId,
         row.connector,
         row.action,
         row.target,

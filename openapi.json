@@ -13879,6 +13879,15 @@
         "operationId": "getBridgeExecutionCycle",
         "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
       }
+    },
+    "/api/bridge/brain-sync/build-wiki/status": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/brain-sync/build-wiki/status",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeBrainSyncBuildWikiStatus",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
     }
   },
   "components": {

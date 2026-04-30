@@ -464,8 +464,13 @@ function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
       </div>
       <p className={styles.providerNotes}>Models: {joinPreview(agent.available_models)}</p>
       <p className={styles.providerNotes}>Tools: {joinPreview(agent.available_tools)}</p>
+      <p className={styles.providerNotes}>Skills: {joinPreview(agent.available_skills)}</p>
       <p className={styles.providerNotes}>Integrations: {joinPreview(agent.available_integrations)}</p>
       <p className={styles.providerNotes}>MCPs: {joinPreview(agent.available_mcps)}</p>
+      <p className={styles.providerNotes}>Routes: {joinPreview(agent.provider_routes)}</p>
+      <p className={styles.providerNotes}>Approval gates: {joinPreview(agent.approval_gates)}</p>
+      <p className={styles.providerNotes}>Restrictions: {joinPreview(agent.restrictions)}</p>
+      <p className={styles.providerNotes}>Cost/rate limits: {joinPreview(agent.cost_rate_limits)}</p>
       <p className={styles.providerNotes}>Brain Sync: {agent.memory_brain_sync_status || 'read-only status only'}</p>
       <p className={styles.providerNotes}>Harness: {agent.harness_event_routing_status || 'read-only status only'}</p>
       {agent.blockers && agent.blockers.length > 0 && (

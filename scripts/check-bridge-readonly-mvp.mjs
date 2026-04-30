@@ -112,6 +112,10 @@ if (failures.length === 0) {
     'OWNER_APPROVAL_REQUIRED',
     'CREDENTIAL_REQUIRED',
     'ALLOWED_READ_ONLY',
+    'ui_visibility',
+    'latestPreflightResult',
+    'Latest Bridge Mode Preflight',
+    'Read-only process-local visibility only',
   ]) {
     if (!preflight.includes(needle)) failures.push(`preflight missing ${needle}`)
   }
@@ -198,6 +202,7 @@ console.log(JSON.stringify({
     'Connector readiness keeps execution and writes disabled',
     'Connector readiness exposes canonical paths, UI state contracts, approval blockers, and verification commands',
     'Preflight route is read-only and creates no approval requests',
+    'Preflight route exposes latest result visibility without persistence or execution',
     'Approval readiness only inspects schema state',
     'Approval contract keeps protected writes at HTTP 423',
     'Approval request POST is blocked with HTTP 423 until persistence exists',

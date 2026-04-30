@@ -334,6 +334,13 @@ interface BuildWikiRunNowPayload {
   approval_id?: string
   approval_state?: string
   telegram_message_id?: number | null
+  linked_task?: {
+    id?: string
+    current_status?: string
+    approval_state?: string
+    execution_state?: string
+    last_checkpoint?: string | null
+  } | null
   approval_channel?: string
   target_service?: string
   execution_enabled?: boolean
@@ -1012,6 +1019,12 @@ function BuildWikiRunNowCard({
       {result?.approval_id && (
         <p className={styles.providerNotes}>
           Request: {result.approval_id} · state: {result.approval_state || 'pending'} · Telegram message: {result.telegram_message_id || 'pending'}
+        </p>
+      )}
+      {result?.linked_task?.id && (
+        <p className={styles.providerNotes}>
+          Linked task: {result.linked_task.id} · {result.linked_task.current_status || 'pending'} · {result.linked_task.execution_state || 'waiting'}
+          {result.linked_task.last_checkpoint ? ` · ${result.linked_task.last_checkpoint}` : ''}
         </p>
       )}
       {result?.next_action && <p className={styles.providerAction}>{result.next_action}</p>}

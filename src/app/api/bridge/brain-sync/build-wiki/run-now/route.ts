@@ -51,6 +51,17 @@ type TelegramApprovalQueuePayload = {
     run_status: string | null
     run_exit_code: number | null
     run_summary: string | null
+    linked_tasks?: Array<{
+      id: string
+      current_status: string
+      assigned_agent: string
+      approval_state: string
+      execution_state: string
+      last_checkpoint: string | null
+      final_result: string | null
+      updated_at: number
+      completed_at: number | null
+    }>
   }>
 }
 
@@ -67,6 +78,13 @@ type TelegramApprovalCreatePayload = {
     status: string
     expires_at: number
     telegram_message_id: number | null
+  }
+  linked_task?: {
+    id: string
+    current_status: string
+    approval_state: string
+    execution_state: string
+    last_checkpoint: string | null
   }
   error?: string
   detail?: string
@@ -130,6 +148,17 @@ async function readLatestTelegramBuildWikiApproval() {
         run_exit_code: approval.run_exit_code,
         run_summary: approval.run_summary,
       } : null,
+      linked_task: approval.linked_tasks?.[0] ? {
+        id: approval.linked_tasks[0].id,
+        current_status: approval.linked_tasks[0].current_status,
+        assigned_agent: approval.linked_tasks[0].assigned_agent,
+        approval_state: approval.linked_tasks[0].approval_state,
+        execution_state: approval.linked_tasks[0].execution_state,
+        last_checkpoint: approval.linked_tasks[0].last_checkpoint,
+        final_result: approval.linked_tasks[0].final_result,
+        updated_at: new Date(approval.linked_tasks[0].updated_at * 1000).toISOString(),
+        completed_at: approval.linked_tasks[0].completed_at ? new Date(approval.linked_tasks[0].completed_at * 1000).toISOString() : null,
+      } : null,
       ui_state: uiState,
       is_terminal: terminal,
     }
@@ -158,6 +187,7 @@ export async function GET(request: NextRequest) {
         is_terminal: telegramLatest.is_terminal,
         approval: telegramLatest.approval,
         run: telegramLatest.run,
+        linked_task: telegramLatest.linked_task,
         execution_enabled: false,
         next_action: 'Use the Run now button to send a Telegram approval request; owner approves in Telegram.',
       },
@@ -214,6 +244,7 @@ export async function POST(request: NextRequest) {
           approval_id: payload.approval.id,
           approval_state: payload.approval.status,
           telegram_message_id: payload.approval.telegram_message_id,
+          linked_task: payload.linked_task || null,
           approval_channel: 'Tony -> Telegram',
           target_service: BUILDWIKI_TARGET_SERVICE,
           execution_enabled: false,

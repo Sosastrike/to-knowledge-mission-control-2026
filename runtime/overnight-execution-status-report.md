@@ -1,8 +1,8 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T00:03:48-04:00
+Generated: 2026-04-30T00:17:14-04:00
 Branch: to-knowledge-mc
-HEAD: 4e87ec8
+HEAD: bf925a3
 
 ## Current Production Health
 - mission-control.service: active
@@ -18,6 +18,10 @@ HEAD: 4e87ec8
 
 ## Commits Pushed In This Block
 ```text
+bf925a3 test(bridge): verify protected actions remain locked
+8ce9963 fix(skills): clarify read-only search state
+7ccf383 fix(connectors): avoid fake approval queue copy
+f0b2f1b docs(runtime): refresh overnight execution status
 4e87ec8 fix(skills): avoid fake approval request copy
 f773296 fix(skills): show approval-required write errors
 3480bbf feat(bridge): surface skill inventory in capability matrix
@@ -53,6 +57,9 @@ c779648 chore(config): document azure auth and sync lockfile
 - Made skill security check read-only instead of writing `security_status` as a side effect.
 - Updated skills UI error handling so protected writes show owner-approval/backend-required messages instead of generic failures.
 - Corrected static designer Skills page copy so it no longer claims approval requests were logged/submitted when the queue is not connected.
+- Corrected static MCP and n8n pages so they no longer say approval requests were queued unless the backend reports `approval_request_created: true`.
+- Clarified static Skills page read-only search state so it says the search/index path is live while install/enable actions remain locked.
+- Added `scripts/check-protected-actions-locked.mjs` to prove protected write probes remain HTTP 423 with no execution, writes, or fake approval persistence.
 
 ## Checks Run
 - `pnpm run typecheck` after code groups.
@@ -60,6 +67,7 @@ c779648 chore(config): document azure auth and sync lockfile
 - `node scripts/check-button-contract-routes.mjs`.
 - `node scripts/check-bridge-readonly-mvp.mjs`.
 - `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337`.
+- `node scripts/check-protected-actions-locked.mjs http://127.0.0.1:3337`.
 - `bash scripts/test-bridge-approval-migration.sh` against copied DB only.
 - Public smoke checks for `https://tkmc.knowledge-vs-ai.com/login`.
 - Authenticated local smoke checks for `GET /api/skills/tool-skills`, `POST /api/skills` returning 423, and Bridge Mode capability matrix skill inventory path.

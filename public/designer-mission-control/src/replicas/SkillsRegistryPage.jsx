@@ -157,7 +157,7 @@ function SkillsRegistryPage() {
       <div className="ns-card">
         <div className="ns-card-h">
           <h2>Find a missing skill</h2>
-          <span className="ns-card-sub">Search index not built yet (backend_required)</span>
+          <span className="ns-card-sub">Read-only search is live. Install and enable actions stay owner-approval locked.</span>
         </div>
         <div style={{display: 'flex', gap: 8}}>
           <input

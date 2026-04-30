@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
   try {
     const response = await fetch(upstream, {
       cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(12000),
     })
     const text = await response.text()
     const contentType = response.headers.get('content-type') || ''

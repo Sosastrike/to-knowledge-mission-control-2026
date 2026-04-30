@@ -76,6 +76,17 @@ type TelegramApprovalQueuePayload = {
       event: string
       detail: string | null
     }>
+    linked_tasks?: Array<{
+      id: string
+      current_status: string
+      assigned_agent: string
+      approval_state: string
+      execution_state: string
+      last_checkpoint: string | null
+      final_result: string | null
+      updated_at: number
+      completed_at: number | null
+    }>
   }>
   summary?: Record<string, number>
   error?: string
@@ -260,6 +271,17 @@ async function readTelegramApprovalQueue() {
         run_summary: row.run_summary,
         error: row.error,
         audit_events: row.audit_events || [],
+        linked_tasks: (row.linked_tasks || []).map((task) => ({
+          id: task.id,
+          current_status: task.current_status,
+          assigned_agent: task.assigned_agent,
+          approval_state: task.approval_state,
+          execution_state: task.execution_state,
+          last_checkpoint: task.last_checkpoint,
+          final_result: task.final_result,
+          updated_at: new Date(task.updated_at * 1000).toISOString(),
+          completed_at: task.completed_at ? new Date(task.completed_at * 1000).toISOString() : null,
+        })),
       })),
       summary,
       ui_placeholder: {

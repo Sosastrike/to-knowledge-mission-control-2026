@@ -287,6 +287,17 @@ interface ApprovalQueuePayload {
       event?: string
       ts?: number
     }>
+    linked_tasks?: Array<{
+      id?: string
+      current_status?: string
+      assigned_agent?: string
+      approval_state?: string
+      execution_state?: string
+      last_checkpoint?: string | null
+      final_result?: string | null
+      updated_at?: string
+      completed_at?: string | null
+    }>
   }>
   summary?: {
     total?: number
@@ -868,6 +879,14 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
                   Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'}
                   {approval.run_exit_code != null ? ` (${approval.run_exit_code})` : ''}
                 </small>
+                {approval.linked_tasks && approval.linked_tasks.length > 0 && (
+                  <>
+                    <br />
+                    <small>
+                      Task: {approval.linked_tasks[0].id || 'unknown'} · {approval.linked_tasks[0].current_status || 'unknown'} · {approval.linked_tasks[0].execution_state || 'unknown'}
+                    </small>
+                  </>
+                )}
               </span>
               <strong>{approval.status || approval.approval_state || 'unknown'}</strong>
             </li>

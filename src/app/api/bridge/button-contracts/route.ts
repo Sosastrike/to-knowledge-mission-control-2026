@@ -25,6 +25,42 @@ type ButtonContract = {
   note: string
 }
 
+function blockedHttpStatus(state: ButtonState): number | null {
+  if (state === 'OWNER_APPROVAL_REQUIRED') return 423
+  if (state === 'CREDENTIAL_REQUIRED' || state === 'BACKEND_REQUIRED') return 503
+  if (state === 'DISABLED') return 410
+  return null
+}
+
+function canExecuteNow(button: ButtonContract): boolean {
+  if (button.method === 'GET' && button.state === 'READ_ONLY') return true
+  if ((button.method === 'LOCAL' || button.method === 'EXTERNAL') && button.state === 'LIVE') return true
+  return false
+}
+
+function buttonWithRuntimeContract(button: ButtonContract) {
+  const blocked_status = blockedHttpStatus(button.state)
+  const execution_enabled = canExecuteNow(button)
+  return {
+    ...button,
+    current_backend_state: button.state,
+    blocked_http_status: blocked_status,
+    execution_enabled,
+    protected_execution_enabled: false,
+    fake_success_allowed: false,
+    should_render_as_disabled:
+      button.state === 'BACKEND_REQUIRED' ||
+      button.state === 'CREDENTIAL_REQUIRED' ||
+      button.state === 'OWNER_APPROVAL_REQUIRED' ||
+      button.state === 'DISABLED',
+    safe_ui_behavior: blocked_status
+      ? `Show ${button.state}; do not fake success. If submitted, backend should return HTTP ${blocked_status}.`
+      : execution_enabled
+        ? 'Allowed within current state.'
+        : 'Render as informational/read-only until a concrete backend state exists.',
+  }
+}
+
 const BUTTONS: ButtonContract[] = [
   { route: 'left-rail', label: 'Mission Control', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
   { route: 'left-rail', label: 'Brain Sync', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
@@ -92,12 +128,16 @@ export async function GET(request: NextRequest) {
     ok: true,
     generated_at: new Date().toISOString(),
     allowed_states: ['LIVE', 'READ_ONLY', 'BACKEND_REQUIRED', 'CREDENTIAL_REQUIRED', 'OWNER_APPROVAL_REQUIRED', 'DISABLED'],
-    buttons: BUTTONS,
+    no_fake_success: true,
+    protected_execution_enabled: false,
+    buttons: BUTTONS.map(buttonWithRuntimeContract),
     summary: {
       total: BUTTONS.length,
       by_state: byState,
       protected_actions: BUTTONS.filter((button) => button.approval_required).length,
       audit_required: BUTTONS.filter((button) => button.audit_required).length,
+      blocked_buttons: BUTTONS.filter((button) => blockedHttpStatus(button.state)).length,
+      executable_now: BUTTONS.filter(canExecuteNow).length,
     },
   })
 }

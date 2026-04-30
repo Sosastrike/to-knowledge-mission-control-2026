@@ -57,6 +57,17 @@ for (const endpoint of [...new Set(endpoints)]) {
 
 if (missing.length) failures.push(`missing route files: ${missing.join(', ')}`)
 
+for (const needle of [
+  'blocked_http_status',
+  'execution_enabled',
+  'protected_execution_enabled: false',
+  'fake_success_allowed: false',
+  'should_render_as_disabled',
+  'no_fake_success: true',
+]) {
+  if (!source.includes(needle)) failures.push(`button runtime contract missing ${needle}`)
+}
+
 const result = {
   ok: failures.length === 0,
   allowed_states: [...allowedStates],

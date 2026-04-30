@@ -1,7 +1,19 @@
 #!/usr/bin/env node
+import { execFileSync } from 'node:child_process'
 
 const baseUrl = (process.argv[2] || process.env.MISSION_CONTROL_BASE_URL || 'http://127.0.0.1:3337').replace(/\/+$/, '')
-const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || '').trim()
+const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || readApiKeyFromDb()).trim()
+
+function readApiKeyFromDb() {
+  try {
+    return execFileSync('sqlite3', [
+      '.data/mission-control.db',
+      "SELECT value FROM settings WHERE key='security.api_key' LIMIT 1;",
+    ], { encoding: 'utf8' }).trim()
+  } catch {
+    return ''
+  }
+}
 
 const designerPages = [
   { id: 'mission', label: 'Mission', required: ['Mission Control.html', 'src/app.jsx'] },

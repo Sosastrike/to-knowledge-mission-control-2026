@@ -16,7 +16,7 @@ type ButtonContract = {
   route: string
   label: string
   endpoint: string | null
-  method: 'GET' | 'POST' | 'LOCAL' | 'EXTERNAL'
+  method: 'GET' | 'POST' | 'PUT' | 'LOCAL' | 'EXTERNAL'
   state: ButtonState
   credential_names: string[]
   approval_required: boolean
@@ -116,6 +116,14 @@ const BUTTONS: ButtonContract[] = [
   { route: 'skills', label: 'Search', endpoint: '/api/skills/finder/search', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only search index.' },
   { route: 'skills', label: 'Test', endpoint: '/api/skills/:id/test', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Probe runner missing.' },
   { route: 'skills', label: 'Request install / Enable / Disable', endpoint: '/api/skills/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Skill mutations locked.' },
+
+  { route: 'schedule', label: 'Refresh schedule', endpoint: '/api/tasks', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Reads task flow only.' },
+  { route: 'schedule', label: 'Assign task to agent', endpoint: '/api/tasks/:id', method: 'PUT', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Task assignment writes are hidden/disabled until approval persistence and audit trail are live.' },
+  { route: 'schedule', label: 'Open full task', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Local navigation into the existing task panel route.' },
+
+  { route: 'live-meeting', label: 'Load active meetings', endpoint: '/api/sessions', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Reads active sessions only.' },
+  { route: 'live-meeting', label: 'Start new meeting', endpoint: '/api/sessions', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Meeting creation backend is not connected from this route yet.' },
+  { route: 'live-meeting', label: 'Join meeting', endpoint: '/api/sessions/:id/control', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Live meeting join/control remains locked until the meeting backend is connected.' },
 ]
 
 export async function GET(request: NextRequest) {

@@ -17,6 +17,7 @@ const checks = [
   ['viral_firecrawl_readiness', ['node', ['scripts/check-viral-firecrawl-readiness.mjs', baseUrl]]],
   ['official_url_policy', ['node', ['scripts/check-official-url-policy.mjs']]],
   ['official_public_urls', ['node', ['scripts/check-official-public-urls.mjs']]],
+  ['approval_migration_lock', ['node', ['scripts/check-approval-migration-lock.mjs', baseUrl]]],
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
@@ -88,6 +89,13 @@ function summarize(name, parsed) {
   }
   if (name === 'official_public_urls') {
     return { results: parsed.results?.map((result) => ({ id: result.id, status: result.status })) }
+  }
+  if (name === 'approval_migration_lock') {
+    return {
+      production_migration_applied: parsed.production_migration_applied,
+      allow_applied: parsed.allow_applied,
+      current_state: parsed.current_state,
+    }
   }
   if (name === 'approval_readiness_live') {
     return {

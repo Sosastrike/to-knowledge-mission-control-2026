@@ -9,18 +9,20 @@
 //    A. Web / Browser Crawl   — FireCrawl backend
 //    B. Video Intelligence    — claude-video /watch backend
 //
-//  Server Component. Reads:
-//    - FireCrawl: process.env.FIRECRAWL_API_KEY + SDK install probe
-//    - Video Intelligence: filesystem probes for the install paths
+//  Server Component. Reads the SAME data the new
+//  /api/viral-crawl/video/status endpoint reads (filesystem + claudeclaw
+//  agent_skills DB), but inline so we don't depend on auth-cookie
+//  passthrough.
 //
 //  Sacred invariants:
-//    - NO execution (no jobs, no API calls beyond local FS / env probes)
+//    - NO execution (no jobs, no downloads, no API write side-effects)
 //    - NO secret values rendered (only credential-name + present:bool)
 //    - NO .env edits
 //    - NO Tony / voice / routing / Zapier writes
 // ─────────────────────────────────────────────────────────────────────
-import { existsSync, statSync } from 'node:fs'
+import { existsSync, statSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import Database from 'better-sqlite3'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -52,57 +54,108 @@ function firecrawlStatus() {
   }
 }
 
-// ── Pillar B — Video Intelligence status (filesystem probes) ────────
+// ── Pillar B — Video Intelligence status (matches /api/viral-crawl/video/status) ────
+const SKILL_NAME = 'watch_video'
+const WRAPPER_PATH = '/home/tony/claudeclaw/scripts/claude-video-to-brain.mjs'
+const VENDOR_SKILL_PATH = '/home/tony/claudeclaw/vendor/skills/claude-video'
+const VENDOR_SKILL_README = join(VENDOR_SKILL_PATH, 'SKILL.md')
+const DB_INSTALLER_PATH = '/home/tony/claudeclaw/scripts/install-viral-crawl-tables.mjs'
+const WATCH_ENV_PATH = '/home/tony/.config/watch/.env'
+const OBSIDIAN_DESTINATION_PATH = '/home/tony/obsidian-vault/07-Knowledge/Viral Crawl/Video Intelligence'
+const CLAUDECLAW_DB_PATH = '/home/tony/claudeclaw/store/claudeclaw.db'
+
+function countMarkdownNotes(root: string): number {
+  if (!existsSync(root)) return 0
+  let count = 0
+  const stack = [root]
+  while (stack.length) {
+    const current = stack.pop()
+    if (!current) continue
+    try {
+      for (const entry of readdirSync(current, { withFileTypes: true })) {
+        const fullPath = join(current, entry.name)
+        if (entry.isDirectory()) stack.push(fullPath)
+        else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) count += 1
+      }
+    } catch {
+      /* skip unreadable */
+    }
+  }
+  return count
+}
+
+type SkillRow = { name?: string; enabled?: number; health?: string; command_or_api?: string }
+
+function readWatchSkillRow(): { present: boolean; row: SkillRow | null } {
+  if (!existsSync(CLAUDECLAW_DB_PATH)) return { present: false, row: null }
+  try {
+    const db = new Database(CLAUDECLAW_DB_PATH, { readonly: true, fileMustExist: true })
+    try {
+      const row = db
+        .prepare('SELECT name, enabled, health, command_or_api FROM agent_skills WHERE name = ? LIMIT 1')
+        .get(SKILL_NAME) as SkillRow | undefined
+      return { present: Boolean(row), row: row || null }
+    } finally {
+      db.close()
+    }
+  } catch {
+    return { present: false, row: null }
+  }
+}
+
 function videoIntelligenceStatus() {
-  const skillRoot = '/home/tony/claudeclaw/vendor/skills/claude-video'
-  const skillReadme = join(skillRoot, 'SKILL.md')
-  const wrapperPath = '/home/tony/claudeclaw/scripts/claude-video-to-brain.mjs'
-  const dbInstaller = '/home/tony/claudeclaw/scripts/install-viral-crawl-tables.mjs'
-  const watchEnv = '/home/tony/.config/watch/.env'
-  const vaultPath = '/home/tony/obsidian-vault/07-Knowledge/Viral Crawl/Video Intelligence'
+  const wrapperPresent = existsSync(WRAPPER_PATH)
+  const vendorSkillPresent = existsSync(VENDOR_SKILL_README)
+  const obsidianDestinationPresent = existsSync(OBSIDIAN_DESTINATION_PATH)
+  const watchEnvPresent = existsSync(WATCH_ENV_PATH)
+  const dbInstallerPresent = existsSync(DB_INSTALLER_PATH)
 
-  const skillInstalled = existsSync(skillReadme)
-  const wrapperInstalled = existsSync(wrapperPath)
-  const dbInstallerPresent = existsSync(dbInstaller)
-  const watchEnvPresent = existsSync(watchEnv)
-
-  // Mode bits: only `0600` is acceptable for the watch env
   let watchEnvMode: string | null = null
   if (watchEnvPresent) {
     try {
-      const m = statSync(watchEnv).mode & 0o777
+      const m = statSync(WATCH_ENV_PATH).mode & 0o777
       watchEnvMode = '0' + m.toString(8)
     } catch {
       /* ignore */
     }
   }
 
-  const vaultFolderExists = existsSync(vaultPath)
+  const registry = readWatchSkillRow()
+  const skillEnabled = registry.row?.enabled === 1
+  const commandTemplate =
+    registry.row?.command_or_api ||
+    'node /home/tony/claudeclaw/scripts/claude-video-to-brain.mjs <URL> <agent> <purpose>'
+  const notesCount = countMarkdownNotes(OBSIDIAN_DESTINATION_PATH)
 
-  // State machine:
-  //   skill missing                      -> BACKEND_REQUIRED
-  //   skill present, wrapper missing     -> BACKEND_REQUIRED
-  //   skill+wrapper present, env missing -> BACKEND_READY_CLI (but Whisper disabled)
-  //   skill+wrapper+env present          -> BACKEND_READY_CLI (full)
+  // BACKEND_READY_CLI requires: wrapper + skill + obsidian dest + registered + enabled
   const state: 'BACKEND_REQUIRED' | 'BACKEND_READY_CLI' =
-    skillInstalled && wrapperInstalled ? 'BACKEND_READY_CLI' : 'BACKEND_REQUIRED'
+    wrapperPresent && vendorSkillPresent && obsidianDestinationPresent && registry.present && skillEnabled
+      ? 'BACKEND_READY_CLI'
+      : 'BACKEND_REQUIRED'
 
   return {
     state,
-    skillInstalled,
-    wrapperInstalled,
-    dbInstallerPresent,
+    execution_enabled: false,
+    skill_name: SKILL_NAME,
+    skill_present: registry.present,
+    skill_enabled: skillEnabled,
+    skill_health: registry.row?.health || 'unknown',
+    wrapper_present: wrapperPresent,
+    wrapper_path: WRAPPER_PATH,
+    vendor_skill_present: vendorSkillPresent,
+    vendor_skill_path: VENDOR_SKILL_PATH,
+    obsidian_destination_present: obsidianDestinationPresent,
+    obsidian_destination: OBSIDIAN_DESTINATION_PATH,
+    notes_count: notesCount,
+    command_template: commandTemplate,
     watchEnvPresent,
     watchEnvMode,
-    vaultFolderExists,
-    skillRoot,
-    wrapperPath,
-    vaultPath,
+    dbInstallerPresent,
     nextAction:
       state === 'BACKEND_REQUIRED'
-        ? 'Run the install script: clone vendor/skills/claude-video and create the wrapper.'
+        ? 'Run scripts/install-viral-crawl-tables.mjs to register watch_video in agent_skills.'
         : !watchEnvPresent
-        ? 'Bridge GROQ_API_KEY/OPENAI_API_KEY into ~/.config/watch/.env (mode 0600).'
+        ? 'Bridge GROQ_API_KEY/OPENAI_API_KEY into ~/.config/watch/.env (mode 0600). Optional — falls back to --no-whisper.'
         : 'Ready. Use the wrapper to analyze a public URL or local file.',
   }
 }
@@ -178,9 +231,15 @@ export default function ViralCrawlPage() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Next action</div>
-          <p className="mt-1 text-sm text-zinc-300">{fc.nextAction}</p>
+        <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+          <div className="text-xs uppercase tracking-wider text-amber-300">FireCrawl-specific blocker</div>
+          <p className="mt-1 text-sm text-zinc-300">
+            Mission Control is missing <code className="font-mono text-amber-300">FIRECRAWL_API_KEY</code> and the{' '}
+            <code className="font-mono text-amber-300">@mendable/firecrawl-js</code> SDK. {fc.nextAction}
+          </p>
+          <p className="mt-2 text-2xs text-zinc-500">
+            This is a FireCrawl-only blocker. The Brain / Obsidian vault is live and unrelated.
+          </p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
@@ -219,15 +278,15 @@ export default function ViralCrawlPage() {
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
             <div className="text-xs uppercase tracking-wider text-zinc-500">Skill installed</div>
             <div className="mt-1 flex items-center justify-between">
-              <span className="truncate font-mono text-xs text-zinc-300">{vi.skillRoot}</span>
-              <YesNo ok={vi.skillInstalled} />
+              <span className="truncate font-mono text-xs text-zinc-300">{vi.vendor_skill_path}</span>
+              <YesNo ok={vi.vendor_skill_present} />
             </div>
           </div>
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
             <div className="text-xs uppercase tracking-wider text-zinc-500">Brain wrapper</div>
             <div className="mt-1 flex items-center justify-between">
               <span className="truncate font-mono text-xs text-zinc-300">scripts/claude-video-to-brain.mjs</span>
-              <YesNo ok={vi.wrapperInstalled} />
+              <YesNo ok={vi.wrapper_present} />
             </div>
           </div>
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
@@ -243,20 +302,42 @@ export default function ViralCrawlPage() {
             <div className="text-xs uppercase tracking-wider text-zinc-500">Brain destination</div>
             <div className="mt-1 flex items-center justify-between">
               <span className="truncate font-mono text-xs text-zinc-300">07-Knowledge/Viral Crawl/Video Intelligence/</span>
-              <YesNo ok={vi.vaultFolderExists} yes="folder ready" no="empty (created on first run)" />
+              <YesNo ok={vi.obsidian_destination_present} yes="folder ready" no="empty (created on first run)" />
+            </div>
+          </div>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <div className="text-xs uppercase tracking-wider text-zinc-500">Skill registry</div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="font-mono text-xs text-zinc-300">{vi.skill_name}</span>
+              <span className={`text-xs ${vi.skill_present && vi.skill_enabled ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {vi.skill_present && vi.skill_enabled ? `✓ enabled · health=${vi.skill_health}` : '✗ not registered'}
+              </span>
+            </div>
+          </div>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <div className="text-xs uppercase tracking-wider text-zinc-500">Brain notes</div>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="font-mono text-xs text-zinc-300">{vi.notes_count} markdown note{vi.notes_count === 1 ? '' : 's'}</span>
+              <span className="text-xs text-zinc-500">live count from vault</span>
             </div>
           </div>
         </div>
 
         <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">How to use (CLI today)</div>
-          <pre className="mt-2 overflow-x-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">
-{`node /home/tony/claudeclaw/scripts/claude-video-to-brain.mjs \\
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs uppercase tracking-wider text-zinc-500">Command template (CLI today)</div>
+            <span className="text-2xs text-zinc-500">
+              execution_enabled: <span className="text-rose-300">false</span> · UI runner deferred (Phase F)
+            </span>
+          </div>
+          <pre className="mt-2 overflow-x-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">{vi.command_template}</pre>
+          <pre className="mt-2 overflow-x-auto rounded bg-zinc-950 p-3 text-xs text-zinc-400">
+{`# Full form
+node /home/tony/claudeclaw/scripts/claude-video-to-brain.mjs \\
      "<URL or local path>" \\
      <agent: tony|researcher|pacman|loom|growth|builder|forge> \\
      <purpose: summarize|learn_skill|competitor_research|...> \\
-     [--start MM:SS] [--end MM:SS] [--no-whisper]`}
-          </pre>
+     [--start MM:SS] [--end MM:SS] [--no-whisper]`}</pre>
           <p className="mt-2 text-xs text-zinc-500">{vi.nextAction}</p>
         </div>
 

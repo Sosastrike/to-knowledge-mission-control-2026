@@ -235,6 +235,41 @@ interface ApprovalReadinessPayload {
   error?: string
 }
 
+interface ApprovalQueuePayload {
+  ok?: boolean
+  mode?: string
+  persistence?: string
+  approval_queue_connected?: boolean
+  approvals?: Array<{
+    id?: string
+    connector?: string
+    action?: string
+    approval_state?: string
+    risk_level?: string
+    created_at?: string
+  }>
+  summary?: {
+    total?: number
+    pending?: number
+    approved?: number
+    denied?: number
+    expired?: number
+    revoked?: number
+  }
+  ui_placeholder?: {
+    title?: string
+    state?: string
+    message?: string
+    next_backend_step?: string
+    no_fake_approval_requests?: boolean
+    approval_request_created?: boolean
+    protected_actions_locked?: boolean
+    protected_action_http_status?: number
+  }
+  next_action?: string
+  error?: string
+}
+
 interface ExecutiveReportPreviewPayload {
   ok?: boolean
   mode?: string
@@ -582,6 +617,60 @@ function ApprovalReadinessCard({ payload }: { payload: ApprovalReadinessPayload 
   )
 }
 
+function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Approval Queue</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No approval queue result loaded yet.</p>
+      </div>
+    )
+  }
+
+  const placeholder = payload.ui_placeholder || {}
+  const summary = payload.summary || {}
+  const approvals = payload.approvals || []
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={payload.approval_queue_connected ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>{placeholder.title || 'Approval Queue'}</strong>
+        </div>
+        <span className={styles.providerState}>{placeholder.state || (payload.approval_queue_connected ? 'READ_ONLY' : 'BACKEND_REQUIRED')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>persistence: {payload.persistence || 'not applied'}</span>
+        <span>pending: {summary.pending ?? 0}</span>
+        <span>total: {summary.total ?? approvals.length}</span>
+        <span>HTTP blocked: {placeholder.protected_action_http_status || 423}</span>
+      </div>
+      {placeholder.message && <p className={styles.providerNotes}>{placeholder.message}</p>}
+      <p className={styles.providerNotes}>
+        Protected actions locked: {placeholder.protected_actions_locked ? 'yes' : 'unknown'} · fake approvals: {placeholder.no_fake_approval_requests ? 'blocked' : 'unknown'} · approval created: {placeholder.approval_request_created ? 'yes' : 'no'}
+      </p>
+      {approvals.length > 0 ? (
+        <ul className={styles.connectorList}>
+          {approvals.slice(0, 5).map((approval) => (
+            <li key={approval.id || `${approval.connector}-${approval.action}`}>
+              <span>{approval.connector || 'unknown'} · {approval.action || 'unknown'}</span>
+              <strong>{approval.approval_state || 'unknown'}</strong>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.providerNotes}>No persistent approvals are visible yet because the production approval/audit migration is not applied.</p>
+      )}
+      {placeholder.next_backend_step && <p className={styles.providerAction}>Next backend step: {placeholder.next_backend_step}</p>}
+      {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
 function ExecutiveReportPreviewCard({ payload }: { payload: ExecutiveReportPreviewPayload | null }) {
   if (!payload) {
     return (
@@ -864,6 +953,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [approvalReadiness, setApprovalReadiness] = useState<ApprovalReadinessPayload | null>(null)
   const [approvalReadinessState, setApprovalReadinessState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [approvalReadinessError, setApprovalReadinessError] = useState<string>('')
+  const [approvalQueue, setApprovalQueue] = useState<ApprovalQueuePayload | null>(null)
+  const [approvalQueueState, setApprovalQueueState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [approvalQueueError, setApprovalQueueError] = useState<string>('')
   const [executivePreview, setExecutivePreview] = useState<ExecutiveReportPreviewPayload | null>(null)
   const [executivePreviewState, setExecutivePreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
   const [executivePreviewError, setExecutivePreviewError] = useState<string>('')
@@ -1068,6 +1160,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setApprovalReadinessError((err as Error).message || 'fetch failed')
         setApprovalReadinessState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/approval-requests', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ApprovalQueuePayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setApprovalQueue(data)
+        setApprovalQueueState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setApprovalQueueError((err as Error).message || 'fetch failed')
+        setApprovalQueueState('error')
       })
     return () => {
       cancelled = true
@@ -1481,11 +1598,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 for every approval — Tony consolidates and represents.
               </p>
               <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                <li>Current state: <strong>BACKEND_REQUIRED</strong></li>
+                <li>Current state: <strong>{approvalReadiness?.production_migration_applied ? 'READ_ONLY' : 'BACKEND_REQUIRED'}</strong></li>
                 <li>Approval channel: <strong>Tony → Telegram</strong></li>
                 <li>Execution state: <strong>locked</strong></li>
-                <li>What is missing: approval/audit DB persistence + Telegram approval callback</li>
-                <li>Pending approvals: <strong>none yet</strong> (queue not connected)</li>
+                <li>What is missing: {approvalReadiness?.production_migration_applied ? 'Telegram approval callback + owner-approved execution runners' : 'approval/audit DB persistence + Telegram approval callback'}</li>
+                <li>Pending approvals: <strong>{approvalQueue?.summary?.pending ?? 0}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (queue not connected)'}</li>
                 <li>Next backend step: approval/audit migration + Telegram approval queue API</li>
               </ul>
               <p style={{ marginTop: 8 }}>
@@ -1495,6 +1612,25 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             </div>
             <div className={styles.providerGrid}>
               <ApprovalReadinessCard payload={approvalReadiness} />
+              {approvalQueueState === 'loading' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Approval Queue</strong>
+                    <span className={styles.providerState}>loading</span>
+                  </div>
+                  <p className={styles.providerNotes}>Loading read-only approval queue from <code>/api/bridge/approval-requests</code>…</p>
+                </div>
+              )}
+              {approvalQueueState === 'error' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Approval Queue</strong>
+                    <span className={styles.providerState}>error</span>
+                  </div>
+                  <p className={styles.providerAction}>Could not load approval queue: {approvalQueueError}</p>
+                </div>
+              )}
+              {approvalQueueState === 'ok' && <ApprovalQueueCard payload={approvalQueue} />}
             </div>
           </>
         )}

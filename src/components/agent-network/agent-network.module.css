@@ -484,6 +484,34 @@
   color: var(--auth-fg-1);
 }
 
+.connectorList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.connectorList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--auth-fg-2);
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+.connectorList strong {
+  color: var(--auth-fg-1);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .preflightRoute {
   display: flex;
   flex-direction: column;

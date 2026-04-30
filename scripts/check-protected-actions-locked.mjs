@@ -56,6 +56,48 @@ const cases = [
     body: { task: 'status-only protected action check' },
     acceptedStatuses: [423],
   },
+  {
+    name: 'approval_request_create_without_persistence',
+    method: 'POST',
+    path: '/api/bridge/approval-requests',
+    body: { connector: 'zapier', action: 'write', target: 'protected-action-check', risk_level: 'high' },
+    acceptedStatuses: [423],
+  },
+  {
+    name: 'approval_request_approve_without_persistence',
+    method: 'POST',
+    path: '/api/bridge/approval-requests/sample/approve',
+    body: { reason: 'status-only protected action check' },
+    acceptedStatuses: [423],
+  },
+  {
+    name: 'approval_request_deny_without_persistence',
+    method: 'POST',
+    path: '/api/bridge/approval-requests/sample/deny',
+    body: { reason: 'status-only protected action check' },
+    acceptedStatuses: [423],
+  },
+  {
+    name: 'mcp_disable_request',
+    method: 'POST',
+    path: '/api/mcp/servers/sample/disable',
+    body: { reason: 'status-only protected action check' },
+    acceptedStatuses: [423],
+  },
+  {
+    name: 'n8n_activate_request',
+    method: 'POST',
+    path: '/api/n8n/workflows/sample/activate',
+    body: { reason: 'status-only protected action check' },
+    acceptedStatuses: [423, 503],
+  },
+  {
+    name: 'zapier_write_approval_request',
+    method: 'POST',
+    path: '/api/zapier/request-write-approval',
+    body: { tool: 'protected-action-check', scope: 'probe' },
+    acceptedStatuses: [423],
+  },
 ]
 
 const results = []

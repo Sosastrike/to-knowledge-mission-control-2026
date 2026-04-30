@@ -1,34 +1,17 @@
 # System Cleanup Inventory Report
 
-Generated: 2026-04-30T05:28:43.043Z
+Generated: 2026-04-30T06:11:33.539Z
 Mode: inventory only. No delete. No quarantine. No protected action.
 
 ## Summary
-- Total dirty-tree candidates: 20
+- Total dirty-tree candidates: 18
 - designer_review_reference: 10
 - old_backup: 2
-- runtime_report: 1
 - untracked_artifact: 2
 - untracked_file: 2
-- untracked_helper: 3
+- untracked_helper: 2
 
 ## Current Candidates
-- runtime/system-cleanup-inventory-report.md
-  - git status: M
-  - category: runtime_report
-  - tracked: yes
-  - reference count: 2
-  - production risk: medium
-  - recommended action: quarantine_after_checks
-  - rollback: restore from runtime/archive/system-cleanup/<batch>/runtime/system-cleanup-inventory-report.md
-- scripts/write-system-cleanup-inventory.mjs
-  - git status: A
-  - category: untracked_helper
-  - tracked: yes
-  - reference count: 0
-  - production risk: low
-  - recommended action: review_before_action
-  - rollback: owner-approved rollback plan required
 - .commit-tkmc.sh
   - git status: ??
   - category: untracked_helper
@@ -175,7 +158,6 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - rollback: restore from runtime/archive/system-cleanup/<batch>/start-mc.sh.DISABLED
 
 ## Safe To Quarantine Later After Checks
-- runtime/system-cleanup-inventory-report.md
 - .commit-tkmc.sh
 - .designer-retirement-backups/
 - .tkmc-commit-msg.txt

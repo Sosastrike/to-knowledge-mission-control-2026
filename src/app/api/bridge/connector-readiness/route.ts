@@ -345,11 +345,11 @@ export async function GET(request: NextRequest) {
       role: 'skill discovery and future install flow',
       state: 'READ_ONLY',
       risk_level: 'medium',
-      read_only_endpoint: '/api/skills/finder/search',
+      read_only_endpoint: '/api/skills/tool-skills',
       execution_endpoint: '/api/skills/finder/request-install',
       canonical_paths: {
         status: '/api/skills',
-        inventory: '/api/skills/finder/search',
+        inventory: '/api/skills/tool-skills',
         execution: '/api/skills/finder/request-install',
         approval: '/api/bridge/approval-requests',
         setup: '/settings/tkmc/skills',
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
       audit_required_for_execution: true,
       writes_enabled: false,
       execution_enabled: false,
-      current_safe_actions: ['list/search only'],
+      current_safe_actions: ['list Mission Control skills', 'list ClaudeClaw agent skill inventory', 'search only'],
       blocked_actions: ['install', 'enable', 'disable', 'arbitrary test execution'],
       owner_approval_required_before: [
         'installing skills',
@@ -375,10 +375,12 @@ export async function GET(request: NextRequest) {
       ],
       deferred_or_redundant_paths: [
         'POST /api/skills/registry remains approval-required and points to canonical install request flow',
+        '/api/skills/tool-skills is the read-only ClaudeClaw agent skill inventory path',
         'canonical install path is /api/skills/finder/request-install',
       ],
       verification_commands: [
         'GET /api/skills',
+        'GET /api/skills/tool-skills',
         'POST /api/skills/finder/search',
       ],
       blocker: 'install runner and approval persistence not enabled',

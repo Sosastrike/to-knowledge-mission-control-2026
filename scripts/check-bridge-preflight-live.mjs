@@ -84,9 +84,13 @@ const zapierWrite = await requestJson('/api/bridge/preflight', {
     owner_goal: 'Probe protected Zapier write path without executing.',
   }),
 })
+const latestContract = await requestJson('/api/bridge/preflight')
 
 if (contract.status !== 200 || contract.body?.ok !== true) {
   failures.push({ path: contract.path, status: contract.status, error: 'preflight_contract_not_ok' })
+}
+if (latestContract.status !== 200 || latestContract.body?.ok !== true) {
+  failures.push({ path: latestContract.path, status: latestContract.status, error: 'preflight_latest_contract_not_ok' })
 }
 
 const statusSummary = preflightSummary(statusCheck)
@@ -106,12 +110,38 @@ for (const [label, summary] of [['status_check', statusSummary], ['zapier_write'
   }
 }
 
+const latest = latestContract.body?.ui_visibility?.latest_preflight
+if (!latest || typeof latest !== 'object') {
+  failures.push({ path: latestContract.path, error: 'latest_preflight_not_visible_after_post' })
+} else {
+  if (latest.id !== zapierWrite.body?.preflight?.id) {
+    failures.push({
+      path: latestContract.path,
+      error: 'latest_preflight_does_not_match_last_post',
+      latest_id: latest.id,
+      last_post_id: zapierWrite.body?.preflight?.id,
+    })
+  }
+  if (latest.decision !== zapierSummary.decision) {
+    failures.push({
+      path: latestContract.path,
+      error: 'latest_preflight_decision_mismatch',
+      latest_decision: latest.decision,
+      last_post_decision: zapierSummary.decision,
+    })
+  }
+  if (latest.execution_enabled === true || latest.approval_request_created === true) {
+    failures.push({ path: latestContract.path, error: 'latest_preflight_enabled_execution_or_created_approval' })
+  }
+}
+
 if (failures.length) {
   console.error(JSON.stringify({
     ok: false,
     base_url: baseUrl,
     failures,
     contract: { status: contract.status, mode: contract.body?.mode },
+    latest_contract: { status: latestContract.status, mode: latestContract.body?.mode, ui_visibility: latestContract.body?.ui_visibility },
     status_check: statusSummary,
     zapier_write: zapierSummary,
   }, null, 2))
@@ -123,6 +153,12 @@ console.log(JSON.stringify({
   base_url: baseUrl,
   expectation: 'Bridge Mode preflight selects read-only routes and blocks protected writes without execution or approval persistence.',
   contract: { status: contract.status, mode: contract.body?.mode, execution_enabled: contract.body?.execution_enabled },
+  latest_visibility: {
+    status: latestContract.status,
+    state: latestContract.body?.ui_visibility?.state,
+    latest_id: latest?.id || null,
+    latest_decision: latest?.decision || null,
+  },
   status_check: statusSummary,
   zapier_write: zapierSummary,
 }, null, 2))

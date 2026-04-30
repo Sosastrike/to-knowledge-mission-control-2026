@@ -86,6 +86,192 @@ interface BridgeProvidersPayload {
   error?: string
 }
 
+interface BridgeCapabilityAgent {
+  id: string
+  display_name: string
+  role: string
+  status: string
+  execution_permission: string
+  available_models?: string[]
+  available_tools?: string[]
+  available_skills?: string[]
+  available_integrations?: string[]
+  available_mcps?: string[]
+  provider_routes?: string[]
+  approval_gates?: string[]
+  restrictions?: string[]
+  memory_brain_sync_status?: string
+  harness_event_routing_status?: string
+  cost_rate_limits?: string[]
+  blockers?: string[]
+  next_action?: string
+  can_execute?: boolean
+}
+
+interface BridgeCapabilityPayload {
+  ok?: boolean
+  mode?: string
+  no_execution_enabled?: boolean
+  no_memory_writes_enabled?: boolean
+  no_connector_writes_enabled?: boolean
+  agents?: BridgeCapabilityAgent[]
+  summary?: {
+    agents_total?: number
+    executable_agents?: number
+    read_only_or_observe_agents?: number
+    tools_total?: number
+    connector_writes_enabled?: number
+    protected_actions_locked?: boolean
+  }
+  error?: string
+}
+
+interface ConnectorReadiness {
+  id: string
+  label: string
+  role: string
+  state: string
+  read_only_endpoint: string | null
+  execution_endpoint: string | null
+  credential_names?: string[]
+  credentials_present_by_name?: Record<string, boolean>
+  approval_required_for_execution?: boolean
+  audit_required_for_execution?: boolean
+  writes_enabled?: boolean
+  execution_enabled?: boolean
+  current_safe_actions?: string[]
+  blocked_actions?: string[]
+  blocker?: string | null
+  next_action?: string
+}
+
+interface ConnectorReadinessPayload {
+  ok?: boolean
+  mode?: string
+  no_execution_enabled?: boolean
+  no_connector_writes_enabled?: boolean
+  connectors?: ConnectorReadiness[]
+  summary?: {
+    total?: number
+    by_state?: Record<string, number>
+    execution_enabled?: number
+    writes_enabled?: number
+    owner_approval_required_for_execution?: number
+  }
+  error?: string
+}
+
+interface BridgePreflightResult {
+  id?: string
+  persistence?: string
+  execution_enabled?: boolean
+  approval_request_created?: boolean
+  approved_for_execution?: boolean
+  agent_id?: string
+  task_type?: string
+  connector?: string | null
+  decision?: string
+  reason?: string
+  http_status_if_attempted?: number
+  selected_route?: {
+    primary?: string
+    fallback?: string
+    notes?: string[]
+  }
+  selected_tools?: string[]
+  selected_models?: string[]
+  selected_skills?: string[]
+  selected_integrations?: string[]
+  selected_mcps?: string[]
+  approval_gates?: string[]
+  restrictions?: string[]
+  credential_names?: string[]
+  credentials_present_by_name?: Record<string, boolean>
+  missing_credentials?: string[]
+  fallback_routes?: string[]
+  telegram_approval_required?: boolean
+  next_action?: string
+}
+
+interface BridgePreflightPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  preflight?: BridgePreflightResult
+  error?: string
+}
+
+interface ApprovalReadinessPayload {
+  ok?: boolean
+  mode?: string
+  no_execution_enabled?: boolean
+  no_connector_writes_enabled?: boolean
+  no_fake_approval_requests?: boolean
+  production_migration_applied?: boolean
+  current_state?: string
+  approval_queue_state?: string
+  db?: {
+    db_exists?: boolean
+    db_path?: string
+    db_size_bytes?: number
+    readable?: boolean
+    tables_present?: string[]
+    tables_missing?: string[]
+    indexes_present?: string[]
+    indexes_missing?: string[]
+    error?: string | null
+  }
+  migration?: {
+    proposed_sql_path?: string
+    proposed_sql_present?: boolean
+    temp_db_test_script_path?: string
+    temp_db_test_script_present?: boolean
+    production_apply_requires_owner_approval?: boolean
+    temp_db_test_command_now?: string
+  }
+  required_tables?: string[]
+  required_indexes?: string[]
+  next_action?: string
+  error?: string
+}
+
+interface ExecutiveReportPreviewPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  no_execution_enabled?: boolean
+  no_persistence_enabled?: boolean
+  no_telegram_send_enabled?: boolean
+  no_pdf_written?: boolean
+  plain_language_summary?: string
+  detailed_report_markdown?: string
+  pdf_status?: string
+  telegram_approval_status?: string
+  next_action?: string
+  error?: string
+}
+
+interface TelegramApprovalPreviewPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  no_execution_enabled?: boolean
+  no_persistence_enabled?: boolean
+  no_telegram_send_enabled?: boolean
+  approval_request_created?: boolean
+  preview?: {
+    channel?: string
+    recipient?: string
+    send_state?: string
+    persistence_state?: string
+    callback_state?: string
+    message_preview?: string
+    buttons?: Array<{ label?: string; state?: string }>
+  }
+  next_action?: string
+  error?: string
+}
+
 interface Props {
   hermes: HermesInfo
   bridge: BridgeInfo
@@ -171,6 +357,262 @@ function ProviderCard({ provider }: { provider: BridgeProviderStatus }) {
       {detail.endpoint && <div className={styles.providerEndpoint}>{detail.endpoint}</div>}
       {detail.notes && <p className={styles.providerNotes}>{detail.notes}</p>}
       {provider.next_action && <p className={styles.providerAction}>{provider.next_action}</p>}
+    </div>
+  )
+}
+
+function joinPreview(items: string[] | undefined, empty = 'none declared') {
+  if (!items || items.length === 0) return empty
+  return items.slice(0, 3).join(' · ') + (items.length > 3 ? ` · +${items.length - 3}` : '')
+}
+
+function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={agent.status} />
+          <strong className={styles.providerName}>{agent.display_name}</strong>
+        </div>
+        <span className={styles.providerState}>{agent.can_execute ? 'execute approved' : agent.execution_permission}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>{agent.status}</span>
+        <span>{agent.role}</span>
+      </div>
+      <p className={styles.providerNotes}>Models: {joinPreview(agent.available_models)}</p>
+      <p className={styles.providerNotes}>Tools: {joinPreview(agent.available_tools)}</p>
+      <p className={styles.providerNotes}>Integrations: {joinPreview(agent.available_integrations)}</p>
+      <p className={styles.providerNotes}>MCPs: {joinPreview(agent.available_mcps)}</p>
+      <p className={styles.providerNotes}>Brain Sync: {agent.memory_brain_sync_status || 'read-only status only'}</p>
+      <p className={styles.providerNotes}>Harness: {agent.harness_event_routing_status || 'read-only status only'}</p>
+      {agent.blockers && agent.blockers.length > 0 && (
+        <p className={styles.providerAction}>Blocked: {joinPreview(agent.blockers)}</p>
+      )}
+      {agent.next_action && <p className={styles.providerAction}>{agent.next_action}</p>}
+    </div>
+  )
+}
+
+function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={connector.state === 'READ_ONLY' ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>{connector.label}</strong>
+        </div>
+        <span className={styles.providerState}>{connector.state.replace(/_/g, ' ')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>{connector.role}</span>
+        <span>writes: {connector.writes_enabled ? 'enabled' : 'locked'}</span>
+        <span>execution: {connector.execution_enabled ? 'enabled' : 'disabled'}</span>
+      </div>
+      {connector.read_only_endpoint && <div className={styles.providerEndpoint}>read: {connector.read_only_endpoint}</div>}
+      {connector.execution_endpoint && <div className={styles.providerEndpoint}>execute: {connector.execution_endpoint}</div>}
+      {connector.credential_names && connector.credential_names.length > 0 && (
+        <p className={styles.providerNotes}>Credentials: {connector.credential_names.join(' · ')}</p>
+      )}
+      {connector.blocker && <p className={styles.providerAction}>Blocked: {connector.blocker}</p>}
+      {connector.next_action && <p className={styles.providerNotes}>{connector.next_action}</p>}
+    </div>
+  )
+}
+
+function PreflightCard({
+  title,
+  payload,
+}: {
+  title: string
+  payload: BridgePreflightPayload | null
+}) {
+  const preflight = payload?.preflight
+  if (!preflight) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>{title}</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No preflight result loaded yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={preflight.decision === 'ALLOWED_READ_ONLY' ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>{title}</strong>
+        </div>
+        <span className={styles.providerState}>{(preflight.decision || 'unknown').replace(/_/g, ' ')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>agent: {preflight.agent_id || 'unknown'}</span>
+        <span>task: {preflight.task_type || 'unknown'}</span>
+        <span>execution: {preflight.execution_enabled ? 'enabled' : 'disabled'}</span>
+        <span>persistence: {preflight.persistence || 'unknown'}</span>
+        <span>approval created: {preflight.approval_request_created ? 'yes' : 'no'}</span>
+      </div>
+      {preflight.reason && <p className={styles.providerNotes}>{preflight.reason}</p>}
+      {preflight.selected_route && (
+        <div className={styles.preflightRoute}>
+          <span>Primary: {preflight.selected_route.primary || 'none'}</span>
+          <span>Fallback: {preflight.selected_route.fallback || 'none'}</span>
+        </div>
+      )}
+      <p className={styles.providerNotes}>Tools: {joinPreview(preflight.selected_tools)}</p>
+      <p className={styles.providerNotes}>Models: {joinPreview(preflight.selected_models)}</p>
+      <p className={styles.providerNotes}>Skills: {joinPreview(preflight.selected_skills)}</p>
+      <p className={styles.providerNotes}>Integrations: {joinPreview(preflight.selected_integrations)}</p>
+      <p className={styles.providerNotes}>MCPs: {joinPreview(preflight.selected_mcps)}</p>
+      {preflight.missing_credentials && preflight.missing_credentials.length > 0 && (
+        <p className={styles.providerAction}>Missing credentials: {preflight.missing_credentials.join(' · ')}</p>
+      )}
+      {preflight.approval_gates && preflight.approval_gates.length > 0 && (
+        <p className={styles.providerAction}>Approval gates: {joinPreview(preflight.approval_gates)}</p>
+      )}
+      {preflight.restrictions && preflight.restrictions.length > 0 && (
+        <p className={styles.providerNotes}>Restrictions: {joinPreview(preflight.restrictions)}</p>
+      )}
+      {preflight.next_action && <p className={styles.providerAction}>{preflight.next_action}</p>}
+    </div>
+  )
+}
+
+function ApprovalReadinessCard({ payload }: { payload: ApprovalReadinessPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Approval/Audit Readiness</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No approval readiness result loaded yet.</p>
+      </div>
+    )
+  }
+
+  const db = payload.db || {}
+  const migration = payload.migration || {}
+  const missingTables = db.tables_missing || []
+  const missingIndexes = db.indexes_missing || []
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={payload.production_migration_applied ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>Approval/Audit Readiness</strong>
+        </div>
+        <span className={styles.providerState}>{(payload.current_state || 'unknown').replace(/_/g, ' ')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>queue: {payload.approval_queue_state || 'unknown'}</span>
+        <span>execution: {payload.no_execution_enabled ? 'disabled' : 'unknown'}</span>
+        <span>writes: {payload.no_connector_writes_enabled ? 'locked' : 'unknown'}</span>
+        <span>fake approvals: {payload.no_fake_approval_requests ? 'blocked' : 'unknown'}</span>
+      </div>
+      <p className={styles.providerNotes}>
+        DB: {db.db_exists ? 'present' : 'missing'} · readable: {db.readable ? 'yes' : 'no'} · size: {db.db_size_bytes ?? 0} bytes
+      </p>
+      <p className={styles.providerNotes}>
+        Tables: {(db.tables_present || []).length}/{(payload.required_tables || []).length || 4} present
+        {missingTables.length > 0 ? ` · missing ${missingTables.length}` : ''}
+      </p>
+      <p className={styles.providerNotes}>
+        Indexes: {(db.indexes_present || []).length}/{(payload.required_indexes || []).length || 15} present
+        {missingIndexes.length > 0 ? ` · missing ${missingIndexes.length}` : ''}
+      </p>
+      {db.error && <p className={styles.providerAction}>DB status: {db.error}</p>}
+      <p className={styles.providerNotes}>
+        Migration proposal: {migration.proposed_sql_present ? 'present' : 'missing'} · temp test script: {migration.temp_db_test_script_present ? 'present' : 'missing'}
+      </p>
+      {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
+function ExecutiveReportPreviewCard({ payload }: { payload: ExecutiveReportPreviewPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Executive Report Preview</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>Waiting for a read-only preflight result before preparing a preview.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status="active" />
+          <strong className={styles.providerName}>Executive Report Preview</strong>
+        </div>
+        <span className={styles.providerState}>read only</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>pdf: {payload.pdf_status || 'BACKEND_REQUIRED'}</span>
+        <span>telegram: {payload.telegram_approval_status || 'BACKEND_REQUIRED'}</span>
+        <span>execution: {payload.no_execution_enabled ? 'disabled' : 'unknown'}</span>
+        <span>persistence: {payload.no_persistence_enabled ? 'not connected' : 'unknown'}</span>
+      </div>
+      {payload.plain_language_summary && (
+        <p className={styles.providerNotes}>{payload.plain_language_summary}</p>
+      )}
+      {payload.detailed_report_markdown && (
+        <pre className={styles.reportPreview}>
+          {payload.detailed_report_markdown.split('\n').slice(0, 12).join('\n')}
+        </pre>
+      )}
+      {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
+function TelegramApprovalPreviewCard({ payload }: { payload: TelegramApprovalPreviewPayload | null }) {
+  if (!payload?.preview) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Tony → Telegram Approval Preview</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No Telegram approval preview loaded yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status="degraded" />
+          <strong className={styles.providerName}>Tony → Telegram Approval Preview</strong>
+        </div>
+        <span className={styles.providerState}>{payload.preview.send_state || 'DISABLED'}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>channel: {payload.preview.channel || 'Tony -> Telegram'}</span>
+        <span>persistence: {payload.preview.persistence_state || 'not connected'}</span>
+        <span>callback: {payload.preview.callback_state || 'BACKEND_REQUIRED'}</span>
+        <span>created: {payload.approval_request_created ? 'yes' : 'no'}</span>
+      </div>
+      {payload.preview.message_preview && (
+        <pre className={styles.reportPreview}>{payload.preview.message_preview}</pre>
+      )}
+      {payload.preview.buttons && payload.preview.buttons.length > 0 && (
+        <p className={styles.providerNotes}>
+          Buttons: {payload.preview.buttons.map((button) => `${button.label || 'button'}=${button.state || 'BACKEND_REQUIRED'}`).join(' · ')}
+        </p>
+      )}
+      {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
     </div>
   )
 }
@@ -302,6 +744,25 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [providers, setProviders] = useState<BridgeProvidersPayload | null>(null)
   const [providerState, setProviderState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [providerError, setProviderError] = useState<string>('')
+  const [capabilities, setCapabilities] = useState<BridgeCapabilityPayload | null>(null)
+  const [capabilityState, setCapabilityState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [capabilityError, setCapabilityError] = useState<string>('')
+  const [connectors, setConnectors] = useState<ConnectorReadinessPayload | null>(null)
+  const [connectorState, setConnectorState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [connectorError, setConnectorError] = useState<string>('')
+  const [statusPreflight, setStatusPreflight] = useState<BridgePreflightPayload | null>(null)
+  const [zapierPreflight, setZapierPreflight] = useState<BridgePreflightPayload | null>(null)
+  const [preflightState, setPreflightState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [preflightError, setPreflightError] = useState<string>('')
+  const [approvalReadiness, setApprovalReadiness] = useState<ApprovalReadinessPayload | null>(null)
+  const [approvalReadinessState, setApprovalReadinessState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [approvalReadinessError, setApprovalReadinessError] = useState<string>('')
+  const [executivePreview, setExecutivePreview] = useState<ExecutiveReportPreviewPayload | null>(null)
+  const [executivePreviewState, setExecutivePreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
+  const [executivePreviewError, setExecutivePreviewError] = useState<string>('')
+  const [telegramApprovalPreview, setTelegramApprovalPreview] = useState<TelegramApprovalPreviewPayload | null>(null)
+  const [telegramApprovalPreviewState, setTelegramApprovalPreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
+  const [telegramApprovalPreviewError, setTelegramApprovalPreviewError] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
@@ -353,6 +814,229 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/capability-matrix', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as BridgeCapabilityPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setCapabilities(data)
+        setCapabilityState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setCapabilityError((err as Error).message || 'fetch failed')
+        setCapabilityState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/connector-readiness', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ConnectorReadinessPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setConnectors(data)
+        setConnectorState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setConnectorError((err as Error).message || 'fetch failed')
+        setConnectorState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const requestPreflight = (body: Record<string, unknown>) =>
+      fetch('/api/bridge/preflight', {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as BridgePreflightPayload
+      })
+
+    Promise.all([
+      requestPreflight({
+        agent_id: 'tony',
+        task_type: 'status_check',
+        owner_goal: 'Show current Mission Control Bridge Mode status.',
+        requested_action: 'read status only',
+      }),
+      requestPreflight({
+        agent_id: 'tony',
+        task_type: 'connector_write',
+        connector: 'zapier',
+        owner_goal: 'Example protected Zapier write check.',
+        requested_action: 'send or update through Zapier',
+      }),
+    ])
+      .then(([statusResult, zapierResult]) => {
+        if (cancelled) return
+        setStatusPreflight(statusResult)
+        setZapierPreflight(zapierResult)
+        setPreflightState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setPreflightError((err as Error).message || 'fetch failed')
+        setPreflightState('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/approval-readiness', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ApprovalReadinessPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setApprovalReadiness(data)
+        setApprovalReadinessState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setApprovalReadinessError((err as Error).message || 'fetch failed')
+        setApprovalReadinessState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!statusPreflight?.preflight) return
+
+    let cancelled = false
+    const preflight = statusPreflight.preflight
+    setExecutivePreviewState('loading')
+
+    fetch('/api/bridge/executive-report-preview', {
+      method: 'POST',
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        owner_goal: 'review the latest Bridge Mode preflight result',
+        expected_outcome: 'see the selected route, blockers, and next safe action before any protected work',
+        task_type: preflight.task_type,
+        preflight_decision: preflight.decision,
+        selected_route: preflight.selected_route?.primary,
+        fallback_route: preflight.selected_route?.fallback,
+        selected_tools: preflight.selected_tools,
+        selected_models: preflight.selected_models,
+        selected_skills: preflight.selected_skills,
+        selected_integrations: preflight.selected_integrations,
+        approval_gates: preflight.approval_gates,
+        missing_credentials: preflight.missing_credentials,
+        risks: ['Protected execution remains disabled until approval/audit persistence is approved.'],
+        next_action: preflight.next_action || 'Keep this in read-only mode until approval persistence and audit logging are wired.',
+      }),
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ExecutiveReportPreviewPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setExecutivePreview(data)
+        setExecutivePreviewState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setExecutivePreviewError((err as Error).message || 'fetch failed')
+        setExecutivePreviewState('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [statusPreflight])
+
+  useEffect(() => {
+    if (!zapierPreflight?.preflight) return
+
+    let cancelled = false
+    const preflight = zapierPreflight.preflight
+    setTelegramApprovalPreviewState('loading')
+
+    fetch('/api/bridge/telegram-approval-preview', {
+      method: 'POST',
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        owner_goal: 'approve a protected Zapier connector write after Bridge Mode preflight',
+        action_label: 'Protected Zapier write',
+        risk_level: 'high',
+        selected_route: preflight.selected_route?.primary,
+        approval_gates: preflight.approval_gates,
+        missing_credentials: preflight.missing_credentials,
+        report_url: null,
+        expires_in_minutes: 30,
+      }),
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as TelegramApprovalPreviewPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setTelegramApprovalPreview(data)
+        setTelegramApprovalPreviewState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setTelegramApprovalPreviewError((err as Error).message || 'fetch failed')
+        setTelegramApprovalPreviewState('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [zapierPreflight])
+
   // Bucket the agents by tier
   const buckets: Record<string, AgentRow[]> = {
     commander: [],
@@ -379,6 +1063,10 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         </p>
       </header>
 
+      <div className={styles.banner}>
+        <strong>Bridge Mode preflight is mandatory.</strong> Every agent must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the task. If Bridge Mode says approval, credential, or backend work is required, the agent must stop that action instead of guessing or faking success.
+      </div>
+
       {/* Top stats strip */}
       <section className={styles.statsStrip}>
         <div className={styles.statBox}>
@@ -394,8 +1082,8 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           <div className={styles.statLabel}>Bridge plans on disk</div>
         </div>
         <div className={styles.statBox}>
-          <div className={styles.statValue}>0</div>
-          <div className={styles.statLabel}>Mutations enabled</div>
+          <div className={styles.statValue}>{capabilities?.summary?.connector_writes_enabled ?? 0}</div>
+          <div className={styles.statLabel}>Connector writes enabled</div>
         </div>
       </section>
 
@@ -419,6 +1107,246 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             tier={{ id: 'other', label: 'Other / Unbucketed', sub: 'Tier not yet declared in registry' }}
             agents={buckets.other}
           />
+        )}
+      </section>
+
+      {/* Bridge Mode capability matrix — read-only MVP */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Bridge Mode Capability Matrix</h2>
+          <span className={styles.tierSub}>
+            Live read-only MVP from <code>/api/bridge/capability-matrix</code>
+          </span>
+        </header>
+        {capabilityState === 'loading' && (
+          <div className={styles.banner}>Loading Bridge Mode matrix from <code>/api/bridge/capability-matrix</code>…</div>
+        )}
+        {capabilityState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load Bridge Mode matrix:</strong> {capabilityError}
+          </div>
+        )}
+        {capabilityState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {capabilities?.mode || 'read-only'}</span>
+              <span>{capabilities?.summary?.agents_total ?? capabilities?.agents?.length ?? 0} agents</span>
+              <span>{capabilities?.summary?.executable_agents ?? 0} executable in approved lane</span>
+              <span>{capabilities?.summary?.read_only_or_observe_agents ?? 0} observe/read-only</span>
+              <span>{capabilities?.summary?.tools_total ?? 0} tools</span>
+              <span>writes enabled: {capabilities?.summary?.connector_writes_enabled ?? 0}</span>
+              <span>protected locked: {capabilities?.summary?.protected_actions_locked ? 'yes' : 'unknown'}</span>
+            </div>
+            <div className={styles.providerGrid}>
+              {(capabilities?.agents || []).map((agent) => (
+                <CapabilityAgentCard key={agent.id} agent={agent} />
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Bridge Mode preflight visibility — no execution */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Latest Bridge Mode Preflight</h2>
+          <span className={styles.tierSub}>
+            Read-only route selection from <code>/api/bridge/preflight</code>
+          </span>
+        </header>
+        {preflightState === 'loading' && (
+          <div className={styles.banner}>Loading read-only preflight from <code>/api/bridge/preflight</code>…</div>
+        )}
+        {preflightState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load Bridge Mode preflight:</strong> {preflightError}
+          </div>
+        )}
+        {preflightState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {statusPreflight?.mode || 'bridge_preflight_read_only'}</span>
+              <span>status check: {statusPreflight?.preflight?.decision || 'unknown'}</span>
+              <span>Zapier write check: {zapierPreflight?.preflight?.decision || 'unknown'}</span>
+              <span>execution: disabled</span>
+              <span>approval request: not created</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              Zapier protected writes check credentials first. If credentials are missing, Bridge Mode reports <strong>CREDENTIAL_REQUIRED</strong>. Once credentials exist, writes still remain locked as <strong>OWNER_APPROVAL_REQUIRED</strong> / HTTP 423 until approval persistence, audit chain, and scoped execution are implemented.
+            </div>
+            <div className={styles.providerGrid}>
+              <PreflightCard title="Current status preflight" payload={statusPreflight} />
+              <PreflightCard title="Protected Zapier write preflight" payload={zapierPreflight} />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Executive report preview — no PDF, no Telegram send */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Executive Report Preview</h2>
+          <span className={styles.tierSub}>
+            Read-only preview from <code>/api/bridge/executive-report-preview</code>
+          </span>
+        </header>
+        {executivePreviewState === 'waiting' && (
+          <div className={styles.banner}>Waiting for latest Bridge Mode preflight before preparing an executive summary preview…</div>
+        )}
+        {executivePreviewState === 'loading' && (
+          <div className={styles.banner}>Loading read-only executive report preview…</div>
+        )}
+        {executivePreviewState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load executive report preview:</strong> {executivePreviewError}
+          </div>
+        )}
+        {executivePreviewState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {executivePreview?.mode || 'executive_report_preview_read_only'}</span>
+              <span>PDF: {executivePreview?.pdf_status || 'BACKEND_REQUIRED'}</span>
+              <span>Telegram approval: {executivePreview?.telegram_approval_status || 'BACKEND_REQUIRED'}</span>
+              <span>execution: disabled</span>
+              <span>persistence: not connected</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              This is a preview only. Mission Control is not writing a PDF, sending Telegram approvals, creating approval records, or executing any connector action yet.
+            </div>
+            <div className={styles.providerGrid}>
+              <ExecutiveReportPreviewCard payload={executivePreview} />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Telegram approval preview — no send, no approval creation */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Telegram Approval Preview</h2>
+          <span className={styles.tierSub}>
+            Disabled Tony-to-Telegram preview from <code>/api/bridge/telegram-approval-preview</code>
+          </span>
+        </header>
+        {telegramApprovalPreviewState === 'waiting' && (
+          <div className={styles.banner}>Waiting for protected-action preflight before preparing a Telegram approval preview…</div>
+        )}
+        {telegramApprovalPreviewState === 'loading' && (
+          <div className={styles.banner}>Loading disabled Telegram approval preview…</div>
+        )}
+        {telegramApprovalPreviewState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load Telegram approval preview:</strong> {telegramApprovalPreviewError}
+          </div>
+        )}
+        {telegramApprovalPreviewState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {telegramApprovalPreview?.mode || 'telegram_approval_preview_read_only'}</span>
+              <span>send: disabled</span>
+              <span>callback: backend required</span>
+              <span>approval created: no</span>
+              <span>execution: disabled</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              This preview shows the future owner approval message only. Mission Control is not sending Telegram messages, creating approval rows, or unlocking protected execution.
+            </div>
+            <div className={styles.providerGrid}>
+              <TelegramApprovalPreviewCard payload={telegramApprovalPreview} />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Approval/audit readiness — no migration */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Approval Queue (Tony → Telegram)</h2>
+          <span className={styles.tierSub}>
+            Read-only readiness. Approval channel is <strong>Tony → Telegram</strong>; Mission Control records the decision.
+          </span>
+        </header>
+        {approvalReadinessState === 'loading' && (
+          <div className={styles.banner}>Loading approval readiness from <code>/api/bridge/approval-readiness</code>…</div>
+        )}
+        {approvalReadinessState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load approval readiness:</strong> {approvalReadinessError}
+          </div>
+        )}
+        {approvalReadinessState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {approvalReadiness?.mode || 'approval_audit_readiness_read_only'}</span>
+              <span>state: {approvalReadiness?.current_state || 'unknown'}</span>
+              <span>queue: {approvalReadiness?.approval_queue_state || 'unknown'}</span>
+              <span>migration applied: {approvalReadiness?.production_migration_applied ? 'yes' : 'no'}</span>
+              <span>execution: disabled</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              <p>
+                Approval Queue is being prepared. Protected actions cannot execute yet. When enabled,
+                agents will send approval requests to <strong>Tony</strong>, and Tony will send the
+                owner one-click <strong>Approve / Deny</strong> messages in <strong>Telegram</strong>.
+              </p>
+              <p>
+                Tony is the approval representative to the owner. Agents do not contact the owner directly
+                for every approval — Tony consolidates and represents.
+              </p>
+              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                <li>Current state: <strong>BACKEND_REQUIRED</strong></li>
+                <li>Approval channel: <strong>Tony → Telegram</strong></li>
+                <li>Execution state: <strong>locked</strong></li>
+                <li>What is missing: approval/audit DB persistence + Telegram approval callback</li>
+                <li>Pending approvals: <strong>none yet</strong> (queue not connected)</li>
+                <li>Next backend step: approval/audit migration + Telegram approval queue API</li>
+              </ul>
+              <p style={{ marginTop: 8 }}>
+                This panel does not apply migrations, send approvals, or unlock connector execution.
+                It only reflects readiness.
+              </p>
+            </div>
+            <div className={styles.providerGrid}>
+              <ApprovalReadinessCard payload={approvalReadiness} />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Connector readiness — no execution */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Connector Readiness</h2>
+          <span className={styles.tierSub}>
+            Read-only connector state from <code>/api/bridge/connector-readiness</code>
+          </span>
+        </header>
+        {connectorState === 'loading' && (
+          <div className={styles.banner}>Loading connector readiness from <code>/api/bridge/connector-readiness</code>…</div>
+        )}
+        {connectorState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load connector readiness:</strong> {connectorError}
+          </div>
+        )}
+        {connectorState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {connectors?.mode || 'read-only'}</span>
+              <span>{connectors?.summary?.total ?? connectors?.connectors?.length ?? 0} connectors</span>
+              <span>execution enabled: {connectors?.summary?.execution_enabled ?? 0}</span>
+              <span>writes enabled: {connectors?.summary?.writes_enabled ?? 0}</span>
+              <span>approval required: {connectors?.summary?.owner_approval_required_for_execution ?? 0}</span>
+              {Object.entries(connectors?.summary?.by_state || {}).map(([state, count]) => (
+                <span key={state}>{state.replace(/_/g, ' ')}: {count}</span>
+              ))}
+            </div>
+            <div className={styles.providerGrid}>
+              {(connectors?.connectors || []).map((connector) => (
+                <ConnectorCard key={connector.id} connector={connector} />
+              ))}
+            </div>
+          </>
         )}
       </section>
 
@@ -506,15 +1434,16 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           />
           <ExternalCard
             title="Bridge Mode"
-            badge={bridge.plansFound > 0 ? `${bridge.plansFound} plans on disk` : 'No plans found'}
-            description="Cross-agent ticketed handoff plane. Plan-only — implementation gated to Phase B."
+            badge={capabilities?.mode ? 'Read-only MVP live' : bridge.plansFound > 0 ? `${bridge.plansFound} plans on disk` : 'No plans found'}
+            description="Central tool/model/skill/integration tunnel. Read-only MVP is live; protected execution remains locked."
             details={[
-              { label: 'Architecture plan', value: 'runtime/agent-network-bridge-mode-plan.md' },
-              { label: 'Phase A discovery', value: 'runtime/bridge-mode-phase-a-discovery-report.md' },
-              { label: 'Phase B impl plan', value: 'runtime/bridge-mode-phase-b-implementation-plan.md' },
-              { label: 'Schema plan', value: 'runtime/bridge-mode-schema-plan.md' },
-              { label: 'Status', value: 'NOT IMPLEMENTED — planning artifacts only' },
+              { label: 'Capability matrix', value: '/api/bridge/capability-matrix' },
+              { label: 'Connector readiness', value: '/api/bridge/connector-readiness' },
+              { label: 'Execution enabled', value: capabilities?.no_execution_enabled ? 'NO' : 'unknown' },
+              { label: 'Connector writes', value: String(capabilities?.summary?.connector_writes_enabled ?? 0) },
+              { label: 'Status', value: 'READ-ONLY MVP — approval/audit persistence required before execution' },
             ]}
+            showPhaseB={false}
           />
         </div>
       </section>

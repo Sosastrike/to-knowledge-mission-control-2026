@@ -22,10 +22,11 @@ function readApiKeyFromDb() {
 
 async function getJson(path) {
   try {
+    const timeoutMs = path.startsWith('/api/mcp/') ? 30000 : 10000
     const response = await fetch(`${baseUrl}${path}`, {
       headers: { 'x-api-key': apiKey },
       cache: 'no-store',
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(timeoutMs),
     })
     const body = await response.json().catch(() => ({}))
     return { path, status: response.status, body }

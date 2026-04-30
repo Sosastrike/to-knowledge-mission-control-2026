@@ -66,13 +66,14 @@ function buildDesignerPath(page) {
 async function fetchRoute(path, options = {}) {
   const headers = {}
   if (apiKey && path.startsWith('/api/')) headers['x-api-key'] = apiKey
+  const timeoutMs = path.startsWith('/api/mcp/') ? 30000 : 10000
 
   const response = await fetch(`${baseUrl}${path}`, {
     method: 'GET',
     headers,
     redirect: 'manual',
     cache: 'no-store',
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(timeoutMs),
   })
   const body = await response.text()
   const authRedirect = [301, 302, 307, 308].includes(response.status) && (response.headers.get('location') || '').startsWith('/login')

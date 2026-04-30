@@ -43,8 +43,8 @@ STANDALONE_PUBLIC_DIR="$STANDALONE_DIR/public"
 
 if [[ ! -f "$STANDALONE_DIR/server.js" ]]; then
   echo "sync-static-to-standalone: standalone server.js missing at $STANDALONE_DIR/server.js" >&2
-  echo "  (this is normal if you haven't built yet — re-run 'npm run build')" >&2
-  exit 0   # exit 0: build wrote nothing standalone-ish, so nothing to sync
+  echo "  Next.js did not emit standalone output. Run the production build with webpack: 'next build --webpack'." >&2
+  exit 1
 fi
 
 mkdir -p "$STANDALONE_NEXT_DIR"

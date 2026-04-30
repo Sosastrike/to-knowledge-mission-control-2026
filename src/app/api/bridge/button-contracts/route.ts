@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireRole } from '@/lib/auth'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+type ButtonState =
+  | 'LIVE'
+  | 'READ_ONLY'
+  | 'BACKEND_REQUIRED'
+  | 'CREDENTIAL_REQUIRED'
+  | 'OWNER_APPROVAL_REQUIRED'
+  | 'DISABLED'
+
+type ButtonContract = {
+  route: string
+  label: string
+  endpoint: string | null
+  method: 'GET' | 'POST' | 'LOCAL' | 'EXTERNAL'
+  state: ButtonState
+  credential_names: string[]
+  approval_required: boolean
+  audit_required: boolean
+  owner: 'Cloud Code' | 'Codex' | 'Cloud Code + Codex'
+  note: string
+}
+
+const BUTTONS: ButtonContract[] = [
+  { route: 'left-rail', label: 'Mission Control', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'Brain Sync', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'Agent Network', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'FireCrawl', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'Zapier', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'n8n', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'MCP Tools', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'Skills', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+
+  { route: 'brain-sync', label: 'Notifications', endpoint: '/api/notifications/stream', method: 'GET', state: 'DISABLED', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'No SSE notification stream wired.' },
+  { route: 'brain-sync', label: 'Help', endpoint: null, method: 'LOCAL', state: 'DISABLED', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'No help backend wired.' },
+  { route: 'brain-sync', label: 'Request Agent 0', endpoint: '/api/agent-zero/request', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Endpoint not enabled until approval persistence exists.' },
+  { route: 'brain-sync', label: 'Rebuild graph', endpoint: '/api/bridge/brain-sync/rebuild', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Graph rebuild is protected.' },
+  { route: 'brain-sync', label: 'Expand / Pop out / Close', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Local UI only.' },
+
+  { route: 'agent-network', label: 'Refresh live', endpoint: '/api/bridge/providers', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Live adapter refreshes read-only data.' },
+  { route: 'agent-network', label: 'Bridge Mode capability matrix', endpoint: '/api/bridge/capability-matrix', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only Bridge Mode MVP: agents, models, tools, skills, MCPs, restrictions, approval gates, and blockers.' },
+  { route: 'agent-network', label: 'Bridge Mode preflight', endpoint: '/api/bridge/preflight', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Read-only preflight evaluator for the Mission Control Agent Execution Cycle. It selects routes and blockers but does not execute or persist.' },
+  { route: 'agent-network', label: 'Approval/audit readiness', endpoint: '/api/bridge/approval-readiness', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only schema/readiness check for approval queue and audit persistence. It never applies migrations or creates approvals.' },
+  { route: 'agent-network', label: 'Executive report preview', endpoint: '/api/bridge/executive-report-preview', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Generates a plain-language and markdown preview only. No PDF write, Telegram send, approval creation, or execution.' },
+  { route: 'agent-network', label: 'Telegram approval preview', endpoint: '/api/bridge/telegram-approval-preview', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Shows disabled Tony-to-Telegram approval copy/buttons only. No send, callback, persistence, approval creation, or execution.' },
+  { route: 'agent-network', label: 'Connector readiness matrix', endpoint: '/api/bridge/connector-readiness', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only readiness for FireCrawl, Zapier, n8n, MCP Tools, and Skills. No connector execution.' },
+  { route: 'agent-network', label: 'Add agent', endpoint: '/api/agents', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Production create disabled until approval/audit persistence exists.' },
+  { route: 'agent-network', label: 'Promote / Demote / Retire / Connect engine', endpoint: '/api/bridge/approval-requests', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Protected agent changes remain locked.' },
+  { route: 'agent-network', label: 'Dock Feed/Table toggle', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Local UI only.' },
+
+  { route: 'firecrawl', label: 'Refresh', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Browser reload.' },
+  { route: 'firecrawl', label: 'New job / Start job', endpoint: '/api/firecrawl/jobs', method: 'POST', state: 'CREDENTIAL_REQUIRED', credential_names: ['FIRECRAWL_API_KEY'], approval_required: true, audit_required: true, owner: 'Codex', note: 'Credential and job runner/persistence required.' },
+  { route: 'firecrawl', label: 'Save draft', endpoint: '/api/firecrawl/drafts', method: 'POST', state: 'DISABLED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'No draft table yet.' },
+  { route: 'firecrawl', label: 'Cancel', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Local form reset.' },
+  { route: 'viral-crawl', label: 'Video Intelligence status', endpoint: '/api/viral-crawl/video/status', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Reports wrapper, vendor skill, Obsidian destination, and watch_video skill registry status. Does not execute video jobs.' },
+  { route: 'viral-crawl', label: 'Run Watch Video / send to Brain', endpoint: '/api/viral-crawl/video/request-run', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Execution is locked until approval persistence, audit chain, and a safe runner are approved.' },
+
+  { route: 'zapier', label: 'Open Zapier', endpoint: 'https://zapier.com/app/dashboard', method: 'EXTERNAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'External navigation only.' },
+  { route: 'zapier', label: 'Load tool list', endpoint: '/api/zapier/tools', method: 'GET', state: 'CREDENTIAL_REQUIRED', credential_names: ['ZAPIER_MCP_URL', 'ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY'], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only tools/list only; no invocation.' },
+  { route: 'zapier', label: 'Request write approval', endpoint: '/api/zapier/request-write-approval', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: ['ZAPIER_MCP_URL'], approval_required: true, audit_required: true, owner: 'Codex', note: 'Writes remain locked.' },
+  { route: 'zapier', label: 'Revoke approval', endpoint: '/api/zapier/revoke-write-approval', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'No persistent approval state yet.' },
+
+  { route: 'n8n', label: 'Open n8n', endpoint: null, method: 'EXTERNAL', state: 'DISABLED', credential_names: ['N8N_BASE_URL'], approval_required: false, audit_required: false, owner: 'Codex', note: 'n8n base URL not configured.' },
+  { route: 'n8n', label: 'Test connection', endpoint: '/api/n8n/test', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: ['N8N_BASE_URL', 'N8N_API_KEY'], approval_required: false, audit_required: true, owner: 'Codex', note: 'n8n not configured.' },
+  { route: 'n8n', label: 'List workflows / executions / webhooks', endpoint: '/api/n8n/workflows', method: 'GET', state: 'BACKEND_REQUIRED', credential_names: ['N8N_BASE_URL', 'N8N_API_KEY'], approval_required: false, audit_required: true, owner: 'Codex', note: 'Read-only passthrough missing.' },
+  { route: 'n8n', label: 'Activate / Deactivate / Execute workflow', endpoint: '/api/n8n/workflows/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: ['N8N_API_KEY'], approval_required: true, audit_required: true, owner: 'Codex', note: 'Workflow writes locked.' },
+
+  { route: 'mcp-tools', label: 'Refresh MCP list', endpoint: '/api/mcp/servers', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Status only.' },
+  { route: 'mcp-tools', label: 'Test server', endpoint: '/api/mcp/servers/:id/test', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Reports known status; does not invoke tools.' },
+  { route: 'mcp-tools', label: 'Reauth / Enable / Disable', endpoint: '/api/mcp/servers/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'MCP config changes locked.' },
+
+  { route: 'skills', label: 'Refresh skills', endpoint: '/api/skills', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only registry.' },
+  { route: 'skills', label: 'Search', endpoint: '/api/skills/finder/search', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only search index.' },
+  { route: 'skills', label: 'Test', endpoint: '/api/skills/:id/test', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Probe runner missing.' },
+  { route: 'skills', label: 'Request install / Enable / Disable', endpoint: '/api/skills/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Skill mutations locked.' },
+]
+
+export async function GET(request: NextRequest) {
+  const auth = requireRole(request, 'viewer')
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const byState = BUTTONS.reduce((acc, button) => {
+    acc[button.state] = (acc[button.state] || 0) + 1
+    return acc
+  }, {} as Record<ButtonState, number>)
+
+  return NextResponse.json({
+    ok: true,
+    generated_at: new Date().toISOString(),
+    allowed_states: ['LIVE', 'READ_ONLY', 'BACKEND_REQUIRED', 'CREDENTIAL_REQUIRED', 'OWNER_APPROVAL_REQUIRED', 'DISABLED'],
+    buttons: BUTTONS,
+    summary: {
+      total: BUTTONS.length,
+      by_state: byState,
+      protected_actions: BUTTONS.filter((button) => button.approval_required).length,
+      audit_required: BUTTONS.filter((button) => button.audit_required).length,
+    },
+  })
+}

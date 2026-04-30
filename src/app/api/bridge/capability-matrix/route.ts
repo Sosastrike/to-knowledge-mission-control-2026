@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
     { id: 'zapier', state: 'OWNER_APPROVAL_REQUIRED', mode: 'tool list/readiness only', endpoint: '/api/zapier/tools', writes_enabled: false },
     { id: 'n8n', state: 'BACKEND_REQUIRED', mode: 'status/readiness only', endpoint: '/api/n8n/status', writes_enabled: false },
     { id: 'mcp_tools', state: 'READ_ONLY', mode: 'status/server inventory only', endpoint: '/api/mcp/servers', writes_enabled: false },
-    { id: 'skills', state: 'READ_ONLY', mode: 'search/list only', endpoint: '/api/skills/finder/search', writes_enabled: false },
+    { id: 'skills', state: 'READ_ONLY', mode: 'ClaudeClaw agent skill inventory plus search/list only', endpoint: '/api/skills/tool-skills', writes_enabled: false },
   ]
 
   return NextResponse.json({

@@ -1,194 +1,218 @@
 # System Cleanup Inventory Report
 
-Generated: 2026-04-30T03:16:28.732Z
+Generated: 2026-04-30T05:28:43.043Z
 Mode: inventory only. No delete. No quarantine. No protected action.
 
 ## Summary
-- Total candidates: 18
+- Total dirty-tree candidates: 20
 - designer_review_reference: 10
-- old_backup: 1
-- untracked_file: 7
+- old_backup: 2
+- runtime_report: 1
+- untracked_artifact: 2
+- untracked_file: 2
+- untracked_helper: 3
 
 ## Current Candidates
+- runtime/system-cleanup-inventory-report.md
+  - git status: M
+  - category: runtime_report
+  - tracked: yes
+  - reference count: 2
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/runtime/system-cleanup-inventory-report.md
+- scripts/write-system-cleanup-inventory.mjs
+  - git status: A
+  - category: untracked_helper
+  - tracked: yes
+  - reference count: 0
+  - production risk: low
+  - recommended action: review_before_action
+  - rollback: owner-approved rollback plan required
 - .commit-tkmc.sh
-  - category: untracked_file
   - git status: ??
-  - risk: low
-  - recommended action: review_before_action
+  - category: untracked_helper
   - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/.commit-tkmc.sh
 - .designer-retirement-backups/
+  - git status: ??
   - category: untracked_file
-  - git status: ??
-  - risk: low
-  - recommended action: review_before_action
   - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/.designer-retirement-backups/
 - .designer-review/agent-network-2026-04-28-review.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/agent-network-2026-04-28/
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 2
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/block4-better-sqlite3-rebuild.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/bridge-providers-panel-plan.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/code-design-latest-2026-04-28-review.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/code-design-latest-2026-04-28/
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 2
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/draft-components/
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/path-a-nextjs-port-plan.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/path-a-reference-material-refinement.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 1
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .designer-review/path-a-section-2-agent-network-refinement.md
-  - category: designer_review_reference
   - git status: ??
-  - risk: low
-  - recommended action: keep_reference
+  - category: designer_review_reference
   - tracked: no
-  - route/service evidence: none detected
+  - reference count: 2
+  - production risk: medium
+  - recommended action: keep_reference
   - rollback: none
 - .tkmc-commit-msg.txt
+  - git status: ??
   - category: untracked_file
-  - git status: ??
-  - risk: low
-  - recommended action: review_before_action
   - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
-- public/Voice-Biometrics-Executive-Report.pdf
-  - category: untracked_file
-  - git status: ??
-  - risk: low
-  - recommended action: review_before_action
-  - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
-- public/lu-ai-collab-v2.mp4
-  - category: untracked_file
-  - git status: ??
-  - risk: low
-  - recommended action: review_before_action
-  - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
-- scripts/mc-create-owner.cjs
-  - category: untracked_file
-  - git status: ??
-  - risk: low
-  - recommended action: review_before_action
-  - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
-- src/app/login/page.tsx.bak-designer-login-20260428-071138
-  - category: old_backup
-  - git status: ??
-  - risk: medium
+  - reference count: 1
+  - production risk: medium
   - recommended action: quarantine_after_checks
-  - tracked: no
-  - route/service evidence: route
-  - rollback: cp -a runtime/archive/system-cleanup/<batch>/src/app/login/page.tsx.bak-designer-login-20260428-071138 src/app/login/page.tsx.bak-designer-login-20260428-071138
-- start-mc.sh.DISABLED
-  - category: untracked_file
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/.tkmc-commit-msg.txt
+- public/Voice-Biometrics-Executive-Report.pdf
   - git status: ??
-  - risk: low
-  - recommended action: review_before_action
+  - category: untracked_artifact
   - tracked: no
-  - route/service evidence: none detected
-  - rollback: owner-approved rollback plan required
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/public/Voice-Biometrics-Executive-Report.pdf
+- public/lu-ai-collab-v2.mp4
+  - git status: ??
+  - category: untracked_artifact
+  - tracked: no
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/public/lu-ai-collab-v2.mp4
+- scripts/mc-create-owner.cjs
+  - git status: ??
+  - category: untracked_helper
+  - tracked: no
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/scripts/mc-create-owner.cjs
+- src/app/login/page.tsx.bak-designer-login-20260428-071138
+  - git status: ??
+  - category: old_backup
+  - tracked: no
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/src/app/login/page.tsx.bak-designer-login-20260428-071138
+- start-mc.sh.DISABLED
+  - git status: ??
+  - category: old_backup
+  - tracked: no
+  - reference count: 1
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/start-mc.sh.DISABLED
 
-## Safe To Remove Later
-- src/app/login/page.tsx.bak-designer-login-20260428-071138 (quarantine_after_checks)
+## Safe To Quarantine Later After Checks
+- runtime/system-cleanup-inventory-report.md
+- .commit-tkmc.sh
+- .designer-retirement-backups/
+- .tkmc-commit-msg.txt
+- public/Voice-Biometrics-Executive-Report.pdf
+- public/lu-ai-collab-v2.mp4
+- scripts/mc-create-owner.cjs
+- src/app/login/page.tsx.bak-designer-login-20260428-071138
+- start-mc.sh.DISABLED
 
-## Must Quarantine First
-- .commit-tkmc.sh (untracked_file)
-- .designer-retirement-backups/ (untracked_file)
-- .designer-review/agent-network-2026-04-28-review.md (designer_review_reference)
-- .designer-review/agent-network-2026-04-28/ (designer_review_reference)
-- .designer-review/block4-better-sqlite3-rebuild.md (designer_review_reference)
-- .designer-review/bridge-providers-panel-plan.md (designer_review_reference)
-- .designer-review/code-design-latest-2026-04-28-review.md (designer_review_reference)
-- .designer-review/code-design-latest-2026-04-28/ (designer_review_reference)
-- .designer-review/draft-components/ (designer_review_reference)
-- .designer-review/path-a-nextjs-port-plan.md (designer_review_reference)
-- .designer-review/path-a-reference-material-refinement.md (designer_review_reference)
-- .designer-review/path-a-section-2-agent-network-refinement.md (designer_review_reference)
-- .tkmc-commit-msg.txt (untracked_file)
-- public/Voice-Biometrics-Executive-Report.pdf (untracked_file)
-- public/lu-ai-collab-v2.mp4 (untracked_file)
-- scripts/mc-create-owner.cjs (untracked_file)
-- src/app/login/page.tsx.bak-designer-login-20260428-071138 (old_backup)
-- start-mc.sh.DISABLED (untracked_file)
+## Reference Material To Keep Out Of Runtime Releases
+- .designer-review/agent-network-2026-04-28-review.md
+- .designer-review/agent-network-2026-04-28/
+- .designer-review/block4-better-sqlite3-rebuild.md
+- .designer-review/bridge-providers-panel-plan.md
+- .designer-review/code-design-latest-2026-04-28-review.md
+- .designer-review/code-design-latest-2026-04-28/
+- .designer-review/draft-components/
+- .designer-review/path-a-nextjs-port-plan.md
+- .designer-review/path-a-reference-material-refinement.md
+- .designer-review/path-a-section-2-agent-network-refinement.md
 
-## Must Never Touch Without Explicit Owner Approval
-- None from current dirty tree.
+## Needs Explicit Owner Approval Before Any Removal
+- None from the current dirty tree
 
-## Production Risk Assessment
-- No production files were deleted or moved by this pass.
-- Current dirty tree is mostly reference material, temporary commit helpers, inactive backups, and two unreferenced public artifacts.
-- The owner/admin creator script is potentially useful but writes DB records when run; keep it uncommitted until a separate credential/onboarding decision.
+## Required Checks Before Future Quarantine
+- `git status --short`
+- fixed-string reference scan
+- route smoke checks
+- `pnpm run typecheck`
+- `pnpm run build`
+- `node scripts/check-overnight-readonly-safety.mjs http://127.0.0.1:3337`
+- secret-pattern scan
+- public login smoke check
 
-## Recommended Cleanup Order
-1. Keep current production source clean; do not stage reference/design review material into release commits.
-2. Quarantine old backups and disabled helper files only after route/service/reference scans pass.
-3. Decide whether unreferenced media/PDF files belong in designer assets, docs, or an archive.
-4. Keep `.designer-review/` reference material out of production release unless the owner asks for a design-audit commit.
-5. Do not delete anything until owner approves destructive cleanup.
+## Current Action
+- No files were deleted.
+- No files were quarantined.
+- No production data, credentials, backups, memory, governance, or active service files were touched.
+- Keep the dirty-tree reference material separated from release commits unless the owner explicitly approves an archive/docs batch.
+

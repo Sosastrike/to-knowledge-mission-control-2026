@@ -11644,6 +11644,331 @@
           "409": { "description": "Working tree has uncommitted changes" }
         }
       }
+    },
+    "/api/agent-zero/request": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "GET /api/agent-zero/request",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getAgentZeroRequest",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Agents"],
+        "summary": "POST /api/agent-zero/request",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postAgentZeroRequest",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/agents/{id}/advanced-config": {
+      "get": {
+        "tags": ["Agents"],
+        "summary": "GET /api/agents/{id}/advanced-config",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getAgentsIdAdvancedConfig",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "put": {
+        "tags": ["Agents"],
+        "summary": "PUT /api/agents/{id}/advanced-config",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "putAgentsIdAdvancedConfig",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/auth/azure-ad": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "GET /api/auth/azure-ad",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getAuthAzureAd",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/auth/azure-ad/status": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "GET /api/auth/azure-ad/status",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getAuthAzureAdStatus",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/auth/callback/azure-ad": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "GET /api/auth/callback/azure-ad",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getAuthCallbackAzureAd",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/approval-contract": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/approval-contract",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeApprovalContract",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/approval-readiness": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/approval-readiness",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeApprovalReadiness",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/approval-requests": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/approval-requests",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeApprovalRequests",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/approval-requests",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeApprovalRequests",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/approval-requests/{id}/approve": {
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/approval-requests/{id}/approve",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeApprovalRequestsIdApprove",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/approval-requests/{id}/deny": {
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/approval-requests/{id}/deny",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeApprovalRequestsIdDeny",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/brain-sync/rebuild": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/brain-sync/rebuild",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeBrainSyncRebuild",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/brain-sync/rebuild",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeBrainSyncRebuild",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/button-contracts": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/button-contracts",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeButtonContracts",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/capability-matrix": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/capability-matrix",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeCapabilityMatrix",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/connector-readiness": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/connector-readiness",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeConnectorReadiness",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/executive-report-preview": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/executive-report-preview",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeExecutiveReportPreview",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/executive-report-preview",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeExecutiveReportPreview",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/preflight": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/preflight",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgePreflight",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/preflight",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgePreflight",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/bridge/providers": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/providers",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeProviders",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/bridge/telegram-approval-preview": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/telegram-approval-preview",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeTelegramApprovalPreview",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Bridge"],
+        "summary": "POST /api/bridge/telegram-approval-preview",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postBridgeTelegramApprovalPreview",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/firecrawl/{path}": {
+      "get": {
+        "tags": ["Integrations"],
+        "summary": "GET /api/firecrawl/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getFirecrawlPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      },
+      "post": {
+        "tags": ["Integrations"],
+        "summary": "POST /api/firecrawl/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postFirecrawlPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      }
+    },
+    "/api/health-check": {
+      "get": {
+        "tags": ["System"],
+        "summary": "GET /api/health-check",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getHealthCheck",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/mcp/{path}": {
+      "get": {
+        "tags": ["Integrations"],
+        "summary": "GET /api/mcp/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getMcpPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Integrations"],
+        "summary": "POST /api/mcp/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postMcpPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/n8n/{path}": {
+      "get": {
+        "tags": ["Integrations"],
+        "summary": "GET /api/n8n/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getN8nPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      },
+      "post": {
+        "tags": ["Integrations"],
+        "summary": "POST /api/n8n/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postN8nPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      }
+    },
+    "/api/skills/{path}": {
+      "get": {
+        "tags": ["Skills"],
+        "summary": "GET /api/skills/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getSkillsPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Skills"],
+        "summary": "POST /api/skills/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postSkillsPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/viral-crawl/video/request-run": {
+      "get": {
+        "tags": ["Viral Crawl"],
+        "summary": "GET /api/viral-crawl/video/request-run",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getViralCrawlVideoRequestRun",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Viral Crawl"],
+        "summary": "POST /api/viral-crawl/video/request-run",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postViralCrawlVideoRequestRun",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" } }
+      }
+    },
+    "/api/viral-crawl/video/status": {
+      "get": {
+        "tags": ["Viral Crawl"],
+        "summary": "GET /api/viral-crawl/video/status",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getViralCrawlVideoStatus",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/zapier/{path}": {
+      "get": {
+        "tags": ["Integrations"],
+        "summary": "GET /api/zapier/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getZapierPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      },
+      "post": {
+        "tags": ["Integrations"],
+        "summary": "POST /api/zapier/{path}",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "postZapierPath",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "423": { "description": "Locked until owner approval/audit gate is satisfied" }, "503": { "description": "Required connector credential or backend is not configured" } }
+      }
     }
   },
   "components": {

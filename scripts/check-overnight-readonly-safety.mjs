@@ -16,6 +16,7 @@ const checks = [
   ['mcp_status_consistency', ['node', ['scripts/check-mcp-status-consistency.mjs', baseUrl]]],
   ['viral_firecrawl_readiness', ['node', ['scripts/check-viral-firecrawl-readiness.mjs', baseUrl]]],
   ['official_url_policy', ['node', ['scripts/check-official-url-policy.mjs']]],
+  ['official_public_urls', ['node', ['scripts/check-official-public-urls.mjs']]],
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
@@ -84,6 +85,9 @@ function summarize(name, parsed) {
   }
   if (name === 'official_url_policy') {
     return { temporary_8080_matches: parsed.matches?.length ?? 0, official_urls: parsed.policy?.official_urls }
+  }
+  if (name === 'official_public_urls') {
+    return { results: parsed.results?.map((result) => ({ id: result.id, status: result.status })) }
   }
   if (name === 'approval_readiness_live') {
     return {

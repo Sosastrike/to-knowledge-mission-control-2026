@@ -30,7 +30,7 @@ function MeetingRoom({ onClose, meeting }) {
   // Real local participants — agents added to this room. Tiles below render
   // these. Each carries a `pendingDispatch` flag because actually placing an
   // SDK call to bring the agent online requires a provider; until that ships,
-  // we add the seat truthfully and label the dispatch as queued.
+  // we add the seat truthfully and label the provider dispatch as not wired.
   const [roomAgents, setRoomAgents] = React.useState([]);
 
   // Real clipboard copy — uses Clipboard API in secure contexts and falls
@@ -76,7 +76,7 @@ function MeetingRoom({ onClose, meeting }) {
     const a = (window.AGENTS || []).find(x => x.id === agentId);
     if (!a) return;
     setRoomAgents(prev => [...prev, { id: a.id, name: a.name, role: a.role, status: a.status, addedAt: new Date(), pendingDispatch: true }]);
-    // Audit the local invite — the provider dispatch is honestly queued.
+    // Audit the local invite — the provider dispatch is not wired yet.
     window.api?.audit?.emit?.('meeting.agent.invite', meeting?.id || 'local', { agent: a.id, name: a.name });
   };
 
@@ -183,7 +183,7 @@ function MeetingRoom({ onClose, meeting }) {
                 </div>
               </div>
 
-              {/* Real agent seats — added via the Invite tab. Tagged "Queued"
+              {/* Real agent seats — added via the Invite tab. Tagged "Not wired"
                   because the provider dispatch isn't wired yet. */}
               {roomAgents.map(a => (
                 <div key={a.id} className="mrx-tile is-agent">
@@ -197,10 +197,10 @@ function MeetingRoom({ onClose, meeting }) {
                       {a.name}
                       <span className="mrx-host-tag" style={{background:'var(--accent)', color:'#fff'}}>Agent</span>
                     </div>
-                    <div className="mrx-tile-role">{a.role} · seat queued</div>
+                    <div className="mrx-tile-role">{a.role} · seat reserved locally</div>
                   </div>
-                  <div className="mrx-camoff-note" title="Provider dispatch pending — seat is real, the agent isn't connected yet">
-                    <I.Info size={11}/> Dispatch queued · not yet on call
+                  <div className="mrx-camoff-note" title="Provider dispatch not wired — seat is real, the agent isn't connected yet">
+                    <I.Info size={11}/> Dispatch not wired · not on call
                   </div>
                   <div className="mrx-tile-br">
                     <button className="icon-btn" onClick={()=>removeAgentFromRoom(a.id)} title="Remove from room" style={{background:'rgba(0,0,0,0.45)'}}>
@@ -282,7 +282,7 @@ function MeetingRoom({ onClose, meeting }) {
                 <button
                   className={`mrx-ctrl ${panel === 'invite' ? 'is-on' : ''}`}
                   onClick={() => setPanel('invite')}
-                  title="Add an agent or saved group to this room (provider dispatch queued until ADMIN WIRE-UP)">
+                  title="Add an agent or saved group to this room (provider dispatch not wired until ADMIN WIRE-UP)">
                   <div className="mrx-ctrl-btn">
                     <I.Agents size={18}/>
                   </div>
@@ -482,7 +482,7 @@ function MeetingRoom({ onClose, meeting }) {
                               <div style={{fontSize:12, color:'var(--fg-0)', fontWeight:500}}>{a.name}</div>
                               <div className="muted xsmall">{a.role}</div>
                             </div>
-                            <span className="tag warn" title="Seat reserved locally · provider dispatch queued">Queued</span>
+                            <span className="tag warn" title="Seat reserved locally · provider dispatch not wired">Not wired</span>
                             <button className="icon-btn" onClick={()=>removeAgentFromRoom(a.id)} title="Remove from room">
                               <I.X size={12}/>
                             </button>

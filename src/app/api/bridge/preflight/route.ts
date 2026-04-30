@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
 import { authJson, hasEnv } from '@/lib/designer-module-api'
+import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -162,6 +163,7 @@ function detectConnector(input: PreflightRequest): string | null {
     if (text.includes(name)) return name
   }
 
+  if (/(heygen|avatar video|talking avatar|create video|generate video)/.test(text)) return 'zapier'
   if (text.includes('mcp')) return 'mcp'
   if (text.includes('skills')) return 'skills'
   if (text.includes('hermes')) return 'hermes'
@@ -252,9 +254,9 @@ function routeFor(agentId: string, taskType: TaskType, connector: string | null)
 
   if (connector === 'zapier') {
     return {
-      primary: 'zapier_tool_inventory_read_only',
+      primary: 'zapier_tool_bridge_read_only',
       fallback: 'manual_owner_scoped_connector_plan',
-      notes: ['Zapier writes remain locked until approval/audit persistence exists.'],
+      notes: ['Query /api/bridge/zapier/tools/search before deciding whether a Zapier tool exists.', 'Zapier writes remain locked until scoped Telegram approval and exact runner wiring exist.'],
     }
   }
 
@@ -343,7 +345,35 @@ export async function POST(request: NextRequest) {
 
   const taskType = classifyTask(input)
   const connector = detectConnector(input)
-  const decision = buildDecision(input, taskType, connector)
+  const zapierQuery = connector === 'zapier'
+    ? /(heygen|avatar|video)/.test([
+      input.owner_goal,
+      input.requested_action,
+      input.target,
+      ...(input.requested_resources || []),
+    ].map(normalize).join(' '))
+      ? 'heygen'
+      : input.requested_action || input.owner_goal || null
+    : null
+  const zapierDiscovery = connector === 'zapier'
+    ? await getZapierToolBridge(zapierQuery)
+    : null
+  let decision = buildDecision(input, taskType, connector)
+  if (connector === 'zapier' && zapierDiscovery?.connected && decision.state === 'CREDENTIAL_REQUIRED') {
+    decision = taskType === 'connector_write'
+      ? {
+        state: 'OWNER_APPROVAL_REQUIRED',
+        reason: 'Zapier tools are visible through the Bridge Tool inventory. Writes remain locked behind Telegram approval and exact-scope runner wiring.',
+        http_status_if_attempted: 423,
+        missing_credentials: [],
+      }
+      : {
+        state: 'ALLOWED_READ_ONLY',
+        reason: 'Zapier tool inventory is visible through Bridge Mode read-only discovery.',
+        http_status_if_attempted: 200,
+        missing_credentials: [],
+      }
+  }
   const selectedRoute = routeFor(input.agent_id || 'tony', taskType, connector)
   const credentialNames = connector ? CONNECTOR_CREDENTIALS[connector] || [] : []
 
@@ -351,7 +381,11 @@ export async function POST(request: NextRequest) {
   const approvalRequired = decision.state === 'OWNER_APPROVAL_REQUIRED'
   const credentialRequired = decision.state === 'CREDENTIAL_REQUIRED'
   const generatedAt = new Date().toISOString()
-  const selectedTools = connector ? [`${connector}:readiness_or_inventory`] : ['bridge:capability_matrix', 'bridge:button_contracts']
+  const selectedTools = zapierDiscovery?.exact_heygen_tool_name
+    ? [zapierDiscovery.exact_heygen_tool_name, 'zapier_tool_bridge_read_only']
+    : connector
+      ? [`${connector}:readiness_or_inventory`]
+      : ['bridge:capability_matrix', 'bridge:button_contracts']
   const selectedModels = input.agent_id === 'hermes'
     ? ['sandbox/local provider when configured']
     : ['claude_cli_direct primary', 'OpenRouter fallback locked', 'Ollama emergency local backup']
@@ -437,6 +471,22 @@ export async function POST(request: NextRequest) {
       executive_report_required: true,
       telegram_approval_required: approvalRequired,
       next_action: nextAction,
+      zapier_tool_discovery: zapierDiscovery
+        ? {
+          connected: zapierDiscovery.connected,
+          mcp_reachable: zapierDiscovery.mcp_reachable,
+          tools_total: zapierDiscovery.tools_total,
+          query: zapierDiscovery.query,
+          heygen_found: zapierDiscovery.heygen_found,
+          exact_heygen_tool_name: zapierDiscovery.exact_heygen_tool_name,
+          required_fields: zapierDiscovery.required_fields,
+          source: zapierDiscovery.source,
+          execution_enabled: false,
+          writes_enabled: false,
+          blocker: zapierDiscovery.blocker,
+          next_action: zapierDiscovery.next_action,
+        }
+        : null,
     },
     ui_visibility: {
       card_title: 'Latest Bridge Mode Preflight',

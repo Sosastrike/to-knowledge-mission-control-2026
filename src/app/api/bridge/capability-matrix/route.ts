@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
       available_models: ['Claude CLI primary route: claude_cli_direct', 'OpenRouter cloud fallback/model router', 'Ollama local emergency fallback'],
       available_tools: ['Telegram text route', 'Telegram voice input route', 'ClaudeClaw dashboard', 'OpenClaw Gateway status', 'Mission Control read-only status', 'Viral Crawl Video Intelligence status'],
       available_skills: ['Skills registry read-only search', 'watch_video skill visible/read-only', 'Approved installed ClaudeClaw skills only'],
-      available_integrations: ['ElevenLabs voice output', 'Whisper/OpenAI/Groq STT approved path', 'FireCrawl readiness', 'Viral Crawl Obsidian destination status', 'Zapier readiness locked until scoped approval'],
+      available_integrations: ['ElevenLabs voice output', 'Whisper/OpenAI/Groq STT approved path', 'FireCrawl readiness', 'Viral Crawl Obsidian destination status', 'Zapier Tool Bridge read-only inventory locked until scoped approval'],
       available_mcps: ['MCP inventory via /api/mcp/servers', 'No MCP mutation without approval'],
       provider_routes: ['primary_chat=claude_cli_direct', 'cloud_fallback=OpenRouter', 'local_fallback=Ollama', 'voice=ElevenLabs', 'automation=Zapier locked'],
       approval_gates: ['Zapier writes', 'model routing changes', 'memory writes', 'governance changes', 'credentials', 'deployments', 'firewall/Caddy/Cloudflare/Docker'],
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
   const toolInventory = [
     { id: 'firecrawl', state: 'CREDENTIAL_REQUIRED', mode: 'readiness only', endpoint: '/api/firecrawl/status', writes_enabled: false },
     { id: 'viral_crawl_video', state: 'READ_ONLY', mode: 'wrapper/vendor/Obsidian/skill status only', endpoint: '/api/viral-crawl/video/status', writes_enabled: false },
-    { id: 'zapier', state: 'OWNER_APPROVAL_REQUIRED', mode: 'tool list/readiness only', endpoint: '/api/zapier/tools', writes_enabled: false },
+    { id: 'zapier', state: 'OWNER_APPROVAL_REQUIRED', mode: 'canonical Zapier Tool Bridge inventory/search only', endpoint: '/api/bridge/zapier/tools', writes_enabled: false },
     { id: 'n8n', state: 'BACKEND_REQUIRED', mode: 'status/readiness only', endpoint: '/api/n8n/status', writes_enabled: false },
     { id: 'mcp_tools', state: 'READ_ONLY', mode: 'status/server inventory only', endpoint: '/api/mcp/servers', writes_enabled: false },
     { id: 'skills', state: 'READ_ONLY', mode: 'ClaudeClaw agent skill inventory plus search/list only', endpoint: '/api/skills/tool-skills', writes_enabled: false },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { requireRole } from '@/lib/auth'
+import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -92,6 +93,8 @@ export async function GET(request: NextRequest) {
   const zapierCredentialNames = ['ZAPIER_MCP_URL', 'ZAPIER_MCP_SERVER', 'ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY']
   const zapierHasTransport = hasEnv('ZAPIER_MCP_URL') || hasEnv('ZAPIER_MCP_SERVER')
   const zapierHasToken = hasEnv('ZAPIER_ACCESS_TOKEN') || hasEnv('ZAPIER_API_KEY')
+  const zapierBridge = await getZapierToolBridge('heygen')
+  const zapierInventoryVisible = zapierBridge.connected
   const n8nMissing = missing(['N8N_BASE_URL', 'N8N_API_KEY'])
 
   const connectors: ConnectorReadiness[] = [
@@ -242,24 +245,24 @@ export async function GET(request: NextRequest) {
       id: 'zapier',
       label: 'Zapier MCP',
       role: 'automation connector and tool inventory',
-      state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
+      state: zapierInventoryVisible ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
       risk_level: 'high',
-      read_only_endpoint: '/api/zapier/tools',
+      read_only_endpoint: '/api/bridge/zapier/tools',
       execution_endpoint: '/api/zapier/request-write-approval',
       canonical_paths: {
-        status: '/api/zapier/status',
-        inventory: '/api/zapier/tools',
+        status: '/api/bridge/zapier/status',
+        inventory: '/api/bridge/zapier/tools',
         execution: '/api/zapier/request-write-approval',
         approval: '/api/bridge/approval-requests',
         setup: '/settings/tkmc/integrations',
       },
       ui_contract: {
-        status_card_state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
-        primary_button_state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'OWNER_APPROVAL_REQUIRED',
-        primary_button_label: !zapierHasTransport || !zapierHasToken ? 'Configure Zapier MCP' : 'Request write approval',
-        disabled_message: !zapierHasTransport || !zapierHasToken
-          ? 'Zapier MCP transport/token is missing by name. Tool execution is unavailable.'
-          : 'Zapier writes remain locked. Tool list is read-only; write tools require HTTP 423 approval flow.',
+        status_card_state: zapierInventoryVisible ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+        primary_button_state: zapierInventoryVisible ? 'OWNER_APPROVAL_REQUIRED' : 'CREDENTIAL_REQUIRED',
+        primary_button_label: zapierInventoryVisible ? 'Request scoped Telegram approval' : 'Connect/resync Zapier MCP',
+        disabled_message: zapierInventoryVisible
+          ? 'Zapier tools are visible through the canonical Bridge inventory. Writes remain locked behind Telegram approval and exact-scope runners.'
+          : 'Zapier tool inventory is not visible. Owner must connect/resync Zapier MCP before tool execution can be planned.',
       },
       credential_names: zapierCredentialNames,
       credentials_present_by_name: credentialMap(zapierCredentialNames),
@@ -267,7 +270,7 @@ export async function GET(request: NextRequest) {
       audit_required_for_execution: true,
       writes_enabled: false,
       execution_enabled: false,
-      current_safe_actions: ['tool-list only when transport/auth are configured', 'no tool invocation'],
+      current_safe_actions: ['tool-list/search only', 'HeyGen discovery only', 'no tool invocation'],
       blocked_actions: ['create', 'update', 'delete', 'send', 'post', 'upload', 'run', 'execute'],
       owner_approval_required_before: [
         'adding or changing Zapier credentials',
@@ -276,22 +279,30 @@ export async function GET(request: NextRequest) {
       ],
       deferred_or_redundant_paths: [
         'direct provider API setup rows should remain deferred when Zapier is the canonical automation path',
-        'ad hoc Zapier calls are not canonical; use /api/zapier/tools for inventory and /api/zapier/request-write-approval for protected writes',
+        'ad hoc Zapier calls are not canonical; use /api/bridge/zapier/tools for inventory and /api/zapier/request-write-approval for protected writes',
       ],
       detail_checks: [
         {
           label: 'Zapier status',
-          state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
-          detail: !zapierHasTransport || !zapierHasToken
-            ? 'Zapier MCP transport/token is missing by name in the Mission Control environment.'
-            : 'Zapier MCP credential names are present. Tool inventory may be listed read-only; tools are not invoked.',
-          endpoint: '/api/zapier/status',
+          state: zapierInventoryVisible ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+          detail: zapierInventoryVisible
+            ? `Zapier inventory is visible from ${zapierBridge.source}. Tool count: ${zapierBridge.tools_total}. MCP reachable: ${zapierBridge.mcp_reachable ? 'yes' : 'no'}.`
+            : 'Zapier MCP/tool inventory is not visible. Tool execution is unavailable.',
+          endpoint: '/api/bridge/zapier/status',
         },
         {
           label: 'Tool inventory',
-          state: !zapierHasTransport || !zapierHasToken ? 'CREDENTIAL_REQUIRED' : 'READ_ONLY',
-          detail: 'GET /api/zapier/tools classifies read/write/unknown where possible and never invokes a tool.',
-          endpoint: '/api/zapier/tools',
+          state: zapierInventoryVisible ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+          detail: 'GET /api/bridge/zapier/tools classifies read/write/unknown where possible and never invokes a tool.',
+          endpoint: '/api/bridge/zapier/tools',
+        },
+        {
+          label: 'HeyGen in Zapier',
+          state: zapierBridge.heygen_found ? 'READ_ONLY' : 'CREDENTIAL_REQUIRED',
+          detail: zapierBridge.heygen_found
+            ? `HeyGen is visible through Zapier as ${zapierBridge.exact_heygen_tool_name}. Required fields are ${zapierBridge.required_fields?.join(', ') || 'not discoverable from the cached snapshot'}.`
+            : 'HeyGen is not visible in Zapier MCP. Owner must connect HeyGen in Zapier, then rerun Zapier resync/tool discovery.',
+          endpoint: '/api/bridge/zapier/tools/search?q=heygen',
         },
         {
           label: 'Write path',
@@ -301,13 +312,17 @@ export async function GET(request: NextRequest) {
         },
       ],
       verification_commands: [
-        'GET /api/zapier/tools',
+        'GET /api/bridge/zapier/status',
+        'GET /api/bridge/zapier/tools',
+        'GET /api/bridge/zapier/tools/search?q=heygen',
         'POST /api/zapier/request-write-approval must remain owner-approval-required',
       ],
-      blocker: !zapierHasTransport || !zapierHasToken
-        ? 'missing Zapier MCP transport or token'
+      blocker: !zapierInventoryVisible
+        ? 'Zapier MCP/tool inventory not visible'
         : 'write approval persistence not applied',
-      next_action: 'Keep reads/tool inventory separate from writes; enable writes only after owner-approved approval/audit persistence.',
+      next_action: zapierBridge.heygen_found
+        ? 'Use Zapier HeyGen path for video planning; do not ask for direct HeyGen API keys first. Execution remains locked until scoped Telegram approval runner is implemented.'
+        : 'Owner connects HeyGen in Zapier, then rerun Zapier resync/tool discovery. Do not request direct HeyGen API keys first.',
     },
     {
       id: 'n8n',

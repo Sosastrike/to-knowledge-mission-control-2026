@@ -184,6 +184,42 @@ interface ConnectorReadinessPayload {
   error?: string
 }
 
+interface ZapierToolRecord {
+  tool_name?: string
+  description?: string | null
+  category?: string
+  write_classification?: 'read' | 'write' | 'unknown'
+  approval_required?: boolean
+  execution_enabled?: boolean
+  blocker?: string | null
+  source?: string
+  required_fields?: string[] | null
+  required_fields_source?: string
+}
+
+interface ZapierToolBridgePayload {
+  ok?: boolean
+  connected?: boolean
+  mcp_reachable?: boolean
+  tools_total?: number
+  tools?: ZapierToolRecord[]
+  heygen_found?: boolean
+  heygen_tools?: ZapierToolRecord[]
+  exact_heygen_tool_name?: string | null
+  required_fields?: string[] | null
+  query?: string | null
+  source?: string
+  sources_checked?: string[]
+  last_checked_at?: string
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  no_zapier_writes?: boolean
+  blocker?: string | null
+  next_action?: string
+  heygen_message?: string
+  error?: string
+}
+
 interface BridgePreflightResult {
   id?: string
   persistence?: string
@@ -214,6 +250,20 @@ interface BridgePreflightResult {
   fallback_routes?: string[]
   telegram_approval_required?: boolean
   next_action?: string
+  zapier_tool_discovery?: {
+    connected?: boolean
+    mcp_reachable?: boolean
+    tools_total?: number
+    query?: string | null
+    heygen_found?: boolean
+    exact_heygen_tool_name?: string | null
+    required_fields?: string[] | null
+    source?: string
+    execution_enabled?: boolean
+    writes_enabled?: boolean
+    blocker?: string | null
+    next_action?: string
+  } | null
 }
 
 interface BridgePreflightPayload {
@@ -848,6 +898,53 @@ function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
   )
 }
 
+function ZapierToolBridgeCard({ payload }: { payload: ZapierToolBridgePayload | null }) {
+  const heygenTools = payload?.heygen_tools || payload?.tools || []
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={payload?.heygen_found ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>Zapier Tool Bridge</strong>
+        </div>
+        <span className={styles.providerState}>{payload?.connected ? 'connected' : 'not visible'}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>tools: {payload?.tools_total ?? 0}</span>
+        <span>MCP reachable: {payload?.mcp_reachable ? 'yes' : 'no'}</span>
+        <span>source: {payload?.source || 'unknown'}</span>
+        <span>writes: {payload?.writes_enabled ? 'enabled' : 'locked'}</span>
+      </div>
+      <p className={styles.providerNotes}>
+        Canonical endpoints: <code>/api/bridge/zapier/status</code> · <code>/api/bridge/zapier/tools</code> · <code>/api/bridge/zapier/tools/search?q=heygen</code>
+      </p>
+      <p className={styles.providerNotes}>
+        HeyGen: {payload?.heygen_found ? `found as ${payload.exact_heygen_tool_name || 'Zapier HeyGen tool'}` : 'not visible in Zapier MCP'}
+      </p>
+      <p className={styles.providerNotes}>
+        Required fields: {payload?.required_fields && payload.required_fields.length > 0 ? payload.required_fields.join(' · ') : 'not discoverable from cached snapshot'}
+      </p>
+      {payload?.heygen_message && <p className={styles.providerAction}>{payload.heygen_message}</p>}
+      {payload?.blocker && <p className={styles.providerAction}>Blocked: {payload.blocker}</p>}
+      {payload?.next_action && <p className={styles.providerNotes}>{payload.next_action}</p>}
+      {heygenTools.length > 0 && (
+        <ul className={styles.connectorList}>
+          {heygenTools.slice(0, 8).map((tool, index) => (
+            <li key={tool.tool_name || `zapier-tool-${index}`}>
+              <span>
+                {tool.tool_name}
+                <br />
+                <small>{tool.description || 'No description'} · {tool.source || 'source unknown'}</small>
+              </span>
+              <strong>{tool.write_classification || 'unknown'}</strong>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function PreflightCard({
   title,
   payload,
@@ -906,6 +1003,11 @@ function PreflightCard({
         <p className={styles.providerNotes}>Restrictions: {joinPreview(preflight.restrictions)}</p>
       )}
       {preflight.next_action && <p className={styles.providerAction}>{preflight.next_action}</p>}
+      {preflight.zapier_tool_discovery && (
+        <p className={styles.providerNotes}>
+          Zapier discovery: {preflight.zapier_tool_discovery.heygen_found ? `HeyGen found as ${preflight.zapier_tool_discovery.exact_heygen_tool_name}` : 'HeyGen not visible'} · source {preflight.zapier_tool_discovery.source || 'unknown'} · tools {preflight.zapier_tool_discovery.tools_total ?? 0}
+        </p>
+      )}
     </div>
   )
 }
@@ -1573,6 +1675,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [zapierPreflight, setZapierPreflight] = useState<BridgePreflightPayload | null>(null)
   const [preflightState, setPreflightState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [preflightError, setPreflightError] = useState<string>('')
+  const [zapierTools, setZapierTools] = useState<ZapierToolBridgePayload | null>(null)
+  const [zapierToolsState, setZapierToolsState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [zapierToolsError, setZapierToolsError] = useState<string>('')
   const [approvalReadiness, setApprovalReadiness] = useState<ApprovalReadinessPayload | null>(null)
   const [approvalReadinessState, setApprovalReadinessState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [approvalReadinessError, setApprovalReadinessError] = useState<string>('')
@@ -1853,6 +1958,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         setPreflightState('error')
       })
 
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/zapier/tools/search?q=heygen', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ZapierToolBridgePayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setZapierTools(data)
+        setZapierToolsState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setZapierToolsError((err as Error).message || 'fetch failed')
+        setZapierToolsState('error')
+      })
     return () => {
       cancelled = true
     }
@@ -2671,6 +2801,34 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 </div>
               )}
               {approvalQueueState === 'ok' && <ApprovalQueueCard payload={approvalQueue} refreshedAt={approvalQueueRefreshedAt} />}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Canonical Zapier Tool Bridge — read-only */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Zapier Tool Bridge</h2>
+          <span className={styles.tierSub}>
+            Read-only tool discovery from <code>/api/bridge/zapier/tools</code>
+          </span>
+        </header>
+        {zapierToolsState === 'loading' && (
+          <div className={styles.banner}>Loading Zapier Tool Bridge from <code>/api/bridge/zapier/tools/search?q=heygen</code>…</div>
+        )}
+        {zapierToolsState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load Zapier Tool Bridge:</strong> {zapierToolsError}
+          </div>
+        )}
+        {zapierToolsState === 'ok' && (
+          <>
+            <div className={styles.preflightNotice}>
+              Tony and every agent must check this bridge before claiming a Zapier/HeyGen tool is missing. This panel never invokes Zapier tools and never enables writes.
+            </div>
+            <div className={styles.providerGrid}>
+              <ZapierToolBridgeCard payload={zapierTools} />
             </div>
           </>
         )}

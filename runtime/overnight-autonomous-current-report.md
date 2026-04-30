@@ -1,16 +1,17 @@
 # Overnight Autonomous Current Report
 
-Generated: 2026-04-30T09:18:08-04:00
+Generated: 2026-04-30T09:33:04-04:00
 
 ## Current HEAD
-- local HEAD: 1c908fa
-- remote to-knowledge-mc: 1c908fa
+- local HEAD: ae43161
+- remote to-knowledge-mc: ae43161
 
 ## Live checks
 - mission-control.service: active
 - TKMC login: 200
-- Full unit tests: 82 files, 931 tests passing
-- Safety suite: 22 checks passing, 0 failures
+- Full unit tests: 82 files, 931 tests passing on last full run
+- Safety suite: 23 checks passing, 0 failures
+- Route smoke coverage: 44 routes, 8 designer pages
 - Bridge Mode: read-only MVP live; protected execution locked
 - Bridge Mode preflight: live read-only; no approval request persistence
 - Bridge cost/rate governance: live read-only; no budget enforcement or provider route changes
@@ -23,6 +24,11 @@ Generated: 2026-04-30T09:18:08-04:00
 - MCP inventory: live discovery restored, 20 servers visible
 
 ## Commits pushed in this continuation
+- ae43161 test(routes): expand read-only bridge smoke coverage
+- 7e60e38 docs(release): group safe overnight commits
+- 0a0b6d1 docs(approvals): avoid stale head wording
+- 605802e docs(approvals): refresh owner migration packet
+- fd14f1d test(skills): guard read-only registry behavior
 - 1c908fa test(bridge): guard read-only cost governance
 - 5d831e2 feat(bridge): add read-only cost governance
 - 2c189c1 feat(bridge): surface full agent capability details
@@ -54,7 +60,7 @@ Generated: 2026-04-30T09:18:08-04:00
 - Credentials or reauth for degraded MCP providers where desired
 
 ## Next safe queue
-1. Continue button contract/route QA.
-2. Expand read-only connector detail checks.
+1. Keep widening read-only route/button QA where new endpoints appear.
+2. Keep connector readiness detailed and honest without execution.
 3. Keep cleanup inventory current without deleting/quarantining.
-4. Prepare final overnight report.
+4. Prepare final overnight report when the safe queue is exhausted or owner returns.

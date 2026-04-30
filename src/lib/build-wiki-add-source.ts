@@ -231,41 +231,74 @@ export async function validateProposedPath(input: string): Promise<AddSourceVali
 }
 
 function unifiedDiff(beforeLines: string[], afterLines: string[]): string {
-  // Simple unified-style preview (not a full LCS diff) — show the SOURCES
-  // block with - and + markers around the changed window. Sufficient for
-  // owner-approval review.
+  // Lightweight unified-style preview (not a full LCS diff). Adequate for
+  // owner-approval review of single-line insertions/deletions, which is
+  // the only mutation Add-Local-Source produces today.
+  //
+  // The previous implementation walked end-of-array index-aligned, so a
+  // simple insertion at position p made every line from p..end appear as
+  // a "diff" (because before[i] vs after[i] mismatch for all i ≥ p once
+  // one line shifts). The fix below computes a common SUFFIX with two
+  // separate pointers (beforeEnd, afterEnd) that decrement together only
+  // while their values match — exactly what `diff` does.
   const out: string[] = []
   out.push(`--- ${FARMER_SCRIPT_PATH}`)
   out.push(`+++ ${FARMER_SCRIPT_PATH}`)
-  // Find first differing line and last differing line.
-  let firstDiff = -1
-  for (let i = 0; i < Math.max(beforeLines.length, afterLines.length); i++) {
-    if (beforeLines[i] !== afterLines[i]) { firstDiff = i; break }
+
+  // Find first differing index (longest common prefix).
+  const minLen = Math.min(beforeLines.length, afterLines.length)
+  let firstDiff = 0
+  while (firstDiff < minLen && beforeLines[firstDiff] === afterLines[firstDiff]) {
+    firstDiff++
   }
-  if (firstDiff === -1) return out.join('\n')
-  let lastDiff = firstDiff
-  for (let i = Math.max(beforeLines.length, afterLines.length) - 1; i >= firstDiff; i--) {
-    if (beforeLines[i] !== afterLines[i]) { lastDiff = i; break }
+  // Identical files → no hunk.
+  if (firstDiff === minLen && beforeLines.length === afterLines.length) {
+    return out.join('\n')
   }
+
+  // Find last differing index by walking the common SUFFIX (independent
+  // pointers per side).
+  let beforeEnd = beforeLines.length
+  let afterEnd = afterLines.length
+  while (
+    beforeEnd > firstDiff &&
+    afterEnd > firstDiff &&
+    beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]
+  ) {
+    beforeEnd--
+    afterEnd--
+  }
+
+  // Hunk window with `ctx` lines of context on either side. The start
+  // index is shared; the END indices differ by the net insertion/deletion
+  // count, which is what makes the `,N` counts in the @@ header right.
   const ctx = 3
   const start = Math.max(0, firstDiff - ctx)
-  const endBefore = Math.min(beforeLines.length, lastDiff + ctx + 1)
-  const endAfter = Math.min(afterLines.length, lastDiff + ctx + 1)
-  out.push(`@@ -${start + 1},${endBefore - start} +${start + 1},${endAfter - start} @@`)
-  // For simplicity, render the full window from `start` showing before lines
-  // first (with -) then after lines (with +) in the changed region; context
-  // lines (unchanged) get prefix space.
-  const maxEnd = Math.max(endBefore, endAfter)
-  for (let i = start; i < maxEnd; i++) {
-    const b = i < beforeLines.length ? beforeLines[i] : null
-    const a = i < afterLines.length ? afterLines[i] : null
-    if (b === a && b !== null) {
-      out.push(' ' + b)
-    } else {
-      if (b !== null) out.push('-' + b)
-      if (a !== null) out.push('+' + a)
-    }
+  const beforeContextEnd = Math.min(beforeLines.length, beforeEnd + ctx)
+  const afterContextEnd = Math.min(afterLines.length, afterEnd + ctx)
+  const beforeCount = beforeContextEnd - start
+  const afterCount = afterContextEnd - start
+  out.push(`@@ -${start + 1},${beforeCount} +${start + 1},${afterCount} @@`)
+
+  // Pre-context (identical on both sides).
+  for (let i = start; i < firstDiff; i++) {
+    out.push(' ' + beforeLines[i])
   }
+  // Removed lines.
+  for (let i = firstDiff; i < beforeEnd; i++) {
+    out.push('-' + beforeLines[i])
+  }
+  // Added lines.
+  for (let i = firstDiff; i < afterEnd; i++) {
+    out.push('+' + afterLines[i])
+  }
+  // Post-context (identical on both sides — `diff` walks beforeLines from
+  // beforeEnd; we use the same since the suffix is identical to afterLines
+  // from afterEnd by construction).
+  for (let i = beforeEnd; i < beforeContextEnd; i++) {
+    out.push(' ' + beforeLines[i])
+  }
+
   return out.join('\n')
 }
 

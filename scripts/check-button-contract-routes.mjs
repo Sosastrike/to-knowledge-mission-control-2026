@@ -21,7 +21,7 @@ const failures = []
 const stateCounts = Object.fromEntries([...allowedStates].map((state) => [state, 0]))
 
 function routeExists(endpoint) {
-  const normalized = endpoint.replace(/:\w+/g, '[id]')
+  const normalized = endpoint.replace(/:(\w+)/g, '[$1]')
   const exact = path.join(root, 'src/app', normalized, 'route.ts')
   if (fs.existsSync(exact)) return path.relative(root, exact)
 

@@ -27,10 +27,13 @@ interface DesignerLoginShellProps {
   googleLoading: boolean
   googleReady: boolean
   googleClientId: string
+  microsoftLoading: boolean
+  microsoftReady: boolean
   onUsernameChange: (value: string) => void
   onPasswordChange: (value: string) => void
   onSubmit: FormEventHandler<HTMLFormElement>
   onGoogleSignIn: () => void
+  onMicrosoftSignIn: () => void
   onClearPending: () => void
   onSetup: () => void
 }
@@ -96,15 +99,6 @@ function MicrosoftGlyph() {
   )
 }
 
-function SamlGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  )
-}
-
 // ── inline notice (used to surface real backend states; styled to
 //    match the .auth-honest pattern from canonical Login.html) ────────
 
@@ -138,15 +132,18 @@ export function DesignerLoginShell({
   googleLoading,
   googleReady,
   googleClientId,
+  microsoftLoading,
+  microsoftReady,
   onUsernameChange,
   onPasswordChange,
   onSubmit,
   onGoogleSignIn,
+  onMicrosoftSignIn,
   onClearPending,
   onSetup,
 }: DesignerLoginShellProps) {
   const [mode, setMode] = useState<PanelMode>('login')
-  const authBlocked = pendingApproval || loading || googleLoading
+  const authBlocked = pendingApproval || loading || googleLoading || microsoftLoading
   const googleConfigured = Boolean(googleClientId)
 
   return (
@@ -354,36 +351,34 @@ export function DesignerLoginShell({
                   )
                 })()}
 
-                {/* Microsoft 365 — placeholder until OAuth provider is wired
-                    by the owner. Visibly marked, never silently grayed. */}
+                {/* Microsoft 365 — enabled only when server-side Entra
+                    configuration is complete. Otherwise it remains visibly
+                    setup-pending, never silently grayed. */}
                 <button
                   type="button"
-                  disabled
-                  className={styles.ssoUnavailable}
-                  aria-label="Continue with Microsoft 365 — requires owner setup"
-                  title="Requires owner setup — Microsoft Entra ID OAuth provider"
+                  onClick={onMicrosoftSignIn}
+                  disabled={!microsoftReady || microsoftLoading || loading || pendingApproval}
+                  className={!microsoftReady ? styles.ssoUnavailable : undefined}
+                  aria-label={
+                    microsoftReady
+                      ? 'Continue with Microsoft 365'
+                      : 'Continue with Microsoft 365 — requires owner setup'
+                  }
+                  title={
+                    microsoftReady
+                      ? undefined
+                      : 'Requires owner setup — Microsoft Entra ID OAuth provider'
+                  }
                 >
                   <span className={styles.glyph}>
                     <MicrosoftGlyph />
                   </span>
-                  <span className={styles.ssoLabel}>Continue with Microsoft 365</span>
-                  <span className={styles.ssoBadge}>Requires owner setup</span>
+                  <span className={styles.ssoLabel}>
+                    {microsoftLoading ? 'Redirecting to Microsoft…' : 'Continue with Microsoft 365'}
+                  </span>
+                  {!microsoftReady && <span className={styles.ssoBadge}>Requires owner setup</span>}
                 </button>
 
-                {/* SAML — placeholder until identity provider is configured. */}
-                <button
-                  type="button"
-                  disabled
-                  className={styles.ssoUnavailable}
-                  aria-label="Single sign-on SAML — requires owner setup"
-                  title="Requires owner setup — SAML identity provider configuration"
-                >
-                  <span className={styles.glyph}>
-                    <SamlGlyph />
-                  </span>
-                  <span className={styles.ssoLabel}>Single sign-on (SAML)</span>
-                  <span className={styles.ssoBadge}>Requires owner setup</span>
-                </button>
               </div>
 
               <div className={styles.bottom}>

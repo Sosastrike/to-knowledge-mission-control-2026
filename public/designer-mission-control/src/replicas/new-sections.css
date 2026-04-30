@@ -1,0 +1,105 @@
+/* ============================================================
+   new-sections.css — shared styles for FireCrawl, Zapier, n8n,
+   MCP Tools, and Skills pages. Reuses existing tokens from
+   styles.css and brain-sync.css; introduces no new colours.
+   ============================================================ */
+
+/* Page shell — same chrome as MiroFish/BrainSync pages */
+.ns-page { padding: 24px 28px 80px; max-width: 1480px; margin: 0 auto; }
+.ns-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+.ns-header h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.ns-header .ns-sub { font-size: 13px; color: var(--text-dim, #8a8f98); }
+.ns-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Status strip */
+.ns-status-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.ns-stat { background: var(--surface-1, #14161a); border: 1px solid var(--border, #23262d); border-radius: 10px; padding: 12px 14px; }
+.ns-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim, #8a8f98); margin-bottom: 6px; }
+.ns-stat-value { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ns-stat-foot { font-size: 11px; color: var(--text-dim, #8a8f98); margin-top: 4px; }
+
+/* State pill — borrows from existing readiness pills */
+.ns-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; line-height: 1.4; border: 1px solid; }
+.ns-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.ns-pill.live           { color: #4ade80; border-color: #4ade8033; background: #4ade8011; }
+.ns-pill.read-only      { color: #60a5fa; border-color: #60a5fa33; background: #60a5fa11; }
+.ns-pill.backend        { color: #fbbf24; border-color: #fbbf2433; background: #fbbf2411; }
+.ns-pill.credential     { color: #f97316; border-color: #f9731633; background: #f9731611; }
+.ns-pill.approval       { color: #f472b6; border-color: #f472b633; background: #f472b611; }
+.ns-pill.disabled       { color: #6b7280; border-color: #6b728033; background: #6b728011; }
+.ns-pill.degraded       { color: #f97316; border-color: #f9731633; background: #f9731611; }
+.ns-pill.failed         { color: #ef4444; border-color: #ef444433; background: #ef444411; }
+.ns-pill.not-installed  { color: #6b7280; border-color: #6b728033; background: #6b728011; }
+.ns-pill.unknown        { color: #6b7280; border-color: #6b728033; background: #6b728011; }
+.ns-pill.connected      { color: #4ade80; border-color: #4ade8033; background: #4ade8011; }
+
+/* Card */
+.ns-card { background: var(--surface-1, #14161a); border: 1px solid var(--border, #23262d); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.ns-card-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.ns-card-h h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.ns-card-h .ns-card-sub { font-size: 12px; color: var(--text-dim, #8a8f98); }
+
+/* Two-column on wide screens */
+.ns-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1100px) { .ns-cols { grid-template-columns: 1fr; } }
+
+/* Form */
+.ns-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.ns-form .full { grid-column: 1 / -1; }
+.ns-form label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim, #8a8f98); margin-bottom: 4px; }
+.ns-form input, .ns-form select, .ns-form textarea {
+  width: 100%; background: var(--surface-2, #0f1115); border: 1px solid var(--border, #23262d);
+  color: var(--text, #e6e7ea); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px;
+}
+.ns-form input:focus, .ns-form select:focus, .ns-form textarea:focus { outline: 1px solid #60a5fa66; }
+.ns-form textarea { min-height: 64px; resize: vertical; }
+.ns-form-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* Buttons */
+.ns-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border, #23262d); background: var(--surface-2, #0f1115); color: var(--text, #e6e7ea); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 120ms, border-color 120ms; }
+.ns-btn:hover:not(:disabled) { background: var(--surface-3, #1b1e24); border-color: var(--border-strong, #2f333c); }
+.ns-btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.ns-btn.primary:hover:not(:disabled) { background: #1d4ed8; }
+.ns-btn.warn    { background: #f472b611; border-color: #f472b633; color: #f472b6; }
+.ns-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ns-btn.tiny { padding: 4px 8px; font-size: 11px; }
+
+/* Tooltip-on-disabled — show why a button is locked */
+.ns-btn[data-locked]::after {
+  content: attr(data-locked); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: #0a0c10; border: 1px solid var(--border, #23262d); padding: 4px 8px; border-radius: 6px;
+  font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 120ms;
+  color: var(--text, #e6e7ea); z-index: 5;
+}
+.ns-btn[data-locked] { position: relative; }
+.ns-btn[data-locked]:hover::after { opacity: 1; }
+
+/* Tables */
+.ns-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ns-table th, .ns-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border, #23262d); }
+.ns-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim, #8a8f98); font-weight: 500; background: var(--surface-2, #0f1115); }
+.ns-table tr:last-child td { border-bottom: 0; }
+.ns-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+.ns-table .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+/* Activity feed */
+.ns-feed { max-height: 360px; overflow-y: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.6; }
+.ns-feed-row { display: grid; grid-template-columns: 80px 100px 1fr; gap: 10px; padding: 4px 0; border-bottom: 1px dashed var(--border, #23262d); }
+.ns-feed-row:last-child { border-bottom: 0; }
+.ns-feed .ts { color: var(--text-dim, #8a8f98); }
+.ns-feed .agent { color: #60a5fa; }
+.ns-feed-empty { padding: 32px 16px; text-align: center; color: var(--text-dim, #8a8f98); font-size: 12px; }
+.ns-feed-empty strong { color: var(--text, #e6e7ea); display: block; margin-bottom: 4px; font-weight: 600; }
+
+/* Banner */
+.ns-banner { padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.ns-banner.warn      { background: #fbbf2411; border: 1px solid #fbbf2433; color: #fbbf24; }
+.ns-banner.info      { background: #60a5fa11; border: 1px solid #60a5fa33; color: #60a5fa; }
+.ns-banner.danger    { background: #ef444411; border: 1px solid #ef444433; color: #ef4444; }
+.ns-banner code { background: #00000033; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+
+/* Section divider */
+.ns-h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim, #8a8f98); margin: 24px 0 10px; font-weight: 600; }
+
+/* Empty state */
+.ns-empty { padding: 28px 16px; text-align: center; color: var(--text-dim, #8a8f98); font-size: 12px; }

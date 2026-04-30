@@ -11,6 +11,7 @@
 //  All auth handlers preserved unchanged from the prior version:
 //    - POST /api/auth/login (username + password)
 //    - POST /api/auth/google (Google Sign-In credential)
+//    - GET  /api/auth/azure-ad (Microsoft 365 / Entra OAuth redirect)
 //    - GET  /api/setup       (first-boot redirect to /setup if needed)
 //    - PENDING_APPROVAL / NO_USERS handling
 //    - useTranslations error strings
@@ -78,12 +79,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleReady, setGoogleReady] = useState(false)
+  const [microsoftLoading, setMicrosoftLoading] = useState(false)
+  const [microsoftReady, setMicrosoftReady] = useState(false)
   const googleCallbackRef = useRef<((response: GoogleCredentialResponse) => void) | null>(null)
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
   // Check if first-time setup is needed on page load — auto-redirect to /setup
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const authError = params.get('authError')
+    const authCode = params.get('authCode')
+    if (authError) {
+      setError(authError)
+      setPendingApproval(authCode === 'PENDING_APPROVAL')
+      setNeedsSetup(false)
+    }
+
     fetch('/api/setup')
       .then((res) => res.json())
       .then((data) => {
@@ -94,6 +106,15 @@ export default function LoginPage() {
       .catch(() => {
         // Ignore — setup check is best-effort
       })
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/auth/azure-ad/status', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setMicrosoftReady(Boolean(data?.configured))
+      })
+      .catch(() => setMicrosoftReady(false))
   }, [])
 
   const completeLogin = useCallback(
@@ -131,7 +152,9 @@ export default function LoginPage() {
 
       // Full reload ensures the session cookie is sent on all subsequent requests.
       // router.push() + refresh() can race and use stale RSC payloads.
-      window.location.href = '/'
+      // Owner directive 2026-04-29: land on the official TKMC app root.
+      // The root now shows the active Mission Control landing surface.
+      window.location.href = '/designer-mission-control/Mission%20Control.html?page=mission'
       return true
     },
     [t],
@@ -203,6 +226,13 @@ export default function LoginPage() {
     window.google.accounts.id.prompt()
   }
 
+  const handleMicrosoftSignIn = () => {
+    if (!microsoftReady) return
+    setError('')
+    setMicrosoftLoading(true)
+    window.location.href = '/api/auth/azure-ad'
+  }
+
   return (
     <DesignerLoginShell
       username={username}
@@ -214,14 +244,18 @@ export default function LoginPage() {
       googleLoading={googleLoading}
       googleReady={googleReady}
       googleClientId={googleClientId}
+      microsoftLoading={microsoftLoading}
+      microsoftReady={microsoftReady}
       onUsernameChange={setUsername}
       onPasswordChange={setPassword}
       onSubmit={handleSubmit}
       onGoogleSignIn={handleGoogleSignIn}
+      onMicrosoftSignIn={handleMicrosoftSignIn}
       onClearPending={() => {
         setPendingApproval(false)
         setError('')
         setGoogleLoading(false)
+        setMicrosoftLoading(false)
       }}
       onSetup={() => {
         window.location.href = '/setup'

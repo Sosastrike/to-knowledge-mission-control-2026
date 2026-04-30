@@ -1,0 +1,563 @@
+/* ============================================================
+   Admin / Settings consolidation styles
+   Used by: Users & Roles, Security, Models, Email redirect.
+   Honest amber chips for unwired actions.
+   ============================================================ */
+
+/* Settings rail groups */
+.sd-rail-group { margin-bottom: 14px; }
+.sd-rail-group-label {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+  font-weight: 600;
+  padding: 0 14px 4px;
+  opacity: 0.7;
+}
+
+/* Honest amber dot — used inside disabled buttons and hints */
+.amber-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #ffb060;
+  box-shadow: 0 0 6px rgba(255,176,96,0.55);
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Honest band — top of each settings page */
+.honest-band {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255,176,96,0.06);
+  border: 1px solid rgba(255,176,96,0.18);
+  border-radius: 9px;
+  color: #d6d2c1;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.honest-band svg { color: #ffb060; flex-shrink: 0; margin-top: 2px; }
+.honest-band b { color: #ffb060; font-weight: 600; }
+
+/* KPI row */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.kpi-card {
+  padding: 12px 14px;
+  background: var(--bg-1, rgba(255,255,255,0.02));
+  border: 1px solid var(--line-1, rgba(255,255,255,0.06));
+  border-radius: 10px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.kpi-card.disabled { opacity: 0.65; }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); font-weight: 500; }
+.kpi-value { font-size: 22px; font-weight: 600; color: var(--fg-0); font-family: ui-monospace, "JetBrains Mono", monospace; line-height: 1.1; }
+.kpi-hint { font-size: 10.5px; color: var(--fg-2); display: flex; align-items: center; gap: 2px; }
+
+/* Role cards (Users page) */
+.role-card {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.06));
+  border-radius: 8px;
+}
+.role-card-head { margin-bottom: 5px; }
+
+/* Redirect card (Email tab pointing at standalone page) */
+.redirect-card {
+  padding: 40px 32px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.06));
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.redirect-card h2 { margin: 4px 0; font-size: 20px; color: var(--fg-0); font-weight: 600; }
+.redirect-card p { margin: 0; max-width: 480px; line-height: 1.55; color: var(--fg-1); font-size: 13px; }
+.redirect-card .btn { margin-top: 8px; }
+.redirect-card .redirect-hint { font-size: 11.5px; color: var(--fg-2); margin-top: 6px; max-width: 440px; line-height: 1.5; }
+.redirect-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft, rgba(107,179,255,0.12));
+  color: var(--accent, #6bb3ff);
+  margin-bottom: 4px;
+}
+
+/* Modal (used by Invite + Confirm) */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9700;
+  background: rgba(5,7,14,0.55);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 5vh 24px;
+}
+.modal {
+  background: rgba(15,19,32,0.98);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  width: min(440px, 92vw);
+  max-height: 90vh;
+  display: grid; grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  color: var(--fg-0);
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.modal-head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--fg-0); }
+.modal-body { padding: 16px; overflow-y: auto; }
+.modal-body label { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: var(--fg-2); margin-bottom: 12px; }
+.modal-body label .input,
+.modal-body label .select {
+  font-family: inherit;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--fg-0);
+  font-size: 13px;
+}
+.modal-honest {
+  display: flex; gap: 7px; align-items: flex-start;
+  padding: 9px 11px;
+  background: rgba(255,176,96,0.06);
+  border: 1px solid rgba(255,176,96,0.18);
+  border-radius: 7px;
+  color: #d0cfc4;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.modal-honest svg { color: #ffb060; flex-shrink: 0; margin-top: 2px; }
+.modal-foot {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; gap: 8px; justify-content: flex-end;
+  background: rgba(0,0,0,0.2);
+}
+.btn.danger {
+  background: rgba(255,80,96,0.12);
+  border-color: rgba(255,80,96,0.3);
+  color: #ff8088;
+}
+.btn.danger:hover { background: rgba(255,80,96,0.2); }
+
+/* Disabled buttons should look honestly-disabled, not just dimmed */
+.btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: rgba(255,255,255,0.02);
+}
+.btn[disabled]:hover { background: rgba(255,255,255,0.02); }
+
+/* Make .input class generic if missing */
+.input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--fg-0);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+.input:focus { border-color: var(--accent, #6bb3ff); }
+
+/* ─── Credentials page ───────────────────────────────────── */
+.cred-masked {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg-1);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  letter-spacing: 0.5px;
+  min-width: 160px;
+}
+
+/* ─── Backend-required chip ───────────────────────────────── */
+.backend-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 8px;
+  background: rgba(255,176,96,0.08);
+  border: 1px solid rgba(255,176,96,0.28);
+  border-radius: 999px;
+  font-size: 10.5px;
+  color: #ffb060;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: help;
+}
+.backend-chip.compact { padding: 2px 7px; font-size: 10px; }
+.backend-chip .amber-dot { margin-right: 0; }
+
+/* ─── Cadence pill (Users + Roles) ────────────────────────── */
+.cadence-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--fg-1);
+  background: rgba(107,179,255,0.08);
+  border: 1px solid rgba(107,179,255,0.22);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+
+/* ─── Security · sec-subnote + audit rows ─────────────────── */
+.sec-subnote {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--fg-2);
+  line-height: 1.55;
+}
+.sec-subnote b { color: var(--fg-1); font-weight: 600; }
+.audit-preview {
+  display: flex; flex-direction: column; gap: 2px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 6px;
+  padding: 6px;
+}
+.audit-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.02);
+}
+.audit-row:hover { background: rgba(255,255,255,0.04); }
+
+/* ─── Models · priority toggle ────────────────────────────── */
+.priority-group {
+  display: inline-flex;
+  border: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.2);
+}
+.priority-btn {
+  padding: 4px 10px;
+  font-size: 10.5px;
+  text-transform: capitalize;
+  color: var(--fg-2);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line-1, rgba(255,255,255,0.08));
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.priority-btn:last-child { border-right: none; }
+.priority-btn:hover { color: var(--fg-0); background: rgba(255,255,255,0.04); }
+.priority-btn.active {
+  background: var(--accent, #6bb3ff);
+  color: #0a0d14;
+  font-weight: 600;
+}
+
+.models-tbl td { vertical-align: top; padding-top: 10px !important; padding-bottom: 10px !important; }
+.models-tbl .select { font-size: 11.5px; padding: 5px 8px; }
+
+/* ─── Integrations Pro grid ───────────────────────────────── */
+.int-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+.int-pro-card {
+  padding: 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line-1, rgba(255,255,255,0.07));
+  border-radius: 10px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.int-pro-head {
+  display: flex; align-items: center; gap: 10px;
+}
+.int-pro-logo {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(107,179,255,0.22), rgba(107,179,255,0.06));
+  border: 1px solid rgba(107,179,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: var(--fg-0);
+  font-size: 15px;
+}
+.int-pro-name {
+  font-size: 13px;
+  color: var(--fg-0);
+  font-weight: 500;
+}
+.int-pro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.int-pro-field { min-width: 0; }
+.int-pro-label {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+.int-pro-field .status-pill { font-size: 10.5px; padding: 1px 7px; }
+.int-pro-field .select {
+  width: 100%;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.select.sm { font-size: 11px; padding: 4px 6px; }
+.int-pro-error {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 9px;
+  background: rgba(255,128,136,0.08);
+  border: 1px solid rgba(255,128,136,0.22);
+  border-radius: 5px;
+  color: #ff8088;
+  font-size: 11px;
+}
+.int-pro-error svg { flex-shrink: 0; }
+.int-pro-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid var(--line-1, rgba(255,255,255,0.05));
+  gap: 8px;
+}
+
+/* ─── Agent logs modal ────────────────────────────────────── */
+.agent-logs {
+  background: #050810;
+  border: 1px solid var(--line-1, rgba(255,255,255,0.07));
+  border-radius: 6px;
+  padding: 10px 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 3px;
+  color: #9ab0c7;
+}
+.agent-logs div { line-height: 1.6; }
+
+/* ─── Readiness map table ────────────────────────────────── */
+.sensitivity-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.readiness-tbl td { vertical-align: top; padding-top: 10px !important; padding-bottom: 10px !important; }
+.readiness-note {
+  margin-top: 4px;
+  padding: 5px 8px;
+  font-size: 10.5px;
+  color: var(--fg-2);
+  background: rgba(255,176,96,0.05);
+  border-left: 2px solid rgba(255,176,96,0.4);
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ─── Card-head can host a BackendRequired chip ──────────── */
+.card-head .backend-chip { margin-left: auto; }
+.card-head > .hstack .backend-chip { margin-right: 8px; }
+
+
+/* ============================================================
+   Agent Governance surface
+   Used by: src/governance-page.jsx, governance-page-2.jsx
+   ============================================================ */
+
+.gov-page { display: flex; flex-direction: column; gap: 14px; padding: 2px; }
+
+.gov-offline-card {
+  padding: 48px 32px; text-align: center; background: var(--bg-1, rgba(255,255,255,0.02));
+  border: 1px dashed rgba(255,180,60,0.35); border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.gov-offline-card h2 { margin: 4px 0; font-size: 20px; color: var(--fg-0); font-weight: 600; }
+.gov-offline-card p  { margin: 0; max-width: 560px; line-height: 1.55; color: var(--fg-1); font-size: 13px; }
+.gov-offline-card .gov-offline-hint { color: var(--fg-2); font-size: 12px; }
+.gov-offline-card code { background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
+
+.gov-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 14px; background: var(--bg-1, rgba(255,255,255,0.02));
+  border: 1px solid var(--border, rgba(255,255,255,0.06)); border-radius: 12px;
+}
+.gov-agent-picker { display: flex; align-items: center; gap: 10px; }
+.gov-picker-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-2); font-weight: 600; }
+.gov-agent-select { min-width: 320px; font-size: 13px; }
+
+.gov-lock-panel { display: flex; align-items: center; gap: 10px; }
+
+.gov-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+  color: var(--fg-1);
+}
+.gov-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.gov-pill.ok       { color: #6ee7b7; border-color: rgba(110,231,183,0.3); background: rgba(110,231,183,0.08); }
+.gov-pill.warn     { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+.gov-pill.offline  { color: #94a3b8; border-color: rgba(148,163,184,0.3); }
+.gov-pill.protected, .gov-pill.locked {
+  color: #c4b5fd; border-color: rgba(196,181,253,0.3); background: rgba(196,181,253,0.08);
+}
+
+.gov-tabs {
+  display: flex; gap: 4px; padding: 4px; background: var(--bg-1, rgba(255,255,255,0.02));
+  border: 1px solid var(--border, rgba(255,255,255,0.06)); border-radius: 10px;
+  flex-wrap: wrap;
+}
+.gov-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; font-size: 12.5px; font-weight: 500;
+  background: transparent; color: var(--fg-1); border: 1px solid transparent; border-radius: 7px;
+  cursor: pointer; transition: background 0.1s;
+}
+.gov-tab:hover { background: rgba(255,255,255,0.04); }
+.gov-tab.active {
+  background: rgba(124,92,255,0.15); color: var(--fg-0);
+  border-color: rgba(124,92,255,0.3);
+}
+
+.gov-tab-body { min-height: 200px; }
+
+.gov-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gov-span-2 { grid-column: span 2; }
+@media (max-width: 920px) { .gov-grid-2 { grid-template-columns: 1fr; } .gov-span-2 { grid-column: span 1; } }
+
+.gov-card { background: var(--bg-1, rgba(255,255,255,0.02)); }
+
+.gov-field-row { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.gov-field-row:last-child { border-bottom: 0; }
+.gov-field-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2); font-weight: 500; }
+.gov-field-value { font-size: 13px; color: var(--fg-0); text-align: right; }
+
+.gov-textarea-block { display: flex; flex-direction: column; gap: 6px; }
+.gov-textarea { font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 12px; line-height: 1.55; resize: vertical; }
+.gov-textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+.gov-textarea-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.gov-memory-body { min-height: 340px; }
+
+.gov-owner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.gov-owner-cell { padding: 10px 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; background: rgba(255,255,255,0.015); }
+.gov-owner-k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); font-weight: 600; margin-bottom: 4px; }
+.gov-owner-v { font-size: 12px; color: var(--fg-1); line-height: 1.45; }
+
+.gov-locked-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.gov-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; font-size: 10.5px; font-weight: 500;
+  border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04); color: var(--fg-1);
+}
+.gov-chip.locked { color: #c4b5fd; border-color: rgba(196,181,253,0.3); background: rgba(196,181,253,0.08); }
+.gov-chip.locked-mini { font-size: 9px; padding: 1px 5px; }
+.gov-chip.auto { color: #94a3b8; }
+.gov-chip.manual { color: #6ee7b7; border-color: rgba(110,231,183,0.25); }
+.gov-chip.mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+
+.gov-warn-banner {
+  display: flex; gap: 10px; padding: 10px 12px;
+  background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 8px; color: var(--fg-1); font-size: 12px; line-height: 1.5;
+}
+.gov-warn-banner svg { flex-shrink: 0; margin-top: 1px; color: #fbbf24; }
+
+.gov-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 4px; }
+
+.gov-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.gov-table thead th {
+  text-align: left; padding: 8px 12px; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); font-weight: 600;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); background: rgba(255,255,255,0.015);
+}
+.gov-table tbody td {
+  padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--fg-1); vertical-align: middle;
+}
+.gov-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+.gov-table .mono { font-family: ui-monospace, "JetBrains Mono", monospace; }
+.gov-table .xsmall { font-size: 11px; }
+.gov-row-editing { background: rgba(124,92,255,0.06); }
+.gov-row-editing td { padding: 6px 10px; }
+.gov-row-editing .input.sm { width: 100%; }
+
+.input.sm { padding: 4px 8px; font-size: 12px; }
+
+.gov-inline-err, .gov-inline-ok {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px; font-size: 11.5px; border-radius: 6px;
+}
+.gov-inline-err { color: #ff8088; background: rgba(255,80,96,0.08); border: 1px solid rgba(255,80,96,0.25); }
+.gov-inline-ok  { color: #6ee7b7; background: rgba(110,231,183,0.08); border: 1px solid rgba(110,231,183,0.25); }
+
+.gov-empty { padding: 24px; color: var(--fg-2); font-size: 13px; text-align: center; }
+
+.gov-protect-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.gov-protect-row { display: flex; gap: 10px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; background: rgba(255,255,255,0.015); }
+.gov-protect-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(124,92,255,0.12); border: 1px solid rgba(124,92,255,0.3);
+  color: #c4b5fd; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.gov-protect-label { font-size: 12.5px; font-weight: 500; color: var(--fg-0); margin-bottom: 2px; }
+
+.gov-rotate-form { gap: 8px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; margin-top: 6px; }
+
+.gov-unlock-modal { max-width: 460px; padding: 22px; }
+.gov-unlock-head { display: flex; gap: 12px; margin-bottom: 16px; }
+.gov-unlock-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: rgba(124,92,255,0.15); border: 1px solid rgba(124,92,255,0.3);
+  color: #c4b5fd; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.gov-unlock-head h3 { margin: 0 0 4px; font-size: 15px; color: var(--fg-0); font-weight: 600; }
+.gov-unlock-reason {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 10px; margin-bottom: 12px; font-size: 11.5px;
+  background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 6px; color: #fbbf24;
+}
+.gov-unlock-label { display: block; margin-bottom: 12px; }
+.gov-unlock-label > span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); font-weight: 600; margin-bottom: 5px; }
+.gov-unlock-err {
+  display: flex; gap: 8px; padding: 8px 10px; margin-bottom: 12px;
+  background: rgba(255,80,96,0.08); border: 1px solid rgba(255,80,96,0.25);
+  border-radius: 6px; color: #ff8088; font-size: 12px;
+}
+.gov-unlock-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal {
+  background: var(--bg-0, #14141a); border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-width: 90vw; max-height: 85vh; overflow: auto;
+}

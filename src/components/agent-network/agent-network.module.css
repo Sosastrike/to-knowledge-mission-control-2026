@@ -475,6 +475,46 @@
   color: var(--auth-fg-1);
 }
 
+.preflightRoute {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(107, 179, 255, 0.06);
+  border: 1px solid rgba(107, 179, 255, 0.14);
+  border-radius: 8px;
+  color: var(--auth-fg-1);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+
+.preflightNotice {
+  color: var(--auth-fg-1);
+  background: rgba(255, 204, 58, 0.08);
+  border: 1px solid rgba(255, 204, 58, 0.22);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+}
+
+.reportPreview {
+  margin: 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--auth-fg-2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
 /* ── external section ────────────────────────────────────────── */
 
 .externalSection {

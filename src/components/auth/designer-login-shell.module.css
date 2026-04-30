@@ -388,7 +388,7 @@
 }
 
 /* When an SSO provider is unavailable (Google missing client id, Microsoft
-   placeholder, SAML placeholder), we surface that state with a visible pill
+   placeholder), we surface that state with a visible pill
    on the right of the button instead of silently graying it out. The button
    layout shifts from centered to space-between to make room. */
 .sso button.ssoUnavailable {

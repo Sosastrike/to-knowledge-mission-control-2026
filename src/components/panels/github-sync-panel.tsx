@@ -55,7 +55,13 @@ export function GitHubSyncPanel() {
   const [repo, setRepo] = useState('')
   const [labelFilter, setLabelFilter] = useState('')
   const [stateFilter, setStateFilter] = useState<'open' | 'closed' | 'all'>('open')
-  const [assignAgent, setAssignAgent] = useState('')
+  const [assignAgent, setAssignAgent] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('mc-github-assign-agent') || ''
+    }
+    return ''
+  })
+  const [agentSaved, setAgentSaved] = useState(true)
   const [agents, setAgents] = useState<{ name: string }[]>([])
 
   // Preview
@@ -406,16 +412,33 @@ export function GitHubSyncPanel() {
             {/* Assign to agent */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">{t('labelAssignAgent')}</label>
-              <select
-                value={assignAgent}
-                onChange={e => setAssignAgent(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                <option value="">{t('unassigned')}</option>
-                {agents.map(a => (
-                  <option key={a.name} value={a.name}>{a.name}</option>
-                ))}
-              </select>
+              <div className="flex gap-1.5">
+                <select
+                  value={assignAgent}
+                  onChange={e => { setAssignAgent(e.target.value); setAgentSaved(false) }}
+                  className="flex-1 px-3 py-1.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">{t('unassigned')}</option>
+                  {agents.map(a => (
+                    <option key={a.name} value={a.name}>{a.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('mc-github-assign-agent', assignAgent)
+                    setAgentSaved(true)
+                    showFeedback(true, assignAgent ? `Agent "${assignAgent}" saved` : 'Agent unassigned')
+                  }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                    agentSaved
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 cursor-default'
+                      : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 cursor-pointer'
+                  }`}
+                >
+                  {agentSaved ? 'Saved' : 'Save'}
+                </button>
+              </div>
             </div>
           </div>
 

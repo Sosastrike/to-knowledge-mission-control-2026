@@ -51,11 +51,20 @@ interface RegistrySkill {
 type PanelTab = 'installed' | 'registry'
 
 const SOURCE_LABELS: Record<string, string> = {
-  'user-agents': '~/.agents/skills (global)',
-  'user-codex': '~/.codex/skills (global)',
-  'project-agents': '.agents/skills (project)',
-  'project-codex': '.codex/skills (project)',
-  'openclaw': '~/.openclaw/skills (gateway)',
+  'user-agents': 'Global Skills',
+  'user-codex': 'Codex Skills',
+  'project-agents': 'Project Skills',
+  'project-codex': 'Project Codex Skills',
+  'openclaw': 'Gateway Skills',
+  'workspace': 'Workspace Skills',
+}
+
+const SOURCE_PATHS: Record<string, string> = {
+  'user-agents': '~/.agents/skills',
+  'user-codex': '~/.codex/skills',
+  'project-agents': '.agents/skills',
+  'project-codex': '.codex/skills',
+  'openclaw': '~/.openclaw/skills',
   'workspace': '~/.openclaw/workspace/skills',
 }
 
@@ -589,18 +598,18 @@ export function SkillsPanel() {
                 ) : (
                   <div className="divide-y divide-border">
                     {filtered.map((skill) => (
-                      <div key={skill.id} className="px-4 py-3">
+                      <div key={skill.id} className="px-4 py-3 hover:bg-secondary/30 transition-colors">
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <div className="font-medium text-sm text-foreground">{skill.name}</div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="font-medium text-sm text-foreground truncate">{skill.name}</div>
                             {skill.registry_slug && (
-                              <span className="text-2xs rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 px-1.5 py-0.5">
+                              <span className="text-2xs rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 px-1.5 py-0.5 shrink-0">
                                 registry
                               </span>
                             )}
-                          </div>
-                          <div className="flex items-center gap-2">
                             {securityBadge(skill.security_status)}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
                             <span className={`text-2xs rounded-full border px-2 py-0.5 ${
                               skill.source === 'openclaw'
                                 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
@@ -621,9 +630,8 @@ export function SkillsPanel() {
                           </div>
                         </div>
                         {skill.description && (
-                          <p className="mt-1 text-xs text-muted-foreground">{skill.description}</p>
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{skill.description}</p>
                         )}
-                        <p className="mt-1 text-2xs text-muted-foreground/70 break-all">{skill.path}</p>
                       </div>
                     ))}
                   </div>

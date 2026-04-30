@@ -1,0 +1,81 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/>
+<title>Agent Network — Spec (printable)</title>
+<style>
+  @page { size: Letter; margin: 0.6in; }
+  body { font: 14px/1.55 -apple-system, "SF Pro Text", system-ui, sans-serif; color: #111; max-width: 7.2in; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 22px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+  h3 { font-size: 13px; margin: 14px 0 4px; color: #333; }
+  code, pre { font: 11.5px/1.45 ui-monospace, "SF Mono", monospace; background: #f4f4f4; }
+  pre { padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  code { padding: 1px 4px; border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0 14px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+  th { background: #f7f7f7; font-weight: 600; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 14px; }
+  .chip { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #fff3cd; color: #5a4400; font-size: 11px; font-weight: 600; margin-right: 4px;}
+  .chip.ok { background: #d4f5dd; color: #114a23; }
+  .chip.err { background: #ffd7d7; color: #6b0e0e; }
+</style></head>
+<body>
+<h1>Agent Network — Developer Handoff</h1>
+<div class="meta">
+  Version 2026-04-28 · <span class="chip">Prototype only</span> <span class="chip err">No production calls</span>
+  <br/>Source: <code>src/agent-network/*</code> · Spec: <code>docs/agent-network-spec.md</code>
+</div>
+
+<h2>1. What this is</h2>
+<p>Visual + interactive prototype for the Agent Network surface — tier-laned canvas, right-side inspector, bottom dock with Brain Sync, Harness, and Cost panes. All data is in-memory through <code>window.AgentRegistry</code>. Nothing here calls a real backend.</p>
+
+<h2>2. Files shipped</h2>
+<table>
+<tr><th>Path</th><th>Purpose</th></tr>
+<tr><td><code>src/agent-network/registry.jsx</code></td><td>Mock store (replace with HTTP client)</td></tr>
+<tr><td><code>src/agent-network/AgentNetworkCanvas.jsx</code></td><td>Tier-laned canvas, drag-to-promote</td></tr>
+<tr><td><code>src/agent-network/AgentInspector.jsx</code></td><td>Right panel — Overview · Permissions · Engines · Tickets · Audit</td></tr>
+<tr><td><code>src/agent-network/AgentNetworkModals.jsx</code></td><td>Add agent wizard · Engine connect · Approval · Assign ticket · Context menu</td></tr>
+<tr><td><code>src/agent-network/AgentNetworkPage.jsx</code></td><td>Page shell — Brain Sync · Harness · Cost dock</td></tr>
+<tr><td><code>src/agent-network/agent-network.css</code></td><td>Extends styles.css tokens</td></tr>
+<tr><td><code>docs/agent-network-spec.md</code></td><td>Full spec (this is its printable copy)</td></tr>
+</table>
+
+<h2>3. Wiring</h2>
+<pre>Mission Control.html
+  &lt;link rel="stylesheet" href="src/agent-network/agent-network.css"/&gt;
+  &lt;script type="text/babel" src="src/agent-network/registry.jsx"&gt;&lt;/script&gt;
+  &lt;script ...Canvas, Inspector, Modals, Page&gt;
+
+src/replicas/WorkspaceRail.jsx     ← rail entry "Agent Network"
+src/app.jsx                        ← route page === 'agent-network'</pre>
+
+<h2>4. Mock vs Production</h2>
+<table>
+<tr><th>Surface</th><th>Today (prototype)</th><th>Production</th></tr>
+<tr><td>AgentRegistry</td><td>In-memory + seeds</td><td>HTTP client; same method names</td></tr>
+<tr><td>Brain Sync feed</td><td>Locally emitted</td><td>SSE <code>/api/events?stream=brain_sync</code></td></tr>
+<tr><td>Harness lanes</td><td>Locally emitted</td><td>SSE <code>/api/events?stream=harness</code></td></tr>
+<tr><td>Cost panel</td><td>Seed values</td><td>Read from <code>cost_ledger</code></td></tr>
+<tr><td>Approvals</td><td>Local timer</td><td><code>/api/approvals</code> + TTL job</td></tr>
+<tr><td>Tony / Agent 0 lock</td><td>UI-only</td><td>Server must enforce HTTP 423</td></tr>
+</table>
+
+<h2>5. Component states (QA)</h2>
+<p>Canvas node: online · idle · degraded · offline · retired · selected · dragged · protected.<br/>
+Inspector tabs: Overview · Permissions · Engines · Tickets · Audit · empty.<br/>
+Approval severities: low (auto) · medium (single-approver) · high (owner + reason).<br/>
+Cost panel: ok · warn · crit · over-budget banner.</p>
+
+<h2>6. Cutover checklist</h2>
+<ol>
+  <li>Implement APIs in <code>spec.md §3</code>; mirror the registry mutation surface.</li>
+  <li>Replace <code>registry.jsx</code> with HTTP-backed equivalent (same exports).</li>
+  <li>Wire SSE for both event streams.</li>
+  <li>Persist approvals with TTL job for <code>expired</code>.</li>
+  <li>Server-enforce Tony / Agent 0 protection (HTTP 423).</li>
+  <li>Audit-log every mutation.</li>
+  <li>QA every state in §5 against live data.</li>
+</ol>
+
+<p style="margin-top:32px; color:#999; font-size:11px;">Generated 2026-04-28 by Claude Design. Prototype + spec only — no production calls, no DB writes, no credential reads.</p>
+</body></html>

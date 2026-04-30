@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>To-Knowledge Mission Control</title>
+<meta name="viewport" content="width=1440"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css?v=6"/>
+<link rel="stylesheet" href="src/replicas/brain-sync.css?v=8"/>
+<link rel="stylesheet" href="src/replicas/mirofish.css?v=1"/>
+<link rel="stylesheet" href="src/replicas/new-sections.css?v=1"/>
+<link rel="stylesheet" href="src/agent-network/agent-network.css?v=1"/>
+<link rel="stylesheet" href="src/meeting-room.css?v=1"/>
+<link rel="stylesheet" href="src/search-notifications.css?v=1"/>
+<link rel="stylesheet" href="src/admin-settings.css?v=2"/>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="src/icons.jsx"></script>
+<script type="text/babel" src="src/data.jsx"></script>
+<script type="text/babel" src="src/ui.jsx"></script>
+<script type="text/babel" src="src/shell.jsx"></script>
+<script type="text/babel" src="src/dashboard-wiring.jsx"></script>
+<script type="text/babel" src="src/dashboard.jsx"></script>
+<script type="text/babel" src="src/ops-intel.jsx"></script>
+<script type="text/babel" src="src/brain-sync.jsx"></script>
+<script type="text/babel" src="src/web-ops.jsx"></script>
+<script type="text/babel" src="src/schedule.jsx"></script>
+<script type="text/babel" src="src/settings.jsx"></script>
+<script type="text/babel" src="src/backend/schema.jsx"></script>
+<script type="text/babel" src="src/backend/adapter-local.jsx"></script>
+<script type="text/babel" src="src/backend/api-client.jsx"></script>
+<script type="text/babel" src="src/backend/http-client.jsx"></script>
+<script type="text/babel" src="src/backend-readiness.jsx"></script>
+<script type="text/babel" src="src/credentials-page.jsx"></script>
+<script type="text/babel" src="src/settings-pages.jsx"></script>
+<script type="text/babel" src="src/agent-mgmt-pro.jsx"></script>
+<script type="text/babel" src="src/governance-page.jsx"></script>
+<script type="text/babel" src="src/governance-page-2.jsx"></script>
+<script type="text/babel" src="src/skills-page.jsx"></script>
+<script type="text/babel" src="src/surfaces.jsx"></script>
+<script type="text/babel" src="src/overlays.jsx"></script>
+<!-- Replica pages + mock API -->
+<script type="text/babel" src="src/replicas/mockApi.jsx"></script>
+<script type="text/babel" src="src/replicas/WorkspaceRail.jsx"></script>
+<script type="text/babel" src="src/replicas/EmailProfilesPage.jsx"></script>
+<script type="text/babel" src="src/replicas/BrainSyncPage.jsx?v=meridian-20260429"></script>
+<script type="text/babel" src="src/replicas/MiroFishPage.jsx"></script>
+<script type="text/babel" src="src/replicas/MeetingsHubPage.jsx"></script>
+<script type="text/babel" src="src/replicas/FireCrawlPage.jsx"></script>
+<script type="text/babel" src="src/replicas/ZapierPage.jsx"></script>
+<script type="text/babel" src="src/replicas/N8NPage.jsx"></script>
+<script type="text/babel" src="src/replicas/MCPToolsPage.jsx"></script>
+<script type="text/babel" src="src/replicas/SkillsRegistryPage.jsx"></script>
+<script type="text/babel" src="src/replicas/ChannelsPage.jsx"></script>
+<script type="text/babel" src="src/replicas/AlertsPage.jsx"></script>
+<!-- Agent Network live read-only shell (see docs/agent-network-spec.md) -->
+<script type="text/babel" src="src/agent-network/registry.jsx"></script>
+<script type="text/babel" src="src/agent-network/AgentNetworkCanvas.jsx"></script>
+<script type="text/babel" src="src/agent-network/AgentInspector.jsx"></script>
+<script type="text/babel" src="src/agent-network/AgentNetworkModals.jsx"></script>
+<script type="text/babel" src="src/agent-network/AgentNetworkPage.jsx"></script>
+<!-- Live read-only bridge: same-origin Mission Control APIs, protected writes blocked -->
+<script type="text/babel" src="src/tkmc-live-adapter.jsx"></script>
+<!-- Search + Notifications (real events only) -->
+<script src="src/notification-bus.jsx"></script>
+<script type="text/babel" src="src/search-command.jsx"></script>
+<script type="text/babel" src="src/notifications-drawer.jsx"></script>
+<script type="text/babel" src="src/login-page.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>

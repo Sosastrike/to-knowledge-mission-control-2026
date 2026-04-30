@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ThemeSelector } from '@/components/ui/theme-selector'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { DigitalClock } from '@/components/ui/digital-clock'
+import { GearIconButton } from '@/components/tkmc/gear-quick-panel'
 import { getNavigationMetrics, navigationMetricEventName } from '@/lib/navigation-metrics'
 
 interface SearchResult {
@@ -381,6 +382,7 @@ export function HeaderBar() {
 
           <LanguageSwitcher />
           <ThemeSelector />
+          <GearIconButton />
         </div>
       </div>
 

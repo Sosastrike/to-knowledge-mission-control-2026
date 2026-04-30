@@ -1466,6 +1466,9 @@ function TaskDetailModal({
                       throw new Error(errorData.error || 'Failed to delete task')
                     }
                     onClose()
+                    // Delay fetchData to avoid React update depth error (#185)
+                    // onClose clears selectedTask first, then refresh task list
+                    setTimeout(() => onDelete(), 100)
                   } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Failed to delete task'
                     alert(errorMessage)

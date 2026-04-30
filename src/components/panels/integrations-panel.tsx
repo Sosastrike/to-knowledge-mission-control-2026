@@ -45,6 +45,8 @@ export function IntegrationsPanel() {
   const [pulling, setPulling] = useState<string | null>(null) // integration id being pulled
   const [pullingAll, setPullingAll] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState<{ integrationId: string; keys: string[] } | null>(null)
+  const [showAddProvider, setShowAddProvider] = useState(false)
+  const [newProvider, setNewProvider] = useState({ name: '', envVar: '', category: 'ai' })
 
   const showFeedback = (ok: boolean, text: string) => {
     setFeedback({ ok, text })
@@ -222,6 +224,28 @@ export function IntegrationsPanel() {
     setConfirmRemove({ integrationId, keys })
   }
 
+  const handleAddProvider = async () => {
+    if (!newProvider.name || !newProvider.envVar) return
+    try {
+      const res = await fetch('/api/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create-custom', ...newProvider }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showFeedback(true, `Added "${data.name}"`)
+        setShowAddProvider(false)
+        setNewProvider({ name: '', envVar: '', category: 'ai' })
+        fetchIntegrations()
+      } else {
+        showFeedback(false, data.error || 'Failed to add')
+      }
+    } catch {
+      showFeedback(false, 'Network error')
+    }
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -292,6 +316,13 @@ export function IntegrationsPanel() {
             </Button>
           )}
           <Button
+            onClick={() => setShowAddProvider(v => !v)}
+            variant="outline"
+            size="sm"
+          >
+            + Add Provider
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
             variant={hasChanges ? 'default' : 'secondary'}
@@ -302,6 +333,53 @@ export function IntegrationsPanel() {
           </Button>
         </div>
       </div>
+
+      {/* Add custom provider form */}
+      {showAddProvider && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Add Custom Integration</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Provider Name</label>
+              <input
+                value={newProvider.name}
+                onChange={e => setNewProvider(p => ({ ...p, name: e.target.value }))}
+                placeholder="e.g. My AI Service"
+                className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Environment Variable</label>
+              <input
+                value={newProvider.envVar}
+                onChange={e => setNewProvider(p => ({ ...p, envVar: e.target.value.toUpperCase() }))}
+                placeholder="e.g. MY_SERVICE_API_KEY"
+                className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Category</label>
+              <select
+                value={newProvider.category}
+                onChange={e => setNewProvider(p => ({ ...p, category: e.target.value }))}
+                className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleAddProvider} size="sm" disabled={!newProvider.name || !newProvider.envVar}>
+              Add Integration
+            </Button>
+            <Button onClick={() => setShowAddProvider(false)} variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Feedback */}
       {feedback && (

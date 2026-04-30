@@ -29,6 +29,12 @@ const designerPages = [
 const coreRoutes = [
   { path: '/login', label: 'Designer login', allowedStatuses: [200], required: ['Mission Control', 'Microsoft 365'], forbidden: ['Single sign-on (SAML)', '>SAML<'] },
   { path: '/agents', label: 'Auth-gated agents route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/viral-crawl', label: 'Auth-gated Viral Crawl route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/schedule', label: 'Auth-gated Schedule route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/live-meeting', label: 'Auth-gated Live Meeting route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/settings/tkmc/integrations', label: 'Auth-gated Integrations settings route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/settings/tkmc/skills', label: 'Auth-gated Skills settings route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
+  { path: '/settings/tkmc/security', label: 'Auth-gated Security settings route', allowedStatuses: [200, 302, 307, 308, 401, 403], required: [] },
   { path: '/api/bridge/button-contracts', label: 'Button contracts API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/capability-matrix', label: 'Bridge capability matrix API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/connector-readiness', label: 'Connector readiness API', allowedStatuses: apiKey ? [200] : [401], json: true },

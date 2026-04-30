@@ -272,6 +272,42 @@ interface TelegramApprovalPreviewPayload {
   error?: string
 }
 
+interface ButtonContractItem {
+  route: string
+  label: string
+  endpoint: string | null
+  method: string
+  state: string
+  current_backend_state?: string
+  credential_names?: string[]
+  approval_required?: boolean
+  audit_required?: boolean
+  blocked_http_status?: number | null
+  execution_enabled?: boolean
+  protected_execution_enabled?: boolean
+  should_render_as_disabled?: boolean
+  fake_success_allowed?: boolean
+  safe_ui_behavior?: string
+  note?: string
+}
+
+interface ButtonContractsPayload {
+  ok?: boolean
+  generated_at?: string
+  no_fake_success?: boolean
+  protected_execution_enabled?: boolean
+  buttons?: ButtonContractItem[]
+  summary?: {
+    total?: number
+    by_state?: Record<string, number>
+    protected_actions?: number
+    audit_required?: number
+    blocked_buttons?: number
+    executable_now?: number
+  }
+  error?: string
+}
+
 interface Props {
   hermes: HermesInfo
   bridge: BridgeInfo
@@ -702,6 +738,32 @@ function ExternalCard({
   )
 }
 
+function ButtonContractCard({ button }: { button: ButtonContractItem }) {
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={button.state === 'LIVE' || button.state === 'READ_ONLY' ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>{button.label}</strong>
+        </div>
+        <span className={styles.providerState}>{button.state.replace(/_/g, ' ')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>{button.route}</span>
+        <span>{button.method}</span>
+        {button.blocked_http_status ? <span>HTTP {button.blocked_http_status}</span> : <span>read/status</span>}
+        <span>execute: {button.execution_enabled ? 'yes' : 'no'}</span>
+      </div>
+      {button.endpoint && <div className={styles.providerEndpoint}>{button.endpoint}</div>}
+      {button.credential_names && button.credential_names.length > 0 && (
+        <p className={styles.providerNotes}>Credentials: {button.credential_names.join(' · ')}</p>
+      )}
+      {button.safe_ui_behavior && <p className={styles.providerNotes}>{button.safe_ui_behavior}</p>}
+      {button.note && <p className={styles.providerAction}>{button.note}</p>}
+    </div>
+  )
+}
+
 // ── tier section ──────────────────────────────────────────────────
 function TierSection({
   tier,
@@ -763,6 +825,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [telegramApprovalPreview, setTelegramApprovalPreview] = useState<TelegramApprovalPreviewPayload | null>(null)
   const [telegramApprovalPreviewState, setTelegramApprovalPreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
   const [telegramApprovalPreviewError, setTelegramApprovalPreviewError] = useState<string>('')
+  const [buttonContracts, setButtonContracts] = useState<ButtonContractsPayload | null>(null)
+  const [buttonContractsState, setButtonContractsState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [buttonContractsError, setButtonContractsError] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
@@ -858,6 +923,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setConnectorError((err as Error).message || 'fetch failed')
         setConnectorState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/button-contracts', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as ButtonContractsPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setButtonContracts(data)
+        setButtonContractsState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setButtonContractsError((err as Error).message || 'fetch failed')
+        setButtonContractsState('error')
       })
     return () => {
       cancelled = true
@@ -1177,6 +1267,47 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             <div className={styles.providerGrid}>
               <PreflightCard title="Current status preflight" payload={statusPreflight} />
               <PreflightCard title="Protected Zapier write preflight" payload={zapierPreflight} />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Button contract states — no silent actions */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Button Contract States</h2>
+          <span className={styles.tierSub}>
+            Live UI action contract from <code>/api/bridge/button-contracts</code>
+          </span>
+        </header>
+        {buttonContractsState === 'loading' && (
+          <div className={styles.banner}>Loading button contracts from <code>/api/bridge/button-contracts</code>…</div>
+        )}
+        {buttonContractsState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load button contracts:</strong> {buttonContractsError}
+          </div>
+        )}
+        {buttonContractsState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>{buttonContracts?.summary?.total ?? buttonContracts?.buttons?.length ?? 0} actions mapped</span>
+              <span>protected actions: {buttonContracts?.summary?.protected_actions ?? 0}</span>
+              <span>audit required: {buttonContracts?.summary?.audit_required ?? 0}</span>
+              <span>blocked: {buttonContracts?.summary?.blocked_buttons ?? 0}</span>
+              <span>safe now: {buttonContracts?.summary?.executable_now ?? 0}</span>
+              <span>fake success: {buttonContracts?.no_fake_success ? 'blocked' : 'unknown'}</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              Every visible action must map to exactly one state: LIVE, READ_ONLY, BACKEND_REQUIRED, CREDENTIAL_REQUIRED, OWNER_APPROVAL_REQUIRED, or DISABLED. Missing backend, missing credential, and owner-approval states must be visible and must not fake success.
+            </div>
+            <div className={styles.providerGrid}>
+              {(buttonContracts?.buttons || [])
+                .filter((button) => button.state !== 'LIVE')
+                .slice(0, 12)
+                .map((button) => (
+                  <ButtonContractCard key={`${button.route}:${button.label}:${button.endpoint || 'local'}`} button={button} />
+                ))}
             </div>
           </>
         )}

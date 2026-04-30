@@ -23,16 +23,12 @@ const LOGS_URL              = (lines) => `/api/bridge/brain-sync/build-wiki/logs
 const TIMER_CTRL_CREATE_URL = '/api/bridge/brain-sync/build-wiki/timer-control';
 const TIMER_CTRL_DISPATCH_URL = (id) => `/api/bridge/brain-sync/build-wiki/timer-control/${encodeURIComponent(id)}/dispatch`;
 
+// Display labels for the still-locked Action buttons. Run Now /
+// Pause/Resume / file browsers / log viewer have their own components.
 const CONTROL_LABELS = {
   add_local_source:       'Add local source',
   enable_external_farmer: 'Enable external farmer',
 };
-
-// Run Now + Pause/Resume (timer-control) + the two file browsers + the log
-// viewer are wired. The remaining 2 controls stay locked.
-const LOCKED_CONTROL_ORDER = [
-  'add_local_source', 'enable_external_farmer',
-];
 
 function buildWikiPillKind(state) {
   switch (state) {
@@ -150,6 +146,36 @@ function uiStateLabel(s) {
     case 'expired':           return { tone: '#888',    label: 'EXPIRED' };
     default:                  return { tone: '#888',    label: String(s || 'UNKNOWN').toUpperCase() };
   }
+}
+
+// ============================================================
+// Section header — visual divider between Status / Actions / Inspect.
+// ============================================================
+function BWSectionHeader({ index, title, subtitle, tone }) {
+  return (
+    <div className="hstack" style={{
+      gap: 10,
+      paddingTop: 4,
+      paddingBottom: 4,
+      borderBottom: `1px solid ${tone || 'var(--line-2)'}33`,
+      alignItems: 'baseline',
+    }}>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 18, height: 18, borderRadius: 999,
+        background: `${tone || '#888'}1A`, color: tone || 'var(--fg-1)',
+        border: `1px solid ${tone || 'var(--line-2)'}55`,
+        fontSize: 10, fontWeight: 700, fontFamily: 'var(--mono)',
+      }}>{index}</span>
+      <span style={{
+        color: 'var(--fg-0)', fontSize: 14, fontWeight: 600,
+        letterSpacing: '0.02em', textTransform: 'uppercase',
+      }}>{title}</span>
+      {subtitle ? (
+        <span className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>· {subtitle}</span>
+      ) : null}
+    </div>
+  );
 }
 
 function BWRunNowControl({ runNow, onAction }) {
@@ -839,9 +865,14 @@ function BuildWikiFarmerSyncPanel() {
         </div>
       </div>
 
-      <div className="card-body vstack" style={{ gap: 12 }}>
+      <div className="card-body vstack" style={{ gap: 14 }}>
 
-        {/* 1 — Sync status row */}
+        {/* ============================================================
+            1) STATUS — schedule, counts, sources, drafts (read-only).
+            ============================================================ */}
+        <BWSectionHeader index={1} title="Status" subtitle="schedule · counts · sources · drafts" tone="#6bb3ff"/>
+
+        {/* Schedule + service KPI strip */}
         <div className="hstack" style={{ gap: 8, alignItems: 'stretch', flexWrap: 'wrap' }}>
           <BWStat label="Farmer" value={farmer.name || '—'} sub={farmer.cadence || '—'} />
           <BWStat label="Next run" value={farmer.next_run_at || '—'} sub={farmer.timer_active ? 'timer active' : 'timer inactive'} />
@@ -860,21 +891,21 @@ function BuildWikiFarmerSyncPanel() {
           </div>
         ) : null}
 
-        {/* 2 — Obsidian destination */}
+        {/* Obsidian destination + counts */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Obsidian destination</div>
           <div className="mono xsmall" style={{ color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>{dest.obsidian_path || '—'}</div>
           <div className="hstack" style={{ gap: 8 }}>
-            <BWStat label="Raw files" value={String(dest.raw_count ?? '—')} />
-            <BWStat label="Wiki pages" value={String(dest.wiki_count ?? '—')} />
-            <BWStat label="Archived versions" value={String(dest.archive_count ?? '—')} />
+            <BWStat label="Raw count" value={String(dest.raw_count ?? '—')} />
+            <BWStat label="Wiki count" value={String(dest.wiki_count ?? '—')} />
+            <BWStat label="Archive count" value={String(dest.archive_count ?? '—')} />
           </div>
         </div>
 
-        {/* 3 — Active local sources */}
+        {/* Active sources */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="hstack">
-            <div className="stat-label">Active local sources</div>
+            <div className="stat-label">Active sources</div>
             <span className="spacer"/>
             <span className="mono xsmall muted">{activeSources.length} wired</span>
           </div>
@@ -892,39 +923,30 @@ function BuildWikiFarmerSyncPanel() {
               </div>
             ))}
           </div>
+          {availableExpansions.length > 0 ? (
+            <>
+              <div className="muted xsmall" style={{ marginTop: 4 }}>{availableExpansions.length} known expansion(s) not yet wired:</div>
+              <div className="vstack" style={{ gap: 4 }}>
+                {availableExpansions.map((src) => (
+                  <div key={src} className="hstack" style={{
+                    padding: '5px 8px', background: 'var(--bg-2)',
+                    borderRadius: 6, border: '1px dashed var(--line-2)',
+                    fontSize: 12,
+                  }}>
+                    <BWPill tone="#ffb547">PROPOSE</BWPill>
+                    <span className="mono xsmall" style={{ overflowWrap: 'anywhere', color: 'var(--fg-2)' }}>{src}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="muted xsmall">Use the <strong>Add Local Source</strong> action below to propose adding one (owner approval required).</div>
+            </>
+          ) : null}
         </div>
 
-        {/* 4 — Available local source expansions */}
+        {/* Draft farmers */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="hstack">
-            <div className="stat-label">Available source expansions</div>
-            <span className="spacer"/>
-            <span className="mono xsmall muted">{availableExpansions.length} pending</span>
-          </div>
-          {availableExpansions.length === 0 ? (
-            <div className="muted xsmall">All known local sources are already wired into the active farmer.</div>
-          ) : (
-            <div className="vstack" style={{ gap: 4 }}>
-              {availableExpansions.map((src) => (
-                <div key={src} className="hstack" style={{
-                  padding: '5px 8px', background: 'var(--bg-2)',
-                  borderRadius: 6, border: '1px dashed var(--line-2)',
-                  fontSize: 12,
-                }}>
-                  <BWPill tone="#ffb547">PROPOSE</BWPill>
-                  <span className="mono xsmall" style={{ overflowWrap: 'anywhere', color: 'var(--fg-2)' }}>{src}</span>
-                  <span className="spacer"/>
-                  <BWLockedButton controlKey="add_local_source" state={controls.add_local_source || 'OWNER_APPROVAL_REQUIRED'} title="Adding a source requires owner approval through the Brain-Sync rebuild contract."/>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 5 — External farmer drafts */}
-        <div className="vstack" style={{ gap: 6 }}>
-          <div className="hstack">
-            <div className="stat-label">External farmer drafts</div>
+            <div className="stat-label">Draft farmers</div>
             <span className="spacer"/>
             <span className="mono xsmall muted">{drafts.length} disabled</span>
           </div>
@@ -947,50 +969,85 @@ function BuildWikiFarmerSyncPanel() {
                     <div className="muted xsmall">blockers: {d.blockers.map((b) => <code key={b} style={{ marginRight: 6, fontSize: 10 }}>{b}</code>)}</div>
                   ) : null}
                 </div>
-                <BWLockedButton controlKey="enable_external_farmer" state={controls.enable_external_farmer || 'CREDENTIAL_REQUIRED'} title="Each external farmer requires its credentials + owner approval before enable."/>
               </div>
             ))}
           </div>
+          {drafts.length > 0 ? (
+            <div className="muted xsmall">Use the <strong>Enable External Farmer</strong> action below — each draft needs its credentials + owner approval first.</div>
+          ) : null}
         </div>
 
-        {/* 6a — Run Now (wired, approval-driven) */}
+        {/* ============================================================
+            2) ACTIONS — wired (approval-driven) + still-locked controls.
+            ============================================================ */}
+        <BWSectionHeader index={2} title="Actions" subtitle="approval-driven · scope-pinned" tone="#a16bff"/>
+
         <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">Run now</div>
+          <div className="stat-label">Run Now</div>
           <BWRunNowControl runNow={data.run_now} onAction={refetch}/>
         </div>
 
-        {/* 6b — Pause / Resume sync (wired, approval-driven) */}
         <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">Pause / Resume sync</div>
+          <div className="stat-label">Pause / Resume Sync</div>
           <BWTimerControl timerControl={data.timer_control} onAction={refetch}/>
         </div>
 
-        {/* 7 — File visibility (read-only) */}
         <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">File visibility (read-only)</div>
-          <BWFileBrowser type="raw"  label="Latest raw files (immutable)" accentTone="#3ddc84" />
-          <BWFileBrowser type="wiki" label="Latest wiki pages"             accentTone="#3ec9ff" />
-        </div>
-
-        {/* 8 — Log visibility (read-only) */}
-        <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">Log visibility (read-only)</div>
-          <BWLogViewer defaultLines={200} />
-        </div>
-
-        {/* 9 — Remaining controls (still locked) */}
-        <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">Other controls (locked)</div>
-          <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {LOCKED_CONTROL_ORDER.map((key) => (
-              <BWLockedButton
-                key={key}
-                controlKey={key}
-                state={controls[key] || 'OWNER_APPROVAL_REQUIRED'}
-                title={`Control "${CONTROL_LABELS[key]}" is currently locked: ${controls[key] || 'OWNER_APPROVAL_REQUIRED'}. No execution is wired from the UI.`}
-              />
-            ))}
+          <div className="stat-label">Add Local Source</div>
+          <div className="hstack" style={{
+            padding: '10px 12px', background: 'var(--bg-2)',
+            borderRadius: 8, border: '1px solid var(--line-1)',
+            gap: 8, flexWrap: 'wrap',
+          }}>
+            <span className="muted xsmall" style={{ flex: 1, minWidth: 220 }}>
+              Propose a new local docs path for the farmer.
+              {availableExpansions.length > 0 ? ` ${availableExpansions.length} known candidate path(s) listed above.` : ' All known sources are already wired.'}
+            </span>
+            <BWLockedButton
+              controlKey="add_local_source"
+              state={controls.add_local_source || 'OWNER_APPROVAL_REQUIRED'}
+              title="Adding a source edits the farmer script. Wiring this control needs a separate owner-approved plan; the button is currently locked."
+            />
           </div>
+        </div>
+
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Enable External Farmer</div>
+          <div className="hstack" style={{
+            padding: '10px 12px', background: 'var(--bg-2)',
+            borderRadius: 8, border: '1px solid var(--line-1)',
+            gap: 8, flexWrap: 'wrap',
+          }}>
+            <span className="muted xsmall" style={{ flex: 1, minWidth: 220 }}>
+              Promote a draft farmer (SMB / Gmail / Slack / YouTube / Web) out of <code style={{ fontSize: 11 }}>farmers/_drafts/</code>.
+              {drafts.length > 0 ? ` ${drafts.length} draft(s) listed above with their blockers.` : ''}
+            </span>
+            <BWLockedButton
+              controlKey="enable_external_farmer"
+              state={controls.enable_external_farmer || 'CREDENTIAL_REQUIRED'}
+              title="Each external farmer needs its credentials AND owner approval. The button is locked until both are supplied."
+            />
+          </div>
+        </div>
+
+        {/* ============================================================
+            3) INSPECT — read-only viewers (raw / wiki / log).
+            ============================================================ */}
+        <BWSectionHeader index={3} title="Inspect" subtitle="read-only · capped · secret-redacted" tone="#3ddc84"/>
+
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Latest Raw Files</div>
+          <BWFileBrowser type="raw" label="Latest raw files (immutable)" accentTone="#3ddc84" />
+        </div>
+
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Latest Wiki Pages</div>
+          <BWFileBrowser type="wiki" label="Latest wiki pages" accentTone="#3ec9ff" />
+        </div>
+
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Farmer Log</div>
+          <BWLogViewer defaultLines={200} />
         </div>
 
         {/* Footer — assigned agents + provenance */}

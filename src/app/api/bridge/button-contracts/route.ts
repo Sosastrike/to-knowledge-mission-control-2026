@@ -113,6 +113,7 @@ const BUTTONS: ButtonContract[] = [
   { route: 'mcp-tools', label: 'Reauth / Enable / Disable', endpoint: '/api/mcp/servers/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'MCP config changes locked.' },
 
   { route: 'skills', label: 'Refresh skills', endpoint: '/api/skills', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only registry.' },
+  { route: 'skills', label: 'Tool skill inventory', endpoint: '/api/skills/tool-skills', method: 'GET', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only ClaudeClaw agent skill inventory.' },
   { route: 'skills', label: 'Search', endpoint: '/api/skills/finder/search', method: 'POST', state: 'READ_ONLY', credential_names: [], approval_required: false, audit_required: false, owner: 'Codex', note: 'Read-only search index.' },
   { route: 'skills', label: 'Test', endpoint: '/api/skills/:id/test', method: 'POST', state: 'BACKEND_REQUIRED', credential_names: [], approval_required: false, audit_required: true, owner: 'Codex', note: 'Probe runner missing.' },
   { route: 'skills', label: 'Request install / Enable / Disable', endpoint: '/api/skills/:id/:action', method: 'POST', state: 'OWNER_APPROVAL_REQUIRED', credential_names: [], approval_required: true, audit_required: true, owner: 'Codex', note: 'Skill mutations locked.' },

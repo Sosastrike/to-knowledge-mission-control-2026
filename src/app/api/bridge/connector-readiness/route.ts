@@ -374,6 +374,7 @@ export async function GET(request: NextRequest) {
         'running arbitrary skill tests',
       ],
       deferred_or_redundant_paths: [
+        'POST/PUT/DELETE /api/skills direct filesystem writes are locked and deprecated as owner-facing actions',
         'POST /api/skills/registry remains approval-required and points to canonical install request flow',
         '/api/skills/tool-skills is the read-only ClaudeClaw agent skill inventory path',
         'canonical install path is /api/skills/finder/request-install',
@@ -384,7 +385,7 @@ export async function GET(request: NextRequest) {
         'POST /api/skills/finder/search',
       ],
       blocker: 'install runner and approval persistence not enabled',
-      next_action: 'Keep POST /api/skills/registry approval-required and canonicalize installs through /api/skills/finder/request-install.',
+      next_action: 'Keep all skill writes locked and canonicalize installs through /api/skills/finder/request-install.',
     },
   ]
 

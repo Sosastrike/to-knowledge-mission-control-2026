@@ -110,7 +110,7 @@ const endpoints: Endpoint[] = [
   // ── Settings ──────────────────────────────────────
   { path: '/api/settings', methods: ['GET', 'PATCH'], description: 'System settings', tag: 'Settings', auth: 'viewer/admin' },
   { path: '/api/integrations', methods: ['GET', 'PATCH'], description: 'Integration configuration', tag: 'Settings', auth: 'viewer/admin' },
-  { path: '/api/skills', methods: ['GET', 'POST', 'PUT', 'DELETE'], description: 'Installed skills index and disk CRUD', tag: 'Settings', auth: 'viewer/operator' },
+  { path: '/api/skills', methods: ['GET', 'POST', 'PUT', 'DELETE'], description: 'Installed skills index; direct writes return owner-approval-required until approval/audit persistence is active', tag: 'Settings', auth: 'viewer/operator' },
 
   // ── Gateway ───────────────────────────────────────
   { path: '/api/gateways', methods: ['GET', 'POST', 'PATCH', 'DELETE'], description: 'Gateway management', tag: 'Gateway', auth: 'admin' },

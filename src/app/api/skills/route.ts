@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'node:crypto'
-import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { access, readdir, readFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { requireRole } from '@/lib/auth'
-import { resolveWithin } from '@/lib/paths'
 import { checkSkillSecurity } from '@/lib/skill-registry'
 
 interface SkillSummary {
@@ -179,62 +177,6 @@ function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
   }
 }
 
-function getRootBySource(roots: SkillRoot[], sourceRaw: string | null): SkillRoot | null {
-  const source = String(sourceRaw || '').trim()
-  if (!source) return null
-  return roots.find((r) => r.source === source) || null
-}
-
-async function upsertSkill(root: SkillRoot, name: string, content: string) {
-  const skillPath = resolveWithin(root.path, name)
-  const skillDocPath = resolveWithin(skillPath, 'SKILL.md')
-  await mkdir(skillPath, { recursive: true })
-  await writeFile(skillDocPath, content, 'utf8')
-
-  // Update DB hash so next sync cycle detects our write
-  try {
-    const { getDatabase } = await import('@/lib/db')
-    const db = getDatabase()
-    const hash = createHash('sha256').update(content, 'utf8').digest('hex')
-    const now = new Date().toISOString()
-    const descLines = content.split('\n').map(l => l.trim()).filter(Boolean)
-    const desc = descLines.find(l => !l.startsWith('#'))
-    db.prepare(`
-      INSERT INTO skills (name, source, path, description, content_hash, installed_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(source, name) DO UPDATE SET
-        path = excluded.path,
-        description = excluded.description,
-        content_hash = excluded.content_hash,
-        updated_at = excluded.updated_at
-    `).run(
-      name,
-      root.source,
-      skillPath,
-      desc ? (desc.length > 220 ? `${desc.slice(0, 217)}...` : desc) : null,
-      hash,
-      now,
-      now
-    )
-  } catch { /* DB not ready yet — sync will catch it */ }
-
-  return { skillPath, skillDocPath }
-}
-
-async function deleteSkill(root: SkillRoot, name: string) {
-  const skillPath = resolveWithin(root.path, name)
-  await rm(skillPath, { recursive: true, force: true })
-
-  // Remove from DB
-  try {
-    const { getDatabase } = await import('@/lib/db')
-    const db = getDatabase()
-    db.prepare('DELETE FROM skills WHERE source = ? AND name = ?').run(root.source, name)
-  } catch { /* best-effort */ }
-
-  return { skillPath }
-}
-
 /**
  * Try to serve skill list from DB (fast path).
  * Falls back to filesystem scan if DB has no data yet.
@@ -259,6 +201,25 @@ function getSkillsFromDB(): SkillSummary[] | null {
   } catch {
     return null
   }
+}
+
+function skillMutationLocked(action: string, extra: Record<string, unknown> = {}) {
+  return NextResponse.json(
+    {
+      ok: false,
+      owner_approval_required: true,
+      approval_state: 'required',
+      execution_enabled: false,
+      writes_enabled: false,
+      approval_request_created: false,
+      canonical_endpoint: '/api/skills/finder/request-install',
+      deprecated_endpoint: '/api/skills',
+      action,
+      next_action: 'Skill writes are locked until owner-approved approval/audit persistence and rollback paths are active.',
+      ...extra,
+    },
+    { status: 423 },
+  )
 }
 
 export async function GET(request: NextRequest) {
@@ -314,15 +275,14 @@ export async function GET(request: NextRequest) {
     const content = await readFile(skillDocPath, 'utf8')
     const security = checkSkillSecurity(content)
 
-    // Update DB with security status
-    try {
-      const { getDatabase } = await import('@/lib/db')
-      const db = getDatabase()
-      db.prepare('UPDATE skills SET security_status = ?, updated_at = ? WHERE source = ? AND name = ?')
-        .run(security.status, new Date().toISOString(), source, name)
-    } catch { /* best-effort */ }
-
-    return NextResponse.json({ source, name, security })
+    return NextResponse.json({
+      source,
+      name,
+      security,
+      state: 'READ_ONLY',
+      writes_enabled: false,
+      note: 'Security check is read-only; security_status persistence is locked until approval/audit persistence is active.',
+    })
   }
 
   // Try DB-backed fast path first
@@ -382,39 +342,24 @@ export async function POST(request: NextRequest) {
   const auth = requireRole(request, 'operator')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const roots = getSkillRoots()
   const body = await request.json().catch(() => ({}))
-  const root = getRootBySource(roots, body?.source)
   const name = normalizeSkillName(String(body?.name || ''))
-  const contentRaw = typeof body?.content === 'string' ? body.content : ''
-  const content = contentRaw.trim() || `# ${name || 'skill'}\n\nDescribe this skill.\n`
-
-  if (!root || !name) {
-    return NextResponse.json({ error: 'Valid source and name are required' }, { status: 400 })
-  }
-
-  await mkdir(root.path, { recursive: true })
-  const { skillPath, skillDocPath } = await upsertSkill(root, name, content)
-  return NextResponse.json({ ok: true, source: root.source, name, skillPath, skillDocPath })
+  return skillMutationLocked('create_skill', {
+    source: body?.source || null,
+    name,
+  })
 }
 
 export async function PUT(request: NextRequest) {
   const auth = requireRole(request, 'operator')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const roots = getSkillRoots()
   const body = await request.json().catch(() => ({}))
-  const root = getRootBySource(roots, body?.source)
   const name = normalizeSkillName(String(body?.name || ''))
-  const content = typeof body?.content === 'string' ? body.content : null
-
-  if (!root || !name || content == null) {
-    return NextResponse.json({ error: 'Valid source, name, and content are required' }, { status: 400 })
-  }
-
-  await mkdir(root.path, { recursive: true })
-  const { skillPath, skillDocPath } = await upsertSkill(root, name, content)
-  return NextResponse.json({ ok: true, source: root.source, name, skillPath, skillDocPath })
+  return skillMutationLocked('update_skill', {
+    source: body?.source || null,
+    name,
+  })
 }
 
 export async function DELETE(request: NextRequest) {
@@ -422,15 +367,11 @@ export async function DELETE(request: NextRequest) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { searchParams } = new URL(request.url)
-  const roots = getSkillRoots()
-  const root = getRootBySource(roots, searchParams.get('source'))
   const name = normalizeSkillName(String(searchParams.get('name') || ''))
-  if (!root || !name) {
-    return NextResponse.json({ error: 'Valid source and name are required' }, { status: 400 })
-  }
-
-  const { skillPath } = await deleteSkill(root, name)
-  return NextResponse.json({ ok: true, source: root.source, name, skillPath })
+  return skillMutationLocked('delete_skill', {
+    source: searchParams.get('source') || null,
+    name,
+  })
 }
 
 export const dynamic = 'force-dynamic'

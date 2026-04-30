@@ -129,7 +129,10 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         if (legacy === '1' || legacy === 'true') return 'neural-lite';
       }
     } catch { /* ignore */ }
-    return 'original';
+    // Owner-approved default 2026-04-30: 'neural-strong' (chosen after
+    // testing all 5 modes). Owner can flip back to 'original' via the
+    // gear settings or localStorage.removeItem('mc.brain.graphMode').
+    return 'neural-strong';
   })();
   const NM = NM_MODES[NM_MODE_KEY] || NM_MODES['original'];
   // Convenience boolean kept so older conditional blocks read cleanly.
@@ -1563,11 +1566,147 @@ function BrainSyncReadinessBanner(){
   );
 }
 
+
+// ============================================================
+// Brain Graph Settings — gear popover for in-UI visual mode picker
+// (Owner directive 2026-04-30 — replaces DevTools-only flag flow.)
+// All 5 modes available; selection persists in mc.brain.graphMode and
+// reloads the page so useBrainGraph re-reads the flag cleanly.
+// ============================================================
+function BrainGraphSettings({ open, currentMode, onSelect, onClose }) {
+  if (!open) return null;
+  const modes = [
+    { id: 'original',      name: 'Original',            desc: 'Existing production look.' },
+    { id: 'neural-lite',   name: 'Neural Lite',         desc: 'Subtle neural movement.' },
+    { id: 'neural-strong', name: 'Neural Strong',       desc: 'Stronger neural layout and separation.', isDefault: true },
+    { id: 'neural-live',   name: 'Neural Live Traffic', desc: 'Stronger traffic/pulse visualization.' },
+    { id: 'neural-clean',  name: 'Neural Clean',        desc: 'Clean readable layout with minimal background.' },
+  ];
+  return (
+    <div
+      className="brain-settings-backdrop"
+      onClick={onClose}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 90,
+        background: 'rgba(6,9,22,0.35)', cursor: 'default',
+      }}
+    >
+      <div
+        className="brain-settings-popover"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label="Brain Graph Settings"
+        style={{
+          position: 'absolute', top: 56, right: 14, zIndex: 100,
+          background: 'var(--bg-2, #0f1422)',
+          border: '1px solid var(--line-1, rgba(255,255,255,0.08))',
+          borderRadius: 10, padding: 14, width: 340,
+          boxShadow: '0 16px 50px rgba(0,0,0,0.55)',
+        }}
+      >
+        <div className="hstack" style={{justifyContent:'space-between', marginBottom:10}}>
+          <span style={{fontSize:13, fontWeight:600, color:'var(--fg-0)'}}>Brain Graph Settings</span>
+          <button className="btn sm" onClick={onClose} aria-label="Close" style={{padding:'2px 8px'}}>✕</button>
+        </div>
+        <div style={{fontSize:11, color:'var(--fg-2)', marginBottom:8, letterSpacing:'0.04em', textTransform:'uppercase'}}>Visualization mode</div>
+        <div style={{display:'flex', flexDirection:'column', gap:6}}>
+          {modes.map((m) => {
+            const active = currentMode === m.id;
+            return (
+              <label
+                key={m.id}
+                className="hstack"
+                style={{
+                  padding:'8px 10px',
+                  borderRadius:8,
+                  cursor:'pointer',
+                  alignItems:'flex-start',
+                  background: active ? 'rgba(107,179,255,0.10)' : 'transparent',
+                  border: '1px solid ' + (active ? 'rgba(107,179,255,0.45)' : 'var(--line-1, rgba(255,255,255,0.08))'),
+                }}
+              >
+                <input
+                  type="radio" name="graphMode" value={m.id}
+                  checked={active}
+                  onChange={() => onSelect(m.id)}
+                  style={{accentColor:'#6bb3ff', marginTop:3}}
+                />
+                <div style={{flex:1, marginLeft:10, minWidth:0}}>
+                  <div className="hstack" style={{gap:6}}>
+                    <span style={{fontSize:12.5, color:'var(--fg-0)', fontWeight:500}}>{m.name}</span>
+                    {m.isDefault && (
+                      <span
+                        className="brain-mock-pill"
+                        style={{fontSize:9, padding:'1px 6px', background:'rgba(61,220,132,0.12)', borderColor:'rgba(61,220,132,0.4)', color:'#3ddc84'}}
+                      >
+                        default
+                      </span>
+                    )}
+                  </div>
+                  <div className="muted xsmall" style={{marginTop:2, lineHeight:1.4}}>{m.desc}</div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+        <div className="hstack" style={{gap:6, marginTop:12}}>
+          <button className="btn sm" onClick={() => onSelect('neural-strong')} style={{flex:1}}>Reset to Default</button>
+          <button className="btn sm" onClick={() => onSelect('original')} style={{flex:1}}>Reset to Original</button>
+        </div>
+        <div className="muted xsmall" style={{marginTop:10, lineHeight:1.4}}>
+          Selection persists in <code className="mono" style={{fontSize:10}}>localStorage.mc.brain.graphMode</code>.
+          Page reloads automatically so the canvas re-initializes cleanly.
+          Future updates may unlock per-knob controls (spacing, pulse intensity, traffic speed, sector separation, label density, line curvature, background intensity, live-data overlays).
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrainGearGlyph({ size = 12 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  );
+}
 function BrainSyncPage(){
   const { pulse, history } = usePulseStream();
   const [tab, setTab] = React.useState('overview');
   const [q, setQ] = React.useState('');
   const [expanded, setExpanded] = React.useState(false);
+  // ── Brain Graph Settings (gear) ───────────────────────────────────
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [currentMode, setCurrentMode] = React.useState(() => {
+    if (typeof window === 'undefined') return 'neural-strong';
+    try {
+      const ls = window.localStorage;
+      if (ls) {
+        const v = ls.getItem('mc.brain.graphMode');
+        if (v) return v;
+        const legacy = ls.getItem('mc.brain.neuralMotion');
+        if (legacy === '1' || legacy === 'true') return 'neural-lite';
+      }
+    } catch { /* ignore */ }
+    return 'neural-strong';
+  });
+  const handleModeSelect = (mode) => {
+    try {
+      if (mode === 'neural-strong') {
+        // The default — clearing the key keeps fallback behavior tidy.
+        window.localStorage.removeItem('mc.brain.graphMode');
+      } else {
+        window.localStorage.setItem('mc.brain.graphMode', mode);
+      }
+    } catch { /* ignore */ }
+    setCurrentMode(mode);
+    // Reload so useBrainGraph re-reads the flag cleanly. The owner approved
+    // auto-reload-on-change as the simplest reliable apply path.
+    if (typeof window !== 'undefined') {
+      setTimeout(() => window.location.reload(), 50);
+    }
+  };
 
   const handleRebuild = () => window.pushToast?.('warn', 'Rebuild graph · endpoint not wired (prototype).');
   const handleExpand  = () => setExpanded(true);
@@ -1613,6 +1752,14 @@ function BrainSyncPage(){
                 <button className="btn sm" onClick={handleRebuild}><I.Refresh size={11}/> Rebuild</button>
                 <button className="btn sm" onClick={handleExpand}><I.Maximize size={11}/> Expand</button>
                 <button className="btn sm" onClick={handlePopOut}><I.External size={11}/> Pop out</button>
+                <button
+                  className="btn sm"
+                  onClick={() => setSettingsOpen((v) => !v)}
+                  aria-label="Brain Graph Settings"
+                  title="Brain Graph Settings"
+                >
+                  <BrainGearGlyph size={11}/> Settings
+                </button>
               </div>
             </div>
 
@@ -1623,12 +1770,18 @@ function BrainSyncPage(){
               })}
             </div>
 
-            <div className="brain-map-stage">
+            <div className="brain-map-stage" style={{position:'relative'}}>
               <BrainCanvasStage running={tab==='overview' || tab==='communities'}/>
               {/* Inline legend — on top of canvas, subtle */}
               <div className="brain-legend-overlay">
                 <BrainLegend compact/>
               </div>
+              <BrainGraphSettings
+                open={settingsOpen}
+                currentMode={currentMode}
+                onSelect={handleModeSelect}
+                onClose={() => setSettingsOpen(false)}
+              />
               {tab !== 'overview' && tab !== 'communities' && (
                 <div className="brain-map-overlay-msg">
                   <div style={{color:'var(--fg-0)', fontWeight:500, marginBottom:4}}>

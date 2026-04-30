@@ -150,6 +150,85 @@ const APPROVAL_CONTRACT = [
   },
 ]
 
+const APPROVAL_FLOW = {
+  current_state: 'READ_ONLY_CONTRACT_ONLY',
+  execution_enabled: false,
+  approval_request_creation_enabled: false,
+  telegram_send_enabled: false,
+  persistence_required_before_execution: true,
+  steps: [
+    {
+      order: 1,
+      name: 'Bridge Mode preflight',
+      endpoint: '/api/bridge/preflight',
+      state: 'READ_ONLY',
+      record_required_later: 'preflight_id',
+    },
+    {
+      order: 2,
+      name: 'Roadmap and 10-check validation',
+      endpoint: '/api/bridge/executive-report-preview',
+      state: 'READ_ONLY',
+      record_required_later: 'roadmap_hash and validation_hash',
+    },
+    {
+      order: 3,
+      name: 'Executive report/PDF preview',
+      endpoint: '/api/bridge/executive-report-preview',
+      state: 'READ_ONLY',
+      record_required_later: 'report_url or report_artifact_ref',
+    },
+    {
+      order: 4,
+      name: 'Tony-to-Telegram approval preview',
+      endpoint: '/api/bridge/telegram-approval-preview',
+      state: 'READ_ONLY',
+      record_required_later: 'telegram_message_id and callback_nonce',
+    },
+    {
+      order: 5,
+      name: 'Approval request persistence',
+      endpoint: '/api/bridge/approval-requests',
+      state: 'BACKEND_REQUIRED',
+      required_table: 'bridge_approval_requests',
+    },
+    {
+      order: 6,
+      name: 'Audit chain append',
+      endpoint: '/api/bridge/approval-requests',
+      state: 'BACKEND_REQUIRED',
+      required_table: 'bridge_audit_events',
+    },
+    {
+      order: 7,
+      name: 'Action lock validation',
+      endpoint: '/api/bridge/approval-requests',
+      state: 'BACKEND_REQUIRED',
+      required_table: 'bridge_action_locks',
+    },
+    {
+      order: 8,
+      name: 'Connector execution run record',
+      endpoint: 'connector-specific approval-gated runner',
+      state: 'BLOCKED_UNTIL_OWNER_APPROVES_EXECUTION',
+      required_table: 'bridge_connector_runs',
+    },
+  ],
+}
+
+const REQUIRED_PERSISTENCE = {
+  migration: 'docs/migrations/proposed-bridge-approval-audit-20260429.sql',
+  temp_db_test: 'scripts/test-bridge-approval-migration.sh',
+  tables: [
+    'bridge_approval_requests',
+    'bridge_audit_events',
+    'bridge_action_locks',
+    'bridge_connector_runs',
+  ],
+  owner_approval_required_before_apply: true,
+  production_apply_enabled: false,
+}
+
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -163,8 +242,13 @@ export async function GET(request: NextRequest) {
       protected_write_http_status: 423,
       no_fake_success: true,
       no_execution_enabled: true,
+      no_connector_execution_enabled: true,
+      no_telegram_send_enabled: true,
+      approval_request_created: false,
       db_persistence: 'draft_only_not_applied',
     },
+    approval_flow: APPROVAL_FLOW,
+    required_persistence: REQUIRED_PERSISTENCE,
     approvals: APPROVAL_CONTRACT,
     summary: {
       total: APPROVAL_CONTRACT.length,

@@ -65,6 +65,16 @@ if (failures.length === 0) {
   if (!buttons.includes('/api/agent-zero/request')) failures.push('button contract missing Agent Zero request endpoint')
   if (!approval.includes('protected_write_http_status: 423')) failures.push('approval contract missing HTTP 423 policy')
   for (const needle of [
+    'approval_flow',
+    'required_persistence',
+    'no_connector_execution_enabled: true',
+    'no_telegram_send_enabled: true',
+    'approval_request_created: false',
+    'bridge_connector_runs',
+  ]) {
+    if (!approval.includes(needle)) failures.push(`approval contract missing ${needle}`)
+  }
+  for (const needle of [
     "mode: 'executive_report_preview_read_only'",
     'no_execution_enabled: true',
     'no_persistence_enabled: true',

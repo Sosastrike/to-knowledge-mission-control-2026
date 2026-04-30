@@ -12,6 +12,7 @@ import { syncSkillsFromDisk } from './skill-sync'
 import { syncLocalAgents } from './local-agent-sync'
 import { dispatchAssignedTasks, runAegisReviews, requeueStaleTasks, autoRouteInboxTasks } from './task-dispatch'
 import { spawnRecurringTasks } from './recurring-tasks'
+import { getClaudeClawRuntimeStatusMap, normalizeRuntimeAgentName } from './claudeclaw-runtime-status'
 
 const BACKUP_DIR = join(dirname(config.dbPath), 'backups')
 
@@ -271,6 +272,73 @@ async function syncAgentLiveStatuses(): Promise<number> {
   return refreshed
 }
 
+/** Sync live ClaudeClaw process-backed agents into the Mission Control registry. */
+async function syncClaudeClawRuntimeStatuses(): Promise<number> {
+  const runtimeAgents = getClaudeClawRuntimeStatusMap()
+  if (runtimeAgents.size === 0) return 0
+
+  const db = getDatabase()
+  const agents = db.prepare('SELECT id, name, status FROM agents').all() as Array<{
+    id: number
+    name: string
+    status: string
+  }>
+  const update = db.prepare('UPDATE agents SET status = ?, last_seen = ?, last_activity = ?, updated_at = ? WHERE id = ?')
+  const now = Math.floor(Date.now() / 1000)
+  let refreshed = 0
+
+  const refreshRuntimeAgents = db.transaction(() => {
+    for (const agent of agents) {
+      const runtime = runtimeAgents.get(normalizeRuntimeAgentName(agent.name))
+      if (!runtime?.running) continue
+
+      const status = agent.status === 'active' ? 'active' : 'idle'
+      const activity = runtime.pid
+        ? `ClaudeClaw runtime unit ${runtime.unit} (pid ${runtime.pid})`
+        : `ClaudeClaw runtime unit ${runtime.unit}`
+      update.run(status, now, activity, now, agent.id)
+      refreshed++
+
+      eventBus.broadcast('agent.status_changed', {
+        id: agent.id,
+        name: agent.name,
+        status,
+        last_seen: now,
+        last_activity: activity,
+      })
+    }
+  })
+  refreshRuntimeAgents()
+
+  const agentZero = agents.find(agent => normalizeRuntimeAgentName(agent.name) === 'agent-0')
+  if (agentZero) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 2500)
+    try {
+      const response = await fetch('http://100.116.35.95:50080/', { signal: controller.signal })
+      if (response.status < 500) {
+        const activity = `Agent Zero container reachable on tailnet port 50080 (HTTP ${response.status})`
+        update.run('idle', now, activity, now, agentZero.id)
+        refreshed++
+
+        eventBus.broadcast('agent.status_changed', {
+          id: agentZero.id,
+          name: agentZero.name,
+          status: 'idle',
+          last_seen: now,
+          last_activity: activity,
+        })
+      }
+    } catch (err) {
+      logger.warn({ err }, 'Agent Zero runtime status sync failed')
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
+  return refreshed
+}
+
 const DAILY_MS = 24 * 60 * 60 * 1000
 const FIVE_MINUTES_MS = 5 * 60 * 1000
 const TICK_MS = 60 * 1000 // Check every minute
@@ -447,7 +515,8 @@ async function tick() {
         : id === 'local_agent_sync' ? await syncLocalAgents()
         : id === 'gateway_agent_sync' ? await syncAgentsFromConfig('scheduled').then(async r => {
             const refreshed = await syncAgentLiveStatuses()
-            return { ok: true, message: `Gateway sync: ${r.created} created, ${r.updated} updated, ${r.synced} total | Live status: ${refreshed} refreshed` }
+            const runtimeRefreshed = await syncClaudeClawRuntimeStatuses()
+            return { ok: true, message: `Gateway sync: ${r.created} created, ${r.updated} updated, ${r.synced} total | Live status: ${refreshed} refreshed | Runtime status: ${runtimeRefreshed} refreshed` }
           })
         : id === 'task_dispatch' ? await autoRouteInboxTasks().then(async (routeResult) => {
             const dispatchResult = await dispatchAssignedTasks()

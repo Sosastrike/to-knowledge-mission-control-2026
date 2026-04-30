@@ -53,11 +53,21 @@ const SECRET_PATTERNS: SecretPattern[] = [
   // Discord webhooks
   { type: 'discord_webhook', severity: 'critical', regex: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/\d{17,}\/[A-Za-z0-9_\-]{60,}/g },
 
-  // OpenAI API keys
+  // OpenAI API keys (legacy and sk-proj- format)
   { type: 'openai_api_key', severity: 'critical', regex: /sk-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}/g },
+  { type: 'openai_api_key_proj', severity: 'critical', regex: /sk-proj-[A-Za-z0-9_\-]{40,}/g },
 
   // Anthropic API keys
   { type: 'anthropic_api_key', severity: 'critical', regex: /sk-ant-api[A-Za-z0-9\-_]{20,}/g },
+
+  // Discord bot tokens (base64 user ID . timestamp . HMAC)
+  { type: 'discord_bot_token', severity: 'critical', regex: /[MN][A-Za-z0-9]{23,}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}/g },
+
+  // Google API keys
+  { type: 'google_api_key', severity: 'critical', regex: /AIzaSy[A-Za-z0-9_-]{33}/g },
+
+  // Firecrawl API keys
+  { type: 'firecrawl_api_key', severity: 'warning', regex: /fc-[a-f0-9]{32}/g },
 
   // Twilio API keys
   { type: 'twilio_api_key', severity: 'critical', regex: /SK[0-9a-fA-F]{32}/g },

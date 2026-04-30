@@ -10,6 +10,7 @@ const checks = [
   ['mission_control_service_live', ['node', ['scripts/check-mission-control-service-live.mjs', baseUrl]]],
   ['button_contract_static', ['node', ['scripts/check-button-contract-routes.mjs']]],
   ['bridge_readonly_static', ['node', ['scripts/check-bridge-readonly-mvp.mjs']]],
+  ['bridge_capability_matrix_live', ['node', ['scripts/check-bridge-capability-matrix-live.mjs', baseUrl]]],
   ['button_contract_live', ['node', ['scripts/check-button-contract-live-status.mjs', baseUrl]]],
   ['protected_actions_locked', ['node', ['scripts/check-protected-actions-locked.mjs', baseUrl]]],
   ['connector_readiness_live', ['node', ['scripts/check-connector-readiness-live.mjs', baseUrl]]],
@@ -69,6 +70,9 @@ function summarize(name, parsed) {
   }
   if (name === 'button_contract_static') {
     return { api_endpoints: parsed.api_endpoints, state_counts: parsed.state_counts }
+  }
+  if (name === 'bridge_capability_matrix_live') {
+    return { summary: parsed.summary, agents: parsed.agents, tools: parsed.tools }
   }
   if (name === 'button_contract_live') {
     return { endpoints_checked: parsed.endpoints_checked, skipped: parsed.skipped }

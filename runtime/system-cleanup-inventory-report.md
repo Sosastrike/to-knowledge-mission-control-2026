@@ -1,6 +1,6 @@
 # System Cleanup Inventory Report
 
-Generated: 2026-04-30T12:41:21.776Z
+Generated: 2026-04-30T13:39:21.598Z
 Mode: inventory only. No delete. No quarantine. No protected action.
 
 ## Summary
@@ -16,7 +16,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_helper
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/.commit-tkmc.sh
@@ -24,7 +24,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_file
   - tracked: no
-  - reference count: 2
+  - reference count: 3
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/.designer-retirement-backups/
@@ -112,7 +112,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_file
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/.tkmc-commit-msg.txt
@@ -120,7 +120,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_artifact
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/public/Voice-Biometrics-Executive-Report.pdf
@@ -128,7 +128,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_artifact
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/public/lu-ai-collab-v2.mp4
@@ -136,7 +136,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_helper
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/scripts/mc-create-owner.cjs
@@ -144,7 +144,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: old_backup
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/src/app/login/page.tsx.bak-designer-login-20260428-071138
@@ -152,7 +152,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: old_backup
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/start-mc.sh.DISABLED

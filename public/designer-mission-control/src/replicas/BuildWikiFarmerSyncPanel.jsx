@@ -19,21 +19,20 @@ const RUN_NOW_DISPATCH_URL  = (id) => `/api/bridge/brain-sync/build-wiki/run-now
 const APPROVE_URL           = (id) => `/api/bridge/approval-requests/${encodeURIComponent(id)}/approve`;
 const FILES_LIST_URL        = (type, limit) => `/api/bridge/brain-sync/build-wiki/files?type=${encodeURIComponent(type)}&limit=${encodeURIComponent(limit)}`;
 const FILE_READ_URL         = (type, name) => `/api/bridge/brain-sync/build-wiki/files/${encodeURIComponent(type)}/${encodeURIComponent(name)}`;
+const LOGS_URL              = (lines) => `/api/bridge/brain-sync/build-wiki/logs?lines=${encodeURIComponent(lines)}`;
 
 const CONTROL_LABELS = {
   pause_sync:             'Pause sync',
   resume_sync:            'Resume sync',
   add_local_source:       'Add local source',
   enable_external_farmer: 'Enable external farmer',
-  view_logs:              'View logs',
 };
 
-// Run Now + the two file browsers are wired (approval-driven and read-only
-// respectively). The remaining 5 controls stay locked behind their badges.
+// Run Now + the two file browsers + the log viewer are wired (approval-driven
+// and read-only respectively). The remaining 4 controls stay locked.
 const LOCKED_CONTROL_ORDER = [
   'pause_sync', 'resume_sync',
   'add_local_source', 'enable_external_farmer',
-  'view_logs',
 ];
 
 function buildWikiPillKind(state) {
@@ -498,6 +497,139 @@ function BWFileBrowser({ type, label, accentTone }) {
   );
 }
 
+// ============================================================
+// Log viewer — read-only farmer log tail + parsed stats.
+// ============================================================
+function BWLogViewer({ defaultLines = 200 }) {
+  const [open, setOpen] = React.useState(false);
+  const [linesCount, setLinesCount] = React.useState(defaultLines);
+  const [state, setState] = React.useState({ loading: false, data: null, error: null });
+
+  const fetchTail = React.useCallback(async (n) => {
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await fetch(LOGS_URL(n), {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+      setState({ loading: false, data: j, error: null });
+    } catch (err) {
+      setState({ loading: false, data: null, error: String(err && err.message || err) });
+    }
+  }, []);
+
+  const toggleOpen = () => {
+    setOpen((prev) => {
+      const next = !prev;
+      if (next && state.data === null && !state.loading) fetchTail(linesCount);
+      return next;
+    });
+  };
+
+  const changeLines = (n) => {
+    setLinesCount(n);
+    if (open) fetchTail(n);
+  };
+
+  const data = state.data;
+  const stats = data && data.stats;
+  const lastErrorLine = stats && stats.last_error;
+
+  return (
+    <div className="vstack" style={{
+      gap: 6, padding: '10px 12px',
+      background: 'var(--bg-2)', borderRadius: 8,
+      border: '1px solid var(--line-1)',
+    }}>
+      <div className="hstack" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <BWPill tone="#ffb547">LOG · READ ONLY</BWPill>
+        <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>Farmer log</span>
+        {data ? <span className="mono xsmall muted">{data.lines_returned} lines · {Math.round(data.size_bytes / 1024)} KB total</span> : null}
+        <span className="spacer"/>
+        {open ? (
+          <>
+            {[100, 200, 500].map((n) => (
+              <button
+                key={n}
+                className="btn sm"
+                disabled={state.loading || n === linesCount}
+                onClick={() => changeLines(n)}
+                title={`Tail last ${n} lines`}
+                style={n === linesCount ? { opacity: 0.7 } : undefined}
+              >
+                {n}
+              </button>
+            ))}
+            <button className="btn sm" onClick={() => fetchTail(linesCount)} disabled={state.loading} title="Refetch">
+              {state.loading ? '…' : <I.Refresh size={11}/>}
+            </button>
+          </>
+        ) : null}
+        <button className="btn sm" onClick={toggleOpen}>
+          {open ? 'Hide' : 'View logs'}
+        </button>
+      </div>
+
+      {open ? (
+        <div className="vstack" style={{ gap: 6 }}>
+          {state.loading && !data ? (
+            <div className="muted xsmall">Loading farmer log tail…</div>
+          ) : null}
+          {state.error ? (
+            <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {state.error}</div>
+          ) : null}
+
+          {stats ? (
+            <div className="hstack" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <BWStat label="Last run" value={stats.last_run_complete ? stats.last_run_complete.at : '—'}
+                      sub={stats.last_run_complete ? `imported ${stats.last_run_complete.imported} of cap ${stats.last_run_complete.cap}` : '—'} />
+              <BWStat label="Imported (in window)" value={String(stats.imported_in_window)}
+                      sub={stats.last_imported_at ? `last ${stats.last_imported_at}` : '—'} />
+              <BWStat label="Skipped (dup-sha)" value={String(stats.skipped_duplicates_in_window)} sub="already-imported deduplication" />
+              <BWStat label="Redacted lines" value={String(stats.redacted_lines)} sub={stats.redacted_lines > 0 ? 'secret patterns matched' : 'clean'} />
+            </div>
+          ) : null}
+
+          {lastErrorLine && lastErrorLine.line ? (
+            <div style={{
+              padding: '6px 8px', borderRadius: 6,
+              background: 'oklch(0.3 0.1 20 / 0.25)',
+              border: '1px solid #ff6a9e55',
+              fontSize: 11, color: '#ffb3c8',
+              fontFamily: 'var(--mono)', overflowWrap: 'anywhere',
+            }}>
+              <strong>Last error / warning</strong>{lastErrorLine.at ? ` · ${lastErrorLine.at}` : ''}: {lastErrorLine.line}
+            </div>
+          ) : null}
+
+          {data && Array.isArray(data.lines) ? (
+            <pre style={{
+              maxHeight: 380, overflow: 'auto',
+              background: 'var(--bg-1)', padding: 10, borderRadius: 6,
+              border: '1px solid var(--line-1)',
+              fontSize: 10.5, lineHeight: 1.5,
+              color: 'var(--fg-1)',
+              whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+              margin: 0,
+            }}>{data.lines.join('\n')}</pre>
+          ) : null}
+
+          {data ? (
+            <div className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>
+              {data.log_path}
+              {data.truncated_from_start ? ' · truncated_from_start (256 KB tail window)' : ''}
+              {data.modified_at ? ` · last modified ${data.modified_at}` : ''}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BuildWikiFarmerSyncPanel() {
   const { loading, data, error, refetch } = useBuildWikiStatus();
 
@@ -697,7 +829,13 @@ function BuildWikiFarmerSyncPanel() {
           <BWFileBrowser type="wiki" label="Latest wiki pages"             accentTone="#3ec9ff" />
         </div>
 
-        {/* 8 — Remaining controls (still locked) */}
+        {/* 8 — Log visibility (read-only) */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Log visibility (read-only)</div>
+          <BWLogViewer defaultLines={200} />
+        </div>
+
+        {/* 9 — Remaining controls (still locked) */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Other controls (locked)</div>
           <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>

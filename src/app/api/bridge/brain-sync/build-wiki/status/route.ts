@@ -17,6 +17,13 @@ import {
   readLatestTimerControl,
   TIMER_PUBLIC_VIEW,
 } from '@/lib/build-wiki-timer-control'
+import {
+  ADD_SOURCE_PUBLIC_VIEW,
+  BUILDWIKI_TARGET_FARMER_SCRIPT,
+  deriveAddSourceUiState,
+  readLatestAddSource,
+  readSourcesBlock,
+} from '@/lib/build-wiki-add-source'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -339,9 +346,18 @@ export async function GET(request: NextRequest) {
   const lastError = await readLastError()
 
   const scheduled = meta.scheduled_farmers?.[0] || null
-  const activeSources = scheduled?.sources?.map(String) || []
-  const sourceSet = new Set(activeSources)
-  const availableExpansions = KNOWN_LOCAL_SOURCES.filter((src) => !sourceSet.has(src))
+  // Active sources come from the LIVE farmer script (the source of truth for
+  // what the farmer will actually scan), not the registry meta — the registry
+  // can drift after an Add-Local-Source dispatch. Falls back to the registry
+  // if the script can't be read (e.g., during deploys).
+  const liveBlock = await readSourcesBlock()
+  const registrySources = scheduled?.sources?.map(String) || []
+  const activeSources: string[] = liveBlock.ok && liveBlock.sources.length > 0
+    ? liveBlock.sources.map(String)
+    : registrySources
+  const normalizeSrc = (s: string) => s.endsWith('/') ? s.replace(/\/+$/, '/') : s + '/'
+  const sourceSet = new Set(activeSources.map(normalizeSrc))
+  const availableExpansions = KNOWN_LOCAL_SOURCES.filter((src) => !sourceSet.has(normalizeSrc(src)))
 
   const enabled = Boolean(scheduled?.enabled)
   const syncState = deriveSyncState(
@@ -466,6 +482,25 @@ export async function GET(request: NextRequest) {
           create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/timer-control' },
           dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/timer-control/{id}/dispatch' },
           read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/timer-control/{id}' },
+          approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
+        },
+      }
+    })(),
+    add_source: (() => {
+      const latest = readLatestAddSource()
+      const ui = deriveAddSourceUiState(latest.approval, latest.run)
+      return {
+        persistence_ready: latest.persistence_ready,
+        target_script: BUILDWIKI_TARGET_FARMER_SCRIPT,
+        ui_state: ui.ui_state,
+        is_terminal: ui.is_terminal,
+        latest_proposed_path: latest.approval ? latest.approval.target_key : null,
+        approval: ADD_SOURCE_PUBLIC_VIEW.pickApproval(latest.approval),
+        run: ADD_SOURCE_PUBLIC_VIEW.pickRun(latest.run),
+        endpoints: {
+          create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/add-source' },
+          dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/add-source/{id}/dispatch' },
+          read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/add-source/{id}' },
           approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
         },
       }

@@ -22,6 +22,9 @@ const FILE_READ_URL         = (type, name) => `/api/bridge/brain-sync/build-wiki
 const LOGS_URL              = (lines) => `/api/bridge/brain-sync/build-wiki/logs?lines=${encodeURIComponent(lines)}`;
 const TIMER_CTRL_CREATE_URL = '/api/bridge/brain-sync/build-wiki/timer-control';
 const TIMER_CTRL_DISPATCH_URL = (id) => `/api/bridge/brain-sync/build-wiki/timer-control/${encodeURIComponent(id)}/dispatch`;
+const ADD_SRC_CREATE_URL    = '/api/bridge/brain-sync/build-wiki/add-source';
+const ADD_SRC_DISPATCH_URL  = (id) => `/api/bridge/brain-sync/build-wiki/add-source/${encodeURIComponent(id)}/dispatch`;
+const ADD_SRC_READ_URL      = (id) => `/api/bridge/brain-sync/build-wiki/add-source/${encodeURIComponent(id)}`;
 
 // Display labels for the still-locked Action buttons. Run Now /
 // Pause/Resume / file browsers / log viewer have their own components.
@@ -793,6 +796,204 @@ function BWTimerControl({ timerControl, onAction }) {
   );
 }
 
+// ============================================================
+// Add Local Source — approval-driven script edit.
+// ============================================================
+function BWAddSourceControl({ addSource, availableExpansions, onAction }) {
+  const [pathInput, setPathInput] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState(null);
+  const [stagedDiff, setStagedDiff] = React.useState(null);
+
+  const tc = addSource || {};
+  const state = tc.ui_state || 'idle';
+  const approval = tc.approval;
+  const run = tc.run;
+  const approvalId = approval && approval.id;
+  const k = uiStateLabel(state);
+
+  const wrap = async (fn) => {
+    setBusy(true); setErrorMsg(null);
+    try {
+      await fn();
+      if (typeof onAction === 'function') onAction();
+    } catch (err) {
+      setErrorMsg(String(err && err.message || err).slice(0, 360));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitPath = (value) => wrap(async () => {
+    const proposed = String(value || pathInput || '').trim();
+    if (!proposed) throw new Error('path is required');
+    const res = await fetch(ADD_SRC_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ path: proposed }),
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const reason = j.reason || j.error || `HTTP ${res.status}`;
+      throw new Error(reason);
+    }
+    if (j.diff_preview) setStagedDiff(j.diff_preview);
+    setPathInput('');
+  });
+
+  const approveSelf = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(APPROVE_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  const dispatchNow = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(ADD_SRC_DISPATCH_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.reason_code || j.error || `HTTP ${res.status}`);
+  });
+
+  // For an active approval, fetch the diff/preview from the per-id endpoint
+  // when the panel mounts so we can show what was approved.
+  React.useEffect(() => {
+    if (!approvalId || stagedDiff) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(ADD_SRC_READ_URL(approvalId), {
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store',
+          credentials: 'same-origin',
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!cancelled && j.ok && j.diff_preview) setStagedDiff(j.diff_preview);
+      } catch { /* noop */ }
+    })();
+    return () => { cancelled = true; };
+  }, [approvalId, stagedDiff]);
+
+  let actionBtn = null;
+  if (state === 'idle' || state === 'completed' || state === 'denied' || state === 'expired' || state === 'failed') {
+    actionBtn = (
+      <button
+        className="btn sm"
+        disabled={busy || !pathInput.trim()}
+        onClick={() => submitPath()}
+        title="Validate the path and create an approval request. No script writes happen yet."
+      >
+        {busy ? 'Validating…' : 'Validate & request'}
+      </button>
+    );
+  } else if (state === 'pending_approval') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={approveSelf} title="Owner / operator approval. Server enforces role + audit.">
+        {busy ? 'Approving…' : 'Approve (owner)'}
+      </button>
+    );
+  } else if (state === 'approved') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={dispatchNow} title="Dispatch the approved request → atomic write to opencloud-docs-farmer.sh with rollback backup.">
+        {busy ? 'Applying…' : 'Apply (write script)'}
+      </button>
+    );
+  } else if (state === 'dispatching') {
+    actionBtn = <button className="btn sm" disabled title="Writing script — wait for completion.">Applying…</button>;
+  }
+
+  return (
+    <div className="vstack" style={{
+      gap: 6, padding: '10px 12px',
+      background: 'var(--bg-2)', borderRadius: 8, border: '1px solid var(--line-1)',
+    }}>
+      {!approval ? (
+        <>
+          <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="/home/tony/some/docs/"
+              value={pathInput}
+              onChange={(e) => setPathInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitPath(); }}
+              style={{
+                flex: 1, minWidth: 240,
+                padding: '6px 10px',
+                background: 'var(--bg-1)', color: 'var(--fg-0)',
+                border: '1px solid var(--line-1)', borderRadius: 6,
+                fontSize: 12, fontFamily: 'var(--mono)',
+              }}
+            />
+            {actionBtn}
+          </div>
+          <div className="muted xsmall">
+            Local paths only · must be under <code style={{ fontSize: 11 }}>/home/tony/</code> · must be a readable directory · denylisted paths (.env, .ssh, secret-like, db dirs, vault internals, backup dirs) are rejected up front.
+          </div>
+          {Array.isArray(availableExpansions) && availableExpansions.length > 0 ? (
+            <div className="hstack" style={{ gap: 4, flexWrap: 'wrap' }}>
+              <span className="muted xsmall">quick-fill:</span>
+              {availableExpansions.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className="btn sm"
+                  style={{ fontSize: 10, padding: '2px 6px', opacity: 0.85 }}
+                  onClick={() => setPathInput(p)}
+                  title={`Use this candidate path: ${p}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="hstack" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <BWPill tone={k.tone}>{k.label}</BWPill>
+          <span className="mono xsmall" style={{ color: 'var(--fg-0)', overflowWrap: 'anywhere', flex: 1, minWidth: 200 }}>
+            {approval.target_key || '—'}
+          </span>
+          <span className="mono xsmall muted">{approval.id}</span>
+          <span className="spacer"/>
+          {actionBtn}
+        </div>
+      )}
+
+      {approval ? (
+        <div className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>
+          requested {approval.created_at}
+          {approval.resolved_at ? <> · {approval.approval_state} {approval.resolved_at} by {approval.resolved_by || '—'}</> : null}
+          {run && run.started_at ? <> · started {run.started_at}</> : null}
+          {run && run.finished_at ? <> · finished {run.finished_at}</> : null}
+        </div>
+      ) : null}
+
+      {stagedDiff ? (
+        <pre style={{
+          maxHeight: 220, overflow: 'auto',
+          background: 'var(--bg-1)', padding: 8, borderRadius: 6,
+          border: '1px solid var(--line-1)',
+          fontSize: 10.5, lineHeight: 1.45,
+          color: 'var(--fg-1)',
+          whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+          margin: 0,
+        }}>{stagedDiff}</pre>
+      ) : null}
+
+      {errorMsg ? <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {errorMsg}</div> : null}
+    </div>
+  );
+}
+
 function BuildWikiFarmerSyncPanel() {
   const { loading, data, error, refetch } = useBuildWikiStatus();
 
@@ -994,21 +1195,11 @@ function BuildWikiFarmerSyncPanel() {
 
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Add Local Source</div>
-          <div className="hstack" style={{
-            padding: '10px 12px', background: 'var(--bg-2)',
-            borderRadius: 8, border: '1px solid var(--line-1)',
-            gap: 8, flexWrap: 'wrap',
-          }}>
-            <span className="muted xsmall" style={{ flex: 1, minWidth: 220 }}>
-              Propose a new local docs path for the farmer.
-              {availableExpansions.length > 0 ? ` ${availableExpansions.length} known candidate path(s) listed above.` : ' All known sources are already wired.'}
-            </span>
-            <BWLockedButton
-              controlKey="add_local_source"
-              state={controls.add_local_source || 'OWNER_APPROVAL_REQUIRED'}
-              title="Adding a source edits the farmer script. Wiring this control needs a separate owner-approved plan; the button is currently locked."
-            />
-          </div>
+          <BWAddSourceControl
+            addSource={data.add_source}
+            availableExpansions={availableExpansions}
+            onAction={refetch}
+          />
         </div>
 
         <div className="vstack" style={{ gap: 6 }}>

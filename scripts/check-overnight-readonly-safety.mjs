@@ -6,6 +6,7 @@ const publicLoginUrl = process.env.TKMC_LOGIN_URL || 'https://tkmc.knowledge-vs-
 
 const checks = [
   ['api_contract_parity', ['node', ['scripts/check-api-contract-parity.mjs', '--root', '.', '--openapi', 'openapi.json', '--ignore-file', 'scripts/api-contract-parity.ignore', '--json']]],
+  ['protected_file_invariants', ['node', ['scripts/check-protected-file-invariants.mjs']]],
   ['mission_control_service_live', ['node', ['scripts/check-mission-control-service-live.mjs', baseUrl]]],
   ['button_contract_static', ['node', ['scripts/check-button-contract-routes.mjs']]],
   ['bridge_readonly_static', ['node', ['scripts/check-bridge-readonly-mvp.mjs']]],
@@ -59,6 +60,9 @@ function runCheck(name, command, args) {
 function summarize(name, parsed) {
   if (name === 'api_contract_parity') {
     return { route_operations: parsed.totals?.routeOperations, openapi_operations: parsed.totals?.openapiOperations, ignored_operations: parsed.totals?.ignoredOperations }
+  }
+  if (name === 'protected_file_invariants') {
+    return { protected_changes: parsed.protected_changes?.length ?? 0, protected_patterns: parsed.protected_patterns }
   }
   if (name === 'mission_control_service_live') {
     return { service: parsed.service, local_login: parsed.local_login, public_login: parsed.public_login }

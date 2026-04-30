@@ -1,15 +1,15 @@
 # Overnight Autonomous Current Report
 
-Generated: 2026-04-30T02:14:58-04:00
+Generated: 2026-04-30T02:19:10-04:00
 
 ## Live Status
 
 - Mission Control service: `active`
 - Public login: `https://tkmc.knowledge-vs-ai.com/login` returned HTTP `200`
-- Current branch HEAD: `10d6be1`
-- Remote `sosastrike/to-knowledge-mc`: `10d6be1`
+- Current branch HEAD: `d3b7d62`
+- Remote `sosastrike/to-knowledge-mc`: `d3b7d62`
 - Overnight safety suite: passed
-  - checks run: 17
+  - checks run: 18
   - failures: 0
 - Bridge approval/audit production tables present: `0`
 - Connector execution enabled: no
@@ -24,6 +24,8 @@ Generated: 2026-04-30T02:14:58-04:00
 - `a4a9bea docs(cleanup): refresh system cleanup inventory`
 - `7d9f06b test(buttons): validate live button contract probes`
 - `e71eda7 test(runtime): expand overnight route and url policy checks`
+- `32dffa3 docs(runtime): add mcp live health report`
+- `d3b7d62 test(runtime): verify official public urls`
 
 ## What Improved
 
@@ -33,6 +35,8 @@ Generated: 2026-04-30T02:14:58-04:00
 4. FireCrawl draft save now returns a clear `BACKEND_REQUIRED`/HTTP 503 response instead of a silent 404.
 5. Protected-action lock coverage expanded from 5 probes to 11 probes, including approval request create/approve/deny, MCP disable, n8n activate, Zapier write approval, Brain Sync rebuild, Agent Zero request, skills, and Viral Crawl.
 6. System cleanup inventory was refreshed after the safe commits reduced the dirty release surface.
+7. MCP live health is documented: 20 servers, with connected / needs-auth / failed states visible without invoking tools.
+8. Official public URL checks were added for TKMC, ClaudeClaw admin, and OpenClaw Gateway.
 
 ## Production Activation
 
@@ -45,6 +49,7 @@ Mission Control was rebuilt and the production `next-server` process was safely 
 - `pnpm run safety:overnight`
 - `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337`
 - `node scripts/check-protected-actions-locked.mjs http://127.0.0.1:3337`
+- `node scripts/check-official-public-urls.mjs`
 - public login smoke check
 - secret-pattern scan on staged diffs before each commit
 - `.env` staged-file check before scoped commits

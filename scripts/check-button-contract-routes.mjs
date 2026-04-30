@@ -64,6 +64,9 @@ for (const needle of [
   'fake_success_allowed: false',
   'should_render_as_disabled',
   'no_fake_success: true',
+  'route_summary',
+  'missing_backend',
+  'missing_credentials',
 ]) {
   if (!source.includes(needle)) failures.push(`button runtime contract missing ${needle}`)
 }

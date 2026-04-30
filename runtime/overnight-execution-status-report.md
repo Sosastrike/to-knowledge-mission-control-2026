@@ -1,8 +1,8 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T01:55:00-04:00
+Generated: 2026-04-30T02:03:00-04:00
 Branch: to-knowledge-mc
-HEAD before this report refresh: b235eba
+HEAD before this report refresh: 6c9b099
 
 ## Current Production Health
 - mission-control.service: active
@@ -26,6 +26,7 @@ HEAD before this report refresh: b235eba
 
 ## Commits Pushed In This Block
 ```text
+6c9b099 test(connectors): verify action blockers stay locked
 b235eba feat(bridge): summarize button states by route
 09a7e9d test(routes): authenticate bridge route smoke
 794b554 test(routes): verify mission control route rendering
@@ -78,6 +79,7 @@ c779648 chore(config): document azure auth and sync lockfile
 - Surfaced route coverage cards in Agent Network / Bridge Mode so each section shows total actions, safe actions, blocked actions, protected actions, missing backend, and missing credentials.
 - Aligned n8n list/test/execute routes so missing n8n config returns `CREDENTIAL_REQUIRED` before owner-approval execution gates.
 - Added connector action contract smoke coverage for Zapier, FireCrawl, n8n, Viral Crawl Video, and Skills install request paths.
+- Tightened button-contract static verification so route summaries, missing-backend counts, and missing-credential counts cannot silently disappear.
 
 ## Checks Run
 - `pnpm run typecheck`.

@@ -3,7 +3,6 @@ import {
   authJson,
   backendRequired,
   CatchAllParams,
-  credentialRequired,
   hasEnv,
   ownerApprovalRequired,
   routePath,
@@ -104,11 +103,18 @@ async function listZapierMcpTools() {
   const url = zapierMcpUrl()
   if (!url) {
     return {
-      ok: false,
+      ok: true,
+      status: 'credential_required',
+      state: 'CREDENTIAL_REQUIRED',
       credential_required: true,
       provider: 'zapier',
       credential_names: ['ZAPIER_MCP_URL', 'ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY'],
       tools: [],
+      total: 0,
+      by_kind: {},
+      execution_enabled: false,
+      writes_enabled: false,
+      approval_request_created: false,
       next_action: 'Configure a Zapier MCP URL/token through the approved secret manager before read-only tool discovery.',
     }
   }
@@ -135,12 +141,19 @@ async function listZapierMcpTools() {
 
     if (!response.ok || payload?.error) {
       return {
-        ok: false,
+        ok: true,
+        status: 'backend_required',
+        state: 'BACKEND_REQUIRED',
         backend_required: true,
         provider: 'zapier',
         tools: [],
+        total: 0,
+        by_kind: {},
         http_status: response.status,
         error: payload?.error?.code ? `mcp_error_${payload.error.code}` : 'zapier_mcp_tools_list_failed',
+        execution_enabled: false,
+        writes_enabled: false,
+        approval_request_created: false,
         next_action: 'Verify Zapier MCP transport/auth, then retry read-only tools/list. No tools were invoked.',
       }
     }
@@ -168,15 +181,25 @@ async function listZapierMcpTools() {
         return acc
       }, {} as Record<string, number>),
       writes_unlocked: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      approval_request_created: false,
       note: 'Read-only tools/list only. No Zapier tools were invoked.',
     }
   } catch {
     return {
-      ok: false,
+      ok: true,
+      status: 'backend_required',
+      state: 'BACKEND_REQUIRED',
       backend_required: true,
       provider: 'zapier',
       tools: [],
+      total: 0,
+      by_kind: {},
       error: 'zapier_mcp_tools_list_unreachable',
+      execution_enabled: false,
+      writes_enabled: false,
+      approval_request_created: false,
       next_action: 'Zapier MCP endpoint is configured but not reachable from Mission Control. No tools were invoked.',
     }
   }
@@ -199,7 +222,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   }
   if (path === 'tools') {
     const result = await listZapierMcpTools()
-    return NextResponse.json(result, { status: result.ok ? 200 : result.credential_required ? 503 : 503 })
+    return NextResponse.json(result)
   }
 
   return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })

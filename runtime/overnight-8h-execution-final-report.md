@@ -13,17 +13,18 @@ True 90% operational is blocked until the owner approves the production approval
 ## Current Live State
 
 - Branch: to-knowledge-mc
-- Verified app code base before this report-only commit: 9bc96d7
+- Verified app code base before later report-only commits: 0f8b5f4
 - Report is committed after the live check; use `git rev-parse --short HEAD` for the latest docs/report commit.
 - mission-control.service: active
 - Listener: 127.0.0.1:3337
 - TKMC public login: HTTP 200
-- Safety suite: 23 checks, 0 failures
-- Route rendering smoke: 44 routes, 8 designer pages, 0 failures
+- Safety suite: 24 checks, 0 failures
+- Route rendering smoke: 45 routes, 8 designer pages, 0 failures
 - Full unit tests: 82 files, 931 tests passing on last full run
 - Provider registry: 9 providers
 - Capability matrix: 4 agents, 6 tools
 - Connector readiness: 6 connectors
+- Owner gates: 9 read-only gates, 0 execution, 0 writes
 - Connector execution enabled: 0
 - Connector writes enabled: 0
 - Approval queue: backend required/read-only placeholder
@@ -51,6 +52,11 @@ True 90% operational is blocked until the owner approves the production approval
 ## Commits Pushed In This Later Overnight Segment
 
 - 9bc96d7 docs(runtime): refresh overnight live report
+- 0f8b5f4 feat(bridge): add read-only owner gates endpoint
+- 9f4df67 docs(cleanup): refresh live cleanup inventory
+- 0ac79d8 docs(runtime): avoid stale current report head
+- e2024d8 docs(runtime): clarify final report head semantics
+- 9ed4838 docs(runtime): refresh overnight final report
 - ae43161 test(routes): expand read-only bridge smoke coverage
 - 7e60e38 docs(release): group safe overnight commits
 - 0a0b6d1 docs(approvals): avoid stale head wording
@@ -79,12 +85,13 @@ True 90% operational is blocked until the owner approves the production approval
 ## Routes / Endpoints Added Or Improved
 
 - /api/bridge/costs: live read-only cost/rate governance; no budget enforcement or provider-route changes.
+- /api/bridge/owner-gates: live read-only owner approval, credential, backend, and cleanup gate summary; no approval creation, no execution, no writes.
 - /api/bridge/capability-matrix: richer agent capability matrix with models, tools, skills, integrations, MCPs, routes, gates, restrictions, cost/rate limits, blockers, and next actions.
 - /api/bridge/preflight: read-only mandatory preflight with latest process-local visibility.
 - /api/bridge/connector-readiness: detailed connector contracts for FireCrawl, Viral Crawl Video, Zapier, n8n, MCP Tools, and Skills Registry.
 - /api/skills/tool-skills and /api/skills/finder/search: read-only skill discovery guarded by live safety tests.
 - /api/zapier/tools: read-only MCP tool inventory path; no tool invocation.
-- Route smoke now covers Bridge costs, executive preview, Telegram approval preview, Zapier status/tools, and n8n status.
+- Route smoke now covers Bridge costs, owner gates, executive preview, Telegram approval preview, Zapier status/tools, and n8n status.
 
 ## Connector Readiness Status
 

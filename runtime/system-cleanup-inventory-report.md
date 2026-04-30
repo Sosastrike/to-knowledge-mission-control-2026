@@ -1,12 +1,13 @@
 # System Cleanup Inventory Report
 
-Generated: 2026-04-30T13:39:21.598Z
+Generated: 2026-04-30T18:43:21.309Z
 Mode: inventory only. No delete. No quarantine. No protected action.
 
 ## Summary
-- Total dirty-tree candidates: 18
+- Total dirty-tree candidates: 20
 - designer_review_reference: 10
 - old_backup: 2
+- runtime_report: 2
 - untracked_artifact: 2
 - untracked_file: 2
 - untracked_helper: 2
@@ -132,6 +133,22 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/public/lu-ai-collab-v2.mp4
+- runtime/db-backups/
+  - git status: ??
+  - category: runtime_report
+  - tracked: no
+  - reference count: 5
+  - production risk: medium
+  - recommended action: quarantine_after_checks
+  - rollback: restore from runtime/archive/system-cleanup/<batch>/runtime/db-backups/
+- runtime/route-providers-before-timeout-fix-20260430.ts
+  - git status: ??
+  - category: runtime_report
+  - tracked: no
+  - reference count: 0
+  - production risk: low
+  - recommended action: review_before_action
+  - rollback: owner-approved rollback plan required
 - scripts/mc-create-owner.cjs
   - git status: ??
   - category: untracked_helper
@@ -163,6 +180,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
 - .tkmc-commit-msg.txt
 - public/Voice-Biometrics-Executive-Report.pdf
 - public/lu-ai-collab-v2.mp4
+- runtime/db-backups/
 - scripts/mc-create-owner.cjs
 - src/app/login/page.tsx.bak-designer-login-20260428-071138
 - start-mc.sh.DISABLED

@@ -17,6 +17,8 @@ const RUN_NOW_CREATE_URL    = '/api/bridge/brain-sync/build-wiki/run-now';
 const RUN_NOW_READ_URL      = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}`;
 const RUN_NOW_DISPATCH_URL  = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}/dispatch`;
 const APPROVE_URL           = (id) => `/api/bridge/approval-requests/${encodeURIComponent(id)}/approve`;
+const FILES_LIST_URL        = (type, limit) => `/api/bridge/brain-sync/build-wiki/files?type=${encodeURIComponent(type)}&limit=${encodeURIComponent(limit)}`;
+const FILE_READ_URL         = (type, name) => `/api/bridge/brain-sync/build-wiki/files/${encodeURIComponent(type)}/${encodeURIComponent(name)}`;
 
 const CONTROL_LABELS = {
   pause_sync:             'Pause sync',
@@ -24,16 +26,14 @@ const CONTROL_LABELS = {
   add_local_source:       'Add local source',
   enable_external_farmer: 'Enable external farmer',
   view_logs:              'View logs',
-  view_latest_raw:        'View latest raw files',
-  view_latest_wiki:       'View latest wiki pages',
 };
 
-// Run now is now wired through its own approval-driven control;
-// the rest stay locked until their respective wirings are approved.
+// Run Now + the two file browsers are wired (approval-driven and read-only
+// respectively). The remaining 5 controls stay locked behind their badges.
 const LOCKED_CONTROL_ORDER = [
   'pause_sync', 'resume_sync',
   'add_local_source', 'enable_external_farmer',
-  'view_logs', 'view_latest_raw', 'view_latest_wiki',
+  'view_logs',
 ];
 
 function buildWikiPillKind(state) {
@@ -279,6 +279,225 @@ function BWRunNowControl({ runNow, onAction }) {
   );
 }
 
+// ============================================================
+// File browsers — read-only listing + in-place viewer.
+// ============================================================
+function formatBytes(n) {
+  if (typeof n !== 'number' || n <= 0) return '0 B';
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatRelative(iso) {
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return iso;
+  const diff = Date.now() - t;
+  if (diff < 60_000) return 'just now';
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+function BWFileViewer({ type, name, onClose }) {
+  const [state, setState] = React.useState({ loading: true, data: null, error: null });
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(FILE_READ_URL(type, name), {
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store',
+          credentials: 'same-origin',
+        });
+        const j = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!res.ok) {
+          setState({ loading: false, data: null, error: j.error || `HTTP ${res.status}` });
+          return;
+        }
+        setState({ loading: false, data: j.file || null, error: null });
+      } catch (err) {
+        if (!cancelled) setState({ loading: false, data: null, error: String(err && err.message || err) });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [type, name]);
+
+  const file = state.data;
+
+  return (
+    <div style={{
+      gridColumn: '1 / -1',
+      padding: '10px 12px',
+      background: 'var(--bg-1)',
+      borderRadius: 8,
+      border: '1px solid var(--accent-line)',
+      marginTop: 4,
+    }}>
+      <div className="hstack" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+        <BWPill tone={type === 'raw' ? '#3ddc84' : '#3ec9ff'}>{type.toUpperCase()}</BWPill>
+        <span style={{ color: 'var(--fg-0)', fontWeight: 500, overflowWrap: 'anywhere' }}>{name}</span>
+        {file ? <span className="muted xsmall mono">{formatBytes(file.size_bytes)} · {formatRelative(file.modified_at)}</span> : null}
+        <span className="spacer"/>
+        <button className="btn sm" onClick={onClose}>Close</button>
+      </div>
+
+      {state.loading ? <div className="muted xsmall">Loading…</div> : null}
+
+      {state.error ? (
+        <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {state.error}</div>
+      ) : null}
+
+      {file && file.secrets_present ? (
+        <div className="mono xsmall" style={{
+          color: '#ffb3c8', padding: '8px 10px',
+          background: 'oklch(0.3 0.1 20 / 0.25)',
+          border: '1px solid #ff6a9e55', borderRadius: 6,
+        }}>
+          ⚠ content_redacted_due_to_secret_pattern_match · matched: {file.secrets_redactions.join(', ')}
+        </div>
+      ) : null}
+
+      {file && file.content !== null && !file.secrets_present ? (
+        <pre style={{
+          maxHeight: 360, overflow: 'auto',
+          background: 'var(--bg-2)', padding: 10, borderRadius: 6,
+          border: '1px solid var(--line-1)',
+          fontSize: 11, lineHeight: 1.45,
+          color: 'var(--fg-1)',
+          whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+          margin: 0,
+        }}>{file.content}</pre>
+      ) : null}
+
+      {file && file.content_truncated ? (
+        <div className="muted xsmall" style={{ marginTop: 6 }}>
+          ⚠ content truncated to 200 KB · full size {formatBytes(file.size_bytes)}
+        </div>
+      ) : null}
+
+      {file ? (
+        <div className="muted xsmall mono" style={{ marginTop: 6, overflowWrap: 'anywhere' }}>
+          {file.relative_path}
+          {file.source ? <> · source: {file.source}</> : null}
+          {file.imported_at ? <> · imported {file.imported_at}</> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function BWFileBrowser({ type, label, accentTone }) {
+  const [open, setOpen] = React.useState(false);
+  const [state, setState] = React.useState({ loading: false, items: [], error: null, generated_at: null });
+  const [viewing, setViewing] = React.useState(null);
+
+  const fetchList = React.useCallback(async () => {
+    setState((s) => ({ ...s, loading: true, error: null }));
+    try {
+      const res = await fetch(FILES_LIST_URL(type, 25), {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+      const block = type === 'raw' ? j.raw : j.wiki;
+      setState({
+        loading: false,
+        items: (block && block.items) || [],
+        error: null,
+        generated_at: j.generated_at || null,
+      });
+    } catch (err) {
+      setState({ loading: false, items: [], error: String(err && err.message || err), generated_at: null });
+    }
+  }, [type]);
+
+  const toggleOpen = () => {
+    setOpen((prev) => {
+      const next = !prev;
+      if (next && state.items.length === 0 && !state.loading) fetchList();
+      return next;
+    });
+  };
+
+  return (
+    <div className="vstack" style={{
+      gap: 6, padding: '10px 12px',
+      background: 'var(--bg-2)', borderRadius: 8,
+      border: '1px solid var(--line-1)',
+    }}>
+      <div className="hstack" style={{ gap: 8 }}>
+        <BWPill tone={accentTone}>{type === 'raw' ? 'RAW · IMMUTABLE' : 'WIKI'}</BWPill>
+        <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>{label}</span>
+        {state.items.length > 0 ? <span className="mono xsmall muted">{state.items.length} latest</span> : null}
+        <span className="spacer"/>
+        {open ? (
+          <button className="btn sm" onClick={fetchList} disabled={state.loading} title="Refetch list">
+            {state.loading ? '…' : <I.Refresh size={11}/>}
+          </button>
+        ) : null}
+        <button className="btn sm" onClick={toggleOpen}>
+          {open ? 'Hide' : 'View latest'}
+        </button>
+      </div>
+
+      {open ? (
+        <div className="vstack" style={{ gap: 4 }}>
+          {state.loading && state.items.length === 0 ? (
+            <div className="muted xsmall">Loading latest {type} files…</div>
+          ) : null}
+          {state.error ? (
+            <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {state.error}</div>
+          ) : null}
+          {state.items.length === 0 && !state.loading && !state.error ? (
+            <div className="muted xsmall">No {type} files found.</div>
+          ) : null}
+
+          {state.items.map((f) => {
+            const open = viewing && viewing === f.name;
+            return (
+              <React.Fragment key={f.name}>
+                <div
+                  className="hstack"
+                  style={{
+                    padding: '5px 8px', background: 'var(--bg-1)',
+                    borderRadius: 6, border: '1px solid var(--line-1)',
+                    fontSize: 12, gap: 8, alignItems: 'center', cursor: 'pointer',
+                  }}
+                  title="Click to view content"
+                  onClick={() => setViewing(open ? null : f.name)}
+                >
+                  <BWPill tone={accentTone}>{type.toUpperCase()}</BWPill>
+                  <span className="mono xsmall" style={{ color: 'var(--fg-0)', overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>
+                    {f.title || f.name}
+                  </span>
+                  <span className="muted xsmall mono">{formatBytes(f.size_bytes)}</span>
+                  <span className="muted xsmall mono">{formatRelative(f.modified_at)}</span>
+                  <span className="muted xsmall">{open ? '▼' : '▸'}</span>
+                </div>
+                {open ? (
+                  <BWFileViewer type={type} name={f.name} onClose={() => setViewing(null)} />
+                ) : null}
+              </React.Fragment>
+            );
+          })}
+
+          {state.generated_at ? (
+            <div className="muted xsmall mono" style={{ paddingTop: 4 }}>
+              listed at {state.generated_at}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BuildWikiFarmerSyncPanel() {
   const { loading, data, error, refetch } = useBuildWikiStatus();
 
@@ -465,12 +684,20 @@ function BuildWikiFarmerSyncPanel() {
           </div>
         </div>
 
-        {/* 6 — Run Now (wired) + the rest of the controls (locked) */}
+        {/* 6 — Run Now (wired, approval-driven) */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Run now</div>
           <BWRunNowControl runNow={data.run_now} onAction={refetch}/>
         </div>
 
+        {/* 7 — File visibility (read-only) */}
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">File visibility (read-only)</div>
+          <BWFileBrowser type="raw"  label="Latest raw files (immutable)" accentTone="#3ddc84" />
+          <BWFileBrowser type="wiki" label="Latest wiki pages"             accentTone="#3ec9ff" />
+        </div>
+
+        {/* 8 — Remaining controls (still locked) */}
         <div className="vstack" style={{ gap: 6 }}>
           <div className="stat-label">Other controls (locked)</div>
           <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>

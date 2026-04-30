@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import {
   authJson,
   backendRequired,
@@ -10,73 +8,17 @@ import {
   ownerApprovalRequired,
   routePath,
 } from '@/lib/designer-module-api'
+import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-function sdkLoaded(): boolean {
-  return existsSync(join(process.cwd(), 'node_modules', '@mendable', 'firecrawl-js', 'package.json'))
-}
-
-function envFileHasName(path: string, name: string): boolean {
-  try {
-    const text = readFileSync(path, 'utf8')
-    return text.split(/\r?\n/).some((line) => line.trim().startsWith(`${name}=`))
-  } catch {
-    return false
-  }
-}
-
-function statusPayload() {
-  const keyPresent = hasEnv('FIRECRAWL_API_KEY')
-  const sdk = sdkLoaded()
-  const missionControlEnvPresent =
-    envFileHasName('/home/tony/mission-control/.env', 'FIRECRAWL_API_KEY') ||
-    envFileHasName('/home/tony/mission-control/.env.local', 'FIRECRAWL_API_KEY')
-  const claudeClawEnvPresent = envFileHasName('/home/tony/claudeclaw/.env', 'FIRECRAWL_API_KEY')
-  const openClawEnvPresent = envFileHasName('/home/tony/.openclaw/.env', 'FIRECRAWL_API_KEY')
-  const envMismatch = !keyPresent && (claudeClawEnvPresent || openClawEnvPresent)
-  const status = !keyPresent ? 'credential_required' : !sdk ? 'backend_required' : 'live'
-  return {
-    ok: true,
-    status,
-    key_present: keyPresent,
-    sdk_loaded: sdk,
-    firecrawl_backend_truth: {
-      mission_control_process_has_firecrawl_api_key: keyPresent,
-      mission_control_env_has_firecrawl_api_key: missionControlEnvPresent,
-      claudeclaw_env_has_firecrawl_api_key: claudeClawEnvPresent,
-      openclaw_env_has_firecrawl_api_key: openClawEnvPresent,
-      mission_control_sdk_present: sdk,
-      mismatch: envMismatch || !sdk,
-      conclusion: envMismatch
-        ? 'Mission Control is missing FIRECRAWL_API_KEY even though ClaudeClaw/OpenClaw have it by name.'
-        : !sdk
-        ? 'Mission Control FireCrawl SDK is missing.'
-        : 'Mission Control FireCrawl credential and SDK are present.',
-      approved_fix_required: !keyPresent || !sdk,
-      approved_fix_note: 'Use an owner-approved credential sync path and package install path. Do not copy secrets manually or run FireCrawl jobs from this endpoint.',
-    },
-    mcp: { name: 'firecrawl-mcp', status: sdk ? 'unknown' : 'not_wired' },
-    api: { reachable: sdk },
-    jobs: { active: 0, queued: 0, completed: 0, failed: 0 },
-    last_successful_crawl: null,
-    assigned_agents: ['Tony', 'Agent 0', 'Researcher', 'Builder', 'Operator', 'Marketing', 'Support'],
-    cost_today_usd: null,
-    next_action: keyPresent
-      ? sdk
-        ? 'Wire FireCrawl SDK job runner and persistence tables after owner approval.'
-        : 'Install @mendable/firecrawl-js and wire the job runner after owner approval.'
-      : 'Mission Control FIRECRAWL_API_KEY is missing. ClaudeClaw/OpenClaw may have the credential, but Mission Control does not. Approved credential sync path required.',
-  }
-}
 
 export async function GET(request: NextRequest, { params }: { params: CatchAllParams }) {
   const auth = authJson(request, 'viewer')
   if (auth) return auth
 
   const path = routePath((await params).path)
-  if (!path || path === 'status') return NextResponse.json(statusPayload())
+  if (!path || path === 'status') return NextResponse.json(getFirecrawlStatus())
   if (path === 'jobs') {
     return NextResponse.json({ ok: true, jobs: [], note: 'no_firecrawl_jobs_table_yet' })
   }

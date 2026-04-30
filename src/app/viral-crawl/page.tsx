@@ -9,10 +9,8 @@
 //    A. Web / Browser Crawl   — FireCrawl backend
 //    B. Video Intelligence    — claude-video /watch backend
 //
-//  Server Component. Reads the SAME data the new
-//  /api/viral-crawl/video/status endpoint reads (filesystem + claudeclaw
-//  agent_skills DB), but inline so we don't depend on auth-cookie
-//  passthrough.
+//  Server Component. Uses the same canonical status helpers as the
+//  /api/firecrawl/status and /api/viral-crawl/video/status endpoints.
 //
 //  Sacred invariants:
 //    - NO execution (no jobs, no downloads, no API write side-effects)
@@ -20,10 +18,9 @@
 //    - NO .env edits
 //    - NO Tony / voice / routing / Zapier writes
 // ─────────────────────────────────────────────────────────────────────
-import { existsSync, statSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
-import Database from 'better-sqlite3'
 import type { Metadata } from 'next'
+import { getFirecrawlStatus } from '@/lib/firecrawl-status'
+import { getViralCrawlVideoStatus } from '@/lib/viral-crawl-status'
 
 export const metadata: Metadata = {
   title: 'Viral Crawl · Mission Control',
@@ -32,139 +29,12 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-// ── Pillar A — FireCrawl status (env + SDK presence) ────────────────
-function firecrawlStatus() {
-  const keyPresent = Boolean((process.env.FIRECRAWL_API_KEY || '').trim())
-  const sdkPath = join(process.cwd(), 'node_modules', '@mendable', 'firecrawl-js', 'package.json')
-  const sdkLoaded = existsSync(sdkPath)
-  const state: 'CREDENTIAL_REQUIRED' | 'BACKEND_REQUIRED' | 'LIVE' = !keyPresent
-    ? 'CREDENTIAL_REQUIRED'
-    : !sdkLoaded
-    ? 'BACKEND_REQUIRED'
-    : 'LIVE'
-  return {
-    state,
-    keyPresent,
-    sdkLoaded,
-    nextAction: !keyPresent
-      ? 'Owner adds FIRECRAWL_API_KEY through the approved secret manager.'
-      : !sdkLoaded
-      ? 'Wire FireCrawl SDK job runner and persistence tables.'
-      : 'Ready to run scrape/extract/crawl jobs.',
-  }
-}
-
-// ── Pillar B — Video Intelligence status (matches /api/viral-crawl/video/status) ────
-const SKILL_NAME = 'watch_video'
-const WRAPPER_PATH = '/home/tony/claudeclaw/scripts/claude-video-to-brain.mjs'
-const VENDOR_SKILL_PATH = '/home/tony/claudeclaw/vendor/skills/claude-video'
-const VENDOR_SKILL_README = join(VENDOR_SKILL_PATH, 'SKILL.md')
-const DB_INSTALLER_PATH = '/home/tony/claudeclaw/scripts/install-viral-crawl-tables.mjs'
-const WATCH_ENV_PATH = '/home/tony/.config/watch/.env'
-const OBSIDIAN_DESTINATION_PATH = '/home/tony/obsidian-vault/07-Knowledge/Viral Crawl/Video Intelligence'
-const CLAUDECLAW_DB_PATH = '/home/tony/claudeclaw/store/claudeclaw.db'
-
-function countMarkdownNotes(root: string): number {
-  if (!existsSync(root)) return 0
-  let count = 0
-  const stack = [root]
-  while (stack.length) {
-    const current = stack.pop()
-    if (!current) continue
-    try {
-      for (const entry of readdirSync(current, { withFileTypes: true })) {
-        const fullPath = join(current, entry.name)
-        if (entry.isDirectory()) stack.push(fullPath)
-        else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) count += 1
-      }
-    } catch {
-      /* skip unreadable */
-    }
-  }
-  return count
-}
-
-type SkillRow = { name?: string; enabled?: number; health?: string; command_or_api?: string }
-
-function readWatchSkillRow(): { present: boolean; row: SkillRow | null } {
-  if (!existsSync(CLAUDECLAW_DB_PATH)) return { present: false, row: null }
-  try {
-    const db = new Database(CLAUDECLAW_DB_PATH, { readonly: true, fileMustExist: true })
-    try {
-      const row = db
-        .prepare('SELECT name, enabled, health, command_or_api FROM agent_skills WHERE name = ? LIMIT 1')
-        .get(SKILL_NAME) as SkillRow | undefined
-      return { present: Boolean(row), row: row || null }
-    } finally {
-      db.close()
-    }
-  } catch {
-    return { present: false, row: null }
-  }
-}
-
-function videoIntelligenceStatus() {
-  const wrapperPresent = existsSync(WRAPPER_PATH)
-  const vendorSkillPresent = existsSync(VENDOR_SKILL_README)
-  const obsidianDestinationPresent = existsSync(OBSIDIAN_DESTINATION_PATH)
-  const watchEnvPresent = existsSync(WATCH_ENV_PATH)
-  const dbInstallerPresent = existsSync(DB_INSTALLER_PATH)
-
-  let watchEnvMode: string | null = null
-  if (watchEnvPresent) {
-    try {
-      const m = statSync(WATCH_ENV_PATH).mode & 0o777
-      watchEnvMode = '0' + m.toString(8)
-    } catch {
-      /* ignore */
-    }
-  }
-
-  const registry = readWatchSkillRow()
-  const skillEnabled = registry.row?.enabled === 1
-  const commandTemplate =
-    registry.row?.command_or_api ||
-    'node /home/tony/claudeclaw/scripts/claude-video-to-brain.mjs <URL> <agent> <purpose>'
-  const notesCount = countMarkdownNotes(OBSIDIAN_DESTINATION_PATH)
-
-  // BACKEND_READY_CLI requires: wrapper + skill + obsidian dest + registered + enabled
-  const state: 'BACKEND_REQUIRED' | 'BACKEND_READY_CLI' =
-    wrapperPresent && vendorSkillPresent && obsidianDestinationPresent && registry.present && skillEnabled
-      ? 'BACKEND_READY_CLI'
-      : 'BACKEND_REQUIRED'
-
-  return {
-    state,
-    execution_enabled: false,
-    skill_name: SKILL_NAME,
-    skill_present: registry.present,
-    skill_enabled: skillEnabled,
-    skill_health: registry.row?.health || 'unknown',
-    wrapper_present: wrapperPresent,
-    wrapper_path: WRAPPER_PATH,
-    vendor_skill_present: vendorSkillPresent,
-    vendor_skill_path: VENDOR_SKILL_PATH,
-    obsidian_destination_present: obsidianDestinationPresent,
-    obsidian_destination: OBSIDIAN_DESTINATION_PATH,
-    notes_count: notesCount,
-    command_template: commandTemplate,
-    watchEnvPresent,
-    watchEnvMode,
-    dbInstallerPresent,
-    nextAction:
-      state === 'BACKEND_REQUIRED'
-        ? 'Run scripts/install-viral-crawl-tables.mjs to register watch_video in agent_skills.'
-        : !watchEnvPresent
-        ? 'Bridge GROQ_API_KEY/OPENAI_API_KEY into ~/.config/watch/.env (mode 0600). Optional — falls back to --no-whisper.'
-        : 'Ready. Use the wrapper to analyze a public URL or local file.',
-  }
-}
-
 // ── State badge ──────────────────────────────────────────────────────
 function StateBadge({ state }: { state: string }) {
   const colorClass: Record<string, string> = {
     LIVE: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
     BACKEND_READY_CLI: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
+    READ_ONLY: 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
     CREDENTIAL_REQUIRED: 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
     BACKEND_REQUIRED: 'bg-rose-500/15 text-rose-300 ring-rose-500/30',
   }
@@ -185,8 +55,8 @@ function YesNo({ ok, yes = 'present', no = 'missing' }: { ok: boolean; yes?: str
 
 // ── Page ─────────────────────────────────────────────────────────────
 export default function ViralCrawlPage() {
-  const fc = firecrawlStatus()
-  const vi = videoIntelligenceStatus()
+  const fc = getFirecrawlStatus()
+  const vi = getViralCrawlVideoStatus()
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-6">

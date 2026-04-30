@@ -12,6 +12,7 @@ const checks = [
   ['protected_actions_locked', ['node', ['scripts/check-protected-actions-locked.mjs', baseUrl]]],
   ['connector_readiness_live', ['node', ['scripts/check-connector-readiness-live.mjs', baseUrl]]],
   ['connector_action_contracts', ['node', ['scripts/check-connector-action-contracts.mjs', baseUrl]]],
+  ['mcp_status_consistency', ['node', ['scripts/check-mcp-status-consistency.mjs', baseUrl]]],
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
@@ -68,6 +69,9 @@ function summarize(name, parsed) {
   }
   if (name === 'connector_action_contracts') {
     return { checked: parsed.checked, expectation: parsed.expectation }
+  }
+  if (name === 'mcp_status_consistency') {
+    return { counts: parsed.counts, server_list_count: parsed.server_list_count, note: parsed.note }
   }
   if (name === 'approval_readiness_live') {
     return {

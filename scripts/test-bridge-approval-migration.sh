@@ -127,6 +127,41 @@ fi
 
 echo "Insert path verified on temp DB."
 
+echo "Checking approval lifecycle path on temp DB..."
+sqlite3 "$TMP_DB" <<'SQL'
+PRAGMA foreign_keys = ON;
+UPDATE bridge_approval_requests
+SET approval_state = 'approved',
+    resolved_at = '2099-01-01T00:01:00.000Z',
+    resolved_by = 'migration-test-owner',
+    resolution_reason = 'temp DB approval lifecycle test'
+WHERE id = 'test_apr_1'
+  AND approval_state = 'pending';
+
+INSERT INTO bridge_audit_events (
+  id, workspace_id, tenant_id, approval_request_id, actor, connector, action,
+  target, target_key, outcome, payload_hash, metadata_json, correlation_id
+) VALUES (
+  'test_audit_2', 1, 1, 'test_apr_1', 'migration-test-owner', 'zapier', 'tool.invoke',
+  'gmail.send_email', 'gmail.send_email', 'approved', 'payloadhash_test_2',
+  '{"decision_only":true,"no_execution_enabled":true}', 'corr_test_1'
+);
+
+UPDATE bridge_connector_runs
+SET run_state = 'blocked',
+    finished_at = '2099-01-01T00:02:00.000Z'
+WHERE id = 'test_run_1'
+  AND run_state = 'planned';
+SQL
+
+lifecycle="$(sqlite3 "$TMP_DB" "SELECT (SELECT approval_state FROM bridge_approval_requests WHERE id='test_apr_1') || '|' || (SELECT COUNT(*) FROM bridge_audit_events WHERE approval_request_id='test_apr_1') || '|' || (SELECT run_state FROM bridge_connector_runs WHERE id='test_run_1');")"
+if [[ "$lifecycle" != "approved|2|blocked" ]]; then
+  echo "ERROR: temp DB lifecycle verification failed: $lifecycle" >&2
+  exit 1
+fi
+
+echo "Approval lifecycle verified on temp DB without enabling execution."
+
 echo "Testing rollback on temp DB only..."
 sqlite3 "$TMP_DB" <<'SQL'
 DROP INDEX IF EXISTS idx_bridge_connector_runs_idempotency;

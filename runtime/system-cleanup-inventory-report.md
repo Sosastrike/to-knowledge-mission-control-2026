@@ -1,6 +1,6 @@
 # System Cleanup Inventory Report
 
-Generated: 2026-04-30T06:11:33.539Z
+Generated: 2026-04-30T12:41:21.776Z
 Mode: inventory only. No delete. No quarantine. No protected action.
 
 ## Summary
@@ -24,7 +24,7 @@ Mode: inventory only. No delete. No quarantine. No protected action.
   - git status: ??
   - category: untracked_file
   - tracked: no
-  - reference count: 1
+  - reference count: 2
   - production risk: medium
   - recommended action: quarantine_after_checks
   - rollback: restore from runtime/archive/system-cleanup/<batch>/.designer-retirement-backups/

@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { authJson, ownerApprovalRequired } from '@/lib/designer-module-api'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
+import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,6 +34,51 @@ type ApprovalRow = {
   resolved_by: string | null
   correlation_id: string
   created_at: string
+}
+
+type TelegramApprovalQueuePayload = {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  canonical_channel?: string
+  execution_enabled?: boolean
+  execution_scope?: string
+  broad_connector_execution_enabled?: boolean
+  approvals?: Array<{
+    id: string
+    requesting_agent: string
+    title: string
+    action: string
+    scope: string
+    risk_level: string
+    protected_action: number
+    tools_integrations: string
+    summary: string
+    status: string
+    created_at: number
+    expires_at: number
+    approved_by: string | null
+    decision_at: number | null
+    correlation_id: string
+    chat_id: string | null
+    telegram_message_id: number | null
+    run_status: string | null
+    run_started_at: number | null
+    run_completed_at: number | null
+    run_exit_code: number | null
+    run_summary: string | null
+    error: string | null
+    audit_events?: Array<{
+      id: number
+      request_id: string
+      ts: number
+      actor: string
+      event: string
+      detail: string | null
+    }>
+  }>
+  summary?: Record<string, number>
+  error?: string
 }
 
 const RISK_LEVELS = new Set(['low', 'medium', 'high'])
@@ -143,9 +189,105 @@ function readApprovalQueue() {
   }
 }
 
+async function readTelegramApprovalQueue() {
+  if (!hasClaudeClawDashboardToken()) {
+    return null
+  }
+
+  try {
+    const upstream = await fetchClaudeClawJson<TelegramApprovalQueuePayload>(
+      '/api/telegram-approvals?audit=1&limit=100',
+      {},
+      12000,
+    )
+    if (!upstream.ok || !upstream.payload || typeof upstream.payload !== 'object') {
+      return null
+    }
+
+    const payload = upstream.payload as TelegramApprovalQueuePayload
+    if (!payload.ok) return null
+    const approvals = payload.approvals || []
+    const summary = approvals.reduce((acc, row) => {
+      acc.total += 1
+      if (row.status === 'pending') acc.pending += 1
+      else if (row.status === 'approved') acc.approved += 1
+      else if (row.status === 'denied') acc.denied += 1
+      else if (row.status === 'expired') acc.expired += 1
+      return acc
+    }, { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 })
+
+    return {
+      ok: true,
+      mode: 'telegram_approval_queue_proxy_read_only',
+      generated_at: new Date().toISOString(),
+      persistence: 'claudeclaw_telegram_approvals_connected',
+      approval_queue_connected: true,
+      canonical_channel: payload.canonical_channel || 'Tony -> Telegram',
+      execution_enabled: false,
+      exact_scope_execution_enabled: true,
+      broad_connector_execution_enabled: false,
+      approvals: approvals.map((row) => ({
+        id: row.id,
+        title: row.title,
+        requesting_agent: row.requesting_agent,
+        connector: 'telegram',
+        action: row.action,
+        scope: row.scope,
+        approval_state: row.status,
+        status: row.status,
+        risk_level: row.risk_level,
+        protected_action: Boolean(row.protected_action),
+        tools_integrations: (() => {
+          try {
+            const parsed = JSON.parse(row.tools_integrations || '[]')
+            return Array.isArray(parsed) ? parsed : []
+          } catch {
+            return []
+          }
+        })(),
+        summary: row.summary,
+        created_at: new Date(row.created_at * 1000).toISOString(),
+        expires_at: new Date(row.expires_at * 1000).toISOString(),
+        approved_by: row.approved_by,
+        decision_at: row.decision_at ? new Date(row.decision_at * 1000).toISOString() : null,
+        correlation_id: row.correlation_id,
+        telegram_message_id: row.telegram_message_id,
+        telegram_sent: Boolean(row.telegram_message_id),
+        run_status: row.run_status,
+        run_started_at: row.run_started_at ? new Date(row.run_started_at * 1000).toISOString() : null,
+        run_completed_at: row.run_completed_at ? new Date(row.run_completed_at * 1000).toISOString() : null,
+        run_exit_code: row.run_exit_code,
+        run_summary: row.run_summary,
+        error: row.error,
+        audit_events: row.audit_events || [],
+      })),
+      summary,
+      ui_placeholder: {
+        title: 'Approval Queue — Tony → Telegram',
+        state: 'READ_ONLY',
+        message: 'Telegram approval requests are live. Approve/Deny decisions still happen in Telegram so the exact request id is known.',
+        next_backend_step: 'Keep Mission Control display-only for decisions until direct MC approval is separately approved.',
+        no_fake_approval_requests: true,
+        approval_request_created: false,
+        protected_actions_locked: true,
+        protected_action_http_status: 423,
+      },
+      next_action: 'Use Telegram Approve/Deny buttons for decisions. Mission Control shows queue and history only.',
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: NextRequest) {
   const auth = authJson(request, 'viewer')
   if (auth) return auth
+
+  const telegramQueue = await readTelegramApprovalQueue()
+  if (telegramQueue) {
+    return NextResponse.json(telegramQueue, { headers: { 'Cache-Control': 'no-store' } })
+  }
+
   const queue = readApprovalQueue()
 
   return NextResponse.json({

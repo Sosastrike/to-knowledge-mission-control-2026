@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Database from 'better-sqlite3'
-import { createHash, randomUUID } from 'node:crypto'
 import { requireRole } from '@/lib/auth'
-import { ownerApprovalRequired } from '@/lib/designer-module-api'
-import { config } from '@/lib/config'
+import { fetchClaudeClawJson } from '@/lib/claudeclaw-telegram-approvals'
 import {
   BUILDWIKI_ACTION_RUN_NOW,
-  BUILDWIKI_CONNECTOR,
   BUILDWIKI_PROTECTED_CATEGORY,
   BUILDWIKI_REQUIRED_APPROVER,
-  BUILDWIKI_RISK_LEVEL,
   BUILDWIKI_ROLLBACK_REF,
-  BUILDWIKI_TARGET_KEY,
   BUILDWIKI_TARGET_SERVICE,
-  approvalPersistenceReady,
   deriveRunNowUiState,
   pickPublicApprovalView,
   pickPublicRunView,
@@ -40,39 +33,136 @@ export const dynamic = 'force-dynamic'
 const REQUEST_REASON_DEFAULT =
   'Owner-initiated manual run of the OpenCloud Build-Wiki local docs farmer (oneshot, append-only, no network egress).'
 
-function stableJson(value: unknown): string {
-  if (!value || typeof value !== 'object') return '{}'
-  return JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort())
+type TelegramApprovalQueuePayload = {
+  ok?: boolean
+  approvals?: Array<{
+    id: string
+    title: string
+    requesting_agent: string
+    action: string
+    scope: string
+    risk_level: string
+    status: string
+    created_at: number
+    expires_at: number
+    approved_by: string | null
+    decision_at: number | null
+    telegram_message_id: number | null
+    run_status: string | null
+    run_exit_code: number | null
+    run_summary: string | null
+  }>
 }
 
-function realUserIdOrNull(db: Database.Database, value: unknown): number | null {
-  const id = Number(value)
-  if (!Number.isInteger(id) || id <= 0) return null
-  const row = db.prepare('SELECT id FROM users WHERE id = ? LIMIT 1').get(id) as { id?: number } | undefined
-  return row?.id || null
+type TelegramApprovalCreatePayload = {
+  ok?: boolean
+  approval_request_created?: boolean
+  approval?: {
+    id: string
+    title: string
+    requesting_agent: string
+    action: string
+    scope: string
+    risk_level: string
+    status: string
+    expires_at: number
+    telegram_message_id: number | null
+  }
+  error?: string
+  detail?: string
 }
 
-function hashScope(input: {
-  workspaceId: number
-  tenantId: number
-  approvalScopeJson: string
-}): string {
-  return createHash('sha256')
-    .update([
-      input.workspaceId,
-      input.tenantId,
-      BUILDWIKI_CONNECTOR,
-      BUILDWIKI_ACTION_RUN_NOW,
-      BUILDWIKI_TARGET_KEY,
-      input.approvalScopeJson,
-    ].join('|'))
-    .digest('hex')
+async function readLatestTelegramBuildWikiApproval() {
+  try {
+    const upstream = await fetchClaudeClawJson<TelegramApprovalQueuePayload>(
+      `/api/telegram-approvals?action=${encodeURIComponent(BUILDWIKI_ACTION_RUN_NOW)}&audit=1&limit=20`,
+      {},
+      12000,
+    )
+    if (!upstream.ok || !upstream.payload || typeof upstream.payload !== 'object') return null
+    const payload = upstream.payload as TelegramApprovalQueuePayload
+    const approval = payload.approvals?.[0]
+    if (!approval) {
+      return {
+        persistence_ready: true,
+        approval: null,
+        run: null,
+        ui_state: 'idle',
+        is_terminal: true,
+      }
+    }
+    const terminal = ['denied', 'expired'].includes(approval.status) || ['completed', 'failed'].includes(approval.run_status || '')
+    const uiState =
+      approval.status === 'pending' ? 'pending_approval' :
+      approval.status === 'denied' ? 'denied' :
+      approval.status === 'expired' ? 'expired' :
+      approval.run_status === 'completed' ? 'completed' :
+      approval.run_status === 'failed' ? 'failed' :
+      approval.status === 'approved' ? 'approved' :
+      'idle'
+    return {
+      persistence_ready: true,
+      approval: {
+        id: approval.id,
+        approval_state: approval.status,
+        requester: approval.requesting_agent,
+        risk_level: approval.risk_level,
+        protected_category: BUILDWIKI_PROTECTED_CATEGORY,
+        reason: approval.title,
+        required_approver: BUILDWIKI_REQUIRED_APPROVER,
+        expires_at: new Date(approval.expires_at * 1000).toISOString(),
+        resolved_at: approval.decision_at ? new Date(approval.decision_at * 1000).toISOString() : null,
+        resolved_by: approval.approved_by,
+        resolution_reason: null,
+        correlation_id: '',
+        created_at: new Date(approval.created_at * 1000).toISOString(),
+        telegram_message_id: approval.telegram_message_id,
+      },
+      run: approval.run_status ? {
+        id: approval.id,
+        approval_request_id: approval.id,
+        audit_event_id: null,
+        run_state: approval.run_status,
+        started_at: null,
+        finished_at: null,
+        rollback_ref: BUILDWIKI_ROLLBACK_REF,
+        correlation_id: '',
+        run_exit_code: approval.run_exit_code,
+        run_summary: approval.run_summary,
+      } : null,
+      ui_state: uiState,
+      is_terminal: terminal,
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) {
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+  }
+
+  const telegramLatest = await readLatestTelegramBuildWikiApproval()
+  if (telegramLatest) {
+    return NextResponse.json(
+      {
+        ok: true,
+        mode: 'telegram_run_now_read_only',
+        generated_at: new Date().toISOString(),
+        persistence_ready: true,
+        approval_channel: 'Tony -> Telegram',
+        target_service: BUILDWIKI_TARGET_SERVICE,
+        ui_state: telegramLatest.ui_state,
+        is_terminal: telegramLatest.is_terminal,
+        approval: telegramLatest.approval,
+        run: telegramLatest.run,
+        execution_enabled: false,
+        next_action: 'Use the Run now button to send a Telegram approval request; owner approves in Telegram.',
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    )
   }
 
   const latest = readLatestRunNow()
@@ -101,213 +191,63 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
-  let db: Database.Database | null = null
+
   try {
-    db = new Database(config.dbPath, { fileMustExist: true })
-    db.pragma('foreign_keys = ON')
-
-    if (!approvalPersistenceReady(db)) {
-      return ownerApprovalRequired({
-        reason: 'approval_persistence_not_applied',
-        current_state: 'OWNER_APPROVAL_REQUIRED',
-        http_status_when_blocked: 423,
-        connector: BUILDWIKI_CONNECTOR,
-        action: BUILDWIKI_ACTION_RUN_NOW,
-        target: BUILDWIKI_TARGET_SERVICE,
-        approval_request_created: false,
-        accepted_for_execution: false,
-        next_action:
-          'Apply the owner-approved bridge approval/audit migration before creating run-now requests.',
-      })
-    }
-
-    // Refuse a duplicate IN-FLIGHT request only:
-    //   pending                       — owner hasn't decided yet
-    //   approved + no dispatch row    — owner has decided, ready to fire
-    //   approved + run='running'      — currently executing
-    // Approved + terminal run (completed | failed | success | error) means the
-    // request fully ran and is now historical — a new request is allowed.
-    const existing = db
-      .prepare(
-        `SELECT id, approval_state
-           FROM bridge_approval_requests
-          WHERE connector = ? AND action = ? AND target_key = ?
-            AND approval_state IN ('pending', 'approved')
-          ORDER BY created_at DESC
-          LIMIT 1`,
-      )
-      .get(
-        BUILDWIKI_CONNECTOR,
-        BUILDWIKI_ACTION_RUN_NOW,
-        BUILDWIKI_TARGET_KEY,
-      ) as { id: string; approval_state: string } | undefined
-
-    if (existing) {
-      const runRow = db
-        .prepare(
-          `SELECT run_state FROM bridge_connector_runs
-            WHERE approval_request_id = ?
-            ORDER BY created_at DESC LIMIT 1`,
-        )
-        .get(existing.id) as { run_state?: string } | undefined
-      const runTerminal = !!runRow && (
-        runRow.run_state === 'completed' ||
-        runRow.run_state === 'success'   ||
-        runRow.run_state === 'failed'    ||
-        runRow.run_state === 'error'
-      )
-
-      if (existing.approval_state === 'pending') {
-        return NextResponse.json(
-          {
-            ok: false,
-            mode: 'run_now_request_in_flight',
-            approval_request_created: false,
-            approval_id: existing.id,
-            approval_state: 'pending',
-            error: 'in_flight_request_exists',
-            next_action: 'A run-now request is already pending owner approval. Approve, deny, or wait for it to expire before creating a new one.',
-          },
-          { status: 409 },
-        )
-      }
-
-      if (existing.approval_state === 'approved' && !runTerminal) {
-        if (runRow && runRow.run_state === 'running') {
-          return NextResponse.json(
-            {
-              ok: false,
-              mode: 'run_now_request_in_flight',
-              approval_request_created: false,
-              approval_id: existing.id,
-              approval_state: 'approved',
-              run_state: 'running',
-              error: 'dispatch_in_progress',
-              next_action: 'A previous run is currently executing. Wait for it to finish.',
-            },
-            { status: 409 },
-          )
-        }
-        return NextResponse.json(
-          {
-            ok: true,
-            mode: 'run_now_request_reused',
-            approval_request_created: false,
-            approval_id: existing.id,
-            approval_state: 'approved',
-            execution_enabled: false,
-            next_action: 'Approval already granted. Call POST /run-now/{id}/dispatch to start the service.',
-          },
-          { status: 200 },
-        )
-      }
-      // approved + terminal run → fall through to create a new request
-    }
-
-    const workspaceId = auth.user.workspace_id || 1
-    const tenantId = auth.user.tenant_id || 1
-    const approvalId = `apr_${randomUUID()}`
-    const auditId = `audit_${randomUUID()}`
-    const correlationId = `corr_buildwiki_run_now_${randomUUID()}`
-    const requester = auth.user.username || auth.user.display_name || 'mission-control'
-    const requesterUserId = realUserIdOrNull(db, auth.user.id)
-    const reason = String(body.reason || REQUEST_REASON_DEFAULT).trim().slice(0, 500) || REQUEST_REASON_DEFAULT
-    const approvalScopeJson = stableJson({
-      service: BUILDWIKI_TARGET_SERVICE,
-      command: `systemctl --user start ${BUILDWIKI_TARGET_SERVICE}`,
-      farmer: 'opencloud-docs-farmer',
-      cap: 'per-run cap of 3 raw drops; recency window 1 day; no network egress',
-    })
-
-    db.transaction(() => {
-      db!.prepare(`
-        INSERT INTO bridge_approval_requests (
-          id, workspace_id, tenant_id, connector, action, target, target_key,
-          requester, requester_user_id, risk_level, approval_state, protected_category,
-          approval_scope_json, scope_hash, reason, required_approver, rollback_available,
-          rollback_ref, expires_at, correlation_id, idempotency_key
-        ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, 1, ?, NULL, ?, NULL
-        )
-      `).run(
-        approvalId,
-        workspaceId,
-        tenantId,
-        BUILDWIKI_CONNECTOR,
-        BUILDWIKI_ACTION_RUN_NOW,
-        BUILDWIKI_TARGET_SERVICE,
-        BUILDWIKI_TARGET_KEY,
-        requester,
-        requesterUserId,
-        BUILDWIKI_RISK_LEVEL,
-        BUILDWIKI_PROTECTED_CATEGORY,
-        approvalScopeJson,
-        hashScope({ workspaceId, tenantId, approvalScopeJson }),
-        reason,
-        BUILDWIKI_REQUIRED_APPROVER,
-        BUILDWIKI_ROLLBACK_REF,
-        correlationId,
-      )
-
-      db!.prepare(`
-        INSERT INTO bridge_audit_events (
-          id, workspace_id, tenant_id, approval_request_id, actor, actor_user_id,
-          connector, action, target, target_key, outcome, payload_hash,
-          metadata_json, correlation_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approval_requested', ?, ?, ?)
-      `).run(
-        auditId,
-        workspaceId,
-        tenantId,
-        approvalId,
-        requester,
-        requesterUserId,
-        BUILDWIKI_CONNECTOR,
-        BUILDWIKI_ACTION_RUN_NOW,
-        BUILDWIKI_TARGET_SERVICE,
-        BUILDWIKI_TARGET_KEY,
-        createHash('sha256').update(approvalScopeJson).digest('hex'),
-        stableJson({
-          source: 'mission-control',
-          run_now_endpoint: '/api/bridge/brain-sync/build-wiki/run-now',
+    const upstream = await fetchClaudeClawJson<TelegramApprovalCreatePayload>(
+      '/api/telegram-approvals/buildwiki/run-now',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          reason: String(body.reason || REQUEST_REASON_DEFAULT).slice(0, 500),
+        }),
+      },
+      12000,
+    )
+    const payload = upstream.payload as TelegramApprovalCreatePayload
+    if (upstream.ok && payload?.ok && payload.approval) {
+      return NextResponse.json(
+        {
+          ok: true,
+          mode: 'telegram_run_now_request_sent_no_execution',
+          approval_request_created: true,
+          approval_id: payload.approval.id,
+          approval_state: payload.approval.status,
+          telegram_message_id: payload.approval.telegram_message_id,
+          approval_channel: 'Tony -> Telegram',
           target_service: BUILDWIKI_TARGET_SERVICE,
           execution_enabled: false,
-          approval_request_created: true,
-        }),
-        correlationId,
+          accepted_for_execution: false,
+          ui_state: 'pending_approval',
+          next_action: 'Approve or deny this exact request in Telegram. Mission Control does not approve directly yet.',
+        },
+        { status: 201 },
       )
-    })()
+    }
 
     return NextResponse.json(
       {
-        ok: true,
-        mode: 'run_now_request_created_no_execution',
-        approval_request_created: true,
-        approval_id: approvalId,
-        approval_state: 'pending',
-        target_service: BUILDWIKI_TARGET_SERVICE,
+        ok: false,
+        mode: 'telegram_run_now_request_failed',
+        approval_request_created: false,
         execution_enabled: false,
-        accepted_for_execution: false,
-        ui_state: 'pending_approval',
-        next_action: `Owner must POST /api/bridge/approval-requests/${approvalId}/approve before dispatch can start ${BUILDWIKI_TARGET_SERVICE}.`,
+        error: payload?.error || `upstream_http_${upstream.status}`,
+        detail: payload?.detail,
+        next_action: 'Restore ClaudeClaw Telegram approval endpoint before creating Build-Wiki approvals from Mission Control.',
       },
-      { status: 201 },
+      { status: upstream.status || 502 },
     )
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message.slice(0, 240) : 'run_now_request_failed',
+        mode: 'telegram_run_now_request_failed',
         approval_request_created: false,
         execution_enabled: false,
+        error: error instanceof Error ? error.message.slice(0, 240) : 'telegram_approval_proxy_failed',
       },
-      { status: 500 },
+      { status: 502 },
     )
-  } finally {
-    try {
-      db?.close()
-    } catch {
-      /* noop */
-    }
   }
+
 }

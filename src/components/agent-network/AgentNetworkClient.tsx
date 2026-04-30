@@ -258,11 +258,35 @@ interface ApprovalQueuePayload {
   approval_queue_connected?: boolean
   approvals?: Array<{
     id?: string
+    title?: string
+    requesting_agent?: string
     connector?: string
     action?: string
+    scope?: string
     approval_state?: string
+    status?: string
     risk_level?: string
+    protected_action?: boolean
+    tools_integrations?: string[]
+    summary?: string
     created_at?: string
+    expires_at?: string
+    approved_by?: string | null
+    decision_at?: string | null
+    telegram_message_id?: number | null
+    telegram_sent?: boolean
+    run_status?: string | null
+    run_started_at?: string | null
+    run_completed_at?: string | null
+    run_exit_code?: number | null
+    run_summary?: string | null
+    error?: string | null
+    audit_events?: Array<{
+      id?: number
+      actor?: string
+      event?: string
+      ts?: number
+    }>
   }>
   summary?: {
     total?: number
@@ -284,6 +308,23 @@ interface ApprovalQueuePayload {
   }
   next_action?: string
   error?: string
+}
+
+interface BuildWikiRunNowPayload {
+  ok?: boolean
+  mode?: string
+  approval_request_created?: boolean
+  approval_id?: string
+  approval_state?: string
+  telegram_message_id?: number | null
+  approval_channel?: string
+  target_service?: string
+  execution_enabled?: boolean
+  accepted_for_execution?: boolean
+  ui_state?: string
+  next_action?: string
+  error?: string
+  detail?: string
 }
 
 interface ExecutiveReportPreviewPayload {
@@ -816,16 +857,69 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
         <ul className={styles.connectorList}>
           {approvals.slice(0, 5).map((approval) => (
             <li key={approval.id || `${approval.connector}-${approval.action}`}>
-              <span>{approval.connector || 'unknown'} · {approval.action || 'unknown'}</span>
-              <strong>{approval.approval_state || 'unknown'}</strong>
+              <span>
+                {approval.title || approval.action || 'approval request'}
+                <br />
+                <small>
+                  {approval.requesting_agent || approval.connector || 'unknown'} · risk {approval.risk_level || 'unknown'} · {approval.scope || 'scope not listed'}
+                </small>
+                <br />
+                <small>
+                  Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'}
+                  {approval.run_exit_code != null ? ` (${approval.run_exit_code})` : ''}
+                </small>
+              </span>
+              <strong>{approval.status || approval.approval_state || 'unknown'}</strong>
             </li>
           ))}
         </ul>
       ) : (
-        <p className={styles.providerNotes}>No persistent approvals are visible yet because the production approval/audit migration is not applied.</p>
+        <p className={styles.providerNotes}>No Telegram approval requests are visible yet.</p>
       )}
       {placeholder.next_backend_step && <p className={styles.providerAction}>Next backend step: {placeholder.next_backend_step}</p>}
       {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
+function BuildWikiRunNowCard({
+  state,
+  result,
+  onRequest,
+}: {
+  state: 'idle' | 'sending' | 'sent' | 'error'
+  result: BuildWikiRunNowPayload | null
+  onRequest: () => void
+}) {
+  const busy = state === 'sending'
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={state === 'error' ? 'degraded' : 'active'} />
+          <strong className={styles.providerName}>Build-Wiki / Farmer Sync</strong>
+        </div>
+        <span className={styles.providerState}>{state === 'sent' ? 'Telegram sent' : 'OWNER_APPROVAL_REQUIRED'}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>action: buildwiki.run_now</span>
+        <span>scope: opencloud-docs-farmer.service only</span>
+        <span>approval: Tony → Telegram</span>
+        <span>execution: after button approval only</span>
+      </div>
+      <p className={styles.providerNotes}>
+        This creates a structured Telegram approval request. Mission Control does not approve directly and does not start the farmer by itself.
+      </p>
+      <button type="button" className={styles.btnPrimary} disabled={busy} onClick={onRequest}>
+        {busy ? 'Sending Telegram request…' : 'Request Run Now Approval'}
+      </button>
+      {result?.approval_id && (
+        <p className={styles.providerNotes}>
+          Request: {result.approval_id} · state: {result.approval_state || 'pending'} · Telegram message: {result.telegram_message_id || 'pending'}
+        </p>
+      )}
+      {result?.next_action && <p className={styles.providerAction}>{result.next_action}</p>}
+      {result?.error && <p className={styles.providerAction}>Request failed: {result.error}{result.detail ? ` · ${result.detail}` : ''}</p>}
     </div>
   )
 }
@@ -1184,6 +1278,8 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [approvalQueue, setApprovalQueue] = useState<ApprovalQueuePayload | null>(null)
   const [approvalQueueState, setApprovalQueueState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [approvalQueueError, setApprovalQueueError] = useState<string>('')
+  const [buildWikiRunNow, setBuildWikiRunNow] = useState<BuildWikiRunNowPayload | null>(null)
+  const [buildWikiRunNowState, setBuildWikiRunNowState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [executivePreview, setExecutivePreview] = useState<ExecutiveReportPreviewPayload | null>(null)
   const [executivePreviewState, setExecutivePreviewState] = useState<'waiting' | 'loading' | 'ok' | 'error'>('waiting')
   const [executivePreviewError, setExecutivePreviewError] = useState<string>('')
@@ -1478,9 +1574,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     }
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/bridge/approval-requests', { cache: 'no-store', credentials: 'same-origin' })
+  function refreshApprovalQueue(cancelledRef?: { cancelled: boolean }) {
+    setApprovalQueueState('loading')
+    return fetch('/api/bridge/approval-requests', { cache: 'no-store', credentials: 'same-origin' })
       .then(async (r) => {
         const data = await r.json().catch(() => ({}))
         if (!r.ok) {
@@ -1489,17 +1585,22 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         return data as ApprovalQueuePayload
       })
       .then((data) => {
-        if (cancelled) return
+        if (cancelledRef?.cancelled) return
         setApprovalQueue(data)
         setApprovalQueueState('ok')
       })
       .catch((err) => {
-        if (cancelled) return
+        if (cancelledRef?.cancelled) return
         setApprovalQueueError((err as Error).message || 'fetch failed')
         setApprovalQueueState('error')
       })
+  }
+
+  useEffect(() => {
+    const cancelledRef = { cancelled: false }
+    refreshApprovalQueue(cancelledRef)
     return () => {
-      cancelled = true
+      cancelledRef.cancelled = true
     }
   }, [])
 
@@ -1600,6 +1701,35 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       cancelled = true
     }
   }, [zapierPreflight])
+
+  async function requestBuildWikiRunNowApproval() {
+    setBuildWikiRunNowState('sending')
+    setBuildWikiRunNow(null)
+    try {
+      const response = await fetch('/api/bridge/brain-sync/build-wiki/run-now', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          reason: 'Owner requested Build-Wiki local farmer run from Mission Control.',
+        }),
+      })
+      const data = await response.json().catch(() => ({})) as BuildWikiRunNowPayload
+      setBuildWikiRunNow(data)
+      if (!response.ok || !data.ok) {
+        setBuildWikiRunNowState('error')
+        return
+      }
+      setBuildWikiRunNowState('sent')
+      refreshApprovalQueue()
+    } catch (err) {
+      setBuildWikiRunNow({
+        ok: false,
+        error: (err as Error).message || 'request failed',
+      })
+      setBuildWikiRunNowState('error')
+    }
+  }
 
   // Bucket the agents by tier
   const buckets: Record<string, AgentRow[]> = {
@@ -2069,6 +2199,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               </p>
             </div>
             <div className={styles.providerGrid}>
+              <BuildWikiRunNowCard
+                state={buildWikiRunNowState}
+                result={buildWikiRunNow}
+                onRequest={requestBuildWikiRunNowApproval}
+              />
               <ApprovalReadinessCard payload={approvalReadiness} />
               {approvalQueueState === 'loading' && (
                 <div className={styles.providerCard}>

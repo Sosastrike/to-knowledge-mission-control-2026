@@ -15,6 +15,7 @@ const checks = [
   ['protected_actions_locked', ['node', ['scripts/check-protected-actions-locked.mjs', baseUrl]]],
   ['connector_readiness_live', ['node', ['scripts/check-connector-readiness-live.mjs', baseUrl]]],
   ['connector_action_contracts', ['node', ['scripts/check-connector-action-contracts.mjs', baseUrl]]],
+  ['skills_readonly_live', ['node', ['scripts/check-skills-readonly-live.mjs', baseUrl]]],
   ['mcp_status_consistency', ['node', ['scripts/check-mcp-status-consistency.mjs', baseUrl]]],
   ['viral_firecrawl_readiness', ['node', ['scripts/check-viral-firecrawl-readiness.mjs', baseUrl]]],
   ['official_url_policy', ['node', ['scripts/check-official-url-policy.mjs']]],
@@ -86,6 +87,9 @@ function summarize(name, parsed) {
   }
   if (name === 'connector_action_contracts') {
     return { checked: parsed.checked, expectation: parsed.expectation }
+  }
+  if (name === 'skills_readonly_live') {
+    return parsed.summary
   }
   if (name === 'mcp_status_consistency') {
     return { counts: parsed.counts, server_list_count: parsed.server_list_count, note: parsed.note }

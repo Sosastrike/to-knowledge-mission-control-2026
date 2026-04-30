@@ -60,7 +60,7 @@ export interface User {
   role: 'admin' | 'operator' | 'viewer'
   workspace_id: number
   tenant_id: number
-  provider?: 'local' | 'google' | 'proxy'
+  provider?: 'local' | 'google' | 'azure-ad' | 'proxy'
   email?: string | null
   avatar_url?: string | null
   is_approved?: number
@@ -88,7 +88,7 @@ interface SessionQueryRow {
   username: string
   display_name: string
   role: 'admin' | 'operator' | 'viewer'
-  provider: 'local' | 'google' | null
+  provider: 'local' | 'google' | 'azure-ad' | null
   email: string | null
   avatar_url: string | null
   is_approved: number
@@ -105,7 +105,7 @@ interface UserQueryRow {
   username: string
   display_name: string
   role: 'admin' | 'operator' | 'viewer'
-  provider: 'local' | 'google' | null
+  provider: 'local' | 'google' | 'azure-ad' | null
   email: string | null
   avatar_url: string | null
   is_approved: number
@@ -313,7 +313,7 @@ export function createUser(
   password: string,
   displayName: string,
   role: User['role'] = 'operator',
-  options?: { provider?: 'local' | 'google'; provider_user_id?: string | null; email?: string | null; avatar_url?: string | null; is_approved?: 0 | 1; approved_by?: string | null; approved_at?: number | null; workspace_id?: number }
+  options?: { provider?: 'local' | 'google' | 'azure-ad'; provider_user_id?: string | null; email?: string | null; avatar_url?: string | null; is_approved?: 0 | 1; approved_by?: string | null; approved_at?: number | null; workspace_id?: number }
 ): User {
   const db = getDatabase()
   if (password.length < 12) throw new Error('Password must be at least 12 characters')
@@ -639,4 +639,3 @@ export function requireRole(
   }
   return { user }
 }
-

@@ -50,8 +50,22 @@ const INTEGRATIONS: IntegrationDef[] = [
   { id: 'moonshot', name: 'Moonshot / Kimi', category: 'ai', envVars: ['MOONSHOT_API_KEY'], vaultItem: 'openclaw-moonshot-api-key' },
   { id: 'ollama', name: 'Ollama (Local)', category: 'ai', envVars: ['OLLAMA_API_KEY'], vaultItem: 'openclaw-ollama-api-key' },
 
+  { id: 'google_ai', name: 'Google AI (Gemini)', category: 'ai', envVars: ['GOOGLE_API_KEY'], testable: true },
+  { id: 'mistral', name: 'Mistral AI', category: 'ai', envVars: ['MISTRAL_API_KEY'], testable: true },
+  { id: 'groq', name: 'Groq', category: 'ai', envVars: ['GROQ_API_KEY'], testable: true },
+  { id: 'together', name: 'Together AI', category: 'ai', envVars: ['TOGETHER_API_KEY'], testable: true },
+  { id: 'perplexity', name: 'Perplexity', category: 'ai', envVars: ['PERPLEXITY_API_KEY'], testable: true },
+  { id: 'deepseek', name: 'DeepSeek', category: 'ai', envVars: ['DEEPSEEK_API_KEY'], testable: true },
+  { id: 'cohere', name: 'Cohere', category: 'ai', envVars: ['COHERE_API_KEY'], testable: true },
+  { id: 'xai', name: 'xAI (Grok)', category: 'ai', envVars: ['XAI_API_KEY'], testable: true },
+  { id: 'fireworks', name: 'Fireworks AI', category: 'ai', envVars: ['FIREWORKS_API_KEY'], testable: true },
+  { id: 'replicate', name: 'Replicate', category: 'ai', envVars: ['REPLICATE_API_TOKEN'], testable: true },
+  { id: 'huggingface', name: 'Hugging Face', category: 'ai', envVars: ['HUGGINGFACE_API_KEY'] },
+  { id: 'stability', name: 'Stability AI', category: 'ai', envVars: ['STABILITY_API_KEY'] },
+
   // Search
   { id: 'brave', name: 'Brave Search', category: 'search', envVars: ['BRAVE_API_KEY'], vaultItem: 'openclaw-brave-api-key' },
+  { id: 'firecrawl', name: 'Firecrawl', category: 'search', envVars: ['FIRECRAWL_API_KEY'], testable: true },
 
   // Social
   {
@@ -63,8 +77,9 @@ const INTEGRATIONS: IntegrationDef[] = [
   },
   { id: 'linkedin', name: 'LinkedIn', category: 'social', envVars: ['LINKEDIN_ACCESS_TOKEN'] },
 
-  // Messaging — add entries here for each Telegram bot you run
+  // Messaging
   { id: 'telegram', name: 'Telegram', category: 'messaging', envVars: ['TELEGRAM_BOT_TOKEN'], vaultItem: 'openclaw-telegram-bot-token', testable: true },
+  { id: 'discord', name: 'Discord (Tony)', category: 'messaging', envVars: ['DISCORD_TOKEN_TONY'] },
 
   // Dev Tools
   { id: 'github', name: 'GitHub', category: 'devtools', envVars: ['GITHUB_TOKEN'], vaultItem: 'openclaw-github-token', testable: true },
@@ -78,12 +93,16 @@ const INTEGRATIONS: IntegrationDef[] = [
     testable: true,
     recommendation: 'Install: npm i -g @googleworkspace/cli — then run `gws auth login` or set a service account credentials file.',
   },
+  { id: 'zapier', name: 'Zapier MCP', category: 'productivity', envVars: ['ZAPIER_MCP_URL'], recommendation: 'OAuth-based. Configured via Claude Code MCP settings.' },
+  { id: 'clickup', name: 'ClickUp', category: 'productivity', envVars: ['CLICKUP_API_KEY'], testable: true },
 
   // Security
   { id: 'onepassword', name: '1Password', category: 'security', envVars: ['OP_SERVICE_ACCOUNT_TOKEN'] },
 
   // Infrastructure
   { id: 'gateway', name: 'Gateway Auth', category: 'infra', envVars: ['OPENCLAW_GATEWAY_TOKEN'], vaultItem: 'openclaw-openclaw-gateway-token' },
+  { id: 'hostinger', name: 'Hostinger', category: 'infra', envVars: ['HOSTINGER_API_TOKEN'], testable: true },
+  { id: 'mc_api', name: 'Mission Control API', category: 'infra', envVars: ['MC_API_KEY'] },
 
   // Browser Automation
   { id: 'hyperbrowser', name: 'Hyperbrowser', category: 'browser', envVars: ['HYPERBROWSER_API_KEY'], testable: true, recommendation: 'Cloud browser automation for AI agents. Get a key at hyperbrowser.ai' },
@@ -100,6 +119,29 @@ const CATEGORIES: Record<string, { label: string; order: number }> = {
   infra: { label: 'Infrastructure', order: 6 },
   productivity: { label: 'Productivity', order: 7 },
   browser: { label: 'Browser Automation', order: 8 },
+}
+
+// ---------------------------------------------------------------------------
+// Custom integrations — user-defined providers stored in .data/custom-integrations.json
+// ---------------------------------------------------------------------------
+
+function getCustomIntegrationsPath(): string {
+  const dataDir = process.env.MISSION_CONTROL_DATA_DIR || '.data'
+  return join(dataDir, 'custom-integrations.json')
+}
+
+function loadCustomIntegrations(): IntegrationDef[] {
+  try {
+    const raw = require('fs').readFileSync(getCustomIntegrationsPath(), 'utf-8')
+    const items = JSON.parse(raw)
+    return Array.isArray(items) ? items : []
+  } catch {
+    return []
+  }
+}
+
+function getAllIntegrations(): IntegrationDef[] {
+  return [...INTEGRATIONS, ...loadCustomIntegrations()]
 }
 
 // Vars that must never be written via this API
@@ -330,7 +372,7 @@ export async function GET(request: NextRequest) {
 
   // Merge plugin integrations and categories
   const pluginIntegrations = getPluginIntegrations()
-  const allIntegrations: IntegrationDef[] = [...INTEGRATIONS]
+  const allIntegrations: IntegrationDef[] = [...getAllIntegrations()]
   const pluginIntegrationMap = new Map<string, PluginIntegrationDef>()
   for (const pi of pluginIntegrations) {
     if (!allIntegrations.some(i => i.id === pi.id)) {
@@ -598,11 +640,38 @@ export async function POST(request: NextRequest) {
     return handlePullAll(request, auth.user, body.category)
   }
 
+  // create-custom: protected write path. Keep the UI contract visible, but do
+  // not persist custom integrations until approval/audit persistence exists.
+  if (body.action === 'create-custom') {
+    const { name, envVar, category } = body as any
+    if (!name || !envVar) {
+      return NextResponse.json({ error: 'name and envVar required' }, { status: 400 })
+    }
+    const id = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_')
+    return NextResponse.json(
+      {
+        ok: false,
+        owner_approval_required: true,
+        approval_state: 'required',
+        http_status_when_blocked: 423,
+        execution_enabled: false,
+        approval_request_created: false,
+        accepted_for_execution: false,
+        id,
+        name,
+        category: category || 'ai',
+        envVar,
+        next_action: 'Custom integration creation requires approval/audit persistence before Mission Control may write configuration.',
+      },
+      { status: 423 },
+    )
+  }
+
   if (!body.integrationId) {
     return NextResponse.json({ error: 'integrationId required' }, { status: 400 })
   }
 
-  let integration: IntegrationDef | undefined = INTEGRATIONS.find(i => i.id === body.integrationId)
+  let integration: IntegrationDef | undefined = getAllIntegrations().find(i => i.id === body.integrationId)
   if (!integration) {
     // Check plugin integrations
     const pi = getPluginIntegrations().find(i => i.id === body.integrationId)
@@ -933,7 +1002,7 @@ async function handlePullAll(
     return NextResponse.json({ error: 'OP_SERVICE_ACCOUNT_TOKEN not found in environment or .env' }, { status: 400 })
   }
 
-  const targets = INTEGRATIONS.filter(i => {
+  const targets = getAllIntegrations().filter(i => {
     if (!i.vaultItem) return false
     if (category && i.category !== category) return false
     return true

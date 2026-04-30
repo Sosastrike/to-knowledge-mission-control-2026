@@ -11,6 +11,7 @@ import { validateBody, createAgentSchema } from '@/lib/validation';
 import { runOpenClaw } from '@/lib/command';
 import { config as appConfig } from '@/lib/config';
 import { resolveWithin } from '@/lib/paths';
+import { getClaudeClawRuntimeStatusMap, normalizeRuntimeAgentName } from '@/lib/claudeclaw-runtime-status';
 import path from 'node:path';
 
 /**
@@ -100,6 +101,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const runtimeStatuses = getClaudeClawRuntimeStatusMap();
+    const nowSec = Math.floor(Date.now() / 1000);
+
     const agentsWithStats = agentsWithParsedData.map(agent => {
       const taskStats = taskStatsByAgent.get(agent.name) || {
         total: 0,
@@ -108,9 +112,26 @@ export async function GET(request: NextRequest) {
         quality_review: 0,
         done: 0,
       }
+      const runtime = runtimeStatuses.get(normalizeRuntimeAgentName(agent.name))
+      const dbLastSeen = typeof agent.last_seen === 'number' ? agent.last_seen : 0
+      const heartbeatStale = dbLastSeen > 0 ? (nowSec - dbLastSeen) > 5 * 60 : true
+      const runtimeOnline = runtime?.running === true
+      const displayStatus = runtimeOnline && (!agent.status || agent.status === 'offline')
+        ? 'idle'
+        : agent.status
+      const displayLastSeen = runtimeOnline && heartbeatStale
+        ? Math.floor(runtime.observedAt / 1000)
+        : agent.last_seen
 
       return {
         ...agent,
+        status: displayStatus,
+        last_seen: displayLastSeen,
+        last_heartbeat: displayLastSeen ? displayLastSeen * 1000 : null,
+        heartbeat_stale: runtimeOnline ? heartbeatStale : false,
+        runtime_status: runtimeOnline ? 'running' : (runtime ? runtime.activeState : 'unknown'),
+        runtime_unit: runtime?.unit ?? null,
+        runtime_pid: runtime?.pid ?? null,
         taskStats: {
           ...taskStats,
           completed: taskStats.done,

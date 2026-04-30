@@ -103,9 +103,11 @@ export const notificationActionSchema = z.object({
 })
 
 export const integrationActionSchema = z.object({
-  action: z.enum(['test', 'pull', 'pull-all']),
+  action: z.enum(['test', 'pull', 'pull-all', 'create-custom']),
   integrationId: z.string().optional(),
   category: z.string().optional(),
+  name: z.string().optional(),
+  envVar: z.string().optional(),
 })
 
 export const createPipelineSchema = z.object({
@@ -168,7 +170,7 @@ export const createUserSchema = z.object({
   password: z.string().min(12, 'Password must be at least 12 characters'),
   display_name: z.string().optional(),
   role: z.enum(['admin', 'operator', 'viewer']).default('operator'),
-  provider: z.enum(['local', 'google']).default('local'),
+  provider: z.enum(['local', 'google', 'azure-ad']).default('local'),
   email: z.string().optional(),
 })
 

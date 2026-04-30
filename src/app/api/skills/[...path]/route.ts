@@ -95,6 +95,43 @@ function searchClaudeClawAgentSkills(query: string): SkillSearchRow[] {
   }
 }
 
+
+function parseCredentialNames(value: string | null | undefined): string[] {
+  try {
+    const parsed = JSON.parse(value || '[]')
+    return Array.isArray(parsed) ? parsed.map(String) : []
+  } catch {
+    return []
+  }
+}
+
+function listClaudeClawAgentSkills(): SkillSearchRow[] {
+  let db: Database.Database | null = null
+  try {
+    db = new Database(CLAUDECLAW_DB_PATH, { readonly: true, fileMustExist: true })
+    return db.prepare(`
+      SELECT
+        name,
+        'claudeclaw-agent-skills' AS source,
+        install_path AS path,
+        purpose AS description,
+        name AS registry_slug,
+        health AS security_status,
+        enabled,
+        command_or_api,
+        category,
+        health,
+        required_credentials
+      FROM agent_skills
+      ORDER BY enabled DESC, category, name
+    `).all() as SkillSearchRow[]
+  } catch {
+    return []
+  } finally {
+    try { db?.close() } catch { /* noop */ }
+  }
+}
+
 function searchSkills(query: string): SkillSearchRow[] {
   const byKey = new Map<string, SkillSearchRow>()
   for (const skill of [
@@ -113,10 +150,41 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
 
   const path = routePath((await params).path)
   if (path === 'tool-skills') {
+    const tools = listClaudeClawAgentSkills().map((skill) => ({
+      name: skill.name || '',
+      source: skill.source || 'claudeclaw-agent-skills',
+      path: skill.path || null,
+      description: skill.description || null,
+      category: skill.category || null,
+      health: skill.health || 'unknown',
+      enabled: skill.enabled === 1,
+      command_or_api: skill.command_or_api || null,
+      credential_names: parseCredentialNames(skill.required_credentials),
+      state: 'READ_ONLY',
+      execution_enabled: false,
+      writes_enabled: false,
+      install_state: 'OWNER_APPROVAL_REQUIRED',
+      test_state: 'BACKEND_REQUIRED',
+    }))
+
     return NextResponse.json({
       ok: true,
-      tools: [],
-      note: 'agent_skills passthrough not wired in the Next.js bridge yet',
+      state: 'READ_ONLY',
+      source: 'claudeclaw_agent_skills_table',
+      claudeclaw_db_path: CLAUDECLAW_DB_PATH,
+      total: tools.length,
+      enabled_total: tools.filter((tool) => tool.enabled).length,
+      execution_enabled: false,
+      writes_enabled: false,
+      actions: {
+        list: 'READ_ONLY',
+        search: 'READ_ONLY',
+        install: 'OWNER_APPROVAL_REQUIRED',
+        enable_disable: 'OWNER_APPROVAL_REQUIRED',
+        test: 'BACKEND_REQUIRED',
+      },
+      tools,
+      note: 'Read-only ClaudeClaw agent skill inventory. No skill install, enable/disable, probe, or execution was performed.',
     })
   }
   return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })
@@ -144,14 +212,7 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
       command_or_api: skill.command_or_api || null,
       category: skill.category || null,
       health: skill.health || null,
-      credential_names: (() => {
-        try {
-          const parsed = JSON.parse(skill.required_credentials || '[]')
-          return Array.isArray(parsed) ? parsed.map(String) : []
-        } catch {
-          return []
-        }
-      })(),
+      credential_names: parseCredentialNames(skill.required_credentials),
       state: 'READ_ONLY',
       executable: false,
       install_state: 'OWNER_APPROVAL_REQUIRED',

@@ -16,24 +16,35 @@ function run(command, args) {
   }
 }
 
-async function statusFor(url) {
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'manual',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(10000),
-    })
-    return { ok: response.status >= 200 && response.status < 400, status: response.status }
-  } catch (error) {
-    return { ok: false, status: 0, error: error instanceof Error ? error.message.slice(0, 240) : 'request_failed' }
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function statusFor(url, attempts = 1) {
+  const tries = []
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        redirect: 'manual',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      })
+      const result = { ok: response.status >= 200 && response.status < 400, status: response.status, attempt }
+      tries.push(result)
+      if (result.ok) return { ...result, attempts: tries }
+    } catch (error) {
+      tries.push({ ok: false, status: 0, error: error instanceof Error ? error.message.slice(0, 240) : 'request_failed', attempt })
+    }
+    if (attempt < attempts) await wait(750 * attempt)
   }
+  return { ...tries[tries.length - 1], attempts: tries }
 }
 
 const service = run('systemctl', ['is-active', 'mission-control.service'])
 const listener = run('bash', ['-lc', "ss -H -ltnp | awk '/:3337/ {print}'"])
 const localLogin = await statusFor(`${localBaseUrl}/login`)
-const publicLogin = await statusFor(publicLoginUrl)
+const publicLogin = await statusFor(publicLoginUrl, 3)
 
 const failures = []
 if (service !== 'active') failures.push({ check: 'mission-control.service', value: service, error: 'service_not_active' })

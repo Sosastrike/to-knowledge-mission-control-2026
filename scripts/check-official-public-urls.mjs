@@ -24,7 +24,11 @@ const targets = [
 const results = []
 const failures = []
 
-for (const target of targets) {
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function probeTarget(target, attempt) {
   try {
     const response = await fetch(target.url, {
       method: 'GET',
@@ -32,28 +36,49 @@ for (const target of targets) {
       cache: 'no-store',
       signal: AbortSignal.timeout(10000),
     })
-    const result = {
+    return {
       id: target.id,
       role: target.role,
       url: target.url,
       status: response.status,
       location: response.headers.get('location') || null,
       ok: target.expected_statuses.includes(response.status),
-    }
-    results.push(result)
-    if (!result.ok) {
-      failures.push({
-        ...result,
-        expected_statuses: target.expected_statuses,
-      })
+      attempt,
     }
   } catch (error) {
-    failures.push({
+    return {
       id: target.id,
       role: target.role,
       url: target.url,
       status: 0,
       error: error instanceof Error ? error.message.slice(0, 240) : 'request_failed',
+      ok: false,
+      attempt,
+    }
+  }
+}
+
+for (const target of targets) {
+  const attempts = []
+  let accepted = null
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const result = await probeTarget(target, attempt)
+    attempts.push(result)
+    if (result.ok) {
+      accepted = result
+      break
+    }
+    if (attempt < 3) await wait(750 * attempt)
+  }
+
+  const result = {
+    ...(accepted || attempts[attempts.length - 1]),
+    attempts,
+  }
+  results.push(result)
+  if (!result.ok) {
+    failures.push({
+      ...result,
       expected_statuses: target.expected_statuses,
     })
   }

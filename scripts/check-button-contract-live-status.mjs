@@ -125,8 +125,18 @@ try {
     }
     liveButtons = contract.body.buttons || []
 
+    const seenButtonKeys = new Set()
     for (const [index, button] of liveButtons.entries()) {
       const label = button?.label || `button_${index}`
+      const duplicateKey = [
+        button?.route || 'unknown-route',
+        label,
+        button?.method || 'unknown-method',
+        button?.endpoint || 'local',
+      ].join('::')
+      if (seenButtonKeys.has(duplicateKey)) failures.push({ label, error: 'duplicate_button_contract', key: duplicateKey })
+      seenButtonKeys.add(duplicateKey)
+
       if (!allowedStates.has(button?.state)) failures.push({ label, error: 'invalid_button_state', state: button?.state })
       if (button?.fake_success_allowed !== false) failures.push({ label, error: 'fake_success_allowed_not_false' })
       if (button?.protected_execution_enabled !== false) failures.push({ label, error: 'protected_execution_enabled_not_false' })

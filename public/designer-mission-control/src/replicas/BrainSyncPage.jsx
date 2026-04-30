@@ -51,6 +51,34 @@ const BRAIN_CATEGORIES = [
 // ============================================================
 
 function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
+  // ── NEURAL MOTION FLAG (owner-approved Path A, 2026-04-29) ──────────
+  // Default OFF — production behavior unchanged.
+  // Enable in console:
+  //   localStorage.setItem('mc.brain.neuralMotion', '1'); location.reload();
+  // Disable:
+  //   localStorage.removeItem('mc.brain.neuralMotion'); location.reload();
+  const NEURAL_MOTION = (() => {
+    if (typeof window === 'undefined') return false;
+    if (window.__brainNeuralMotion === true) return true;
+    try {
+      const v = window.localStorage && window.localStorage.getItem('mc.brain.neuralMotion');
+      return v === '1' || v === 'true';
+    } catch { return false; }
+  })();
+  // Sector centroids for soft anchoring of bulk nodes when NEURAL_MOTION
+  // is enabled. Coords are normalized 0..1; chosen to keep each category
+  // in a clear "lobe" of the canvas without overlapping the hub triangle.
+  const NM_SECTOR_CENTROIDS = {
+    tony:        { cx: 0.50, cy: 0.50 },
+    'agent zero':{ cx: 0.50, cy: 0.32 },
+    agents:      { cx: 0.30, cy: 0.45 },
+    memories:    { cx: 0.72, cy: 0.45 },
+    skills:      { cx: 0.25, cy: 0.70 },
+    obsidian:    { cx: 0.40, cy: 0.78 },
+    mempalace:   { cx: 0.62, cy: 0.78 },
+    graphify:    { cx: 0.78, cy: 0.65 },
+    external:    { cx: 0.85, cy: 0.30 },
+  };
   // Returns ref to attach to a <canvas>, plus a pulseAt(x,y,color) method.
   const canvasRef = React.useRef(null);
   const graphRef = React.useRef(null);
@@ -507,7 +535,10 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
           // Smooth peak around the middle of the cycle
           a = s.baseAlpha * (0.6 + 0.4 * Math.sin(u * Math.PI * 2));
         }
-        ctx.fillStyle = `rgba(220,228,255,${a.toFixed(3)})`;
+        const _nmA = NEURAL_MOTION ? a * 0.3 : a;
+        ctx.fillStyle = NEURAL_MOTION
+          ? `rgba(120,150,200,${_nmA.toFixed(3)})`
+          : `rgba(220,228,255,${a.toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI*2);
         ctx.fill();
@@ -527,8 +558,17 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
             // the commander hubs + their satellite tools never touch Tony
             // and never reach the outer support orbit.
             const orbitT = (t / 14) * Math.PI * 2 * n.orbitDir + n.orbitPhase;
-            n.x = 0.50 + Math.cos(orbitT) * 0.20;
-            n.y = 0.50 + Math.sin(orbitT) * 0.15;
+            const _baseNx = 0.50 + Math.cos(orbitT) * 0.20;
+            const _baseNy = 0.50 + Math.sin(orbitT) * 0.15;
+            if (NEURAL_MOTION) {
+              // Tiny synaptic wobble — keeps hubs from feeling like
+              // perfectly orbital satellites.
+              n.x = _baseNx + 0.005 * Math.sin(t * 0.4 + n.phase);
+              n.y = _baseNy + 0.005 * Math.cos(t * 0.7 + n.phase);
+            } else {
+              n.x = _baseNx;
+              n.y = _baseNy;
+            }
           }
           continue;
         }
@@ -575,6 +615,57 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         }
       }
 
+      // ── NEURAL MOTION: sector anchoring + bulk repulsion ──────────
+      // Runs only when the flag is on. Keeps bulk nodes in their
+      // category lobes and prevents clumping. O(N^2) but bounded by
+      // a hard cap on bulk count.
+      if (NEURAL_MOTION) {
+        const _bulk = [];
+        for (const n of g.nodes) {
+          if (n.isHub || n.isSupportAgent || n.isIntegration) continue;
+          _bulk.push(n);
+          if (_bulk.length >= 80) break;
+        }
+        const _SECTOR_PULL = 0.0005;
+        for (const n of _bulk) {
+          const c = NM_SECTOR_CENTROIDS[n.cat];
+          if (c) {
+            n.vx += (c.cx - n.x) * _SECTOR_PULL;
+            n.vy += (c.cy - n.y) * _SECTOR_PULL;
+          }
+        }
+        const _MIN_DIST = 0.012;
+        const _PUSH = 0.00015;
+        for (let i = 0; i < _bulk.length; i++) {
+          const a = _bulk[i];
+          for (let j = i + 1; j < _bulk.length; j++) {
+            const b = _bulk[j];
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < _MIN_DIST && d > 0.0001) {
+              const f = (_MIN_DIST - d) / d;
+              a.vx -= dx * f * _PUSH;
+              a.vy -= dy * f * _PUSH;
+              b.vx += dx * f * _PUSH;
+              b.vy += dy * f * _PUSH;
+            }
+          }
+        }
+        // Re-clamp into the oval after repulsion
+        for (const n of _bulk) {
+          n.x += n.vx; n.y += n.vy;
+          n.vx *= 0.99; n.vy *= 0.99;
+          const ox = (n.x - 0.5) / 0.48;
+          const oy = (n.y - 0.5) / 0.42;
+          const rOval = Math.sqrt(ox * ox + oy * oy);
+          if (rOval > 1) {
+            const f = 1 / rOval;
+            n.x = 0.5 + ox * f * 0.48;
+            n.y = 0.5 + oy * f * 0.42;
+          }
+        }
+      }
+
       // Edges - render first (behind nodes)
       ctx.lineWidth = 0.6;
       for (let i = 0; i < g.edges.length; i++) {
@@ -606,8 +697,24 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         const op = e.op * (e.hub ? 0.9 : (0.7 + 0.3 * Math.sin(t + i)));
         ctx.strokeStyle = hexWithAlpha(A.color, op);
         ctx.beginPath();
-        ctx.moveTo(A.x * w, A.y * h);
-        ctx.lineTo(B.x * w, B.y * h);
+        const _ax = A.x * w, _ay = A.y * h;
+        const _bx = B.x * w, _by = B.y * h;
+        if (NEURAL_MOTION) {
+          // Synapse-like bezier. Sign of perpendicular offset is
+          // deterministic from edge index so curves don't all bend
+          // the same way.
+          const _dx = _bx - _ax, _dy = _by - _ay;
+          const _len = Math.sqrt(_dx * _dx + _dy * _dy);
+          const _sign = (i % 2) ? 1 : -1;
+          const _off = _sign * Math.min(_len * 0.12, 24);
+          const _mx = (_ax + _bx) / 2 + (-_dy / (_len || 1)) * _off;
+          const _my = (_ay + _by) / 2 + (_dx / (_len || 1)) * _off;
+          ctx.moveTo(_ax, _ay);
+          ctx.quadraticCurveTo(_mx, _my, _bx, _by);
+        } else {
+          ctx.moveTo(_ax, _ay);
+          ctx.lineTo(_bx, _by);
+        }
         ctx.stroke();
       }
 
@@ -754,6 +861,23 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       }
 
       // Particles
+      // ── NEURAL MOTION: continuous low-rate pulse seeder ──────────
+      // Seeds 1 particle every ~0.5s while NEURAL_MOTION is on, capped
+      // at 30 active particles so the canvas never hot-spots.
+      if (NEURAL_MOTION) {
+        if (!g._nmLastPulseSeed) g._nmLastPulseSeed = 0;
+        if (t - g._nmLastPulseSeed > 0.5 && g.particles.length < 30 && g.edges.length > 0) {
+          g._nmLastPulseSeed = t;
+          const _e = g.edges[Math.floor(Math.random() * g.edges.length)];
+          if (_e) {
+            g.particles.push({
+              edge: _e, t: 0,
+              speed: 0.25 + Math.random() * 0.4,
+              color: g.nodes[_e.a].color,
+            });
+          }
+        }
+      }
       for (let i = g.particles.length - 1; i >= 0; i--) {
         const p = g.particles[i];
         p.t += p.speed * dt;
@@ -839,6 +963,18 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         }
       }
 
+      // ── NEURAL MOTION: honest visual-only label ─────────────────
+      if (NEURAL_MOTION) {
+        ctx.save();
+        ctx.font = '500 9px -apple-system, Inter, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(150,170,200,0.55)';
+        ctx.fillText(
+          'NEURAL MOTION (visual): synaptic motion is illustrative; live signal is read-only counters + pulse beats.',
+          w / 2, h - 8
+        );
+        ctx.restore();
+      }
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);

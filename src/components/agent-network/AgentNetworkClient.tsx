@@ -131,8 +131,22 @@ interface ConnectorReadiness {
   label: string
   role: string
   state: string
+  risk_level?: string
   read_only_endpoint: string | null
   execution_endpoint: string | null
+  canonical_paths?: {
+    status?: string | null
+    inventory?: string | null
+    execution?: string | null
+    approval?: string | null
+    setup?: string | null
+  }
+  ui_contract?: {
+    status_card_state?: string
+    primary_button_state?: string
+    primary_button_label?: string
+    disabled_message?: string
+  }
   credential_names?: string[]
   credentials_present_by_name?: Record<string, boolean>
   approval_required_for_execution?: boolean
@@ -141,6 +155,8 @@ interface ConnectorReadiness {
   execution_enabled?: boolean
   current_safe_actions?: string[]
   blocked_actions?: string[]
+  owner_approval_required_before?: string[]
+  deferred_or_redundant_paths?: string[]
   blocker?: string | null
   next_action?: string
 }
@@ -517,9 +533,11 @@ function ProviderCard({ provider }: { provider: BridgeProviderStatus }) {
   )
 }
 
-function joinPreview(items: string[] | undefined, empty = 'none declared') {
+function joinPreview(items: string[] | undefined, emptyOrLimit: string | number = 'none declared') {
+  const limit = typeof emptyOrLimit === 'number' ? emptyOrLimit : 3
+  const empty = typeof emptyOrLimit === 'string' ? emptyOrLimit : 'none declared'
   if (!items || items.length === 0) return empty
-  return items.slice(0, 3).join(' · ') + (items.length > 3 ? ` · +${items.length - 3}` : '')
+  return items.slice(0, limit).join(' · ') + (items.length > limit ? ` · +${items.length - limit}` : '')
 }
 
 function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
@@ -556,6 +574,9 @@ function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
 }
 
 function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
+  const credentialStates = Object.entries(connector.credentials_present_by_name || {})
+    .map(([name, present]) => `${name}: ${present ? 'present' : 'missing'}`)
+
   return (
     <div className={styles.providerCard}>
       <div className={styles.providerHead}>
@@ -567,13 +588,44 @@ function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
       </div>
       <div className={styles.providerMeta}>
         <span>{connector.role}</span>
+        {connector.risk_level && <span>risk: {connector.risk_level}</span>}
         <span>writes: {connector.writes_enabled ? 'enabled' : 'locked'}</span>
         <span>execution: {connector.execution_enabled ? 'enabled' : 'disabled'}</span>
+        <span>approval: {connector.approval_required_for_execution ? 'required' : 'not required'}</span>
+        <span>audit: {connector.audit_required_for_execution ? 'required' : 'not required'}</span>
       </div>
+      {connector.ui_contract && (
+        <p className={styles.providerNotes}>
+          Button state: {connector.ui_contract.primary_button_state || connector.state} · {connector.ui_contract.primary_button_label || 'No action'}
+        </p>
+      )}
+      {connector.ui_contract?.disabled_message && (
+        <p className={styles.providerAction}>{connector.ui_contract.disabled_message}</p>
+      )}
       {connector.read_only_endpoint && <div className={styles.providerEndpoint}>read: {connector.read_only_endpoint}</div>}
-      {connector.execution_endpoint && <div className={styles.providerEndpoint}>execute: {connector.execution_endpoint}</div>}
+      {connector.execution_endpoint && <div className={styles.providerEndpoint}>execute locked: {connector.execution_endpoint}</div>}
+      {connector.canonical_paths && (
+        <p className={styles.providerNotes}>
+          Canonical paths: status {connector.canonical_paths.status || 'n/a'} · inventory {connector.canonical_paths.inventory || 'n/a'} · approval {connector.canonical_paths.approval || 'n/a'} · setup {connector.canonical_paths.setup || 'n/a'}
+        </p>
+      )}
       {connector.credential_names && connector.credential_names.length > 0 && (
-        <p className={styles.providerNotes}>Credentials: {connector.credential_names.join(' · ')}</p>
+        <p className={styles.providerNotes}>Credential names: {connector.credential_names.join(' · ')}</p>
+      )}
+      {credentialStates.length > 0 && (
+        <p className={styles.providerNotes}>Credential status: {joinPreview(credentialStates, 4)}</p>
+      )}
+      {connector.current_safe_actions && connector.current_safe_actions.length > 0 && (
+        <p className={styles.providerNotes}>Safe now: {joinPreview(connector.current_safe_actions, 3)}</p>
+      )}
+      {connector.blocked_actions && connector.blocked_actions.length > 0 && (
+        <p className={styles.providerAction}>Locked actions: {joinPreview(connector.blocked_actions, 4)}</p>
+      )}
+      {connector.owner_approval_required_before && connector.owner_approval_required_before.length > 0 && (
+        <p className={styles.providerNotes}>Owner approval before: {joinPreview(connector.owner_approval_required_before, 3)}</p>
+      )}
+      {connector.deferred_or_redundant_paths && connector.deferred_or_redundant_paths.length > 0 && (
+        <p className={styles.providerNotes}>Deferred/redundant: {joinPreview(connector.deferred_or_redundant_paths, 2)}</p>
       )}
       {connector.blocker && <p className={styles.providerAction}>Blocked: {connector.blocker}</p>}
       {connector.next_action && <p className={styles.providerNotes}>{connector.next_action}</p>}

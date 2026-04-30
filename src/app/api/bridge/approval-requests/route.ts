@@ -105,6 +105,18 @@ export async function GET(request: NextRequest) {
     approvals: queue.approvals,
     summary: queue.summary,
     error: queue.error,
+    ui_placeholder: {
+      title: 'Approval Queue',
+      state: queue.persistence_ready ? 'READ_ONLY' : 'BACKEND_REQUIRED',
+      message: queue.persistence_ready
+        ? 'Approval persistence tables are present. Queue is visible read-only; protected execution remains locked.'
+        : 'Approval persistence is being prepared. Protected actions cannot execute yet.',
+      next_backend_step: 'Owner-approved approval/audit persistence migration + queue API write path.',
+      no_fake_approval_requests: true,
+      approval_request_created: false,
+      protected_actions_locked: true,
+      protected_action_http_status: 423,
+    },
     next_action: queue.persistence_ready
       ? 'Queue is readable. Protected execution remains locked until owner explicitly approves scoped execution runners.'
       : 'Owner must approve and apply the bridge approval/audit migration before approval requests can persist.',

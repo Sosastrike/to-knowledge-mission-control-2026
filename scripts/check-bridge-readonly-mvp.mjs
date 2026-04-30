@@ -173,6 +173,10 @@ if (failures.length === 0) {
     'approval_persistence_not_applied',
     'readApprovalQueue',
     'approval_queue_connected',
+    'ui_placeholder',
+    'Approval Queue',
+    'BACKEND_REQUIRED',
+    'protected_action_http_status: 423',
     'approval_request_created: false',
     'accepted_for_execution: false',
   ]) {

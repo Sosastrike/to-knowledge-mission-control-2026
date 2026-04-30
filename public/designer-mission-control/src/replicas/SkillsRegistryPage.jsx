@@ -29,27 +29,49 @@ function SkillsRegistryPage() {
   React.useEffect(() => { load(); }, []);
 
   async function approval(skill_id, action) {
-    await fetch(`/api/skills/${encodeURIComponent(skill_id)}/${action}`, { method: 'POST' });
-    setToast({ kind: 'warn', msg: `${action} on ${skill_id} requires owner approval — request logged.` });
+    const res = await fetch(`/api/skills/${encodeURIComponent(skill_id)}/${action}`, { method: 'POST' });
+    const body = await res.json().catch(() => ({}));
+    const queued = body.approval_request_created === true;
+    setToast({
+      kind: 'warn',
+      msg: queued
+        ? `${action} on ${skill_id} queued for owner approval.`
+        : `${action} on ${skill_id} requires owner approval. Approval queue is not connected yet; no request was sent.`,
+    });
     setTimeout(() => setToast(null), 5000);
   }
   async function requestInstall(name) {
-    await fetch('/api/skills/finder/request-install', {
+    const res = await fetch('/api/skills/finder/request-install', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
     });
-    setToast({ kind: 'warn', msg: `Install request for "${name}" submitted (owner approval required).` });
+    const body = await res.json().catch(() => ({}));
+    const queued = body.approval_request_created === true;
+    setToast({
+      kind: 'warn',
+      msg: queued
+        ? `Install request for "${name}" queued for owner approval.`
+        : `Installing "${name}" requires owner approval. Approval queue is not connected yet; no request was sent.`,
+    });
     setTimeout(() => setToast(null), 5000);
   }
   async function search() {
     if (!query.trim()) return;
-    setToast({ kind: 'warn', msg: 'Skill finder index not built yet (backend_required).' });
     try {
-      await fetch('/api/skills/finder/search', {
+      const res = await fetch('/api/skills/finder/search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
-    } catch (_) {}
+      const body = await res.json().catch(() => ({}));
+      setToast({
+        kind: res.ok ? 'ok' : 'warn',
+        msg: res.ok
+          ? `Read-only skill search found ${body.total || 0} matching skills. Installs remain approval-locked.`
+          : body.next_action || body.error || 'Skill search is unavailable.',
+      });
+    } catch (_) {
+      setToast({ kind: 'warn', msg: 'Skill search is unavailable.' });
+    }
     setTimeout(() => setToast(null), 5000);
   }
 

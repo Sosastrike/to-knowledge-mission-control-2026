@@ -392,6 +392,42 @@ interface BridgeCostsPayload {
   error?: string
 }
 
+interface OwnerGate {
+  id: string
+  title: string
+  category: string
+  state: string
+  priority: number
+  approval_required?: boolean
+  credential_names?: string[]
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  current_safe_behavior?: string
+  blocker?: string
+  next_action?: string
+}
+
+interface BridgeOwnerGatesPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  no_execution_enabled?: boolean
+  no_connector_writes_enabled?: boolean
+  no_secret_values_exposed?: boolean
+  production_db_migration_applied?: boolean
+  gates?: OwnerGate[]
+  summary?: {
+    total?: number
+    by_state?: Record<string, number>
+    owner_approval_required?: number
+    credential_related?: number
+    execution_enabled?: number
+    writes_enabled?: number
+  }
+  canonical_next_step?: string
+  error?: string
+}
+
 interface Props {
   hermes: HermesInfo
   bridge: BridgeInfo
@@ -757,6 +793,32 @@ function CostGovernanceCard({ payload }: { payload: BridgeCostsPayload | null })
   )
 }
 
+function OwnerGateCard({ gate }: { gate: OwnerGate }) {
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={gate.state === 'READ_ONLY' ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>{gate.title}</strong>
+        </div>
+        <span className={styles.providerState}>{gate.state.replace(/_/g, ' ')}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>priority {gate.priority}</span>
+        <span>{gate.category.replace(/_/g, ' ')}</span>
+        <span>execution: {gate.execution_enabled ? 'enabled' : 'disabled'}</span>
+        <span>writes: {gate.writes_enabled ? 'enabled' : 'locked'}</span>
+      </div>
+      {gate.current_safe_behavior && <p className={styles.providerNotes}>{gate.current_safe_behavior}</p>}
+      {gate.credential_names && gate.credential_names.length > 0 && (
+        <p className={styles.providerNotes}>Credential names: {gate.credential_names.join(' · ')}</p>
+      )}
+      {gate.blocker && <p className={styles.providerAction}>Blocked: {gate.blocker}</p>}
+      {gate.next_action && <p className={styles.providerNotes}>{gate.next_action}</p>}
+    </div>
+  )
+}
+
 function ExecutiveReportPreviewCard({ payload }: { payload: ExecutiveReportPreviewPayload | null }) {
   if (!payload) {
     return (
@@ -1054,6 +1116,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [costs, setCosts] = useState<BridgeCostsPayload | null>(null)
   const [costsState, setCostsState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [costsError, setCostsError] = useState<string>('')
+  const [ownerGates, setOwnerGates] = useState<BridgeOwnerGatesPayload | null>(null)
+  const [ownerGatesState, setOwnerGatesState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [ownerGatesError, setOwnerGatesError] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
@@ -1199,6 +1264,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setCostsError((err as Error).message || 'fetch failed')
         setCostsState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/owner-gates', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as BridgeOwnerGatesPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setOwnerGates(data)
+        setOwnerGatesState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setOwnerGatesError((err as Error).message || 'fetch failed')
+        setOwnerGatesState('error')
       })
     return () => {
       cancelled = true
@@ -1556,6 +1646,50 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 </div>
               ))}
             </div>
+          </>
+        )}
+      </section>
+
+      {/* Owner gates — read-only blocker visibility */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Owner Gates / Blockers</h2>
+          <span className={styles.tierSub}>
+            Read-only approval and credential blockers from <code>/api/bridge/owner-gates</code>
+          </span>
+        </header>
+        {ownerGatesState === 'loading' && (
+          <div className={styles.banner}>Loading owner gates from <code>/api/bridge/owner-gates</code>…</div>
+        )}
+        {ownerGatesState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load owner gates:</strong> {ownerGatesError}
+          </div>
+        )}
+        {ownerGatesState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {ownerGates?.mode || 'bridge_owner_gates_read_only'}</span>
+              <span>{ownerGates?.summary?.total ?? ownerGates?.gates?.length ?? 0} gates</span>
+              <span>owner approval: {ownerGates?.summary?.owner_approval_required ?? 0}</span>
+              <span>credential related: {ownerGates?.summary?.credential_related ?? 0}</span>
+              <span>execution enabled: {ownerGates?.summary?.execution_enabled ?? 0}</span>
+              <span>writes enabled: {ownerGates?.summary?.writes_enabled ?? 0}</span>
+              {Object.entries(ownerGates?.summary?.by_state || {}).map(([state, count]) => (
+                <span key={state}>{state.replace(/_/g, ' ')}: {count}</span>
+              ))}
+            </div>
+            <div className={styles.preflightNotice}>
+              Owner gates are visibility only. Mission Control is not sending approval requests, changing credentials, applying migrations, enabling connector execution, or writing to Zapier from this panel.
+            </div>
+            <div className={styles.providerGrid}>
+              {(ownerGates?.gates || []).slice(0, 6).map((gate) => (
+                <OwnerGateCard key={gate.id} gate={gate} />
+              ))}
+            </div>
+            {ownerGates?.canonical_next_step && (
+              <div className={styles.preflightNotice}>{ownerGates.canonical_next_step}</div>
+            )}
           </>
         )}
       </section>

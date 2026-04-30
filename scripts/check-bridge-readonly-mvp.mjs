@@ -14,6 +14,8 @@ const requiredFiles = [
   'src/app/api/bridge/preflight/route.ts',
   'src/app/api/bridge/providers/route.ts',
   'src/app/api/bridge/approval-requests/route.ts',
+  'src/app/api/bridge/approval-requests/[id]/approve/route.ts',
+  'src/app/api/bridge/approval-requests/[id]/deny/route.ts',
   'src/app/api/bridge/brain-sync/rebuild/route.ts',
   'src/app/api/agent-zero/request/route.ts',
 ]
@@ -38,6 +40,8 @@ if (failures.length === 0) {
   const telegramApprovalPreview = read('src/app/api/bridge/telegram-approval-preview/route.ts')
   const preflight = read('src/app/api/bridge/preflight/route.ts')
   const approvalRequests = read('src/app/api/bridge/approval-requests/route.ts')
+  const approvalRequestApprove = read('src/app/api/bridge/approval-requests/[id]/approve/route.ts')
+  const approvalRequestDeny = read('src/app/api/bridge/approval-requests/[id]/deny/route.ts')
   const brainSyncRebuild = read('src/app/api/bridge/brain-sync/rebuild/route.ts')
   const agentZeroRequest = read('src/app/api/agent-zero/request/route.ts')
 
@@ -160,6 +164,8 @@ if (failures.length === 0) {
 
   for (const [name, source] of [
     ['approval requests', approvalRequests],
+    ['approval request approve', approvalRequestApprove],
+    ['approval request deny', approvalRequestDeny],
     ['brain sync rebuild', brainSyncRebuild],
     ['agent zero request', agentZeroRequest],
   ]) {

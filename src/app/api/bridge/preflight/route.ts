@@ -35,6 +35,27 @@ type PreflightRequest = {
   expected_duration_seconds?: number
 }
 
+type LatestPreflightResult = {
+  id: string
+  generated_at: string
+  agent_id: string
+  task_type: TaskType
+  connector: string | null
+  decision: DecisionState
+  reason: string
+  selected_route: ReturnType<typeof routeFor>
+  selected_tools: string[]
+  selected_models: string[]
+  selected_skills: string[]
+  selected_integrations: string[]
+  selected_mcps: string[]
+  restrictions: string[]
+  approval_gates: string[]
+  missing_credentials: string[]
+  credential_required: boolean
+  next_action: string
+}
+
 const TASK_TYPES: TaskType[] = [
   'status_check',
   'planning',
@@ -147,6 +168,8 @@ function detectConnector(input: PreflightRequest): string | null {
   if (text.includes('agent zero')) return 'agent_zero'
   return null
 }
+
+let latestPreflightResult: LatestPreflightResult | null = null
 
 function credentialPresence(names: string[]): Record<string, boolean> {
   return Object.fromEntries(names.map((name) => [name, hasEnv(name)]))
@@ -289,6 +312,15 @@ export async function GET(request: NextRequest) {
       preflight_policy: '/docs/BRIDGE_MODE_PREFLIGHT_POLICY.md',
       approval_contracts: '/docs/BRIDGE_APPROVAL_API_CONTRACTS.md',
     },
+    ui_visibility: {
+      card_title: 'Latest Bridge Mode Preflight',
+      state: latestPreflightResult ? latestPreflightResult.decision : 'NO_PREFLIGHT_RECORDED',
+      latest_preflight: latestPreflightResult,
+      empty_state: latestPreflightResult
+        ? null
+        : 'No in-memory preflight has been run since the current Mission Control process started.',
+      note: 'This is process-local read-only visibility. Approval persistence is not connected and no approval request is created.',
+    },
     example_request: {
       agent_id: 'tony',
       owner_goal: 'Prepare a Zapier email automation plan',
@@ -318,11 +350,52 @@ export async function POST(request: NextRequest) {
   const correlationId = `pf_${Date.now()}_${randomUUID().slice(0, 8)}`
   const approvalRequired = decision.state === 'OWNER_APPROVAL_REQUIRED'
   const credentialRequired = decision.state === 'CREDENTIAL_REQUIRED'
+  const generatedAt = new Date().toISOString()
+  const selectedTools = connector ? [`${connector}:readiness_or_inventory`] : ['bridge:capability_matrix', 'bridge:button_contracts']
+  const selectedModels = input.agent_id === 'hermes'
+    ? ['sandbox/local provider when configured']
+    : ['claude_cli_direct primary', 'OpenRouter fallback locked', 'Ollama emergency local backup']
+  const selectedSkills = ['skills registry read-only search/list only']
+  const selectedIntegrations = connector ? [connector] : ['Mission Control status', 'OpenClaw Gateway status']
+  const selectedMcps = ['MCP status/server inventory only']
+  const approvalGates = approvalRequired
+    ? ['owner approval required', 'approval/audit persistence migration required before execution']
+    : []
+  const restrictions = [
+    'no protected execution enabled',
+    'no connector writes enabled',
+    'no memory/governance/voice/routing changes',
+    'no secrets exposed',
+  ]
+  const nextAction = approvalRequired
+    ? 'Create owner-facing roadmap/report, then use Telegram approval after persistence and approval queue are wired.'
+    : 'Proceed only with safe read-only/planning work under this preflight result.'
+
+  latestPreflightResult = {
+    id: correlationId,
+    generated_at: generatedAt,
+    agent_id: input.agent_id || 'tony',
+    task_type: taskType,
+    connector,
+    decision: decision.state,
+    reason: decision.reason,
+    selected_route: selectedRoute,
+    selected_tools: selectedTools,
+    selected_models: selectedModels,
+    selected_skills: selectedSkills,
+    selected_integrations: selectedIntegrations,
+    selected_mcps: selectedMcps,
+    restrictions,
+    approval_gates: approvalGates,
+    missing_credentials: decision.missing_credentials,
+    credential_required: credentialRequired,
+    next_action: nextAction,
+  }
 
   return NextResponse.json({
     ok: true,
     mode: 'bridge_preflight_read_only',
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt,
     preflight: {
       id: correlationId,
       persistence: 'not_connected',
@@ -339,20 +412,13 @@ export async function POST(request: NextRequest) {
       reason: decision.reason,
       http_status_if_attempted: decision.http_status_if_attempted,
       selected_route: selectedRoute,
-      selected_tools: connector ? [`${connector}:readiness_or_inventory`] : ['bridge:capability_matrix', 'bridge:button_contracts'],
-      selected_models: input.agent_id === 'hermes' ? ['sandbox/local provider when configured'] : ['claude_cli_direct primary', 'OpenRouter fallback locked', 'Ollama emergency local backup'],
-      selected_skills: ['skills registry read-only search/list only'],
-      selected_integrations: connector ? [connector] : ['Mission Control status', 'OpenClaw Gateway status'],
-      selected_mcps: ['MCP status/server inventory only'],
-      approval_gates: approvalRequired
-        ? ['owner approval required', 'approval/audit persistence migration required before execution']
-        : [],
-      restrictions: [
-        'no protected execution enabled',
-        'no connector writes enabled',
-        'no memory/governance/voice/routing changes',
-        'no secrets exposed',
-      ],
+      selected_tools: selectedTools,
+      selected_models: selectedModels,
+      selected_skills: selectedSkills,
+      selected_integrations: selectedIntegrations,
+      selected_mcps: selectedMcps,
+      approval_gates: approvalGates,
+      restrictions,
       credential_names: credentialNames,
       credentials_present_by_name: credentialPresence(credentialNames),
       missing_credentials: decision.missing_credentials,
@@ -370,9 +436,12 @@ export async function POST(request: NextRequest) {
       },
       executive_report_required: true,
       telegram_approval_required: approvalRequired,
-      next_action: approvalRequired
-        ? 'Create owner-facing roadmap/report, then use Telegram approval after persistence and approval queue are wired.'
-        : 'Proceed only with safe read-only/planning work under this preflight result.',
+      next_action: nextAction,
+    },
+    ui_visibility: {
+      card_title: 'Latest Bridge Mode Preflight',
+      latest_preflight: latestPreflightResult,
+      note: 'Read-only process-local visibility only. No approval request was created.',
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

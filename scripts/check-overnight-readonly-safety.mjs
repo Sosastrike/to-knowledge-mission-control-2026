@@ -5,6 +5,7 @@ const baseUrl = (process.argv[2] || process.env.MISSION_CONTROL_BASE_URL || 'htt
 const publicLoginUrl = process.env.TKMC_LOGIN_URL || 'https://tkmc.knowledge-vs-ai.com/login'
 
 const checks = [
+  ['api_contract_parity', ['node', ['scripts/check-api-contract-parity.mjs', '--root', '.', '--openapi', 'openapi.json', '--ignore-file', 'scripts/api-contract-parity.ignore', '--json']]],
   ['button_contract_static', ['node', ['scripts/check-button-contract-routes.mjs']]],
   ['bridge_readonly_static', ['node', ['scripts/check-bridge-readonly-mvp.mjs']]],
   ['button_contract_live', ['node', ['scripts/check-button-contract-live-status.mjs', baseUrl]]],
@@ -15,6 +16,7 @@ const checks = [
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
   ['route_rendering_live', ['node', ['scripts/check-mission-control-route-rendering.mjs', baseUrl]]],
+  ['approval_migration_temp_db', ['bash', ['-lc', "MISSION_CONTROL_DB_PATH=/home/tony/mission-control/.data/mission-control.db bash scripts/test-bridge-approval-migration.sh >/tmp/bridge-approval-migration-overnight.txt && printf '{\"ok\":true,\"mode\":\"copied_db_only\",\"production_db_modified\":false,\"execution_enabled\":false}\\n'"]]],
 ]
 
 function runCheck(name, command, args) {
@@ -49,6 +51,9 @@ function runCheck(name, command, args) {
 }
 
 function summarize(name, parsed) {
+  if (name === 'api_contract_parity') {
+    return { route_operations: parsed.totals?.routeOperations, openapi_operations: parsed.totals?.openapiOperations, ignored_operations: parsed.totals?.ignoredOperations }
+  }
   if (name === 'button_contract_static') {
     return { api_endpoints: parsed.api_endpoints, state_counts: parsed.state_counts }
   }
@@ -87,6 +92,9 @@ function summarize(name, parsed) {
   }
   if (name === 'route_rendering_live') {
     return { routes_checked: parsed.routes_checked, designer_pages_checked: parsed.designer_pages_checked, api_auth: parsed.api_auth }
+  }
+  if (name === 'approval_migration_temp_db') {
+    return { mode: parsed.mode, production_db_modified: parsed.production_db_modified, execution_enabled: parsed.execution_enabled }
   }
   return { checked: parsed.checked || parsed.guarantees?.length || true }
 }

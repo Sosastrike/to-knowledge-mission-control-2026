@@ -109,12 +109,39 @@ if (failures.length === 0) {
     "mode: 'connector_readiness_read_only'",
     'no_execution_enabled: true',
     'no_connector_writes_enabled: true',
+    'risk_level',
+    'canonical_paths',
+    'ui_contract',
+    'owner_approval_required_before',
+    'deferred_or_redundant_paths',
+    'verification_commands',
     'FIRECRAWL_API_KEY',
     'ZAPIER_MCP_URL',
     'N8N_BASE_URL',
     '/api/skills/finder/request-install',
   ]) {
     if (!connectors.includes(needle)) failures.push(`connector readiness missing ${needle}`)
+  }
+
+  for (const connectorId of [
+    'firecrawl',
+    'viral_crawl_video',
+    'zapier',
+    'n8n',
+    'mcp_tools',
+    'skills_registry',
+  ]) {
+    if (!connectors.includes(`id: '${connectorId}'`)) failures.push(`connector readiness missing ${connectorId}`)
+  }
+
+  for (const endpoint of [
+    '/api/viral-crawl/video/request-run',
+    '/api/zapier/request-write-approval',
+    '/api/n8n/workflows/:id/:action',
+    '/api/mcp/servers/:id/:action',
+    '/api/skills/finder/request-install',
+  ]) {
+    if (!connectors.includes(endpoint)) failures.push(`connector readiness missing execution lock path ${endpoint}`)
   }
 
   for (const [name, source] of [
@@ -151,6 +178,7 @@ console.log(JSON.stringify({
     'Button contracts include preflight and approval readiness',
     'Executive report preview is read-only',
     'Connector readiness keeps execution and writes disabled',
+    'Connector readiness exposes canonical paths, UI state contracts, approval blockers, and verification commands',
     'Preflight route is read-only and creates no approval requests',
     'Approval readiness only inspects schema state',
     'Approval contract keeps protected writes at HTTP 423',

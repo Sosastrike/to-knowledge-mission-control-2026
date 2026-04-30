@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { execFile } from 'node:child_process'
 import {
+  NODE24_BIN,
   authJson,
   backendRequired,
   CatchAllParams,
@@ -7,7 +9,6 @@ import {
   ownerApprovalRequired,
   readJsonIfPresent,
   routePath,
-  safeExecFile,
 } from '@/lib/designer-module-api'
 
 export const runtime = 'nodejs'
@@ -28,6 +29,14 @@ type McpServer = {
 const MCP_CACHE_TTL_MS = 30_000
 let cachedServers: { loadedAt: number; servers: McpServer[] } | null = null
 let loadingServers: Promise<McpServer[]> | null = null
+let lastDiscovery: {
+  cli_ok: boolean
+  cli_stdout_length: number
+  cli_stderr_length: number
+  cli_error: string | null
+  fallback_used: boolean
+  config_servers_found: number
+} | null = null
 
 function parseClaudeMcpList(stdout: string): McpServer[] {
   const servers: McpServer[] = []
@@ -105,12 +114,20 @@ async function loadServers(): Promise<McpServer[]> {
 }
 
 async function loadServersUncached(): Promise<McpServer[]> {
-  const fromCliResult = await safeExecFile('claude', ['mcp', 'list'], 15000)
+  const fromCliResult = await readClaudeMcpList()
   // `claude mcp list` performs live health checks and can exit non-zero or
   // timeout when one provider is slow. Parse any stdout it returned so one
   // failing server does not make the whole Mission Control MCP panel empty.
   const fromCli = fromCliResult.stdout ? parseClaudeMcpList(fromCliResult.stdout) : []
   const fromConfig = await readMcpConfigFile()
+  lastDiscovery = {
+    cli_ok: fromCliResult.ok,
+    cli_stdout_length: fromCliResult.stdout.length,
+    cli_stderr_length: fromCliResult.stderr.length,
+    cli_error: fromCliResult.error || null,
+    fallback_used: fromCliResult.fallback_used,
+    config_servers_found: fromConfig.length,
+  }
   const merged = new Map<string, McpServer>()
   for (const server of fromCli) merged.set(server.name, server)
   for (const server of fromConfig) if (!merged.has(server.name)) merged.set(server.name, server)
@@ -126,6 +143,43 @@ async function loadServersUncached(): Promise<McpServer[]> {
         : null,
     visible_to: { tony: true, sub_agents: false },
   }))
+}
+
+function execFileText(command: string, args: string[], timeout: number, shellFallback = false) {
+  return new Promise<{ ok: boolean; stdout: string; stderr: string; error?: string; fallback_used: boolean }>((resolve) => {
+    execFile(
+      command,
+      args,
+      {
+        cwd: '/home/tony/mission-control',
+        timeout,
+        env: {
+          ...process.env,
+          HOME: process.env.HOME || '/home/tony',
+          PATH: `${NODE24_BIN}:${process.env.PATH || ''}`,
+        },
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          ok: !error,
+          stdout: String(stdout || ''),
+          stderr: String(stderr || ''),
+          error: error ? String(error.message || 'command_failed').slice(0, 500) : undefined,
+          fallback_used: shellFallback,
+        })
+      },
+    )
+  })
+}
+
+async function readClaudeMcpList() {
+  const direct = await execFileText(`${NODE24_BIN}/claude`, ['mcp', 'list'], 20000)
+  if (direct.stdout.trim()) return direct
+
+  // Some production shells initialize Claude plugin paths differently. This is
+  // still read-only; it lists MCP servers and never invokes tools.
+  const fallback = await execFileText('/bin/bash', ['-lc', `PATH=${NODE24_BIN}:$PATH claude mcp list`], 25000, true)
+  return fallback.stdout.trim() ? fallback : direct
 }
 
 function tally(servers: McpServer[]) {
@@ -157,6 +211,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
       summary,
       servers,
       sources_checked: ['claude-cli', '~/.claude/mcp.json', '~/.config/claude/mcp.json'],
+      discovery: lastDiscovery,
       note: servers.length ? null : 'no_mcp_servers_detected',
     })
   }

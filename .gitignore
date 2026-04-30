@@ -11,8 +11,14 @@ dist/
 
 # Misc
 .DS_Store
+._*
 *.pem
 .env*.local
+.env.bak*
+*.bak
+*.bak.*
+*.pid
+*.log
 
 # npm (project uses pnpm)
 package-lock.json
@@ -30,6 +36,7 @@ yarn-error.log*
 next-env.d.ts
 .env
 .data/
+mission-control.db
 aegis/
 
 # Playwright

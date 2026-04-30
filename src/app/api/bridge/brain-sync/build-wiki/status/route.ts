@@ -4,6 +4,13 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
 import { authJson } from '@/lib/designer-module-api'
+import {
+  BUILDWIKI_TARGET_SERVICE,
+  deriveRunNowUiState,
+  pickPublicApprovalView,
+  pickPublicRunView,
+  readLatestRunNow,
+} from '@/lib/build-wiki-run-now'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -416,6 +423,25 @@ export async function GET(request: NextRequest) {
       view_latest_raw: 'READ_ONLY',
       view_latest_wiki: 'READ_ONLY',
     },
+    run_now: (() => {
+      const latest = readLatestRunNow()
+      const ui = deriveRunNowUiState(latest.approval, latest.run)
+      return {
+        persistence_ready: latest.persistence_ready,
+        target_service: BUILDWIKI_TARGET_SERVICE,
+        ui_state: ui.ui_state,
+        is_terminal: ui.is_terminal,
+        approval: pickPublicApprovalView(latest.approval),
+        run: pickPublicRunView(latest.run),
+        endpoints: {
+          create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now' },
+          dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch' },
+          read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/run-now/{id}' },
+          approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
+          deny:     { method: 'POST', path: '/api/bridge/approval-requests/{id}/deny' },
+        },
+      }
+    })(),
     notices: {
       no_execution_enabled: true,
       no_secret_exposure: true,
@@ -423,6 +449,7 @@ export async function GET(request: NextRequest) {
       no_tony_routing_change: true,
       no_zapier_writes: true,
       single_vault: true,
+      run_now_dispatch_scope: BUILDWIKI_TARGET_SERVICE,
     },
   }
 

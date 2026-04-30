@@ -13,9 +13,12 @@
 // ============================================================
 
 const BUILD_WIKI_STATUS_URL = '/api/bridge/brain-sync/build-wiki/status';
+const RUN_NOW_CREATE_URL    = '/api/bridge/brain-sync/build-wiki/run-now';
+const RUN_NOW_READ_URL      = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}`;
+const RUN_NOW_DISPATCH_URL  = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}/dispatch`;
+const APPROVE_URL           = (id) => `/api/bridge/approval-requests/${encodeURIComponent(id)}/approve`;
 
 const CONTROL_LABELS = {
-  run_now:                'Run now',
   pause_sync:             'Pause sync',
   resume_sync:            'Resume sync',
   add_local_source:       'Add local source',
@@ -25,8 +28,10 @@ const CONTROL_LABELS = {
   view_latest_wiki:       'View latest wiki pages',
 };
 
-const CONTROL_ORDER = [
-  'run_now', 'pause_sync', 'resume_sync',
+// Run now is now wired through its own approval-driven control;
+// the rest stay locked until their respective wirings are approved.
+const LOCKED_CONTROL_ORDER = [
+  'pause_sync', 'resume_sync',
   'add_local_source', 'enable_external_farmer',
   'view_logs', 'view_latest_raw', 'view_latest_wiki',
 ];
@@ -129,6 +134,148 @@ function BWLockedButton({ controlKey, state, title }) {
       <span>{CONTROL_LABELS[controlKey] || controlKey}</span>
       <BWPill tone={k.color}>{k.label}</BWPill>
     </button>
+  );
+}
+
+// ============================================================
+// Run Now — approval-driven control (the only wired button).
+// ============================================================
+function uiStateLabel(s) {
+  switch (s) {
+    case 'idle':              return { tone: '#6bb3ff', label: 'IDLE' };
+    case 'pending_approval':  return { tone: '#ffb547', label: 'APPROVAL PENDING' };
+    case 'approved':          return { tone: '#3ec9ff', label: 'APPROVED' };
+    case 'dispatching':       return { tone: '#a16bff', label: 'DISPATCHING' };
+    case 'completed':         return { tone: '#3ddc84', label: 'COMPLETED' };
+    case 'failed':            return { tone: '#ff6a9e', label: 'FAILED' };
+    case 'denied':            return { tone: '#ff6a9e', label: 'DENIED' };
+    case 'expired':           return { tone: '#888',    label: 'EXPIRED' };
+    default:                  return { tone: '#888',    label: String(s || 'UNKNOWN').toUpperCase() };
+  }
+}
+
+function BWRunNowControl({ runNow, onAction }) {
+  const [busy, setBusy] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState(null);
+  const state = (runNow && runNow.ui_state) || 'idle';
+  const approvalId = runNow && runNow.approval && runNow.approval.id;
+  const k = uiStateLabel(state);
+
+  const wrap = async (fn) => {
+    setBusy(true); setErrorMsg(null);
+    try {
+      await fn();
+      if (typeof onAction === 'function') onAction();
+    } catch (err) {
+      setErrorMsg(String(err && err.message || err).slice(0, 240));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestRun = () => wrap(async () => {
+    const res = await fetch(RUN_NOW_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({}),
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  const dispatchNow = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(RUN_NOW_DISPATCH_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const detail = j.systemctl_exit_code !== undefined
+        ? ` (exit ${j.systemctl_exit_code})`
+        : '';
+      throw new Error((j.error || `HTTP ${res.status}`) + detail);
+    }
+  });
+
+  // Owner self-approval is exposed as a separate button so the operator can
+  // also walk through the contract without leaving the panel. The approve
+  // route still enforces operator role server-side.
+  const approveSelf = () => wrap(async () => {
+    if (!approvalId) throw new Error('no_approval_id');
+    const res = await fetch(APPROVE_URL(approvalId), {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  });
+
+  // Pick which action button (if any) is exposed for the current state.
+  let actionBtn = null;
+  if (state === 'idle' || state === 'completed' || state === 'denied' || state === 'expired' || state === 'failed') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={requestRun} title="Create an approval request to run opencloud-docs-farmer.service once.">
+        {busy ? 'Submitting…' : (state === 'completed' || state === 'failed' ? 'Request another run' : 'Request run')}
+      </button>
+    );
+  } else if (state === 'pending_approval') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={approveSelf} title="Owner / operator approval. Server still enforces role + audit.">
+        {busy ? 'Approving…' : 'Approve (owner)'}
+      </button>
+    );
+  } else if (state === 'approved') {
+    actionBtn = (
+      <button className="btn sm" disabled={busy} onClick={dispatchNow} title="Dispatch the approved request → systemctl --user start opencloud-docs-farmer.service.">
+        {busy ? 'Dispatching…' : 'Dispatch'}
+      </button>
+    );
+  } else if (state === 'dispatching') {
+    actionBtn = (
+      <button className="btn sm" disabled title="Service is running — wait for completion."> Dispatching… </button>
+    );
+  }
+
+  const approval = (runNow && runNow.approval) || null;
+  const run = (runNow && runNow.run) || null;
+
+  return (
+    <div className="vstack" style={{
+      gap: 6, padding: '10px 12px',
+      background: 'var(--bg-2)', borderRadius: 8, border: '1px solid var(--line-1)',
+    }}>
+      <div className="hstack" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ color: 'var(--fg-0)', fontWeight: 500 }}>Run now</span>
+        <BWPill tone={k.tone}>{k.label}</BWPill>
+        {approval ? <span className="mono xsmall muted">{approval.id}</span> : null}
+        <span className="spacer"/>
+        {actionBtn}
+      </div>
+
+      {approval ? (
+        <div className="muted xsmall mono" style={{ overflowWrap: 'anywhere' }}>
+          requested {approval.created_at}
+          {approval.resolved_at ? <> · {approval.approval_state} {approval.resolved_at} by {approval.resolved_by || '—'}</> : null}
+          {run && run.started_at ? <> · started {run.started_at}</> : null}
+          {run && run.finished_at ? <> · finished {run.finished_at}</> : null}
+          {run ? <> · run {run.id}</> : null}
+        </div>
+      ) : (
+        <div className="muted xsmall">
+          Click <strong>Request run</strong> to create an owner-approval request for{' '}
+          <code style={{ fontSize: 11 }}>{(runNow && runNow.target_service) || 'opencloud-docs-farmer.service'}</code>.
+          The service is not started until you separately approve and then dispatch.
+        </div>
+      )}
+
+      {errorMsg ? (
+        <div className="mono xsmall" style={{ color: '#ffb3c8' }}>error: {errorMsg}</div>
+      ) : null}
+    </div>
   );
 }
 
@@ -318,11 +465,16 @@ function BuildWikiFarmerSyncPanel() {
           </div>
         </div>
 
-        {/* 6 — Controls (all locked) */}
+        {/* 6 — Run Now (wired) + the rest of the controls (locked) */}
         <div className="vstack" style={{ gap: 6 }}>
-          <div className="stat-label">Controls</div>
+          <div className="stat-label">Run now</div>
+          <BWRunNowControl runNow={data.run_now} onAction={refetch}/>
+        </div>
+
+        <div className="vstack" style={{ gap: 6 }}>
+          <div className="stat-label">Other controls (locked)</div>
           <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {CONTROL_ORDER.map((key) => (
+            {LOCKED_CONTROL_ORDER.map((key) => (
               <BWLockedButton
                 key={key}
                 controlKey={key}

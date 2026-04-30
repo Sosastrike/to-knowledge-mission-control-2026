@@ -235,7 +235,11 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
     })
   }
   if (path === 'revoke-write-approval') {
-    return NextResponse.json({ ok: true, revoked_at: new Date().toISOString(), approval_state: 'none' })
+    return backendRequired({
+      approval_state: 'not_connected',
+      revoked: false,
+      next_action: 'Approval persistence is not connected, so there is no durable Zapier approval state to revoke yet.',
+    })
   }
 
   return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })

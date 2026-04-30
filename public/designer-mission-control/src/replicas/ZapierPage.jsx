@@ -43,18 +43,36 @@ function ZapierPage() {
     catch (e) { setTools({ ok: false, error: e.message }); }
   }
   async function requestApproval() {
-    setToast({ kind: 'warn', msg: 'Owner approval flow not implemented yet — request was logged with backend_required.' });
     try {
-      await fetch('/api/zapier/request-write-approval', {
+      const res = await fetch('/api/zapier/request-write-approval', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool: 'all', scope: 'session', ttl_minutes: 30 }),
       });
-    } catch (_) {}
+      const json = await res.json().catch(() => ({}));
+      setToast({
+        kind: 'warn',
+        msg: json.approval_request_created
+          ? 'Approval request created. Protected writes remain locked until approved.'
+          : 'Approval queue is not connected yet. Writes stay locked; no approval request was sent.',
+      });
+    } catch (_) {
+      setToast({ kind: 'warn', msg: 'Approval queue is unavailable. Writes stay locked; no approval request was sent.' });
+    }
     setTimeout(() => setToast(null), 6000);
   }
   async function revokeApproval() {
-    await fetch('/api/zapier/revoke-write-approval', { method: 'POST' });
-    setToast({ kind: 'info', msg: 'Approval revoked.' });
+    try {
+      const res = await fetch('/api/zapier/revoke-write-approval', { method: 'POST' });
+      const json = await res.json().catch(() => ({}));
+      setToast({
+        kind: 'info',
+        msg: json.revoked
+          ? 'Approval revoked.'
+          : 'No durable approval state exists yet, so there is nothing to revoke.',
+      });
+    } catch (_) {
+      setToast({ kind: 'info', msg: 'Approval persistence is not connected yet, so there is nothing to revoke.' });
+    }
     setTimeout(() => setToast(null), 4000);
   }
 

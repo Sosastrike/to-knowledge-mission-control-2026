@@ -23,6 +23,7 @@ const checks = [
   ['approval_migration_lock', ['node', ['scripts/check-approval-migration-lock.mjs', baseUrl]]],
   ['approval_readiness_live', ['node', ['scripts/check-approval-readiness-live.mjs', baseUrl]]],
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
+  ['bridge_execution_cycle_live', ['node', ['scripts/check-bridge-execution-cycle-live.mjs', baseUrl]]],
   ['bridge_costs_live', ['node', ['scripts/check-bridge-costs-live.mjs', baseUrl]]],
   ['bridge_owner_gates_live', ['node', ['scripts/check-bridge-owner-gates-live.mjs', baseUrl]]],
   ['agent_network_ui_contracts', ['node', ['scripts/check-agent-network-ui-contracts.mjs']]],
@@ -129,6 +130,9 @@ function summarize(name, parsed) {
       execution_enabled: parsed.status_check?.execution_enabled || parsed.zapier_write?.execution_enabled || false,
       approval_request_created: parsed.status_check?.approval_request_created || parsed.zapier_write?.approval_request_created || false,
     }
+  }
+  if (name === 'bridge_execution_cycle_live') {
+    return { mode: parsed.mode, cycle_steps: parsed.cycle_steps, validation_checks: parsed.validation_checks, no_execution_enabled: parsed.no_execution_enabled, approval_request_created: parsed.approval_request_created }
   }
   if (name === 'bridge_costs_live') {
     return {

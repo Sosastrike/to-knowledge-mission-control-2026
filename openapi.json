@@ -13870,6 +13870,15 @@
         "operationId": "getBridgeOwnerGates",
         "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
       }
+    },
+    "/api/bridge/execution-cycle": {
+      "get": {
+        "tags": ["Bridge"],
+        "summary": "GET /api/bridge/execution-cycle",
+        "description": "Documented for route/OpenAPI parity. Current production posture is read-only or owner-approval-gated unless a route-specific contract states otherwise.",
+        "operationId": "getBridgeExecutionCycle",
+        "responses": { "200": { "description": "OK" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
     }
   },
   "components": {

@@ -51,6 +51,7 @@ const coreRoutes = [
   { path: '/api/bridge/capability-matrix', label: 'Bridge capability matrix API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/connector-readiness', label: 'Connector readiness API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/preflight', label: 'Bridge preflight contract API', allowedStatuses: apiKey ? [200] : [401], json: true },
+  { path: '/api/bridge/execution-cycle', label: 'Agent execution cycle API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/costs', label: 'Bridge cost/rate governance API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/owner-gates', label: 'Bridge owner gates API', allowedStatuses: apiKey ? [200] : [401], json: true },
   { path: '/api/bridge/executive-report-preview', label: 'Executive report preview API', allowedStatuses: apiKey ? [200] : [401], json: true },

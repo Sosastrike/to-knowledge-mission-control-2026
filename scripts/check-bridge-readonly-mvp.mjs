@@ -12,6 +12,7 @@ const requiredFiles = [
   'src/app/api/bridge/executive-report-preview/route.ts',
   'src/app/api/bridge/telegram-approval-preview/route.ts',
   'src/app/api/bridge/preflight/route.ts',
+  'src/app/api/bridge/execution-cycle/route.ts',
   'src/app/api/bridge/providers/route.ts',
   'src/app/api/bridge/approval-requests/route.ts',
   'src/app/api/bridge/approval-requests/[id]/approve/route.ts',
@@ -65,6 +66,7 @@ if (failures.length === 0) {
   if (!buttons.includes('/api/bridge/executive-report-preview')) failures.push('button contract missing executive report preview endpoint')
   if (!buttons.includes('/api/bridge/telegram-approval-preview')) failures.push('button contract missing Telegram approval preview endpoint')
   if (!buttons.includes('/api/bridge/preflight')) failures.push('button contract missing preflight endpoint')
+  if (!buttons.includes('/api/bridge/execution-cycle')) failures.push('button contract missing execution cycle endpoint')
   if (!buttons.includes('/api/bridge/brain-sync/rebuild')) failures.push('button contract missing Brain Sync rebuild endpoint')
   if (!buttons.includes('/api/agent-zero/request')) failures.push('button contract missing Agent Zero request endpoint')
   if (!approval.includes('protected_write_http_status: 423')) failures.push('approval contract missing HTTP 423 policy')

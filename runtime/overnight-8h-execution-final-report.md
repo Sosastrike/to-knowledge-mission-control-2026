@@ -1,6 +1,6 @@
 # Overnight 8h Execution Final Report
 
-Generated: 2026-04-30T09:35:29-04:00
+Generated: 2026-04-30T10:22:28-04:00
 
 ## Executive Summary
 
@@ -13,18 +13,17 @@ True 90% operational is blocked until the owner approves the production approval
 ## Current Live State
 
 - Branch: to-knowledge-mc
-- Verified app code base before later report-only commits: 0f8b5f4
-- Report is committed after the live check; use `git rev-parse --short HEAD` for the latest docs/report commit.
+- Current pushed HEAD: 5f63ee7
 - mission-control.service: active
 - Listener: 127.0.0.1:3337
 - TKMC public login: HTTP 200
-- Safety suite: 24 checks, 0 failures
+- Safety suite: 25 checks, 0 failures
 - Route rendering smoke: 45 routes, 8 designer pages, 0 failures
 - Full unit tests: 82 files, 931 tests passing on last full run
 - Provider registry: 9 providers
 - Capability matrix: 4 agents, 6 tools
 - Connector readiness: 6 connectors
-- Owner gates: 9 read-only gates, 0 execution, 0 writes
+- Owner gates: 9 read-only gates visible in the Agent Network UI, 0 execution, 0 writes
 - Connector execution enabled: 0
 - Connector writes enabled: 0
 - Approval queue: backend required/read-only placeholder
@@ -51,6 +50,9 @@ True 90% operational is blocked until the owner approves the production approval
 
 ## Commits Pushed In This Later Overnight Segment
 
+- 5f63ee7 feat(bridge): expand connector readiness details
+- 659dd76 test(bridge): verify agent network status contracts
+- b86c3b2 feat(bridge): surface owner gates in agent network
 - 9bc96d7 docs(runtime): refresh overnight live report
 - 0f8b5f4 feat(bridge): add read-only owner gates endpoint
 - 9f4df67 docs(cleanup): refresh live cleanup inventory
@@ -85,13 +87,14 @@ True 90% operational is blocked until the owner approves the production approval
 ## Routes / Endpoints Added Or Improved
 
 - /api/bridge/costs: live read-only cost/rate governance; no budget enforcement or provider-route changes.
-- /api/bridge/owner-gates: live read-only owner approval, credential, backend, and cleanup gate summary; no approval creation, no execution, no writes.
+- /api/bridge/owner-gates: live read-only owner approval, credential, backend, and cleanup gate summary, surfaced in Agent Network; no approval creation, no execution, no writes.
 - /api/bridge/capability-matrix: richer agent capability matrix with models, tools, skills, integrations, MCPs, routes, gates, restrictions, cost/rate limits, blockers, and next actions.
 - /api/bridge/preflight: read-only mandatory preflight with latest process-local visibility.
-- /api/bridge/connector-readiness: detailed connector contracts for FireCrawl, Viral Crawl Video, Zapier, n8n, MCP Tools, and Skills Registry.
+- /api/bridge/connector-readiness: detailed connector contracts for FireCrawl, Viral Crawl Video, Zapier, n8n, MCP Tools, and Skills Registry; Agent Network cards now show canonical paths, button state, approval/audit requirements, credential status by name, locked actions, and next action.
 - /api/skills/tool-skills and /api/skills/finder/search: read-only skill discovery guarded by live safety tests.
 - /api/zapier/tools: read-only MCP tool inventory path; no tool invocation.
 - Route smoke now covers Bridge costs, owner gates, executive preview, Telegram approval preview, Zapier status/tools, and n8n status.
+- Agent Network UI contract guard verifies the shell consumes core Bridge contracts and does not expose protected execution controls.
 
 ## Connector Readiness Status
 

@@ -204,6 +204,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      payload = {
+        ok: response.ok,
+        mode: 'bridge_provider_registry_proxy_read_only',
+        upstream_ok: response.ok,
+        no_execution_enabled: true,
+        no_routing_changes_enabled: true,
+        ...(payload as Record<string, unknown>),
+      }
+    }
+
     return NextResponse.json(payload, {
       status: response.status,
       headers: { 'Cache-Control': 'no-store' },

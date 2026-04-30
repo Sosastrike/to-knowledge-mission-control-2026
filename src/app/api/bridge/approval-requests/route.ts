@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Database from 'better-sqlite3'
+import { createHash, randomUUID } from 'node:crypto'
 import { authJson, ownerApprovalRequired } from '@/lib/designer-module-api'
+import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 export const runtime = 'nodejs'
@@ -31,6 +33,50 @@ type ApprovalRow = {
   resolved_by: string | null
   correlation_id: string
   created_at: string
+}
+
+const RISK_LEVELS = new Set(['low', 'medium', 'high'])
+const PROTECTED_CATEGORIES = new Set([
+  'agent_execution',
+  'memory',
+  'routing',
+  'external_automation',
+  'research',
+  'tooling',
+  'skills',
+  'model_routing',
+  'infrastructure',
+  'credentials',
+  'other',
+])
+
+function cleanText(value: unknown, fallback = ''): string {
+  return String(value ?? fallback).trim().slice(0, 500)
+}
+
+function stableJson(value: unknown): string {
+  if (!value || typeof value !== 'object') return '{}'
+  return JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort())
+}
+
+function hashScope(input: {
+  workspaceId: number
+  tenantId: number
+  connector: string
+  action: string
+  targetKey: string
+  approvalScopeJson: string
+}) {
+  return createHash('sha256')
+    .update([
+      input.workspaceId,
+      input.tenantId,
+      input.connector,
+      input.action,
+      input.targetKey,
+      input.approvalScopeJson,
+    ].join('|'))
+    .digest('hex')
 }
 
 function tableExists(db: Database.Database, name: string): boolean {
@@ -124,16 +170,145 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = authJson(request, 'operator')
-  if (auth) return auth
+  const auth = requireRole(request, 'operator')
+  if ('error' in auth) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
 
-  return ownerApprovalRequired({
-    reason: 'approval_persistence_not_applied',
-    current_state: 'OWNER_APPROVAL_REQUIRED',
-    http_status_when_blocked: 423,
-    ...APPROVAL_STUB,
-    accepted_for_execution: false,
-    approval_request_created: false,
-    next_action: 'Apply the owner-approved bridge approval/audit migration before creating persistent approval requests.',
-  })
+  const body = await request.json().catch(() => ({})) as Record<string, unknown>
+  let db: Database.Database | null = null
+  try {
+    db = new Database(config.dbPath, { fileMustExist: true })
+    db.pragma('foreign_keys = ON')
+
+    if (!tableExists(db, 'bridge_approval_requests') || !tableExists(db, 'bridge_audit_events')) {
+      return ownerApprovalRequired({
+        reason: 'approval_persistence_not_applied',
+        current_state: 'OWNER_APPROVAL_REQUIRED',
+        http_status_when_blocked: 423,
+        ...APPROVAL_STUB,
+        accepted_for_execution: false,
+        approval_request_created: false,
+        next_action: 'Apply the owner-approved bridge approval/audit migration before creating persistent approval requests.',
+      })
+    }
+
+    const connector = cleanText(body.connector || body.provider || 'unknown', 'unknown')
+    const action = cleanText(body.action || body.requested_action || 'protected_action', 'protected_action')
+    const target = cleanText(body.target || body.tool || '', '')
+    const targetKey = cleanText(body.target_key || target || action, action)
+    const riskLevel = cleanText(body.risk_level || 'high', 'high').toLowerCase()
+    const protectedCategory = cleanText(body.protected_category || 'other', 'other')
+    const approvalScopeJson = stableJson(body.approval_scope_json || body.approval_scope || {})
+
+    const errors: string[] = []
+    if (!connector || connector === 'unknown') errors.push('connector is required')
+    if (!action) errors.push('action is required')
+    if (!RISK_LEVELS.has(riskLevel)) errors.push('risk_level must be low|medium|high')
+    if (!PROTECTED_CATEGORIES.has(protectedCategory)) errors.push('protected_category is invalid')
+    if (errors.length) {
+      return NextResponse.json({ ok: false, errors, execution_enabled: false }, { status: 400 })
+    }
+
+    const workspaceId = auth.user.workspace_id || 1
+    const tenantId = auth.user.tenant_id || 1
+    const id = `apr_${randomUUID()}`
+    const auditId = `audit_${randomUUID()}`
+    const correlationId = cleanText(body.correlation_id || `corr_${randomUUID()}`, `corr_${randomUUID()}`)
+    const scopeHash = hashScope({ workspaceId, tenantId, connector, action, targetKey, approvalScopeJson })
+    const idempotencyKey = cleanText(body.idempotency_key || '', '') || null
+    const requester = auth.user.username || auth.user.display_name || 'mission-control'
+    const reason = cleanText(body.reason || body.owner_goal || body.summary || 'Protected action requires owner approval.', 'Protected action requires owner approval.')
+
+    const created = db.transaction(() => {
+      if (idempotencyKey) {
+        const existing = db!.prepare(`
+          SELECT id, approval_state
+          FROM bridge_approval_requests
+          WHERE workspace_id = ? AND tenant_id = ? AND idempotency_key = ?
+          LIMIT 1
+        `).get(workspaceId, tenantId, idempotencyKey) as { id: string; approval_state: string } | undefined
+        if (existing) return { id: existing.id, reused: true, state: existing.approval_state }
+      }
+
+      db!.prepare(`
+        INSERT INTO bridge_approval_requests (
+          id, workspace_id, tenant_id, connector, action, target, target_key,
+          requester, requester_user_id, risk_level, approval_state, protected_category,
+          approval_scope_json, scope_hash, reason, required_approver, rollback_available,
+          rollback_ref, expires_at, correlation_id, idempotency_key
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, 'owner', ?, ?, ?, ?, ?
+        )
+      `).run(
+        id,
+        workspaceId,
+        tenantId,
+        connector,
+        action,
+        target || null,
+        targetKey,
+        requester,
+        auth.user.id,
+        riskLevel,
+        protectedCategory,
+        approvalScopeJson,
+        scopeHash,
+        reason,
+        body.rollback_available ? 1 : 0,
+        cleanText(body.rollback_ref || '', '') || null,
+        cleanText(body.expires_at || '', '') || null,
+        correlationId,
+        idempotencyKey,
+      )
+
+      db!.prepare(`
+        INSERT INTO bridge_audit_events (
+          id, workspace_id, tenant_id, approval_request_id, actor, actor_user_id,
+          connector, action, target, target_key, outcome, payload_hash, metadata_json, correlation_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approval_requested', ?, ?, ?)
+      `).run(
+        auditId,
+        workspaceId,
+        tenantId,
+        id,
+        requester,
+        auth.user.id,
+        connector,
+        action,
+        target || null,
+        targetKey,
+        createHash('sha256').update(approvalScopeJson).digest('hex'),
+        stableJson({
+          source: 'mission-control',
+          no_execution_enabled: true,
+          approval_request_created: true,
+        }),
+        correlationId,
+      )
+
+      return { id, reused: false, state: 'pending' }
+    })()
+
+    return NextResponse.json({
+      ok: true,
+      mode: 'approval_request_created_no_execution',
+      persistence: 'connected',
+      approval_request_created: true,
+      approval_id: created.id,
+      reused_idempotency_key: created.reused,
+      approval_state: created.state,
+      execution_enabled: false,
+      accepted_for_execution: false,
+      no_connector_writes_enabled: true,
+      next_action: 'Owner must approve this request before any protected action can execute. Execution runners remain disabled.',
+    }, { status: created.reused ? 200 : 201 })
+  } catch (error) {
+    return NextResponse.json({
+      ok: false,
+      error: error instanceof Error ? error.message.slice(0, 240) : 'approval_request_failed',
+      execution_enabled: false,
+      approval_request_created: false,
+    }, { status: 500 })
+  } finally {
+    try { db?.close() } catch { /* noop */ }
+  }
 }

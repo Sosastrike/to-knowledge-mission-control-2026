@@ -25,6 +25,7 @@ const checks = [
   ['bridge_preflight_live', ['node', ['scripts/check-bridge-preflight-live.mjs', baseUrl]]],
   ['bridge_costs_live', ['node', ['scripts/check-bridge-costs-live.mjs', baseUrl]]],
   ['bridge_owner_gates_live', ['node', ['scripts/check-bridge-owner-gates-live.mjs', baseUrl]]],
+  ['agent_network_ui_contracts', ['node', ['scripts/check-agent-network-ui-contracts.mjs']]],
   ['provider_registry_live', ['node', ['scripts/check-provider-registry-live.mjs', baseUrl]]],
   ['route_rendering_live', ['node', ['scripts/check-mission-control-route-rendering.mjs', baseUrl]]],
   ['approval_migration_temp_db', ['bash', ['-lc', "MISSION_CONTROL_DB_PATH=/home/tony/mission-control/.data/mission-control.db bash scripts/test-bridge-approval-migration.sh >/tmp/bridge-approval-migration-overnight.txt && printf '{\"ok\":true,\"mode\":\"copied_db_only\",\"production_db_modified\":false,\"execution_enabled\":false}\\n'"]]],
@@ -146,6 +147,9 @@ function summarize(name, parsed) {
       no_execution_enabled: parsed.no_execution_enabled,
       no_connector_writes_enabled: parsed.no_connector_writes_enabled,
     }
+  }
+  if (name === 'agent_network_ui_contracts') {
+    return { contracts_checked: parsed.contracts_checked, required_copy_checked: parsed.required_copy_checked, invariants: parsed.invariants }
   }
   if (name === 'provider_registry_live') {
     return { provider_count: parsed.provider_count, summary: parsed.summary }

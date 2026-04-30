@@ -227,6 +227,7 @@ export async function GET(request: NextRequest) {
       provider_registry: '/api/bridge/providers',
       capability_matrix: '/api/bridge/capability-matrix',
       preflight: '/api/bridge/preflight',
+      costs: '/api/bridge/costs',
       approval_readiness: '/api/bridge/approval-readiness',
       executive_report_preview: '/api/bridge/executive-report-preview',
       telegram_approval_preview: '/api/bridge/telegram-approval-preview',

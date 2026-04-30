@@ -354,6 +354,44 @@ interface ButtonContractsPayload {
   error?: string
 }
 
+interface BridgeCostsPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  no_execution_enabled?: boolean
+  no_budget_enforcement_enabled?: boolean
+  no_provider_routing_changes_enabled?: boolean
+  window_days?: number
+  summary?: {
+    total_tokens?: number
+    estimated_cost?: number
+    request_count?: number
+    agent_count?: number
+  }
+  agents?: Array<{
+    agent?: string
+    total_tokens?: number
+    estimated_cost?: number
+    request_count?: number
+    last_active?: string | null
+  }>
+  governance?: {
+    current_state?: string
+    expensive_job_threshold?: string
+    route_changes?: string
+    fallback_policy?: string
+    approval_required_for?: string[]
+  }
+  rate_limits?: {
+    enforcement_state?: string
+    bridge_specific_limits?: string
+    agent_loop_detection?: string
+    no_autonomous_expensive_loops?: boolean
+  }
+  next_action?: string
+  error?: string
+}
+
 interface Props {
   hermes: HermesInfo
   bridge: BridgeInfo
@@ -676,6 +714,49 @@ function ApprovalQueueCard({ payload }: { payload: ApprovalQueuePayload | null }
   )
 }
 
+function CostGovernanceCard({ payload }: { payload: BridgeCostsPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Cost / Rate Governance</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No cost/rate result loaded yet.</p>
+      </div>
+    )
+  }
+
+  const summary = payload.summary || {}
+  const governance = payload.governance || {}
+  const rateLimits = payload.rate_limits || {}
+
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={payload.ok ? 'active' : 'degraded'} />
+          <strong className={styles.providerName}>Cost / Rate Governance</strong>
+        </div>
+        <span className={styles.providerState}>{payload.mode || 'read-only'}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>{payload.window_days ?? 30}d window</span>
+        <span>{summary.agent_count ?? 0} agents</span>
+        <span>{summary.request_count ?? 0} requests</span>
+        <span>execution: {payload.no_execution_enabled ? 'disabled' : 'unknown'}</span>
+      </div>
+      <p className={styles.providerNotes}>Tokens: {(summary.total_tokens ?? 0).toLocaleString()}</p>
+      <p className={styles.providerNotes}>Estimated cost: ${Number(summary.estimated_cost ?? 0).toFixed(4)}</p>
+      <p className={styles.providerNotes}>Fallback policy: {governance.fallback_policy || 'Claude CLI primary; fallbacks locked'}</p>
+      <p className={styles.providerNotes}>Rate limits: {rateLimits.enforcement_state || 'read-only visibility only'}</p>
+      <p className={styles.providerNotes}>Approval required for: {joinPreview(governance.approval_required_for)}</p>
+      {payload.error && <p className={styles.providerAction}>Cost visibility status: {payload.error}</p>}
+      {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
+    </div>
+  )
+}
+
 function ExecutiveReportPreviewCard({ payload }: { payload: ExecutiveReportPreviewPayload | null }) {
   if (!payload) {
     return (
@@ -970,6 +1051,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [buttonContracts, setButtonContracts] = useState<ButtonContractsPayload | null>(null)
   const [buttonContractsState, setButtonContractsState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [buttonContractsError, setButtonContractsError] = useState<string>('')
+  const [costs, setCosts] = useState<BridgeCostsPayload | null>(null)
+  const [costsState, setCostsState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [costsError, setCostsError] = useState<string>('')
 
   useEffect(() => {
     let cancelled = false
@@ -1090,6 +1174,31 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setButtonContractsError((err as Error).message || 'fetch failed')
         setButtonContractsState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/costs?days=30', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as BridgeCostsPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setCosts(data)
+        setCostsState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setCostsError((err as Error).message || 'fetch failed')
+        setCostsState('error')
       })
     return () => {
       cancelled = true
@@ -1397,6 +1506,54 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
             <div className={styles.providerGrid}>
               {(capabilities?.agents || []).map((agent) => (
                 <CapabilityAgentCard key={agent.id} agent={agent} />
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Bridge Mode cost/rate governance — read-only visibility */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Cost / Rate Governance</h2>
+          <span className={styles.tierSub}>
+            Read-only token and rate-limit visibility from <code>/api/bridge/costs</code>
+          </span>
+        </header>
+        {costsState === 'loading' && (
+          <div className={styles.banner}>Loading cost/rate visibility from <code>/api/bridge/costs</code>…</div>
+        )}
+        {costsState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load cost/rate visibility:</strong> {costsError}
+          </div>
+        )}
+        {costsState === 'ok' && (
+          <>
+            <div className={styles.providerSummary}>
+              <span>mode: {costs?.mode || 'bridge_cost_rate_read_only'}</span>
+              <span>execution: {costs?.no_execution_enabled ? 'disabled' : 'unknown'}</span>
+              <span>budget enforcement: {costs?.no_budget_enforcement_enabled ? 'not enabled' : 'unknown'}</span>
+              <span>provider routing changes: {costs?.no_provider_routing_changes_enabled ? 'locked' : 'unknown'}</span>
+            </div>
+            <div className={styles.preflightNotice}>
+              Cost/rate governance is visibility only. Bridge Mode can show usage and policy, but it does not change model routes, enforce budgets, or allow expensive jobs until approval/audit persistence is approved.
+            </div>
+            <div className={styles.providerGrid}>
+              <CostGovernanceCard payload={costs} />
+              {(costs?.agents || []).slice(0, 3).map((agent) => (
+                <div className={styles.providerCard} key={agent.agent || 'unknown'}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>{agent.agent || 'unknown agent'}</strong>
+                    <span className={styles.providerState}>read only</span>
+                  </div>
+                  <div className={styles.providerMeta}>
+                    <span>{(agent.total_tokens ?? 0).toLocaleString()} tokens</span>
+                    <span>{agent.request_count ?? 0} requests</span>
+                    <span>${Number(agent.estimated_cost ?? 0).toFixed(4)}</span>
+                  </div>
+                  {agent.last_active && <p className={styles.providerNotes}>Last active: {new Date(agent.last_active).toLocaleString()}</p>}
+                </div>
               ))}
             </div>
           </>

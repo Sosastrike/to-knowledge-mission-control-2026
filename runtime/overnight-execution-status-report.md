@@ -1,29 +1,40 @@
 # Overnight Mission Control Execution Status
 
-Generated: 2026-04-30T00:42:00-04:00
+Generated: 2026-04-30T01:10:00-04:00
 Branch: to-knowledge-mc
-HEAD: ef7b21e
+HEAD before this report refresh: 15f3f0f
 
 ## Current Production Health
 - mission-control.service: active
+- Mission Control listener: 127.0.0.1:3337
 - TKMC login: HTTP 200
-- OpenClaw Gateway: HTTP 200
-- ClaudeClaw admin: HTTP 401 (auth-gated expected)
+- `/agents`: auth-gated redirect to `/login` when unauthenticated
+- Designer shell pages: auth-gated redirects to `/login?page=...` when unauthenticated
+- Bridge provider registry: 9 providers verified
+- Bridge preflight: read-only live
+- Connector readiness: read-only live
+- Approval queue/persistence: not connected
 - Connector execution: disabled
 - Zapier writes: locked
-- Skill writes: locked behind owner approval / HTTP 423
+- Viral Crawl execution: locked
 - Production DB migration: not applied
 - `.env` changes: none
 - Tony voice/routing/memory/governance changes: none
 
 ## Commits Pushed In This Block
 ```text
+15f3f0f fix(bridge): classify missing connector config accurately
+476ece2 feat(bridge): surface button contract states
+a77693f test(bridge): verify provider registry contract
+adc9950 test(bridge): verify preflight remains read-only
+634f621 docs(runtime): refresh overnight connector proof
 ef7b21e test(bridge): verify approval readiness remains locked
 a208402 feat(skills): add read-only skill search status endpoint
 5fc7fab fix(bridge): clarify credential-required read-only button contracts
 e49a7f1 test(bridge): verify connector readiness remains read-only
 b4b804b fix(ui): avoid fake meeting dispatch copy
 8b90f2f fix(zapier): return readable credential-required tool status
+5593e2a docs(runtime): refresh overnight protected-action checks
 bf925a3 test(bridge): verify protected actions remain locked
 8ce9963 fix(skills): clarify read-only search state
 7ccf383 fix(connectors): avoid fake approval queue copy
@@ -48,47 +59,34 @@ c779648 chore(config): document azure auth and sync lockfile
 1534afa feat(agents): expose read-only advanced config with locked writes
 ```
 
-## Completed Since Block Start
-- Documented Microsoft 365 / Entra env variable names in `.env.example` without values.
-- Synced `pnpm-lock.yaml` to the already-active Next 16.2.3 dependency state.
-- Added `/schedule` and `/live-meeting` routes with write buttons disabled/locked instead of silently doing nothing.
-- Expanded `/api/bridge/button-contracts` to cover schedule and live-meeting actions.
-- Refreshed cleanup inventory from current live git state only.
-- Added dormant approval request/approve/deny persistence code that activates only after owner-approved migration exists.
-- Changed Zapier revoke approval from fake success to backend-required no-op until persistence exists.
-- Corrected active Zapier UI copy so it no longer claims approval requests/revocations happened when persistence is not connected.
-- Added read-only ClaudeClaw `agent_skills` inventory at `GET /api/skills/tool-skills`.
-- Mapped the tool skill inventory into button contracts, connector readiness, and Bridge Mode capability matrix.
-- Locked direct `POST`/`PUT`/`DELETE /api/skills` filesystem writes behind HTTP 423 owner approval.
-- Made skill security check read-only instead of writing `security_status` as a side effect.
-- Updated skills UI error handling so protected writes show owner-approval/backend-required messages instead of generic failures.
-- Corrected static designer Skills page copy so it no longer claims approval requests were logged/submitted when the queue is not connected.
-- Corrected static MCP and n8n pages so they no longer say approval requests were queued unless the backend reports `approval_request_created: true`.
-- Clarified static Skills page read-only search state so it says the search/index path is live while install/enable actions remain locked.
-- Added `scripts/check-protected-actions-locked.mjs` to prove protected write probes remain HTTP 423 with no execution, writes, or fake approval persistence.
-- Changed `GET /api/zapier/tools` so missing Zapier credentials return a readable `CREDENTIAL_REQUIRED` contract with HTTP 200 instead of making the UI look like a broken backend.
-- Clarified meeting-room copy so local agent seats say provider dispatch is not wired, not queued.
-- Added `scripts/check-connector-readiness-live.mjs` to verify all connector read-only endpoints stay live and do not enable execution, writes, or fake approvals.
-- Clarified button-contract semantics for read-only `CREDENTIAL_REQUIRED` endpoints.
-- Added `GET /api/skills/finder/search?q=...` as a read-only skill-search status endpoint, while POST search remains available.
-- Added `scripts/check-approval-readiness-live.mjs` to verify approval readiness/queue surfaces remain locked and do not create fake approval rows.
+## Completed Since Last Status Refresh
+- Added Bridge Mode provider-registry live smoke coverage.
+- Added Bridge Mode preflight live smoke coverage.
+- Surfaced latest Bridge Mode preflight and button state summaries inside the Agent Network page.
+- Clarified missing connector configuration in button contracts so n8n missing config is credential-required instead of pretending to be a live action.
+- Kept FireCrawl draft/run paths marked backend-required while Mission Control lacks its FireCrawl credential/package.
+- Added a route rendering smoke script for the official Mission Control login, auth-gated shell routes, and read-only Bridge APIs.
+- Confirmed unauthenticated owner-facing designer routes redirect to login instead of exposing the shell.
 
 ## Checks Run
-- `pnpm run typecheck` after code groups.
-- `pnpm run build` after runtime groups.
+- `pnpm run typecheck`.
+- `pnpm run build`.
 - `node scripts/check-button-contract-routes.mjs`.
 - `node scripts/check-bridge-readonly-mvp.mjs`.
 - `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337`.
 - `node scripts/check-protected-actions-locked.mjs http://127.0.0.1:3337`.
 - `node scripts/check-connector-readiness-live.mjs http://127.0.0.1:3337`.
 - `node scripts/check-approval-readiness-live.mjs http://127.0.0.1:3337`.
+- `node scripts/check-bridge-preflight-live.mjs http://127.0.0.1:3337`.
+- `node scripts/check-provider-registry-live.mjs http://127.0.0.1:3337`.
+- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`.
 - `bash scripts/test-bridge-approval-migration.sh` against copied DB only.
-- Public smoke checks for `https://tkmc.knowledge-vs-ai.com/login`.
-- Authenticated local smoke checks for `GET /api/skills/tool-skills`, `POST /api/skills` returning 423, and Bridge Mode capability matrix skill inventory path.
+- Public smoke check for `https://tkmc.knowledge-vs-ai.com/login`.
 - Secret-pattern diff scans before commits.
 - `.env` diff checks before commits.
 
 ## Current Dirty Tree
+Known unrelated/untracked items remain uncommitted and were not staged:
 ```text
 ?? .commit-tkmc.sh
 ?? .designer-retirement-backups/
@@ -115,3 +113,12 @@ c779648 chore(config): document azure auth and sync lockfile
 2. Keep tightening button contracts so no visible action silently does nothing or fakes success.
 3. Keep cleanup inventory current; do not delete or quarantine without owner approval.
 4. Prepare final overnight report with phase percentages and owner blockers.
+
+## Invariants
+- No `.env` change.
+- No secrets exposed.
+- No connector execution enabled.
+- No Zapier writes executed.
+- No production DB migration applied.
+- No destructive cleanup performed.
+- Tony voice, route, memory, and governance unchanged.

@@ -155,7 +155,15 @@ if (failures.length === 0) {
     if (!source.includes('persistence:')) failures.push(`${name} stub missing persistence marker`)
   }
 
-  if (!approvalRequests.includes('approval_persistence_not_applied')) failures.push('approval requests stub missing persistence blocker')
+  for (const needle of [
+    'approval_persistence_not_applied',
+    'readApprovalQueue',
+    'approval_queue_connected',
+    'approval_request_created: false',
+    'accepted_for_execution: false',
+  ]) {
+    if (!approvalRequests.includes(needle)) failures.push(`approval requests stub missing ${needle}`)
+  }
   if (!brainSyncRebuild.includes('no_memory_writes_enabled: true')) failures.push('Brain Sync rebuild stub missing no_memory_writes_enabled')
   if (!agentZeroRequest.includes('no_agent_execution_enabled: true')) failures.push('Agent Zero request stub missing no_agent_execution_enabled')
 }

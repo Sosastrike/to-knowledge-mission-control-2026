@@ -25,10 +25,16 @@ type ButtonContract = {
   note: string
 }
 
-function blockedHttpStatus(state: ButtonState): number | null {
-  if (state === 'OWNER_APPROVAL_REQUIRED') return 423
-  if (state === 'CREDENTIAL_REQUIRED' || state === 'BACKEND_REQUIRED') return 503
-  if (state === 'DISABLED') return 410
+function blockedHttpStatus(button: ButtonContract): number | null {
+  if (button.state === 'OWNER_APPROVAL_REQUIRED') return 423
+  if (button.state === 'CREDENTIAL_REQUIRED') {
+    // Read-only status/list endpoints may return HTTP 200 with a
+    // CREDENTIAL_REQUIRED state so the UI can show the blocker clearly.
+    // Mutating actions still block at HTTP 503 until credentials exist.
+    return button.method === 'GET' ? null : 503
+  }
+  if (button.state === 'BACKEND_REQUIRED') return 503
+  if (button.state === 'DISABLED') return 410
   return null
 }
 
@@ -39,8 +45,10 @@ function canExecuteNow(button: ButtonContract): boolean {
 }
 
 function buttonWithRuntimeContract(button: ButtonContract) {
-  const blocked_status = blockedHttpStatus(button.state)
+  const blocked_status = blockedHttpStatus(button)
   const execution_enabled = canExecuteNow(button)
+  const credential_readonly_status =
+    button.method === 'GET' && button.state === 'CREDENTIAL_REQUIRED'
   return {
     ...button,
     current_backend_state: button.state,
@@ -55,7 +63,9 @@ function buttonWithRuntimeContract(button: ButtonContract) {
       button.state === 'DISABLED',
     safe_ui_behavior: blocked_status
       ? `Show ${button.state}; do not fake success. If submitted, backend should return HTTP ${blocked_status}.`
-      : execution_enabled
+      : credential_readonly_status
+        ? 'Show CREDENTIAL_REQUIRED from the read-only endpoint; do not execute or request secrets outside the approved credential path.'
+        : execution_enabled
         ? 'Allowed within current state.'
         : 'Render as informational/read-only until a concrete backend state exists.',
   }
@@ -149,7 +159,7 @@ export async function GET(request: NextRequest) {
       by_state: byState,
       protected_actions: BUTTONS.filter((button) => button.approval_required).length,
       audit_required: BUTTONS.filter((button) => button.audit_required).length,
-      blocked_buttons: BUTTONS.filter((button) => blockedHttpStatus(button.state)).length,
+      blocked_buttons: BUTTONS.filter((button) => blockedHttpStatus(button)).length,
       executable_now: BUTTONS.filter(canExecuteNow).length,
     },
   })

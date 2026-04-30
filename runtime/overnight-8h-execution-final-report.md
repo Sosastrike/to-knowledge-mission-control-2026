@@ -13,8 +13,8 @@ True 90% operational is blocked until the owner approves the production approval
 ## Current Live State
 
 - Branch: to-knowledge-mc
-- HEAD: 9bc96d7
-- Remote sosastrike/to-knowledge-mc: 9bc96d7
+- Verified app code base before this report-only commit: 9bc96d7
+- Report is committed after the live check; use `git rev-parse --short HEAD` for the latest docs/report commit.
 - mission-control.service: active
 - Listener: 127.0.0.1:3337
 - TKMC public login: HTTP 200

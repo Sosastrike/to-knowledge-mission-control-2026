@@ -20,6 +20,18 @@ interface SkillSummary {
 
 type SkillRoot = { source: string; path: string }
 
+const NAMED_SKILLS = [
+  'UI/UX Pro Max',
+  'Claude-Mem',
+  'LightRAG',
+  'n8n',
+  'MiroFish',
+  'Everything Claude Code',
+  'To Knowledge Skills',
+  'Zapier',
+  'FireCrawl',
+]
+
 function resolveSkillRoot(
   envName: string,
   fallback: string,
@@ -118,6 +130,53 @@ function normalizeSkillName(raw: string): string | null {
   if (!value) return null
   if (!/^[a-zA-Z0-9._-]+$/.test(value)) return null
   return value
+}
+
+function normalizeComparableName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
+  const filesystem = skills.map((skill) => ({
+    id: skill.id,
+    name: skill.name,
+    install_path: skill.path,
+    path: skill.path,
+    readme: true,
+    source: skill.source,
+    state: 'installed',
+  }))
+  const agent = skills
+    .filter((skill) => /agent|openclaw|workspace/i.test(skill.source))
+    .map((skill) => ({
+      id: skill.id,
+      name: skill.name,
+      source: skill.source,
+      state: 'installed',
+      install_path: skill.path,
+    }))
+  const installedNames = new Set(skills.map((skill) => normalizeComparableName(skill.name)))
+  const named = NAMED_SKILLS.map((label) => {
+    const key = normalizeComparableName(label)
+    const installed = Array.from(installedNames).some((name) =>
+      name.includes(key.slice(0, Math.min(8, key.length))),
+    )
+    return {
+      label,
+      installed,
+      state: installed ? 'installed' : 'not_installed',
+      next_action: installed ? null : `request_install:${label}`,
+    }
+  })
+
+  return {
+    ok: true,
+    filesystem,
+    agent,
+    npx: [],
+    named,
+    roots_scanned: roots.map((root) => root.path),
+  }
 }
 
 function getRootBySource(roots: SkillRoot[], sourceRaw: string | null): SkillRoot | null {
@@ -292,6 +351,7 @@ export async function GET(request: NextRequest) {
       skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
       groups: Array.from(groupMap.values()),
       total: deduped.size,
+      ...buildRegistryExtensions(Array.from(deduped.values()), roots),
     })
   }
 
@@ -314,6 +374,7 @@ export async function GET(request: NextRequest) {
     skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
     groups: bySource,
     total: deduped.size,
+    ...buildRegistryExtensions(Array.from(deduped.values()), roots),
   })
 }
 

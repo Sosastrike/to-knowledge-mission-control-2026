@@ -3,7 +3,6 @@ import { requireRole } from '@/lib/auth'
 import { heavyLimiter } from '@/lib/rate-limit'
 import {
   searchRegistry,
-  installFromRegistry,
   checkSkillSecurity,
   type RegistrySource,
 } from '@/lib/skill-registry'
@@ -39,7 +38,9 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/skills/registry — Install skill from external registry.
- * Admin-only. Downloads, validates, security-scans, and writes to disk.
+ * Deprecated direct mutation path. External skill installation must go
+ * through the canonical Bridge approval flow:
+ * POST /api/skills/finder/request-install
  */
 export async function POST(request: NextRequest) {
   const auth = requireRole(request, 'admin')
@@ -65,13 +66,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Invalid targetRoot. Use: ${VALID_TARGETS.join(', ')}` }, { status: 400 })
   }
 
-  const result = await installFromRegistry({ source, slug, targetRoot })
-
-  if (!result.ok) {
-    return NextResponse.json(result, { status: 422 })
-  }
-
-  return NextResponse.json(result)
+  return NextResponse.json(
+    {
+      ok: false,
+      owner_approval_required: true,
+      approval_state: 'required',
+      canonical_endpoint: '/api/skills/finder/request-install',
+      deprecated_endpoint: '/api/skills/registry',
+      source,
+      slug,
+      targetRoot,
+      next_action: 'Create an approval request through /api/skills/finder/request-install. Direct registry install is intentionally disabled.',
+    },
+    { status: 423 },
+  )
 }
 
 /**

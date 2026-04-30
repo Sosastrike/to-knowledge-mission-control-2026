@@ -70,7 +70,6 @@ export function LineCookSchedule() {
   const [loading, setLoading] = useState(true)
   const [agents, setAgents] = useState<string[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
-  const [assigning, setAssigning] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -122,26 +121,13 @@ export function LineCookSchedule() {
   }
   for (const t of tasks) byStatus[normalizeStatus(t.status)].push(t)
 
-  async function assignTo(task: Task, agent: string) {
-    setAssigning(true)
-    try {
-      await fetch(`/api/tasks/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assigned_to: agent, status: 'assigned' }),
-      })
-      await load()
-      setSelectedTask(null)
-    } finally { setAssigning(false) }
-  }
-
   return (
     <div className="p-5 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Schedule</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Today's priority first — horizontal task flow for fast scanning.
+            Today's priority first. Assignment writes are locked until approval persistence is connected.
           </p>
         </div>
         <button onClick={load} className="px-3 py-1.5 text-xs font-medium rounded-md border border-border">
@@ -241,13 +227,16 @@ export function LineCookSchedule() {
               {normalizeStatus(selectedTask.status) === 'pending' && (
                 <div className="pt-4 border-t border-border">
                   <h4 className="text-xs font-semibold text-foreground mb-2">Assign to agent</h4>
+                  <p className="text-2xs text-muted-foreground mb-2">
+                    OWNER_APPROVAL_REQUIRED. Task assignment will stay read-only until the approval queue and audit trail are live.
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {agents.map(a => (
                       <button
                         key={a}
-                        onClick={() => assignTo(selectedTask, a)}
-                        disabled={assigning}
-                        className="text-2xs px-2 py-1 rounded border border-border hover:border-primary/40 disabled:opacity-50"
+                        disabled
+                        title="Owner approval and audit persistence are required before task assignment writes can run."
+                        className="text-2xs px-2 py-1 rounded border border-border opacity-50 cursor-not-allowed"
                       >
                         {a}
                       </button>

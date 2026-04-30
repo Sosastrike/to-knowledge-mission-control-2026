@@ -135,6 +135,18 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
     })
   }
 
+  if (path === 'drafts') {
+    const body = await request.json().catch(() => ({}))
+    return backendRequired({
+      received: {
+        title: body?.title ?? null,
+        type: body?.type ?? null,
+        target_url_present: typeof body?.url === 'string' && body.url.length > 0,
+      },
+      next_action: 'Wire FireCrawl draft persistence before saving owner-visible crawl drafts.',
+    })
+  }
+
   if (parts[0] === 'jobs' && parts[1]) {
     const jobId = parts[1]
     const action = parts[2] || ''

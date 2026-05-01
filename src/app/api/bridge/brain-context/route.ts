@@ -12,6 +12,9 @@ type BrainContextPayload = {
   query?: string
   agent_id?: string
   source_status?: unknown[]
+  source_contracts?: unknown[]
+  agent_consumers?: unknown[]
+  write_contract?: unknown
   hits?: unknown[]
   context_text?: string
   error?: string
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
     canonical_source: 'ClaudeClaw /api/brain/context',
     execution_enabled: false,
     memory_writes_enabled: false,
-    note: 'Read-only shared brain context proxy. It reads Build-Wiki, Obsidian, file handoffs, approval history, and task history through ClaudeClaw.',
+    note: 'Read-only shared brain context proxy. It reads Build-Wiki, Obsidian, file handoffs, approval history, task history, and MemPalace status through ClaudeClaw. Source contracts and agent consumer contracts are mirrored from the canonical endpoint.',
   }, {
     status: upstream.ok ? 200 : upstream.status,
     headers: { 'Cache-Control': 'no-store' },

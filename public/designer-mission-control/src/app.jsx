@@ -98,6 +98,7 @@ function App() {
     else if (p === 'n8n') { setPage('n8n'); }
     else if (p === 'mcp-tools') { setPage('mcp-tools'); }
     else if (p === 'skills') { setPage('skills'); }
+    else if (p === 'reports') { setPage('reports'); }
     else if (p === 'meeting' || p === 'meetings') {
       const live = (window.MEETINGS || []).find(m => m.live) || (window.MEETINGS || [])[0];
       if (live) { setMeeting(live); setMeetingOpen(true); }
@@ -189,6 +190,7 @@ function App() {
           {page === 'n8n' && <N8NPage/>}
           {page === 'mcp-tools' && <MCPToolsPage/>}
           {page === 'skills' && <SkillsRegistryPage/>}
+          {page === 'reports' && <ExecutiveReportsPage/>}
           {page === 'email-smtp' && <EmailProfilesPage/>}
         </main>
       </div>

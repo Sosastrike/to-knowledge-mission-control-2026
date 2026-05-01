@@ -1428,6 +1428,55 @@ const migrations: Migration[] = [
       db.exec(`ALTER TABLE mcp_call_log ADD COLUMN signature TEXT DEFAULT NULL`)
       db.exec(`ALTER TABLE mcp_call_log ADD COLUMN public_key TEXT DEFAULT NULL`)
     }
+  },
+  {
+    id: '051_scheduled_reports',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS scheduled_reports (
+          id TEXT PRIMARY KEY,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          tenant_id INTEGER NOT NULL DEFAULT 1,
+          name TEXT NOT NULL,
+          report_type TEXT NOT NULL,
+          assigned_agent TEXT NOT NULL DEFAULT 'Tony',
+          schedule_text TEXT NOT NULL,
+          cron_expr TEXT NOT NULL,
+          timezone TEXT NOT NULL DEFAULT 'America/New_York',
+          criteria_json TEXT NOT NULL DEFAULT '{}',
+          enabled INTEGER NOT NULL DEFAULT 1,
+          status TEXT NOT NULL DEFAULT 'enabled',
+          completion_percentage INTEGER NOT NULL DEFAULT 0,
+          blockers_json TEXT NOT NULL DEFAULT '[]',
+          last_run_at INTEGER,
+          next_run_at INTEGER,
+          created_by TEXT NOT NULL DEFAULT 'system',
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          deleted_at INTEGER
+        );
+
+        CREATE TABLE IF NOT EXISTS scheduled_report_runs (
+          id TEXT PRIMARY KEY,
+          report_id TEXT NOT NULL,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          status TEXT NOT NULL DEFAULT 'queued',
+          started_at INTEGER,
+          completed_at INTEGER,
+          completion_percentage INTEGER NOT NULL DEFAULT 0,
+          summary TEXT,
+          artifact_url TEXT,
+          blockers_json TEXT NOT NULL DEFAULT '[]',
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          FOREIGN KEY (report_id) REFERENCES scheduled_reports(id) ON DELETE CASCADE
+        );
+      `)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_reports_workspace ON scheduled_reports(workspace_id, deleted_at, enabled)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_reports_next_run ON scheduled_reports(next_run_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_reports_agent ON scheduled_reports(assigned_agent)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_report_runs_report ON scheduled_report_runs(report_id, created_at DESC)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_report_runs_workspace ON scheduled_report_runs(workspace_id, created_at DESC)`)
+    }
   }
 ]
 

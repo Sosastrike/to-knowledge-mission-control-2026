@@ -14,6 +14,7 @@ const WORKSPACE_PAGES = [
   { id:'n8n',        label:'n8n',             icon:'Activity' },
   { id:'mcp-tools',  label:'MCP Tools',       icon:'Plug' },
   { id:'skills',     label:'Skills',          icon:'Sparkle' },
+  { id:'reports',    label:'Reports',         icon:'FileLog' },
   { id:'email-smtp', label:'Email & SMTP',    icon:'Mail' },
 ];
 

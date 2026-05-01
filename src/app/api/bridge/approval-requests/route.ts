@@ -5,6 +5,7 @@ import { authJson, ownerApprovalRequired } from '@/lib/designer-module-api'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
+import { splitApprovalQueue, summarizeApprovalQueue, normalizeApprovalQueueState } from '@/lib/approval-queue-state'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -160,6 +161,9 @@ function readApprovalQueue() {
       return {
         persistence_ready: false,
         approvals: [] as ApprovalRow[],
+        active_approvals: [] as ApprovalRow[],
+        history_approvals: [] as ApprovalRow[],
+        active_queue_visible: false,
         summary: { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 },
         error: null,
       }
@@ -174,19 +178,16 @@ function readApprovalQueue() {
       LIMIT 100
     `).all() as ApprovalRow[]
 
-    const summary = approvals.reduce((acc, row) => {
-      acc.total += 1
-      if (row.approval_state === 'pending') acc.pending += 1
-      else if (row.approval_state === 'approved') acc.approved += 1
-      else if (row.approval_state === 'denied') acc.denied += 1
-      else if (row.approval_state === 'expired') acc.expired += 1
-      else if (row.approval_state === 'revoked') acc.revoked += 1
-      return acc
-    }, { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 })
+    const generatedAt = new Date()
+    const summary = summarizeApprovalQueue(approvals, generatedAt)
+    const { activeApprovals, historyApprovals } = splitApprovalQueue(approvals, generatedAt)
 
     return {
       persistence_ready: true,
       approvals,
+      active_approvals: activeApprovals,
+      history_approvals: historyApprovals,
+      active_queue_visible: activeApprovals.length > 0,
       summary,
       error: null,
     }
@@ -194,6 +195,9 @@ function readApprovalQueue() {
     return {
       persistence_ready: false,
       approvals: [] as ApprovalRow[],
+      active_approvals: [] as ApprovalRow[],
+      history_approvals: [] as ApprovalRow[],
+      active_queue_visible: false,
       summary: { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 },
       error: error instanceof Error ? error.message.slice(0, 200) : 'approval queue read failed',
     }
@@ -220,35 +224,57 @@ async function readTelegramApprovalQueue() {
     const payload = upstream.payload as TelegramApprovalQueuePayload
     if (!payload.ok) return null
     const approvals = payload.approvals || []
-    const summary = approvals.reduce((acc, row) => {
-      const uiState =
-        row.ui_state ||
-        row.unified_state ||
-        (row.status === 'approved' && row.run_status ? row.run_status : row.status)
-      acc.total += 1
-      if (row.status === 'pending') acc.pending += 1
-      else if (row.status === 'approved') acc.approved += 1
-      else if (row.status === 'denied') acc.denied += 1
-      else if (row.status === 'expired') acc.expired += 1
-      if (uiState === 'running') acc.running += 1
-      else if (uiState === 'completed') acc.completed += 1
-      else if (uiState === 'failed') acc.failed += 1
-      return acc
-    }, { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0, running: 0, completed: 0, failed: 0 })
+    const generatedAt = new Date()
+    const summary = summarizeApprovalQueue(approvals, generatedAt)
+    const { activeApprovals } = splitApprovalQueue(approvals, generatedAt)
+    const activeIds = new Set(activeApprovals.map((row) => row.id))
 
     return {
       ok: true,
       mode: 'telegram_approval_queue_proxy_read_only',
-      generated_at: new Date().toISOString(),
+      generated_at: generatedAt.toISOString(),
       persistence: 'claudeclaw_telegram_approvals_connected',
       approval_queue_connected: true,
+      active_queue_visible: activeApprovals.length > 0,
       canonical_channel: payload.canonical_channel || 'Tony -> Telegram',
       execution_enabled: false,
       exact_scope_execution_enabled: true,
       broad_connector_execution_enabled: false,
-      approvals: approvals.map((row) => ({
-        ui_state: row.ui_state || row.unified_state || (row.status === 'approved' && row.run_status ? row.run_status : row.status),
-        unified_state: row.unified_state || row.ui_state || (row.status === 'approved' && row.run_status ? row.run_status : row.status),
+      active_approvals: approvals.filter((row) => activeIds.has(row.id)).map((row) => mapTelegramApprovalRow(row, generatedAt)),
+      history_approvals: approvals.filter((row) => !activeIds.has(row.id)).map((row) => mapTelegramApprovalRow(row, generatedAt)),
+      approvals: approvals.map((row) => mapTelegramApprovalRow(row, generatedAt)),
+      summary,
+      ui_placeholder: {
+        title: activeApprovals.length > 0 ? 'Approval Queue — Tony → Telegram' : 'Approval system status',
+        state: activeApprovals.length > 0 ? 'PENDING' : 'NO_PENDING_APPROVALS',
+        message: activeApprovals.length > 0
+          ? 'Pending owner decisions are waiting in Telegram. Use the Approve/Deny buttons there.'
+          : 'No approvals pending. Completed, denied, expired, and failed requests are shown in approval history only.',
+        next_backend_step: activeApprovals.length > 0
+          ? 'Wait for owner decision in Telegram, then mirror the canonical status here.'
+          : 'No owner action required unless Tony sends a new Telegram approval request.',
+        no_fake_approval_requests: true,
+        approval_request_created: false,
+        protected_actions_locked: true,
+        protected_action_http_status: 423,
+      },
+      next_action: activeApprovals.length > 0
+        ? 'Use Telegram Approve/Deny buttons for pending decisions. Mission Control remains read-only.'
+        : 'No approvals pending.',
+    }
+  } catch {
+    return null
+  }
+}
+
+function mapTelegramApprovalRow(
+  row: NonNullable<TelegramApprovalQueuePayload['approvals']>[number],
+  generatedAt: Date,
+) {
+  const normalizedState = normalizeApprovalQueueState(row, generatedAt)
+  return {
+        ui_state: normalizedState,
+        unified_state: normalizedState,
         id: row.id,
         title: row.title,
         requesting_agent: row.requesting_agent,
@@ -293,22 +319,6 @@ async function readTelegramApprovalQueue() {
           updated_at: new Date(task.updated_at * 1000).toISOString(),
           completed_at: task.completed_at ? new Date(task.completed_at * 1000).toISOString() : null,
         })),
-      })),
-      summary,
-      ui_placeholder: {
-        title: 'Approval Queue — Tony → Telegram',
-        state: 'READ_ONLY',
-        message: 'Telegram approval requests are live and canonical. Mission Control, OpenCloud, and Gateway/Dashboard surfaces must read this same request id and state.',
-        next_backend_step: 'Keep owner decisions in Telegram only; web/API surfaces are read-only mirrors unless explicitly approved later.',
-        no_fake_approval_requests: true,
-        approval_request_created: false,
-        protected_actions_locked: true,
-        protected_action_http_status: 423,
-      },
-      next_action: 'Use Telegram Approve/Deny buttons for decisions. Mission Control, OpenCloud, and Gateway/Dashboard show the same canonical queue and history only.',
-    }
-  } catch {
-    return null
   }
 }
 
@@ -330,14 +340,19 @@ export async function GET(request: NextRequest) {
     ...APPROVAL_STUB,
     persistence: queue.persistence_ready ? 'read_only_connected' : 'not_applied',
     approval_queue_connected: queue.persistence_ready,
+    active_queue_visible: Boolean(queue.active_queue_visible),
+    active_approvals: queue.active_approvals || [],
+    history_approvals: queue.history_approvals || [],
     approvals: queue.approvals,
     summary: queue.summary,
     error: queue.error,
     ui_placeholder: {
-      title: 'Approval Queue',
-      state: queue.persistence_ready ? 'READ_ONLY' : 'BACKEND_REQUIRED',
-      message: queue.persistence_ready
-        ? 'Approval persistence tables are present. Queue is visible read-only; protected execution remains locked.'
+      title: queue.active_queue_visible ? 'Approval Queue' : 'Approval system status',
+      state: queue.active_queue_visible ? 'PENDING' : (queue.persistence_ready ? 'NO_PENDING_APPROVALS' : 'BACKEND_REQUIRED'),
+      message: queue.active_queue_visible
+        ? 'Pending owner decisions are waiting in the canonical approval queue.'
+        : queue.persistence_ready
+        ? 'No approvals pending. Completed, denied, expired, and failed requests are shown in approval history only.'
         : 'Approval persistence is being prepared. Protected actions cannot execute yet.',
       next_backend_step: 'Owner-approved approval/audit persistence migration + queue API write path.',
       no_fake_approval_requests: true,

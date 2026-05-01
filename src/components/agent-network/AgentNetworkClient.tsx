@@ -313,6 +313,7 @@ interface ApprovalQueuePayload {
   mode?: string
   persistence?: string
   approval_queue_connected?: boolean
+  active_queue_visible?: boolean
   approvals?: Array<{
     id?: string
     title?: string
@@ -358,9 +359,12 @@ interface ApprovalQueuePayload {
       completed_at?: string | null
     }>
   }>
+  active_approvals?: ApprovalQueuePayload['approvals']
+  history_approvals?: ApprovalQueuePayload['approvals']
   summary?: {
     total?: number
     pending?: number
+    active_pending?: number
     approved?: number
     denied?: number
     expired?: number
@@ -368,6 +372,7 @@ interface ApprovalQueuePayload {
     running?: number
     completed?: number
     failed?: number
+    history?: number
   }
   ui_placeholder?: {
     title?: string
@@ -1086,44 +1091,58 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
   const placeholder = payload.ui_placeholder || {}
   const summary = payload.summary || {}
   const approvals = payload.approvals || []
-  const latest = approvals[0]
+  const activeApprovals = payload.active_approvals || approvals.filter((approval) => {
+    const state = (approval.ui_state || approval.unified_state || approval.status || approval.approval_state || '').toLowerCase()
+    return state === 'pending'
+  })
+  const historyApprovals = payload.history_approvals || approvals.filter((approval) => !activeApprovals.some((active) => active.id === approval.id))
+  const activeQueueVisible = payload.active_queue_visible ?? activeApprovals.length > 0
+  const latestActive = activeApprovals[0]
+  const latestHistory = historyApprovals[0]
   const linkedTaskCount = approvals.reduce((total, approval) => total + (approval.linked_tasks?.length || 0), 0)
   const auditEventCount = approvals.reduce((total, approval) => total + (approval.audit_events?.length || 0), 0)
+  const displayTitle = activeQueueVisible ? (placeholder.title || 'Approval Queue — Tony → Telegram') : 'Approval system status'
+  const displayState = activeQueueVisible ? (placeholder.state || 'PENDING') : 'NO_PENDING_APPROVALS'
 
   return (
     <div className={styles.providerCard}>
       <div className={styles.providerHead}>
         <div className={styles.providerTitleWrap}>
-          <StatusDot status={payload.approval_queue_connected ? 'active' : 'degraded'} />
-          <strong className={styles.providerName}>{placeholder.title || 'Approval Queue'}</strong>
+          <StatusDot status={activeQueueVisible ? 'degraded' : 'active'} />
+          <strong className={styles.providerName}>{displayTitle}</strong>
         </div>
-        <span className={styles.providerState}>{placeholder.state || (payload.approval_queue_connected ? 'READ_ONLY' : 'BACKEND_REQUIRED')}</span>
+        <span className={styles.providerState}>{displayState}</span>
       </div>
       <div className={styles.providerMeta}>
         <span>persistence: {payload.persistence || 'not applied'}</span>
-        <span>pending: {summary.pending ?? 0}</span>
+        <span>pending: {summary.active_pending ?? summary.pending ?? activeApprovals.length}</span>
         <span>running: {summary.running ?? 0}</span>
         <span>completed: {summary.completed ?? 0}</span>
         <span>failed: {summary.failed ?? 0}</span>
+        <span>history: {summary.history ?? historyApprovals.length}</span>
         <span>total: {summary.total ?? approvals.length}</span>
         <span>linked tasks: {linkedTaskCount}</span>
         <span>audit events: {auditEventCount}</span>
         <span>HTTP blocked: {placeholder.protected_action_http_status || 423}</span>
         {refreshedAt && <span>refreshed: {refreshedAt}</span>}
       </div>
-      {placeholder.message && <p className={styles.providerNotes}>{placeholder.message}</p>}
+      {activeQueueVisible ? (
+        <p className={styles.providerNotes}>{placeholder.message || 'Pending owner decisions are waiting in Telegram. Use the Approve/Deny buttons there.'}</p>
+      ) : (
+        <p className={styles.providerNotes}>No approvals pending. Completed, denied, expired, and failed requests are available in approval history below.</p>
+      )}
       <p className={styles.providerNotes}>
         Protected actions locked: {placeholder.protected_actions_locked ? 'yes' : 'unknown'} · fake approvals: {placeholder.no_fake_approval_requests ? 'blocked' : 'unknown'} · approval created: {placeholder.approval_request_created ? 'yes' : 'no'}
       </p>
-      {latest && (
+      {latestActive && (
         <p className={styles.providerNotes}>
-          Latest: {latest.id} · {latest.ui_state || latest.unified_state || latest.status || latest.approval_state || 'unknown'} · owner decision through Telegram only
-          {latest.expires_at ? ` · expires ${latest.expires_at}` : ''}
+          Active request: {latestActive.id} · {latestActive.ui_state || latestActive.unified_state || latestActive.status || latestActive.approval_state || 'unknown'} · owner decision through Telegram only
+          {latestActive.expires_at ? ` · expires ${latestActive.expires_at}` : ''}
         </p>
       )}
-      {approvals.length > 0 ? (
+      {activeApprovals.length > 0 ? (
         <ul className={styles.connectorList}>
-          {approvals.slice(0, 5).map((approval) => (
+          {activeApprovals.slice(0, 5).map((approval) => (
             <li key={approval.id || `${approval.connector}-${approval.action}`}>
               <span>
                 {approval.title || approval.action || 'approval request'}
@@ -1158,7 +1177,32 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
           ))}
         </ul>
       ) : (
-        <p className={styles.providerNotes}>No Telegram approval requests are visible yet. When Tony sends an Approve/Deny request, it will appear here with the linked task id and audit events.</p>
+        <p className={styles.providerNotes}>No approvals pending. When Tony sends a new Approve/Deny request, this card will switch back to an active queue with the linked task id and audit events.</p>
+      )}
+      {historyApprovals.length > 0 && (
+        <>
+          <p className={styles.providerNotes}>
+            Approval history latest: {latestHistory?.id || 'none'} · {latestHistory?.ui_state || latestHistory?.unified_state || latestHistory?.status || latestHistory?.approval_state || 'unknown'}
+          </p>
+          <ul className={styles.connectorList}>
+            {historyApprovals.slice(0, 5).map((approval) => (
+              <li key={approval.id || `${approval.connector}-${approval.action}-history`}>
+                <span>
+                  {approval.title || approval.action || 'approval request'}
+                  <br />
+                  <small>
+                    {approval.requesting_agent || approval.connector || 'unknown'} · {approval.scope || 'scope not listed'}
+                  </small>
+                  <br />
+                  <small>
+                    Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'} · audit events: {approval.audit_events?.length || 0}
+                  </small>
+                </span>
+                <strong>{approval.ui_state || approval.unified_state || approval.status || approval.approval_state || 'unknown'}</strong>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       {placeholder.next_backend_step && <p className={styles.providerAction}>Next backend step: {placeholder.next_backend_step}</p>}
       {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}

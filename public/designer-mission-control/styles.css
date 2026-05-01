@@ -1068,28 +1068,28 @@ button { font-family: inherit; }
   gap: 7px;
   min-width: 0;
 }
-.approval-queue-placeholder {
+.approval-system-status {
   width: min(680px, 100%);
   padding: 8px 10px;
   border: 1px solid rgba(255,204,0,0.24);
   border-radius: 8px;
   background: rgba(255,204,0,0.055);
 }
-.approval-queue-placeholder > div {
+.approval-system-status > div {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.approval-queue-placeholder strong {
+.approval-system-status strong {
   color: var(--fg-0);
   font-size: 12px;
 }
-.approval-queue-placeholder p {
+.approval-system-status p {
   margin: 4px 0 1px;
   color: var(--fg-1);
 }
-.approval-queue-placeholder small {
+.approval-system-status small {
   color: var(--fg-2);
 }
 .demo-banner .close-x {

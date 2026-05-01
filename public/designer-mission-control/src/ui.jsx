@@ -105,13 +105,13 @@ function DemoBanner() {
         <span>
           <b style={{color:'var(--fg-0)'}}>Live read-only mode.</b> Status data is live. Execution approvals go through <b>Tony in Telegram</b> with Approve/Deny buttons. Mission Control shows status and history only; broad protected writes stay locked as <code>OWNER_APPROVAL_REQUIRED</code> or HTTP 423.
         </span>
-        <div className="approval-queue-placeholder" role="status" aria-label="Approval Queue status">
+        <div className="approval-system-status" role="status" aria-label="Approval system status">
           <div>
-            <strong>Approval Queue — Tony → Telegram</strong>
-            <span className="mock-badge">Read-only</span>
+            <strong>Approval system status</strong>
+            <span className="mock-badge">Read-only mirror</span>
           </div>
-          <p>Telegram one-click approvals are live for supported scoped actions. Use Telegram buttons for decisions; this screen does not approve or execute actions directly.</p>
-          <small>Next backend step: extend the same approval/audit path to more protected actions without enabling broad connector execution.</small>
+          <p>No approvals are approved from this screen. Active pending requests appear only when Tony sends a real Telegram Approve/Deny request.</p>
+          <small>Completed, denied, expired, and failed approvals move to history instead of staying in the active queue.</small>
         </div>
       </div>
       <button className="close-x" onClick={()=>{ sessionStorage.setItem('cc.liveReadOnlyBannerV3Dismissed','1'); setDismissed(true); }} aria-label="Dismiss">✕</button>

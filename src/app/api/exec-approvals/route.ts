@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { logger } from '@/lib/logger'
+import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
 import path from 'node:path'
 
 function gatewayUrl(p: string): string {
@@ -15,6 +16,20 @@ function execApprovalsPath(): string {
 
 function computeHash(raw: string): string {
   return createHash('sha256').update(raw, 'utf8').digest('hex')
+}
+
+async function readCanonicalTelegramApprovals() {
+  if (!hasClaudeClawDashboardToken()) return null
+  try {
+    const upstream = await fetchClaudeClawJson<any>('/api/telegram-approvals?audit=1&limit=100', {}, 5000)
+    if (!upstream.ok || !upstream.payload || typeof upstream.payload !== 'object') return null
+    const payload = upstream.payload as any
+    if (!payload.ok) return null
+    return payload
+  } catch (err) {
+    logger.warn({ err }, 'Canonical Telegram approval queue unavailable')
+    return null
+  }
 }
 
 /**
@@ -31,6 +46,8 @@ export async function GET(request: NextRequest) {
     return getAllowlist()
   }
 
+  const canonical = await readCanonicalTelegramApprovals()
+
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 5000)
 
@@ -43,11 +60,26 @@ export async function GET(request: NextRequest) {
 
     if (!res.ok) {
       logger.warn({ status: res.status }, 'Gateway exec-approvals endpoint returned error')
-      return NextResponse.json({ approvals: [] })
+      return NextResponse.json({
+        approvals: canonical?.approvals || [],
+        canonical_approval_queue: canonical,
+        legacy_gateway_approvals: [],
+        mode: 'canonical_telegram_approvals_with_gateway_unavailable',
+        approval_channel: 'Tony -> Telegram',
+        decision_surface: 'Telegram inline Approve/Deny buttons only',
+      })
     }
 
     const data = await res.json()
-    return NextResponse.json(data)
+    return NextResponse.json({
+      ...data,
+      approvals: canonical?.approvals || data?.approvals || [],
+      canonical_approval_queue: canonical,
+      legacy_gateway_approvals: data?.approvals || [],
+      mode: canonical ? 'canonical_telegram_approvals_with_gateway_mirror' : 'legacy_gateway_approvals_only',
+      approval_channel: canonical ? 'Tony -> Telegram' : 'legacy_gateway',
+      decision_surface: canonical ? 'Telegram inline Approve/Deny buttons only' : 'legacy gateway approval surface',
+    })
   } catch (err: any) {
     clearTimeout(timeout)
     if (err.name === 'AbortError') {
@@ -55,7 +87,14 @@ export async function GET(request: NextRequest) {
     } else {
       logger.warn({ err }, 'Gateway exec-approvals unreachable')
     }
-    return NextResponse.json({ approvals: [] })
+    return NextResponse.json({
+      approvals: canonical?.approvals || [],
+      canonical_approval_queue: canonical,
+      legacy_gateway_approvals: [],
+      mode: 'canonical_telegram_approvals_with_gateway_unreachable',
+      approval_channel: 'Tony -> Telegram',
+      decision_surface: 'Telegram inline Approve/Deny buttons only',
+    })
   }
 }
 
@@ -175,36 +214,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required field: id' }, { status: 400 })
   }
 
-  const validActions = ['approve', 'deny', 'always_allow']
-  if (!validActions.includes(body.action)) {
-    return NextResponse.json({ error: `Invalid action. Must be one of: ${validActions.join(', ')}` }, { status: 400 })
-  }
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 5000)
-
-  try {
-    const res = await fetch(gatewayUrl('/api/exec-approvals/respond'), {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: body.id,
-        action: body.action,
-        reason: body.reason,
-      }),
-    })
-    clearTimeout(timeout)
-
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
-  } catch (err: any) {
-    clearTimeout(timeout)
-    if (err.name === 'AbortError') {
-      logger.error('Gateway exec-approvals respond request timed out')
-      return NextResponse.json({ error: 'Gateway request timed out' }, { status: 504 })
-    }
-    logger.error({ err }, 'Gateway exec-approvals respond failed')
-    return NextResponse.json({ error: 'Gateway unreachable' }, { status: 502 })
-  }
+  return NextResponse.json({
+    ok: false,
+    error: 'legacy_exec_approval_decision_disabled',
+    approval_id: body.id,
+    approval_channel: 'Tony -> Telegram',
+    decision_surface: 'Telegram inline Approve/Deny buttons only',
+    execution_enabled: false,
+    no_duplicate_approval_system: true,
+    next_action: 'Use the canonical Tony Telegram Approve/Deny buttons for this exact approval id.',
+  }, { status: 423 })
 }

@@ -322,6 +322,8 @@ interface ApprovalQueuePayload {
     scope?: string
     approval_state?: string
     status?: string
+    ui_state?: string
+    unified_state?: string
     risk_level?: string
     protected_action?: boolean
     tools_integrations?: string[]
@@ -363,6 +365,9 @@ interface ApprovalQueuePayload {
     denied?: number
     expired?: number
     revoked?: number
+    running?: number
+    completed?: number
+    failed?: number
   }
   ui_placeholder?: {
     title?: string
@@ -1097,6 +1102,9 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
       <div className={styles.providerMeta}>
         <span>persistence: {payload.persistence || 'not applied'}</span>
         <span>pending: {summary.pending ?? 0}</span>
+        <span>running: {summary.running ?? 0}</span>
+        <span>completed: {summary.completed ?? 0}</span>
+        <span>failed: {summary.failed ?? 0}</span>
         <span>total: {summary.total ?? approvals.length}</span>
         <span>linked tasks: {linkedTaskCount}</span>
         <span>audit events: {auditEventCount}</span>
@@ -1109,7 +1117,7 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
       </p>
       {latest && (
         <p className={styles.providerNotes}>
-          Latest: {latest.id} · {latest.status || latest.approval_state || 'unknown'} · owner decision through Telegram only
+          Latest: {latest.id} · {latest.ui_state || latest.unified_state || latest.status || latest.approval_state || 'unknown'} · owner decision through Telegram only
           {latest.expires_at ? ` · expires ${latest.expires_at}` : ''}
         </p>
       )}
@@ -1125,7 +1133,7 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
                 </small>
                 <br />
                 <small>
-                  Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'}
+                  Canonical state: {approval.ui_state || approval.unified_state || approval.status || approval.approval_state || 'unknown'} · Telegram: {approval.telegram_sent ? `sent #${approval.telegram_message_id}` : 'not sent'} · run: {approval.run_status || 'not run'}
                   {approval.run_exit_code != null ? ` (${approval.run_exit_code})` : ''}
                 </small>
                 <br />
@@ -1145,7 +1153,7 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
                   </>
                 )}
               </span>
-              <strong>{approval.status || approval.approval_state || 'unknown'}</strong>
+              <strong>{approval.ui_state || approval.unified_state || approval.status || approval.approval_state || 'unknown'}</strong>
             </li>
           ))}
         </ul>

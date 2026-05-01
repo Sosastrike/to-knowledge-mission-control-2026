@@ -68,6 +68,7 @@ type TelegramApprovalQueuePayload = {
 type TelegramApprovalCreatePayload = {
   ok?: boolean
   approval_request_created?: boolean
+  duplicate_prompt_prevented?: boolean
   approval?: {
     id: string
     title: string
@@ -240,7 +241,8 @@ export async function POST(request: NextRequest) {
         {
           ok: true,
           mode: 'telegram_run_now_request_sent_no_execution',
-          approval_request_created: true,
+          approval_request_created: payload.approval_request_created === true,
+          duplicate_prompt_prevented: payload.duplicate_prompt_prevented === true,
           approval_id: payload.approval.id,
           approval_state: payload.approval.status,
           telegram_message_id: payload.approval.telegram_message_id,
@@ -252,7 +254,7 @@ export async function POST(request: NextRequest) {
           ui_state: 'pending_approval',
           next_action: 'Approve or deny this exact request in Telegram. Mission Control does not approve directly yet.',
         },
-        { status: 201 },
+        { status: payload.approval_request_created === true ? 201 : 200 },
       )
     }
 

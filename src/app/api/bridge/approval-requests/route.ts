@@ -68,6 +68,8 @@ type TelegramApprovalQueuePayload = {
     run_exit_code: number | null
     run_summary: string | null
     error: string | null
+    ui_state?: string
+    unified_state?: string
     audit_events?: Array<{
       id: number
       request_id: string
@@ -219,13 +221,20 @@ async function readTelegramApprovalQueue() {
     if (!payload.ok) return null
     const approvals = payload.approvals || []
     const summary = approvals.reduce((acc, row) => {
+      const uiState =
+        row.ui_state ||
+        row.unified_state ||
+        (row.status === 'approved' && row.run_status ? row.run_status : row.status)
       acc.total += 1
       if (row.status === 'pending') acc.pending += 1
       else if (row.status === 'approved') acc.approved += 1
       else if (row.status === 'denied') acc.denied += 1
       else if (row.status === 'expired') acc.expired += 1
+      if (uiState === 'running') acc.running += 1
+      else if (uiState === 'completed') acc.completed += 1
+      else if (uiState === 'failed') acc.failed += 1
       return acc
-    }, { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 })
+    }, { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0, running: 0, completed: 0, failed: 0 })
 
     return {
       ok: true,
@@ -238,6 +247,8 @@ async function readTelegramApprovalQueue() {
       exact_scope_execution_enabled: true,
       broad_connector_execution_enabled: false,
       approvals: approvals.map((row) => ({
+        ui_state: row.ui_state || row.unified_state || (row.status === 'approved' && row.run_status ? row.run_status : row.status),
+        unified_state: row.unified_state || row.ui_state || (row.status === 'approved' && row.run_status ? row.run_status : row.status),
         id: row.id,
         title: row.title,
         requesting_agent: row.requesting_agent,
@@ -287,14 +298,14 @@ async function readTelegramApprovalQueue() {
       ui_placeholder: {
         title: 'Approval Queue — Tony → Telegram',
         state: 'READ_ONLY',
-        message: 'Telegram approval requests are live. Approve/Deny decisions still happen in Telegram so the exact request id is known.',
-        next_backend_step: 'Keep Mission Control display-only for decisions until direct MC approval is separately approved.',
+        message: 'Telegram approval requests are live and canonical. Mission Control, OpenCloud, and Gateway/Dashboard surfaces must read this same request id and state.',
+        next_backend_step: 'Keep owner decisions in Telegram only; web/API surfaces are read-only mirrors unless explicitly approved later.',
         no_fake_approval_requests: true,
         approval_request_created: false,
         protected_actions_locked: true,
         protected_action_http_status: 423,
       },
-      next_action: 'Use Telegram Approve/Deny buttons for decisions. Mission Control shows queue and history only.',
+      next_action: 'Use Telegram Approve/Deny buttons for decisions. Mission Control, OpenCloud, and Gateway/Dashboard show the same canonical queue and history only.',
     }
   } catch {
     return null

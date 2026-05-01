@@ -21,7 +21,7 @@ const requiredCopy = [
   { id: 'bridge_mode_read_only', needle: 'read-only' },
   { id: 'owner_gates_visibility_only', needle: 'Owner gates are visibility only' },
   { id: 'execution_cycle_mandatory', needle: 'Every agent must pass through Bridge Mode before acting' },
-  { id: 'approval_queue_tony_telegram', needle: 'Approval Queue — Tony → Telegram' },
+  { id: 'approval_system_status_empty_queue', needle: 'Approval system status' },
   { id: 'no_fake_approval_requests', needle: 'not sending approval requests' },
   { id: 'no_zapier_writes', needle: 'writing to Zapier' },
 ]
@@ -49,7 +49,7 @@ const report = {
     ui_consumes_readonly_bridge_contracts: missingContracts.length === 0,
     owner_gates_visible: source.includes('/api/bridge/owner-gates') && source.includes('Owner Gates / Blockers'),
     execution_cycle_visible: source.includes('/api/bridge/execution-cycle') && source.includes('Agent Execution Cycle'),
-    approval_queue_placeholder_visible: source.includes('/api/bridge/approval-readiness') && source.includes('Approval Queue — Tony → Telegram'),
+    approval_queue_placeholder_visible: source.includes('/api/bridge/approval-readiness') && source.includes('activeQueueVisible') && source.includes('Approval system status'),
     no_protected_execution_from_ui: forbidden.length === 0,
   },
 }

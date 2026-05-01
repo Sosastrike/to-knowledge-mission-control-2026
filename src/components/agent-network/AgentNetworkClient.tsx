@@ -1101,7 +1101,7 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
   const latestHistory = historyApprovals[0]
   const linkedTaskCount = approvals.reduce((total, approval) => total + (approval.linked_tasks?.length || 0), 0)
   const auditEventCount = approvals.reduce((total, approval) => total + (approval.audit_events?.length || 0), 0)
-  const displayTitle = activeQueueVisible ? (placeholder.title || 'Approval Queue — Tony → Telegram') : 'Approval system status'
+  const displayTitle = activeQueueVisible ? (placeholder.title || 'Approval Queue') : 'Approval system status'
   const displayState = activeQueueVisible ? (placeholder.state || 'PENDING') : 'NO_PENDING_APPROVALS'
 
   return (
@@ -2333,6 +2333,14 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     const tier = KNOWN_TIER_OF[id] || 'other'
     buckets[tier].push(a)
   }
+  const activeApprovalCount = approvalQueue?.active_approvals?.length ?? approvalQueue?.summary?.active_pending ?? 0
+  const activeQueueVisible = Boolean(approvalQueue?.active_queue_visible || activeApprovalCount > 0)
+  const approvalSectionTitle = activeQueueVisible
+    ? (approvalQueue?.ui_placeholder?.title || 'Approval Queue')
+    : 'Approval system status'
+  const approvalSectionSubtitle = activeQueueVisible
+    ? 'Pending owner decisions are waiting in Telegram. Mission Control mirrors the canonical state only.'
+    : 'No approvals pending. Completed, denied, expired, and failed requests stay in approval history.'
 
   return (
     <main className={styles.root} data-theme="mc">
@@ -2742,10 +2750,8 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       {/* Approval/audit readiness — no migration */}
       <section className={styles.providerSection}>
         <header className={styles.externalSectionHeader}>
-          <h2 className={styles.tierTitle}>Approval Queue — Tony → Telegram</h2>
-          <span className={styles.tierSub}>
-            Read-only readiness. Approval channel is <strong>Tony → Telegram</strong>; Mission Control records the decision.
-          </span>
+          <h2 className={styles.tierTitle}>{approvalSectionTitle}</h2>
+          <span className={styles.tierSub}>{approvalSectionSubtitle}</span>
         </header>
         {approvalReadinessState === 'loading' && (
           <div className={styles.banner}>Loading approval readiness from <code>/api/bridge/approval-readiness</code>…</div>
@@ -2765,21 +2771,23 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               <span>execution: disabled</span>
             </div>
             <div className={styles.preflightNotice}>
-              <p>
-                Approval Queue is handled by <strong>Tony → Telegram</strong> for supported scoped actions.
-                Mission Control shows status and history here; owner decisions still happen with one-click
-                <strong>Approve / Deny</strong> messages in <strong>Telegram</strong>.
-              </p>
-              <p>
-                Tony is the approval representative to the owner. Agents do not contact the owner directly
-                for every approval — Tony consolidates and represents.
-              </p>
+              {activeQueueVisible ? (
+                <p>
+                  Pending approvals are active in the canonical Telegram queue. Owner decisions still happen
+                  with one-click <strong>Approve / Deny</strong> messages in <strong>Telegram</strong>.
+                </p>
+              ) : (
+                <p>
+                  No approvals are pending. This panel is a neutral status mirror; completed, denied,
+                  expired, and failed requests are shown as history instead of an active queue.
+                </p>
+              )}
               <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                 <li>Current state: <strong>{approvalReadiness?.production_migration_applied ? 'READ_ONLY' : 'BACKEND_REQUIRED'}</strong></li>
                 <li>Approval channel: <strong>Tony → Telegram</strong></li>
                 <li>Execution state: <strong>locked</strong></li>
                 <li>What is missing: {approvalReadiness?.production_migration_applied ? 'more owner-approved scoped execution runners' : 'production bridge approval/audit migration for broad connector actions'}</li>
-                <li>Pending approvals: <strong>{approvalQueue?.summary?.pending ?? 0}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (Tony Telegram queue fallback)'}</li>
+                <li>Pending approvals: <strong>{activeApprovalCount}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (Tony Telegram queue fallback)'}</li>
                 <li>Next backend step: extend the existing Tony Telegram approval path to more protected actions.</li>
               </ul>
               <p style={{ marginTop: 8 }}>

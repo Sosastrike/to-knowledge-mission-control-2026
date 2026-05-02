@@ -15,7 +15,6 @@
 const BUILD_WIKI_STATUS_URL = '/api/bridge/brain-sync/build-wiki/status';
 const RUN_NOW_CREATE_URL    = '/api/bridge/brain-sync/build-wiki/run-now';
 const RUN_NOW_READ_URL      = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}`;
-const RUN_NOW_DISPATCH_URL  = (id) => `/api/bridge/brain-sync/build-wiki/run-now/${encodeURIComponent(id)}/dispatch`;
 const APPROVE_URL           = (id) => `/api/bridge/approval-requests/${encodeURIComponent(id)}/approve`;
 const FILES_LIST_URL        = (type, limit) => `/api/bridge/brain-sync/build-wiki/files?type=${encodeURIComponent(type)}&limit=${encodeURIComponent(limit)}`;
 const FILE_READ_URL         = (type, name) => `/api/bridge/brain-sync/build-wiki/files/${encodeURIComponent(type)}/${encodeURIComponent(name)}`;
@@ -211,36 +210,6 @@ function BWRunNowControl({ runNow, onAction }) {
     if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
   });
 
-  const dispatchNow = () => wrap(async () => {
-    if (!approvalId) throw new Error('no_approval_id');
-    const res = await fetch(RUN_NOW_DISPATCH_URL(approvalId), {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      credentials: 'same-origin',
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const detail = j.systemctl_exit_code !== undefined
-        ? ` (exit ${j.systemctl_exit_code})`
-        : '';
-      throw new Error((j.error || `HTTP ${res.status}`) + detail);
-    }
-  });
-
-  // Owner self-approval is exposed as a separate button so the operator can
-  // also walk through the contract without leaving the panel. The approve
-  // route still enforces operator role server-side.
-  const approveSelf = () => wrap(async () => {
-    if (!approvalId) throw new Error('no_approval_id');
-    const res = await fetch(APPROVE_URL(approvalId), {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      credentials: 'same-origin',
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
-  });
-
   // Pick which action button (if any) is exposed for the current state.
   let actionBtn = null;
   if (state === 'idle' || state === 'completed' || state === 'denied' || state === 'expired' || state === 'failed') {
@@ -251,19 +220,15 @@ function BWRunNowControl({ runNow, onAction }) {
     );
   } else if (state === 'pending_approval') {
     actionBtn = (
-      <button className="btn sm" disabled={busy} onClick={approveSelf} title="Owner / operator approval. Server still enforces role + audit.">
-        {busy ? 'Approving…' : 'Approve (owner)'}
+      <button className="btn sm" disabled title="Approve or deny this request in Telegram. Mission Control does not approve directly.">
+        Awaiting Telegram
       </button>
     );
-  } else if (state === 'approved') {
+  } else if (state === 'approved' || state === 'dispatching') {
     actionBtn = (
-      <button className="btn sm" disabled={busy} onClick={dispatchNow} title="Dispatch the approved request → systemctl --user start opencloud-docs-farmer.service.">
-        {busy ? 'Dispatching…' : 'Dispatch'}
+      <button className="btn sm" disabled title="Tony is dispatching the exact approved scope from the Telegram approval callback.">
+        Run dispatched
       </button>
-    );
-  } else if (state === 'dispatching') {
-    actionBtn = (
-      <button className="btn sm" disabled title="Service is running — wait for completion."> Dispatching… </button>
     );
   }
 
@@ -295,7 +260,7 @@ function BWRunNowControl({ runNow, onAction }) {
         <div className="muted xsmall">
           Click <strong>Request run</strong> to create an owner-approval request for{' '}
           <code style={{ fontSize: 11 }}>{(runNow && runNow.target_service) || 'opencloud-docs-farmer.service'}</code>.
-          The service is not started until you separately approve and then dispatch.
+          The service is not started until the owner approves in Telegram.
         </div>
       )}
 

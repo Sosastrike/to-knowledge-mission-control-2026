@@ -11,6 +11,7 @@ import {
   pickPublicRunView,
   readLatestRunNow,
 } from '@/lib/build-wiki-run-now'
+import { readLatestTelegramBuildWikiRunNowApproval } from '@/lib/build-wiki-telegram-run-now'
 import {
   BUILDWIKI_TIMER_UNIT,
   deriveTimerUiState,
@@ -344,6 +345,7 @@ export async function GET(request: NextRequest) {
   const timer = getTimerStatus()
   const counts = await countDestination()
   const lastError = await readLastError()
+  const telegramRunNow = await readLatestTelegramBuildWikiRunNowApproval()
 
   const scheduled = meta.scheduled_farmers?.[0] || null
   // Active sources come from the LIVE farmer script (the source of truth for
@@ -448,19 +450,29 @@ export async function GET(request: NextRequest) {
     run_now: (() => {
       const latest = readLatestRunNow()
       const ui = deriveRunNowUiState(latest.approval, latest.run)
-      return {
+      const canonical = telegramRunNow || {
         persistence_ready: latest.persistence_ready,
         target_service: BUILDWIKI_TARGET_SERVICE,
         ui_state: ui.ui_state,
         is_terminal: ui.is_terminal,
         approval: pickPublicApprovalView(latest.approval),
         run: pickPublicRunView(latest.run),
+        linked_task: null,
+      }
+      return {
+        persistence_ready: canonical.persistence_ready,
+        target_service: BUILDWIKI_TARGET_SERVICE,
+        ui_state: canonical.ui_state,
+        is_terminal: canonical.is_terminal,
+        approval: canonical.approval,
+        run: canonical.run,
+        linked_task: canonical.linked_task,
+        approval_channel: 'Tony -> Telegram',
+        web_approval_enabled: false,
+        dispatch_surface: 'telegram_callback_only',
         endpoints: {
           create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now' },
-          dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch' },
           read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/run-now/{id}' },
-          approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
-          deny:     { method: 'POST', path: '/api/bridge/approval-requests/{id}/deny' },
         },
       }
     })(),

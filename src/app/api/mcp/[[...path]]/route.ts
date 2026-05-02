@@ -10,6 +10,7 @@ import {
   readJsonIfPresent,
   routePath,
 } from '@/lib/designer-module-api'
+import { getMcpServerTools } from '@/lib/mcp-server-tool-schemas'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -219,13 +220,23 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   }
 
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'servers' && parts[1] && ['tools', 'resources'].includes(parts[2] || '')) {
+  if (parts[0] === 'servers' && parts[1] && parts[2] === 'tools') {
+    const result = await getMcpServerTools(parts[1])
+    return NextResponse.json({
+      ...result,
+      endpoint: `/api/mcp/servers/${parts[1]}/tools`,
+      route_state: result.ok ? 'read_only_live_schema_passthrough' : 'read_only_schema_passthrough_unavailable',
+      note: result.ok ? 'Read-only MCP tools/list only. No MCP tool was invoked.' : result.next_action,
+    }, { status: result.ok ? 200 : 503 })
+  }
+
+  if (parts[0] === 'servers' && parts[1] && parts[2] === 'resources') {
     return backendRequired({
       server: parts[1],
       action: parts[2],
       source: '/api/mcp/list',
       route_state: 'read_only_passthrough_not_wired',
-      blocker: 'Mission Control can list MCP servers read-only, but per-server tool/resource schema passthrough is not wired yet.',
+      blocker: 'Mission Control can list MCP servers and HTTP tool schemas read-only, but per-server resource passthrough is not wired yet.',
       next_action: 'Use /api/mcp/list for server visibility and provider-specific read-only inventory routes until live passthrough is approved and implemented.',
       note: 'No MCP tool was invoked.',
     })

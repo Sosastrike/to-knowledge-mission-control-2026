@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
+import { getMcpServerTools } from './mcp-server-tool-schemas'
 
 export type ZapierWriteClassification = 'read' | 'write' | 'unknown'
 
@@ -161,6 +162,25 @@ async function listLiveMcpTools(providerNames: string[]): Promise<{
   mcp_reachable: boolean
   tools: ZapierToolRecord[]
 }> {
+  const claudeMcp = await getMcpServerTools('zapier')
+  if (claudeMcp.ok && claudeMcp.tools.length > 0) {
+    return {
+      mcp_reachable: true,
+      tools: claudeMcp.tools
+        .map((tool) => toRecord({
+          name: tool.tool_name,
+          description: tool.description || undefined,
+          inputSchema: tool.input_schema
+            ? {
+              required: tool.input_schema.required_fields,
+              properties: Object.fromEntries(tool.input_schema.properties.map((property) => [property.name, { type: property.type || undefined, description: property.description || undefined }])),
+            }
+            : undefined,
+        }, 'claude_mcp', providerNames))
+        .filter((tool): tool is ZapierToolRecord => Boolean(tool)),
+    }
+  }
+
   const url = zapierMcpUrl()
   if (!url) return { mcp_reachable: false, tools: [] }
 
@@ -293,4 +313,3 @@ export async function getZapierToolBridge(query?: string | null): Promise<Zapier
       : 'HeyGen is not visible in Zapier MCP. Owner must connect HeyGen in Zapier, then rerun Zapier resync/tool discovery.',
   }
 }
-

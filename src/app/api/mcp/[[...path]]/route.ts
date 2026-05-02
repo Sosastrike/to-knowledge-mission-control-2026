@@ -204,12 +204,14 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   const servers = await loadServers()
   const summary = tally(servers)
   if (!path || path === 'status') return NextResponse.json({ ok: true, ...summary })
-  if (path === 'servers') {
+  if (path === 'list' || path === 'servers') {
     return NextResponse.json({
       ok: true,
       ...summary,
       summary,
       servers,
+      authoritative_route: '/api/mcp/list',
+      compatibility_routes: ['/api/mcp/status', '/api/mcp/servers'],
       sources_checked: ['claude-cli', '~/.claude/mcp.json', '~/.config/claude/mcp.json'],
       discovery: lastDiscovery,
       note: servers.length ? null : 'no_mcp_servers_detected',
@@ -221,7 +223,11 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
     return backendRequired({
       server: parts[1],
       action: parts[2],
-      note: 'Per-server MCP passthrough is not wired yet.',
+      source: '/api/mcp/list',
+      route_state: 'read_only_passthrough_not_wired',
+      blocker: 'Mission Control can list MCP servers read-only, but per-server tool/resource schema passthrough is not wired yet.',
+      next_action: 'Use /api/mcp/list for server visibility and provider-specific read-only inventory routes until live passthrough is approved and implemented.',
+      note: 'No MCP tool was invoked.',
     })
   }
 

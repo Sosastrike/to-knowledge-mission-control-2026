@@ -7,6 +7,7 @@ import {
   ownerApprovalRequired,
   routePath,
 } from '@/lib/designer-module-api'
+import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -59,152 +60,6 @@ function statusPayload() {
   }
 }
 
-type ZapierToolClass = 'read' | 'write' | 'unknown'
-
-type McpTool = {
-  name?: string
-  description?: string
-  inputSchema?: unknown
-}
-
-function zapierMcpUrl(): string {
-  return (process.env.ZAPIER_MCP_URL || process.env.ZAPIER_MCP_SERVER || '').trim()
-}
-
-function classifyZapierTool(tool: McpTool): ZapierToolClass {
-  const text = `${tool.name || ''} ${tool.description || ''}`.toLowerCase()
-  if (/\b(create|update|delete|remove|send|post|upload|run|execute|trigger|publish|invite|move|set|enable|disable|approve|revoke)\b/.test(text)) {
-    return 'write'
-  }
-  if (/\b(get|list|search|find|lookup|retrieve|read|fetch|query|inspect|describe|status|history)\b/.test(text)) {
-    return 'read'
-  }
-  return 'unknown'
-}
-
-function parseMcpJsonResponse(text: string): unknown {
-  const trimmed = text.trim()
-  if (!trimmed) return null
-  if (trimmed.startsWith('{')) return JSON.parse(trimmed)
-
-  // Some MCP HTTP transports can stream SSE frames. Parse the first JSON data
-  // frame without returning raw response text, because transport errors may
-  // include sensitive server details.
-  for (const line of trimmed.split('\n')) {
-    const normalized = line.trim()
-    if (!normalized.startsWith('data:')) continue
-    const data = normalized.slice(5).trim()
-    if (data && data.startsWith('{')) return JSON.parse(data)
-  }
-  return null
-}
-
-async function listZapierMcpTools() {
-  const url = zapierMcpUrl()
-  if (!url) {
-    return {
-      ok: true,
-      status: 'credential_required',
-      state: 'CREDENTIAL_REQUIRED',
-      credential_required: true,
-      provider: 'zapier',
-      credential_names: ['ZAPIER_MCP_URL', 'ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY'],
-      tools: [],
-      total: 0,
-      by_kind: {},
-      execution_enabled: false,
-      writes_enabled: false,
-      approval_request_created: false,
-      next_action: 'Configure a Zapier MCP URL/token through the approved secret manager before read-only tool discovery.',
-    }
-  }
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json, text/event-stream',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'tools-list',
-        method: 'tools/list',
-        params: {},
-      }),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(7000),
-    })
-    const payload = parseMcpJsonResponse(await response.text()) as
-      | { result?: { tools?: McpTool[] }; error?: { code?: number; message?: string } }
-      | null
-
-    if (!response.ok || payload?.error) {
-      return {
-        ok: true,
-        status: 'backend_required',
-        state: 'BACKEND_REQUIRED',
-        backend_required: true,
-        provider: 'zapier',
-        tools: [],
-        total: 0,
-        by_kind: {},
-        http_status: response.status,
-        error: payload?.error?.code ? `mcp_error_${payload.error.code}` : 'zapier_mcp_tools_list_failed',
-        execution_enabled: false,
-        writes_enabled: false,
-        approval_request_created: false,
-        next_action: 'Verify Zapier MCP transport/auth, then retry read-only tools/list. No tools were invoked.',
-      }
-    }
-
-    const tools = (payload?.result?.tools || []).map((tool) => {
-      const kind = classifyZapierTool(tool)
-      return {
-        name: String(tool.name || ''),
-        description: tool.description || null,
-        kind,
-        execution_state: kind === 'write' ? 'OWNER_APPROVAL_REQUIRED' : kind === 'read' ? 'READ_ONLY' : 'BACKEND_REQUIRED',
-        approval_required: kind !== 'read',
-        audit_required: true,
-      }
-    }).filter((tool) => tool.name)
-
-    return {
-      ok: true,
-      status: 'read_only',
-      provider: 'zapier',
-      tools,
-      total: tools.length,
-      by_kind: tools.reduce((acc, tool) => {
-        acc[tool.kind] = (acc[tool.kind] || 0) + 1
-        return acc
-      }, {} as Record<string, number>),
-      writes_unlocked: false,
-      execution_enabled: false,
-      writes_enabled: false,
-      approval_request_created: false,
-      note: 'Read-only tools/list only. No Zapier tools were invoked.',
-    }
-  } catch {
-    return {
-      ok: true,
-      status: 'backend_required',
-      state: 'BACKEND_REQUIRED',
-      backend_required: true,
-      provider: 'zapier',
-      tools: [],
-      total: 0,
-      by_kind: {},
-      error: 'zapier_mcp_tools_list_unreachable',
-      execution_enabled: false,
-      writes_enabled: false,
-      approval_request_created: false,
-      next_action: 'Zapier MCP endpoint is configured but not reachable from Mission Control. No tools were invoked.',
-    }
-  }
-}
-
 export async function GET(request: NextRequest, { params }: { params: CatchAllParams }) {
   const auth = authJson(request, 'viewer')
   if (auth) return auth
@@ -221,8 +76,15 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
     })
   }
   if (path === 'tools') {
-    const result = await listZapierMcpTools()
-    return NextResponse.json(result)
+    const query = new URL(request.url).searchParams.get('q')
+    const result = await getZapierToolBridge(query)
+    return NextResponse.json({
+      ...result,
+      endpoint: '/api/zapier/tools',
+      canonical_endpoint: '/api/bridge/zapier/tools',
+      route_state: 'legacy_read_only_compatibility',
+      note: 'Legacy Zapier tool route now uses the canonical read-only Bridge inventory. No Zapier tools were invoked.',
+    })
   }
 
   return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })

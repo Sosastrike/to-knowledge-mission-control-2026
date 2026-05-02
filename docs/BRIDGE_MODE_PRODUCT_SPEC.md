@@ -271,6 +271,18 @@ Read-only MVP:
 - connector health
 - blocked routes
 
+### 10a. File Handoff Ledger Panel
+
+Read-only MVP:
+
+- show canonical file handoff ledger path from ClaudeClaw
+- list recent file IDs, task IDs, assigned agent, local path, destination, and status
+- show `temp`, `pending_destination`, `delivered`, and `failed` states honestly
+- show Google Drive destination as pending unless a Drive upload runner is explicitly wired
+- show missing permission/manual-step guidance when an external destination cannot be written
+- do not execute uploads, connector writes, deletions, or file moves from this panel
+- link file handoff facts into Brain Sync and task history visibility
+
 Future execution:
 
 - persistent `harness_events`
@@ -278,6 +290,7 @@ Future execution:
 - approved handoff execution
 - failure alerts
 - retry policy
+- owner-approved destination delivery after the canonical approval/audit path exists
 
 ### 11. Cost / Rate Limits
 

@@ -465,8 +465,18 @@
   border-color: rgba(255, 204, 58, 0.3);
 }
 
-.providerState_sandbox,
-.providerState_backup,
+.providerState_sandbox {
+  color: #d7c6ff;
+  background: rgba(159, 126, 255, 0.11);
+  border-color: rgba(159, 126, 255, 0.32);
+}
+
+.providerState_backup {
+  color: #9ed7ff;
+  background: rgba(78, 174, 255, 0.09);
+  border-color: rgba(78, 174, 255, 0.28);
+}
+
 .providerState_unknown {
   color: var(--auth-fg-2);
   background: rgba(255, 255, 255, 0.04);
@@ -487,11 +497,48 @@
   padding: 2px 6px;
 }
 
+.providerFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.providerFact {
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--auth-fg-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  padding: 7px 8px;
+  overflow-wrap: anywhere;
+}
+
+.providerFactLabel {
+  color: var(--auth-fg-3);
+  display: block;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
 .providerEndpoint {
   color: var(--auth-fg-2);
+  background: rgba(107, 179, 255, 0.05);
+  border: 1px solid rgba(107, 179, 255, 0.12);
+  border-radius: 8px;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 11px;
   overflow-wrap: anywhere;
+  padding: 8px 10px;
 }
 
 .providerNotes,
@@ -504,6 +551,13 @@
 
 .providerAction {
   color: var(--auth-fg-1);
+}
+
+.providerBlocker {
+  margin: 0;
+  color: var(--auth-warn);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .connectorList {

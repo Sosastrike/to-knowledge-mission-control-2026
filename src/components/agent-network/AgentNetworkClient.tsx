@@ -69,7 +69,7 @@ interface BridgeProviderStatus {
     http_status?: number | null
     latency_ms?: number | null
     credential_name?: string | null
-    credential_present?: boolean
+    credential_present?: boolean | null
     notes?: string
     error?: string | null
   }
@@ -516,6 +516,227 @@ interface BuildWikiStatusPayload {
   notices?: Record<string, unknown>
 }
 
+interface BrainSyncSourceStatus {
+  source?: string
+  status?: 'read_only' | 'not_connected' | 'needs_owner_setup' | string
+  raw_state?: string
+  last_known_sync_at?: string | null
+  last_attempt_at?: string | null
+  missing_connector_warning?: string | null
+  summary?: string
+  path?: string | null
+  count?: number | null
+  last_error?: string | null
+  writes_enabled?: boolean
+  details?: Record<string, unknown>
+}
+
+interface BrainSyncReadOnlyPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  canonical_sources?: Record<string, string>
+  sources?: BrainSyncSourceStatus[]
+  summary?: Record<string, number>
+  brain_sync?: {
+    planned_status?: string
+    available_status?: string
+    production_memory_writes_enabled?: boolean
+    protected_memory_changes_enabled?: boolean
+    shared_brain_writes_enabled?: boolean
+    mempalace_writes_enabled?: boolean
+    external_connector_writes_enabled?: boolean
+    missing_connector_warning?: string[]
+  }
+  error?: string
+}
+
+interface HarnessPendingTicket {
+  id?: number
+  ticket_ref?: string | null
+  title?: string
+  status?: string
+  priority?: string
+  assigned_to?: string
+  updated_at?: string | null
+}
+
+interface HarnessAgentActivity {
+  id?: number
+  name?: string
+  role?: string
+  status?: string
+  last_seen_at?: string | null
+  last_activity?: string | null
+  updated_at?: string | null
+}
+
+interface HarnessProviderActivity {
+  id?: string
+  name?: string
+  category?: string
+  state?: string
+  endpoint?: string | null
+  last_checked_at?: string | null
+  notes?: string | null
+  blocker?: string | null
+  next_action?: string | null
+}
+
+interface HarnessRecentActivity {
+  id?: number
+  type?: string
+  entity_type?: string
+  entity_id?: number
+  actor?: string
+  description?: string
+  created_at?: string | null
+}
+
+interface HarnessReadOnlyPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  execution_enabled?: boolean
+  protected_actions_enabled?: boolean
+  routing_status?: {
+    state?: string
+    ticket_routing?: string
+    event_routing?: string
+    agent_activity?: string
+    provider_activity?: string
+    durable_harness_backend_present?: boolean
+    missing_harness_backend_warning?: string | null
+  }
+  pending_tickets?: {
+    state?: string
+    source?: string
+    count?: number
+    items?: HarnessPendingTicket[]
+  }
+  agent_activity?: {
+    state?: string
+    source?: string
+    count?: number
+    items?: HarnessAgentActivity[]
+  }
+  provider_activity?: {
+    state?: string
+    source?: string
+    count?: number
+    items?: HarnessProviderActivity[]
+    warning?: string | null
+  }
+  recent_activity?: {
+    state?: string
+    source?: string
+    count?: number
+    items?: HarnessRecentActivity[]
+  }
+  missing_harness_backend_warning?: string | null
+  db?: {
+    state?: string
+    warning?: string | null
+    harness_events_table_present?: boolean
+    bridge_harness_events_table_present?: boolean
+  }
+  next_action?: string
+  error?: string
+}
+
+interface AgentZeroReviewerPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  agent?: {
+    id?: string
+    name?: string
+    role?: string
+    allowed_behavior?: string[]
+    disallowed_behavior?: string[]
+    execution_permission?: string
+    execution_enabled?: boolean
+    execution_disabled_until?: string
+    owner_approval_required_for_execution?: boolean
+  }
+  tailnet?: {
+    endpoint?: string
+    reachable?: boolean
+    http_status?: number | null
+    latency_ms?: number | null
+    error?: string | null
+  }
+  provider_registry?: {
+    state?: string
+    category?: string
+    last_checked_at?: string | null
+    notes?: string | null
+    error?: string | null
+    next_action?: string | null
+  }
+  safety?: {
+    docker_changes_enabled?: boolean
+    config_changes_enabled?: boolean
+    execution_permissions_changed?: boolean
+    protected_actions_created?: boolean
+    writes_enabled?: boolean
+  }
+  error?: string
+}
+
+interface HermesSandboxPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  agent?: {
+    id?: string
+    name?: string
+    role?: string
+    allowed_behavior?: string[]
+    disallowed_behavior?: string[]
+    execution_permission?: string
+    production_bridge_enabled?: boolean
+    owner_approval_required_for_production_bridge?: boolean
+  }
+  install?: {
+    installed?: boolean
+    binary_path?: string | null
+    version?: string | null
+    version_error?: string | null
+    sandbox_homes?: string[]
+    sandbox_state?: string
+  }
+  runtime_status?: {
+    active_sessions?: number
+    cron_jobs?: number
+    memory_entries_read_only?: number
+    gateway_pid_running?: boolean
+    production_gateway_enabled?: boolean
+    public_ports_enabled?: boolean
+    tony_memory_connection_enabled?: boolean
+    credential_changes_enabled?: boolean
+  }
+  provider_registry?: {
+    state?: string
+    category?: string
+    last_checked_at?: string | null
+    notes?: string | null
+    limitation?: string | null
+    error?: string | null
+    next_action?: string | null
+  }
+  safety?: {
+    production_gateway_changes_enabled?: boolean
+    public_port_changes_enabled?: boolean
+    tony_memory_connection_changed?: boolean
+    credential_changes_enabled?: boolean
+    execution_permissions_changed?: boolean
+    protected_actions_created?: boolean
+    writes_enabled?: boolean
+  }
+  error?: string
+}
+
 interface ExecutiveReportPreviewPayload {
   ok?: boolean
   mode?: string
@@ -761,6 +982,35 @@ function providerStateLabel(state: ProviderState | undefined) {
   return (state || 'unknown').replace(/_/g, ' ')
 }
 
+function providerCredentialLabel(provider: BridgeProviderStatus) {
+  const detail = provider.detail || {}
+  if (detail.credential_present === true) return 'yes'
+  if (detail.credential_present === false) return 'no'
+  if (detail.credential_name) return 'unknown'
+  return 'not required'
+}
+
+function providerEndpointLabel(provider: BridgeProviderStatus) {
+  const endpoint = provider.detail?.endpoint
+  if (!endpoint) return 'not exposed / not configured'
+  if (/[?&](token|api[_-]?key|secret|password)=/i.test(endpoint) || /\/\/[^/\s]+:[^@\s]+@/.test(endpoint)) {
+    return 'hidden: endpoint contains sensitive-looking data'
+  }
+  return endpoint
+}
+
+function providerBlockerLabel(provider: BridgeProviderStatus) {
+  const detail = provider.detail || {}
+  if (detail.error) return detail.error
+  if (provider.state === 'missing_credential') {
+    return detail.credential_name
+      ? `Missing ${detail.credential_name}`
+      : 'Missing required credential'
+  }
+  if (provider.state === 'degraded') return detail.notes || 'Provider reported degraded status'
+  return 'none'
+}
+
 function ProviderCard({ provider }: { provider: BridgeProviderStatus }) {
   const detail = provider.detail || {}
   return (
@@ -774,20 +1024,86 @@ function ProviderCard({ provider }: { provider: BridgeProviderStatus }) {
           {providerStateLabel(provider.state)}
         </span>
       </div>
+      <div className={styles.providerFacts}>
+        <div className={styles.providerFact}>
+          <span className={styles.providerFactLabel}>Type</span>
+          <span>{provider.category || 'unknown'}</span>
+        </div>
+        <div className={styles.providerFact}>
+          <span className={styles.providerFactLabel}>State</span>
+          <span>{providerStateLabel(provider.state)}</span>
+        </div>
+        <div className={styles.providerFact}>
+          <span className={styles.providerFactLabel}>Credential present</span>
+          <span>{providerCredentialLabel(provider)}</span>
+        </div>
+      </div>
       <div className={styles.providerMeta}>
-        <span>{provider.category}</span>
+        {detail.credential_name && <span>credential: {detail.credential_name}</span>}
         {detail.http_status != null && <span>HTTP {detail.http_status}</span>}
         {detail.latency_ms != null && <span>{detail.latency_ms}ms</span>}
-        {detail.credential_name && (
-          <span>
-            {detail.credential_name}: {detail.credential_present ? 'present' : 'missing'}
-          </span>
-        )}
       </div>
-      {detail.endpoint && <div className={styles.providerEndpoint}>{detail.endpoint}</div>}
+      <div className={styles.providerEndpoint}>
+        <span className={styles.providerFactLabel}>Endpoint</span>
+        {providerEndpointLabel(provider)}
+      </div>
       {detail.notes && <p className={styles.providerNotes}>{detail.notes}</p>}
-      {provider.next_action && <p className={styles.providerAction}>{provider.next_action}</p>}
+      <p className={styles.providerAction}>Next action: {provider.next_action || 'none'}</p>
+      <p className={styles.providerBlocker}>Blocker: {providerBlockerLabel(provider)}</p>
     </div>
+  )
+}
+
+function ProviderRegistrySection({
+  providers,
+  providerState,
+  providerError,
+}: {
+  providers: BridgeProvidersPayload | null
+  providerState: 'loading' | 'ok' | 'error'
+  providerError: string
+}) {
+  return (
+    <section className={styles.providerSection}>
+      <header className={styles.externalSectionHeader}>
+        <h2 className={styles.tierTitle}>Bridge Provider Registry</h2>
+        <span className={styles.tierSub}>
+          Live read-only snapshot from <code>/api/bridge/providers</code>
+        </span>
+      </header>
+      {providerState === 'loading' && (
+        <div className={styles.banner}>Loading provider status from <code>/api/bridge/providers</code>...</div>
+      )}
+      {providerState === 'error' && (
+        <div className={`${styles.banner} ${styles.bannerError}`}>
+          <strong>Could not load provider status:</strong> {providerError}
+        </div>
+      )}
+      {providerState === 'ok' && (
+        <>
+          <div className={styles.providerSummary}>
+            <span>{providers?.summary?.total ?? providers?.providers?.length ?? 0} providers</span>
+            <span>source: /api/bridge/providers</span>
+            <span>read-only: yes</span>
+            <span>routing changes: no</span>
+            {Object.entries(providers?.summary?.by_state || {}).map(([state, count]) => (
+              <span key={state}>{providerStateLabel(state as ProviderState)}: {count}</span>
+            ))}
+          </div>
+          {(providers?.providers || []).length === 0 ? (
+            <div className={styles.emptyTier} role="status">
+              No providers returned from the read-only registry. Check /api/bridge/providers before taking action.
+            </div>
+          ) : (
+            <div className={styles.providerGrid}>
+              {(providers?.providers || []).map((provider) => (
+                <ProviderCard key={provider.id} provider={provider} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
   )
 }
 
@@ -1072,6 +1388,254 @@ function ApprovalReadinessCard({ payload }: { payload: ApprovalReadinessPayload 
       </p>
       {payload.next_action && <p className={styles.providerAction}>{payload.next_action}</p>}
     </div>
+  )
+}
+
+function brainSyncStatusLabel(status: string | undefined) {
+  return (status || 'unknown').replace(/_/g, ' ')
+}
+
+function brainSyncDotStatus(status: string | undefined) {
+  if (status === 'read_only') return 'active'
+  if (status === 'needs_owner_setup') return 'degraded'
+  return 'offline'
+}
+
+function BrainSyncSourceCard({ source }: { source: BrainSyncSourceStatus }) {
+  const status = source.status || 'unknown'
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={brainSyncDotStatus(status)} />
+          <strong className={styles.providerName}>{(source.source || 'unknown').replace(/_/g, ' ')}</strong>
+        </div>
+        <span className={styles.providerState}>{brainSyncStatusLabel(status)}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>raw: {source.raw_state || 'unknown'}</span>
+        <span>writes: {source.writes_enabled ? 'enabled' : 'locked'}</span>
+        {source.count != null && <span>count: {source.count}</span>}
+      </div>
+      {source.summary && <p className={styles.providerNotes}>{source.summary}</p>}
+      <p className={styles.providerNotes}>
+        Last sync: {source.last_known_sync_at || 'unknown'} · Last attempt: {source.last_attempt_at || 'unknown'}
+      </p>
+      {source.path && (
+        <div className={styles.providerEndpoint}>
+          <span className={styles.providerFactLabel}>Path</span>
+          {source.path}
+        </div>
+      )}
+      {source.missing_connector_warning && (
+        <p className={styles.providerAction}>{source.missing_connector_warning}</p>
+      )}
+      {source.last_error && <p className={styles.providerAction}>Last error: {source.last_error}</p>}
+    </div>
+  )
+}
+
+function BrainSyncReadOnlyStatusCard({ payload }: { payload: BrainSyncReadOnlyPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Brain Sync Source Status</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No Brain Sync source status loaded yet.</p>
+      </div>
+    )
+  }
+
+  const sources = payload.sources || []
+  const summary = payload.summary || {}
+  const brainSync = payload.brain_sync || {}
+  const warnings = brainSync.missing_connector_warning || []
+
+  return (
+    <>
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <div className={styles.providerTitleWrap}>
+            <StatusDot status={brainSync.available_status === 'available' ? 'active' : 'degraded'} />
+            <strong className={styles.providerName}>Brain Sync Source Status</strong>
+          </div>
+          <span className={styles.providerState}>READ_ONLY</span>
+        </div>
+        <div className={styles.providerMeta}>
+          <span>sources: {summary.total ?? sources.length}</span>
+          <span>read-only: {summary.read_only ?? 0}</span>
+          <span>not connected: {summary.not_connected ?? 0}</span>
+          <span>needs setup: {summary.needs_owner_setup ?? 0}</span>
+        </div>
+        <p className={styles.providerNotes}>
+          Tony memory, MemPalace, Obsidian, Graphify, and planned Brain Sync are shown as read-only visibility. No memory write or protected memory change is enabled here.
+        </p>
+        <p className={styles.providerNotes}>
+          Planned: {brainSync.planned_status || 'unknown'} · Available: {brainSync.available_status || 'unknown'} · Generated: {payload.generated_at || 'unknown'}
+        </p>
+        <ul className={styles.connectorList}>
+          <li><span>Production memory writes<br /><small>Requires separate owner-approved activation.</small></span><strong>{brainSync.production_memory_writes_enabled ? 'enabled' : 'locked'}</strong></li>
+          <li><span>Protected memory changes<br /><small>No protected memory mutation from this panel.</small></span><strong>{brainSync.protected_memory_changes_enabled ? 'enabled' : 'locked'}</strong></li>
+          <li><span>MemPalace writes<br /><small>MemPalace remains status/read-only.</small></span><strong>{brainSync.mempalace_writes_enabled ? 'enabled' : 'locked'}</strong></li>
+        </ul>
+        {warnings.length > 0 ? (
+          <p className={styles.providerAction}>Connector warnings: {warnings.join(' · ')}</p>
+        ) : (
+          <p className={styles.providerNotes}>No missing connector warnings from the read-only status layer.</p>
+        )}
+      </div>
+      {sources.map((source) => (
+        <BrainSyncSourceCard key={source.source || source.raw_state || 'brain-source'} source={source} />
+      ))}
+    </>
+  )
+}
+
+function HarnessVisibilityCard({ payload }: { payload: HarnessReadOnlyPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Harness Visibility</strong>
+          <span className={styles.providerState}>waiting</span>
+        </div>
+        <p className={styles.providerNotes}>No Harness status loaded yet.</p>
+      </div>
+    )
+  }
+
+  const routing = payload.routing_status || {}
+  const pendingTickets = payload.pending_tickets?.items || []
+  const agentActivity = payload.agent_activity?.items || []
+  const providerActivity = payload.provider_activity?.items || []
+  const recentActivity = payload.recent_activity?.items || []
+
+  return (
+    <>
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <div className={styles.providerTitleWrap}>
+            <StatusDot status={routing.durable_harness_backend_present ? 'active' : 'degraded'} />
+            <strong className={styles.providerName}>Harness Visibility</strong>
+          </div>
+          <span className={styles.providerState}>READ_ONLY</span>
+        </div>
+        <div className={styles.providerMeta}>
+          <span>routing: {routing.state || 'unknown'}</span>
+          <span>tickets: {payload.pending_tickets?.count ?? pendingTickets.length}</span>
+          <span>agents: {payload.agent_activity?.count ?? agentActivity.length}</span>
+          <span>providers: {payload.provider_activity?.count ?? providerActivity.length}</span>
+          <span>events table: {routing.durable_harness_backend_present ? 'present' : 'missing'}</span>
+        </div>
+        <p className={styles.providerNotes}>
+          Harness is visible in read-only mode through existing Mission Control tasks, activities, agents, and provider registry data. It does not create routes, protected actions, migrations, or execution.
+        </p>
+        <ul className={styles.connectorList}>
+          <li><span>Ticket routing<br /><small>{payload.pending_tickets?.source || 'existing Mission Control tasks'}</small></span><strong>{routing.ticket_routing || 'unknown'}</strong></li>
+          <li><span>Event routing<br /><small>Durable Harness event table is required before routing writes.</small></span><strong>{routing.event_routing || 'unknown'}</strong></li>
+          <li><span>Execution<br /><small>No Harness execution route exists in this layer.</small></span><strong>{payload.execution_enabled ? 'enabled' : 'locked'}</strong></li>
+        </ul>
+        {(payload.missing_harness_backend_warning || routing.missing_harness_backend_warning) && (
+          <p className={styles.providerAction}>{payload.missing_harness_backend_warning || routing.missing_harness_backend_warning}</p>
+        )}
+        {payload.provider_activity?.warning && <p className={styles.providerAction}>Provider status: {payload.provider_activity.warning}</p>}
+        {payload.next_action && <p className={styles.providerNotes}>Next: {payload.next_action}</p>}
+      </div>
+
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Pending Tickets</strong>
+          <span className={styles.providerState}>{payload.pending_tickets?.state || 'unknown'}</span>
+        </div>
+        {pendingTickets.length > 0 ? (
+          <ul className={styles.connectorList}>
+            {pendingTickets.slice(0, 6).map((ticket) => (
+              <li key={ticket.id || ticket.title}>
+                <span>
+                  {ticket.ticket_ref ? `${ticket.ticket_ref} · ` : ''}{ticket.title || 'untitled ticket'}
+                  <br />
+                  <small>{ticket.priority || 'priority unknown'} · assigned to {ticket.assigned_to || 'unassigned'} · updated {ticket.updated_at || 'unknown'}</small>
+                </span>
+                <strong>{ticket.status || 'unknown'}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.providerNotes}>No pending tickets found in the existing Mission Control task board.</p>
+        )}
+      </div>
+
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Agent Activity</strong>
+          <span className={styles.providerState}>{payload.agent_activity?.state || 'unknown'}</span>
+        </div>
+        {agentActivity.length > 0 ? (
+          <ul className={styles.connectorList}>
+            {agentActivity.slice(0, 6).map((agent) => (
+              <li key={agent.id || agent.name}>
+                <span>
+                  {agent.name || 'agent'} · {agent.role || 'role unknown'}
+                  <br />
+                  <small>{agent.last_activity || 'No recent activity'} · seen {agent.last_seen_at || 'unknown'}</small>
+                </span>
+                <strong>{agent.status || 'unknown'}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.providerNotes}>No agent activity rows found.</p>
+        )}
+      </div>
+
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Provider Activity</strong>
+          <span className={styles.providerState}>{payload.provider_activity?.state || 'unknown'}</span>
+        </div>
+        {providerActivity.length > 0 ? (
+          <ul className={styles.connectorList}>
+            {providerActivity.slice(0, 6).map((provider) => (
+              <li key={provider.id || provider.name}>
+                <span>
+                  {provider.name || 'provider'} · {provider.category || 'category unknown'}
+                  <br />
+                  <small>{provider.endpoint || 'no endpoint'}{provider.next_action ? ` · ${provider.next_action}` : ''}</small>
+                </span>
+                <strong>{provider.state || 'unknown'}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.providerNotes}>No provider activity available from the read-only provider registry.</p>
+        )}
+      </div>
+
+      <div className={styles.providerCard}>
+        <div className={styles.providerHead}>
+          <strong className={styles.providerName}>Recent Harness Sources</strong>
+          <span className={styles.providerState}>{payload.recent_activity?.state || 'unknown'}</span>
+        </div>
+        {recentActivity.length > 0 ? (
+          <ul className={styles.connectorList}>
+            {recentActivity.slice(0, 6).map((activity) => (
+              <li key={activity.id || activity.description}>
+                <span>
+                  {activity.description || activity.type || 'activity'}
+                  <br />
+                  <small>{activity.actor || 'unknown'} · {activity.entity_type || 'entity'} #{activity.entity_id ?? 'unknown'} · {activity.created_at || 'unknown'}</small>
+                </span>
+                <strong>{activity.type || 'activity'}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.providerNotes}>No recent Mission Control activity rows found.</p>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -1615,6 +2179,152 @@ function ExternalCard({
   )
 }
 
+function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.externalCard}>
+        <div className={styles.externalHead}>
+          <strong className={styles.externalTitle}>Agent Zero</strong>
+          <span className={styles.externalBadge}>loading</span>
+        </div>
+        <p className={styles.externalDescription}>Loading Agent Zero reviewer/supervisor status…</p>
+      </div>
+    )
+  }
+
+  const agent = payload.agent || {}
+  const tailnet = payload.tailnet || {}
+  const provider = payload.provider_registry || {}
+  const safety = payload.safety || {}
+
+  return (
+    <div className={styles.externalCard}>
+      <div className={styles.externalHead}>
+        <strong className={styles.externalTitle}>{agent.name || 'Agent Zero'}</strong>
+        <span className={styles.externalBadge}>{tailnet.reachable ? 'Tailnet reachable' : 'Tailnet check failed'}</span>
+      </div>
+      <p className={styles.externalDescription}>
+        Reviewer/supervisor only. Agent Zero may observe, recommend, and review. It is not an executor in Mission Control.
+      </p>
+      <dl className={styles.externalDetails}>
+        <div className={styles.externalDetailRow}>
+          <dt>Role</dt>
+          <dd>{agent.role || 'reviewer / supervisor'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Allowed behavior</dt>
+          <dd>{joinPreview(agent.allowed_behavior, 4)}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Execution</dt>
+          <dd>{agent.execution_enabled ? 'enabled' : 'disabled until owner approval'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Tailnet endpoint</dt>
+          <dd>{tailnet.endpoint || 'http://100.116.35.95:50080/'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Tailnet status</dt>
+          <dd>{tailnet.http_status ? `HTTP ${tailnet.http_status}` : 'not reachable'}{tailnet.latency_ms != null ? ` · ${tailnet.latency_ms}ms` : ''}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Provider state</dt>
+          <dd>{provider.state || 'unknown'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Safety locks</dt>
+          <dd>Docker {safety.docker_changes_enabled ? 'enabled' : 'locked'} · config {safety.config_changes_enabled ? 'enabled' : 'locked'} · writes {safety.writes_enabled ? 'enabled' : 'locked'}</dd>
+        </div>
+      </dl>
+      {(provider.error || tailnet.error) && (
+        <p className={styles.providerAction}>Status warning: {provider.error || tailnet.error}</p>
+      )}
+      <p className={styles.providerNotes}>{provider.notes || 'Execution remains disabled until owner-approved scoped runner and audit path exist.'}</p>
+      <p className={styles.providerAction}>{provider.next_action || 'Keep Agent Zero observe/recommend/review only.'}</p>
+    </div>
+  )
+}
+
+function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }) {
+  if (!payload) {
+    return (
+      <div className={styles.externalCard}>
+        <div className={styles.externalHead}>
+          <strong className={styles.externalTitle}>Hermes</strong>
+          <span className={styles.externalBadge}>loading</span>
+        </div>
+        <p className={styles.externalDescription}>Loading Hermes sandbox specialist status…</p>
+      </div>
+    )
+  }
+
+  const agent = payload.agent || {}
+  const install = payload.install || {}
+  const runtime = payload.runtime_status || {}
+  const provider = payload.provider_registry || {}
+  const safety = payload.safety || {}
+  const sandboxHomes = Array.isArray(install.sandbox_homes) ? install.sandbox_homes : []
+
+  return (
+    <div className={styles.externalCard}>
+      <div className={styles.externalHead}>
+        <strong className={styles.externalTitle}>{agent.name || 'Hermes'}</strong>
+        <span className={styles.externalBadge}>{install.installed ? 'Sandbox specialist' : 'Not installed'}</span>
+      </div>
+      <p className={styles.externalDescription}>
+        Sandbox skill/workflow specialist only. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval.
+      </p>
+      <dl className={styles.externalDetails}>
+        <div className={styles.externalDetailRow}>
+          <dt>Role</dt>
+          <dd>{agent.role || 'sandbox skill/workflow specialist'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Allowed behavior</dt>
+          <dd>{joinPreview(agent.allowed_behavior, 4)}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Installed version</dt>
+          <dd>{install.version || '(unknown)'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Binary path</dt>
+          <dd>{install.binary_path || '(not detected)'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Sandbox state</dt>
+          <dd>{install.sandbox_state || provider.state || 'unknown'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Sandbox homes</dt>
+          <dd>{sandboxHomes.length > 0 ? joinPreview(sandboxHomes, 2) : '(none detected)'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Production bridge</dt>
+          <dd>{agent.production_bridge_enabled ? 'enabled' : 'disabled until owner approval'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Provider state</dt>
+          <dd>{provider.state || 'sandbox'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Runtime read-only</dt>
+          <dd>{runtime.active_sessions ?? 0} active · {runtime.cron_jobs ?? 0} cron · {runtime.memory_entries_read_only ?? 0} memory entries</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Safety locks</dt>
+          <dd>gateway {safety.production_gateway_changes_enabled ? 'enabled' : 'locked'} · ports {safety.public_port_changes_enabled ? 'enabled' : 'locked'} · credentials {safety.credential_changes_enabled ? 'enabled' : 'locked'}</dd>
+        </div>
+      </dl>
+      {(provider.error || install.version_error) && (
+        <p className={styles.providerAction}>Status warning: {provider.error || install.version_error}</p>
+      )}
+      <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, Tony memory connection, or credentials are changed by this surface.'}</p>
+      <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes sandbox/read-only until owner approves production bridge wiring.'}</p>
+    </div>
+  )
+}
+
 function ButtonContractCard({ button }: { button: ButtonContractItem }) {
   return (
     <div className={styles.providerCard}>
@@ -1740,6 +2450,18 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [buildWikiStatus, setBuildWikiStatus] = useState<BuildWikiStatusPayload | null>(null)
   const [buildWikiStatusState, setBuildWikiStatusState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [buildWikiStatusError, setBuildWikiStatusError] = useState<string>('')
+  const [brainSyncStatus, setBrainSyncStatus] = useState<BrainSyncReadOnlyPayload | null>(null)
+  const [brainSyncStatusState, setBrainSyncStatusState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [brainSyncStatusError, setBrainSyncStatusError] = useState<string>('')
+  const [harnessStatus, setHarnessStatus] = useState<HarnessReadOnlyPayload | null>(null)
+  const [harnessStatusState, setHarnessStatusState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [harnessStatusError, setHarnessStatusError] = useState<string>('')
+  const [agentZeroReviewer, setAgentZeroReviewer] = useState<AgentZeroReviewerPayload | null>(null)
+  const [agentZeroReviewerState, setAgentZeroReviewerState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [agentZeroReviewerError, setAgentZeroReviewerError] = useState<string>('')
+  const [hermesSandbox, setHermesSandbox] = useState<HermesSandboxPayload | null>(null)
+  const [hermesSandboxState, setHermesSandboxState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [hermesSandboxError, setHermesSandboxError] = useState<string>('')
   const [buildWikiRunNow, setBuildWikiRunNow] = useState<BuildWikiRunNowPayload | null>(null)
   const [buildWikiRunNowState, setBuildWikiRunNowState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [buildWikiFiles, setBuildWikiFiles] = useState<BuildWikiFilesPayload | null>(null)
@@ -1859,6 +2581,84 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setConnectorError((err as Error).message || 'fetch failed')
         setConnectorState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setHarnessStatusState('loading')
+    fetch('/api/bridge/harness/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as HarnessReadOnlyPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setHarnessStatus(data)
+        setHarnessStatusState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setHarnessStatusError((err as Error).message || 'fetch failed')
+        setHarnessStatusState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setAgentZeroReviewerState('loading')
+    fetch('/api/bridge/agent-zero/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as AgentZeroReviewerPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setAgentZeroReviewer(data)
+        setAgentZeroReviewerState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setAgentZeroReviewerError((err as Error).message || 'fetch failed')
+        setAgentZeroReviewerState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setHermesSandboxState('loading')
+    fetch('/api/bridge/hermes/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as HermesSandboxPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setHermesSandbox(data)
+        setHermesSandboxState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setHermesSandboxError((err as Error).message || 'fetch failed')
+        setHermesSandboxState('error')
       })
     return () => {
       cancelled = true
@@ -2135,6 +2935,30 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
 
   useEffect(() => {
     let cancelled = false
+    setBrainSyncStatusState('loading')
+    fetch('/api/bridge/brain-sync/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(data?.error || `status HTTP ${r.status}`)
+        return data as BrainSyncReadOnlyPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setBrainSyncStatus(data)
+        setBrainSyncStatusState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setBrainSyncStatusError((err as Error).message || 'fetch failed')
+        setBrainSyncStatusState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
     setBuildWikiStatusState('loading')
     fetch('/api/bridge/brain-sync/build-wiki/status', { cache: 'no-store', credentials: 'same-origin' })
       .then(async (r) => {
@@ -2388,6 +3212,12 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         </div>
       )}
 
+      <ProviderRegistrySection
+        providers={providers}
+        providerState={providerState}
+        providerError={providerError}
+      />
+
       {/* Tier-laned canvas */}
       <section className={styles.canvas}>
         {TIER_DEFS.map((t) => (
@@ -2434,6 +3264,29 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               ))}
             </div>
           </>
+        )}
+      </section>
+
+      {/* Harness visibility — read-only MVP */}
+      <section className={styles.providerSection}>
+        <header className={styles.externalSectionHeader}>
+          <h2 className={styles.tierTitle}>Harness Visibility</h2>
+          <span className={styles.tierSub}>
+            Read-only routing, tickets, agent activity, and provider activity from <code>/api/bridge/harness/status</code>
+          </span>
+        </header>
+        {harnessStatusState === 'loading' && (
+          <div className={styles.banner}>Loading Harness visibility from <code>/api/bridge/harness/status</code>…</div>
+        )}
+        {harnessStatusState === 'error' && (
+          <div className={`${styles.banner} ${styles.bannerError}`}>
+            <strong>Could not load Harness visibility:</strong> {harnessStatusError}
+          </div>
+        )}
+        {harnessStatusState === 'ok' && (
+          <div className={styles.providerGrid}>
+            <HarnessVisibilityCard payload={harnessStatus} />
+          </div>
         )}
       </section>
 
@@ -2796,6 +3649,25 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               </p>
             </div>
             <div className={styles.providerGrid}>
+              {brainSyncStatusState === 'loading' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Brain Sync Source Status</strong>
+                    <span className={styles.providerState}>loading</span>
+                  </div>
+                  <p className={styles.providerNotes}>Loading read-only Tony memory, MemPalace, Obsidian, and Graphify status…</p>
+                </div>
+              )}
+              {brainSyncStatusState === 'error' && (
+                <div className={styles.providerCard}>
+                  <div className={styles.providerHead}>
+                    <strong className={styles.providerName}>Brain Sync Source Status</strong>
+                    <span className={styles.providerState}>error</span>
+                  </div>
+                  <p className={styles.providerAction}>Could not load Brain Sync status: {brainSyncStatusError}</p>
+                </div>
+              )}
+              {brainSyncStatusState === 'ok' && <BrainSyncReadOnlyStatusCard payload={brainSyncStatus} />}
               {buildWikiStatusState === 'loading' && (
                 <div className={styles.providerCard}>
                   <div className={styles.providerHead}>
@@ -2931,39 +3803,6 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         )}
       </section>
 
-      {/* Bridge provider registry — read-only */}
-      <section className={styles.providerSection}>
-        <header className={styles.externalSectionHeader}>
-          <h2 className={styles.tierTitle}>Bridge Provider Registry</h2>
-          <span className={styles.tierSub}>
-            Live read-only snapshot from <code>/api/bridge/providers</code>
-          </span>
-        </header>
-        {providerState === 'loading' && (
-          <div className={styles.banner}>Loading provider status from <code>/api/bridge/providers</code>…</div>
-        )}
-        {providerState === 'error' && (
-          <div className={`${styles.banner} ${styles.bannerError}`}>
-            <strong>Could not load provider status:</strong> {providerError}
-          </div>
-        )}
-        {providerState === 'ok' && (
-          <>
-            <div className={styles.providerSummary}>
-              <span>{providers?.summary?.total ?? providers?.providers?.length ?? 0} providers</span>
-              {Object.entries(providers?.summary?.by_state || {}).map(([state, count]) => (
-                <span key={state}>{providerStateLabel(state as ProviderState)}: {count}</span>
-              ))}
-            </div>
-            <div className={styles.providerGrid}>
-              {(providers?.providers || []).map((provider) => (
-                <ProviderCard key={provider.id} provider={provider} />
-              ))}
-            </div>
-          </>
-        )}
-      </section>
-
       {/* External / tailnet entities */}
       <section className={styles.externalSection}>
         <header className={styles.externalSectionHeader}>
@@ -2973,34 +3812,52 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           </span>
         </header>
         <div className={styles.externalGrid}>
-          <ExternalCard
-            title="Agent Zero"
-            badge="Tailnet-only"
-            description="External agent runtime. Container running on Tailnet IP only — no public exposure. Phase A: visibility only."
-            details={[
-              { label: 'Image', value: 'agent0ai/agent-zero:latest' },
-              { label: 'Tailnet endpoint', value: '100.116.35.95:50080' },
-              { label: 'Public exposure', value: 'NONE (by design)' },
-              { label: 'Mount', value: '/home/tony/agent-zero-deploy/data → /a0' },
-              { label: 'Phase A access', value: 'read-only' },
-            ]}
-          />
-          <ExternalCard
-            title="Hermes Agent"
-            badge={hermes.installed ? 'Sandbox installed' : 'Not installed'}
-            description={
-              hermes.installed
-                ? 'Sandbox-only install. CLI works under isolated HERMES_HOME. Not operational in production.'
-                : 'Sandbox folder not detected. Install per /home/tony/claudeclaw/runtime/hermes-sandbox-install-report.md.'
-            }
-            details={[
-              { label: 'Path', value: hermes.path || '(not present)' },
-              { label: 'Version', value: hermes.version || '(unknown)' },
-              { label: 'Production wiring', value: 'NONE — sandbox-only' },
-              { label: 'HERMES_HOME', value: '/home/tony/sandbox/hermes-home-* (isolated)' },
-              { label: 'Phase A access', value: 'read-only status display' },
-            ]}
-          />
+          {agentZeroReviewerState === 'ok' && <AgentZeroReviewerCard payload={agentZeroReviewer} />}
+          {agentZeroReviewerState === 'loading' && <AgentZeroReviewerCard payload={null} />}
+          {agentZeroReviewerState === 'error' && (
+            <div className={styles.externalCard}>
+              <div className={styles.externalHead}>
+                <strong className={styles.externalTitle}>Agent Zero</strong>
+                <span className={styles.externalBadge}>status error</span>
+              </div>
+              <p className={styles.externalDescription}>Could not load Agent Zero reviewer status: {agentZeroReviewerError}</p>
+              <dl className={styles.externalDetails}>
+                <div className={styles.externalDetailRow}>
+                  <dt>Role</dt>
+                  <dd>observe / recommend / review</dd>
+                </div>
+                <div className={styles.externalDetailRow}>
+                  <dt>Execution</dt>
+                  <dd>disabled until owner approval</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+          {hermesSandboxState === 'ok' && <HermesSandboxCard payload={hermesSandbox} />}
+          {hermesSandboxState === 'loading' && <HermesSandboxCard payload={null} />}
+          {hermesSandboxState === 'error' && (
+            <div className={styles.externalCard}>
+              <div className={styles.externalHead}>
+                <strong className={styles.externalTitle}>Hermes</strong>
+                <span className={styles.externalBadge}>status error</span>
+              </div>
+              <p className={styles.externalDescription}>Could not load Hermes sandbox status: {hermesSandboxError}</p>
+              <dl className={styles.externalDetails}>
+                <div className={styles.externalDetailRow}>
+                  <dt>Role</dt>
+                  <dd>sandbox skill/workflow specialist</dd>
+                </div>
+                <div className={styles.externalDetailRow}>
+                  <dt>Production bridge</dt>
+                  <dd>disabled until owner approval</dd>
+                </div>
+                <div className={styles.externalDetailRow}>
+                  <dt>Safety locks</dt>
+                  <dd>gateway locked · public ports locked · credentials locked</dd>
+                </div>
+              </dl>
+            </div>
+          )}
           <ExternalCard
             title="OpenClaw Gateway"
             badge="HTTP 200"

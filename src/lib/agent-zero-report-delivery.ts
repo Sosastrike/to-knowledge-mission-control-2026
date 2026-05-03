@@ -208,7 +208,7 @@ function deliveryChannels(requested: AgentZeroReportRequestedDelivery[], id: str
 function buildNormalReply(channels: AgentZeroReportDeliveryChannel[]): string {
   const requestedBlocked = channels.filter((channel) => channel.requested && channel.status === 'blocked' && channel.provider !== 'mission_control')
   if (requestedBlocked.some((channel) => channel.provider === 'onedrive')) {
-    return 'I created the report in Mission Control, but OneDrive delivery is blocked because OneDrive delivery is not configured yet.'
+    return 'OneDrive upload is blocked because the upload connector is not configured.'
   }
   if (requestedBlocked.some((channel) => channel.provider === 'google_drive')) {
     return 'Google Drive upload is blocked because the upload connector is not configured.'

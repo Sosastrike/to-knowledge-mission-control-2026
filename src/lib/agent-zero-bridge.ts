@@ -554,6 +554,13 @@ export type AgentZeroReadOnlyContext = {
     google_drive_verify_link_endpoint: '/api/bridge/agent-zero/google-drive/verify-link'
     onedrive_delivery_visible: boolean
     onedrive_status: EcosystemAccessState
+    onedrive_delivery_adapter_status: EcosystemAccessState
+    onedrive_upload_connector_configured: false
+    onedrive_status_endpoint: '/api/bridge/agent-zero/onedrive/status'
+    onedrive_folder_lookup_endpoint: '/api/bridge/agent-zero/onedrive/folder-lookup'
+    onedrive_upload_test_endpoint: '/api/bridge/agent-zero/onedrive/upload-test-file'
+    onedrive_upload_report_endpoint: '/api/bridge/agent-zero/onedrive/upload-report'
+    onedrive_verify_link_endpoint: '/api/bridge/agent-zero/onedrive/verify-link'
     raw_local_paths_exposed: false
     task_ids_in_normal_replies: false
     external_delivery_writes_enabled: false
@@ -1160,6 +1167,8 @@ export function buildAgentZeroReadOnlyContext(input: {
         '/api/bridge/agent-zero/reports',
         '/api/bridge/agent-zero/google-drive/status',
         '/api/bridge/agent-zero/google-drive/upload-report',
+        '/api/bridge/agent-zero/onedrive/status',
+        '/api/bridge/agent-zero/onedrive/upload-report',
         '/api/bridge/providers',
         '/api/bridge/preflight',
         '/api/mcp/list',
@@ -1387,6 +1396,13 @@ export function buildAgentZeroReadOnlyContext(input: {
       google_drive_verify_link_endpoint: '/api/bridge/agent-zero/google-drive/verify-link',
       onedrive_delivery_visible: Boolean(input.oneDriveVisible),
       onedrive_status: input.oneDriveVisible ? 'visible' : 'blocked',
+      onedrive_delivery_adapter_status: 'blocked',
+      onedrive_upload_connector_configured: false,
+      onedrive_status_endpoint: '/api/bridge/agent-zero/onedrive/status',
+      onedrive_folder_lookup_endpoint: '/api/bridge/agent-zero/onedrive/folder-lookup',
+      onedrive_upload_test_endpoint: '/api/bridge/agent-zero/onedrive/upload-test-file',
+      onedrive_upload_report_endpoint: '/api/bridge/agent-zero/onedrive/upload-report',
+      onedrive_verify_link_endpoint: '/api/bridge/agent-zero/onedrive/verify-link',
       raw_local_paths_exposed: false,
       task_ids_in_normal_replies: false,
       external_delivery_writes_enabled: false,
@@ -1436,6 +1452,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry, brain.available_read_apis, brain.available_write_apis, brain.index_status, and brain.brain_watchers. Distinguish status visibility from content read adapters and write adapters.',
     'For report delivery, use delivery.agent_zero_report_create_endpoint and delivery mission_control links only. Do not expose local paths, raw filenames, task IDs, or claim Telegram/Drive delivery unless a generated report_delivery object explicitly says that happened.',
     'For Google Drive delivery, use delivery.google_drive_status_endpoint first. Uploads require delivery.google_drive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: Google Drive upload is blocked because the upload connector is not configured.',
+    'For OneDrive delivery, use delivery.onedrive_status_endpoint first. Uploads require delivery.onedrive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: OneDrive upload is blocked because the upload connector is not configured.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

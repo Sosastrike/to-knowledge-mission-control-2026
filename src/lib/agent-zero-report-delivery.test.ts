@@ -52,7 +52,7 @@ describe('Agent Zero report delivery surface', () => {
 
     const onedrive = result.report.delivery_channels.find((channel) => channel.provider === 'onedrive')
     expect(onedrive).toMatchObject({ requested: true, status: 'blocked', external_write: true, requires_bridge_session: true })
-    expect(result.report.normal_reply).toContain('OneDrive delivery is blocked')
+    expect(result.report.normal_reply).toBe('OneDrive upload is blocked because the upload connector is not configured.')
     expect(result.report.normal_reply.startsWith('Done')).toBe(false)
     expect(result.report.normal_reply).not.toContain('/home/tony')
   })

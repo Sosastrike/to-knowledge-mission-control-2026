@@ -533,12 +533,22 @@ export type AgentZeroReadOnlyContext = {
   opencloud_buildwiki: AgentZeroBuildWikiFarmerSummary
   delivery: {
     report_pdf_delivery_status: EcosystemAccessState
+    agent_zero_report_delivery_status: EcosystemAccessState
+    agent_zero_report_create_endpoint: '/api/bridge/agent-zero/reports'
+    agent_zero_report_list_endpoint: '/api/bridge/agent-zero/reports'
+    agent_zero_report_detail_endpoint: '/api/bridge/agent-zero/reports/:id'
+    agent_zero_pdf_download_endpoint: '/api/bridge/agent-zero/reports/:id/pdf'
     telegram_reports_visible: boolean
+    telegram_pdf_attachment_status: EcosystemAccessState
+    telegram_pdf_attachment_blocked_reason: string | null
     mission_control_reports_visible: boolean
+    mission_control_report_links_enabled: true
     google_drive_delivery_visible: boolean
     google_drive_status: EcosystemAccessState
     onedrive_delivery_visible: boolean
     onedrive_status: EcosystemAccessState
+    raw_local_paths_exposed: false
+    task_ids_in_normal_replies: false
     external_delivery_writes_enabled: false
   }
   bridge_session: {
@@ -1140,6 +1150,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         '/api/bridge/agent-zero/status',
         '/api/bridge/agent-zero/test-chat',
         '/api/bridge/agent-zero/ecosystem',
+        '/api/bridge/agent-zero/reports',
         '/api/bridge/providers',
         '/api/bridge/preflight',
         '/api/mcp/list',
@@ -1346,12 +1357,22 @@ export function buildAgentZeroReadOnlyContext(input: {
     },
     delivery: {
       report_pdf_delivery_status: 'visible',
+      agent_zero_report_delivery_status: 'visible',
+      agent_zero_report_create_endpoint: '/api/bridge/agent-zero/reports',
+      agent_zero_report_list_endpoint: '/api/bridge/agent-zero/reports',
+      agent_zero_report_detail_endpoint: '/api/bridge/agent-zero/reports/:id',
+      agent_zero_pdf_download_endpoint: '/api/bridge/agent-zero/reports/:id/pdf',
       telegram_reports_visible: true,
+      telegram_pdf_attachment_status: 'blocked',
+      telegram_pdf_attachment_blocked_reason: 'no_approved_telegram_document_attachment_route',
       mission_control_reports_visible: true,
+      mission_control_report_links_enabled: true,
       google_drive_delivery_visible: Boolean(input.googleDriveVisible),
       google_drive_status: input.googleDriveVisible ? 'visible' : 'blocked',
       onedrive_delivery_visible: Boolean(input.oneDriveVisible),
       onedrive_status: input.oneDriveVisible ? 'visible' : 'blocked',
+      raw_local_paths_exposed: false,
+      task_ids_in_normal_replies: false,
       external_delivery_writes_enabled: false,
     },
     bridge_session: {
@@ -1397,6 +1418,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'For skill questions, use skills.registry and skills.sources. Do not claim unregistered skills; mark blocked or dependency-limited skills honestly.',
     'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked, missing credential, read-only/write-enabled, and Bridge Session requirements exactly as shown.',
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry, brain.available_read_apis, brain.available_write_apis, brain.index_status, and brain.brain_watchers. Distinguish status visibility from content read adapters and write adapters.',
+    'For report delivery, use delivery.agent_zero_report_create_endpoint and delivery mission_control links only. Do not expose local paths, raw filenames, task IDs, or claim Telegram/Drive delivery unless a generated report_delivery object explicitly says that happened.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

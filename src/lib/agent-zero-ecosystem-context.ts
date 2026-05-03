@@ -10,6 +10,7 @@ import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
+import { getAgentZeroMemPalaceStatus } from '@/lib/agent-zero-mempalace-adapter'
 import {
   type AgentZeroCapabilityState,
   type AgentZeroBrainApiSummary,
@@ -901,7 +902,7 @@ function endpointSummary(input: {
 }
 
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
-  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, obsidianAdapterStatus, timerActive, githubToken] = await Promise.all([
+  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, obsidianAdapterStatus, mempalaceAdapterStatus, timerActive, githubToken] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
       status: 503,
@@ -963,6 +964,37 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       direct_access: false as const,
       proxy_access: true as const,
       blockers: ['obsidian_adapter_status_failed'],
+    })),
+    Promise.resolve(getAgentZeroMemPalaceStatus()).catch(() => ({
+      ok: false,
+      mode: 'agent_zero_mempalace_read_only_adapter' as const,
+      status: 'blocked' as const,
+      mempalace_visible: false,
+      graph_db_status: 'missing' as const,
+      vector_db_status: 'missing' as const,
+      data_dir_status: 'missing' as const,
+      config_status: 'missing' as const,
+      index_status: 'missing' as const,
+      last_seen_at: null,
+      counts: {
+        entities: null,
+        triples: null,
+        entity_types: null,
+        predicates: null,
+        collections: null,
+        embeddings: null,
+        fulltext_rows: null,
+      },
+      available_actions: ['status' as const],
+      safe_summary_available: false,
+      raw_private_dump_enabled: false as const,
+      read_only: true as const,
+      write_enabled: false as const,
+      execution_enabled: false as const,
+      direct_filesystem_exposed: false as const,
+      direct_access: false as const,
+      proxy_access: true as const,
+      blockers: ['mempalace_adapter_status_failed'],
     })),
     readBuildWikiTimerActive(),
     getGitHubToken().catch(() => null),
@@ -1251,6 +1283,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const brainContextReachable = Boolean((brainContextResult as any).ok && (brainContextResult.payload as BrainContextPayload)?.ok !== false)
   const brainWriteContractReachable = Boolean((brainWriteContractResult as any).ok)
   const obsidianAdapterConnected = obsidianAdapterStatus.status === 'connected'
+  const mempalaceAdapterConnected = mempalaceAdapterStatus.status === 'connected'
   const brainLastSyncAt = [
     obsidianSync?.last_success_at,
     mempalaceSync?.last_success_at,
@@ -1325,6 +1358,24 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       status: obsidianAdapterConnected ? 'connected' : 'blocked',
       purpose: 'Agent Zero Obsidian adapter note summary. No LLM/tool execution is required.',
       blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/mempalace?action=status',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero MemPalace adapter index/status summary. It exposes counts and health only, not raw memory content.',
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/mempalace?action=query&q=...',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero MemPalace safe query summary. Returns aggregate counts and categories only; raw memory records stay hidden.',
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/mempalace?action=summary&q=...',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero MemPalace safe memory summary. No embeddings, raw records, or private memory dumps are returned.',
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
     }),
   ]
   const brainWriteApis: AgentZeroBrainApiSummary[] = [
@@ -1435,16 +1486,33 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       sync: mempalaceSync,
       context: brainContextBySource.get('mempalace'),
       contract: brainContractBySource.get('mempalace'),
-      readAdapter: 'status_only',
+      status: mempalaceAdapterConnected ? 'connected' : undefined,
+      rawState: mempalaceAdapterConnected ? 'adapter_safe_summary_ready' : undefined,
+      statusVisible: mempalaceAdapterConnected || undefined,
+      readAdapter: mempalaceAdapterConnected ? 'available' : 'status_only',
       writeAdapter: 'blocked',
-      readContentEnabled: false,
-      pathStatus: pathStatusFromDetails(mempalaceDetails, ['data_path']),
-      indexStatus: mempalaceEntries !== null ? 'visible' : (numberFromDetails(mempalaceDetails, 'chroma_bytes') ? 'visible' : 'unknown'),
-      availableReadApis: ['/api/bridge/brain-sync/status', '/api/bridge/brain-context'],
+      readContentEnabled: mempalaceAdapterConnected,
+      pathStatus: mempalaceAdapterStatus.mempalace_visible ? 'present' : pathStatusFromDetails(mempalaceDetails, ['data_path']),
+      indexStatus: mempalaceAdapterStatus.index_status === 'visible'
+        ? 'visible'
+        : mempalaceEntries !== null ? 'visible' : (numberFromDetails(mempalaceDetails, 'chroma_bytes') ? 'visible' : 'unknown'),
+      availableReadApis: [
+        '/api/bridge/brain-sync/status',
+        '/api/bridge/brain-context',
+        '/api/bridge/agent-zero/mempalace?action=status',
+        '/api/bridge/agent-zero/mempalace?action=query&q=...',
+        '/api/bridge/agent-zero/mempalace?action=summary&q=...',
+      ],
       availableWriteApis: [],
-      blockers: ['mempalace_status_only', 'mempalace_content_read_adapter_not_connected', 'mempalace_writes_disabled'],
-      summary: mempalaceSync?.summary || brainContextBySource.get('mempalace')?.detail || 'MemPalace is not production-connected yet.',
-      notes: 'MemPalace is status-only/read-status only until an owner-approved client, schema, audit path, rollback path, and write runner are connected.',
+      blockers: [
+        'mempalace_writes_disabled',
+        ...(mempalaceAdapterConnected ? [] : ['mempalace_content_read_adapter_not_connected']),
+        ...mempalaceAdapterStatus.blockers,
+      ],
+      summary: mempalaceAdapterConnected
+        ? `MemPalace read-only adapter is connected. It sees ${mempalaceAdapterStatus.counts.entities ?? 0} graph entities, ${mempalaceAdapterStatus.counts.triples ?? 0} graph relationships, and ${mempalaceAdapterStatus.counts.embeddings ?? 0} vector index rows as safe aggregate summaries.`
+        : mempalaceSync?.summary || brainContextBySource.get('mempalace')?.detail || 'MemPalace is not production-connected yet.',
+      notes: 'Agent Zero can read MemPalace status and safe aggregate memory summaries only through Mission Control. Raw private memory dumps, writes, embeddings, and direct filesystem/database access stay disabled.',
     }),
     brainSourceRegistryItem({
       id: 'graphify',
@@ -1724,6 +1792,36 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       readOnly: true,
       requiresBridgeSession: false,
       blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'mempalace.adapter.status',
+      name: 'MemPalace adapter status',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_mempalace_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'mempalace.adapter.query',
+      name: 'MemPalace adapter safe memory query',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_mempalace_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'mempalace.adapter.summary',
+      name: 'MemPalace adapter safe memory summary',
+      status: mempalaceAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_mempalace_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: mempalaceAdapterConnected ? null : mempalaceAdapterStatus.blockers.join(';') || 'mempalace_adapter_blocked',
     }),
     ...mcpToolRegistry,
     ...fallbackZapierToolRegistry,

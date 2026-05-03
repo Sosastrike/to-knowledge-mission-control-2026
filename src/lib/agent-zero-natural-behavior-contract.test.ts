@@ -175,6 +175,22 @@ describe('Agent Zero natural behavior contract', () => {
     expect(visible).toContain('task-abc123456')
   })
 
+  it('hides Bridge Session and report IDs unless the owner asks for them', () => {
+    const hidden = sanitizeAgentZeroOwnerReply({
+      ownerMessage: 'Can you see Build-Wiki?',
+      text: 'There is currently one pending your approval (bs_8f906d74d4). Report azr_moq6318x_c9777e050969 is available.',
+    })
+    const visible = sanitizeAgentZeroOwnerReply({
+      ownerMessage: 'Show me the bridge session ID.',
+      text: 'There is currently one pending your approval (bs_8f906d74d4).',
+    })
+
+    expect(hidden).not.toContain('bs_8f906d74d4')
+    expect(hidden).not.toContain('azr_moq6318x_c9777e050969')
+    expect(hidden).toContain('the internal record')
+    expect(visible).toContain('bs_8f906d74d4')
+  })
+
   it('requires exact blockers for blocked connector and report delivery questions', () => {
     const oneDrive = sanitizeAgentZeroOwnerReply({
       ownerMessage: 'Send the report to OneDrive.',

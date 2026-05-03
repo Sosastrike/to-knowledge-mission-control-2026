@@ -596,9 +596,10 @@ const INTERNAL_REPORT_PATH_PATTERN = /\bruntime\/(?:executive-reports|reports|ta
 const RAW_STAGE_PATTERN = /\b(?:Failed stage|Error stage|Stage failed|Traceback|Stack trace)\b/gi
 const ROBOTIC_LABEL_PATTERN = /^\s*(?:Status|Result|Next|Trace|Tool|Tools|Runtime|Model|System|Stage|Output)\s*:\s*/i
 const TASK_ID_PATTERN = /\b(?:task[_\s-]*id|task)\s*[:#-]?\s*(?:task[-_])?[a-z0-9][a-z0-9_-]{5,}\b/gi
+const INTERNAL_ID_PATTERN = /\b(?:bs|azr|apr|approval|session|report)[_-][a-z0-9][a-z0-9_-]{5,}\b/gi
 
 function ownerAskedForTaskIds(ownerMessage?: string): boolean {
-  return /\b(?:task\s*id|task\s*ids|show(?: me)?(?: the)? task|what(?: is|'s) the task)\b/i.test(ownerMessage || '')
+  return /\b(?:(?:task|session|bridge\s*session|approval|report)\s*id|(?:task|session|approval|report)\s*ids|show(?: me)?(?: the)? (?:task|session|approval|report)|what(?: is|'s) the (?:task|session|approval|report))\b/i.test(ownerMessage || '')
 }
 
 export function sanitizeAgentZeroOwnerReply(input: {
@@ -624,7 +625,9 @@ export function sanitizeAgentZeroOwnerReply(input: {
     .trim()
 
   if (!ownerAskedIds) {
-    text = text.replace(TASK_ID_PATTERN, 'the task')
+    text = text
+      .replace(TASK_ID_PATTERN, 'the task')
+      .replace(INTERNAL_ID_PATTERN, 'the internal record')
   }
 
   if (blocker) {

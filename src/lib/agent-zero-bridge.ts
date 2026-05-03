@@ -256,6 +256,12 @@ export type AgentZeroBrainSourceRegistryItem = {
   status: EcosystemAccessState
   raw_state: string
   status_visible: boolean
+  read_available: boolean
+  write_available: boolean
+  blocked: boolean
+  blocked_reason: string | null
+  read_blocked_reason: string | null
+  write_blocked_reason: string | null
   read_adapter: AgentZeroBrainAdapterStatus
   write_adapter: AgentZeroBrainAdapterStatus
   read_content_enabled: boolean
@@ -303,6 +309,12 @@ export type AgentZeroBuildWikiFarmerSummary = {
   direct_opencloud_access_visible: boolean
   build_wiki_status_visible: boolean
   read_only: true
+  read_available: boolean
+  write_available: boolean
+  blocked: boolean
+  blocked_reason: string | null
+  read_blocked_reason: string | null
+  write_blocked_reason: string | null
   routes: Record<string, { method: 'GET' | 'POST'; path: string; read_only: boolean; execution_enabled: false; requires_bridge_session: boolean }>
   farmer_service: string
   farmer_timer: string
@@ -1126,8 +1138,8 @@ function brainLiveRegistryItem(
   fallback: { id: string; name: string; endpoint: string },
 ): AgentZeroLiveRegistryItem {
   const visible = Boolean(source && source.status_visible)
-  const readEnabled = Boolean(source?.read_content_enabled || source?.read_adapter === 'available' || source?.read_adapter === 'status_only')
-  const writeEnabled = Boolean(source?.write_adapter === 'available')
+  const readEnabled = Boolean(source?.read_available ?? (source?.read_content_enabled || source?.read_adapter === 'available' || source?.read_adapter === 'status_only'))
+  const writeEnabled = Boolean(source?.write_available ?? source?.write_adapter === 'available')
   return liveRegistryItem({
     id: fallback.id,
     name: fallback.name,
@@ -1136,13 +1148,13 @@ function brainLiveRegistryItem(
     configured: visible,
     readOnly: readEnabled,
     writeEnabled,
-    blocked: !source || accessIsBlocked(source.status),
+    blocked: !source || Boolean(source.blocked) || accessIsBlocked(source.status),
     missingCredential: false,
     requiresBridgeSession: writeEnabled,
     credentialPresent: null,
     source: source ? 'mission_control_brain_registry' : 'mission_control_brain_registry_missing',
     endpoint: fallback.endpoint,
-    blockedReason: source?.blockers?.[0] || (!source ? `${fallback.id}_not_visible` : null),
+    blockedReason: source?.blocked_reason || source?.blockers?.[0] || (!source ? `${fallback.id}_not_visible` : null),
     summary: source?.summary || `${fallback.name} is not visible through the live brain registry.`,
     counts: {
       read_apis: source?.available_read_apis?.length ?? 0,
@@ -1641,6 +1653,12 @@ export function buildAgentZeroReadOnlyContext(input: {
     status: source.access,
     raw_state: source.status,
     status_visible: source.access !== 'blocked' && source.access !== 'not_connected',
+    read_available: source.access !== 'blocked' && source.access !== 'not_connected',
+    write_available: false,
+    blocked: source.access === 'blocked' || source.access === 'not_connected',
+    blocked_reason: source.access === 'blocked' || source.access === 'not_connected' ? `${source.source}_not_visible` : null,
+    read_blocked_reason: source.access === 'blocked' || source.access === 'not_connected' ? `${source.source}_read_not_available` : null,
+    write_blocked_reason: `${source.source}_write_adapter_disabled`,
     read_adapter: source.source === 'mempalace' ? 'status_only' : 'status_only',
     write_adapter: 'blocked',
     read_content_enabled: false,
@@ -1665,6 +1683,12 @@ export function buildAgentZeroReadOnlyContext(input: {
       status: source.status,
       raw_state: source.raw_state,
       status_visible: Boolean(source.status_visible),
+      read_available: Boolean(source.read_available ?? (source.read_adapter === 'available' || source.read_adapter === 'status_only')),
+      write_available: Boolean(source.write_available ?? source.write_adapter === 'available'),
+      blocked: Boolean(source.blocked ?? accessIsBlocked(source.status)),
+      blocked_reason: source.blocked_reason || null,
+      read_blocked_reason: source.read_blocked_reason || null,
+      write_blocked_reason: source.write_blocked_reason || null,
       read_adapter: source.read_adapter,
       write_adapter: source.write_adapter,
       read_content_enabled: Boolean(source.read_content_enabled),
@@ -1958,6 +1982,12 @@ export function buildAgentZeroReadOnlyContext(input: {
       direct_opencloud_access_visible: false,
       build_wiki_status_visible: true,
       read_only: true,
+      read_available: true,
+      write_available: Boolean(input.bridgeSessionAvailable),
+      blocked: false,
+      blocked_reason: null,
+      read_blocked_reason: null,
+      write_blocked_reason: input.bridgeSessionAvailable ? null : 'buildwiki_write_requires_bridge_session_and_owner_approval',
       routes: {
         status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
         run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },

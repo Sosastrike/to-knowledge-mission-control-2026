@@ -751,6 +751,12 @@ async function readBuildWikiFarmerStatus(input: {
     direct_opencloud_access_visible: false,
     build_wiki_status_visible: true,
     read_only: true,
+    read_available: true,
+    write_available: input.latestRunNow.persistence_ready,
+    blocked: false,
+    blocked_reason: null,
+    read_blocked_reason: null,
+    write_blocked_reason: input.latestRunNow.persistence_ready ? null : 'buildwiki_run_now_persistence_unavailable',
     routes: {
       status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
       files: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/files', read_only: true, execution_enabled: false, requires_bridge_session: false },
@@ -1047,6 +1053,13 @@ function brainSourceRegistryItem(input: {
   if (readStatus === 'status_only' && input.id !== 'brain_sync') blockers.add(`${input.id}_content_read_adapter_not_connected`)
   if (writeStatus !== 'available') blockers.add(`${input.id}_write_adapter_disabled`)
   if (status === 'blocked') blockers.add(`${input.id}_status_blocked`)
+  const readAvailable = status !== 'blocked' && status !== 'not_connected' && (readStatus === 'available' || readStatus === 'status_only')
+  const writeAvailable = writeStatus === 'available'
+  const blockedReason = status === 'blocked'
+    ? `${input.id}_status_blocked`
+    : !readAvailable && !writeAvailable
+      ? `${input.id}_adapter_not_available`
+      : null
 
   return {
     id: input.id,
@@ -1054,6 +1067,12 @@ function brainSourceRegistryItem(input: {
     status,
     raw_state: rawState,
     status_visible: Boolean(input.statusVisible ?? status !== 'blocked'),
+    read_available: readAvailable,
+    write_available: writeAvailable,
+    blocked: Boolean(blockedReason),
+    blocked_reason: blockedReason,
+    read_blocked_reason: readAvailable ? null : `${input.id}_read_adapter_blocked`,
+    write_blocked_reason: writeAvailable ? null : `${input.id}_write_adapter_disabled`,
     read_adapter: readStatus,
     write_adapter: writeStatus,
     read_content_enabled: Boolean(input.readContentEnabled && readStatus === 'available'),

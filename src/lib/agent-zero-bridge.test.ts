@@ -338,6 +338,12 @@ describe('Agent Zero read-only bridge connector', () => {
           status: 'visible',
           raw_state: 'read_ready',
           status_visible: true,
+          read_available: true,
+          write_available: false,
+          blocked: false,
+          blocked_reason: null,
+          read_blocked_reason: null,
+          write_blocked_reason: 'obsidian_write_adapter_disabled',
           read_adapter: 'available',
           write_adapter: 'blocked',
           read_content_enabled: true,
@@ -362,6 +368,12 @@ describe('Agent Zero read-only bridge connector', () => {
           status: 'visible',
           raw_state: 'status_only',
           status_visible: true,
+          read_available: true,
+          write_available: false,
+          blocked: false,
+          blocked_reason: null,
+          read_blocked_reason: null,
+          write_blocked_reason: 'mempalace_write_adapter_disabled',
           read_adapter: 'status_only',
           write_adapter: 'blocked',
           read_content_enabled: false,
@@ -386,6 +398,12 @@ describe('Agent Zero read-only bridge connector', () => {
           status: 'visible',
           raw_state: 'healthy',
           status_visible: true,
+          read_available: true,
+          write_available: false,
+          blocked: false,
+          blocked_reason: null,
+          read_blocked_reason: null,
+          write_blocked_reason: 'graphify_write_adapter_disabled',
           read_adapter: 'status_only',
           write_adapter: 'blocked',
           read_content_enabled: false,
@@ -410,6 +428,12 @@ describe('Agent Zero read-only bridge connector', () => {
           status: 'visible',
           raw_state: 'sync_snapshots_visible',
           status_visible: true,
+          read_available: true,
+          write_available: false,
+          blocked: false,
+          blocked_reason: null,
+          read_blocked_reason: null,
+          write_blocked_reason: 'brain_watchers_write_adapter_disabled',
           read_adapter: 'status_only',
           write_adapter: 'blocked',
           read_content_enabled: false,
@@ -574,12 +598,22 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.integrations.registry.every((integration) => integration.credential_values_exposed === false)).toBe(true)
     expect(context.integrations.write_enabled_total).toBe(0)
     expect(context.integrations.bridge_session_required_total).toBe(3)
+    const obsidian = context.brain.registry.find((source) => source.id === 'obsidian')
+    const mempalace = context.brain.registry.find((source) => source.id === 'mempalace')
+    const graphify = context.brain.registry.find((source) => source.id === 'graphify')
     expect(context.brain.obsidian_visible).toBe(true)
-    expect(context.brain.registry.find((source) => source.id === 'obsidian')?.read_content_enabled).toBe(true)
-    expect(context.brain.registry.find((source) => source.id === 'obsidian')?.write_content_enabled).toBe(false)
-    expect(context.brain.registry.find((source) => source.id === 'mempalace')?.read_adapter).toBe('status_only')
-    expect(context.brain.registry.find((source) => source.id === 'mempalace')?.read_content_enabled).toBe(false)
-    expect(context.brain.registry.find((source) => source.id === 'graphify')?.write_adapter).toBe('blocked')
+    expect(obsidian?.read_content_enabled).toBe(true)
+    expect(obsidian?.read_available).toBe(true)
+    expect(obsidian?.write_available).toBe(false)
+    expect(obsidian?.blocked).toBe(false)
+    expect(obsidian?.write_content_enabled).toBe(false)
+    expect(mempalace?.read_adapter).toBe('status_only')
+    expect(mempalace?.read_available).toBe(true)
+    expect(mempalace?.write_available).toBe(false)
+    expect(mempalace?.read_content_enabled).toBe(false)
+    expect(graphify?.read_available).toBe(true)
+    expect(graphify?.write_adapter).toBe('blocked')
+    expect(graphify?.write_available).toBe(false)
     expect(context.brain.brain_watchers.direct_control_enabled).toBe(false)
     expect(context.brain.vault_path_status.obsidian).toBe('present')
     expect(context.brain.index_status.rebuild_write_api_enabled).toBe(false)
@@ -594,6 +628,9 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.brain.blockers).toContain('mempalace_status_only')
     expect(context.brain.memory_writes_enabled).toBe(false)
     expect(context.opencloud_buildwiki.build_wiki_status_visible).toBe(true)
+    expect(context.opencloud_buildwiki.read_available).toBe(true)
+    expect(context.opencloud_buildwiki.write_available).toBe(true)
+    expect(context.opencloud_buildwiki.blocked).toBe(false)
     expect(context.opencloud_buildwiki.direct_opencloud_access_visible).toBe(false)
     expect(context.opencloud_buildwiki.farmer_execution_enabled).toBe(false)
     expect(context.opencloud_buildwiki.timer_active).toBe(true)

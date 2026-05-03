@@ -589,6 +589,59 @@ export type AgentZeroReadOnlyMessageResult = {
   error: string | null
 }
 
+const LOCAL_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
+const INTERNAL_REPORT_PATH_PATTERN = /\bruntime\/(?:executive-reports|reports|task-reports|agent-zero-reports)\/[^\s`'"\])}]*/gi
+const RAW_STAGE_PATTERN = /\b(?:Failed stage|Error stage|Stage failed|Traceback|Stack trace)\b/gi
+const ROBOTIC_LABEL_PATTERN = /^\s*(?:Status|Result|Next|Trace|Tool|Tools|Runtime|Model|System|Stage|Output)\s*:\s*/i
+const TASK_ID_PATTERN = /\b(?:task[_\s-]*id|task)\s*[:#-]?\s*(?:task[-_])?[a-z0-9][a-z0-9_-]{5,}\b/gi
+
+function ownerAskedForTaskIds(ownerMessage?: string): boolean {
+  return /\b(?:task\s*id|task\s*ids|show(?: me)?(?: the)? task|what(?: is|'s) the task)\b/i.test(ownerMessage || '')
+}
+
+export function sanitizeAgentZeroOwnerReply(input: {
+  text: string | null | undefined
+  ownerMessage?: string
+  blocker?: string | null
+  systemHasFile?: boolean
+}): string | null {
+  if (!input.text) return null
+  const ownerAskedIds = ownerAskedForTaskIds(input.ownerMessage)
+  const blocker = input.blocker ? String(input.blocker).replace(/[_-]+/g, ' ').trim() : ''
+  let text = String(input.text)
+    .replace(LOCAL_PATH_PATTERN, 'Mission Control')
+    .replace(INTERNAL_REPORT_PATH_PATTERN, 'Mission Control')
+    .replace(RAW_STAGE_PATTERN, 'A step could not complete')
+    .replace(/\b(?:send|upload|attach)\s+it\s+again\b/gi, input.systemHasFile ? 'I can use the existing file' : 'send it through an approved delivery path')
+    .replace(/\bplease\s+send\s+(?:the\s+)?file\s+again\b/gi, input.systemHasFile ? 'I can use the existing file' : 'please use an approved delivery path')
+    .split('\n')
+    .map((line) => line.replace(ROBOTIC_LABEL_PATTERN, '').trim())
+    .filter(Boolean)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  if (!ownerAskedIds) {
+    text = text.replace(TASK_ID_PATTERN, 'the task')
+  }
+
+  if (blocker) {
+    text = text
+      .replace(/^\s*Done[,.!:\s-]*/i, '')
+      .replace(/\bcompleted\b/gi, 'blocked')
+      .replace(/\b(?:final\s+)?report\s+is\s+ready\b/gi, 'requested delivery is blocked')
+      .trim()
+  }
+  if (blocker && /\b(done|completed|sent|uploaded)\b/i.test(text) && /\b(blocked|missing|unavailable|not configured|cannot|could not)\b/i.test(text)) {
+    text = text.replace(/\bcompleted\b/gi, 'blocked').trim()
+  }
+  if (blocker && !text.toLowerCase().includes(blocker.toLowerCase())) {
+    text = `${text} Blocked: ${blocker}.`.trim()
+  }
+  if (!text) return blocker ? `Blocked: ${blocker}.` : null
+  return text
+}
+
 function stateToAccess(value: unknown): EcosystemAccessState {
   const text = String(value || '').toLowerCase()
   if (!text) return 'unknown'
@@ -1463,6 +1516,13 @@ export function buildAgentZeroReadOnlyContext(input: {
 export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: AgentZeroReadOnlyContext): string {
   return [
     'You are Agent Zero in a Mission Control ecosystem test.',
+    'Answer naturally: concise, useful, and human. Do not sound like a terminal log or scripted status report.',
+    'Do not use robotic labels such as Status:, Result:, Next:, Tool:, Runtime:, Model:, System:, or Stage: unless the owner explicitly requests a technical report.',
+    'Do not expose raw error stage names. Explain the blocker in plain language.',
+    'Do not expose task IDs, local paths, raw filenames, traces, or tool dumps unless the owner explicitly asks for them.',
+    'Do not say Done, completed, sent, or uploaded unless every requested outcome and requested delivery channel truly succeeded.',
+    'If a connector, upload, execution, or delivery is blocked, say the exact blocker once and do not pretend completion.',
+    'If Mission Control already has a report or file link, do not ask the owner to send it again; refer to the available Mission Control link.',
     'You may use only the JSON context below. Do not claim direct access beyond it.',
     'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
     'If bridge_session.execution_enabled is true, execute only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for repeated approval for small steps inside the active session.',
@@ -1552,6 +1612,12 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       payload = null
     }
     const extracted = extractAgentZeroResponse(payload, text)
+    const cleanedText = sanitizeAgentZeroOwnerReply({
+      text: extracted.text,
+      ownerMessage: input.ownerMessage,
+      blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
+      systemHasFile: /\b(report|file|pdf|markdown|attachment|document)\b/i.test(input.ownerMessage),
+    })
     return {
       ok: response.ok,
       status: response.status,
@@ -1560,10 +1626,10 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       execution_enabled: false,
       writes_enabled: false,
       blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
-      response_text: extracted.text,
+      response_text: cleanedText,
       context_id: extracted.contextId,
       raw_response_shape: extracted.shape,
-      error: response.ok ? null : (extracted.text || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
+      error: response.ok ? null : (cleanedText || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
     }
   } catch (error) {
     return {

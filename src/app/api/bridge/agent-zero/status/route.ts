@@ -107,6 +107,9 @@ export async function GET(request: NextRequest) {
       agent_zero_api_key_configured: apiKey.present,
       context_mode: 'read_only_bridge_context',
       test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
+      ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
+      bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
+      bridge_session_execution_enabled: false,
       blocker: bridgeStatus === 'blocked_missing_agent_zero_api_key'
         ? 'Agent Zero external API is reachable at /api/api_message, but Mission Control has no configured API key to call it.'
         : bridgeStatus === 'unreachable'

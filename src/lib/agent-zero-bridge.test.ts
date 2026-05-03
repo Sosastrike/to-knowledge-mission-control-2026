@@ -62,21 +62,61 @@ describe('Agent Zero read-only bridge connector', () => {
   it('builds a read-only Mission Control context and refuses execution claims', () => {
     const context = buildAgentZeroReadOnlyContext({
       providerIds: ['tony', 'agent_zero', 'zapier'],
+      agents: [
+        { id: 'tony', status: 'active', role: 'runtime', execution_enabled: true },
+        { id: 'agent_zero', status: 'connected', role: 'reviewer', execution_enabled: false },
+      ],
+      modelCatalog: [
+        { alias: 'sonnet', provider: 'anthropic', name: 'anthropic/claude-sonnet-4-6' },
+        { alias: 'gpt-4.1', provider: 'openai', name: 'openai/gpt-4.1' },
+      ],
+      skillNames: ['browser-use', 'documents'],
+      integrationItems: [
+        { id: 'mission_control', status: 'reachable', visibility: 'visible', execution_enabled: false, writes_enabled: false },
+        { id: 'google_drive', status: 'visible_via_zapier_schema', visibility: 'visible', execution_enabled: false, writes_enabled: false },
+      ],
+      mcpServers: ['zapier'],
       mcpVisible: true,
       zapierVisible: true,
+      zapierToolsTotal: 42,
+      googleDriveVisible: true,
+      oneDriveVisible: false,
       heygenVisible: true,
       heygenSchemaVisible: true,
+      brainSources: [
+        { source: 'obsidian', status: 'read_only', summary: 'vault visible' },
+        { source: 'mempalace', status: 'read_only', summary: 'status visible' },
+      ],
+      timerActive: true,
+      latestBuildWikiRunState: 'idle',
+      bridgeSessionAvailable: true,
     })
     const prompt = buildAgentZeroReadOnlyPrompt('What can you see?', context)
 
     expect(context.mission_control.execution_enabled).toBe(false)
     expect(context.mission_control.writes_enabled).toBe(false)
+    expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/ecosystem')
     expect(context.bridge.providers).toEqual(['agent_zero', 'tony', 'zapier'])
+    expect(context.bridge.mcp_servers).toEqual(['zapier'])
+    expect(context.agents.items.find((agent) => agent.id === 'agent_zero')?.execution_enabled).toBe(false)
+    expect(context.models.providers).toContain('openai')
+    expect(context.skills.writes_enabled).toBe(false)
+    expect(context.tools.google_drive_visible).toBe(true)
+    expect(context.tools.onedrive_visible).toBe(false)
+    expect(context.tools.execution_enabled).toBe(false)
+    expect(context.integrations.items.every((integration) => integration.execution_enabled === false)).toBe(true)
+    expect(context.brain.obsidian_visible).toBe(true)
+    expect(context.brain.memory_writes_enabled).toBe(false)
     expect(context.opencloud_buildwiki.build_wiki_status_visible).toBe(true)
     expect(context.opencloud_buildwiki.direct_opencloud_access_visible).toBe(false)
     expect(context.opencloud_buildwiki.farmer_execution_enabled).toBe(false)
+    expect(context.opencloud_buildwiki.timer_active).toBe(true)
+    expect(context.delivery.external_delivery_writes_enabled).toBe(false)
+    expect(context.bridge_session.execution_enabled).toBe(false)
+    expect(context.bridge_session.blocked_scopes).toContain('docker_socket')
     expect(prompt).toContain('Mission Control read-only ecosystem test')
     expect(prompt).toContain('Do not run tools')
+    expect(prompt).toContain('Bridge Session execution is not active')
     expect(prompt).toContain('Do not enumerate your internal Agent Zero tools')
     expect(prompt).toContain('"heygen_schema_visible":true')
   })

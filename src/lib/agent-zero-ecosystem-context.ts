@@ -1,21 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
-import { requireRole } from '@/lib/auth'
 import { fetchClaudeClawJson } from '@/lib/claudeclaw-telegram-approvals'
 import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
 import { getAllModels } from '@/lib/models'
 import { getDatabase } from '@/lib/db'
 import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
 import {
+  AgentZeroReadOnlyContext,
   buildAgentZeroReadOnlyContext,
-  getAgentZeroApiKeyState,
-  probeAgentZeroRuntime,
-  sendAgentZeroReadOnlyMessage,
 } from '@/lib/agent-zero-bridge'
-
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
 
 type ProviderStatus = {
   id?: string
@@ -38,9 +31,18 @@ const ZAPIER_TOOLS_FILE = '/home/tony/claudeclaw/runtime/zapier-tools.txt'
 
 function execFileText(command: string, args: string[], timeout = 2500): Promise<string> {
   return new Promise((resolve) => {
-    execFile(command, args, { timeout, env: { ...process.env, XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR || '/run/user/1001' } }, (_error, stdout) => {
-      resolve(String(stdout || ''))
-    })
+    execFile(
+      command,
+      args,
+      {
+        timeout,
+        env: {
+          ...process.env,
+          XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR || '/run/user/1001',
+        },
+      },
+      (_error, stdout) => resolve(String(stdout || '')),
+    )
   })
 }
 
@@ -74,7 +76,15 @@ async function readBuildWikiTimerActive(): Promise<boolean | null> {
   return text === 'active'
 }
 
-async function buildContext() {
+function hasOneDriveTool(toolNames: string[]): boolean {
+  return toolNames.some((tool) => tool.includes('onedrive') || tool.includes('one_drive'))
+}
+
+function hasSource(brainSources: BrainSyncPayload['sources'], sourceName: string): boolean {
+  return Boolean(brainSources?.some((source) => String(source.source).toLowerCase() === sourceName))
+}
+
+export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
   const [providersResult, zapierResult, brainResult, zapierToolNames, timerActive] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
@@ -108,6 +118,7 @@ async function buildContext() {
   const latestRunNow = readLatestRunNow()
   const runState = deriveRunNowUiState(latestRunNow.approval, latestRunNow.run)
   const skillNames = readSkillNames()
+  const oneDriveVisible = hasOneDriveTool(Array.from(toolSet))
 
   return buildAgentZeroReadOnlyContext({
     providerIds,
@@ -128,11 +139,11 @@ async function buildContext() {
       { id: 'zapier', status: (zapierResult as any).connected ? 'visible' : 'blocked', visibility: (zapierResult as any).connected ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
       { id: 'heygen', status: (zapierResult as any).heygen_found ? 'schema_visible' : 'not_visible', visibility: (zapierResult as any).heygen_found ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
       { id: 'google_drive', status: toolSet.has('mcp__zapier__google_drive_upload_file') ? 'visible_via_zapier_schema' : 'not_visible', visibility: toolSet.has('mcp__zapier__google_drive_upload_file') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
-      { id: 'onedrive', status: Array.from(toolSet).some((tool) => tool.includes('onedrive') || tool.includes('one_drive')) ? 'visible_via_zapier_schema' : 'not_visible', visibility: Array.from(toolSet).some((tool) => tool.includes('onedrive') || tool.includes('one_drive')) ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
+      { id: 'onedrive', status: oneDriveVisible ? 'visible_via_zapier_schema' : 'not_visible', visibility: oneDriveVisible ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
       { id: 'openrouter', status: providerSet.has('openrouter') ? 'visible' : 'unknown', visibility: providerSet.has('openrouter') ? 'visible' : 'unknown', execution_enabled: false, writes_enabled: false },
-      { id: 'obsidian', status: brainSources.some((source) => String(source.source).toLowerCase() === 'obsidian') ? 'visible_read_only' : 'not_connected', visibility: brainSources.some((source) => String(source.source).toLowerCase() === 'obsidian') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
-      { id: 'mempalace', status: brainSources.some((source) => String(source.source).toLowerCase() === 'mempalace') ? 'visible_read_only' : 'not_connected', visibility: brainSources.some((source) => String(source.source).toLowerCase() === 'mempalace') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
-      { id: 'graphify', status: brainSources.some((source) => String(source.source).toLowerCase() === 'graphify') ? 'visible_read_only' : 'not_connected', visibility: brainSources.some((source) => String(source.source).toLowerCase() === 'graphify') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
+      { id: 'obsidian', status: hasSource(brainSources, 'obsidian') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'obsidian') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
+      { id: 'mempalace', status: hasSource(brainSources, 'mempalace') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'mempalace') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
+      { id: 'graphify', status: hasSource(brainSources, 'graphify') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'graphify') ? 'visible' : 'blocked', execution_enabled: false, writes_enabled: false },
       { id: 'build_wiki', status: 'visible_read_only', visibility: 'visible', execution_enabled: false, writes_enabled: false },
     ],
     mcpServers: (zapierResult as any).connected || (zapierResult as any).mcp_reachable ? ['zapier'] : [],
@@ -140,7 +151,7 @@ async function buildContext() {
     zapierVisible: Boolean((zapierResult as any).connected || (zapierResult as any).tools_total),
     zapierToolsTotal: Number((zapierResult as any).tools_total || zapierToolNames.length || 0),
     googleDriveVisible: toolSet.has('mcp__zapier__google_drive_upload_file'),
-    oneDriveVisible: Array.from(toolSet).some((tool) => tool.includes('onedrive') || tool.includes('one_drive')),
+    oneDriveVisible,
     heygenVisible: Boolean((zapierResult as any).heygen_found),
     heygenSchemaVisible: Array.isArray((zapierResult as any).required_fields)
       && ((zapierResult as any).required_fields as string[]).length > 0,
@@ -148,90 +159,5 @@ async function buildContext() {
     timerActive,
     latestBuildWikiRunState: runState.ui_state,
     bridgeSessionAvailable: latestRunNow.persistence_ready,
-  })
-}
-
-export async function GET(request: NextRequest) {
-  const auth = requireRole(request, 'viewer')
-  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
-
-  const [runtimeStatus, apiKey, context] = await Promise.all([
-    probeAgentZeroRuntime(),
-    Promise.resolve(getAgentZeroApiKeyState()),
-    buildContext(),
-  ])
-
-  return NextResponse.json({
-    ok: true,
-    mode: 'agent_zero_read_only_test_channel',
-    generated_at: new Date().toISOString(),
-    label: 'Agent Zero — read-only ecosystem test',
-    runtime: runtimeStatus,
-    agent_zero_api_key_configured: apiKey.present,
-    context,
-    ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
-    bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
-    status: runtimeStatus.reachable
-      ? (apiKey.present ? 'ready_for_read_only_chat' : 'blocked_missing_agent_zero_api_key')
-      : 'unreachable',
-    execution_enabled: false,
-    writes_enabled: false,
-    protected_actions_enabled: false,
-    next_action: apiKey.present
-      ? 'Use POST /api/bridge/agent-zero/test-chat for read-only live Agent Zero context tests.'
-      : 'Owner must configure an Agent Zero external API key for Mission Control before live chat can be proxied.',
-  }, { headers: { 'Cache-Control': 'no-store' } })
-}
-
-export async function POST(request: NextRequest) {
-  const auth = requireRole(request, 'operator')
-  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
-
-  let message = ''
-  try {
-    const body = await request.json()
-    message = typeof body?.message === 'string' ? body.message.trim() : ''
-  } catch {
-    message = ''
-  }
-
-  if (!message) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'message_required',
-        execution_enabled: false,
-        writes_enabled: false,
-      },
-      { status: 400, headers: { 'Cache-Control': 'no-store' } },
-    )
-  }
-
-  const context = await buildContext()
-  const result = await sendAgentZeroReadOnlyMessage({
-    ownerMessage: message.slice(0, 4000),
-    context,
-  })
-
-  return NextResponse.json({
-    ...result,
-    label: 'Agent Zero — read-only ecosystem test',
-    context_sent: context,
-    ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
-    bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
-    safety: {
-      execution_enabled: false,
-      writes_enabled: false,
-      zapier_writes_enabled: false,
-      heygen_generation_enabled: false,
-      smb_enabled: false,
-      farmer_execution_enabled: false,
-    },
-    next_action: result.ok
-      ? 'Review Agent Zero answer against the read-only context; execution remains disabled.'
-      : 'Configure Agent Zero external API access or resolve the runtime blocker, then rerun the read-only test.',
-  }, {
-    status: result.ok ? 200 : result.status,
-    headers: { 'Cache-Control': 'no-store' },
   })
 }

@@ -48,6 +48,7 @@ export type AgentZeroReadOnlyContext = {
     mode: 'read_only_bridge_context'
     execution_enabled: false
     writes_enabled: false
+    surfaces: string[]
   }
   bridge: {
     providers: string[]
@@ -56,13 +57,89 @@ export type AgentZeroReadOnlyContext = {
     zapier_visible: boolean
     heygen_visible: boolean
     heygen_schema_visible: boolean
+    mcp_servers: string[]
+    mcp_tools_visible: boolean
+  }
+  agents: {
+    visible: true
+    items: Array<{
+      id: string
+      status: string
+      role: string
+      execution_enabled: boolean
+    }>
+  }
+  models: {
+    visible: true
+    total: number
+    providers: string[]
+    catalog: Array<{
+      alias: string
+      provider: string
+      name: string
+    }>
+  }
+  skills: {
+    visible: boolean
+    total: number
+    sample: string[]
+    writes_enabled: false
+  }
+  tools: {
+    visible: boolean
+    zapier_tools_total: number
+    google_drive_visible: boolean
+    onedrive_visible: boolean
+    heygen_schema_visible: boolean
+    execution_enabled: false
+    writes_enabled: false
+  }
+  integrations: {
+    visible: true
+    items: Array<{
+      id: string
+      status: string
+      visibility: 'configured' | 'visible' | 'blocked' | 'unknown'
+      execution_enabled: boolean
+      writes_enabled: boolean
+    }>
+  }
+  brain: {
+    visible: boolean
+    sources: Array<{
+      source: string
+      status: string
+      summary: string
+    }>
+    obsidian_visible: boolean
+    mempalace_visible: boolean
+    graphify_visible: boolean
+    memory_writes_enabled: false
   }
   opencloud_buildwiki: {
     direct_opencloud_access_visible: boolean
     build_wiki_status_visible: boolean
     farmer_service: string
     farmer_timer: string
+    timer_active: boolean | null
+    latest_run_state: string | null
     farmer_execution_enabled: false
+    note: string
+  }
+  delivery: {
+    telegram_reports_visible: boolean
+    mission_control_reports_visible: boolean
+    google_drive_delivery_visible: boolean
+    onedrive_delivery_visible: boolean
+    external_delivery_writes_enabled: false
+  }
+  bridge_session: {
+    available: boolean
+    status: 'read_only_context_active' | 'owner_approval_required' | 'blocked'
+    execution_enabled: false
+    writes_enabled: false
+    allowed_scopes: string[]
+    blocked_scopes: string[]
     note: string
   }
   restrictions: string[]
@@ -211,18 +288,62 @@ export async function probeAgentZeroRuntime(baseUrl = getAgentZeroBaseUrl()): Pr
 
 export function buildAgentZeroReadOnlyContext(input: {
   providerIds?: string[]
+  agents?: Array<{ id: string; status?: string; role?: string; execution_enabled?: boolean }>
+  modelCatalog?: Array<{ alias: string; provider: string; name: string }>
+  skillNames?: string[]
+  integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; execution_enabled?: boolean; writes_enabled?: boolean }>
+  mcpServers?: string[]
   mcpVisible?: boolean
   zapierVisible?: boolean
+  zapierToolsTotal?: number
+  googleDriveVisible?: boolean
+  oneDriveVisible?: boolean
   heygenVisible?: boolean
   heygenSchemaVisible?: boolean
+  brainSources?: Array<{ source?: string; status?: string; raw_state?: string; summary?: string }>
+  timerActive?: boolean | null
+  latestBuildWikiRunState?: string | null
+  bridgeSessionAvailable?: boolean
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || []).filter(Boolean))).sort()
+  const modelCatalog = (input.modelCatalog || []).slice(0, 40)
+  const modelProviders = Array.from(new Set(modelCatalog.map((model) => model.provider).filter(Boolean))).sort()
+  const skillNames = Array.from(new Set((input.skillNames || []).filter(Boolean))).sort()
+  const agents = (input.agents || []).map((agent) => ({
+    id: agent.id,
+    status: agent.status || 'unknown',
+    role: agent.role || 'ecosystem agent',
+    execution_enabled: Boolean(agent.execution_enabled),
+  }))
+  const integrations = (input.integrationItems || []).map((integration) => ({
+    id: integration.id,
+    status: integration.status || 'unknown',
+    visibility: integration.visibility || 'unknown',
+    execution_enabled: Boolean(integration.execution_enabled),
+    writes_enabled: Boolean(integration.writes_enabled),
+  }))
+  const brainSources = (input.brainSources || []).map((source) => ({
+    source: String(source.source || 'unknown'),
+    status: String(source.status || source.raw_state || 'unknown'),
+    summary: String(source.summary || ''),
+  }))
+  const mcpServers = Array.from(new Set((input.mcpServers || []).filter(Boolean))).sort()
   return {
     mission_control: {
       visible: true,
       mode: 'read_only_bridge_context',
       execution_enabled: false,
       writes_enabled: false,
+      surfaces: [
+        '/api/bridge/agent-zero/status',
+        '/api/bridge/agent-zero/test-chat',
+        '/api/bridge/agent-zero/ecosystem',
+        '/api/bridge/providers',
+        '/api/bridge/preflight',
+        '/api/mcp/list',
+        '/api/bridge/brain-sync/status',
+        '/api/bridge/brain-context',
+      ],
     },
     bridge: {
       providers,
@@ -231,20 +352,91 @@ export function buildAgentZeroReadOnlyContext(input: {
       zapier_visible: Boolean(input.zapierVisible),
       heygen_visible: Boolean(input.heygenVisible),
       heygen_schema_visible: Boolean(input.heygenSchemaVisible),
+      mcp_servers: mcpServers,
+      mcp_tools_visible: Boolean(input.mcpVisible || input.zapierVisible || input.heygenVisible),
+    },
+    agents: {
+      visible: true,
+      items: agents,
+    },
+    models: {
+      visible: true,
+      total: modelCatalog.length,
+      providers: modelProviders,
+      catalog: modelCatalog.map((model) => ({
+        alias: model.alias,
+        provider: model.provider,
+        name: model.name,
+      })),
+    },
+    skills: {
+      visible: skillNames.length > 0,
+      total: skillNames.length,
+      sample: skillNames.slice(0, 25),
+      writes_enabled: false,
+    },
+    tools: {
+      visible: Boolean(input.mcpVisible || input.zapierVisible || input.heygenVisible || input.zapierToolsTotal),
+      zapier_tools_total: Number(input.zapierToolsTotal || 0),
+      google_drive_visible: Boolean(input.googleDriveVisible),
+      onedrive_visible: Boolean(input.oneDriveVisible),
+      heygen_schema_visible: Boolean(input.heygenSchemaVisible),
+      execution_enabled: false,
+      writes_enabled: false,
+    },
+    integrations: {
+      visible: true,
+      items: integrations,
+    },
+    brain: {
+      visible: brainSources.length > 0,
+      sources: brainSources,
+      obsidian_visible: brainSources.some((source) => source.source.toLowerCase() === 'obsidian' && source.status !== 'not_connected'),
+      mempalace_visible: brainSources.some((source) => source.source.toLowerCase() === 'mempalace' && source.status !== 'not_connected'),
+      graphify_visible: brainSources.some((source) => source.source.toLowerCase() === 'graphify' && source.status !== 'not_connected'),
+      memory_writes_enabled: false,
     },
     opencloud_buildwiki: {
       direct_opencloud_access_visible: false,
       build_wiki_status_visible: true,
       farmer_service: 'opencloud-docs-farmer.service',
       farmer_timer: 'opencloud-docs-farmer.timer',
+      timer_active: typeof input.timerActive === 'boolean' ? input.timerActive : null,
+      latest_run_state: input.latestBuildWikiRunState || null,
       farmer_execution_enabled: false,
       note: 'Mission Control exposes Build-Wiki/Farmer status read-only; this does not grant direct OpenCloud file access or permission to run the farmer.',
     },
+    delivery: {
+      telegram_reports_visible: true,
+      mission_control_reports_visible: true,
+      google_drive_delivery_visible: Boolean(input.googleDriveVisible),
+      onedrive_delivery_visible: Boolean(input.oneDriveVisible),
+      external_delivery_writes_enabled: false,
+    },
+    bridge_session: {
+      available: Boolean(input.bridgeSessionAvailable),
+      status: input.bridgeSessionAvailable ? 'owner_approval_required' : 'read_only_context_active',
+      execution_enabled: false,
+      writes_enabled: false,
+      allowed_scopes: input.bridgeSessionAvailable
+        ? ['read_only.ecosystem_context', 'review.recommendation', 'buildwiki.run_now.after_owner_approval']
+        : ['read_only.ecosystem_context', 'review.recommendation'],
+      blocked_scopes: [
+        'broad_shell',
+        'docker_socket',
+        'zapier.write_without_bridge_session',
+        'heygen.generate_without_bridge_session',
+        'smb.mount_without_smb_phase',
+        'memory.write_without_owner_approval',
+      ],
+      note: 'Agent Zero may see ecosystem context and recommend actions. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
+    },
     restrictions: [
-      'read-only Mission Control context only',
-      'no protected action execution',
-      'no Zapier or HeyGen execution',
-      'no SMB or farmer execution',
+      'read-only Mission Control ecosystem context unless a scoped Bridge Session is separately approved',
+      'no protected action execution from test-chat',
+      'no Zapier or HeyGen execution from test-chat',
+      'no SMB or farmer execution from test-chat',
+      'no broad shell, Docker socket, root/system, credential, or auth bypass access',
       'no Docker/config/auth/credential changes',
       'answer unknown when data is not visible through the provided context',
     ],
@@ -256,6 +448,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'You are Agent Zero in a Mission Control read-only ecosystem test.',
     'You may use only the JSON context below. Do not claim direct access beyond it.',
     'Execution is disabled. Do not run tools, request writes, or say that you executed anything.',
+    'Bridge Session execution is not active in this chat. If execution is requested, explain that a separate owner-approved Bridge Session and scoped adapter are required.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',

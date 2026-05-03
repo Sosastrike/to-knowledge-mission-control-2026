@@ -682,6 +682,9 @@ interface AgentZeroReviewerPayload {
     agent_zero_api_key_configured?: boolean
     context_mode?: string
     test_chat_endpoint?: string
+    ecosystem_context_endpoint?: string
+    bridge_session_endpoint?: string
+    bridge_session_execution_enabled?: boolean
     blocker?: string | null
   }
   provider_registry?: {
@@ -2308,6 +2311,14 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         <div className={styles.externalDetailRow}>
           <dt>Test channel</dt>
           <dd>{connector.test_chat_endpoint || '/api/bridge/agent-zero/test-chat'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Ecosystem context</dt>
+          <dd>{connector.ecosystem_context_endpoint || '/api/bridge/agent-zero/ecosystem'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Bridge Session</dt>
+          <dd>{connector.bridge_session_execution_enabled ? 'enabled' : 'locked until scoped owner approval'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Provider state</dt>

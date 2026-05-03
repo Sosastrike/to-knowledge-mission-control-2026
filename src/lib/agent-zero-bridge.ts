@@ -1,15 +1,30 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 export const AGENT_ZERO_DEFAULT_BASE_URL = 'http://100.116.35.95:50080'
 export const AGENT_ZERO_API_KEY_ENV_NAMES = [
   'AGENT_ZERO_API_KEY',
   'AGENT_ZERO_EXTERNAL_API_KEY',
   'AGENT_ZERO_BRIDGE_API_KEY',
 ]
+export const AGENT_ZERO_API_KEY_FILE_ENV_NAME = 'AGENT_ZERO_API_KEY_FILE'
+export const AGENT_ZERO_DEFAULT_API_KEY_FILE =
+  '/home/tony/.config/mission-control/secrets/agent-zero-api-key'
+export const AGENT_ZERO_SYSTEMD_CREDENTIAL_NAMES = [
+  'agent-zero-api-key',
+  'AGENT_ZERO_API_KEY',
+  'agent_zero_api_key',
+]
 
 export type AgentZeroApiKeyState = {
   required: true
   present: boolean
   configured_env_name: string | null
+  source_type: 'environment' | 'secret_file' | 'systemd_credential' | 'missing'
+  source_path: string | null
   accepted_env_names: string[]
+  accepted_file_env_name: string
+  accepted_systemd_credential_names: string[]
   redacted: string | null
 }
 
@@ -42,6 +57,14 @@ export type AgentZeroReadOnlyContext = {
     heygen_visible: boolean
     heygen_schema_visible: boolean
   }
+  opencloud_buildwiki: {
+    direct_opencloud_access_visible: boolean
+    build_wiki_status_visible: boolean
+    farmer_service: string
+    farmer_timer: string
+    farmer_execution_enabled: false
+    note: string
+  }
   restrictions: string[]
 }
 
@@ -60,6 +83,12 @@ export type AgentZeroReadOnlyMessageResult = {
 }
 
 type EnvLike = Record<string, string | undefined>
+type KeySource = {
+  name: string
+  value: string
+  sourceType: AgentZeroApiKeyState['source_type']
+  sourcePath: string | null
+}
 
 function normalizeBaseUrl(value?: string | null): string {
   const raw = (value || process.env.AGENT_ZERO_BASE_URL || AGENT_ZERO_DEFAULT_BASE_URL).trim()
@@ -70,10 +99,51 @@ export function getAgentZeroBaseUrl(): string {
   return normalizeBaseUrl()
 }
 
-function readAgentZeroApiKey(env: EnvLike = process.env): { name: string; value: string } | null {
+function safeReadSecretFile(filePath: string): string | null {
+  try {
+    const stat = fs.statSync(filePath)
+    if (!stat.isFile()) return null
+    const value = fs.readFileSync(filePath, 'utf8').trim()
+    return value || null
+  } catch {
+    return null
+  }
+}
+
+function systemdCredentialCandidates(env: EnvLike): string[] {
+  const dir = env.CREDENTIALS_DIRECTORY
+  if (!dir) return []
+  return AGENT_ZERO_SYSTEMD_CREDENTIAL_NAMES.map((name) => path.join(dir, name))
+}
+
+function secretFileCandidates(env: EnvLike, includeDefaults: boolean): string[] {
+  const candidates = [
+    env[AGENT_ZERO_API_KEY_FILE_ENV_NAME],
+    ...systemdCredentialCandidates(env),
+    ...(includeDefaults ? [AGENT_ZERO_DEFAULT_API_KEY_FILE] : []),
+  ].filter((value): value is string => Boolean(value && value.trim()))
+
+  return Array.from(new Set(candidates))
+}
+
+function readAgentZeroApiKey(env: EnvLike = process.env): KeySource | null {
   for (const name of AGENT_ZERO_API_KEY_ENV_NAMES) {
     const value = env[name]?.trim()
-    if (value) return { name, value }
+    if (value) return { name, value, sourceType: 'environment', sourcePath: null }
+  }
+
+  const includeDefaultFile = env === process.env
+  for (const filePath of secretFileCandidates(env, includeDefaultFile)) {
+    const value = safeReadSecretFile(filePath)
+    if (value) {
+      const isSystemdCredential = Boolean(env.CREDENTIALS_DIRECTORY && filePath.startsWith(`${env.CREDENTIALS_DIRECTORY}/`))
+      return {
+        name: isSystemdCredential ? 'systemd_credential' : AGENT_ZERO_API_KEY_FILE_ENV_NAME,
+        value,
+        sourceType: isSystemdCredential ? 'systemd_credential' : 'secret_file',
+        sourcePath: filePath,
+      }
+    }
   }
   return null
 }
@@ -84,7 +154,11 @@ export function getAgentZeroApiKeyState(env: EnvLike = process.env): AgentZeroAp
     required: true,
     present: Boolean(key),
     configured_env_name: key?.name || null,
+    source_type: key?.sourceType || 'missing',
+    source_path: key?.sourcePath || null,
     accepted_env_names: AGENT_ZERO_API_KEY_ENV_NAMES,
+    accepted_file_env_name: AGENT_ZERO_API_KEY_FILE_ENV_NAME,
+    accepted_systemd_credential_names: AGENT_ZERO_SYSTEMD_CREDENTIAL_NAMES,
     redacted: key ? `${key.name}=<redacted>` : null,
   }
 }
@@ -158,6 +232,14 @@ export function buildAgentZeroReadOnlyContext(input: {
       heygen_visible: Boolean(input.heygenVisible),
       heygen_schema_visible: Boolean(input.heygenSchemaVisible),
     },
+    opencloud_buildwiki: {
+      direct_opencloud_access_visible: false,
+      build_wiki_status_visible: true,
+      farmer_service: 'opencloud-docs-farmer.service',
+      farmer_timer: 'opencloud-docs-farmer.timer',
+      farmer_execution_enabled: false,
+      note: 'Mission Control exposes Build-Wiki/Farmer status read-only; this does not grant direct OpenCloud file access or permission to run the farmer.',
+    },
     restrictions: [
       'read-only Mission Control context only',
       'no protected action execution',
@@ -174,6 +256,9 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'You are Agent Zero in a Mission Control read-only ecosystem test.',
     'You may use only the JSON context below. Do not claim direct access beyond it.',
     'Execution is disabled. Do not run tools, request writes, or say that you executed anything.',
+    'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
+    'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
+    'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',
     '',
     `MISSION_CONTROL_READ_ONLY_CONTEXT=${JSON.stringify(context)}`,
@@ -215,7 +300,7 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       response_text: null,
       context_id: null,
       raw_response_shape: [],
-      error: 'Agent Zero external API requires X-API-KEY; configure one of AGENT_ZERO_API_KEY, AGENT_ZERO_EXTERNAL_API_KEY, or AGENT_ZERO_BRIDGE_API_KEY without exposing the value.',
+      error: 'Agent Zero external API requires X-API-KEY; configure a Mission Control environment variable, systemd credential, or secret file without exposing the value.',
     }
   }
 
@@ -233,8 +318,6 @@ export async function sendAgentZeroReadOnlyMessage(input: {
         'X-API-KEY': key.value,
       },
       body: JSON.stringify({
-        context_id: 'mission-control-agent-zero-readonly',
-        project_name: 'Mission Control read-only Agent Zero test',
         message: prompt,
         lifetime_hours: 2,
       }),

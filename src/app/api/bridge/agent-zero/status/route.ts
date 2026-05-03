@@ -104,10 +104,15 @@ export async function GET(request: NextRequest) {
     mission_control_connector: {
       status: bridgeStatus,
       can_see_mission_control: apiKey.present && runtime.reachable ? 'not_live_verified_yet' : false,
+      agent_zero_api_key_configured: apiKey.present,
       api_key_present: apiKey.present,
       api_key_configured_env_name: apiKey.configured_env_name,
+      api_key_source_type: apiKey.source_type,
+      api_key_source_path: apiKey.source_path,
       api_key_redacted: apiKey.redacted,
       accepted_api_key_env_names: apiKey.accepted_env_names,
+      accepted_api_key_file_env_name: apiKey.accepted_file_env_name,
+      accepted_systemd_credential_names: apiKey.accepted_systemd_credential_names,
       context_mode: 'read_only_bridge_context',
       test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
       blocker: bridgeStatus === 'blocked_missing_agent_zero_api_key'

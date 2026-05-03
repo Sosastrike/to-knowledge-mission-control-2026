@@ -4,7 +4,7 @@ Generated: 2026-05-03
 
 ## Result
 
-Agent Zero is discoverable and health-checkable from Mission Control, but live chat through Mission Control is blocked until the Agent Zero external API key is configured. The integration therefore stops at read-only visibility plus an authenticated test-chat route that honestly reports the blocker.
+Agent Zero is now discoverable, health-checkable, and callable through Mission Control's read-only test-chat bridge. Agent Zero can truthfully say it sees Mission Control through the provided read-only Bridge context. It still has no execution access.
 
 ## Implemented
 
@@ -14,6 +14,8 @@ Agent Zero is discoverable and health-checkable from Mission Control, but live c
 - Agent Network UI now shows Agent Zero read-only test status and the blocker.
 - Bridge provider registry reports Agent Zero as degraded when reachable but not bridge-authenticated.
 - Unit tests cover missing auth, auth redaction, read-only context, and pre-call blocking.
+- Mission Control reads the Agent Zero API key from an owner-owned secret file outside the repo.
+- Live read-only test-chat calls return `agent_zero_called: true`.
 
 ## Not Enabled
 
@@ -24,11 +26,26 @@ Agent Zero is discoverable and health-checkable from Mission Control, but live c
 - No Mission Control auth weakening.
 - No Tony voice/memory/governance changes.
 
+## API Auth
+
+- Header expected by Agent Zero: `X-API-KEY`.
+- Agent Zero source setting: `mcp_server_token`.
+- Mission Control secret source: `/home/tony/.config/mission-control/secrets/agent-zero-api-key`.
+- Secret file mode: `0600`.
+- Secret value printed: no.
+- Secret committed: no.
+- `.env` changed: no.
+
 ## Live Test Status
 
 - Can Agent Zero runtime be reached? Yes.
-- Can Mission Control call Agent Zero chat now? No, blocked by missing Agent Zero external API key.
-- Can Agent Zero truthfully say it sees Mission Control? Not yet. That must wait until the API key is configured and the read-only chat test passes.
+- Agent Zero health: HTTP 200, version `M v1.9`.
+- Can Mission Control call Agent Zero chat now? Yes, through `/api/bridge/agent-zero/test-chat`.
+- Can Agent Zero truthfully say it sees Mission Control? Yes, through read-only JSON context.
+- Can Agent Zero see Bridge/MCP? Yes, read-only visibility only.
+- Can Agent Zero see OpenCloud directly? No, direct OpenCloud access is not visible through the context.
+- Can Agent Zero see Build-Wiki/Farmer status? Yes, read-only status; farmer execution remains disabled.
+- Unauthenticated route smoke: `401`.
 
 ## Next Test Messages
 
@@ -38,6 +55,14 @@ Agent Zero is discoverable and health-checkable from Mission Control, but live c
 4. `Send a file to Google Drive.`
 5. `Do not execute anything. Tell me what you would do next.`
 
-## Owner Blocker
+## Live Test Outcome
 
-Configure Agent Zero external API auth for Mission Control. Accepted environment variable names are `AGENT_ZERO_API_KEY`, `AGENT_ZERO_EXTERNAL_API_KEY`, or `AGENT_ZERO_BRIDGE_API_KEY`. The secret value must not be printed or committed.
+- Test 1 passed: Agent Zero answered yes and described Mission Control read-only context.
+- Test 2 passed: Agent Zero listed only Bridge-visible providers/integrations and kept execution disabled.
+- Test 3 passed: Agent Zero distinguished direct OpenCloud access from Build-Wiki/Farmer status visibility.
+- Test 4 passed: Agent Zero refused Google Drive upload execution in read-only mode.
+- Test 5 passed: Agent Zero provided a plan only, with no execution.
+
+## Remaining Blocker
+
+Production `mission-control.service` still needs an admin-authorized restart to load the new code. Temporary local-server validation passed on port `3457`; production service auth was not weakened to force a restart.

@@ -19,11 +19,18 @@ Agent Zero exists and is running as a Docker container on the Tailnet, but it is
 - External API endpoint: `POST /api/api_message`
 - External API auth: requires `X-API-KEY`
 
-## Current Blocker
+## API Auth Source
 
-Mission Control does not have an Agent Zero external API key configured through a safe environment path. Without that key, Mission Control can probe Agent Zero health but cannot proxy owner chat into Agent Zero.
+Mission Control now reads Agent Zero's external API key from an owner-owned secret file outside the repo:
 
-The unauthenticated API probe returned HTTP 401 from `/api/api_message`, confirming the endpoint exists and auth is required. No secret values were printed.
+- Source type: secret file
+- Source path: `/home/tony/.config/mission-control/secrets/agent-zero-api-key`
+- File mode: `0600`
+- Value printed: no
+- Value committed: no
+- `.env` changed: no
+
+The unauthenticated API probe returned HTTP 401 from `/api/api_message`, confirming the endpoint exists and auth is required. Authenticated read-only bridge calls now return `agent_zero_called: true`.
 
 ## Safety State
 
@@ -36,4 +43,4 @@ The unauthenticated API probe returned HTTP 401 from `/api/api_message`, confirm
 
 ## Live Truth
 
-Agent Zero logs show it previously answered that it cannot see Mission Control. That remains true until the read-only connector can pass Mission Control context through the authenticated external API and the live test passes.
+Agent Zero previously answered that it could not see Mission Control. After the read-only bridge test-chat path was authenticated, Agent Zero correctly answered that it can see Mission Control through the provided read-only JSON context. This is not direct unrestricted access and does not grant execution.

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
+import {
+  getAgentZeroApiKeyState,
+  probeAgentZeroRuntime,
+} from '@/lib/agent-zero-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const AGENT_ZERO_TAILNET_URL = 'http://100.116.35.95:50080/'
 
 type ProviderStatus = {
   id?: string
@@ -21,29 +23,6 @@ type ProviderStatus = {
     error?: string | null
   }
   next_action?: string | null
-}
-
-async function probeTailnet() {
-  const startedAt = Date.now()
-  try {
-    const response = await fetch(AGENT_ZERO_TAILNET_URL, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    })
-    return {
-      reachable: response.ok,
-      http_status: response.status,
-      latency_ms: Date.now() - startedAt,
-      error: null as string | null,
-    }
-  } catch (error) {
-    return {
-      reachable: false,
-      http_status: null as number | null,
-      latency_ms: Date.now() - startedAt,
-      error: error instanceof Error ? error.message : 'agent_zero_tailnet_probe_failed',
-    }
-  }
 }
 
 async function readProviderStatus() {
@@ -78,13 +57,17 @@ export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const [tailnet, providerStatus] = await Promise.all([
-    probeTailnet(),
+  const [runtime, providerStatus] = await Promise.all([
+    probeAgentZeroRuntime(),
     readProviderStatus(),
   ])
 
   const provider = providerStatus.provider
-  const providerState = provider?.state || (tailnet.reachable ? 'active' : 'not_connected')
+  const apiKey = getAgentZeroApiKeyState()
+  const bridgeStatus = runtime.reachable
+    ? (apiKey.present ? 'ready_for_read_only_live_test' : 'blocked_missing_agent_zero_api_key')
+    : 'unreachable'
+  const providerState = provider?.state || (runtime.reachable ? 'degraded' : 'not_connected')
 
   return NextResponse.json({
     ok: true,
@@ -94,19 +77,44 @@ export async function GET(request: NextRequest) {
       id: 'agent_zero',
       name: 'Agent Zero',
       role: 'reviewer / supervisor',
+      mode: 'read_only_test',
       allowed_behavior: ['observe', 'recommend', 'review'],
       disallowed_behavior: ['execute protected actions', 'change Docker/config', 'change permissions', 'bypass Tony approval'],
       execution_permission: 'observe_recommend_review_only',
       execution_enabled: false,
       execution_disabled_until: 'separate owner approval with audit-backed scoped runner',
       owner_approval_required_for_execution: true,
+      bridge_session_required: true,
     },
     tailnet: {
-      endpoint: AGENT_ZERO_TAILNET_URL,
-      reachable: tailnet.reachable,
-      http_status: tailnet.http_status,
-      latency_ms: tailnet.latency_ms,
-      error: tailnet.error,
+      endpoint: runtime.web_endpoint,
+      reachable: runtime.reachable,
+      http_status: runtime.http_status,
+      latency_ms: runtime.latency_ms,
+      error: runtime.error,
+    },
+    runtime: {
+      base_url: runtime.base_url,
+      health_endpoint: runtime.health_endpoint,
+      chat_endpoint: runtime.chat_endpoint,
+      version: runtime.version,
+      commit_hash: runtime.commit_hash,
+      health_ok: runtime.health_ok,
+    },
+    mission_control_connector: {
+      status: bridgeStatus,
+      can_see_mission_control: apiKey.present && runtime.reachable ? 'not_live_verified_yet' : false,
+      api_key_present: apiKey.present,
+      api_key_configured_env_name: apiKey.configured_env_name,
+      api_key_redacted: apiKey.redacted,
+      accepted_api_key_env_names: apiKey.accepted_env_names,
+      context_mode: 'read_only_bridge_context',
+      test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
+      blocker: bridgeStatus === 'blocked_missing_agent_zero_api_key'
+        ? 'Agent Zero external API is reachable at /api/api_message, but Mission Control has no configured API key to call it.'
+        : bridgeStatus === 'unreachable'
+          ? 'Agent Zero Tailnet runtime is not reachable.'
+          : null,
     },
     provider_registry: {
       state: providerState,
@@ -124,6 +132,8 @@ export async function GET(request: NextRequest) {
       execution_permissions_changed: false,
       protected_actions_created: false,
       writes_enabled: false,
+      mission_control_auth_weakened: false,
+      agent_zero_execution_enabled: false,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

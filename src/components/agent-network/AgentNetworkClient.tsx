@@ -658,6 +658,8 @@ interface AgentZeroReviewerPayload {
     execution_enabled?: boolean
     execution_disabled_until?: string
     owner_approval_required_for_execution?: boolean
+    mode?: string
+    bridge_session_required?: boolean
   }
   tailnet?: {
     endpoint?: string
@@ -665,6 +667,25 @@ interface AgentZeroReviewerPayload {
     http_status?: number | null
     latency_ms?: number | null
     error?: string | null
+  }
+  runtime?: {
+    base_url?: string
+    health_endpoint?: string
+    chat_endpoint?: string
+    version?: string | null
+    commit_hash?: string | null
+    health_ok?: boolean
+  }
+  mission_control_connector?: {
+    status?: string
+    can_see_mission_control?: boolean | string
+    api_key_present?: boolean
+    api_key_configured_env_name?: string | null
+    api_key_redacted?: string | null
+    accepted_api_key_env_names?: string[]
+    context_mode?: string
+    test_chat_endpoint?: string
+    blocker?: string | null
   }
   provider_registry?: {
     state?: string
@@ -2180,6 +2201,10 @@ function ExternalCard({
 }
 
 function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload | null }) {
+  const [testMessage, setTestMessage] = useState('Can you see Mission Control? Answer yes or no.')
+  const [testState, setTestState] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [testResult, setTestResult] = useState<string>('')
+
   if (!payload) {
     return (
       <div className={styles.externalCard}>
@@ -2194,8 +2219,44 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
 
   const agent = payload.agent || {}
   const tailnet = payload.tailnet || {}
+  const runtime = payload.runtime || {}
+  const connector = payload.mission_control_connector || {}
   const provider = payload.provider_registry || {}
   const safety = payload.safety || {}
+  const connectorStatus = connector.status
+    ? connector.status.replace(/_/g, ' ')
+    : 'unknown'
+  const missionControlVisibility = connector.can_see_mission_control === true
+    ? 'yes'
+    : connector.can_see_mission_control === 'not_live_verified_yet'
+      ? 'ready, not live-verified'
+      : 'no'
+  const testChatBlocked = connector.status === 'blocked_missing_agent_zero_api_key' || tailnet.reachable === false
+
+  async function runAgentZeroReadOnlyTest() {
+    setTestState('running')
+    setTestResult('')
+    try {
+      const response = await fetch('/api/bridge/agent-zero/test-chat', {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: testMessage }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setTestState('error')
+        setTestResult(String(data.error || data.blocker || `HTTP ${response.status}`))
+        return
+      }
+      setTestState('done')
+      setTestResult(String(data.response_text || data.blocker || 'No response text returned.'))
+    } catch (error) {
+      setTestState('error')
+      setTestResult(error instanceof Error ? error.message : 'Agent Zero test failed')
+    }
+  }
 
   return (
     <div className={styles.externalCard}>
@@ -2220,12 +2281,32 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
           <dd>{agent.execution_enabled ? 'enabled' : 'disabled until owner approval'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
+          <dt>Mode</dt>
+          <dd>{agent.mode || 'read_only_test'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
           <dt>Tailnet endpoint</dt>
           <dd>{tailnet.endpoint || 'http://100.116.35.95:50080/'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Tailnet status</dt>
           <dd>{tailnet.http_status ? `HTTP ${tailnet.http_status}` : 'not reachable'}{tailnet.latency_ms != null ? ` · ${tailnet.latency_ms}ms` : ''}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Version</dt>
+          <dd>{runtime.version || 'unknown'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Mission Control</dt>
+          <dd>{missionControlVisibility}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Connector</dt>
+          <dd>{connectorStatus}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Test channel</dt>
+          <dd>{connector.test_chat_endpoint || '/api/bridge/agent-zero/test-chat'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Provider state</dt>
@@ -2239,6 +2320,37 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
       {(provider.error || tailnet.error) && (
         <p className={styles.providerAction}>Status warning: {provider.error || tailnet.error}</p>
       )}
+      {connector.blocker && (
+        <p className={styles.providerAction}>Connector blocker: {connector.blocker}</p>
+      )}
+      <div className={styles.agentZeroTestBox}>
+        <label className={styles.agentZeroTestLabel} htmlFor="agent-zero-test-message">
+          Agent Zero read-only test
+        </label>
+        <textarea
+          id="agent-zero-test-message"
+          className={styles.agentZeroTestInput}
+          value={testMessage}
+          rows={3}
+          onChange={(event) => setTestMessage(event.target.value)}
+          disabled={testState === 'running'}
+        />
+        <div className={styles.agentActions}>
+          <button
+            type="button"
+            className={testChatBlocked ? styles.btnDisabled : styles.btnPrimary}
+            disabled={testChatBlocked || testState === 'running'}
+            onClick={runAgentZeroReadOnlyTest}
+          >
+            {testState === 'running' ? 'Checking…' : testChatBlocked ? 'Blocked' : 'Ask read-only'}
+          </button>
+        </div>
+        {testResult && (
+          <p className={testState === 'error' ? styles.providerAction : styles.providerNotes}>
+            {testResult}
+          </p>
+        )}
+      </div>
       <p className={styles.providerNotes}>{provider.notes || 'Execution remains disabled until owner-approved scoped runner and audit path exist.'}</p>
       <p className={styles.providerAction}>{provider.next_action || 'Keep Agent Zero observe/recommend/review only.'}</p>
     </div>

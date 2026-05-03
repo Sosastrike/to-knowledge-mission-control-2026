@@ -41,11 +41,11 @@ export type AgentZeroReportManifest = {
   delivery_channels: AgentZeroReportDeliveryChannel[]
   normal_reply: string
   safety: {
-    raw_local_paths_exposed: false
-    task_ids_in_normal_reply: false
-    protected_actions_executed: false
-    external_writes_executed: false
-    telegram_attachment_sent: false
+    raw_local_paths_exposed: boolean
+    task_ids_in_normal_reply: boolean
+    protected_actions_executed: boolean
+    external_writes_executed: boolean
+    telegram_attachment_sent: boolean
   }
 }
 
@@ -225,6 +225,7 @@ function markdownForReport(input: {
   createdAt: string
   sections: AgentZeroReportSection[]
   channels: AgentZeroReportDeliveryChannel[]
+  safety: AgentZeroReportManifest['safety']
 }): string {
   const lines = [
     `# ${input.title}`,
@@ -239,9 +240,9 @@ function markdownForReport(input: {
     '',
     '## Safety',
     '',
-    '- Raw local paths exposed: false',
-    '- Protected actions executed: false',
-    '- External writes executed: false',
+    `- Raw local paths exposed: ${input.safety.raw_local_paths_exposed}`,
+    `- Protected actions executed: ${input.safety.protected_actions_executed}`,
+    `- External writes executed: ${input.safety.external_writes_executed}`,
     '',
   ]
   for (const section of input.sections) {
@@ -324,6 +325,7 @@ export async function createAgentZeroReport(input: {
   ownerMessage?: string
   source?: 'api' | 'test_chat'
   root?: string
+  safety?: Partial<AgentZeroReportManifest['safety']>
 }): Promise<AgentZeroReportCreationResult> {
   const id = safeId()
   const title = bounded(input.title, 'Agent Zero Report', 160)
@@ -333,6 +335,13 @@ export async function createAgentZeroReport(input: {
   const channels = deliveryChannels(deliveries, id)
   const normalReply = buildNormalReply(channels)
   const sections = normalizeSections(input.sections)
+  const safety: AgentZeroReportManifest['safety'] = {
+    raw_local_paths_exposed: false,
+    task_ids_in_normal_reply: false,
+    protected_actions_executed: Boolean(input.safety?.protected_actions_executed),
+    external_writes_executed: Boolean(input.safety?.external_writes_executed),
+    telegram_attachment_sent: Boolean(input.safety?.telegram_attachment_sent),
+  }
   const slug = slugify(title)
   const markdownFilename = `${slug}.md`
   const pdfFilename = `${slug}.pdf`
@@ -340,7 +349,7 @@ export async function createAgentZeroReport(input: {
   ensureDirExists(reportRoot(input.root))
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 })
 
-  const markdown = markdownForReport({ title, summary, createdAt, sections, channels })
+  const markdown = markdownForReport({ title, summary, createdAt, sections, channels, safety })
   const pdf = createPdfBytes(title, markdown)
   const manifest: AgentZeroReportManifest = {
     id,
@@ -356,13 +365,7 @@ export async function createAgentZeroReport(input: {
     pdf_filename: pdfFilename,
     delivery_channels: channels,
     normal_reply: normalReply,
-    safety: {
-      raw_local_paths_exposed: false,
-      task_ids_in_normal_reply: false,
-      protected_actions_executed: false,
-      external_writes_executed: false,
-      telegram_attachment_sent: false,
-    },
+    safety,
   }
 
   const markdownPath = safeReportFile(dir, markdownFilename)

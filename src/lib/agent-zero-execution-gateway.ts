@@ -1,4 +1,9 @@
 import Database from 'better-sqlite3'
+import { execFile, type ExecFileException } from 'node:child_process'
+import {
+  BUILDWIKI_ACTION_RUN_NOW,
+  BUILDWIKI_TARGET_SERVICE,
+} from './build-wiki-run-now'
 import {
   createAgentZeroReport,
   redactUnsafeOwnerText,
@@ -78,6 +83,13 @@ type AdapterHandlerResult = {
   result: Record<string, unknown>
 }
 
+type BuildWikiRunNowDispatchResult = {
+  ok: boolean
+  exitCode: number | null
+  signal: string | null
+  stderr: string
+}
+
 type AdapterDefinition = AgentZeroExecutionAdapterSummary & {
   handler: (input: AgentZeroExecutionGatewayInput, session: AgentZeroBridgeSessionObject) => Promise<AdapterHandlerResult>
 }
@@ -90,6 +102,7 @@ export type AgentZeroExecutionGatewayInput = {
   input?: Record<string, unknown>
   reportRoot?: string
   obsidianRoot?: string
+  buildWikiRunNowRunner?: () => Promise<BuildWikiRunNowDispatchResult>
   mempalacePaths?: {
     graphDbPath?: string
     dataDir?: string
@@ -143,6 +156,41 @@ const SAFETY = {
 } as const
 
 const FORBIDDEN_ACTION_RE = /\b(shell|exec|command|filesystem|file\.read|secret|docker|root|sudo|env|credential)\b/i
+const BUILDWIKI_RUN_NOW_TIMEOUT_MS = 9 * 60 * 1000
+const BUILDWIKI_RUN_NOW_COMMAND = `systemctl --user start ${BUILDWIKI_TARGET_SERVICE}` as const
+
+function dispatchBuildWikiRunNow(): Promise<BuildWikiRunNowDispatchResult> {
+  return new Promise((resolve) => {
+    const childEnv: NodeJS.ProcessEnv = {
+      XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR || '/run/user/1001',
+      PATH: '/usr/bin:/bin',
+      NODE_ENV: process.env.NODE_ENV || 'production',
+    }
+    const child = execFile(
+      '/usr/bin/systemctl',
+      ['--user', 'start', BUILDWIKI_TARGET_SERVICE],
+      {
+        timeout: BUILDWIKI_RUN_NOW_TIMEOUT_MS,
+        env: childEnv,
+        maxBuffer: 64 * 1024,
+      },
+      (error: ExecFileException | null, _stdout: string | Buffer, stderr: string | Buffer) => {
+        const stderrText = redactUnsafeOwnerText(String(stderr || '').slice(-1000))
+        if (error) {
+          resolve({
+            ok: false,
+            exitCode: typeof error.code === 'number' ? error.code : null,
+            signal: error.signal ? String(error.signal) : null,
+            stderr: stderrText,
+          })
+          return
+        }
+        resolve({ ok: true, exitCode: 0, signal: null, stderr: stderrText })
+      },
+    )
+    child.on('error', () => { /* callback handles process failure */ })
+  })
+}
 
 function stringInput(input: Record<string, unknown> | undefined, key: string, fallback = ''): string {
   const value = input?.[key]
@@ -277,6 +325,10 @@ const ADAPTERS: AdapterDefinition[] = [
           { heading: 'Attachment', body: 'This report is available through Mission Control links only.' },
         ],
         root: request.reportRoot,
+        safety: {
+          protected_actions_executed: true,
+          external_writes_executed: false,
+        },
       })
       return {
         ok: true,
@@ -432,26 +484,100 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
-    action: 'buildwiki.run_now',
+    action: BUILDWIKI_ACTION_RUN_NOW,
     category: 'buildwiki_run_now',
     label: 'Build-Wiki Run Now',
-    description: 'Scoped Build-Wiki action. This gateway will not run systemctl directly; it requires the registered dispatcher adapter to accept a Bridge Session id.',
-    status: 'blocked',
+    description: 'Starts the local OpenCloud Build-Wiki farmer through exactly one scoped systemd user service command.',
+    status: 'available',
     execution_enabled: true,
     writes_enabled: true,
     bridge_session_required: true,
     allowed_scope_keys: ['buildwiki.run_now'],
-    blocked_reason: 'buildwiki_run_now_bridge_session_dispatch_adapter_not_wired',
+    blocked_reason: null,
     safety: SAFETY,
-    handler: async () => blockedResult(
-      'Build-Wiki Run Now is blocked until the registered dispatcher accepts this Bridge Session id.',
-      'buildwiki_run_now_bridge_session_dispatch_adapter_not_wired',
-      {
-        action: 'buildwiki.run_now',
-        target_service: 'opencloud-docs-farmer.service',
-        direct_systemctl_from_gateway: false,
-      },
-    ),
+    handler: async (request, session) => {
+      const dispatchedAt = new Date().toISOString()
+      const dispatch = await (request.buildWikiRunNowRunner || dispatchBuildWikiRunNow)()
+      const finishedAt = new Date().toISOString()
+      const reportEvent = {
+        type: 'buildwiki.run_now.result',
+        created_at: finishedAt,
+        action: BUILDWIKI_ACTION_RUN_NOW,
+        target_service: BUILDWIKI_TARGET_SERVICE,
+        exact_command: BUILDWIKI_RUN_NOW_COMMAND,
+        bridge_session_id: session.session_id,
+        run_state: dispatch.ok ? 'completed' : 'failed',
+        systemctl_exit_code: dispatch.exitCode,
+        systemctl_signal: dispatch.signal,
+        stderr_tail_present: Boolean(dispatch.stderr),
+        mission_control_status_route: '/api/bridge/brain-sync/build-wiki/status',
+        no_broad_external_farmers: true,
+        smb_fork2_executed: false,
+        external_farmers_executed: false,
+        audited_by_bridge_session: true,
+      }
+      const report = await createAgentZeroReport({
+        title: dispatch.ok ? 'Build-Wiki Run Now Dispatch Report' : 'Build-Wiki Run Now Failure Report',
+        summary: dispatch.ok
+          ? 'Agent Zero dispatched the local Build-Wiki farmer through the scoped Bridge Session adapter.'
+          : 'Agent Zero attempted the scoped Build-Wiki Run Now adapter, but the systemd service start failed.',
+        requestedDelivery: { provider: 'mission_control' },
+        source: 'api',
+        sections: [
+          {
+            heading: 'Scoped action',
+            body: [
+              `Action: ${BUILDWIKI_ACTION_RUN_NOW}`,
+              `Command: ${BUILDWIKI_RUN_NOW_COMMAND}`,
+              'Scope: local Build-Wiki farmer service only.',
+              'Broad external farmers: disabled.',
+              'SMB/Fork 2: not executed.',
+            ],
+          },
+          {
+            heading: 'Result',
+            body: [
+              `Run state: ${reportEvent.run_state}`,
+              `Exit code: ${dispatch.exitCode === null ? 'unknown' : dispatch.exitCode}`,
+              `Signal: ${dispatch.signal || 'none'}`,
+              dispatch.stderr ? `Stderr tail: ${dispatch.stderr.slice(-400)}` : 'Stderr tail: none',
+            ],
+          },
+        ],
+        root: request.reportRoot,
+      })
+      return {
+        ok: dispatch.ok,
+        status: dispatch.ok ? 'completed' : 'failed',
+        normal_reply: dispatch.ok
+          ? 'Done. Build-Wiki Run Now was dispatched through the Agent Zero Bridge Session.'
+          : 'Build-Wiki Run Now could not start the local farmer service; I recorded the result in Mission Control.',
+        blocked_reason: dispatch.ok ? null : 'buildwiki_run_now_systemctl_failed',
+        result: {
+          action: BUILDWIKI_ACTION_RUN_NOW,
+          target_service: BUILDWIKI_TARGET_SERVICE,
+          exact_command: BUILDWIKI_RUN_NOW_COMMAND,
+          run_state: reportEvent.run_state,
+          systemctl_exit_code: dispatch.exitCode,
+          systemctl_signal: dispatch.signal,
+          stderr_tail: dispatch.stderr.slice(-400),
+          dispatched_at: dispatchedAt,
+          finished_at: finishedAt,
+          scoped_service_only: true,
+          broad_external_farmers_enabled: false,
+          smb_fork2_executed: false,
+          external_farmers_executed: false,
+          raw_shell_enabled: false,
+          arbitrary_service_args_enabled: false,
+          audit_event_required: true,
+          report_event_required: true,
+          report_event_created: true,
+          report_event: reportEvent,
+          report_created: true,
+          ...publicReportResult(report),
+        },
+      }
+    },
   },
   {
     action: 'obsidian.note.create',
@@ -965,6 +1091,13 @@ export async function executeAgentZeroBridgeAction(input: AgentZeroExecutionGate
         adapter_status: adapterResult.status,
         blocked_reason: adapterResult.blocked_reason,
         no_fake_done: true,
+        report_event: safeJson(adapterResult.result?.report_event || null),
+        report_event_type: typeof adapterResult.result?.report_event === 'object' && adapterResult.result.report_event
+          ? String((adapterResult.result.report_event as Record<string, unknown>).type || '')
+          : null,
+        report_event_run_state: typeof adapterResult.result?.report_event === 'object' && adapterResult.result.report_event
+          ? String((adapterResult.result.report_event as Record<string, unknown>).run_state || '')
+          : null,
       },
       now: input.now,
     })

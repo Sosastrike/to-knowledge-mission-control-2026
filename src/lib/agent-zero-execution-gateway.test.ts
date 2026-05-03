@@ -243,6 +243,110 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(mcp.result).toMatchObject({ tool_invoked: false })
   })
 
+  it('runs Build-Wiki only through an active Bridge Session and creates a report event', async () => {
+    const db = setupDb()
+    let callCount = 0
+    const runner = async () => {
+      callCount += 1
+      return { ok: true, exitCode: 0, signal: null, stderr: '' }
+    }
+
+    const blocked = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      action: 'buildwiki.run_now',
+      buildWikiRunNowRunner: runner,
+    })
+    expect(blocked.ok).toBe(false)
+    expect(blocked.http_status).toBe(423)
+    expect(blocked.blocked_reason).toBe('active_bridge_session_required')
+    expect(callCount).toBe(0)
+
+    const sessionId = approveSession(db)
+    const reportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'az-gateway-buildwiki-'))
+    tempRoots.push(reportRoot)
+    const result = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'buildwiki.run_now',
+      reportRoot,
+      buildWikiRunNowRunner: runner,
+    })
+
+    expect(callCount).toBe(1)
+    expect(result.ok).toBe(true)
+    expect(result.http_status).toBe(200)
+    expect(result.status).toBe('completed')
+    expect(result.result).toMatchObject({
+      action: 'buildwiki.run_now',
+      target_service: 'opencloud-docs-farmer.service',
+      exact_command: 'systemctl --user start opencloud-docs-farmer.service',
+      run_state: 'completed',
+      scoped_service_only: true,
+      broad_external_farmers_enabled: false,
+      smb_fork2_executed: false,
+      external_farmers_executed: false,
+      audit_event_required: true,
+      report_event_required: true,
+      report_event_created: true,
+      report_created: true,
+    })
+    expect(result.result?.report_event).toMatchObject({
+      type: 'buildwiki.run_now.result',
+      target_service: 'opencloud-docs-farmer.service',
+      no_broad_external_farmers: true,
+      smb_fork2_executed: false,
+      external_farmers_executed: false,
+      audited_by_bridge_session: true,
+    })
+    expect(JSON.stringify(result)).toContain('/api/bridge/agent-zero/reports/')
+    expect(JSON.stringify(result)).not.toContain(reportRoot)
+    expect(JSON.stringify(result)).not.toContain('/home/tony')
+
+    const auditRows = db.prepare(`
+      SELECT outcome, metadata_json
+      FROM bridge_session_audit_events
+      WHERE action = 'buildwiki.run_now'
+      ORDER BY created_at ASC
+    `).all() as Array<{ outcome: string; metadata_json: string }>
+    expect(auditRows.map((row) => row.outcome)).toEqual(['started', 'completed'])
+    expect(JSON.parse(auditRows[1].metadata_json)).toMatchObject({
+      report_event_type: 'buildwiki.run_now.result',
+      report_event_run_state: 'completed',
+    })
+  })
+
+  it('reports Build-Wiki service start failures without running broad farmers', async () => {
+    const db = setupDb()
+    const sessionId = approveSession(db)
+    const reportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'az-gateway-buildwiki-fail-'))
+    tempRoots.push(reportRoot)
+    const result = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'buildwiki.run_now',
+      reportRoot,
+      buildWikiRunNowRunner: async () => ({ ok: false, exitCode: 1, signal: null, stderr: 'unit failed without secrets' }),
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.http_status).toBe(423)
+    expect(result.status).toBe('failed')
+    expect(result.blocked_reason).toBe('buildwiki_run_now_systemctl_failed')
+    expect(result.normal_reply).toBe('Build-Wiki Run Now could not start the local farmer service; I recorded the result in Mission Control.')
+    expect(result.result).toMatchObject({
+      run_state: 'failed',
+      report_event_created: true,
+      broad_external_farmers_enabled: false,
+      smb_fork2_executed: false,
+      external_farmers_executed: false,
+    })
+    expect(JSON.stringify(result)).not.toContain(reportRoot)
+    expect(JSON.stringify(result)).not.toContain('/home/tony')
+  })
+
   it('writes Obsidian notes only through an active scoped Bridge Session adapter', async () => {
     const db = setupDb()
     const blocked = await executeAgentZeroBridgeAction({

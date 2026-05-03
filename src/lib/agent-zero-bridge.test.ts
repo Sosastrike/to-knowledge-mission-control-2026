@@ -305,6 +305,171 @@ describe('Agent Zero read-only bridge connector', () => {
         { source: 'obsidian', status: 'read_only', summary: 'vault visible' },
         { source: 'mempalace', status: 'read_only', summary: 'status visible' },
       ],
+      brainRegistry: [
+        {
+          id: 'obsidian',
+          name: 'Obsidian',
+          status: 'visible',
+          raw_state: 'read_ready',
+          status_visible: true,
+          read_adapter: 'available',
+          write_adapter: 'blocked',
+          read_content_enabled: true,
+          write_content_enabled: false,
+          memory_writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          path_status: 'present',
+          index_status: 'visible',
+          last_sync_at: '2026-05-03T13:00:00.000Z',
+          last_attempt_at: '2026-05-03T13:00:00.000Z',
+          last_error: null,
+          available_read_apis: ['/api/bridge/brain-sync/status', '/api/bridge/brain-context'],
+          available_write_apis: [],
+          blockers: ['obsidian_writes_disabled'],
+          summary: 'Obsidian vault status visible and shared context read adapter available.',
+          notes: 'Filesystem presence is not a direct Agent Zero tool.',
+        },
+        {
+          id: 'mempalace',
+          name: 'MemPalace',
+          status: 'visible',
+          raw_state: 'status_only',
+          status_visible: true,
+          read_adapter: 'status_only',
+          write_adapter: 'blocked',
+          read_content_enabled: false,
+          write_content_enabled: false,
+          memory_writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          path_status: 'present',
+          index_status: 'visible',
+          last_sync_at: '2026-05-03T12:00:00.000Z',
+          last_attempt_at: '2026-05-03T12:00:00.000Z',
+          last_error: null,
+          available_read_apis: ['/api/bridge/brain-sync/status'],
+          available_write_apis: [],
+          blockers: ['mempalace_status_only', 'mempalace_writes_disabled'],
+          summary: 'MemPalace status visible only.',
+          notes: 'No production read/write adapter yet.',
+        },
+        {
+          id: 'graphify',
+          name: 'Graphify',
+          status: 'visible',
+          raw_state: 'healthy',
+          status_visible: true,
+          read_adapter: 'status_only',
+          write_adapter: 'blocked',
+          read_content_enabled: false,
+          write_content_enabled: false,
+          memory_writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          path_status: 'present',
+          index_status: 'visible',
+          last_sync_at: '2026-05-03T11:00:00.000Z',
+          last_attempt_at: '2026-05-03T11:00:00.000Z',
+          last_error: null,
+          available_read_apis: ['/api/bridge/brain-sync/status', '/api/memory/graph'],
+          available_write_apis: [],
+          blockers: ['graphify_rebuild_disabled_without_owner_approval'],
+          summary: 'Graphify artifact status visible.',
+          notes: 'No direct Graphify control.',
+        },
+        {
+          id: 'brain_watchers',
+          name: 'Brain watchers',
+          status: 'visible',
+          raw_state: 'sync_snapshots_visible',
+          status_visible: true,
+          read_adapter: 'status_only',
+          write_adapter: 'blocked',
+          read_content_enabled: false,
+          write_content_enabled: false,
+          memory_writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          path_status: 'not_applicable',
+          index_status: 'not_connected',
+          last_sync_at: '2026-05-03T13:00:00.000Z',
+          last_attempt_at: null,
+          last_error: null,
+          available_read_apis: ['/api/bridge/brain-sync/status'],
+          available_write_apis: [],
+          blockers: ['watcher_status_inferred_from_sync_snapshots_no_direct_control_adapter'],
+          summary: 'Watcher status inferred from snapshots.',
+          notes: 'No watcher control.',
+        },
+      ],
+      brainReadApis: [
+        {
+          endpoint: '/api/bridge/brain-sync/status',
+          method: 'GET',
+          status: 'connected',
+          purpose: 'Read-only Brain Sync status.',
+          read_only: true,
+          write_enabled: false,
+          requires_owner_approval: false,
+          requires_bridge_session: false,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+        {
+          endpoint: '/api/bridge/brain-context',
+          method: 'GET',
+          status: 'connected',
+          purpose: 'Shared brain context proxy.',
+          read_only: true,
+          write_enabled: false,
+          requires_owner_approval: false,
+          requires_bridge_session: false,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+      ],
+      brainWriteApis: [
+        {
+          endpoint: '/api/memory/search',
+          method: 'POST',
+          status: 'blocked',
+          purpose: 'Index rebuild blocked for Agent Zero.',
+          read_only: false,
+          write_enabled: false,
+          requires_owner_approval: true,
+          requires_bridge_session: true,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: 'agent_zero_read_only_context_write_disabled',
+        },
+      ],
+      brainWatchers: {
+        status: 'visible',
+        status_visible: true,
+        direct_control_enabled: false,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        last_seen_at: '2026-05-03T13:00:00.000Z',
+        sources: ['obsidian', 'mempalace', 'graphify'],
+        blockers: ['watcher_status_inferred_from_sync_snapshots_no_direct_control_adapter'],
+        summary: 'Watcher status inferred from sync snapshots.',
+      },
+      brainIndexStatus: {
+        status: 'visible',
+        indexed_records: 123,
+        indexed_sources: ['obsidian', 'mempalace', 'graphify'],
+        last_indexed_at: '2026-05-03T13:00:00.000Z',
+        search_read_api_available: true,
+        rebuild_write_api_enabled: false,
+        blockers: ['index_rebuild_write_disabled_for_agent_zero'],
+      },
       timerActive: true,
       latestBuildWikiRunState: 'idle',
       bridgeSessionAvailable: true,
@@ -381,6 +546,23 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.integrations.write_enabled_total).toBe(0)
     expect(context.integrations.bridge_session_required_total).toBe(3)
     expect(context.brain.obsidian_visible).toBe(true)
+    expect(context.brain.registry.find((source) => source.id === 'obsidian')?.read_content_enabled).toBe(true)
+    expect(context.brain.registry.find((source) => source.id === 'obsidian')?.write_content_enabled).toBe(false)
+    expect(context.brain.registry.find((source) => source.id === 'mempalace')?.read_adapter).toBe('status_only')
+    expect(context.brain.registry.find((source) => source.id === 'mempalace')?.read_content_enabled).toBe(false)
+    expect(context.brain.registry.find((source) => source.id === 'graphify')?.write_adapter).toBe('blocked')
+    expect(context.brain.brain_watchers.direct_control_enabled).toBe(false)
+    expect(context.brain.vault_path_status.obsidian).toBe('present')
+    expect(context.brain.index_status.rebuild_write_api_enabled).toBe(false)
+    expect(context.brain.available_read_apis.map((api) => api.endpoint)).toContain('/api/bridge/brain-context')
+    expect(context.brain.available_write_apis[0]).toMatchObject({
+      endpoint: '/api/memory/search',
+      method: 'POST',
+      status: 'blocked',
+      write_enabled: false,
+      requires_owner_approval: true,
+    })
+    expect(context.brain.blockers).toContain('mempalace_status_only')
     expect(context.brain.memory_writes_enabled).toBe(false)
     expect(context.opencloud_buildwiki.build_wiki_status_visible).toBe(true)
     expect(context.opencloud_buildwiki.direct_opencloud_access_visible).toBe(false)
@@ -396,6 +578,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('models.provider_registry')
     expect(prompt).toContain('skills.registry')
     expect(prompt).toContain('integrations.registry')
+    expect(prompt).toContain('brain.registry')
     expect(prompt).toContain('direct access versus Mission Control proxy')
     expect(prompt).toContain('"heygen_schema_visible":true')
     expect(prompt).toContain('"execution_enabled":false')

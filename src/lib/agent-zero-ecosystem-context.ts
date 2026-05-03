@@ -11,6 +11,11 @@ import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getGitHubToken } from '@/lib/github'
 import {
   type AgentZeroCapabilityState,
+  type AgentZeroBrainApiSummary,
+  type AgentZeroBrainIndexSummary,
+  type AgentZeroBrainPathStatus,
+  type AgentZeroBrainSourceRegistryItem,
+  type AgentZeroBrainWatchersSummary,
   type AgentZeroIntegrationCapability,
   type AgentZeroModelProviderStatus,
   type AgentZeroModelProviderSummary,
@@ -37,8 +42,36 @@ type BrainSyncPayload = {
     source?: string
     state?: string
     status?: string
+    raw_state?: string
+    last_success_at?: number | null
+    last_attempt_at?: number | null
+    last_error?: string | null
     summary?: string
+    details?: Record<string, unknown>
   }>
+}
+
+type BrainContextPayload = {
+  ok?: boolean
+  source_status?: Array<{
+    source?: string
+    state?: string
+    path?: string
+    count?: number
+    detail?: string
+  }>
+  source_contracts?: Array<{
+    source?: string
+    current_status?: string
+    read_path?: string
+    write_path?: string
+    owner_approval_required?: boolean
+    writes_enabled_from_shared_context?: boolean
+    notes?: string
+    risks?: string[]
+  }>
+  agent_consumers?: unknown[]
+  write_contract?: unknown
 }
 
 function execFileText(command: string, args: string[], timeout = 2500): Promise<string> {
@@ -434,6 +467,11 @@ function accessFromVisibility(value: string | null | undefined): EcosystemAccess
   return 'unknown'
 }
 
+function isoFromEpochSeconds(value: unknown): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null
+  return new Date(value * 1000).toISOString()
+}
+
 function hasCredential(names: string[]): boolean {
   return names.some((name) => Boolean(process.env[name]?.trim()))
 }
@@ -532,6 +570,111 @@ function toolRegistryItem(input: {
     execution_enabled: false,
     writes_enabled: false,
     blocked_reason: input.blockedReason || null,
+  }
+}
+
+function brainApi(input: {
+  endpoint: string
+  method?: AgentZeroBrainApiSummary['method']
+  status: EcosystemAccessState
+  purpose: string
+  readOnly?: boolean
+  requiresOwnerApproval?: boolean
+  requiresBridgeSession?: boolean
+  blockedReason?: string | null
+}): AgentZeroBrainApiSummary {
+  return {
+    endpoint: input.endpoint,
+    method: input.method || 'GET',
+    status: input.status,
+    purpose: input.purpose,
+    read_only: input.readOnly !== false,
+    write_enabled: false,
+    requires_owner_approval: Boolean(input.requiresOwnerApproval),
+    requires_bridge_session: Boolean(input.requiresBridgeSession),
+    execution_enabled: false,
+    direct_access: false,
+    proxy_access: true,
+    blocked_reason: input.blockedReason || null,
+  }
+}
+
+function pathStatusFromDetails(details: Record<string, unknown> | undefined, keys: string[]): AgentZeroBrainPathStatus {
+  if (!details) return 'unknown'
+  return keys.some((key) => typeof details[key] === 'string' && String(details[key]).trim())
+    ? 'present'
+    : 'unknown'
+}
+
+function numberFromDetails(details: Record<string, unknown> | undefined, key: string): number | null {
+  const value = details?.[key]
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function brainSourceRegistryItem(input: {
+  id: AgentZeroBrainSourceRegistryItem['id']
+  name: string
+  sync?: NonNullable<BrainSyncPayload['sources']>[number]
+  context?: NonNullable<BrainContextPayload['source_status']>[number]
+  contract?: NonNullable<BrainContextPayload['source_contracts']>[number]
+  status?: EcosystemAccessState
+  rawState?: string
+  statusVisible?: boolean
+  readAdapter?: AgentZeroBrainSourceRegistryItem['read_adapter']
+  writeAdapter?: AgentZeroBrainSourceRegistryItem['write_adapter']
+  readContentEnabled?: boolean
+  pathStatus?: AgentZeroBrainPathStatus
+  indexStatus?: EcosystemAccessState
+  availableReadApis?: string[]
+  availableWriteApis?: string[]
+  blockers?: string[]
+  summary?: string
+  notes?: string
+}): AgentZeroBrainSourceRegistryItem {
+  const rawState = input.rawState || input.sync?.state || input.sync?.raw_state || input.sync?.status || input.context?.state || input.contract?.current_status || 'unknown'
+  const status = input.status || accessFromVisibility(rawState)
+  const readStatus = input.readAdapter || (
+    input.contract?.current_status === 'read_ready'
+      ? 'available'
+      : input.contract?.current_status === 'status_only'
+        ? 'status_only'
+        : status === 'blocked'
+          ? 'blocked'
+          : 'status_only'
+  )
+  const writeStatus = input.writeAdapter || (
+    input.contract?.writes_enabled_from_shared_context
+      ? 'available'
+      : 'blocked'
+  )
+  const blockers = new Set(input.blockers || [])
+  if (readStatus === 'status_only' && input.id !== 'brain_sync') blockers.add(`${input.id}_content_read_adapter_not_connected`)
+  if (writeStatus !== 'available') blockers.add(`${input.id}_write_adapter_disabled`)
+  if (status === 'blocked') blockers.add(`${input.id}_status_blocked`)
+
+  return {
+    id: input.id,
+    name: input.name,
+    status,
+    raw_state: rawState,
+    status_visible: Boolean(input.statusVisible ?? status !== 'blocked'),
+    read_adapter: readStatus,
+    write_adapter: writeStatus,
+    read_content_enabled: Boolean(input.readContentEnabled && readStatus === 'available'),
+    write_content_enabled: false,
+    memory_writes_enabled: false,
+    direct_access: false,
+    proxy_access: true,
+    path_status: input.pathStatus || 'unknown',
+    index_status: input.indexStatus || 'unknown',
+    last_sync_at: isoFromEpochSeconds(input.sync?.last_success_at),
+    last_attempt_at: isoFromEpochSeconds(input.sync?.last_attempt_at),
+    last_error: input.sync?.last_error || null,
+    available_read_apis: Array.from(new Set(input.availableReadApis || [])).sort(),
+    available_write_apis: Array.from(new Set(input.availableWriteApis || [])).sort(),
+    blockers: Array.from(blockers).sort(),
+    summary: input.summary || input.context?.detail || input.sync?.summary || `${input.name} status is ${status}.`,
+    notes: input.notes || input.contract?.notes || '',
   }
 }
 
@@ -757,7 +900,7 @@ function endpointSummary(input: {
 }
 
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
-  const [providersResult, zapierResult, mcpZapierResult, brainResult, timerActive, githubToken] = await Promise.all([
+  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, timerActive, githubToken] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
       status: 503,
@@ -788,6 +931,20 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       status: 503,
       payload: { sources: [] as BrainSyncPayload['sources'] },
     })),
+    fetchClaudeClawJson<BrainContextPayload>(
+      '/api/brain/context?q=brain%20status&agent_id=agent_zero&limit=5',
+      {},
+      12000,
+    ).catch(() => ({
+      ok: false,
+      status: 503,
+      payload: { source_status: [], source_contracts: [] } as BrainContextPayload,
+    })),
+    fetchClaudeClawJson<Record<string, unknown>>('/api/brain/write-contract', {}, 12000).catch(() => ({
+      ok: false,
+      status: 503,
+      payload: {},
+    })),
     readBuildWikiTimerActive(),
     getGitHubToken().catch(() => null),
   ])
@@ -804,6 +961,15 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const brainSources = Array.isArray((brainResult.payload as BrainSyncPayload)?.sources)
     ? ((brainResult.payload as BrainSyncPayload).sources || [])
     : []
+  const brainContextSources = Array.isArray((brainContextResult.payload as BrainContextPayload)?.source_status)
+    ? ((brainContextResult.payload as BrainContextPayload).source_status || [])
+    : []
+  const brainSourceContracts = Array.isArray((brainContextResult.payload as BrainContextPayload)?.source_contracts)
+    ? ((brainContextResult.payload as BrainContextPayload).source_contracts || [])
+    : []
+  const brainSyncBySource = new Map(brainSources.map((source) => [String(source.source || '').toLowerCase(), source]))
+  const brainContextBySource = new Map(brainContextSources.map((source) => [String(source.source || '').toLowerCase(), source]))
+  const brainContractBySource = new Map(brainSourceContracts.map((contract) => [String(contract.source || '').toLowerCase(), contract]))
   const latestRunNow = readLatestRunNow()
   const runState = deriveRunNowUiState(latestRunNow.approval, latestRunNow.run)
   const skillNames = readSkillNames()
@@ -1053,6 +1219,245 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       notes: 'All discovered MCP tools are exposed as read-only metadata. Tool invocation is disabled from Agent Zero test-chat.',
     }),
   ]
+  const obsidianSync = brainSyncBySource.get('obsidian')
+  const mempalaceSync = brainSyncBySource.get('mempalace')
+  const graphifySync = brainSyncBySource.get('graphify')
+  const obsidianDetails = obsidianSync?.details
+  const mempalaceDetails = mempalaceSync?.details
+  const graphifyDetails = graphifySync?.details
+  const obsidianMdFiles = numberFromDetails(obsidianDetails, 'md_files')
+  const mempalaceEntries = numberFromDetails(mempalaceDetails, 'last_entries')
+  const graphifyNodes = numberFromDetails(graphifyDetails, 'nodes')
+  const graphifyEdges = numberFromDetails(graphifyDetails, 'edges')
+  const brainContextReachable = Boolean((brainContextResult as any).ok && (brainContextResult.payload as BrainContextPayload)?.ok !== false)
+  const brainWriteContractReachable = Boolean((brainWriteContractResult as any).ok)
+  const brainLastSyncAt = [
+    obsidianSync?.last_success_at,
+    mempalaceSync?.last_success_at,
+    graphifySync?.last_success_at,
+  ]
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b)
+    .at(-1) || null
+  const brainReadApis: AgentZeroBrainApiSummary[] = [
+    brainApi({
+      endpoint: '/api/bridge/brain-sync/status',
+      status: brainSources.length > 0 ? 'connected' : 'blocked',
+      purpose: 'Read-only Brain Sync status for Obsidian, MemPalace, Graphify, brain watchers, and shared brain source state.',
+      blockedReason: brainSources.length > 0 ? null : 'brain_sync_status_unavailable',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/brain-context',
+      status: brainContextReachable ? 'connected' : 'blocked',
+      purpose: 'Read-only shared brain context proxy. It may return content snippets only through Mission Control/ClaudeClaw context rules.',
+      blockedReason: brainContextReachable ? null : 'shared_brain_context_proxy_unavailable',
+    }),
+    brainApi({
+      endpoint: '/api/memory/health',
+      status: 'configured',
+      purpose: 'Mission Control memory directory health diagnostics. Read-only for Agent Zero.',
+    }),
+    brainApi({
+      endpoint: '/api/memory/search',
+      status: 'configured',
+      purpose: 'Mission Control FTS memory search GET endpoint. Query-only; rebuild POST is not enabled for Agent Zero.',
+    }),
+    brainApi({
+      endpoint: '/api/memory/context',
+      status: 'configured',
+      purpose: 'Mission Control memory context read endpoint when memory directory/index are available.',
+    }),
+    brainApi({
+      endpoint: '/api/memory/graph',
+      status: 'configured',
+      purpose: 'Mission Control memory graph read endpoint. This is not proof of direct Graphify control.',
+    }),
+    brainApi({
+      endpoint: '/api/memory/links',
+      status: 'configured',
+      purpose: 'Mission Control memory link graph read endpoint.',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/brain-sync/build-wiki/status',
+      status: 'connected',
+      purpose: 'Build-Wiki/Farmer read-only status inside the shared brain surface.',
+    }),
+  ]
+  const brainWriteApis: AgentZeroBrainApiSummary[] = [
+    brainApi({
+      endpoint: '/api/memory/search',
+      method: 'POST',
+      status: 'blocked',
+      purpose: 'FTS index rebuild exists as an operator mutation path, but Agent Zero read-only chat cannot use it.',
+      readOnly: false,
+      requiresOwnerApproval: true,
+      requiresBridgeSession: true,
+      blockedReason: 'agent_zero_read_only_context_write_disabled',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/brain-sync/rebuild',
+      method: 'POST',
+      status: 'blocked',
+      purpose: 'Brain/Graph rebuild action requires owner approval and is not enabled for Agent Zero test-chat.',
+      readOnly: false,
+      requiresOwnerApproval: true,
+      requiresBridgeSession: true,
+      blockedReason: 'owner_approved_bridge_session_required',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/brain-sync/build-wiki/run-now',
+      method: 'POST',
+      status: 'blocked',
+      purpose: 'Build-Wiki farmer run request path. This is not a memory write and remains separately approval-gated.',
+      readOnly: false,
+      requiresOwnerApproval: true,
+      requiresBridgeSession: true,
+      blockedReason: 'buildwiki_run_now_requires_explicit_owner_approval',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/brain-sync/build-wiki/add-source',
+      method: 'POST',
+      status: 'blocked',
+      purpose: 'Build-Wiki source addition is a protected mutation path; not enabled for Agent Zero read-only chat.',
+      readOnly: false,
+      requiresOwnerApproval: true,
+      requiresBridgeSession: true,
+      blockedReason: 'protected_source_add_requires_owner_approval',
+    }),
+  ]
+  const brainRegistry: AgentZeroBrainSourceRegistryItem[] = [
+    brainSourceRegistryItem({
+      id: 'brain_sync',
+      name: 'Brain Sync',
+      status: brainSources.length > 0 || brainContextReachable ? 'connected' : 'blocked',
+      rawState: brainSources.length > 0 ? 'status_visible' : 'not_connected',
+      statusVisible: brainSources.length > 0 || brainContextReachable,
+      readAdapter: brainContextReachable ? 'available' : 'status_only',
+      writeAdapter: 'blocked',
+      readContentEnabled: brainContextReachable,
+      pathStatus: 'not_applicable',
+      indexStatus: graphifyNodes !== null || obsidianMdFiles !== null || mempalaceEntries !== null ? 'visible' : 'unknown',
+      availableReadApis: brainReadApis.map((api) => api.endpoint),
+      availableWriteApis: brainWriteApis.map((api) => api.endpoint),
+      blockers: [
+        'memory_writes_disabled',
+        ...(brainContextReachable ? [] : ['shared_brain_context_proxy_unavailable']),
+        ...(brainWriteContractReachable ? [] : ['brain_write_contract_unavailable']),
+      ],
+      summary: brainSources.length > 0
+        ? 'Brain Sync status is visible read-only through Mission Control/ClaudeClaw.'
+        : 'Brain Sync status is not visible through the current bridge.',
+      notes: 'Brain Sync status visibility does not enable memory writes.',
+    }),
+    brainSourceRegistryItem({
+      id: 'obsidian',
+      name: 'Obsidian',
+      sync: obsidianSync,
+      context: brainContextBySource.get('obsidian'),
+      contract: brainContractBySource.get('obsidian'),
+      readAdapter: brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? 'available' : 'status_only',
+      writeAdapter: 'blocked',
+      readContentEnabled: brainContractBySource.get('obsidian')?.current_status === 'read_ready' && brainContextReachable,
+      pathStatus: pathStatusFromDetails(obsidianDetails, ['vault_path']),
+      indexStatus: obsidianMdFiles !== null ? 'visible' : 'unknown',
+      availableReadApis: ['/api/bridge/brain-sync/status', '/api/bridge/brain-context', '/api/memory/search'],
+      availableWriteApis: [],
+      blockers: [
+        'obsidian_writes_disabled',
+        ...(brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? [] : ['obsidian_content_read_adapter_not_proven']),
+      ],
+      summary: obsidianSync?.summary || brainContextBySource.get('obsidian')?.detail || 'Obsidian status is not visible.',
+      notes: 'Filesystem/vault presence is not the same as an Agent Zero tool. Agent Zero can use only Mission Control proxy/status/context surfaces.',
+    }),
+    brainSourceRegistryItem({
+      id: 'mempalace',
+      name: 'MemPalace',
+      sync: mempalaceSync,
+      context: brainContextBySource.get('mempalace'),
+      contract: brainContractBySource.get('mempalace'),
+      readAdapter: 'status_only',
+      writeAdapter: 'blocked',
+      readContentEnabled: false,
+      pathStatus: pathStatusFromDetails(mempalaceDetails, ['data_path']),
+      indexStatus: mempalaceEntries !== null ? 'visible' : (numberFromDetails(mempalaceDetails, 'chroma_bytes') ? 'visible' : 'unknown'),
+      availableReadApis: ['/api/bridge/brain-sync/status', '/api/bridge/brain-context'],
+      availableWriteApis: [],
+      blockers: ['mempalace_status_only', 'mempalace_content_read_adapter_not_connected', 'mempalace_writes_disabled'],
+      summary: mempalaceSync?.summary || brainContextBySource.get('mempalace')?.detail || 'MemPalace is not production-connected yet.',
+      notes: 'MemPalace is status-only/read-status only until an owner-approved client, schema, audit path, rollback path, and write runner are connected.',
+    }),
+    brainSourceRegistryItem({
+      id: 'graphify',
+      name: 'Graphify',
+      sync: graphifySync,
+      context: brainContextBySource.get('graphify'),
+      contract: brainContractBySource.get('graphify'),
+      readAdapter: graphifySync ? 'status_only' : 'blocked',
+      writeAdapter: 'blocked',
+      readContentEnabled: false,
+      pathStatus: pathStatusFromDetails(graphifyDetails, ['dir']),
+      indexStatus: graphifyNodes !== null ? 'visible' : 'unknown',
+      availableReadApis: ['/api/bridge/brain-sync/status', '/api/memory/graph'],
+      availableWriteApis: [],
+      blockers: [
+        'graphify_direct_read_adapter_not_connected_to_agent_zero',
+        'graphify_rebuild_disabled_without_owner_approval',
+      ],
+      summary: graphifySync?.summary || 'Graphify status is not visible.',
+      notes: 'Graphify artifact status can be visible without giving Agent Zero direct Graphify file or rebuild access.',
+    }),
+    brainSourceRegistryItem({
+      id: 'brain_watchers',
+      name: 'Brain watchers',
+      status: brainSources.length > 0 ? 'visible' : 'blocked',
+      rawState: brainSources.length > 0 ? 'sync_snapshots_visible' : 'not_connected',
+      statusVisible: brainSources.length > 0,
+      readAdapter: 'status_only',
+      writeAdapter: 'blocked',
+      readContentEnabled: false,
+      pathStatus: 'not_applicable',
+      indexStatus: 'not_connected',
+      availableReadApis: ['/api/bridge/brain-sync/status'],
+      availableWriteApis: [],
+      blockers: ['watcher_status_inferred_from_sync_snapshots_no_direct_control_adapter'],
+      summary: brainSources.length > 0
+        ? 'Brain watcher status is inferred from Obsidian, MemPalace, and Graphify sync snapshots.'
+        : 'Brain watcher status is not visible through Mission Control.',
+      notes: 'Agent Zero cannot start, stop, or control brain watchers.',
+    }),
+  ]
+  const brainWatchers: AgentZeroBrainWatchersSummary = {
+    status: brainSources.length > 0 ? 'visible' : 'blocked',
+    status_visible: brainSources.length > 0,
+    direct_control_enabled: false,
+    execution_enabled: false,
+    direct_access: false,
+    proxy_access: true,
+    last_seen_at: isoFromEpochSeconds(brainLastSyncAt),
+    sources: brainSources.map((source) => String(source.source || '')).filter(Boolean),
+    blockers: ['watcher_status_inferred_from_sync_snapshots_no_direct_control_adapter'],
+    summary: brainSources.length > 0
+      ? 'Brain watchers are visible only as read-only sync/status snapshots.'
+      : 'Brain watchers are not visible through the current bridge.',
+  }
+  const brainIndexStatus: AgentZeroBrainIndexSummary = {
+    status: graphifyNodes !== null || obsidianMdFiles !== null || mempalaceEntries !== null ? 'visible' : 'unknown',
+    indexed_records: [graphifyNodes, obsidianMdFiles, mempalaceEntries]
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      .reduce((total, value) => total + value, 0) || null,
+    indexed_sources: [
+      ...(obsidianMdFiles !== null ? ['obsidian'] : []),
+      ...(mempalaceEntries !== null ? ['mempalace'] : []),
+      ...(graphifyNodes !== null ? ['graphify'] : []),
+    ],
+    last_indexed_at: isoFromEpochSeconds(brainLastSyncAt),
+    search_read_api_available: true,
+    rebuild_write_api_enabled: false,
+    blockers: [
+      ...(graphifyEdges === null ? ['graphify_edge_index_not_visible'] : []),
+      'index_rebuild_write_disabled_for_agent_zero',
+    ],
+  }
   const endpointSummaries = [
     endpointSummary({
       endpoint: '/api/bridge/preflight',
@@ -1284,6 +1689,11 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     heygenVisible: Boolean((zapierResult as any).heygen_found),
     heygenSchemaVisible: heygenRequiredFields.length > 0,
     brainSources,
+    brainRegistry,
+    brainReadApis,
+    brainWriteApis,
+    brainWatchers,
+    brainIndexStatus,
     timerActive,
     latestBuildWikiRunState: runState.ui_state,
     bridgeSessionAvailable: latestRunNow.persistence_ready,

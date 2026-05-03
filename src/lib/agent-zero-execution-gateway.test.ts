@@ -100,6 +100,24 @@ function makeObsidianVault() {
   return root
 }
 
+function makeMemPalaceStore() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'az-gateway-mempalace-'))
+  const dataDir = path.join(root, 'mempalace-data')
+  const configDir = path.join(root, '.mempalace')
+  fs.mkdirSync(dataDir, { recursive: true })
+  fs.mkdirSync(configDir, { recursive: true })
+  const configPath = path.join(configDir, 'config.json')
+  fs.writeFileSync(configPath, '{"enabled":true}')
+  tempRoots.push(root)
+  return {
+    graphDbPath: path.join(configDir, 'knowledge_graph.sqlite3'),
+    dataDir,
+    chromaDbPath: path.join(dataDir, 'chroma.sqlite3'),
+    summaryDbPath: path.join(dataDir, 'agent-zero-memory-summaries.sqlite3'),
+    configPath,
+  }
+}
+
 afterEach(() => {
   for (const dir of tempRoots.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true })
@@ -110,6 +128,7 @@ describe('Agent Zero Bridge execution gateway', () => {
   it('lists registered adapters without enabling unsafe execution surfaces', () => {
     const adapters = listAgentZeroExecutionAdapters()
     expect(adapters.map((adapter) => adapter.action)).toContain('agent_zero.report.create')
+    expect(adapters.map((adapter) => adapter.action)).toContain('mempalace.memory.remember_task_result')
     expect(adapters.map((adapter) => adapter.action)).toContain('mcp.tool.execute')
     expect(adapters.every((adapter) => adapter.bridge_session_required)).toBe(true)
     expect(adapters.every((adapter) => adapter.safety.raw_shell_enabled === false)).toBe(true)
@@ -277,6 +296,78 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(tagged.result).toMatchObject({ action: 'tag_note' })
 
     const auditCount = (db.prepare(`SELECT COUNT(*) AS count FROM bridge_session_audit_events WHERE action LIKE 'obsidian.note.%'`).get() as { count: number }).count
+    expect(auditCount).toBe(4)
+  })
+
+  it('writes MemPalace memory summaries only through an active scoped Bridge Session adapter', async () => {
+    const db = setupDb()
+    const mempalacePaths = makeMemPalaceStore()
+    const blocked = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      action: 'mempalace.memory.remember_task_result',
+      mempalacePaths,
+      input: {
+        task_id: 'task-999',
+        result_summary: 'No active session should write this.',
+      },
+    })
+    expect(blocked.ok).toBe(false)
+    expect(blocked.http_status).toBe(423)
+    expect(blocked.blocked_reason).toBe('active_bridge_session_required')
+
+    const sessionId = approveSession(db)
+    const remembered = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'mempalace.memory.remember_task_result',
+      mempalacePaths,
+      input: {
+        task_id: 'task-999',
+        result_summary: 'Capability report finished. token=do-not-leak /home/tony/private.md',
+        report_id: 'report-999',
+        tags: ['release'],
+      },
+    })
+
+    expect(remembered.ok).toBe(true)
+    expect(remembered.status).toBe('completed')
+    expect(remembered.result).toMatchObject({
+      action: 'remember_task_result',
+      raw_records_returned: false,
+      raw_private_dump_enabled: false,
+      direct_filesystem_exposed: false,
+      overwrite_performed: false,
+      append_only_versioned: true,
+      audit_required: true,
+    })
+    expect(JSON.stringify(remembered)).not.toContain('do-not-leak')
+    expect(JSON.stringify(remembered)).not.toContain('/home/tony')
+    expect(JSON.stringify(remembered)).not.toContain(mempalacePaths.dataDir)
+
+    const linked = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'mempalace.memory.link_report_task',
+      mempalacePaths,
+      input: {
+        memory_key: 'capability-report',
+        task_id: 'task-999',
+        report_id: 'report-999',
+        summary: 'Linked capability memory to report.',
+      },
+    })
+    expect(linked.ok).toBe(true)
+    expect(linked.result).toMatchObject({ action: 'link_memory_to_report_task' })
+
+    const memoryDb = new Database(mempalacePaths.summaryDbPath, { readonly: true, fileMustExist: true })
+    const memoryCount = (memoryDb.prepare('SELECT COUNT(*) AS count FROM agent_zero_memory_summaries').get() as { count: number }).count
+    memoryDb.close()
+    expect(memoryCount).toBe(2)
+
+    const auditCount = (db.prepare(`SELECT COUNT(*) AS count FROM bridge_session_audit_events WHERE action LIKE 'mempalace.memory.%'`).get() as { count: number }).count
     expect(auditCount).toBe(4)
   })
 

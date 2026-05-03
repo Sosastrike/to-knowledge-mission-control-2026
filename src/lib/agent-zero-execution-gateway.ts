@@ -17,6 +17,12 @@ import {
   verifyAgentZeroOneDriveLink,
 } from './agent-zero-onedrive-delivery'
 import {
+  linkAgentZeroMemoryToReportTask,
+  rememberAgentZeroOwnerPreference,
+  rememberAgentZeroTaskResult,
+  updateAgentZeroSafeMemorySummary,
+} from './agent-zero-mempalace-adapter'
+import {
   appendAgentZeroObsidianReportSummary,
   createAgentZeroObsidianNote,
   linkAgentZeroObsidianNoteToTaskReport,
@@ -84,6 +90,13 @@ export type AgentZeroExecutionGatewayInput = {
   input?: Record<string, unknown>
   reportRoot?: string
   obsidianRoot?: string
+  mempalacePaths?: {
+    graphDbPath?: string
+    dataDir?: string
+    chromaDbPath?: string
+    summaryDbPath?: string
+    configPath?: string
+  }
   now?: Date
 }
 
@@ -597,18 +610,134 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
-    action: 'mempalace.write',
+    action: 'mempalace.memory.remember_task_result',
     category: 'mempalace_adapter',
-    label: 'MemPalace write',
-    description: 'Write adapter placeholder. It blocks unless a separately enabled MemPalace write adapter exists.',
-    status: 'blocked',
+    label: 'Remember task result in MemPalace',
+    description: 'Stores a bounded owner-visible task-result memory summary through the MemPalace adapter.',
+    status: 'available',
     execution_enabled: true,
     writes_enabled: true,
     bridge_session_required: true,
-    allowed_scope_keys: ['mempalace.write_adapter'],
-    blocked_reason: 'mempalace_write_adapter_not_enabled',
+    allowed_scope_keys: ['mempalace.write_adapter', 'mempalace.memory.remember_task_result'],
+    blocked_reason: null,
     safety: SAFETY,
-    handler: async () => blockedResult('MemPalace write is blocked because the write adapter is not enabled.', 'mempalace_write_adapter_not_enabled'),
+    handler: async (request) => {
+      const result = rememberAgentZeroTaskResult({
+        ...request.mempalacePaths,
+        taskId: stringInput(request.input, 'task_id') || stringInput(request.input, 'taskId') || null,
+        resultSummary: stringInput(request.input, 'result_summary') || stringInput(request.input, 'resultSummary') || stringInput(request.input, 'summary') || null,
+        reportId: stringInput(request.input, 'report_id') || stringInput(request.input, 'reportId') || null,
+        reportUrl: stringInput(request.input, 'report_url') || stringInput(request.input, 'reportUrl') || null,
+        confidence: typeof request.input?.confidence === 'number' ? request.input.confidence : undefined,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'mempalace_task_result_memory_write_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'mempalace.memory.remember_owner_preference',
+    category: 'mempalace_adapter',
+    label: 'Remember owner preference in MemPalace',
+    description: 'Stores a bounded owner-visible preference summary through the MemPalace adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.write_adapter', 'mempalace.memory.remember_owner_preference'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = rememberAgentZeroOwnerPreference({
+        ...request.mempalacePaths,
+        preference: stringInput(request.input, 'preference') || stringInput(request.input, 'summary') || null,
+        scope: stringInput(request.input, 'scope') || null,
+        confidence: typeof request.input?.confidence === 'number' ? request.input.confidence : undefined,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'mempalace_owner_preference_memory_write_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'mempalace.memory.update_safe_summary',
+    category: 'mempalace_adapter',
+    label: 'Update safe MemPalace summary',
+    description: 'Appends a new safe summary version for a MemPalace memory key without overwriting prior records.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.write_adapter', 'mempalace.memory.update_safe_summary'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = updateAgentZeroSafeMemorySummary({
+        ...request.mempalacePaths,
+        memoryKey: stringInput(request.input, 'memory_key') || stringInput(request.input, 'memoryKey') || null,
+        summary: stringInput(request.input, 'summary') || null,
+        ownerVisibleSummary: stringInput(request.input, 'owner_visible_summary') || stringInput(request.input, 'ownerVisibleSummary') || null,
+        confidence: typeof request.input?.confidence === 'number' ? request.input.confidence : undefined,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'mempalace_safe_summary_memory_write_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'mempalace.memory.link_report_task',
+    category: 'mempalace_adapter',
+    label: 'Link MemPalace memory to task/report',
+    description: 'Stores a safe audited memory link to a task and/or report through the MemPalace adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.write_adapter', 'mempalace.memory.link_report_task'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = linkAgentZeroMemoryToReportTask({
+        ...request.mempalacePaths,
+        memoryKey: stringInput(request.input, 'memory_key') || stringInput(request.input, 'memoryKey') || null,
+        taskId: stringInput(request.input, 'task_id') || stringInput(request.input, 'taskId') || null,
+        reportId: stringInput(request.input, 'report_id') || stringInput(request.input, 'reportId') || null,
+        reportUrl: stringInput(request.input, 'report_url') || stringInput(request.input, 'reportUrl') || null,
+        summary: stringInput(request.input, 'summary') || null,
+        confidence: typeof request.input?.confidence === 'number' ? request.input.confidence : undefined,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'mempalace_task_report_link_memory_write_failed', result as unknown as Record<string, unknown>)
+    },
   },
   {
     action: 'mcp.tool.execute',

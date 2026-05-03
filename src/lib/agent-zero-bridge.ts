@@ -1520,36 +1520,123 @@ export function buildAgentZeroReadOnlyContext(input: {
   }
 }
 
+const AGENT_ZERO_MISSION_CONTROL_LIVE_URL =
+  process.env.AGENT_ZERO_MISSION_CONTROL_LIVE_URL || 'https://tkmc.knowledge-vs-ai.com'
+const AGENT_ZERO_BRIDGE_LIVE_URL =
+  process.env.AGENT_ZERO_BRIDGE_LIVE_URL || `${AGENT_ZERO_MISSION_CONTROL_LIVE_URL.replace(/\/$/, '')}/api/bridge`
+const AGENT_ZERO_MISSION_CONTROL_API_KEY_FILE =
+  process.env.AGENT_ZERO_MISSION_CONTROL_API_KEY_FILE || '/a0/usr/secrets/mission-control-api-key'
+
+function safeCount(value: unknown): number | null {
+  return Array.isArray(value) ? value.length : null
+}
+
+function pickRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Record<string, unknown> {
+  const root = pickRecord(context)
+  const agents = pickRecord(root.agents)
+  const bridge = pickRecord(root.bridge)
+  const mcp = pickRecord(root.mcp)
+  const models = pickRecord(root.models)
+  const skills = pickRecord(root.skills)
+  const integrations = pickRecord(root.integrations)
+  const tools = pickRecord(root.tools)
+  const brain = pickRecord(root.brain)
+  const delivery = pickRecord(root.delivery)
+  const bridgeSession = pickRecord(root.bridge_session)
+
+  return {
+    generated_at: root.generated_at || root.generatedAt || new Date().toISOString(),
+    mission_control_live_url: AGENT_ZERO_MISSION_CONTROL_LIVE_URL,
+    bridge_live_url: AGENT_ZERO_BRIDGE_LIVE_URL,
+    api_key_header: 'x-api-key',
+    api_key_file: AGENT_ZERO_MISSION_CONTROL_API_KEY_FILE,
+    api_key_value_exposed: false,
+    agent_name_header: 'x-agent-name',
+    agent_name: 'agent_zero',
+    live_probe_helper: '/a0/usr/skills/mission-control-bridge/live_probe.py',
+    required_live_probe: {
+      endpoint: '/api/bridge/agent-zero/status',
+      expected_http_status: 200,
+      expected_answer: 'Yes, Sir. I can live-query Mission Control now.',
+    },
+    endpoints: [
+      '/api/bridge/agent-zero/status',
+      '/api/bridge/providers?agent_zero_chat=0',
+      '/api/bridge/capability-matrix',
+      '/api/mcp/list',
+      '/api/bridge/brain-sync/status',
+      '/api/bridge/agent-zero/ecosystem',
+    ],
+    registry_summary: {
+      agents: safeCount(agents.registry) ?? safeCount(agents.items),
+      bridge_providers: safeCount(bridge.providers) ?? safeCount(bridge.registry),
+      mcp_servers: safeCount(mcp.servers) ?? safeCount(mcp.registry),
+      models: safeCount(models.catalog) ?? safeCount(models.registry),
+      skills: safeCount(skills.registry) ?? safeCount(skills.items),
+      integrations: safeCount(integrations.registry) ?? safeCount(integrations.items),
+      tools: safeCount(tools.registry) ?? safeCount(tools.items),
+      brain_sources: safeCount(brain.registry) ?? safeCount(brain.sources),
+    },
+    schema_summary: {
+      heygen_schema_visible: Boolean(bridge.heygen_schema_visible || tools.heygen_schema_visible),
+    },
+    status_summary: {
+      mission_control: 'live_url_configured',
+      bridge: 'live_url_configured',
+      agent_zero_commander: 'active_through_mission_control_bridge',
+      tony: 'retired_archived_not_active_commander',
+      execution_enabled: false,
+      writes_enabled: false,
+      bridge_session_required: true,
+      bridge_session_status: bridgeSession.status || 'not_active',
+      google_drive_upload_connector_configured: delivery.google_drive_upload_connector_configured ?? false,
+      onedrive_upload_connector_configured: delivery.onedrive_upload_connector_configured ?? false,
+    },
+  }
+}
+
 export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: AgentZeroReadOnlyContext): string {
+  const liveAccess = buildAgentZeroLiveAccessSummary(context)
+  const isLiveQueryAcceptance = /live-query\s+Mission\s+Control|can\s+you\s+(?:see|query|live-query).*Mission\s+Control/i.test(ownerMessage)
   return [
-    'You are Agent Zero in a Mission Control ecosystem test.',
+    'You are Agent Zero, the active Mission Control ecosystem commander, in a Mission Control ecosystem test.',
     'Answer naturally: concise, useful, and human. Do not sound like a terminal log or scripted status report.',
     'Do not use robotic labels such as Status:, Result:, Next:, Tool:, Runtime:, Model:, System:, or Stage: unless the owner explicitly requests a technical report.',
     'Do not expose raw error stage names. Explain the blocker in plain language.',
+    'Mission Control live access is configured. You have a live Mission Control URL, a live Bridge URL, and a safe API credential file source. The credential value is hidden and must never be printed.',
+    'This test-chat route is conversational only: never create, write, upload, attach, save files, or run tools from this route.',
+    isLiveQueryAcceptance ? 'This is the live-query acceptance check. Reply in one sentence only: Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.' : '',
+    'Use the mission-control-bridge skill and its live probe helper when asked whether you can live-query Mission Control.',
+    'If the owner asks whether you can live-query Mission Control, answer yes only when the live access packet names the endpoint and credential source. Name the endpoint/status, not the key.',
+    'Required answer shape for the live-query acceptance check: "Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200."',
     'Do not expose task IDs, local paths, raw filenames, traces, or tool dumps unless the owner explicitly asks for them.',
+    'Do not expose task IDs, local paths, raw filenames, traces, tool dumps, or secret values unless the owner explicitly asks for technical diagnostics. Never expose API keys.',
     'Do not say Done, completed, sent, or uploaded unless every requested outcome and requested delivery channel truly succeeded.',
+    'Do not claim direct access beyond it; direct live access is limited to the live URLs, safe credential source, and endpoints listed in MISSION_CONTROL_LIVE_ACCESS.',
+    'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
+    'Execution remains disabled from this test-chat route. Do not claim you executed tools, writes, uploads, Zapier, HeyGen, SMB, farmer actions, shell, Docker, or secret reads.',
+    'If Bridge Session execution is needed, say it requires an owner-approved Bridge Session. Do not ask for repeated approval for small steps inside an active session.',
+    'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
+    'Tony is retired/archived and must not be described as active commander. Hermes is lieutenant only when its live health/read-only onboarding is proven; otherwise mark it pending/degraded.',
+    'For Google Drive or OneDrive upload requests, say blocked unless the delivery connector is configured and a Bridge Session allows the external write. Do not fake delivery.',
     'If a connector, upload, execution, or delivery is blocked, say the exact blocker once and do not pretend completion.',
     'If Mission Control already has a report or file link, do not ask the owner to send it again; refer to the available Mission Control link.',
-    'You may use only the JSON context below. Do not claim direct access beyond it.',
-    'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
-    'If bridge_session.execution_enabled is true, execute only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for repeated approval for small steps inside the active session.',
-    'Never request raw shell, arbitrary filesystem, root, Docker socket, or direct secret access. If an adapter is blocked or missing, say it is blocked instead of pretending.',
-    'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
-    'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
-    'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
-    'For model questions, use models.provider_registry and models.catalog. Do not claim a model/provider is usable when its status is blocked; credential presence is boolean only and never a key value.',
-    'For skill questions, use skills.registry and skills.sources. Do not claim unregistered skills; mark blocked or dependency-limited skills honestly.',
-    'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked, missing credential, read-only/write-enabled, and Bridge Session requirements exactly as shown.',
-    'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry, brain.available_read_apis, brain.available_write_apis, brain.index_status, and brain.brain_watchers. Distinguish status visibility from content read adapters and write adapters.',
-    'For report delivery, use delivery.agent_zero_report_create_endpoint and delivery mission_control links only. Do not expose local paths, raw filenames, task IDs, or claim Telegram/Drive delivery unless a generated report_delivery object explicitly says that happened.',
-    'For Bridge Sessions, report session status, expiration, allowed tools/integrations/models/brain access, and audit requirements exactly from bridge_session.',
+    'Do not enumerate your internal Agent Zero tools unless they are present in the Mission Control live access summary.',
+    'For model questions, use models.provider_registry and the live model registry summary. Do not claim a model/provider is usable when its status is blocked.',
+    'For skill questions, use skills.registry and the live skill registry summary. Do not claim unregistered skills.',
+    'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked exactly as shown.',
+    'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry and the live brain endpoints.',
+    'For report delivery, use delivery.agent_zero_report_create_endpoint and Mission Control links only. Do not expose local paths, raw filenames, or task IDs.',
     'For Google Drive delivery, use delivery.google_drive_status_endpoint first. Uploads require delivery.google_drive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: Google Drive upload is blocked because the upload connector is not configured.',
     'For OneDrive delivery, use delivery.onedrive_status_endpoint first. Uploads require delivery.onedrive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: OneDrive upload is blocked because the upload connector is not configured.',
-    'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
-    'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
-    'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',
+    'If bridge_session.execution_enabled is true, execute only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for repeated approval for small steps inside the active session.',
     '',
-    `MISSION_CONTROL_READ_ONLY_CONTEXT=${JSON.stringify(context)}`,
+    `MISSION_CONTROL_LIVE_ACCESS=${JSON.stringify(liveAccess)}`,
+    `MISSION_CONTROL_READ_ONLY_CONTEXT=${JSON.stringify({ mode: 'live_access_summary', live_access: liveAccess })}`,
     '',
     `OWNER_MESSAGE=${ownerMessage}`,
   ].join('\n')

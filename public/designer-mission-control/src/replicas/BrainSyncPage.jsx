@@ -29,18 +29,23 @@
 // the canvas picks it up. No JSX changes required.
 const BRAIN_CATEGORIES = [
   { id:'agentzero',  name:'Agent Zero',     color:'#6bb3ff', count: 1,       nodes: 1,
-    role:'Primary brain operator', tagline:'Commander · reports to Owner', special:true, tier:'commander' },
+    role:'Primary brain operator', tagline:'Main nucleus · reports to Owner', special:true, tier:'commander' },
   { id:'hermes',     name:'Hermes',         color:'#ff4f8a', count: 1,       nodes: 1,
-    role:'Lieutenant / Skill workflow specialist', tagline:'Supports Agent Zero · read-only pending proof', special:true, tier:'lieutenant' },
+    role:'Lieutenant / Skill workflow specialist', tagline:'Secondary brain operator · supports Agent Zero', special:true, tier:'lieutenant' },
   { id:'brainsync',  name:'Brain Sync',     color:'#ffb547', count: 1,       nodes: 1,
-    role:'Knowledge sync system', tagline:'Obsidian · MemPalace · Graphify · Build-Wiki', special:true, tier:'system' },
+    role:'Brain coordination layer', tagline:'Coordinates Obsidian · MemPalace · Graphify · Build-Wiki', special:true, tier:'system' },
+  { id:'obsidian',   name:'Obsidian',       color:'#c084ff', count: 12431,   nodes: 240,
+    role:'Knowledge system', tagline:'Knowledge system · vault/read status' },
+  { id:'mempalace',  name:'MemPalace',      color:'#ff6a9e', count: 7842,    nodes: 200,
+    role:'Memory system', tagline:'Memory system · safe summaries/status' },
+  { id:'graphify',   name:'Graphify',       color:'#3ec9ff', count: 1180000, nodes: 260,
+    role:'Graph system', tagline:'Graph system · watcher/status layer' },
+  { id:'buildwiki',  name:'Build-Wiki',     color:'#ffd43a', count: 1,       nodes: 24,
+    role:'Knowledge sync / farmer system', tagline:'Knowledge sync / farmer system · approval-gated Run Now' },
   { id:'agents',     name:'Other agents',   color:'#a16bff', count: 14,      nodes: 14  },
   { id:'memories',   name:'Memories',       color:'#ff9644', count: 87112,   nodes: 280 },
   { id:'skills',     name:'Skills',         color:'#3ddc84', count: 642,     nodes: 120 },
-  { id:'obsidian',   name:'Obsidian',       color:'#c084ff', count: 12431,   nodes: 240 },
-  { id:'mempalace',  name:'MemPalace',      color:'#ff6a9e', count: 7842,    nodes: 200 },
-  { id:'graphify',   name:'Graphify',       color:'#3ec9ff', count: 1180000, nodes: 260 },
-  { id:'external',   name:'External sources',color:'#ffd43a',count: 98,      nodes: 80  },
+  { id:'external',   name:'External sources',color:'#9fb4ff',count: 98,      nodes: 80  },
 ];
 
 // ============================================================
@@ -146,6 +151,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     obsidian:    { cx: 0.40, cy: 0.78 },
     mempalace:   { cx: 0.62, cy: 0.78 },
     graphify:    { cx: 0.78, cy: 0.65 },
+    buildwiki:   { cx: 0.84, cy: 0.38 },
     external:    { cx: 0.85, cy: 0.30 },
   };
   // Returns ref to attach to a <canvas>, plus a pulseAt(x,y,color) method.
@@ -255,10 +261,10 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     edges.push({ a: HUB_HERMES_INDEX,   b: HUB_BRAIN_SYNC_INDEX, op: 0.18, support: true });
 
     // ─── Support-agent constellation ──────────────────────────
-    // Per design rule: Agent Zero + Agent Zero stay as the two dominant brains.
+    // Per design rule: Agent Zero and Hermes stay as the two dominant agent brains.
     // Every other agent in the system shows up here as a *very small*
     // satellite — a tiny nucleus on a slow elliptical orbit between the
-    // two hubs, with faint links back to BOTH (it's a governance/support
+    // two agent hubs, with faint links back to BOTH (it's a governance/support
     // layer, not its own primary). Names match the seeded agent_runtime
     // rows so the universe matches the real system 1:1. Renaming an
     // agent in the backend never changes node identity — only the label.
@@ -280,7 +286,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     ];
     // Satellites encircle the *pair* of hubs as a single grouped constellation,
     // sitting on a wider, shallower ellipse that wraps around both. They never
-    // cross the centerline between Agent Zero and Agent Zero — that empty spine stays
+    // cross the centerline between Agent Zero and Hermes — that empty spine stays
     // reserved for the two cores so the eye reads them as the dominant pair.
     const orbitCx = (hubs[0].x + hubs[1].x) / 2;
     const orbitCy = (hubs[0].y + hubs[1].y) / 2;
@@ -324,12 +330,12 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         // Cache hub indices so the renderer can draw the two faint
         // governance connectors without re-searching every frame.
         linkCommanderId: HUB_AGENT_ZERO_INDEX,
-        linkA0Id:   HUB_HERMES_INDEX,
+        linkHermesId: HUB_HERMES_INDEX,
       });
     });
     // Edges from each satellite → both hubs. Stored on the edges array
     // so they participate in normal traffic-particle routing too —
-    // Agent Zero pinging a satellite, or Agent Zero acknowledging one, are
+    // Agent Zero pinging a satellite, or Hermes acknowledging one, are
     // first-class system events and visible as glints when they happen.
     const supportNodeIds = nodes.filter(n => n.isSupportAgent).map(n => n.id);
     for (const sid of supportNodeIds) {
@@ -337,23 +343,23 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       edges.push({ a: HUB_HERMES_INDEX,   b: sid, op: 0.09, support: true });
     }
 
-    // Other categories - distributed in organic clusters INSIDE the oval
-    const otherCats = BRAIN_CATEGORIES.slice(2);
-    // each cat gets a cluster center somewhere in the oval, non-overlapping-ish
-    const clusterSeeds = [
-      { x: 0.22, y: 0.38 }, // memories
-      { x: 0.24, y: 0.68 }, // skills
-      { x: 0.40, y: 0.25 }, // obsidian
-      { x: 0.60, y: 0.75 }, // mempalace
-      { x: 0.78, y: 0.35 }, // graphify
-      { x: 0.78, y: 0.65 }, // external
-      { x: 0.50, y: 0.20 }, // agents (on top)
-    ];
-    // Agents cluster placed separately
-    const agentsSeed = clusterSeeds[6];
-    const agentsCat = BRAIN_CATEGORIES[2];
+    // Brain systems and supporting categories distributed in organic clusters inside the oval.
+    // Agent Zero and Hermes are hubs above; Brain Sync is the coordination hub.
+    const clusterSeedsByCat = {
+      obsidian:  { x: 0.40, y: 0.25 }, // knowledge system
+      mempalace: { x: 0.60, y: 0.75 }, // memory system
+      graphify:  { x: 0.78, y: 0.35 }, // graph system
+      buildwiki: { x: 0.82, y: 0.60 }, // knowledge sync / farmer system
+      agents:    { x: 0.50, y: 0.20 }, // other agents (on top)
+      memories:  { x: 0.22, y: 0.38 },
+      skills:    { x: 0.24, y: 0.68 },
+      external:  { x: 0.78, y: 0.65 },
+    };
+    const drawableCats = BRAIN_CATEGORIES.filter(cat => !['agentzero','hermes','brainsync','agents'].includes(cat.id));
+    const agentsCat = BRAIN_CATEGORIES.find(cat => cat.id === 'agents');
+    const agentsSeed = clusterSeedsByCat.agents;
 
-    // Place agents cluster (small, close to the hubs)
+    // Place other active agents cluster (small, close to the hubs)
     for (let i = 0; i < agentsCat.nodes; i++) {
       const theta = Math.random() * Math.PI * 2;
       const rad = Math.pow(Math.random(), 1.5) * 0.06;
@@ -370,10 +376,9 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       });
     }
 
-    // Place other categories
-    for (let c = 0; c < otherCats.length - 1; c++) { // exclude agents (already placed)
-      const cat = otherCats[c];
-      const seed = clusterSeeds[c];
+    // Place brain systems and support categories
+    for (const cat of drawableCats) {
+      const seed = clusterSeedsByCat[cat.id] || { x: 0.50, y: 0.50 };
       const count = Math.round(cat.nodes * densityScale);
       for (let i = 0; i < count; i++) {
         const theta = Math.random() * Math.PI * 2;
@@ -615,7 +620,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       // Drift + curl noise (cheap)
       for (const n of g.nodes) {
         if (n.isHub) {
-          // Agent Zero stays fixed dead-center. Agent Zero and Brain Sync orbit Agent Zero
+          // Agent Zero stays fixed dead-center. Hermes and Brain Sync orbit Agent Zero
           // closely and energetically — tight radius (~20 units in screen
           // space at the default canvas size) and a fast 12-second lap so
           // the motion reads as constant urgent activity, not drift.
@@ -910,13 +915,13 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       const commInterval = 0.25 + Math.random() * 0.20;
       if (g.lastCommanderComm > commInterval) {
         g.lastCommanderComm = 0;
-        // Find Agent Zero↔Agent0 and Agent Zero↔Brain Sync edges, fire particles in
+        // Find Agent Zero↔Hermes and Agent Zero↔Brain Sync edges, fire particles in
         // alternating directions so it reads as conversation.
         for (let i = 0; i < g.edges.length; i++) {
           const e = g.edges[i];
           if (!e.commanderLink && !(e.support && e.b === 2)) continue;
-          // Pick direction: roughly half the time Agent Zero→commander, half
-          // commander→Agent Zero, so the dialogue feels two-way.
+          // Pick direction: roughly half the time Agent Zero→secondary hub, half
+          // secondary hub→Agent Zero, so the dialogue feels two-way.
           const reversed = Math.random() < 0.5;
           const startNode = g.nodes[reversed ? e.b : e.a];
           g.particles.push({
@@ -1172,7 +1177,7 @@ function GraphifyGlyphBig({ size=18 }) {
     <path d="M6 6 L12 12 L18 6 M12 12 L12 18" stroke="#3ec9ff" strokeWidth="1"/>
   </svg>;
 }
-function PacmanIcon({ size=18 }) {
+function BuildWikiGlyph({ size=18 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24">
     <path d="M12 2a10 10 0 1 0 8.66 15L12 12l8.66-5A10 10 0 0 0 12 2z" fill="#ffcc3a"/>
   </svg>;
@@ -1299,7 +1304,7 @@ function KpiStrip({ pulse, history }) {
       <SourceKpi icon={<ObsidianGlyph/>}      name="OBSIDIAN"  value="12,431 files"     ago="2m ago"/>
       <SourceKpi icon={<MemPalaceGlyph/>}     name="MEMPALACE" value="7,842 memories"   ago="1m ago"/>
       <SourceKpi icon={<GraphifyGlyphBig/>}   name="GRAPHIFY"  value="1.18M entities"   ago="30s ago"/>
-      <SourceKpi icon={<PacmanIcon/>}         name="PAC-MAN"   value="Real-time events" ago="Now"/>
+      <SourceKpi icon={<BuildWikiGlyph/>}       name="BUILD-WIKI" value="Farmer status"    ago="Now"/>
     </div>
   );
 }
@@ -1538,7 +1543,7 @@ function BrainSyncReadinessBanner(){
           <div style={{color:"#3ddc84", fontWeight:600, marginBottom:4}}>What is live today</div>
           <ul style={{paddingLeft:16, margin:0, color:"var(--fg-1)"}}>
             <li>Memory health / status indicators</li>
-            <li>Read-only counters (Obsidian / MemPalace / Graphify / Pac-Man)</li>
+            <li>Read-only counters (Obsidian / MemPalace / Graphify / Build-Wiki)</li>
             <li>Vault file counts (when the vault is reachable)</li>
           </ul>
         </div>
@@ -1548,7 +1553,7 @@ function BrainSyncReadinessBanner(){
             <li>Real-time Obsidian UI updates</li>
             <li>MemPalace live sync</li>
             <li>Graphify live graph updates</li>
-            <li>Pac-Man real-time event feed</li>
+            <li>Build-Wiki/Farmer live event feed</li>
             <li>Brain Sync write events</li>
             <li>Memory write approvals (gated through Agent Zero Bridge Session)</li>
           </ul>

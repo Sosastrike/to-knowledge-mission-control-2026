@@ -1,7 +1,7 @@
 // Addendum 03 — Graphify + Brain Sync Visualization
 // Dashboard widget + in-app drill-down (same Mission Control, not a separate app).
 // Connects: Graphify (graph.html / graph.json / GRAPH_REPORT.md), Obsidian sync,
-// MemPalace sync, agent memory telemetry, Pac-Man backup oversight.
+// MemPalace sync, agent memory telemetry, Build-Wiki/Farmer status.
 
 /* ============================================================
    DATA — shape mirrors /api/knowledge-graph/* and
@@ -18,14 +18,14 @@ const GRAPHIFY_DATA = {
     { id:'archivist', name:'Archivist',state:'pruning',  op:'Trimming low-salience memories',  nodes:-4, t:'4m' },
     { id:'lyra',      name:'Lyra',     state:'reading',  op:'Anomaly correlation trace',       nodes: 0, t:'6m' },
   ],
-  summary: 'Pac-Man rebuilt the sales knowledge graph from Obsidian + MemPalace 3 minutes ago. 18 new nodes, 34 new edges. No sync errors.',
+  summary: 'Build-Wiki/Farmer status is visible alongside Obsidian, MemPalace, and Graphify. The last graph rebuild added 18 nodes and 34 edges. No sync errors.',
   runs: [
-    { id:'RUN-01412', trigger:'pacman',  scope:'sales',       state:'ok',   at:'14:29', dur:'42s',  added:'+18n +34e', removed:'−0',   summary:'Rebuilt sales subgraph from 4 Obsidian vaults + MemPalace.' },
+    { id:'RUN-01412', trigger:'buildwiki',  scope:'sales',       state:'ok',   at:'14:29', dur:'42s',  added:'+18n +34e', removed:'−0',   summary:'Rebuilt sales subgraph from 4 Obsidian vaults + MemPalace.' },
     { id:'RUN-01411', trigger:'manual',  scope:'all',         state:'ok',   at:'13:42', dur:'4m 02s', added:'+214n +488e', removed:'−12', summary:'Full rebuild after skill-registry update (v2.4.1).' },
     { id:'RUN-01410', trigger:'agent',   scope:'refund-flow', state:'ok',   at:'13:18', dur:'11s',  added:'+3n +9e',  removed:'−0',   summary:'Atlas added BluePeak refund clause references.' },
     { id:'RUN-01409', trigger:'schedule',scope:'archive',     state:'warn', at:'12:00', dur:'1m 48s', added:'+0n +0e',  removed:'−0',   summary:'Archive subgraph skipped — Obsidian sync was delayed.' },
     { id:'RUN-01408', trigger:'agent',   scope:'memory',      state:'ok',   at:'11:38', dur:'29s',  added:'+7n +14e', removed:'−2',   summary:'Archivist pruned stale memories (< 0.3 salience).' },
-    { id:'RUN-01407', trigger:'pacman',  scope:'nightly',     state:'ok',   at:'04:12', dur:'6m 14s', added:'+1.2k n +3.8k e', removed:'−48', summary:'Nightly full rebuild from snapshot.' },
+    { id:'RUN-01407', trigger:'buildwiki',  scope:'nightly',     state:'ok',   at:'04:12', dur:'6m 14s', added:'+1.2k n +3.8k e', removed:'−48', summary:'Nightly full rebuild from snapshot.' },
   ],
 };
 
@@ -33,7 +33,7 @@ const BRAIN_SYNC = {
   obsidian:  { status:'synced',  last:'2m',  lag:'—',        size:'38 MB',   note:'Bidirectional, 3 vaults' },
   mempalace: { status:'synced',  last:'1m',  lag:'—',        size:'1.4 GB',  note:'Vector store · 14.3k items' },
   graphify:  { status:'healthy', last:'3m',  lag:'—',        size:'120 MB',  note:'v2025.04.19-1428 · serving' },
-  pacman:    { status:'online',  last:'10h', lag:'—',        size:'—',       note:'Nightly 04:12 OK · 1 warn today' },
+  buildwiki: { status:'online',  last:'10h', lag:'—',        size:'—',       note:'Farmer timer active · Run Now approval-gated' },
 };
 
 const AGENT_MEMORY_USAGE = [
@@ -48,12 +48,12 @@ const AGENT_MEMORY_USAGE = [
 const GRAPH_EVENTS = [
   { t:'14:32:18', kind:'read',    agent:'Atlas',     op:'MemPalace.search("renewal clause")',     result:'ok',   note:'3 hits, top @0.91' },
   { t:'14:31:40', kind:'write',   agent:'Atlas',     op:'Graphify.upsert(node:BluePeak.renewal)', result:'ok',   note:'+1 node, +4 edges' },
-  { t:'14:29:04', kind:'rebuild', agent:'Pac-Man',   op:'Graphify.rebuild(scope:sales)',          result:'ok',   note:'+18 nodes, +34 edges' },
+  { t:'14:29:04', kind:'rebuild', agent:'Build-Wiki',   op:'Graphify.rebuild(scope:sales)',          result:'ok',   note:'+18 nodes, +34 edges' },
   { t:'14:22:09', kind:'query',   agent:'Orion',     op:'Graphify.traverse(from:refund-flow, d:2)', result:'ok', note:'returned 12 paths' },
   { t:'14:18:51', kind:'read',    agent:'Research',  op:'Obsidian.read(archive/2023/legal/*)',    result:'ok',   note:'47 files · 2.1s' },
   { t:'14:02:41', kind:'prune',   agent:'Archivist', op:'MemPalace.prune(salience<0.3)',          result:'ok',   note:'−4 items' },
   { t:'13:48:17', kind:'write',   agent:'Lyra',      op:'Graphify.upsert(anomaly:refund-spike)',  result:'warn', note:'partial merge, review' },
-  { t:'13:42:02', kind:'rebuild', agent:'Pac-Man',   op:'Graphify.rebuild(scope:all)',            result:'ok',   note:'full rebuild 4m 02s' },
+  { t:'13:42:02', kind:'rebuild', agent:'Build-Wiki',   op:'Graphify.rebuild(scope:all)',            result:'ok',   note:'full rebuild 4m 02s' },
 ];
 
 
@@ -185,7 +185,7 @@ function GraphifyDrawer({ onClose, initialTab }) {
   return (
     <WorkspaceOverlay
       title="Knowledge graph · Brain sync"
-      subtitle="Graphify + Obsidian + MemPalace + Pac-Man · unified view"
+      subtitle="Graphify + Obsidian + MemPalace + Build-Wiki/Farmer · unified view"
       onClose={onClose}
       wide
     >
@@ -231,7 +231,7 @@ function GraphifyDrawer({ onClose, initialTab }) {
             <BrainPill icon={<I.Book size={14} style={{color:'var(--accent)'}}/>}    label="Obsidian"  s={b.obsidian.status}  last={b.obsidian.last}  note={b.obsidian.note}/>
             <BrainPill icon={<I.Database size={14} style={{color:'var(--accent)'}}/>}label="MemPalace" s={b.mempalace.status} last={b.mempalace.last} note={b.mempalace.note}/>
             <BrainPill icon={<GraphGlyph size={14}/>}                                label="Graphify"  s={b.graphify.status}  last={b.graphify.last}  note={b.graphify.note}/>
-            <BrainPill icon={<PacmanGlyph size={14}/>}                               label="Pac-Man backups" s={b.pacman.status} last={b.pacman.last} note={b.pacman.note}/>
+            <BrainPill icon={<GraphGlyph size={14}/>}                                 label="Build-Wiki/Farmer" s={b.buildwiki.status} last={b.buildwiki.last} note={b.buildwiki.note}/>
           </div>
         </div>
       </div>
@@ -271,7 +271,7 @@ function GraphifyDrawer({ onClose, initialTab }) {
           <div className="card col-7">
             <div className="card-head">
               <div className="card-title">Recent rebuilds</div>
-              <span className="muted xsmall">Pac-Man-triggered, manual, agent-triggered, scheduled</span>
+              <span className="muted xsmall">Build-Wiki/Farmer, manual, agent-triggered, scheduled</span>
             </div>
             <table className="tbl">
               <thead><tr>
@@ -342,7 +342,7 @@ function GraphifyDrawer({ onClose, initialTab }) {
               <option value="orion">Orion</option>
               <option value="lyra">Lyra</option>
               <option value="archivist">Archivist</option>
-              <option value="pacman">Pac-Man</option>
+              <option value="buildwiki">Build-Wiki/Farmer</option>
             </select>
             <select className="select" value={filters.status} onChange={e=>setFilters({...filters, status:e.target.value})} style={{width:140}}>
               <option value="all">All results</option>
@@ -476,7 +476,7 @@ ${d.summary}
 ## Top contributors (last 24h)
 1. Atlas        — 12 writes  (BluePeak renewal, sales)
 2. Archivist    — 84 writes  (memory pruning)
-3. Pac-Man      — 2 rebuilds (nightly + on-demand)
+3. Build-Wiki/Farmer — 2 status/rebuild events (nightly + on-demand)
 
 ## Source systems
 - Obsidian:   synced  (last: 2m ago, 38 MB, 3 vaults)

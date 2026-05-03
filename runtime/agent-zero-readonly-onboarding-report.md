@@ -9,7 +9,7 @@ Agent Zero is now discoverable, health-checkable, and callable through Mission C
 ## Implemented
 
 - Agent Zero runtime health probe using `GET /api/health`.
-- Mission Control status route now exposes runtime, version, health, connector state, and API-key presence by name only.
+- Mission Control status route now exposes runtime, version, health, connector state, and only the boolean `agent_zero_api_key_configured` auth state.
 - Read-only test-chat route added at `/api/bridge/agent-zero/test-chat`.
 - Agent Network UI now shows Agent Zero read-only test status and the blocker.
 - Bridge provider registry reports Agent Zero as degraded when reachable but not bridge-authenticated.
@@ -34,6 +34,7 @@ Agent Zero is now discoverable, health-checkable, and callable through Mission C
 - Secret file mode: `0600`.
 - Secret value printed: no.
 - Secret committed: no.
+- Secret source metadata returned by public Agent Zero routes: no.
 - `.env` changed: no.
 
 ## Live Test Status
@@ -46,6 +47,7 @@ Agent Zero is now discoverable, health-checkable, and callable through Mission C
 - Can Agent Zero see OpenCloud directly? No, direct OpenCloud access is not visible through the context.
 - Can Agent Zero see Build-Wiki/Farmer status? Yes, read-only status; farmer execution remains disabled.
 - Unauthenticated route smoke: `401`.
+- Public route auth metadata smoke: only `agent_zero_api_key_configured` is returned; source path/env/systemd details are kept server-side.
 
 ## Next Test Messages
 

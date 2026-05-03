@@ -74,10 +74,12 @@ export async function GET(
     return NextResponse.json(
       {
         ok: true,
-        mode: 'bridge_provider_detail_agent_zero_read_only',
+        mode: 'bridge_provider_detail_agent_zero_bridge_session_execution',
         upstream_ok: true,
         provider,
-        execution_enabled: false,
+        execution_enabled: provider.execution_enabled,
+        full_access_via_bridge: provider.full_access_via_bridge,
+        bridge_session_required: provider.bridge_session_required,
         no_routing_changes_enabled: true,
       },
       { headers: { 'Cache-Control': 'no-store' } },

@@ -43,7 +43,7 @@ export type AgentZeroRuntimeProbe = {
   error: string | null
 }
 
-export type AgentZeroEcosystemAgentState = 'connected' | 'degraded' | 'offline'
+export type AgentZeroEcosystemAgentState = 'active' | 'connected' | 'degraded' | 'offline'
 
 export type AgentZeroEcosystemAgentRecord = {
   id: 'agent_zero'
@@ -51,10 +51,11 @@ export type AgentZeroEcosystemAgentRecord = {
   category: 'agent'
   status: AgentZeroEcosystemAgentState
   state: AgentZeroEcosystemAgentState
-  mode: 'read_only'
-  execution_enabled: false
+  mode: 'bridge_session_execution' | 'read_only'
+  execution_enabled: boolean
   writes_enabled: false
   bridge_session_required: true
+  full_access_via_bridge: boolean
   health_url: 'configured'
   chat_route: '/api/bridge/agent-zero/test-chat'
   capabilities_source: 'mission_control_context'
@@ -78,9 +79,10 @@ export type AgentZeroEcosystemAgentRecord = {
     bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session'
     execution_gateway_endpoint: '/api/bridge/agent-zero/execute'
     capabilities_source: 'mission_control_context'
-    mode: 'read_only'
-    execution_enabled: false
+    mode: 'bridge_session_execution' | 'read_only'
+    execution_enabled: boolean
     bridge_session_required: true
+    full_access_via_bridge: boolean
     direct_access: false
     proxy_access: true
     blocker: string | null
@@ -819,7 +821,7 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
   const state: AgentZeroEcosystemAgentState = !runtime.reachable || !runtime.health_ok
     ? 'offline'
     : apiKey.present && (chatStatus === 'working' || !input.verifyChat)
-      ? 'connected'
+      ? 'active'
       : 'degraded'
   const blocker = state === 'offline'
     ? (runtime.error || 'Agent Zero Tailnet health endpoint is not reachable.')
@@ -833,10 +835,11 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
     category: 'agent',
     status: state,
     state,
-    mode: 'read_only',
-    execution_enabled: false,
+    mode: 'bridge_session_execution',
+    execution_enabled: true,
     writes_enabled: false,
     bridge_session_required: true,
+    full_access_via_bridge: true,
     health_url: 'configured',
     chat_route: '/api/bridge/agent-zero/test-chat',
     capabilities_source: 'mission_control_context',
@@ -860,17 +863,18 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
       bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
       execution_gateway_endpoint: '/api/bridge/agent-zero/execute',
       capabilities_source: 'mission_control_context',
-      mode: 'read_only',
-      execution_enabled: false,
+      mode: 'bridge_session_execution',
+      execution_enabled: true,
       bridge_session_required: true,
+      full_access_via_bridge: true,
       direct_access: false,
       proxy_access: true,
       blocker,
-      notes: 'Agent Zero is active as a read-only ecosystem agent through Mission Control context. Execution remains disabled until a separately approved Bridge Session and scoped adapter exist.',
+      notes: 'Agent Zero is active as a Bridge Session execution agent through Mission Control. Execution is available only through approved, scoped, audited Bridge adapters; raw shell, Docker socket, root access, and direct secret access stay disabled.',
       error: blocker,
     },
-    next_action: state === 'connected'
-      ? 'Use /api/bridge/agent-zero/test-chat for read-only Agent Zero ecosystem questions. Execution remains disabled.'
+    next_action: state === 'active'
+      ? 'Use /api/bridge/agent-zero/test-chat for ecosystem questions and /api/bridge/agent-zero/execute only after an owner-approved active Bridge Session.'
       : state === 'degraded'
         ? 'Fix Agent Zero API auth/test-chat before treating Agent Zero as connected.'
         : 'Restore Agent Zero Tailnet health before read-only ecosystem tests.',

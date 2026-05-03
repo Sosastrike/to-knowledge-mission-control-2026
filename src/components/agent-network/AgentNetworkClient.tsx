@@ -2283,7 +2283,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         <span className={styles.externalBadge}>{ecosystemState}</span>
       </div>
       <p className={styles.externalDescription}>
-        Real ecosystem agent in read-only mode. Agent Zero can use Mission Control context for observe, recommend, and review work; execution stays disabled.
+        Real ecosystem agent in Bridge Session execution mode. Agent Zero can observe, recommend, review, and run only approved Mission Control Bridge adapters inside an active audited session.
       </p>
       <dl className={styles.externalDetails}>
         <div className={styles.externalDetailRow}>
@@ -2300,11 +2300,11 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Execution</dt>
-          <dd>{agent.execution_enabled || provider.execution_enabled ? 'enabled' : 'disabled'}</dd>
+          <dd>{agent.execution_enabled || provider.execution_enabled ? 'enabled via Bridge Session' : 'disabled'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Mode</dt>
-          <dd>{agent.mode || 'read_only'}</dd>
+          <dd>{agent.mode || 'bridge_session_execution'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Health URL</dt>
@@ -2352,7 +2352,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Bridge Session</dt>
-          <dd>{provider.bridge_session_required || agent.bridge_session_required ? 'required for execution' : 'not required'}</dd>
+          <dd>{provider.bridge_session_required || agent.bridge_session_required ? 'required for adapter execution' : 'not required'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Provider state</dt>
@@ -2400,8 +2400,8 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
           </p>
         )}
       </div>
-      <p className={styles.providerNotes}>{provider.notes || 'Execution remains disabled until owner-approved scoped runner and audit path exist.'}</p>
-      <p className={styles.providerAction}>{provider.next_action || 'Keep Agent Zero observe/recommend/review only.'}</p>
+      <p className={styles.providerNotes}>{provider.notes || 'Execution is available only through an owner-approved Bridge Session and audited registered adapters.'}</p>
+      <p className={styles.providerAction}>{provider.next_action || 'Open a Bridge Session before running any Agent Zero adapter action.'}</p>
     </div>
   )
 }

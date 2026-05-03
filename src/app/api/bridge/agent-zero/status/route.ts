@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    mode: 'agent_zero_ecosystem_agent_status_read_only',
+    mode: 'agent_zero_ecosystem_agent_status_bridge_session_execution',
     generated_at: agentZero.last_checked_at,
     agent: {
       id: agentZero.id,
@@ -35,13 +35,15 @@ export async function GET(request: NextRequest) {
       health_url: agentZero.health_url,
       chat_route: agentZero.chat_route,
       capabilities_source: agentZero.capabilities_source,
-      allowed_behavior: ['observe', 'recommend', 'review'],
-      disallowed_behavior: ['execute protected actions', 'change Docker/config', 'change permissions', 'bypass Tony approval'],
-      execution_permission: bridgeSession.execution_enabled ? 'scoped_bridge_session' : 'observe_recommend_review_only',
-      execution_enabled: bridgeSession.execution_enabled,
-      execution_disabled_until: bridgeSession.execution_enabled ? null : 'single owner-approved Bridge Session with audit-backed scoped runner',
+      allowed_behavior: ['observe', 'recommend', 'review', 'execute through approved Bridge Session adapters only'],
+      disallowed_behavior: ['execute without active Bridge Session', 'change Docker/config', 'change permissions', 'bypass owner approval', 'use raw shell/root/Docker socket/direct secrets'],
+      execution_permission: bridgeSession.execution_enabled ? 'scoped_bridge_session_active' : 'bridge_session_execution_available_but_session_not_active',
+      execution_enabled: agentZero.execution_enabled,
+      current_execution_allowed: bridgeSession.execution_enabled,
+      execution_disabled_until: bridgeSession.execution_enabled ? null : 'active owner-approved Bridge Session with audit-backed scoped runner',
       owner_approval_required_for_execution: !bridgeSession.execution_enabled,
-      bridge_session_required: !bridgeSession.execution_enabled,
+      bridge_session_required: true,
+      full_access_via_bridge: agentZero.full_access_via_bridge,
     },
     tailnet: {
       endpoint: detail.endpoint,
@@ -59,24 +61,27 @@ export async function GET(request: NextRequest) {
       health_ok: agentZero.health_status === 'healthy',
     },
     mission_control_connector: {
-      status: agentZero.status === 'connected'
-        ? 'connected_read_only'
+      status: agentZero.status === 'active'
+        ? 'active_bridge_session_execution'
+        : agentZero.status === 'connected'
+          ? 'connected_bridge_session_execution'
         : agentZero.status === 'degraded'
           ? 'degraded_read_only'
           : 'offline',
-      can_see_mission_control: agentZero.status === 'connected',
+      can_see_mission_control: agentZero.status === 'active' || agentZero.status === 'connected',
       agent_zero_api_key_configured: detail.api_key_configured,
       auth_status: agentZero.auth_status,
       health_status: agentZero.health_status,
       chat_status: agentZero.chat_status,
       agent_zero_called: agentZero.agent_zero_called,
-      context_mode: 'read_only_bridge_context',
+      context_mode: 'bridge_session_execution_context',
       test_chat_endpoint: detail.test_chat_endpoint,
       ecosystem_context_endpoint: detail.ecosystem_context_endpoint,
       bridge_session_endpoint: detail.bridge_session_endpoint,
       bridge_session_execution_enabled: bridgeSession.execution_enabled,
       bridge_session: bridgeSession,
-      blocker: bridgeSession.execution_enabled ? null : (detail.blocker || bridgeSession.blocked_reason),
+      blocker: detail.blocker || null,
+      current_execution_blocker: bridgeSession.execution_enabled ? null : (bridgeSession.blocked_reason || 'active_bridge_session_required'),
     },
     provider_registry: {
       state: agentZero.state,
@@ -85,8 +90,10 @@ export async function GET(request: NextRequest) {
       health_status: agentZero.health_status,
       auth_status: agentZero.auth_status,
       chat_status: agentZero.chat_status,
-      execution_enabled: bridgeSession.execution_enabled,
-      bridge_session_required: !bridgeSession.execution_enabled,
+      execution_enabled: agentZero.execution_enabled,
+      current_execution_allowed: bridgeSession.execution_enabled,
+      bridge_session_required: true,
+      full_access_via_bridge: agentZero.full_access_via_bridge,
       notes: detail.notes,
       error: detail.error,
       blocker: detail.blocker,
@@ -97,9 +104,10 @@ export async function GET(request: NextRequest) {
       config_changes_enabled: false,
       execution_permissions_changed: false,
       protected_actions_created: false,
-      writes_enabled: false,
+      writes_enabled: bridgeSession.execution_enabled,
       mission_control_auth_weakened: false,
-      agent_zero_execution_enabled: bridgeSession.execution_enabled,
+      agent_zero_execution_enabled: agentZero.execution_enabled,
+      current_agent_zero_execution_allowed: bridgeSession.execution_enabled,
       bridge_session_audit_required: true,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })

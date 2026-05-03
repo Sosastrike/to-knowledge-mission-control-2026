@@ -7,13 +7,18 @@ import { getZapierToolBridge, type ZapierToolRecord } from '@/lib/zapier-tool-br
 import { getAllModels } from '@/lib/models'
 import { getDatabase } from '@/lib/db'
 import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
+import { getFirecrawlStatus } from '@/lib/firecrawl-status'
+import { getGitHubToken } from '@/lib/github'
 import {
+  type AgentZeroCapabilityState,
+  type AgentZeroIntegrationCapability,
   type AgentZeroModelProviderStatus,
   type AgentZeroModelProviderSummary,
   type AgentZeroReadOnlyContext,
   type AgentZeroReadOnlyEndpointSummary,
   type AgentZeroSkillRegistryItem,
   type AgentZeroSkillSourceSummary,
+  type AgentZeroToolRegistryItem,
   type EcosystemAccessState,
   buildAgentZeroReadOnlyContext,
 } from '@/lib/agent-zero-bridge'
@@ -433,6 +438,103 @@ function hasCredential(names: string[]): boolean {
   return names.some((name) => Boolean(process.env[name]?.trim()))
 }
 
+function credentialPresentFromSources(names: string[], sourcePresent = false): boolean {
+  return sourcePresent || hasCredential(names)
+}
+
+function capabilityState(input: {
+  connected?: boolean
+  configured?: boolean
+  credentialPresent?: boolean
+  missingCredential?: boolean
+}): AgentZeroCapabilityState {
+  if (input.connected) return 'connected'
+  if (input.configured || input.credentialPresent) return 'configured'
+  if (input.missingCredential) return 'blocked'
+  return 'blocked'
+}
+
+function capability(input: {
+  id: string
+  name: string
+  category: AgentZeroIntegrationCapability['category']
+  connected?: boolean
+  configured?: boolean
+  credentialPresent?: boolean
+  missingCredential?: boolean
+  credentialNames?: string[]
+  readOnly?: boolean
+  writeEnabled?: boolean
+  requiresBridgeSession?: boolean
+  toolCount?: number | null
+  source?: string
+  blockedReason?: string | null
+  notes?: string
+}): AgentZeroIntegrationCapability {
+  const credentialPresent = Boolean(input.credentialPresent)
+  const missingCredential = Boolean(input.missingCredential)
+  const status = capabilityState({
+    connected: input.connected,
+    configured: input.configured,
+    credentialPresent,
+    missingCredential,
+  })
+  return {
+    id: input.id,
+    name: input.name,
+    category: input.category,
+    status,
+    credential_present: credentialPresent,
+    missing_credential: missingCredential,
+    credential_names: input.credentialNames || [],
+    credential_values_exposed: false,
+    read_only: input.readOnly !== false,
+    write_enabled: Boolean(input.writeEnabled),
+    requires_bridge_session: Boolean(input.requiresBridgeSession),
+    execution_enabled: false,
+    direct_access: false,
+    proxy_access: true,
+    tool_count: typeof input.toolCount === 'number' ? input.toolCount : null,
+    source: input.source || 'mission_control_context',
+    blocked_reason: input.blockedReason || (missingCredential ? 'missing_credential' : null),
+    notes: input.notes || '',
+  }
+}
+
+function toolRegistryItem(input: {
+  id: string
+  name?: string
+  status: EcosystemAccessState
+  source: string
+  category?: string
+  mcpServerName?: string | null
+  schemaAvailable?: boolean
+  readOnly?: boolean
+  writeEnabled?: boolean
+  requiresBridgeSession?: boolean
+  missingCredential?: boolean
+  blockedReason?: string | null
+}): AgentZeroToolRegistryItem {
+  return {
+    id: input.id,
+    name: input.name || input.id,
+    status: input.status,
+    source: input.source,
+    category: input.category || 'unknown',
+    mcp_server_name: input.mcpServerName || null,
+    schema_available: Boolean(input.schemaAvailable),
+    read_only: input.readOnly !== false,
+    write_enabled: Boolean(input.writeEnabled),
+    requires_bridge_session: Boolean(input.requiresBridgeSession),
+    missing_credential: Boolean(input.missingCredential),
+    direct_access: false,
+    proxy_access: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    blocked_reason: input.blockedReason || null,
+  }
+}
+
 function normalizedProviderText(provider: ProviderStatus): string {
   return [
     provider.id,
@@ -629,35 +731,6 @@ function buildModelProviderRegistry(input: {
   return [...requiredProviders, ...optionalProviders]
 }
 
-function curatedZapierTools(tools: ZapierToolRecord[]): ZapierToolRecord[] {
-  const priorityTerms = [
-    'heygen',
-    'google_drive',
-    'onedrive',
-    'one_drive',
-    'openai',
-    'gmail',
-    'slack',
-    'youtube',
-    'drive',
-    'file',
-    'report',
-    'search',
-    'find',
-    'list',
-  ]
-  const selected = new Map<string, ZapierToolRecord>()
-  for (const tool of tools) {
-    const name = normalizeToolName(tool)
-    if (priorityTerms.some((term) => name.includes(term))) selected.set(tool.tool_name, tool)
-  }
-  for (const tool of tools) {
-    if (selected.size >= 75) break
-    selected.set(tool.tool_name, tool)
-  }
-  return Array.from(selected.values()).slice(0, 75)
-}
-
 function endpointSummary(input: {
   endpoint: string
   mcp_server_name?: string | null
@@ -684,7 +757,7 @@ function endpointSummary(input: {
 }
 
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
-  const [providersResult, zapierResult, mcpZapierResult, brainResult, timerActive] = await Promise.all([
+  const [providersResult, zapierResult, mcpZapierResult, brainResult, timerActive, githubToken] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
       status: 503,
@@ -716,6 +789,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       payload: { sources: [] as BrainSyncPayload['sources'] },
     })),
     readBuildWikiTimerActive(),
+    getGitHubToken().catch(() => null),
   ])
 
   const providers = Array.isArray((providersResult.payload as any)?.providers)
@@ -723,7 +797,6 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     : []
   const allModels = getAllModels()
   const providerIds = providers.map(providerId).filter(Boolean)
-  const providerSet = new Set(providerIds.map((provider) => provider.toLowerCase()))
   const zapierTools = Array.isArray((zapierResult as any).tools)
     ? ((zapierResult as any).tools as ZapierToolRecord[])
     : []
@@ -754,6 +827,232 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const mcpReachable = Boolean((mcpZapierResult as any).mcp_reachable || (zapierResult as any).mcp_reachable)
   const zapierReachable = Boolean((zapierResult as any).connected || (zapierResult as any).mcp_reachable)
   const zapierBlocker = String((mcpZapierResult as any).blocker || (zapierResult as any).blocker || '').trim() || null
+  const mcpTools = Array.isArray((mcpZapierResult as any).tools) ? ((mcpZapierResult as any).tools as any[]) : []
+  const firecrawlStatus = getFirecrawlStatus(process.cwd())
+  const githubCredentialPresent = Boolean(githubToken)
+  const zapierCredentialNames = ['ZAPIER_MCP_URL', 'ZAPIER_MCP_SERVER', 'ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY']
+  const zapierCredentialPresent = credentialPresentFromSources(zapierCredentialNames, zapierReachable)
+  const googleDriveCredentialNames = ['GOOGLE_DRIVE_CLIENT_ID', 'GOOGLE_DRIVE_CLIENT_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']
+  const oneDriveCredentialNames = ['ONEDRIVE_CLIENT_ID', 'ONEDRIVE_CLIENT_SECRET', 'MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET']
+  const telegramCredentialNames = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_TOKEN', 'BOT_TOKEN']
+  const slackCredentialNames = ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN', 'SLACK_WEBHOOK_URL']
+  const whatsappCredentialNames = ['WHATSAPP_API_KEY', 'WHATSAPP_ACCESS_TOKEN', 'META_WHATSAPP_TOKEN']
+  const emailCredentialNames = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD', 'SENDGRID_API_KEY', 'MAILGUN_API_KEY', 'AGENTMAIL_API_KEY']
+  const smsCredentialNames = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER']
+  const hasToolLike = (terms: string[]) => Array.from(toolSet).some((tool) => terms.some((term) => tool.includes(term)))
+  const providerVisible = (terms: string[]) => Boolean(providerStateFor(providers, terms))
+  const telegramVisible = providerVisible(['telegram']) || hasCredential(telegramCredentialNames)
+  const slackVisible = hasToolLike(['slack']) || hasCredential(slackCredentialNames) || providerVisible(['slack'])
+  const whatsappVisible = hasToolLike(['whatsapp', 'whats_app']) || hasCredential(whatsappCredentialNames) || providerVisible(['whatsapp'])
+  const emailVisible = hasToolLike(['gmail', 'email', 'mailgun', 'sendgrid']) || hasCredential(emailCredentialNames) || providerVisible(['email', 'gmail'])
+  const smsVisible = hasToolLike(['twilio', 'sms']) || hasCredential(smsCredentialNames) || providerVisible(['twilio', 'sms'])
+  const integrationRegistry: AgentZeroIntegrationCapability[] = [
+    capability({
+      id: 'google_drive',
+      name: 'Google Drive',
+      category: 'storage',
+      connected: googleDriveVisible,
+      configured: hasCredential(googleDriveCredentialNames),
+      credentialPresent: hasCredential(googleDriveCredentialNames),
+      missingCredential: !googleDriveVisible && !hasCredential(googleDriveCredentialNames),
+      credentialNames: googleDriveCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => normalizeToolName(tool).includes('google_drive')).length || null,
+      source: googleDriveVisible ? 'zapier_mcp_schema' : 'mission_control_env',
+      blockedReason: googleDriveVisible ? null : 'google_drive_not_visible_or_configured',
+      notes: 'Visible only through safe schema/registry metadata here. Upload/write actions require a separate approved Bridge Session.',
+    }),
+    capability({
+      id: 'onedrive',
+      name: 'OneDrive',
+      category: 'storage',
+      connected: oneDriveVisible,
+      configured: hasCredential(oneDriveCredentialNames),
+      credentialPresent: hasCredential(oneDriveCredentialNames),
+      missingCredential: !oneDriveVisible && !hasCredential(oneDriveCredentialNames),
+      credentialNames: oneDriveCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => /one_?drive|onedrive/.test(normalizeToolName(tool))).length || null,
+      source: oneDriveVisible ? 'zapier_mcp_schema' : 'mission_control_env',
+      blockedReason: oneDriveVisible ? null : 'onedrive_not_visible_or_configured',
+      notes: 'A local report path does not satisfy OneDrive delivery. Upload/write actions require a separate approved Bridge Session.',
+    }),
+    capability({
+      id: 'zapier',
+      name: 'Zapier',
+      category: 'automation',
+      connected: Boolean((zapierResult as any).connected || (mcpZapierResult as any).ok),
+      configured: zapierCredentialPresent || zapierReachable,
+      credentialPresent: zapierCredentialPresent,
+      missingCredential: !zapierCredentialPresent && !zapierReachable,
+      credentialNames: zapierCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: Number((zapierResult as any).tools_total || zapierTools.length || 0),
+      source: String((zapierResult as any).source || 'zapier_mcp'),
+      blockedReason: (zapierResult as any).connected || zapierReachable ? null : (zapierBlocker || 'zapier_not_configured'),
+      notes: 'Tool/schema discovery is read-only. Zapier writes remain disabled until an exact-scope Bridge Session exists.',
+    }),
+    capability({
+      id: 'heygen',
+      name: 'HeyGen',
+      category: 'media',
+      connected: Boolean((zapierResult as any).heygen_found && heygenRequiredFields.length > 0),
+      configured: Boolean((zapierResult as any).heygen_found),
+      credentialPresent: zapierCredentialPresent,
+      missingCredential: !zapierCredentialPresent && !(zapierResult as any).heygen_found,
+      credentialNames: zapierCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: Number((zapierResult as any).heygen_tools?.length || 0),
+      source: 'zapier_mcp_schema',
+      blockedReason: (zapierResult as any).heygen_found ? null : 'heygen_tool_schema_not_visible',
+      notes: 'HeyGen generation is not enabled. Schema visibility does not grant generation access.',
+    }),
+    capability({
+      id: 'telegram',
+      name: 'Telegram',
+      category: 'messaging',
+      connected: telegramVisible,
+      configured: telegramVisible,
+      credentialPresent: hasCredential(telegramCredentialNames) || telegramVisible,
+      missingCredential: !telegramVisible,
+      credentialNames: telegramCredentialNames,
+      requiresBridgeSession: true,
+      source: providerVisible(['telegram']) ? 'claudeclaw_provider_registry' : 'mission_control_env',
+      blockedReason: telegramVisible ? null : 'telegram_not_visible_or_configured',
+      notes: 'Telegram owner workflow is visible as ecosystem status only. Agent Zero test-chat cannot send messages.',
+    }),
+    capability({
+      id: 'build_wiki',
+      name: 'Build-Wiki',
+      category: 'buildwiki',
+      connected: true,
+      configured: true,
+      credentialPresent: true,
+      missingCredential: false,
+      credentialNames: [],
+      requiresBridgeSession: true,
+      source: 'mission_control_build_wiki',
+      blockedReason: null,
+      notes: 'Build-Wiki status is visible read-only. Run Now remains approval-gated and scoped to the local farmer service.',
+    }),
+    capability({
+      id: 'opencloud_farmer',
+      name: 'OpenCloud farmer',
+      category: 'buildwiki',
+      connected: timerActive === true,
+      configured: typeof timerActive === 'boolean',
+      credentialPresent: true,
+      missingCredential: false,
+      credentialNames: [],
+      requiresBridgeSession: true,
+      source: 'systemd_user_timer_status',
+      blockedReason: typeof timerActive === 'boolean' ? null : 'opencloud_docs_farmer_timer_status_unknown',
+      notes: 'Agent Zero can see farmer/timer status only. Farmer execution requires owner approval and scoped dispatcher.',
+    }),
+    capability({
+      id: 'github',
+      name: 'GitHub',
+      category: 'developer',
+      connected: githubCredentialPresent,
+      configured: githubCredentialPresent,
+      credentialPresent: githubCredentialPresent,
+      missingCredential: !githubCredentialPresent,
+      credentialNames: ['GITHUB_TOKEN'],
+      requiresBridgeSession: true,
+      source: 'mission_control_github_client',
+      blockedReason: githubCredentialPresent ? null : 'github_token_not_configured',
+      notes: 'GitHub sync/client support is present. Writes and pushes require explicit owner approval outside Agent Zero test-chat.',
+    }),
+    capability({
+      id: 'firecrawl',
+      name: 'Firecrawl',
+      category: 'crawler',
+      connected: firecrawlStatus.state === 'LIVE',
+      configured: Boolean(firecrawlStatus.key_present || firecrawlStatus.sdk_loaded),
+      credentialPresent: Boolean(firecrawlStatus.key_present),
+      missingCredential: !firecrawlStatus.key_present,
+      credentialNames: ['FIRECRAWL_API_KEY'],
+      requiresBridgeSession: true,
+      source: 'mission_control_firecrawl_status',
+      blockedReason: firecrawlStatus.state === 'LIVE' ? null : firecrawlStatus.state.toLowerCase(),
+      notes: firecrawlStatus.next_action,
+    }),
+    capability({
+      id: 'slack',
+      name: 'Slack',
+      category: 'messaging',
+      connected: slackVisible,
+      configured: slackVisible,
+      credentialPresent: hasCredential(slackCredentialNames) || slackVisible,
+      missingCredential: !slackVisible,
+      credentialNames: slackCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => normalizeToolName(tool).includes('slack')).length || null,
+      source: slackVisible ? 'zapier_or_provider_registry' : 'mission_control_env',
+      blockedReason: slackVisible ? null : 'slack_not_visible_or_configured',
+      notes: 'Included only as visible/configured/blocked metadata; no Slack sends are enabled from Agent Zero test-chat.',
+    }),
+    capability({
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      category: 'messaging',
+      connected: whatsappVisible,
+      configured: whatsappVisible,
+      credentialPresent: hasCredential(whatsappCredentialNames) || whatsappVisible,
+      missingCredential: !whatsappVisible,
+      credentialNames: whatsappCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => /whatsapp|whats_app/.test(normalizeToolName(tool))).length || null,
+      source: whatsappVisible ? 'zapier_or_provider_registry' : 'mission_control_env',
+      blockedReason: whatsappVisible ? null : 'whatsapp_not_visible_or_configured',
+      notes: 'No WhatsApp messages are enabled from Agent Zero test-chat.',
+    }),
+    capability({
+      id: 'email',
+      name: 'Email providers',
+      category: 'communication',
+      connected: emailVisible,
+      configured: emailVisible,
+      credentialPresent: hasCredential(emailCredentialNames) || emailVisible,
+      missingCredential: !emailVisible,
+      credentialNames: emailCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => /gmail|email|mailgun|sendgrid/.test(normalizeToolName(tool))).length || null,
+      source: emailVisible ? 'zapier_or_provider_registry' : 'mission_control_env',
+      blockedReason: emailVisible ? null : 'email_provider_not_visible_or_configured',
+      notes: 'Email send/write actions require exact-scope approval and a Bridge Session.',
+    }),
+    capability({
+      id: 'sms',
+      name: 'SMS providers',
+      category: 'communication',
+      connected: smsVisible,
+      configured: smsVisible,
+      credentialPresent: hasCredential(smsCredentialNames) || smsVisible,
+      missingCredential: !smsVisible,
+      credentialNames: smsCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: zapierTools.filter((tool) => /twilio|sms/.test(normalizeToolName(tool))).length || null,
+      source: smsVisible ? 'zapier_or_provider_registry' : 'mission_control_env',
+      blockedReason: smsVisible ? null : 'sms_provider_not_visible_or_configured',
+      notes: 'SMS send/write actions require exact-scope approval and a Bridge Session.',
+    }),
+    capability({
+      id: 'mcp_tools',
+      name: 'MCP tools',
+      category: 'mcp',
+      connected: Boolean((mcpZapierResult as any).ok),
+      configured: mcpReachable || mcpToolCount > 0,
+      credentialPresent: Boolean((mcpZapierResult as any).auth_attached || zapierCredentialPresent),
+      missingCredential: !mcpReachable && mcpToolCount === 0,
+      credentialNames: zapierCredentialNames,
+      requiresBridgeSession: true,
+      toolCount: mcpToolCount,
+      source: 'mcp_schema_passthrough',
+      blockedReason: (mcpZapierResult as any).ok ? null : (zapierBlocker || 'mcp_tool_schema_unavailable'),
+      notes: 'All discovered MCP tools are exposed as read-only metadata. Tool invocation is disabled from Agent Zero test-chat.',
+    }),
+  ]
   const endpointSummaries = [
     endpointSummary({
       endpoint: '/api/bridge/preflight',
@@ -815,77 +1114,114 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       note: 'Zapier tool search is visible read-only; use q=heygen for schema discovery. No execution is enabled.',
     }),
   ]
-  const integrationItems = [
-    { id: 'mission_control', status: 'reachable', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'bridge', status: providers.length > 0 ? 'visible' : 'degraded', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'mcp', status: (mcpZapierResult as any).mcp_reachable ? 'connected' : ((zapierResult as any).mcp_reachable ? 'visible' : 'blocked'), visibility: ((zapierResult as any).mcp_reachable || (mcpZapierResult as any).mcp_reachable) ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'zapier', status: (zapierResult as any).connected ? 'tool_inventory_visible' : 'blocked', visibility: (zapierResult as any).connected ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'heygen', status: (zapierResult as any).heygen_found ? 'schema_visible_read_only' : 'not_visible', visibility: (zapierResult as any).heygen_found ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'google_drive', status: googleDriveVisible ? 'visible_via_zapier_schema' : 'not_visible', visibility: googleDriveVisible ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'onedrive', status: oneDriveVisible ? 'visible_via_zapier_schema' : 'not_visible', visibility: oneDriveVisible ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'openrouter', status: providerSet.has('openrouter') ? 'visible_in_provider_registry' : 'unknown', visibility: providerSet.has('openrouter') ? 'visible' as const : 'unknown' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'obsidian', status: hasSource(brainSources, 'obsidian') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'obsidian') ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'mempalace', status: hasSource(brainSources, 'mempalace') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'mempalace') ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'graphify', status: hasSource(brainSources, 'graphify') ? 'visible_read_only' : 'not_connected', visibility: hasSource(brainSources, 'graphify') ? 'visible' as const : 'blocked' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'build_wiki', status: 'visible_read_only', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-    { id: 'reports_pdf_delivery', status: 'visible_via_mission_control', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
-  ]
-  const curatedTools = curatedZapierTools(zapierTools)
-  const toolRegistry = [
-    {
-      id: 'mission_control.status',
-      status: 'connected' as EcosystemAccessState,
-      source: 'mission_control',
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    },
-    {
-      id: 'bridge.providers.list',
-      status: providers.length > 0 ? 'visible' as EcosystemAccessState : 'blocked' as EcosystemAccessState,
-      source: 'mission_control_bridge',
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    },
-    {
-      id: 'mcp.zapier.tools.schema',
-      status: accessFromVisibility((mcpZapierResult as any).ok ? 'connected' : (mcpZapierResult as any).blocker),
+  const integrationItems = integrationRegistry.map((item) => ({
+    id: item.id,
+    status: item.status,
+    visibility: item.status === 'blocked'
+      ? 'blocked' as const
+      : item.status === 'connected'
+        ? 'visible' as const
+        : 'configured' as const,
+    direct_access: false,
+    proxy_access: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    missing_credential: item.missing_credential,
+    read_only: item.read_only,
+    write_enabled: item.write_enabled,
+    requires_bridge_session: item.requires_bridge_session,
+  }))
+  const zapierToolRecordsByName = new Map(zapierTools.map((tool) => [tool.tool_name, tool]))
+  const mcpToolRegistry = mcpTools.map((tool) => {
+    const name = String(tool.tool_name || tool.raw_tool_name || '').trim()
+    const zapierTool = zapierToolRecordsByName.get(name)
+    const writeClassification = String(tool.write_classification || zapierTool?.write_classification || 'unknown')
+    const isReadOnly = writeClassification === 'read'
+    return toolRegistryItem({
+      id: name,
+      name,
+      status: accessFromVisibility(tool.schema_available ? 'schema_visible' : (mcpZapierResult as any).status),
       source: 'mcp_schema_passthrough',
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    },
-    {
-      id: 'build_wiki.farmer.status',
-      status: 'visible' as EcosystemAccessState,
-      source: 'mission_control_build_wiki',
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    },
-    {
-      id: 'brain.sync.status',
-      status: brainSources.length > 0 ? 'visible' as EcosystemAccessState : 'blocked' as EcosystemAccessState,
-      source: 'claudeclaw_brain_sync',
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    },
-    ...curatedTools.map((tool) => ({
+      category: zapierTool?.category || 'mcp',
+      mcpServerName: String((mcpZapierResult as any).server || 'zapier'),
+      schemaAvailable: Boolean(tool.schema_available),
+      readOnly: isReadOnly,
+      writeEnabled: false,
+      requiresBridgeSession: true,
+      missingCredential: !mcpReachable && !zapierCredentialPresent,
+      blockedReason: 'tool_invocation_disabled_in_agent_zero_read_only_context',
+    })
+  }).filter((tool) => tool.id)
+  const fallbackZapierToolRegistry = zapierTools
+    .filter((tool) => !mcpToolRegistry.some((item) => item.id === tool.tool_name))
+    .map((tool) => toolRegistryItem({
       id: tool.tool_name,
+      name: tool.tool_name,
       status: accessFromVisibility(tool.required_fields ? 'schema_visible' : tool.source),
       source: `zapier_${tool.source}`,
-      direct_access: false,
-      proxy_access: true,
-      execution_enabled: false,
-      writes_enabled: false,
-    })),
+      category: tool.category,
+      mcpServerName: 'zapier',
+      schemaAvailable: Boolean(tool.required_fields),
+      readOnly: tool.write_classification === 'read',
+      writeEnabled: false,
+      requiresBridgeSession: true,
+      missingCredential: !zapierCredentialPresent,
+      blockedReason: tool.blocker || 'tool_invocation_disabled_in_agent_zero_read_only_context',
+    }))
+  const toolRegistry = [
+    toolRegistryItem({
+      id: 'mission_control.status',
+      name: 'Mission Control status',
+      status: 'connected',
+      source: 'mission_control',
+      category: 'status',
+      readOnly: true,
+      requiresBridgeSession: false,
+    }),
+    toolRegistryItem({
+      id: 'bridge.providers.list',
+      name: 'Bridge provider list',
+      status: providers.length > 0 ? 'visible' : 'blocked',
+      source: 'mission_control_bridge',
+      category: 'bridge',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: providers.length > 0 ? null : 'provider_registry_empty_or_unreachable',
+    }),
+    toolRegistryItem({
+      id: 'mcp.zapier.tools.schema',
+      name: 'Zapier MCP tool/schema listing',
+      status: accessFromVisibility((mcpZapierResult as any).ok ? 'connected' : (mcpZapierResult as any).blocker),
+      source: 'mcp_schema_passthrough',
+      category: 'mcp',
+      mcpServerName: 'zapier',
+      schemaAvailable: mcpSchemaAvailable,
+      readOnly: true,
+      requiresBridgeSession: false,
+      missingCredential: !zapierCredentialPresent && !mcpReachable,
+      blockedReason: (mcpZapierResult as any).ok ? null : (zapierBlocker || 'mcp_schema_unavailable'),
+    }),
+    toolRegistryItem({
+      id: 'build_wiki.farmer.status',
+      name: 'Build-Wiki farmer status',
+      status: 'visible',
+      source: 'mission_control_build_wiki',
+      category: 'buildwiki',
+      readOnly: true,
+      requiresBridgeSession: false,
+    }),
+    toolRegistryItem({
+      id: 'brain.sync.status',
+      name: 'Brain Sync status',
+      status: brainSources.length > 0 ? 'visible' : 'blocked',
+      source: 'claudeclaw_brain_sync',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: brainSources.length > 0 ? null : 'brain_sync_status_unavailable',
+    }),
+    ...mcpToolRegistry,
+    ...fallbackZapierToolRegistry,
   ]
 
   return buildAgentZeroReadOnlyContext({
@@ -918,6 +1254,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     skillRegistry: skillRegistry.items,
     skillSources: skillRegistry.sources,
     integrationItems,
+    integrationRegistry,
     toolRegistry,
     mcpServers: [{
       name: 'zapier',

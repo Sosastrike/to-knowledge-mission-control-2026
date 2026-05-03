@@ -187,9 +187,89 @@ describe('Agent Zero read-only bridge connector', () => {
         { id: 'mission_control', status: 'reachable', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
         { id: 'google_drive', status: 'visible_via_zapier_schema', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
       ],
+      integrationRegistry: [
+        {
+          id: 'google_drive',
+          name: 'Google Drive',
+          category: 'storage',
+          status: 'connected',
+          credential_present: false,
+          missing_credential: false,
+          credential_names: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
+          credential_values_exposed: false,
+          read_only: true,
+          write_enabled: false,
+          requires_bridge_session: true,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          tool_count: 2,
+          source: 'zapier_mcp_schema',
+          blocked_reason: null,
+          notes: 'Visible through schema only.',
+        },
+        {
+          id: 'firecrawl',
+          name: 'Firecrawl',
+          category: 'crawler',
+          status: 'blocked',
+          credential_present: false,
+          missing_credential: true,
+          credential_names: ['FIRECRAWL_API_KEY'],
+          credential_values_exposed: false,
+          read_only: true,
+          write_enabled: false,
+          requires_bridge_session: true,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          tool_count: null,
+          source: 'mission_control_firecrawl_status',
+          blocked_reason: 'credential_required',
+          notes: 'Credential required.',
+        },
+        {
+          id: 'mcp_tools',
+          name: 'MCP tools',
+          category: 'mcp',
+          status: 'connected',
+          credential_present: true,
+          missing_credential: false,
+          credential_names: ['ZAPIER_MCP_URL'],
+          credential_values_exposed: false,
+          read_only: true,
+          write_enabled: false,
+          requires_bridge_session: true,
+          execution_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          tool_count: 42,
+          source: 'mcp_schema_passthrough',
+          blocked_reason: null,
+          notes: 'Schema listing only.',
+        },
+      ],
       toolRegistry: [
         { id: 'mcp.zapier.tools.schema', status: 'connected', source: 'mcp_schema_passthrough', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
         { id: 'build_wiki.farmer.status', status: 'visible', source: 'mission_control_build_wiki', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
+        {
+          id: 'mcp__zapier__google_drive_upload_file',
+          name: 'Google Drive Upload File',
+          status: 'connected',
+          source: 'mcp_schema_passthrough',
+          category: 'google_drive',
+          mcp_server_name: 'zapier',
+          schema_available: true,
+          read_only: false,
+          write_enabled: false,
+          requires_bridge_session: true,
+          missing_credential: false,
+          direct_access: false,
+          proxy_access: true,
+          execution_enabled: false,
+          writes_enabled: false,
+          blocked_reason: 'tool_invocation_disabled_in_agent_zero_read_only_context',
+        },
       ],
       mcpServers: [{ name: 'zapier', status: 'connected', transport: 'http', tool_count: 42, schema_available: true }],
       mcpEndpointSummaries: [
@@ -285,10 +365,21 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.skills.missing_dependencies_total).toBe(2)
     expect(context.skills.sources.map((source) => source.source)).toContain('home_claude')
     expect(context.tools.registry.find((tool) => tool.id === 'mcp.zapier.tools.schema')?.execution_enabled).toBe(false)
+    expect(context.tools.registry.find((tool) => tool.id === 'mcp__zapier__google_drive_upload_file')?.write_enabled).toBe(false)
+    expect(context.tools.registry.find((tool) => tool.id === 'mcp__zapier__google_drive_upload_file')?.requires_bridge_session).toBe(true)
+    expect(context.tools.mcp_tools_total).toBe(1)
+    expect(context.tools.write_enabled_total).toBe(0)
+    expect(context.tools.bridge_session_required_total).toBe(1)
     expect(context.tools.google_drive_visible).toBe(true)
     expect(context.tools.onedrive_visible).toBe(false)
     expect(context.tools.execution_enabled).toBe(false)
     expect(context.integrations.items.every((integration) => integration.execution_enabled === false)).toBe(true)
+    expect(context.integrations.registry.find((integration) => integration.id === 'google_drive')?.status).toBe('connected')
+    expect(context.integrations.registry.find((integration) => integration.id === 'google_drive')?.requires_bridge_session).toBe(true)
+    expect(context.integrations.registry.find((integration) => integration.id === 'firecrawl')?.missing_credential).toBe(true)
+    expect(context.integrations.registry.every((integration) => integration.credential_values_exposed === false)).toBe(true)
+    expect(context.integrations.write_enabled_total).toBe(0)
+    expect(context.integrations.bridge_session_required_total).toBe(3)
     expect(context.brain.obsidian_visible).toBe(true)
     expect(context.brain.memory_writes_enabled).toBe(false)
     expect(context.opencloud_buildwiki.build_wiki_status_visible).toBe(true)
@@ -304,6 +395,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('Do not enumerate your internal Agent Zero tools')
     expect(prompt).toContain('models.provider_registry')
     expect(prompt).toContain('skills.registry')
+    expect(prompt).toContain('integrations.registry')
     expect(prompt).toContain('direct access versus Mission Control proxy')
     expect(prompt).toContain('"heygen_schema_visible":true')
     expect(prompt).toContain('"execution_enabled":false')

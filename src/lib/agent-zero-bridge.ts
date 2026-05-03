@@ -158,6 +158,59 @@ export type AgentZeroSkillSourceSummary = {
   blocked_reason: string | null
 }
 
+export type AgentZeroCapabilityState = 'connected' | 'configured' | 'blocked'
+
+export type AgentZeroIntegrationCapability = {
+  id: string
+  name: string
+  category:
+    | 'storage'
+    | 'automation'
+    | 'media'
+    | 'messaging'
+    | 'communication'
+    | 'buildwiki'
+    | 'developer'
+    | 'crawler'
+    | 'mcp'
+    | 'delivery'
+    | 'other'
+  status: AgentZeroCapabilityState
+  credential_present: boolean
+  missing_credential: boolean
+  credential_names: string[]
+  credential_values_exposed: false
+  read_only: boolean
+  write_enabled: boolean
+  requires_bridge_session: boolean
+  execution_enabled: false
+  direct_access: false
+  proxy_access: true
+  tool_count: number | null
+  source: string
+  blocked_reason: string | null
+  notes: string
+}
+
+export type AgentZeroToolRegistryItem = {
+  id: string
+  name: string
+  status: EcosystemAccessState
+  source: string
+  category: string
+  mcp_server_name: string | null
+  schema_available: boolean
+  read_only: boolean
+  write_enabled: boolean
+  requires_bridge_session: boolean
+  missing_credential: boolean
+  direct_access: false
+  proxy_access: true
+  execution_enabled: false
+  writes_enabled: false
+  blocked_reason: string | null
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: false
   bridge_session_required: true
@@ -264,16 +317,13 @@ export type AgentZeroReadOnlyContext = {
   tools: {
     visible: boolean
     registry_status: EcosystemAccessState
-    registry: Array<{
-      id: string
-      status: EcosystemAccessState
-      source: string
-      direct_access: boolean
-      proxy_access: boolean
-      execution_enabled: boolean
-      writes_enabled: boolean
-    }>
+    registry: AgentZeroToolRegistryItem[]
     zapier_tools_total: number
+    mcp_tools_total: number
+    read_only_total: number
+    write_enabled_total: number
+    bridge_session_required_total: number
+    missing_credentials_total: number
     google_drive_visible: boolean
     onedrive_visible: boolean
     heygen_schema_visible: boolean
@@ -283,6 +333,14 @@ export type AgentZeroReadOnlyContext = {
   integrations: {
     visible: true
     registry_status: EcosystemAccessState
+    registry: AgentZeroIntegrationCapability[]
+    connected_total: number
+    configured_total: number
+    blocked_total: number
+    missing_credentials_total: number
+    write_enabled_total: number
+    bridge_session_required_total: number
+    credential_values_exposed: false
     items: Array<{
       id: string
       status: string
@@ -291,6 +349,10 @@ export type AgentZeroReadOnlyContext = {
       proxy_access: boolean
       execution_enabled: boolean
       writes_enabled: boolean
+      missing_credential?: boolean
+      read_only?: boolean
+      write_enabled?: boolean
+      requires_bridge_session?: boolean
     }>
   }
   brain: {
@@ -602,8 +664,9 @@ export function buildAgentZeroReadOnlyContext(input: {
   skillNames?: string[]
   skillRegistry?: AgentZeroSkillRegistryItem[]
   skillSources?: AgentZeroSkillSourceSummary[]
-  integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
-  toolRegistry?: Array<{ id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
+  integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean; missing_credential?: boolean; read_only?: boolean; write_enabled?: boolean; requires_bridge_session?: boolean }>
+  integrationRegistry?: AgentZeroIntegrationCapability[]
+  toolRegistry?: Array<Partial<AgentZeroToolRegistryItem> & { id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
   mcpServers?: Array<{ name: string; status?: string; transport?: string; tool_count?: number | null; reachable?: boolean; schema_available?: boolean; blocked_reason?: string | null; tools_endpoint?: string }>
   mcpEndpointSummaries?: AgentZeroReadOnlyEndpointSummary[]
   mcpToolSchemaSummary?: { tools_total?: number; schema_available?: boolean; required_fields?: string[]; write_tools_total?: number; read_tools_total?: number }
@@ -718,7 +781,34 @@ export function buildAgentZeroReadOnlyContext(input: {
     proxy_access: integration.proxy_access !== false,
     execution_enabled: Boolean(integration.execution_enabled),
     writes_enabled: Boolean(integration.writes_enabled),
+    missing_credential: Boolean(integration.missing_credential),
+    read_only: integration.read_only !== false,
+    write_enabled: Boolean(integration.write_enabled || integration.writes_enabled),
+    requires_bridge_session: Boolean(integration.requires_bridge_session),
   }))
+  const integrationRegistry = (input.integrationRegistry || [])
+    .map((capability) => ({
+      id: capability.id,
+      name: capability.name,
+      category: capability.category,
+      status: capability.status,
+      credential_present: Boolean(capability.credential_present),
+      missing_credential: Boolean(capability.missing_credential),
+      credential_names: Array.from(new Set(capability.credential_names || [])).sort(),
+      credential_values_exposed: false as const,
+      read_only: Boolean(capability.read_only),
+      write_enabled: Boolean(capability.write_enabled),
+      requires_bridge_session: Boolean(capability.requires_bridge_session),
+      execution_enabled: false as const,
+      direct_access: false as const,
+      proxy_access: true as const,
+      tool_count: typeof capability.tool_count === 'number' ? capability.tool_count : null,
+      source: capability.source || 'mission_control_context',
+      blocked_reason: capability.blocked_reason || null,
+      notes: capability.notes || '',
+    }))
+    .filter((capability) => capability.id && capability.name)
+    .sort((a, b) => a.id.localeCompare(b.id))
   const brainSources = (input.brainSources || []).map((source) => ({
     source: String(source.source || 'unknown'),
     status: String(source.status || source.raw_state || 'unknown'),
@@ -756,12 +846,21 @@ export function buildAgentZeroReadOnlyContext(input: {
   }
   const toolRegistry = (input.toolRegistry || []).map((tool) => ({
     id: tool.id,
+    name: tool.name || tool.id,
     status: tool.status || 'unknown',
     source: tool.source || 'unknown',
-    direct_access: Boolean(tool.direct_access),
-    proxy_access: tool.proxy_access !== false,
-    execution_enabled: Boolean(tool.execution_enabled),
-    writes_enabled: Boolean(tool.writes_enabled),
+    category: tool.category || 'unknown',
+    mcp_server_name: tool.mcp_server_name || null,
+    schema_available: Boolean(tool.schema_available),
+    read_only: tool.read_only !== false,
+    write_enabled: Boolean(tool.write_enabled),
+    requires_bridge_session: Boolean(tool.requires_bridge_session),
+    missing_credential: Boolean(tool.missing_credential),
+    direct_access: false as const,
+    proxy_access: true as const,
+    execution_enabled: false as const,
+    writes_enabled: false as const,
+    blocked_reason: tool.blocked_reason || null,
   }))
   const openrouterModelProvider = modelProviderRegistry.find((provider) => provider.id === 'openrouter')
   const openrouterStatus = openrouterModelProvider
@@ -855,6 +954,11 @@ export function buildAgentZeroReadOnlyContext(input: {
       registry_status: toolRegistry.length > 0 ? 'visible' : 'unknown',
       registry: toolRegistry,
       zapier_tools_total: Number(input.zapierToolsTotal || 0),
+      mcp_tools_total: toolRegistry.filter((tool) => Boolean(tool.mcp_server_name)).length,
+      read_only_total: toolRegistry.filter((tool) => tool.read_only).length,
+      write_enabled_total: toolRegistry.filter((tool) => tool.write_enabled).length,
+      bridge_session_required_total: toolRegistry.filter((tool) => tool.requires_bridge_session).length,
+      missing_credentials_total: toolRegistry.filter((tool) => tool.missing_credential).length,
       google_drive_visible: Boolean(input.googleDriveVisible),
       onedrive_visible: Boolean(input.oneDriveVisible),
       heygen_schema_visible: Boolean(input.heygenSchemaVisible),
@@ -864,6 +968,14 @@ export function buildAgentZeroReadOnlyContext(input: {
     integrations: {
       visible: true,
       registry_status: integrations.length > 0 ? 'visible' : 'unknown',
+      registry: integrationRegistry,
+      connected_total: integrationRegistry.filter((capability) => capability.status === 'connected').length,
+      configured_total: integrationRegistry.filter((capability) => capability.status === 'configured').length,
+      blocked_total: integrationRegistry.filter((capability) => capability.status === 'blocked').length,
+      missing_credentials_total: integrationRegistry.filter((capability) => capability.missing_credential).length,
+      write_enabled_total: integrationRegistry.filter((capability) => capability.write_enabled).length,
+      bridge_session_required_total: integrationRegistry.filter((capability) => capability.requires_bridge_session).length,
+      credential_values_exposed: false,
       items: integrations,
     },
     brain: {
@@ -940,6 +1052,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
     'For model questions, use models.provider_registry and models.catalog. Do not claim a model/provider is usable when its status is blocked; credential presence is boolean only and never a key value.',
     'For skill questions, use skills.registry and skills.sources. Do not claim unregistered skills; mark blocked or dependency-limited skills honestly.',
+    'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked, missing credential, read-only/write-enabled, and Bridge Session requirements exactly as shown.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

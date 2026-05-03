@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import type { AgentZeroBridgeSessionObject } from './agent-zero-bridge-session'
 
 export const AGENT_ZERO_DEFAULT_BASE_URL = 'http://100.116.35.95:50080'
 export const AGENT_ZERO_API_KEY_ENV_NAMES = [
@@ -356,14 +357,14 @@ export type AgentZeroBuildWikiFarmerSummary = {
 }
 
 export type AgentZeroReadOnlyContext = {
-  execution_enabled: false
-  bridge_session_required: true
+  execution_enabled: boolean
+  bridge_session_required: boolean
   mission_control: {
     visible: true
     status: EcosystemAccessState
     mode: 'read_only_bridge_context'
-    execution_enabled: false
-    writes_enabled: false
+    execution_enabled: boolean
+    writes_enabled: boolean
     direct_access: false
     proxy_access: true
     auth_required: true
@@ -565,14 +566,10 @@ export type AgentZeroReadOnlyContext = {
     task_ids_in_normal_replies: false
     external_delivery_writes_enabled: false
   }
-  bridge_session: {
+  bridge_session: AgentZeroBridgeSessionObject & {
     available: boolean
-    status: 'read_only_context_active' | 'owner_approval_required' | 'blocked'
-    execution_enabled: false
-    writes_enabled: false
     allowed_scopes: string[]
     blocked_scopes: string[]
-    note: string
   }
   restrictions: string[]
 }
@@ -857,6 +854,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   latestBuildWikiRunState?: string | null
   buildWikiFarmerStatus?: AgentZeroBuildWikiFarmerSummary
   bridgeSessionAvailable?: boolean
+  bridgeSession?: AgentZeroBridgeSessionObject
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || []).filter(Boolean))).sort()
   const providerRegistry = (input.providerRegistry || []).map((provider) => ({
@@ -1134,6 +1132,8 @@ export function buildAgentZeroReadOnlyContext(input: {
     rebuild_write_api_enabled: false,
     blockers: brainRegistry.length > 0 ? [] : ['brain_index_status_not_visible'],
   } satisfies AgentZeroBrainIndexSummary
+  const bridgeSession = input.bridgeSession
+  const bridgeSessionActive = Boolean(bridgeSession?.execution_enabled && bridgeSession.status === 'active')
   const brainWatchers = input.brainWatchers || {
     status: brainSources.length > 0 ? 'visible' : 'blocked',
     status_visible: brainSources.length > 0,
@@ -1149,14 +1149,14 @@ export function buildAgentZeroReadOnlyContext(input: {
       : 'Brain watcher status is not visible through Mission Control.',
   } satisfies AgentZeroBrainWatchersSummary
   return {
-    execution_enabled: false,
-    bridge_session_required: true,
+    execution_enabled: bridgeSessionActive,
+    bridge_session_required: !bridgeSessionActive,
     mission_control: {
       visible: true,
       status: 'connected',
       mode: 'read_only_bridge_context',
       execution_enabled: false,
-      writes_enabled: false,
+      writes_enabled: bridgeSessionActive,
       direct_access: false,
       proxy_access: true,
       auth_required: true,
@@ -1408,22 +1408,42 @@ export function buildAgentZeroReadOnlyContext(input: {
       external_delivery_writes_enabled: false,
     },
     bridge_session: {
-      available: Boolean(input.bridgeSessionAvailable),
-      status: input.bridgeSessionAvailable ? 'owner_approval_required' : 'read_only_context_active',
-      execution_enabled: false,
-      writes_enabled: false,
-      allowed_scopes: input.bridgeSessionAvailable
-        ? ['read_only.ecosystem_context', 'review.recommendation', 'buildwiki.run_now.after_owner_approval']
+      ...(bridgeSession || {
+        session_id: null,
+        owner_id: null,
+        agent_id: 'agent_zero' as const,
+        started_at: null,
+        expires_at: null,
+        scope: 'Use all registered Mission Control / Bridge tools, models, agents, integrations, Brain adapters, and Build-Wiki actions available in this environment for this mission.',
+        allowed_tools: ['read_only.ecosystem_context', 'review.recommendation'],
+        allowed_integrations: ['mission_control', 'bridge'],
+        allowed_models: [],
+        allowed_brain_access: ['brain_sync.status'],
+        audit_log: [],
+        execution_enabled: false,
+        bridge_session_required: true,
+        status: input.bridgeSessionAvailable ? 'pending_approval' as const : 'not_requested' as const,
+        approval_request_id: null,
+        approval_state: null,
+        approval_prompt: 'Approval needed: Open Bridge Session for Agent Zero.\nScope: Use all registered Mission Control / Bridge tools, models, agents, integrations, Brain adapters, and Build-Wiki actions available in this environment for this mission.\nDuration: 12 hours.\nRule: Agent Zero must not fake completion and must report blocked connectors honestly.\nApprove or deny?',
+        duplicate_prompt_prevented: false,
+        no_approval_spam: true as const,
+        blocked_reason: input.bridgeSessionAvailable ? 'owner_approval_required' : null,
+        note: 'Agent Zero may see ecosystem context and recommend actions. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
+      }),
+      available: Boolean(bridgeSession?.session_id || input.bridgeSessionAvailable),
+      allowed_scopes: bridgeSessionActive
+        ? (bridgeSession?.allowed_tools || [])
         : ['read_only.ecosystem_context', 'review.recommendation'],
       blocked_scopes: [
         'broad_shell',
         'docker_socket',
-        'zapier.write_without_bridge_session',
-        'heygen.generate_without_bridge_session',
+        'root_system_access',
+        'credential_exfiltration',
+        'auth_bypass',
         'smb.mount_without_smb_phase',
-        'memory.write_without_owner_approval',
+        'memory.write_without_explicit_owner_scope',
       ],
-      note: 'Agent Zero may see ecosystem context and recommend actions. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
     },
     restrictions: [
       'read-only Mission Control ecosystem context unless a scoped Bridge Session is separately approved',
@@ -1439,10 +1459,10 @@ export function buildAgentZeroReadOnlyContext(input: {
 
 export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: AgentZeroReadOnlyContext): string {
   return [
-    'You are Agent Zero in a Mission Control read-only ecosystem test.',
+    'You are Agent Zero in a Mission Control ecosystem test.',
     'You may use only the JSON context below. Do not claim direct access beyond it.',
-    'Execution is disabled. Do not run tools, request writes, or say that you executed anything.',
-    'Bridge Session execution is not active in this chat. If execution is requested, explain that a separate owner-approved Bridge Session and scoped adapter are required.',
+    'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
+    'If bridge_session.execution_enabled is true, work only inside the listed bridge_session scope and ensure each action is audited through /api/bridge/agent-zero/bridge-session/audit. Do not ask for repeated approval for small steps inside the active session.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
     'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
@@ -1451,6 +1471,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked, missing credential, read-only/write-enabled, and Bridge Session requirements exactly as shown.',
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry, brain.available_read_apis, brain.available_write_apis, brain.index_status, and brain.brain_watchers. Distinguish status visibility from content read adapters and write adapters.',
     'For report delivery, use delivery.agent_zero_report_create_endpoint and delivery mission_control links only. Do not expose local paths, raw filenames, task IDs, or claim Telegram/Drive delivery unless a generated report_delivery object explicitly says that happened.',
+    'For Bridge Sessions, report session status, expiration, allowed tools/integrations/models/brain access, and audit requirements exactly from bridge_session.',
     'For Google Drive delivery, use delivery.google_drive_status_endpoint first. Uploads require delivery.google_drive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: Google Drive upload is blocked because the upload connector is not configured.',
     'For OneDrive delivery, use delivery.onedrive_status_endpoint first. Uploads require delivery.onedrive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: OneDrive upload is blocked because the upload connector is not configured.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',

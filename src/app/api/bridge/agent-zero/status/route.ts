@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { buildAgentZeroEcosystemAgentRecord } from '@/lib/agent-zero-bridge'
+import { readLatestAgentZeroBridgeSession } from '@/lib/agent-zero-bridge-session'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,12 @@ export async function GET(request: NextRequest) {
     chatTimeoutMs: 12000,
   })
   const detail = agentZero.detail
+  const bridgeSessionRead = readLatestAgentZeroBridgeSession({
+    workspaceId: auth.user.workspace_id || 1,
+    tenantId: auth.user.tenant_id || 1,
+    sync: true,
+  })
+  const bridgeSession = bridgeSessionRead.session
 
   return NextResponse.json({
     ok: true,
@@ -30,11 +37,11 @@ export async function GET(request: NextRequest) {
       capabilities_source: agentZero.capabilities_source,
       allowed_behavior: ['observe', 'recommend', 'review'],
       disallowed_behavior: ['execute protected actions', 'change Docker/config', 'change permissions', 'bypass Tony approval'],
-      execution_permission: 'observe_recommend_review_only',
-      execution_enabled: false,
-      execution_disabled_until: 'separate owner approval with audit-backed scoped runner',
-      owner_approval_required_for_execution: true,
-      bridge_session_required: true,
+      execution_permission: bridgeSession.execution_enabled ? 'scoped_bridge_session' : 'observe_recommend_review_only',
+      execution_enabled: bridgeSession.execution_enabled,
+      execution_disabled_until: bridgeSession.execution_enabled ? null : 'single owner-approved Bridge Session with audit-backed scoped runner',
+      owner_approval_required_for_execution: !bridgeSession.execution_enabled,
+      bridge_session_required: !bridgeSession.execution_enabled,
     },
     tailnet: {
       endpoint: detail.endpoint,
@@ -67,8 +74,9 @@ export async function GET(request: NextRequest) {
       test_chat_endpoint: detail.test_chat_endpoint,
       ecosystem_context_endpoint: detail.ecosystem_context_endpoint,
       bridge_session_endpoint: detail.bridge_session_endpoint,
-      bridge_session_execution_enabled: false,
-      blocker: detail.blocker,
+      bridge_session_execution_enabled: bridgeSession.execution_enabled,
+      bridge_session: bridgeSession,
+      blocker: bridgeSession.execution_enabled ? null : (detail.blocker || bridgeSession.blocked_reason),
     },
     provider_registry: {
       state: agentZero.state,
@@ -77,8 +85,8 @@ export async function GET(request: NextRequest) {
       health_status: agentZero.health_status,
       auth_status: agentZero.auth_status,
       chat_status: agentZero.chat_status,
-      execution_enabled: false,
-      bridge_session_required: true,
+      execution_enabled: bridgeSession.execution_enabled,
+      bridge_session_required: !bridgeSession.execution_enabled,
       notes: detail.notes,
       error: detail.error,
       blocker: detail.blocker,
@@ -91,7 +99,8 @@ export async function GET(request: NextRequest) {
       protected_actions_created: false,
       writes_enabled: false,
       mission_control_auth_weakened: false,
-      agent_zero_execution_enabled: false,
+      agent_zero_execution_enabled: bridgeSession.execution_enabled,
+      bridge_session_audit_required: true,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

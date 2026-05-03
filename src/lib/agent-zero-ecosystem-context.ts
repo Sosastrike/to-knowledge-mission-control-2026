@@ -18,6 +18,7 @@ import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
 import { getAgentZeroMemPalaceStatus } from '@/lib/agent-zero-mempalace-adapter'
+import { readLatestAgentZeroBridgeSession } from '@/lib/agent-zero-bridge-session'
 import {
   type AgentZeroCapabilityState,
   type AgentZeroBrainApiSummary,
@@ -1897,6 +1898,8 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       missingCredential: !zapierCredentialPresent,
       blockedReason: tool.blocker || 'tool_invocation_disabled_in_agent_zero_read_only_context',
     }))
+  const bridgeSessionRead = readLatestAgentZeroBridgeSession({ sync: true })
+
   const toolRegistry = [
     toolRegistryItem({
       id: 'mission_control.status',
@@ -2091,6 +2094,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     timerActive,
     latestBuildWikiRunState: runState.ui_state,
     buildWikiFarmerStatus,
-    bridgeSessionAvailable: latestRunNow.persistence_ready,
+    bridgeSessionAvailable: latestRunNow.persistence_ready || bridgeSessionRead.persistence_ready,
+    bridgeSession: bridgeSessionRead.session,
   })
 }

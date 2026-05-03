@@ -1477,6 +1477,62 @@ const migrations: Migration[] = [
       db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_report_runs_report ON scheduled_report_runs(report_id, created_at DESC)`)
       db.exec(`CREATE INDEX IF NOT EXISTS idx_scheduled_report_runs_workspace ON scheduled_report_runs(workspace_id, created_at DESC)`)
     }
+  },
+  {
+    id: '052_agent_zero_bridge_sessions',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS bridge_sessions (
+          id TEXT PRIMARY KEY,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          tenant_id INTEGER NOT NULL DEFAULT 1,
+          approval_request_id TEXT NOT NULL UNIQUE,
+          owner_id INTEGER,
+          agent_id TEXT NOT NULL,
+          session_state TEXT NOT NULL CHECK (session_state IN ('pending_approval', 'active', 'denied', 'expired', 'revoked')),
+          started_at TEXT,
+          expires_at TEXT NOT NULL,
+          scope_json TEXT NOT NULL DEFAULT '{}',
+          allowed_tools_json TEXT NOT NULL DEFAULT '[]',
+          allowed_integrations_json TEXT NOT NULL DEFAULT '[]',
+          allowed_models_json TEXT NOT NULL DEFAULT '[]',
+          allowed_brain_access_json TEXT NOT NULL DEFAULT '[]',
+          execution_enabled INTEGER NOT NULL DEFAULT 0 CHECK (execution_enabled IN (0, 1)),
+          correlation_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+          FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+          FOREIGN KEY (approval_request_id) REFERENCES bridge_approval_requests(id) ON DELETE CASCADE,
+          FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS bridge_session_audit_events (
+          id TEXT PRIMARY KEY,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          tenant_id INTEGER NOT NULL DEFAULT 1,
+          session_id TEXT NOT NULL,
+          approval_request_id TEXT,
+          actor TEXT NOT NULL,
+          actor_user_id INTEGER,
+          agent_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          target TEXT,
+          outcome TEXT NOT NULL,
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+          FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+          FOREIGN KEY (session_id) REFERENCES bridge_sessions(id) ON DELETE CASCADE,
+          FOREIGN KEY (approval_request_id) REFERENCES bridge_approval_requests(id) ON DELETE SET NULL,
+          FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+        );
+      `)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_sessions_agent_state ON bridge_sessions(workspace_id, tenant_id, agent_id, session_state, expires_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_sessions_approval ON bridge_sessions(approval_request_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_session_audit_session ON bridge_session_audit_events(session_id, created_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_session_audit_action ON bridge_session_audit_events(action, created_at)`)
+    }
   }
 ]
 

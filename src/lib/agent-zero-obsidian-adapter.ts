@@ -1,4 +1,4 @@
-import { lstatSync, readdirSync, readFileSync, statSync, type Dirent } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync, type Dirent } from 'node:fs'
 import path from 'node:path'
 
 export const AGENT_ZERO_OBSIDIAN_DEFAULT_VAULT = '/home/tony/obsidian-vault'
@@ -8,6 +8,9 @@ const MAX_SEARCH_RESULTS = 12
 const MAX_READ_BYTES = 120_000
 const MAX_CONTENT_PREVIEW_CHARS = 8000
 const MAX_SUMMARY_CHARS = 1400
+const MAX_WRITE_CHARS = 20_000
+const MAX_APPEND_CHARS = 6000
+const MAX_TAGS = 20
 const BLOCKED_SEGMENTS = new Set([
   '.git',
   '.obsidian',
@@ -87,6 +90,38 @@ export type AgentZeroObsidianSummaryResult = {
   blockers: string[]
 }
 
+export type AgentZeroObsidianWriteAction =
+  | 'create_note'
+  | 'update_note'
+  | 'append_report_summary'
+  | 'tag_note'
+  | 'link_task_report'
+
+export type AgentZeroObsidianWriteResult = {
+  ok: boolean
+  mode: 'agent_zero_obsidian_bridge_write_adapter'
+  action: AgentZeroObsidianWriteAction
+  status: AgentZeroObsidianAdapterStatus
+  note: {
+    title: string
+    relative_path: string
+    modified_at: string | null
+    size_bytes: number
+    tags?: string[]
+  } | null
+  read_only: false
+  write_enabled: true
+  execution_enabled: true
+  bridge_session_required: true
+  direct_filesystem_exposed: false
+  raw_content_returned: false
+  private_dump_returned: false
+  audit_required: true
+  blockers: string[]
+  normal_reply: string
+  no_fake_done: true
+}
+
 type NoteMetadata = {
   title: string
   relative_path: string
@@ -147,6 +182,40 @@ function cleanContentPreview(content: string): string {
   return redactSensitive(stripFrontmatter(content)).trim()
 }
 
+function cleanWriteContent(content: string, maxChars = MAX_WRITE_CHARS): string {
+  return redactSensitive(String(content || '').replace(/\0/g, '')).trim().slice(0, maxChars)
+}
+
+function slugify(value: string): string {
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72)
+  return slug || 'agent-zero-note'
+}
+
+function normalizeTag(value: string): string | null {
+  const tag = String(value || '')
+    .replace(/^#+/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_/-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+  if (!tag || tag.startsWith('/') || tag.includes('..') || hasBlockedSegment(tag)) return null
+  return tag
+}
+
+function normalizeTags(input: unknown): string[] {
+  const raw = Array.isArray(input)
+    ? input
+    : typeof input === 'string'
+      ? input.split(/[,\s]+/)
+      : []
+  return Array.from(new Set(raw.map((item) => normalizeTag(String(item))).filter((item): item is string => Boolean(item)))).slice(0, MAX_TAGS)
+}
+
 function extractTitle(content: string, fallbackPath: string): string {
   const frontmatter = content.match(/^---\n([\s\S]*?)\n---/)
   const frontmatterTitle = frontmatter?.[1]?.match(/^title:\s*(.+)$/mi)?.[1]
@@ -175,6 +244,153 @@ function resolveSafeNotePath(relativePath: string, root?: string): string {
   const stat = lstatSync(fullPath)
   if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('obsidian_note_not_readable')
   return fullPath
+}
+
+function assertNoSymlinkPath(base: string, relativePath: string): void {
+  let current = base
+  for (const segment of normalizeRelativePath(relativePath).split('/').filter(Boolean)) {
+    current = path.join(current, segment)
+    if (!existsSync(current)) continue
+    const stat = lstatSync(current)
+    if (stat.isSymbolicLink()) throw new Error('obsidian_path_symlink_blocked')
+  }
+}
+
+function resolveSafeWritableNotePath(input: { relativePath: string; root?: string; mustExist: boolean }): string {
+  const base = vaultRoot(input.root)
+  const normalized = normalizeRelativePath(input.relativePath)
+  if (!normalized || normalized.includes('\0') || normalized.includes('..') || hasBlockedSegment(normalized)) {
+    throw new Error('obsidian_path_blocked')
+  }
+  if (!normalized.toLowerCase().endsWith('.md')) throw new Error('obsidian_note_must_be_markdown')
+  const fullPath = path.resolve(base, normalized)
+  if (!isWithin(base, fullPath)) throw new Error('obsidian_path_escapes_vault')
+  assertNoSymlinkPath(base, normalized)
+  if (input.mustExist) {
+    const stat = lstatSync(fullPath)
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('obsidian_note_not_writable')
+  }
+  return fullPath
+}
+
+function createRelativePath(input: { path?: string | null; title?: string | null }): string {
+  const providedPath = input.path?.trim()
+  if (providedPath) {
+    const normalized = normalizeRelativePath(providedPath)
+    return normalized.toLowerCase().endsWith('.md') ? normalized : `${normalized}.md`
+  }
+  const title = String(input.title || 'Agent Zero Note').trim().slice(0, 160) || 'Agent Zero Note'
+  return `Agent Zero/${slugify(title)}.md`
+}
+
+function noteWriteMetadata(fullPath: string, relativePath: string, content?: string): NonNullable<AgentZeroObsidianWriteResult['note']> {
+  const stat = statSync(fullPath)
+  return {
+    title: extractTitle(content ?? readFileSync(fullPath, 'utf8').slice(0, 12000), relativePath),
+    relative_path: normalizeRelativePath(relativePath),
+    modified_at: Number.isFinite(stat.mtimeMs) ? new Date(stat.mtimeMs).toISOString() : null,
+    size_bytes: stat.size,
+  }
+}
+
+function writeBlocked(action: AgentZeroObsidianWriteAction, blocker: string): AgentZeroObsidianWriteResult {
+  return {
+    ok: false,
+    mode: 'agent_zero_obsidian_bridge_write_adapter',
+    action,
+    status: 'blocked',
+    note: null,
+    read_only: false,
+    write_enabled: true,
+    execution_enabled: true,
+    bridge_session_required: true,
+    direct_filesystem_exposed: false,
+    raw_content_returned: false,
+    private_dump_returned: false,
+    audit_required: true,
+    blockers: [blocker],
+    normal_reply: 'Obsidian write is blocked.',
+    no_fake_done: true,
+  }
+}
+
+function writeSuccess(action: AgentZeroObsidianWriteAction, note: NonNullable<AgentZeroObsidianWriteResult['note']>, tags?: string[]): AgentZeroObsidianWriteResult {
+  return {
+    ok: true,
+    mode: 'agent_zero_obsidian_bridge_write_adapter',
+    action,
+    status: 'connected',
+    note: tags ? { ...note, tags } : note,
+    read_only: false,
+    write_enabled: true,
+    execution_enabled: true,
+    bridge_session_required: true,
+    direct_filesystem_exposed: false,
+    raw_content_returned: false,
+    private_dump_returned: false,
+    audit_required: true,
+    blockers: [],
+    normal_reply: 'Done. I updated the Obsidian note through the Bridge adapter.',
+    no_fake_done: true,
+  }
+}
+
+function requireVault(root?: string): { ok: true; base: string } | { ok: false; blocker: string } {
+  const status = getAgentZeroObsidianStatus(root)
+  if (!status.ok) return { ok: false, blocker: status.blockers[0] || 'obsidian_vault_missing_or_unreadable' }
+  return { ok: true, base: vaultRoot(root) }
+}
+
+function contentWithFrontmatter(input: { title: string; body: string; tags?: string[] }): string {
+  const tags = normalizeTags(input.tags)
+  return [
+    '---',
+    `title: ${input.title.replace(/[\r\n]/g, ' ').slice(0, 160)}`,
+    'created_by: agent_zero_bridge_adapter',
+    `created_at: ${new Date().toISOString()}`,
+    ...(tags.length ? [`tags: [${tags.join(', ')}]`] : []),
+    '---',
+    '',
+    `# ${input.title.replace(/[\r\n]/g, ' ').slice(0, 160)}`,
+    '',
+    input.body,
+    '',
+  ].join('\n')
+}
+
+function readExistingNote(input: { path?: string | null; title?: string | null; root?: string }): NoteMetadata | null {
+  return findNoteByPathOrTitle(input)
+}
+
+function parseSimpleTags(frontmatter: string): string[] {
+  const line = frontmatter.match(/^tags:\s*(.+)$/mi)?.[1]
+  if (!line) return []
+  return normalizeTags(line.replace(/^\[|\]$/g, '').split(','))
+}
+
+function addTagsToContent(content: string, tags: string[]): { content: string; tags: string[] } {
+  const nextTags = normalizeTags(tags)
+  const frontmatter = content.match(/^---\n([\s\S]*?)\n---\n?/)
+  if (!frontmatter) {
+    return {
+      content: ['---', `tags: [${nextTags.join(', ')}]`, '---', '', content].join('\n'),
+      tags: nextTags,
+    }
+  }
+  const existingTags = parseSimpleTags(frontmatter[1])
+  const merged = Array.from(new Set([...existingTags, ...nextTags])).slice(0, MAX_TAGS)
+  const body = content.slice(frontmatter[0].length)
+  const frontmatterBody = /^tags:\s*.+$/mi.test(frontmatter[1])
+    ? frontmatter[1].replace(/^tags:\s*.+$/mi, `tags: [${merged.join(', ')}]`)
+    : `${frontmatter[1].trimEnd()}\ntags: [${merged.join(', ')}]`
+  return {
+    content: ['---', frontmatterBody, '---', body.replace(/^\n?/, '\n')].join('\n'),
+    tags: merged,
+  }
+}
+
+function appendSection(input: { content: string; heading: string; body: string }): string {
+  return `${input.content.replace(/\s*$/g, '')}\n\n## ${input.heading.replace(/[\r\n#]/g, ' ').trim().slice(0, 120)}\n\n${input.body.trim()}\n`
 }
 
 function listNotes(root?: string): NoteMetadata[] {
@@ -470,5 +686,156 @@ export function summarizeAgentZeroObsidianNote(input: {
     execution_enabled: false,
     direct_filesystem_exposed: false,
     blockers: [],
+  }
+}
+
+export function createAgentZeroObsidianNote(input: {
+  path?: string | null
+  title?: string | null
+  content?: string | null
+  tags?: unknown
+  root?: string
+}): AgentZeroObsidianWriteResult {
+  const vault = requireVault(input.root)
+  if (!vault.ok) return writeBlocked('create_note', vault.blocker)
+  const title = String(input.title || 'Agent Zero Note').replace(/[\r\n]/g, ' ').trim().slice(0, 160) || 'Agent Zero Note'
+  const relativePath = createRelativePath({ path: input.path, title })
+  const body = cleanWriteContent(input.content || '')
+  if (!body) return writeBlocked('create_note', 'obsidian_note_content_required')
+  try {
+    const fullPath = resolveSafeWritableNotePath({ relativePath, root: input.root, mustExist: false })
+    if (existsSync(fullPath)) return writeBlocked('create_note', 'obsidian_note_already_exists')
+    mkdirSync(path.dirname(fullPath), { recursive: true, mode: 0o700 })
+    const content = contentWithFrontmatter({ title, body, tags: normalizeTags(input.tags) })
+    writeFileSync(fullPath, content, { mode: 0o600, flag: 'wx' })
+    return writeSuccess('create_note', noteWriteMetadata(fullPath, relativePath, content), normalizeTags(input.tags))
+  } catch (error) {
+    return writeBlocked('create_note', error instanceof Error ? error.message : 'obsidian_note_create_failed')
+  }
+}
+
+export function updateAgentZeroObsidianNote(input: {
+  path?: string | null
+  title?: string | null
+  content?: string | null
+  root?: string
+}): AgentZeroObsidianWriteResult {
+  const vault = requireVault(input.root)
+  if (!vault.ok) return writeBlocked('update_note', vault.blocker)
+  const content = cleanWriteContent(input.content || '')
+  if (!content) return writeBlocked('update_note', 'obsidian_note_content_required')
+  try {
+    const note = readExistingNote({ path: input.path, title: input.title, root: input.root })
+    if (!note) return writeBlocked('update_note', 'safe_note_not_found_by_path_or_title')
+    const fullPath = resolveSafeWritableNotePath({ relativePath: note.relative_path, root: input.root, mustExist: true })
+    const title = String(input.title || note.title).replace(/[\r\n]/g, ' ').trim().slice(0, 160) || note.title
+    const next = contentWithFrontmatter({ title, body: content })
+    writeFileSync(fullPath, next, { mode: 0o600 })
+    return writeSuccess('update_note', noteWriteMetadata(fullPath, note.relative_path, next))
+  } catch (error) {
+    return writeBlocked('update_note', error instanceof Error ? error.message : 'obsidian_note_update_failed')
+  }
+}
+
+export function appendAgentZeroObsidianReportSummary(input: {
+  path?: string | null
+  title?: string | null
+  summary?: string | null
+  reportId?: string | null
+  reportUrl?: string | null
+  root?: string
+}): AgentZeroObsidianWriteResult {
+  const vault = requireVault(input.root)
+  if (!vault.ok) return writeBlocked('append_report_summary', vault.blocker)
+  const summary = cleanWriteContent(input.summary || '', MAX_APPEND_CHARS)
+  if (!summary) return writeBlocked('append_report_summary', 'obsidian_report_summary_required')
+  try {
+    const note = readExistingNote({ path: input.path, title: input.title, root: input.root })
+    if (!note) return writeBlocked('append_report_summary', 'safe_note_not_found_by_path_or_title')
+    const fullPath = resolveSafeWritableNotePath({ relativePath: note.relative_path, root: input.root, mustExist: true })
+    const current = readFileSync(fullPath, 'utf8')
+    const reportLine = input.reportUrl
+      ? `Report: ${redactSensitive(input.reportUrl).slice(0, 300)}`
+      : input.reportId
+        ? `Report: ${String(input.reportId).replace(/[^a-zA-Z0-9_.:-]/g, '').slice(0, 120)}`
+        : null
+    const next = appendSection({
+      content: current,
+      heading: 'Agent Zero Report Summary',
+      body: [
+        `Appended: ${new Date().toISOString()}`,
+        reportLine,
+        '',
+        summary,
+      ].filter((line): line is string => line !== null).join('\n'),
+    })
+    writeFileSync(fullPath, next, { mode: 0o600 })
+    return writeSuccess('append_report_summary', noteWriteMetadata(fullPath, note.relative_path, next))
+  } catch (error) {
+    return writeBlocked('append_report_summary', error instanceof Error ? error.message : 'obsidian_report_summary_append_failed')
+  }
+}
+
+export function tagAgentZeroObsidianNote(input: {
+  path?: string | null
+  title?: string | null
+  tags?: unknown
+  root?: string
+}): AgentZeroObsidianWriteResult {
+  const vault = requireVault(input.root)
+  if (!vault.ok) return writeBlocked('tag_note', vault.blocker)
+  const tags = normalizeTags(input.tags)
+  if (tags.length === 0) return writeBlocked('tag_note', 'obsidian_tags_required')
+  try {
+    const note = readExistingNote({ path: input.path, title: input.title, root: input.root })
+    if (!note) return writeBlocked('tag_note', 'safe_note_not_found_by_path_or_title')
+    const fullPath = resolveSafeWritableNotePath({ relativePath: note.relative_path, root: input.root, mustExist: true })
+    const current = readFileSync(fullPath, 'utf8')
+    const tagged = addTagsToContent(current, tags)
+    writeFileSync(fullPath, tagged.content, { mode: 0o600 })
+    return writeSuccess('tag_note', noteWriteMetadata(fullPath, note.relative_path, tagged.content), tagged.tags)
+  } catch (error) {
+    return writeBlocked('tag_note', error instanceof Error ? error.message : 'obsidian_note_tag_failed')
+  }
+}
+
+export function linkAgentZeroObsidianNoteToTaskReport(input: {
+  path?: string | null
+  title?: string | null
+  taskId?: string | number | null
+  reportId?: string | null
+  reportUrl?: string | null
+  linkTitle?: string | null
+  root?: string
+}): AgentZeroObsidianWriteResult {
+  const vault = requireVault(input.root)
+  if (!vault.ok) return writeBlocked('link_task_report', vault.blocker)
+  const taskId = input.taskId === null || input.taskId === undefined
+    ? null
+    : String(input.taskId).replace(/[^a-zA-Z0-9_.:-]/g, '').slice(0, 120)
+  const reportId = input.reportId ? String(input.reportId).replace(/[^a-zA-Z0-9_.:-]/g, '').slice(0, 120) : null
+  const reportUrl = input.reportUrl ? redactSensitive(input.reportUrl).slice(0, 300) : null
+  const linkTitle = input.linkTitle ? String(input.linkTitle).replace(/[\[\]\r\n|]/g, '').trim().slice(0, 120) : null
+  if (!taskId && !reportId && !reportUrl && !linkTitle) return writeBlocked('link_task_report', 'obsidian_task_or_report_link_required')
+  try {
+    const note = readExistingNote({ path: input.path, title: input.title, root: input.root })
+    if (!note) return writeBlocked('link_task_report', 'safe_note_not_found_by_path_or_title')
+    const fullPath = resolveSafeWritableNotePath({ relativePath: note.relative_path, root: input.root, mustExist: true })
+    const current = readFileSync(fullPath, 'utf8')
+    const next = appendSection({
+      content: current,
+      heading: 'Agent Zero Task and Report Link',
+      body: [
+        `Linked: ${new Date().toISOString()}`,
+        taskId ? `Task: ${taskId}` : null,
+        reportId ? `Report ID: ${reportId}` : null,
+        reportUrl ? `Report: ${reportUrl}` : null,
+        linkTitle ? `Related note: [[${linkTitle}]]` : null,
+      ].filter((line): line is string => line !== null).join('\n'),
+    })
+    writeFileSync(fullPath, next, { mode: 0o600 })
+    return writeSuccess('link_task_report', noteWriteMetadata(fullPath, note.relative_path, next))
+  } catch (error) {
+    return writeBlocked('link_task_report', error instanceof Error ? error.message : 'obsidian_task_report_link_failed')
   }
 }

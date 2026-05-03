@@ -17,6 +17,13 @@ import {
   verifyAgentZeroOneDriveLink,
 } from './agent-zero-onedrive-delivery'
 import {
+  appendAgentZeroObsidianReportSummary,
+  createAgentZeroObsidianNote,
+  linkAgentZeroObsidianNoteToTaskReport,
+  tagAgentZeroObsidianNote,
+  updateAgentZeroObsidianNote,
+} from './agent-zero-obsidian-adapter'
+import {
   readLatestAgentZeroBridgeSession,
   recordAgentZeroBridgeSessionAudit,
   type AgentZeroBridgeSessionObject,
@@ -76,6 +83,7 @@ export type AgentZeroExecutionGatewayInput = {
   action: string
   input?: Record<string, unknown>
   reportRoot?: string
+  obsidianRoot?: string
   now?: Date
 }
 
@@ -433,18 +441,160 @@ const ADAPTERS: AdapterDefinition[] = [
     ),
   },
   {
-    action: 'obsidian.write',
+    action: 'obsidian.note.create',
     category: 'obsidian_adapter',
-    label: 'Obsidian write',
-    description: 'Write adapter placeholder. It blocks unless a separately enabled Obsidian write adapter exists.',
-    status: 'blocked',
+    label: 'Create Obsidian note',
+    description: 'Creates one safe Markdown note inside the configured Obsidian vault through the adapter.',
+    status: 'available',
     execution_enabled: true,
     writes_enabled: true,
     bridge_session_required: true,
-    allowed_scope_keys: ['obsidian.write_adapter'],
-    blocked_reason: 'obsidian_write_adapter_not_enabled',
+    allowed_scope_keys: ['obsidian.write_adapter', 'obsidian.note.create'],
+    blocked_reason: null,
     safety: SAFETY,
-    handler: async () => blockedResult('Obsidian write is blocked because the write adapter is not enabled.', 'obsidian_write_adapter_not_enabled'),
+    handler: async (request) => {
+      const result = createAgentZeroObsidianNote({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+        content: stringInput(request.input, 'content') || null,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'obsidian_note_create_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.update',
+    category: 'obsidian_adapter',
+    label: 'Update Obsidian note',
+    description: 'Replaces one safe Markdown note through the Obsidian adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.write_adapter', 'obsidian.note.update'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = updateAgentZeroObsidianNote({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+        content: stringInput(request.input, 'content') || null,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'obsidian_note_update_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.append_report_summary',
+    category: 'obsidian_adapter',
+    label: 'Append report summary to Obsidian note',
+    description: 'Appends a bounded report summary section to one safe Markdown note.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.write_adapter', 'obsidian.note.append_report_summary'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = appendAgentZeroObsidianReportSummary({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+        summary: stringInput(request.input, 'summary') || null,
+        reportId: stringInput(request.input, 'report_id') || null,
+        reportUrl: stringInput(request.input, 'report_url') || null,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'obsidian_report_summary_append_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.tag',
+    category: 'obsidian_adapter',
+    label: 'Tag Obsidian note',
+    description: 'Adds safe tags to one Markdown note through the Obsidian adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.write_adapter', 'obsidian.note.tag'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = tagAgentZeroObsidianNote({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+        tags: request.input?.tags,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'obsidian_note_tag_failed', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.link_task_report',
+    category: 'obsidian_adapter',
+    label: 'Link Obsidian note to task or report',
+    description: 'Appends safe task/report reference metadata to one Markdown note.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.write_adapter', 'obsidian.note.link_task_report'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = linkAgentZeroObsidianNoteToTaskReport({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+        taskId: stringInput(request.input, 'task_id') || null,
+        reportId: stringInput(request.input, 'report_id') || null,
+        reportUrl: stringInput(request.input, 'report_url') || null,
+        linkTitle: stringInput(request.input, 'link_title') || null,
+      })
+      return result.ok
+        ? {
+            ok: true,
+            status: 'completed',
+            normal_reply: result.normal_reply,
+            blocked_reason: null,
+            result: result as unknown as Record<string, unknown>,
+          }
+        : blockedResult(result.normal_reply, result.blockers[0] || 'obsidian_task_report_link_failed', result as unknown as Record<string, unknown>)
+    },
   },
   {
     action: 'mempalace.write',

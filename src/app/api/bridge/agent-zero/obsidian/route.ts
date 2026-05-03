@@ -36,6 +36,14 @@ export async function GET(request: NextRequest) {
         read_safe_note_by_path_or_title: true,
         summarize_note: true,
         write_enabled: false,
+        bridge_session_write_gateway: '/api/bridge/agent-zero/execute',
+        bridge_session_write_actions: [
+          'obsidian.note.create',
+          'obsidian.note.update',
+          'obsidian.note.append_report_summary',
+          'obsidian.note.tag',
+          'obsidian.note.link_task_report',
+        ],
         direct_filesystem_exposed: false,
       },
     }))

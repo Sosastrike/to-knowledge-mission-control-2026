@@ -138,7 +138,7 @@ const DEFAULT_ALLOWED_INTEGRATIONS = [
   'telegram_status_delivery_if_route_configured',
 ]
 const DEFAULT_ALLOWED_MODELS = ['openrouter_if_configured', 'openai_if_configured', 'anthropic_if_configured', 'gemini_if_configured', 'groq_if_configured', 'local_models_if_configured']
-const DEFAULT_ALLOWED_BRAIN_ACCESS = ['brain_sync.status', 'obsidian.read_adapter', 'mempalace.read_adapter', 'graphify.status', 'brain_watchers.status']
+const DEFAULT_ALLOWED_BRAIN_ACCESS = ['brain_sync.status', 'obsidian.read_adapter', 'obsidian.write_adapter', 'mempalace.read_adapter', 'graphify.status', 'brain_watchers.status']
 const BLOCKED_SCOPES = ['broad_shell', 'docker_socket', 'root_system_access', 'credential_exfiltration', 'auth_bypass', 'smb_mount_without_separate_smb_phase', 'memory_write_without_explicit_owner_scope']
 
 function isoNow(now = new Date()): string {

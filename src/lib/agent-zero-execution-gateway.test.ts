@@ -92,6 +92,14 @@ function approveSession(db: Database.Database) {
 
 const tempRoots: string[] = []
 
+function makeObsidianVault() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'az-gateway-obsidian-'))
+  fs.mkdirSync(path.join(root, 'Agent Zero'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'Agent Zero', 'Existing.md'), '# Existing\n\nOriginal content.\n')
+  tempRoots.push(root)
+  return root
+}
+
 afterEach(() => {
   for (const dir of tempRoots.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true })
@@ -214,6 +222,62 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(mcp.status).toBe('blocked')
     expect(mcp.blocked_reason).toBe('mcp_tool_execution_adapter_not_configured')
     expect(mcp.result).toMatchObject({ tool_invoked: false })
+  })
+
+  it('writes Obsidian notes only through an active scoped Bridge Session adapter', async () => {
+    const db = setupDb()
+    const blocked = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      action: 'obsidian.note.create',
+      obsidianRoot: makeObsidianVault(),
+      input: { path: 'Agent Zero/Blocked.md', title: 'Blocked', content: 'no session' },
+    })
+    expect(blocked.ok).toBe(false)
+    expect(blocked.http_status).toBe(423)
+    expect(blocked.blocked_reason).toBe('active_bridge_session_required')
+
+    const sessionId = approveSession(db)
+    const root = makeObsidianVault()
+    const created = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'obsidian.note.create',
+      obsidianRoot: root,
+      input: {
+        path: 'Agent Zero/New Note.md',
+        title: 'New Note',
+        content: 'Created through Bridge Session. api_key=do-not-leak',
+        tags: ['agent-zero'],
+      },
+    })
+
+    expect(created.ok).toBe(true)
+    expect(created.status).toBe('completed')
+    expect(created.result).toMatchObject({
+      action: 'create_note',
+      direct_filesystem_exposed: false,
+      raw_content_returned: false,
+      private_dump_returned: false,
+      audit_required: true,
+    })
+    expect(JSON.stringify(created)).not.toContain(root)
+    expect(JSON.stringify(created)).not.toContain('do-not-leak')
+
+    const tagged = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'obsidian.note.tag',
+      obsidianRoot: root,
+      input: { path: 'Agent Zero/New Note.md', tags: ['release-proof'] },
+    })
+    expect(tagged.ok).toBe(true)
+    expect(tagged.result).toMatchObject({ action: 'tag_note' })
+
+    const auditCount = (db.prepare(`SELECT COUNT(*) AS count FROM bridge_session_audit_events WHERE action LIKE 'obsidian.note.%'`).get() as { count: number }).count
+    expect(auditCount).toBe(4)
   })
 
   it('rejects unknown and unsafe action names', async () => {

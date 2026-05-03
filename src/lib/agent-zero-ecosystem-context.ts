@@ -1653,7 +1653,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       readAdapter: obsidianAdapterConnected
         ? 'available'
         : brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? 'available' : 'status_only',
-      writeAdapter: 'blocked',
+      writeAdapter: obsidianAdapterConnected ? 'available' : 'blocked',
       readContentEnabled: obsidianAdapterConnected || (brainContractBySource.get('obsidian')?.current_status === 'read_ready' && brainContextReachable),
       pathStatus: obsidianAdapterStatus.vault_path_status === 'present' ? 'present' : pathStatusFromDetails(obsidianDetails, ['vault_path']),
       indexStatus: obsidianAdapterStatus.indexed || obsidianMdFiles !== null ? 'visible' : 'unknown',
@@ -1666,16 +1666,24 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
         '/api/bridge/agent-zero/obsidian?action=read&path=...|title=...',
         '/api/bridge/agent-zero/obsidian?action=summarize&path=...|title=...',
       ],
-      availableWriteApis: [],
+      availableWriteApis: obsidianAdapterConnected
+        ? [
+            '/api/bridge/agent-zero/execute action=obsidian.note.create',
+            '/api/bridge/agent-zero/execute action=obsidian.note.update',
+            '/api/bridge/agent-zero/execute action=obsidian.note.append_report_summary',
+            '/api/bridge/agent-zero/execute action=obsidian.note.tag',
+            '/api/bridge/agent-zero/execute action=obsidian.note.link_task_report',
+          ]
+        : [],
       blockers: [
-        'obsidian_writes_disabled',
+        ...(obsidianAdapterConnected ? [] : ['obsidian_write_adapter_blocked']),
         ...(obsidianAdapterConnected || brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? [] : ['obsidian_content_read_adapter_not_proven']),
         ...obsidianAdapterStatus.blockers,
       ],
       summary: obsidianAdapterConnected
-        ? `Obsidian read-only adapter is connected with ${obsidianAdapterStatus.note_count} safe markdown notes visible.`
+        ? `Obsidian adapter is connected with ${obsidianAdapterStatus.note_count} safe markdown notes visible. Writes require an active Agent Zero Bridge Session and the execution gateway.`
         : obsidianSync?.summary || brainContextBySource.get('obsidian')?.detail || 'Obsidian status is not visible.',
-      notes: 'Filesystem/vault presence is not the same as direct Agent Zero filesystem access. Agent Zero can use only the Mission Control Obsidian adapter and proxy/status/context surfaces.',
+      notes: 'Filesystem/vault presence is not direct Agent Zero filesystem access. Agent Zero can write only through the Mission Control Obsidian adapter after Bridge Session approval; every write is audited by the execution gateway.',
     }),
     brainSourceRegistryItem({
       id: 'mempalace',

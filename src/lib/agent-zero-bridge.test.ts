@@ -568,6 +568,19 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.opencloud_buildwiki.direct_opencloud_access_visible).toBe(false)
     expect(context.opencloud_buildwiki.farmer_execution_enabled).toBe(false)
     expect(context.opencloud_buildwiki.timer_active).toBe(true)
+    expect(context.opencloud_buildwiki.routes.status).toMatchObject({ method: 'GET', read_only: true, execution_enabled: false })
+    expect(context.opencloud_buildwiki.routes.run_now_create).toMatchObject({ method: 'POST', read_only: false, execution_enabled: false, requires_bridge_session: true })
+    expect(context.opencloud_buildwiki.run_now).toMatchObject({
+      action: 'buildwiki.run_now',
+      target_service: 'opencloud-docs-farmer.service',
+      owner_approval_required: true,
+      bridge_session_required: true,
+      execution_enabled: false,
+      dispatch_scope: 'opencloud-docs-farmer.service',
+    })
+    expect(context.opencloud_buildwiki.fork_state.fork1).toMatchObject({ state: 'visible', execution_enabled: false, scope: 'opencloud-docs-farmer.service' })
+    expect(context.opencloud_buildwiki.fork_state.fork2).toMatchObject({ state: 'blocked', smb_mounted: false, execution_enabled: false })
+    expect(context.opencloud_buildwiki.smb).toMatchObject({ required_for_fork2: true, mounted: false, mount_status: 'blocked' })
     expect(context.delivery.external_delivery_writes_enabled).toBe(false)
     expect(context.bridge_session.execution_enabled).toBe(false)
     expect(context.bridge_session.blocked_scopes).toContain('docker_socket')

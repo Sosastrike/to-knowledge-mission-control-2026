@@ -6,7 +6,14 @@ import { getMcpServerTools } from '@/lib/mcp-server-tool-schemas'
 import { getZapierToolBridge, type ZapierToolRecord } from '@/lib/zapier-tool-bridge'
 import { getAllModels } from '@/lib/models'
 import { getDatabase } from '@/lib/db'
-import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
+import {
+  BUILDWIKI_ACTION_RUN_NOW,
+  BUILDWIKI_CONNECTOR,
+  BUILDWIKI_TARGET_KEY,
+  BUILDWIKI_TARGET_SERVICE,
+  deriveRunNowUiState,
+  readLatestRunNow,
+} from '@/lib/build-wiki-run-now'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
@@ -18,6 +25,7 @@ import {
   type AgentZeroBrainPathStatus,
   type AgentZeroBrainSourceRegistryItem,
   type AgentZeroBrainWatchersSummary,
+  type AgentZeroBuildWikiFarmerSummary,
   type AgentZeroIntegrationCapability,
   type AgentZeroModelProviderStatus,
   type AgentZeroModelProviderSummary,
@@ -435,6 +443,193 @@ function readSkillRegistry(): SkillRegistryReadResult {
   return {
     items: deduped,
     sources: Array.from(sourceMap.values()).sort((a, b) => `${a.source}:${a.label}`.localeCompare(`${b.source}:${b.label}`)),
+  }
+}
+
+function parseSystemctlShow(text: string): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const line of text.split('\n')) {
+    const index = line.indexOf('=')
+    if (index <= 0) continue
+    out[line.slice(0, index)] = line.slice(index + 1)
+  }
+  return out
+}
+
+function systemdTimestamp(value: string | undefined): string | null {
+  if (!value || value === '0' || value === 'n/a') return null
+  return value
+}
+
+function systemdActiveBoolean(value: string | undefined): boolean | null {
+  if (!value) return null
+  return value === 'active'
+}
+
+function readSmbMountState(): { mounted: boolean; mount_status: EcosystemAccessState; blocker: string } {
+  try {
+    const mounts = readFileSync('/proc/mounts', 'utf8')
+    const mounted = mounts
+      .split('\n')
+      .some((line) => /\s(cifs|smb3|smbfs)\s/i.test(line))
+    return {
+      mounted,
+      mount_status: mounted ? 'visible' : 'blocked',
+      blocker: mounted ? 'smb_mount_visible_read_only' : 'smb_mount_not_verified',
+    }
+  } catch {
+    return { mounted: false, mount_status: 'unknown', blocker: 'smb_mount_status_unavailable' }
+  }
+}
+
+function lastRunAccessState(result: string, exitStatus: number | null, startedAt: string | null): EcosystemAccessState {
+  if (!startedAt) return 'unknown'
+  if (result === 'success' && (exitStatus === null || exitStatus === 0)) return 'connected'
+  if (result && result !== 'success' && result !== 'unknown') return 'blocked'
+  return 'visible'
+}
+
+async function readBuildWikiFarmerStatus(input: {
+  latestRunNow: ReturnType<typeof readLatestRunNow>
+  runState: ReturnType<typeof deriveRunNowUiState>
+}): Promise<AgentZeroBuildWikiFarmerSummary> {
+  const [timerText, serviceText] = await Promise.all([
+    execFileText('systemctl', [
+      '--user',
+      'show',
+      'opencloud-docs-farmer.timer',
+      '--no-pager',
+      '-p',
+      'ActiveState',
+      '-p',
+      'UnitFileState',
+      '-p',
+      'NextElapseUSecRealtime',
+      '-p',
+      'LastTriggerUSec',
+    ], 2500),
+    execFileText('systemctl', [
+      '--user',
+      'show',
+      'opencloud-docs-farmer.service',
+      '--no-pager',
+      '-p',
+      'ActiveState',
+      '-p',
+      'SubState',
+      '-p',
+      'Result',
+      '-p',
+      'ExecMainStatus',
+      '-p',
+      'ExecMainStartTimestamp',
+      '-p',
+      'ExecMainExitTimestamp',
+    ], 2500),
+  ])
+  const timer = parseSystemctlShow(timerText)
+  const service = parseSystemctlShow(serviceText)
+  const timerActive = systemdActiveBoolean(timer.ActiveState)
+  const serviceActive = systemdActiveBoolean(service.ActiveState)
+  const exitStatus = service.ExecMainStatus !== undefined && service.ExecMainStatus !== ''
+    ? Number(service.ExecMainStatus)
+    : null
+  const normalizedExitStatus = Number.isFinite(exitStatus) ? exitStatus : null
+  const lastStartedAt = systemdTimestamp(service.ExecMainStartTimestamp)
+  const lastExitedAt = systemdTimestamp(service.ExecMainExitTimestamp)
+  const lastResult = service.Result || 'unknown'
+  const smb = readSmbMountState()
+  const approval = input.latestRunNow.approval
+  const run = input.latestRunNow.run
+  const runNowBlockedReason = approval?.approval_state === 'pending'
+    ? 'owner_approval_pending'
+    : input.runState.ui_state === 'approved'
+      ? 'bridge_session_dispatch_required'
+      : 'buildwiki_run_now_requires_bridge_session_and_owner_approval'
+
+  return {
+    status: timer.ActiveState || service.ActiveState ? 'visible' : 'unknown',
+    direct_opencloud_access_visible: false,
+    build_wiki_status_visible: true,
+    read_only: true,
+    routes: {
+      status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
+      files: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/files', read_only: true, execution_enabled: false, requires_bridge_session: false },
+      logs: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/logs', read_only: true, execution_enabled: false, requires_bridge_session: false },
+      run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },
+      run_now_read: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}', read_only: true, execution_enabled: false, requires_bridge_session: false },
+      run_now_dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch', read_only: false, execution_enabled: false, requires_bridge_session: true },
+    },
+    farmer_service: BUILDWIKI_TARGET_SERVICE,
+    farmer_timer: 'opencloud-docs-farmer.timer',
+    timer_active: timerActive,
+    timer: {
+      unit: 'opencloud-docs-farmer.timer',
+      active: timerActive,
+      active_state: timer.ActiveState || 'unknown',
+      unit_file_state: timer.UnitFileState || null,
+      next_run_at: systemdTimestamp(timer.NextElapseUSecRealtime),
+      last_trigger_at: systemdTimestamp(timer.LastTriggerUSec),
+    },
+    service: {
+      unit: BUILDWIKI_TARGET_SERVICE,
+      active: serviceActive,
+      active_state: service.ActiveState || 'unknown',
+      sub_state: service.SubState || 'unknown',
+      last_result: lastResult,
+      last_exit_status: normalizedExitStatus,
+      last_started_at: lastStartedAt,
+      last_exited_at: lastExitedAt,
+    },
+    last_run: {
+      status: lastRunAccessState(lastResult, normalizedExitStatus, lastStartedAt),
+      result: lastResult,
+      exit_status: normalizedExitStatus,
+      started_at: lastStartedAt,
+      completed_at: lastExitedAt,
+      source: 'systemd_user_service',
+    },
+    run_now: {
+      action: BUILDWIKI_ACTION_RUN_NOW,
+      connector: BUILDWIKI_CONNECTOR,
+      target_service: BUILDWIKI_TARGET_SERVICE,
+      ui_state: input.runState.ui_state,
+      approval_state: approval?.approval_state || null,
+      run_state: run?.run_state || null,
+      approval_id: approval?.id || null,
+      persistence_ready: input.latestRunNow.persistence_ready,
+      owner_approval_required: true,
+      bridge_session_required: true,
+      execution_enabled: false,
+      dispatch_scope: BUILDWIKI_TARGET_KEY,
+      blocked_reason: runNowBlockedReason,
+    },
+    fork_state: {
+      fork1: {
+        state: 'visible',
+        label: 'local_buildwiki_farmer',
+        status_visible: true,
+        execution_enabled: false,
+        approval_required: true,
+        scope: BUILDWIKI_TARGET_SERVICE,
+      },
+      fork2: {
+        state: smb.mounted ? 'visible' : 'blocked',
+        label: 'smb_external_farmer',
+        smb_mounted: smb.mounted,
+        execution_enabled: false,
+        approval_required: true,
+        blocker: smb.mounted ? 'smb_mount_visible_but_fork2_execution_still_requires_owner_approval' : smb.blocker,
+      },
+    },
+    smb: {
+      required_for_fork2: true,
+      mounted: smb.mounted,
+      mount_status: smb.mount_status,
+      blocker: smb.mounted ? 'smb_mount_visible_but_fork2_not_enabled' : smb.blocker,
+    },
+    farmer_execution_enabled: false,
+    note: 'Agent Zero can see Build-Wiki/Farmer status only. Run Now requires a Bridge Session and owner approval, dispatch stays scoped to opencloud-docs-farmer.service, and SMB/Fork 2 remains blocked unless an SMB mount is verified and separately approved.',
   }
 }
 
@@ -1023,6 +1218,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const brainContractBySource = new Map(brainSourceContracts.map((contract) => [String(contract.source || '').toLowerCase(), contract]))
   const latestRunNow = readLatestRunNow()
   const runState = deriveRunNowUiState(latestRunNow.approval, latestRunNow.run)
+  const buildWikiFarmerStatus = await readBuildWikiFarmerStatus({ latestRunNow, runState })
   const skillNames = readSkillNames()
   const oneDriveVisible = hasOneDriveTool(Array.from(toolSet))
   const googleDriveVisible = Array.from(toolSet).some((tool) => tool.includes('google_drive') || tool.includes('google_drive_upload_file'))
@@ -1894,6 +2090,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     brainIndexStatus,
     timerActive,
     latestBuildWikiRunState: runState.ui_state,
+    buildWikiFarmerStatus,
     bridgeSessionAvailable: latestRunNow.persistence_ready,
   })
 }

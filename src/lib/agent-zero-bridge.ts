@@ -277,6 +277,84 @@ export type AgentZeroBrainIndexSummary = {
   blockers: string[]
 }
 
+export type AgentZeroBuildWikiFarmerSummary = {
+  status: EcosystemAccessState
+  direct_opencloud_access_visible: boolean
+  build_wiki_status_visible: boolean
+  read_only: true
+  routes: Record<string, { method: 'GET' | 'POST'; path: string; read_only: boolean; execution_enabled: false; requires_bridge_session: boolean }>
+  farmer_service: string
+  farmer_timer: string
+  timer_active: boolean | null
+  timer: {
+    unit: string
+    active: boolean | null
+    active_state: string
+    unit_file_state: string | null
+    next_run_at: string | null
+    last_trigger_at: string | null
+  }
+  service: {
+    unit: string
+    active: boolean | null
+    active_state: string
+    sub_state: string
+    last_result: string
+    last_exit_status: number | null
+    last_started_at: string | null
+    last_exited_at: string | null
+  }
+  last_run: {
+    status: EcosystemAccessState
+    result: string
+    exit_status: number | null
+    started_at: string | null
+    completed_at: string | null
+    source: 'systemd_user_service'
+  }
+  run_now: {
+    action: 'buildwiki.run_now'
+    connector: 'skill.build_wiki'
+    target_service: 'opencloud-docs-farmer.service'
+    ui_state: string | null
+    approval_state: string | null
+    run_state: string | null
+    approval_id: string | null
+    persistence_ready: boolean
+    owner_approval_required: true
+    bridge_session_required: true
+    execution_enabled: false
+    dispatch_scope: 'opencloud-docs-farmer.service'
+    blocked_reason: string | null
+  }
+  fork_state: {
+    fork1: {
+      state: EcosystemAccessState
+      label: 'local_buildwiki_farmer'
+      status_visible: boolean
+      execution_enabled: false
+      approval_required: true
+      scope: 'opencloud-docs-farmer.service'
+    }
+    fork2: {
+      state: EcosystemAccessState
+      label: 'smb_external_farmer'
+      smb_mounted: boolean
+      execution_enabled: false
+      approval_required: true
+      blocker: string
+    }
+  }
+  smb: {
+    required_for_fork2: true
+    mounted: boolean
+    mount_status: EcosystemAccessState
+    blocker: string
+  }
+  farmer_execution_enabled: false
+  note: string
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: false
   bridge_session_required: true
@@ -452,17 +530,7 @@ export type AgentZeroReadOnlyContext = {
     graphify_status: EcosystemAccessState
     memory_writes_enabled: false
   }
-  opencloud_buildwiki: {
-    status: EcosystemAccessState
-    direct_opencloud_access_visible: boolean
-    build_wiki_status_visible: boolean
-    farmer_service: string
-    farmer_timer: string
-    timer_active: boolean | null
-    latest_run_state: string | null
-    farmer_execution_enabled: false
-    note: string
-  }
+  opencloud_buildwiki: AgentZeroBuildWikiFarmerSummary
   delivery: {
     report_pdf_delivery_status: EcosystemAccessState
     telegram_reports_visible: boolean
@@ -763,6 +831,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   brainIndexStatus?: AgentZeroBrainIndexSummary
   timerActive?: boolean | null
   latestBuildWikiRunState?: string | null
+  buildWikiFarmerStatus?: AgentZeroBuildWikiFarmerSummary
   bridgeSessionAvailable?: boolean
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || []).filter(Boolean))).sort()
@@ -1195,16 +1264,85 @@ export function buildAgentZeroReadOnlyContext(input: {
       graphify_status: graphifyStatus,
       memory_writes_enabled: false,
     },
-    opencloud_buildwiki: {
+    opencloud_buildwiki: input.buildWikiFarmerStatus || {
       status: 'visible',
       direct_opencloud_access_visible: false,
       build_wiki_status_visible: true,
+      read_only: true,
+      routes: {
+        status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
+        run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },
+      },
       farmer_service: 'opencloud-docs-farmer.service',
       farmer_timer: 'opencloud-docs-farmer.timer',
       timer_active: typeof input.timerActive === 'boolean' ? input.timerActive : null,
-      latest_run_state: input.latestBuildWikiRunState || null,
+      timer: {
+        unit: 'opencloud-docs-farmer.timer',
+        active: typeof input.timerActive === 'boolean' ? input.timerActive : null,
+        active_state: typeof input.timerActive === 'boolean' ? (input.timerActive ? 'active' : 'inactive') : 'unknown',
+        unit_file_state: null,
+        next_run_at: null,
+        last_trigger_at: null,
+      },
+      service: {
+        unit: 'opencloud-docs-farmer.service',
+        active: null,
+        active_state: 'unknown',
+        sub_state: 'unknown',
+        last_result: 'unknown',
+        last_exit_status: null,
+        last_started_at: null,
+        last_exited_at: null,
+      },
+      last_run: {
+        status: 'unknown',
+        result: 'unknown',
+        exit_status: null,
+        started_at: null,
+        completed_at: null,
+        source: 'systemd_user_service',
+      },
+      run_now: {
+        action: 'buildwiki.run_now',
+        connector: 'skill.build_wiki',
+        target_service: 'opencloud-docs-farmer.service',
+        ui_state: input.latestBuildWikiRunState || null,
+        approval_state: null,
+        run_state: null,
+        approval_id: null,
+        persistence_ready: Boolean(input.bridgeSessionAvailable),
+        owner_approval_required: true,
+        bridge_session_required: true,
+        execution_enabled: false,
+        dispatch_scope: 'opencloud-docs-farmer.service',
+        blocked_reason: 'buildwiki_run_now_requires_owner_approval',
+      },
+      fork_state: {
+        fork1: {
+          state: 'visible',
+          label: 'local_buildwiki_farmer',
+          status_visible: true,
+          execution_enabled: false,
+          approval_required: true,
+          scope: 'opencloud-docs-farmer.service',
+        },
+        fork2: {
+          state: 'blocked',
+          label: 'smb_external_farmer',
+          smb_mounted: false,
+          execution_enabled: false,
+          approval_required: true,
+          blocker: 'smb_mount_not_verified',
+        },
+      },
+      smb: {
+        required_for_fork2: true,
+        mounted: false,
+        mount_status: 'blocked',
+        blocker: 'smb_mount_not_verified',
+      },
       farmer_execution_enabled: false,
-      note: 'Mission Control exposes Build-Wiki/Farmer status read-only; this does not grant direct OpenCloud file access or permission to run the farmer.',
+      note: 'Mission Control exposes Build-Wiki/Farmer status read-only; Run Now requires an owner-approved Bridge Session and is scoped only to opencloud-docs-farmer.service. Fork 2 remains blocked until SMB is mounted and verified.',
     },
     delivery: {
       report_pdf_delivery_status: 'visible',

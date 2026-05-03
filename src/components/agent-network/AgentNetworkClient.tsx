@@ -2432,7 +2432,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
     <div className={styles.externalCard}>
       <div className={styles.externalHead}>
         <strong className={styles.externalTitle}>{agent.name || 'Hermes'}</strong>
-        <span className={styles.externalBadge}>{install.installed ? 'Sandbox specialist' : 'Not installed'}</span>
+        <span className={styles.externalBadge}>{install.installed ? 'Lieutenant pending' : 'Not installed'}</span>
       </div>
       <p className={styles.externalDescription}>
         Lieutenant / skill and workflow specialist. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval and live health proof.

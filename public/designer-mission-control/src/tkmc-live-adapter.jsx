@@ -23,33 +23,45 @@
 
   const PROVIDER_META = {
     tony: {
-      tier: 'commander',
+      tier: 'archive',
       kind: 'agent',
-      role: 'Commander / owner operational lead',
-      cluster: 'ClaudeClaw',
-      icon: 'Crown',
-      badge: 'Commander',
+      role: 'Retired commander archive',
+      cluster: 'Archive',
+      icon: 'Archive',
+      badge: 'Retired · hidden',
       locked: true,
-      memory: 'full',
+      memory: 'none',
+      hidden: true,
+    },
+    tony_legacy: {
+      tier: 'archive',
+      kind: 'agent',
+      role: 'Retired commander archive',
+      cluster: 'Archive',
+      icon: 'Archive',
+      badge: 'Retired · hidden',
+      locked: true,
+      memory: 'none',
+      hidden: true,
     },
     agent_zero: {
       tier: 'commander',
       kind: 'agent',
-      role: 'Supervisor / reviewer',
+      role: 'Commander / ecosystem lead',
       cluster: 'Agent Zero',
       icon: 'ShieldCheck',
-      badge: 'Supervisor',
+      badge: 'Commander',
       locked: true,
       memory: 'read',
     },
     hermes: {
-      tier: 'specialist',
+      tier: 'lieutenant',
       kind: 'agent',
-      role: 'Skill and workflow specialist',
+      role: 'Lieutenant / skill and workflow specialist',
       cluster: 'Hermes/Hermit',
       icon: 'Sparkles',
-      badge: 'Sandbox specialist',
-      memory: 'none',
+      badge: 'Lieutenant · pending',
+      memory: 'scoped',
     },
     openrouter: {
       tier: 'tool',
@@ -262,17 +274,17 @@
       permissions: kind === 'agent' ? ['observe', 'recommend', 'review'] : ['observe'],
       capabilities: kind === 'agent' ? ['observe', 'recommend', 'review'] : ['status', 'health'],
       engines: [],
-      reports_to: id === 'tony' ? null : 'tony',
-      supervises: id === 'tony' ? ['agent_zero', 'hermes'] : [],
-      handoff_targets: id === 'tony' ? ['agent_zero', 'hermes'] : ['tony'],
+      reports_to: id === 'agent_zero' ? 'owner' : id === 'hermes' ? 'agent_zero' : id === 'tony' || id === 'tony_legacy' ? null : 'agent_zero',
+      supervises: id === 'agent_zero' ? ['hermes'] : [],
+      handoff_targets: id === 'agent_zero' ? ['hermes'] : id === 'tony' || id === 'tony_legacy' ? [] : ['agent_zero', 'hermes'],
       cost_today: 0,
       token_usage_today: 0,
       model_provider: provider.category === 'model_provider' ? id : null,
       default_model: provider.detail?.model || provider.detail?.default_model || null,
-      risk_level: id === 'tony' || id === 'agent_zero' ? 'high' : provider.next_action ? 'medium' : 'low',
+      risk_level: id === 'agent_zero' ? 'high' : id === 'tony' || id === 'tony_legacy' ? 'low' : provider.next_action ? 'medium' : 'low',
       approval_required_actions: ['credentials', 'memory_write', 'governance_change', 'service_restart', 'deploy', 'external_access'],
       memory_access_level: meta.memory || 'none',
-      brain_sync_enabled: id === 'tony' || id === 'agent_zero' || id === 'hermes',
+      brain_sync_enabled: id === 'agent_zero' || id === 'hermes',
       harness_routing_enabled: true,
       source_of_truth: 'mission-control-api',
       confidence_level: provider.state === 'active' || provider.state === 'configured' ? 0.95 : 0.72,
@@ -280,10 +292,12 @@
       last_sync_at: provider.last_checked ? new Date(provider.last_checked * 1000).toISOString() : state.loadedAt,
       created_at: state.loadedAt,
       updated_at: state.loadedAt,
-      color_token: id === 'tony' ? '--accent' : undefined,
+      color_token: id === 'agent_zero' ? '--accent' : undefined,
       icon: meta.icon || 'Plug',
       badge: meta.badge || provider.state || 'Provider',
       locked: !!meta.locked,
+      hidden: !!meta.hidden,
+      archived: id === 'tony' || id === 'tony_legacy',
       endpoint: provider.detail?.endpoint || null,
       x_position: 8 + slot * 84,
       y_position: laneY,
@@ -403,7 +417,9 @@
 
   function buildRegistrySnapshot(payloads) {
     const providers = payloads.providers?.providers || [];
-    const providerNodes = providers.map((provider, index) => mapProviderNode(provider, index, providers.length));
+    const providerNodes = providers
+      .map((provider, index) => mapProviderNode(provider, index, providers.length))
+      .filter((node) => !node.hidden && node.status !== 'retired' && node.id !== 'tony' && node.id !== 'tony_legacy');
 
     const health = payloads.health;
     const memory = payloads.memory;

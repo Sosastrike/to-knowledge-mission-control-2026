@@ -62,9 +62,13 @@ describe('Agent Zero read-only bridge connector', () => {
   it('builds a read-only Mission Control context and refuses execution claims', () => {
     const context = buildAgentZeroReadOnlyContext({
       providerIds: ['tony', 'agent_zero', 'zapier'],
+      providerRegistry: [
+        { id: 'agent_zero', name: 'Agent Zero', state: 'connected', category: 'agent', execution_enabled: false, direct_access: false, proxy_access: true },
+        { id: 'openrouter', name: 'OpenRouter', state: 'visible', category: 'model_provider', execution_enabled: false, direct_access: false, proxy_access: true },
+      ],
       agents: [
-        { id: 'tony', status: 'active', role: 'runtime', execution_enabled: true },
-        { id: 'agent_zero', status: 'connected', role: 'reviewer', execution_enabled: false },
+        { id: 'tony', status: 'active', role: 'runtime', execution_enabled: false, direct_access: false, proxy_access: true },
+        { id: 'agent_zero', status: 'connected', role: 'reviewer', execution_enabled: false, direct_access: false, proxy_access: true },
       ],
       modelCatalog: [
         { alias: 'sonnet', provider: 'anthropic', name: 'anthropic/claude-sonnet-4-6' },
@@ -72,10 +76,21 @@ describe('Agent Zero read-only bridge connector', () => {
       ],
       skillNames: ['browser-use', 'documents'],
       integrationItems: [
-        { id: 'mission_control', status: 'reachable', visibility: 'visible', execution_enabled: false, writes_enabled: false },
-        { id: 'google_drive', status: 'visible_via_zapier_schema', visibility: 'visible', execution_enabled: false, writes_enabled: false },
+        { id: 'mission_control', status: 'reachable', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
+        { id: 'google_drive', status: 'visible_via_zapier_schema', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
       ],
-      mcpServers: ['zapier'],
+      toolRegistry: [
+        { id: 'mcp.zapier.tools.schema', status: 'connected', source: 'mcp_schema_passthrough', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
+        { id: 'build_wiki.farmer.status', status: 'visible', source: 'mission_control_build_wiki', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
+      ],
+      mcpServers: [{ name: 'zapier', status: 'connected', transport: 'http', tool_count: 42 }],
+      mcpToolSchemaSummary: {
+        tools_total: 42,
+        schema_available: true,
+        required_fields: ['instructions'],
+        write_tools_total: 30,
+        read_tools_total: 12,
+      },
       mcpVisible: true,
       zapierVisible: true,
       zapierToolsTotal: 42,
@@ -95,12 +110,25 @@ describe('Agent Zero read-only bridge connector', () => {
 
     expect(context.mission_control.execution_enabled).toBe(false)
     expect(context.mission_control.writes_enabled).toBe(false)
+    expect(context.execution_enabled).toBe(false)
+    expect(context.bridge_session_required).toBe(true)
+    expect(context.mission_control.status).toBe('connected')
+    expect(context.mission_control.direct_access).toBe(false)
+    expect(context.mission_control.proxy_access).toBe(true)
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/ecosystem')
     expect(context.bridge.providers).toEqual(['agent_zero', 'tony', 'zapier'])
+    expect(context.bridge.provider_registry.find((provider) => provider.id === 'agent_zero')?.execution_enabled).toBe(false)
     expect(context.bridge.mcp_servers).toEqual(['zapier'])
+    expect(context.mcp.servers[0]).toMatchObject({ name: 'zapier', access: 'connected', tool_count: 42 })
+    expect(context.mcp.tool_schema_summary.tools_total).toBe(42)
+    expect(context.mcp.tool_schema_summary.required_fields).toContain('instructions')
+    expect(context.mcp.execution_enabled).toBe(false)
+    expect(context.mcp.writes_enabled).toBe(false)
     expect(context.agents.items.find((agent) => agent.id === 'agent_zero')?.execution_enabled).toBe(false)
+    expect(context.agents.items.find((agent) => agent.id === 'tony')?.execution_enabled).toBe(false)
     expect(context.models.providers).toContain('openai')
     expect(context.skills.writes_enabled).toBe(false)
+    expect(context.tools.registry.find((tool) => tool.id === 'mcp.zapier.tools.schema')?.execution_enabled).toBe(false)
     expect(context.tools.google_drive_visible).toBe(true)
     expect(context.tools.onedrive_visible).toBe(false)
     expect(context.tools.execution_enabled).toBe(false)
@@ -118,6 +146,8 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('Do not run tools')
     expect(prompt).toContain('Bridge Session execution is not active')
     expect(prompt).toContain('Do not enumerate your internal Agent Zero tools')
+    expect(prompt).toContain('direct access versus Mission Control proxy')
     expect(prompt).toContain('"heygen_schema_visible":true')
+    expect(prompt).toContain('"execution_enabled":false')
   })
 })

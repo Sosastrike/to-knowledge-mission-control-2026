@@ -42,17 +42,41 @@ export type AgentZeroRuntimeProbe = {
   error: string | null
 }
 
+export type EcosystemAccessState =
+  | 'connected'
+  | 'configured'
+  | 'visible'
+  | 'blocked'
+  | 'not_connected'
+  | 'unknown'
+
 export type AgentZeroReadOnlyContext = {
+  execution_enabled: false
+  bridge_session_required: true
   mission_control: {
     visible: true
+    status: EcosystemAccessState
     mode: 'read_only_bridge_context'
     execution_enabled: false
     writes_enabled: false
+    direct_access: false
+    proxy_access: true
+    auth_required: true
     surfaces: string[]
   }
   bridge: {
     providers: string[]
     provider_count: number
+    provider_registry: Array<{
+      id: string
+      name: string
+      state: string
+      category: string
+      access: EcosystemAccessState
+      execution_enabled: boolean
+      direct_access: boolean
+      proxy_access: boolean
+    }>
     mcp_visible: boolean
     zapier_visible: boolean
     heygen_visible: boolean
@@ -60,17 +84,42 @@ export type AgentZeroReadOnlyContext = {
     mcp_servers: string[]
     mcp_tools_visible: boolean
   }
+  mcp: {
+    visible: boolean
+    status: EcosystemAccessState
+    servers: Array<{
+      name: string
+      status: string
+      transport: string
+      tool_count: number | null
+      access: EcosystemAccessState
+    }>
+    tool_schema_summary: {
+      tools_total: number
+      schema_available: boolean
+      required_fields: string[]
+      write_tools_total: number
+      read_tools_total: number
+    }
+    execution_enabled: false
+    writes_enabled: false
+    direct_tool_execution_enabled: false
+  }
   agents: {
     visible: true
+    registry_status: EcosystemAccessState
     items: Array<{
       id: string
       status: string
       role: string
       execution_enabled: boolean
+      direct_access: boolean
+      proxy_access: boolean
     }>
   }
   models: {
     visible: true
+    registry_status: EcosystemAccessState
     total: number
     providers: string[]
     catalog: Array<{
@@ -78,15 +127,27 @@ export type AgentZeroReadOnlyContext = {
       provider: string
       name: string
     }>
+    openrouter_status: EcosystemAccessState
   }
   skills: {
     visible: boolean
+    registry_status: EcosystemAccessState
     total: number
     sample: string[]
     writes_enabled: false
   }
   tools: {
     visible: boolean
+    registry_status: EcosystemAccessState
+    registry: Array<{
+      id: string
+      status: EcosystemAccessState
+      source: string
+      direct_access: boolean
+      proxy_access: boolean
+      execution_enabled: boolean
+      writes_enabled: boolean
+    }>
     zapier_tools_total: number
     google_drive_visible: boolean
     onedrive_visible: boolean
@@ -96,27 +157,38 @@ export type AgentZeroReadOnlyContext = {
   }
   integrations: {
     visible: true
+    registry_status: EcosystemAccessState
     items: Array<{
       id: string
       status: string
       visibility: 'configured' | 'visible' | 'blocked' | 'unknown'
+      direct_access: boolean
+      proxy_access: boolean
       execution_enabled: boolean
       writes_enabled: boolean
     }>
   }
   brain: {
     visible: boolean
+    system_status: EcosystemAccessState
     sources: Array<{
       source: string
       status: string
       summary: string
+      access: EcosystemAccessState
+      direct_access: boolean
+      proxy_access: boolean
     }>
     obsidian_visible: boolean
+    obsidian_status: EcosystemAccessState
     mempalace_visible: boolean
+    mempalace_status: EcosystemAccessState
     graphify_visible: boolean
+    graphify_status: EcosystemAccessState
     memory_writes_enabled: false
   }
   opencloud_buildwiki: {
+    status: EcosystemAccessState
     direct_opencloud_access_visible: boolean
     build_wiki_status_visible: boolean
     farmer_service: string
@@ -127,10 +199,13 @@ export type AgentZeroReadOnlyContext = {
     note: string
   }
   delivery: {
+    report_pdf_delivery_status: EcosystemAccessState
     telegram_reports_visible: boolean
     mission_control_reports_visible: boolean
     google_drive_delivery_visible: boolean
+    google_drive_status: EcosystemAccessState
     onedrive_delivery_visible: boolean
+    onedrive_status: EcosystemAccessState
     external_delivery_writes_enabled: false
   }
   bridge_session: {
@@ -157,6 +232,25 @@ export type AgentZeroReadOnlyMessageResult = {
   context_id: string | null
   raw_response_shape: string[]
   error: string | null
+}
+
+function stateToAccess(value: unknown): EcosystemAccessState {
+  const text = String(value || '').toLowerCase()
+  if (!text) return 'unknown'
+  if (/(active|healthy|ready|connected|reachable|ok|success)/.test(text)) return 'connected'
+  if (/(configured|schema|available)/.test(text)) return 'configured'
+  if (/(visible|read_only|degraded|partial|backup|sandbox)/.test(text)) return 'visible'
+  if (/(missing|blocked|not_visible|not_connected|unavailable|failed|error|denied|locked)/.test(text)) return 'blocked'
+  return 'unknown'
+}
+
+function brainSourceStatus(
+  sources: Array<{ source: string; status: string }>,
+  name: string,
+): EcosystemAccessState {
+  const source = sources.find((item) => item.source.toLowerCase() === name)
+  if (!source) return 'blocked'
+  return stateToAccess(source.status)
 }
 
 type EnvLike = Record<string, string | undefined>
@@ -288,11 +382,14 @@ export async function probeAgentZeroRuntime(baseUrl = getAgentZeroBaseUrl()): Pr
 
 export function buildAgentZeroReadOnlyContext(input: {
   providerIds?: string[]
-  agents?: Array<{ id: string; status?: string; role?: string; execution_enabled?: boolean }>
+  providerRegistry?: Array<{ id?: string; name?: string; state?: string; category?: string; execution_enabled?: boolean; direct_access?: boolean; proxy_access?: boolean }>
+  agents?: Array<{ id: string; status?: string; role?: string; execution_enabled?: boolean; direct_access?: boolean; proxy_access?: boolean }>
   modelCatalog?: Array<{ alias: string; provider: string; name: string }>
   skillNames?: string[]
-  integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; execution_enabled?: boolean; writes_enabled?: boolean }>
-  mcpServers?: string[]
+  integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
+  toolRegistry?: Array<{ id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
+  mcpServers?: Array<{ name: string; status?: string; transport?: string; tool_count?: number | null }>
+  mcpToolSchemaSummary?: { tools_total?: number; schema_available?: boolean; required_fields?: string[]; write_tools_total?: number; read_tools_total?: number }
   mcpVisible?: boolean
   zapierVisible?: boolean
   zapierToolsTotal?: number
@@ -306,6 +403,16 @@ export function buildAgentZeroReadOnlyContext(input: {
   bridgeSessionAvailable?: boolean
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || []).filter(Boolean))).sort()
+  const providerRegistry = (input.providerRegistry || []).map((provider) => ({
+    id: String(provider.id || provider.name || ''),
+    name: String(provider.name || provider.id || ''),
+    state: String(provider.state || 'unknown'),
+    category: String(provider.category || 'provider'),
+    access: stateToAccess(provider.state || (provider.id || provider.name ? 'visible' : 'unknown')),
+    execution_enabled: Boolean(provider.execution_enabled),
+    direct_access: Boolean(provider.direct_access),
+    proxy_access: provider.proxy_access !== false,
+  })).filter((provider) => provider.id || provider.name)
   const modelCatalog = (input.modelCatalog || []).slice(0, 40)
   const modelProviders = Array.from(new Set(modelCatalog.map((model) => model.provider).filter(Boolean))).sort()
   const skillNames = Array.from(new Set((input.skillNames || []).filter(Boolean))).sort()
@@ -314,11 +421,15 @@ export function buildAgentZeroReadOnlyContext(input: {
     status: agent.status || 'unknown',
     role: agent.role || 'ecosystem agent',
     execution_enabled: Boolean(agent.execution_enabled),
+    direct_access: Boolean(agent.direct_access),
+    proxy_access: agent.proxy_access !== false,
   }))
   const integrations = (input.integrationItems || []).map((integration) => ({
     id: integration.id,
     status: integration.status || 'unknown',
     visibility: integration.visibility || 'unknown',
+    direct_access: Boolean(integration.direct_access),
+    proxy_access: integration.proxy_access !== false,
     execution_enabled: Boolean(integration.execution_enabled),
     writes_enabled: Boolean(integration.writes_enabled),
   }))
@@ -326,14 +437,53 @@ export function buildAgentZeroReadOnlyContext(input: {
     source: String(source.source || 'unknown'),
     status: String(source.status || source.raw_state || 'unknown'),
     summary: String(source.summary || ''),
+    access: stateToAccess(source.status || source.raw_state),
+    direct_access: false,
+    proxy_access: true,
   }))
-  const mcpServers = Array.from(new Set((input.mcpServers || []).filter(Boolean))).sort()
+  const mcpServers = (input.mcpServers || [])
+    .map((server) => ({
+      name: server.name,
+      status: server.status || 'unknown',
+      transport: server.transport || 'unknown',
+      tool_count: typeof server.tool_count === 'number' ? server.tool_count : null,
+      access: stateToAccess(server.status || 'unknown'),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const mcpToolSummary = {
+    tools_total: Number(input.mcpToolSchemaSummary?.tools_total || input.zapierToolsTotal || 0),
+    schema_available: Boolean(input.mcpToolSchemaSummary?.schema_available || input.heygenSchemaVisible),
+    required_fields: Array.from(new Set(input.mcpToolSchemaSummary?.required_fields || [])),
+    write_tools_total: Number(input.mcpToolSchemaSummary?.write_tools_total || 0),
+    read_tools_total: Number(input.mcpToolSchemaSummary?.read_tools_total || 0),
+  }
+  const toolRegistry = (input.toolRegistry || []).map((tool) => ({
+    id: tool.id,
+    status: tool.status || 'unknown',
+    source: tool.source || 'unknown',
+    direct_access: Boolean(tool.direct_access),
+    proxy_access: tool.proxy_access !== false,
+    execution_enabled: Boolean(tool.execution_enabled),
+    writes_enabled: Boolean(tool.writes_enabled),
+  }))
+  const openrouterStatus = input.integrationItems?.find((item) => item.id === 'openrouter')?.visibility === 'visible'
+    ? 'visible'
+    : providers.includes('openrouter') ? 'visible' : 'unknown'
+  const obsidianStatus = brainSourceStatus(brainSources, 'obsidian')
+  const mempalaceStatus = brainSourceStatus(brainSources, 'mempalace')
+  const graphifyStatus = brainSourceStatus(brainSources, 'graphify')
   return {
+    execution_enabled: false,
+    bridge_session_required: true,
     mission_control: {
       visible: true,
+      status: 'connected',
       mode: 'read_only_bridge_context',
       execution_enabled: false,
       writes_enabled: false,
+      direct_access: false,
+      proxy_access: true,
+      auth_required: true,
       surfaces: [
         '/api/bridge/agent-zero/status',
         '/api/bridge/agent-zero/test-chat',
@@ -348,19 +498,31 @@ export function buildAgentZeroReadOnlyContext(input: {
     bridge: {
       providers,
       provider_count: providers.length,
+      provider_registry: providerRegistry,
       mcp_visible: Boolean(input.mcpVisible),
       zapier_visible: Boolean(input.zapierVisible),
       heygen_visible: Boolean(input.heygenVisible),
       heygen_schema_visible: Boolean(input.heygenSchemaVisible),
-      mcp_servers: mcpServers,
+      mcp_servers: mcpServers.map((server) => server.name),
       mcp_tools_visible: Boolean(input.mcpVisible || input.zapierVisible || input.heygenVisible),
+    },
+    mcp: {
+      visible: Boolean(input.mcpVisible || mcpServers.length),
+      status: input.mcpVisible || mcpServers.length ? 'visible' : 'blocked',
+      servers: mcpServers,
+      tool_schema_summary: mcpToolSummary,
+      execution_enabled: false,
+      writes_enabled: false,
+      direct_tool_execution_enabled: false,
     },
     agents: {
       visible: true,
+      registry_status: agents.length > 0 ? 'visible' : 'unknown',
       items: agents,
     },
     models: {
       visible: true,
+      registry_status: modelCatalog.length > 0 ? 'visible' : 'unknown',
       total: modelCatalog.length,
       providers: modelProviders,
       catalog: modelCatalog.map((model) => ({
@@ -368,15 +530,19 @@ export function buildAgentZeroReadOnlyContext(input: {
         provider: model.provider,
         name: model.name,
       })),
+      openrouter_status: openrouterStatus as EcosystemAccessState,
     },
     skills: {
       visible: skillNames.length > 0,
+      registry_status: skillNames.length > 0 ? 'visible' : 'unknown',
       total: skillNames.length,
       sample: skillNames.slice(0, 25),
       writes_enabled: false,
     },
     tools: {
       visible: Boolean(input.mcpVisible || input.zapierVisible || input.heygenVisible || input.zapierToolsTotal),
+      registry_status: toolRegistry.length > 0 ? 'visible' : 'unknown',
+      registry: toolRegistry,
       zapier_tools_total: Number(input.zapierToolsTotal || 0),
       google_drive_visible: Boolean(input.googleDriveVisible),
       onedrive_visible: Boolean(input.oneDriveVisible),
@@ -386,17 +552,23 @@ export function buildAgentZeroReadOnlyContext(input: {
     },
     integrations: {
       visible: true,
+      registry_status: integrations.length > 0 ? 'visible' : 'unknown',
       items: integrations,
     },
     brain: {
       visible: brainSources.length > 0,
+      system_status: brainSources.length > 0 ? 'visible' : 'blocked',
       sources: brainSources,
-      obsidian_visible: brainSources.some((source) => source.source.toLowerCase() === 'obsidian' && source.status !== 'not_connected'),
-      mempalace_visible: brainSources.some((source) => source.source.toLowerCase() === 'mempalace' && source.status !== 'not_connected'),
-      graphify_visible: brainSources.some((source) => source.source.toLowerCase() === 'graphify' && source.status !== 'not_connected'),
+      obsidian_visible: obsidianStatus !== 'blocked' && obsidianStatus !== 'not_connected',
+      obsidian_status: obsidianStatus,
+      mempalace_visible: mempalaceStatus !== 'blocked' && mempalaceStatus !== 'not_connected',
+      mempalace_status: mempalaceStatus,
+      graphify_visible: graphifyStatus !== 'blocked' && graphifyStatus !== 'not_connected',
+      graphify_status: graphifyStatus,
       memory_writes_enabled: false,
     },
     opencloud_buildwiki: {
+      status: 'visible',
       direct_opencloud_access_visible: false,
       build_wiki_status_visible: true,
       farmer_service: 'opencloud-docs-farmer.service',
@@ -407,10 +579,13 @@ export function buildAgentZeroReadOnlyContext(input: {
       note: 'Mission Control exposes Build-Wiki/Farmer status read-only; this does not grant direct OpenCloud file access or permission to run the farmer.',
     },
     delivery: {
+      report_pdf_delivery_status: 'visible',
       telegram_reports_visible: true,
       mission_control_reports_visible: true,
       google_drive_delivery_visible: Boolean(input.googleDriveVisible),
+      google_drive_status: input.googleDriveVisible ? 'visible' : 'blocked',
       onedrive_delivery_visible: Boolean(input.oneDriveVisible),
+      onedrive_status: input.oneDriveVisible ? 'visible' : 'blocked',
       external_delivery_writes_enabled: false,
     },
     bridge_session: {
@@ -451,6 +626,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'Bridge Session execution is not active in this chat. If execution is requested, explain that a separate owner-approved Bridge Session and scoped adapter are required.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
+    'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',
     '',

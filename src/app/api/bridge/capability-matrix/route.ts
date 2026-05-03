@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
+import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -110,7 +111,10 @@ export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const providers = await loadProviderStatuses()
+  const [providers, agentZeroContext] = await Promise.all([
+    loadProviderStatuses(),
+    buildAgentZeroEcosystemContext(),
+  ])
 
   const agents: AgentCapability[] = [
     {
@@ -226,6 +230,8 @@ export async function GET(request: NextRequest) {
     agents,
     model_providers: modelProviders,
     tool_inventory: toolInventory,
+    live_registry: agentZeroContext.live_registry,
+    agent_zero_ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
     approval_gates: [
       'credentials',
       'memory writes',

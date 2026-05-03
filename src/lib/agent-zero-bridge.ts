@@ -359,6 +359,73 @@ export type AgentZeroBuildWikiFarmerSummary = {
   note: string
 }
 
+export const AGENT_ZERO_LIVE_REGISTRY_STATES = [
+  'connected',
+  'configured',
+  'read-only',
+  'write-enabled',
+  'blocked',
+  'missing credential',
+] as const
+
+export type AgentZeroLiveRegistryState = typeof AGENT_ZERO_LIVE_REGISTRY_STATES[number]
+
+export type AgentZeroLiveRegistryCategory =
+  | 'model'
+  | 'agent'
+  | 'tool'
+  | 'skill'
+  | 'mcp_server'
+  | 'integration'
+  | 'bridge_provider'
+  | 'brain_system'
+  | 'buildwiki_farmer'
+
+export type AgentZeroLiveRegistryItem = {
+  id: string
+  name: string
+  category: AgentZeroLiveRegistryCategory
+  states: AgentZeroLiveRegistryState[]
+  primary_state: AgentZeroLiveRegistryState
+  status_text: string
+  connected: boolean
+  configured: boolean
+  read_only: boolean
+  write_enabled: boolean
+  blocked: boolean
+  missing_credential: boolean
+  execution_enabled: boolean
+  requires_bridge_session: boolean
+  credential_present: boolean | null
+  credential_values_exposed: false
+  source: string
+  endpoint: string | null
+  blocked_reason: string | null
+  summary: string
+  counts?: Record<string, number | null>
+}
+
+export type AgentZeroLiveRegistry = {
+  mode: 'agent_zero_live_ecosystem_registry'
+  generated_at: string
+  vocabulary: AgentZeroLiveRegistryState[]
+  items: AgentZeroLiveRegistryItem[]
+  by_category: Record<AgentZeroLiveRegistryCategory, string[]>
+  required_items: string[]
+  missing_required_items: string[]
+  totals: {
+    items: number
+    connected: number
+    configured: number
+    read_only: number
+    write_enabled: number
+    blocked: number
+    missing_credential: number
+  }
+  secrets_exposed: false
+  execution_enabled: boolean
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: boolean
   bridge_session_required: boolean
@@ -574,6 +641,7 @@ export type AgentZeroReadOnlyContext = {
     allowed_scopes: string[]
     blocked_scopes: string[]
   }
+  live_registry: AgentZeroLiveRegistry
   restrictions: string[]
 }
 
@@ -881,6 +949,445 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
       : state === 'degraded'
         ? 'Fix Agent Zero API auth/test-chat before treating Agent Zero as connected.'
         : 'Restore Agent Zero Tailnet health before read-only ecosystem tests.',
+  }
+}
+
+const REQUIRED_AGENT_ZERO_LIVE_REGISTRY_ITEMS = [
+  'models',
+  'openrouter',
+  'agents',
+  'tools',
+  'skills',
+  'mcp_servers',
+  'integrations',
+  'bridge_providers',
+  'firecrawl',
+  'zapier',
+  'heygen',
+  'agentmail',
+  'google_drive',
+  'onedrive',
+  'telegram',
+  'whatsapp',
+  'obsidian',
+  'mempalace',
+  'graphify',
+  'buildwiki_farmer',
+] as const
+
+function accessIsVisible(value: unknown): boolean {
+  return /^(connected|configured|visible|active|ready|healthy)$/i.test(String(value || ''))
+}
+
+function accessIsBlocked(value: unknown): boolean {
+  return /^(blocked|missing|missing_credential|not_connected|disabled|offline|unavailable|unknown)$/i.test(String(value || ''))
+}
+
+function liveRegistryItem(input: {
+  id: string
+  name: string
+  category: AgentZeroLiveRegistryCategory
+  connected?: boolean
+  configured?: boolean
+  readOnly?: boolean
+  writeEnabled?: boolean
+  blocked?: boolean
+  missingCredential?: boolean
+  executionEnabled?: boolean
+  requiresBridgeSession?: boolean
+  credentialPresent?: boolean | null
+  source?: string
+  endpoint?: string | null
+  blockedReason?: string | null
+  summary?: string
+  counts?: Record<string, number | null>
+}): AgentZeroLiveRegistryItem {
+  const connected = Boolean(input.connected)
+  const configured = Boolean(input.configured)
+  const readOnly = input.readOnly !== false
+  const writeEnabled = Boolean(input.writeEnabled)
+  const missingCredential = Boolean(input.missingCredential)
+  const blocked = Boolean(input.blocked || missingCredential || (!connected && !configured && !readOnly && !writeEnabled))
+  const states = AGENT_ZERO_LIVE_REGISTRY_STATES.filter((state) => {
+    if (state === 'connected') return connected
+    if (state === 'configured') return configured
+    if (state === 'read-only') return readOnly
+    if (state === 'write-enabled') return writeEnabled
+    if (state === 'blocked') return blocked
+    if (state === 'missing credential') return missingCredential
+    return false
+  })
+  const effectiveStates = states.length > 0 ? states : ['blocked' as const]
+  const primaryState: AgentZeroLiveRegistryState = missingCredential
+    ? 'missing credential'
+    : blocked && !connected && !configured
+      ? 'blocked'
+      : writeEnabled
+        ? 'write-enabled'
+        : connected
+          ? 'connected'
+          : configured
+            ? 'configured'
+            : readOnly
+              ? 'read-only'
+              : 'blocked'
+
+  return {
+    id: input.id,
+    name: input.name,
+    category: input.category,
+    states: effectiveStates,
+    primary_state: primaryState,
+    status_text: effectiveStates.join(' / '),
+    connected,
+    configured,
+    read_only: readOnly,
+    write_enabled: writeEnabled,
+    blocked,
+    missing_credential: missingCredential,
+    execution_enabled: Boolean(input.executionEnabled),
+    requires_bridge_session: Boolean(input.requiresBridgeSession),
+    credential_present: input.credentialPresent ?? null,
+    credential_values_exposed: false,
+    source: input.source || 'mission_control_live_context',
+    endpoint: input.endpoint || null,
+    blocked_reason: input.blockedReason || null,
+    summary: input.summary || '',
+    ...(input.counts ? { counts: input.counts } : {}),
+  }
+}
+
+function integrationLiveRegistryItem(
+  capability: AgentZeroIntegrationCapability | undefined,
+  fallback: {
+    id: string
+    name: string
+    category?: AgentZeroLiveRegistryCategory
+    source?: string
+    endpoint?: string | null
+    blockedReason?: string
+  },
+): AgentZeroLiveRegistryItem {
+  return liveRegistryItem({
+    id: fallback.id,
+    name: fallback.name,
+    category: fallback.category || 'integration',
+    connected: capability?.status === 'connected',
+    configured: capability?.status === 'configured' || Boolean(capability?.credential_present),
+    readOnly: capability?.read_only ?? true,
+    writeEnabled: Boolean(capability?.write_enabled),
+    blocked: !capability || capability.status === 'blocked',
+    missingCredential: capability ? capability.missing_credential : true,
+    requiresBridgeSession: capability?.requires_bridge_session ?? true,
+    credentialPresent: capability ? capability.credential_present : false,
+    source: capability?.source || fallback.source || 'mission_control_integration_registry',
+    endpoint: fallback.endpoint || null,
+    blockedReason: capability?.blocked_reason || fallback.blockedReason || (!capability ? `${fallback.id}_not_registered` : null),
+    summary: capability?.notes || `${fallback.name} status comes from the live integration registry.`,
+    counts: { tools: capability?.tool_count ?? null },
+  })
+}
+
+function brainLiveRegistryItem(
+  source: AgentZeroBrainSourceRegistryItem | undefined,
+  fallback: { id: string; name: string; endpoint: string },
+): AgentZeroLiveRegistryItem {
+  const visible = Boolean(source && source.status_visible)
+  const readEnabled = Boolean(source?.read_content_enabled || source?.read_adapter === 'available' || source?.read_adapter === 'status_only')
+  const writeEnabled = Boolean(source?.write_adapter === 'available')
+  return liveRegistryItem({
+    id: fallback.id,
+    name: fallback.name,
+    category: 'brain_system',
+    connected: Boolean(source && accessIsVisible(source.status)),
+    configured: visible,
+    readOnly: readEnabled,
+    writeEnabled,
+    blocked: !source || accessIsBlocked(source.status),
+    missingCredential: false,
+    requiresBridgeSession: writeEnabled,
+    credentialPresent: null,
+    source: source ? 'mission_control_brain_registry' : 'mission_control_brain_registry_missing',
+    endpoint: fallback.endpoint,
+    blockedReason: source?.blockers?.[0] || (!source ? `${fallback.id}_not_visible` : null),
+    summary: source?.summary || `${fallback.name} is not visible through the live brain registry.`,
+    counts: {
+      read_apis: source?.available_read_apis?.length ?? 0,
+      write_apis: source?.available_write_apis?.length ?? 0,
+    },
+  })
+}
+
+function buildAgentZeroLiveRegistry(input: {
+  generatedAt: string
+  executionEnabled: boolean
+  providerRegistry: Array<{ id: string; name: string; state: string; category: string; access: EcosystemAccessState }>
+  agents: Array<{ id: string; status: string; role: string; execution_enabled: boolean }>
+  modelCatalog: Array<{ alias: string; provider: string; name: string }>
+  modelProviderRegistry: AgentZeroModelProviderSummary[]
+  skillNames: string[]
+  skillRegistry: AgentZeroSkillRegistryItem[]
+  integrationRegistry: AgentZeroIntegrationCapability[]
+  toolRegistry: AgentZeroToolRegistryItem[]
+  mcpServers: Array<{
+    name: string
+    status: string
+    tool_count: number | null
+    reachable: boolean
+    schema_available: boolean
+    blocked_reason: string | null
+    tools_endpoint: string
+  }>
+  mcpToolSummary: {
+    tools_total: number
+    schema_available: boolean
+    write_tools_total: number
+    read_tools_total: number
+  }
+  brainRegistry: AgentZeroBrainSourceRegistryItem[]
+  buildWikiFarmerStatus?: AgentZeroBuildWikiFarmerSummary
+  timerActive?: boolean | null
+}): AgentZeroLiveRegistry {
+  const integrationById = new Map(input.integrationRegistry.map((item) => [item.id, item]))
+  const brainById = new Map(input.brainRegistry.map((item) => [item.id, item]))
+  const openrouter = input.modelProviderRegistry.find((provider) => provider.id === 'openrouter')
+  const buildWiki = input.buildWikiFarmerStatus
+  const providerCount = input.providerRegistry.length
+  const connectedProviderCount = input.providerRegistry.filter((provider) => accessIsVisible(provider.access)).length
+  const connectedMcpCount = input.mcpServers.filter((server) => server.reachable).length
+  const connectedToolCount = input.toolRegistry.filter((tool) => accessIsVisible(tool.status)).length
+  const writeEnabledToolCount = input.toolRegistry.filter((tool) => tool.write_enabled).length
+  const blockedToolCount = input.toolRegistry.filter((tool) => tool.status === 'blocked').length
+  const connectedIntegrationCount = input.integrationRegistry.filter((item) => item.status === 'connected').length
+  const configuredIntegrationCount = input.integrationRegistry.filter((item) => item.status === 'configured').length
+  const writeEnabledIntegrationCount = input.integrationRegistry.filter((item) => item.write_enabled).length
+
+  const items: AgentZeroLiveRegistryItem[] = [
+    liveRegistryItem({
+      id: 'models',
+      name: 'Models',
+      category: 'model',
+      connected: input.modelCatalog.length > 0,
+      configured: input.modelProviderRegistry.length > 0,
+      readOnly: true,
+      blocked: input.modelCatalog.length === 0,
+      source: 'mission_control_model_registry',
+      endpoint: '/api/bridge/capability-matrix',
+      summary: 'Model catalog and provider status visible through Mission Control. Model execution requires a Bridge Session route.',
+      counts: { models: input.modelCatalog.length, providers: input.modelProviderRegistry.length },
+    }),
+    liveRegistryItem({
+      id: 'openrouter',
+      name: 'OpenRouter',
+      category: 'model',
+      connected: openrouter?.status === 'connected',
+      configured: openrouter?.status === 'configured' || Boolean(openrouter?.credential_present),
+      readOnly: true,
+      blocked: !openrouter || openrouter.status === 'blocked',
+      missingCredential: Boolean(openrouter && !openrouter.credential_present && openrouter.status === 'blocked'),
+      requiresBridgeSession: true,
+      credentialPresent: openrouter?.credential_present ?? false,
+      source: 'mission_control_model_provider_registry',
+      endpoint: '/api/bridge/capability-matrix',
+      blockedReason: openrouter?.blocked_reason || (!openrouter ? 'openrouter_provider_not_visible' : null),
+      summary: openrouter?.best_use_case || 'OpenRouter provider status is reported without exposing credentials.',
+      counts: { models: openrouter?.model_count ?? null },
+    }),
+    liveRegistryItem({
+      id: 'agents',
+      name: 'Agents',
+      category: 'agent',
+      connected: input.agents.length > 0,
+      configured: input.agents.length > 0,
+      readOnly: true,
+      blocked: input.agents.length === 0,
+      source: 'mission_control_agent_registry',
+      endpoint: '/api/bridge/providers',
+      summary: 'Agent Zero is the commander; Hermes is lieutenant only when health/read-only tests prove it; Tony is retired/archived.',
+      counts: { agents: input.agents.length },
+    }),
+    liveRegistryItem({
+      id: 'tools',
+      name: 'Tools',
+      category: 'tool',
+      connected: connectedToolCount > 0,
+      configured: input.toolRegistry.length > 0,
+      readOnly: true,
+      writeEnabled: writeEnabledToolCount > 0,
+      blocked: input.toolRegistry.length === 0,
+      source: 'mission_control_tool_registry',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+      summary: 'Tool metadata is live and read-only. Tool execution requires a Bridge Session and registered adapter.',
+      counts: { tools: input.toolRegistry.length, connected: connectedToolCount, write_enabled: writeEnabledToolCount, blocked: blockedToolCount },
+    }),
+    liveRegistryItem({
+      id: 'skills',
+      name: 'Skills',
+      category: 'skill',
+      connected: input.skillNames.length > 0 || input.skillRegistry.length > 0,
+      configured: input.skillNames.length > 0 || input.skillRegistry.length > 0,
+      readOnly: true,
+      blocked: input.skillNames.length === 0 && input.skillRegistry.length === 0,
+      source: 'mission_control_skill_registry',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+      summary: 'Skill metadata is visible; skill/script execution remains disabled unless an approved adapter exists.',
+      counts: { skills: input.skillNames.length || input.skillRegistry.length },
+    }),
+    liveRegistryItem({
+      id: 'mcp_servers',
+      name: 'MCP servers',
+      category: 'mcp_server',
+      connected: connectedMcpCount > 0,
+      configured: input.mcpServers.length > 0 || input.mcpToolSummary.tools_total > 0,
+      readOnly: true,
+      blocked: input.mcpServers.length === 0 && input.mcpToolSummary.tools_total === 0,
+      requiresBridgeSession: true,
+      source: 'mission_control_mcp_registry',
+      endpoint: '/api/mcp/list',
+      blockedReason: input.mcpServers.find((server) => server.blocked_reason)?.blocked_reason || null,
+      summary: 'MCP server and schema summaries are visible read-only; tool invocation is disabled from test chat.',
+      counts: { servers: input.mcpServers.length, tools: input.mcpToolSummary.tools_total, schema_visible: input.mcpToolSummary.schema_available ? 1 : 0 },
+    }),
+    liveRegistryItem({
+      id: 'integrations',
+      name: 'Integrations',
+      category: 'integration',
+      connected: connectedIntegrationCount > 0,
+      configured: connectedIntegrationCount + configuredIntegrationCount > 0,
+      readOnly: true,
+      writeEnabled: writeEnabledIntegrationCount > 0,
+      blocked: input.integrationRegistry.length === 0,
+      requiresBridgeSession: true,
+      source: 'mission_control_integration_registry',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+      summary: 'Integrations report connected/configured/blocked state only. External writes require a Bridge Session and adapter.',
+      counts: { integrations: input.integrationRegistry.length, connected: connectedIntegrationCount, configured: configuredIntegrationCount, write_enabled: writeEnabledIntegrationCount },
+    }),
+    liveRegistryItem({
+      id: 'bridge_providers',
+      name: 'Bridge providers',
+      category: 'bridge_provider',
+      connected: connectedProviderCount > 0,
+      configured: providerCount > 0,
+      readOnly: true,
+      blocked: providerCount === 0,
+      source: 'mission_control_bridge_provider_registry',
+      endpoint: '/api/bridge/providers',
+      summary: 'Bridge provider registry is visible through Mission Control. Agent Zero is active; Tony is hidden/archived.',
+      counts: { providers: providerCount, connected: connectedProviderCount },
+    }),
+    integrationLiveRegistryItem(integrationById.get('firecrawl'), {
+      id: 'firecrawl',
+      name: 'Firecrawl',
+      endpoint: '/api/firecrawl/status',
+    }),
+    integrationLiveRegistryItem(integrationById.get('zapier'), {
+      id: 'zapier',
+      name: 'Zapier',
+      endpoint: '/api/zapier/tools',
+    }),
+    integrationLiveRegistryItem(integrationById.get('heygen'), {
+      id: 'heygen',
+      name: 'HeyGen',
+      endpoint: '/api/bridge/zapier/tools/search?q=heygen',
+    }),
+    integrationLiveRegistryItem(integrationById.get('email'), {
+      id: 'agentmail',
+      name: 'AgentMail',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+      blockedReason: 'agentmail_provider_not_visible_or_configured',
+    }),
+    integrationLiveRegistryItem(integrationById.get('google_drive'), {
+      id: 'google_drive',
+      name: 'Google Drive',
+      endpoint: '/api/bridge/agent-zero/google-drive/status',
+    }),
+    integrationLiveRegistryItem(integrationById.get('onedrive'), {
+      id: 'onedrive',
+      name: 'OneDrive',
+      endpoint: '/api/bridge/agent-zero/onedrive/status',
+    }),
+    integrationLiveRegistryItem(integrationById.get('telegram'), {
+      id: 'telegram',
+      name: 'Telegram',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+    }),
+    integrationLiveRegistryItem(integrationById.get('whatsapp'), {
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      endpoint: '/api/bridge/agent-zero/ecosystem',
+    }),
+    brainLiveRegistryItem(brainById.get('obsidian'), {
+      id: 'obsidian',
+      name: 'Obsidian',
+      endpoint: '/api/bridge/brain-sync/status',
+    }),
+    brainLiveRegistryItem(brainById.get('mempalace'), {
+      id: 'mempalace',
+      name: 'MemPalace',
+      endpoint: '/api/bridge/brain-sync/status',
+    }),
+    brainLiveRegistryItem(brainById.get('graphify'), {
+      id: 'graphify',
+      name: 'Graphify',
+      endpoint: '/api/memory/graph',
+    }),
+    liveRegistryItem({
+      id: 'buildwiki_farmer',
+      name: 'Build-Wiki/Farmer',
+      category: 'buildwiki_farmer',
+      connected: Boolean(buildWiki && buildWiki.status !== 'blocked'),
+      configured: true,
+      readOnly: true,
+      blocked: buildWiki?.status === 'blocked',
+      requiresBridgeSession: true,
+      credentialPresent: null,
+      source: 'mission_control_buildwiki_farmer_status',
+      endpoint: '/api/bridge/brain-sync/build-wiki/status',
+      blockedReason: buildWiki?.run_now?.blocked_reason || null,
+      summary: 'Build-Wiki/Farmer status is visible. Run Now requires a Bridge Session and stays scoped to opencloud-docs-farmer.service.',
+      counts: { timer_active: input.timerActive === true ? 1 : 0 },
+    }),
+  ]
+
+  const categories: AgentZeroLiveRegistryCategory[] = [
+    'model',
+    'agent',
+    'tool',
+    'skill',
+    'mcp_server',
+    'integration',
+    'bridge_provider',
+    'brain_system',
+    'buildwiki_farmer',
+  ]
+  const by_category = categories.reduce((acc, category) => {
+    acc[category] = items.filter((item) => item.category === category).map((item) => item.id)
+    return acc
+  }, {} as Record<AgentZeroLiveRegistryCategory, string[]>)
+
+  const ids = new Set(items.map((item) => item.id))
+  const missingRequiredItems = REQUIRED_AGENT_ZERO_LIVE_REGISTRY_ITEMS.filter((item) => !ids.has(item))
+
+  return {
+    mode: 'agent_zero_live_ecosystem_registry',
+    generated_at: input.generatedAt,
+    vocabulary: [...AGENT_ZERO_LIVE_REGISTRY_STATES],
+    items,
+    by_category,
+    required_items: [...REQUIRED_AGENT_ZERO_LIVE_REGISTRY_ITEMS],
+    missing_required_items: missingRequiredItems,
+    totals: {
+      items: items.length,
+      connected: items.filter((item) => item.connected).length,
+      configured: items.filter((item) => item.configured).length,
+      read_only: items.filter((item) => item.read_only).length,
+      write_enabled: items.filter((item) => item.write_enabled).length,
+      blocked: items.filter((item) => item.blocked).length,
+      missing_credential: items.filter((item) => item.missing_credential).length,
+    },
+    secrets_exposed: false,
+    execution_enabled: input.executionEnabled,
   }
 }
 
@@ -1196,6 +1703,24 @@ export function buildAgentZeroReadOnlyContext(input: {
   } satisfies AgentZeroBrainIndexSummary
   const bridgeSession = input.bridgeSession
   const bridgeSessionActive = Boolean(bridgeSession?.execution_enabled && bridgeSession.status === 'active')
+  const generatedAt = new Date().toISOString()
+  const liveRegistry = buildAgentZeroLiveRegistry({
+    generatedAt,
+    executionEnabled: bridgeSessionActive,
+    providerRegistry,
+    agents,
+    modelCatalog,
+    modelProviderRegistry,
+    skillNames,
+    skillRegistry,
+    integrationRegistry,
+    toolRegistry,
+    mcpServers,
+    mcpToolSummary,
+    brainRegistry,
+    buildWikiFarmerStatus: input.buildWikiFarmerStatus,
+    timerActive: input.timerActive,
+  })
   const brainWatchers = input.brainWatchers || {
     status: brainSources.length > 0 ? 'visible' : 'blocked',
     status_visible: brainSources.length > 0,
@@ -1508,6 +2033,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         'memory.write_without_explicit_owner_scope',
       ],
     },
+    live_registry: liveRegistry,
     restrictions: [
       'read-only Mission Control ecosystem context unless a scoped Bridge Session is separately approved',
       'no protected action execution from test-chat',
@@ -1547,6 +2073,7 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
   const brain = pickRecord(root.brain)
   const delivery = pickRecord(root.delivery)
   const bridgeSession = pickRecord(root.bridge_session)
+  const liveRegistry = pickRecord(root.live_registry)
 
   return {
     generated_at: root.generated_at || root.generatedAt || new Date().toISOString(),
@@ -1580,6 +2107,17 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
       integrations: safeCount(integrations.registry) ?? safeCount(integrations.items),
       tools: safeCount(tools.registry) ?? safeCount(tools.items),
       brain_sources: safeCount(brain.registry) ?? safeCount(brain.sources),
+    },
+    live_registry: {
+      endpoint: '/api/bridge/capability-matrix',
+      ecosystem_endpoint: '/api/bridge/agent-zero/ecosystem',
+      mode: liveRegistry.mode || 'agent_zero_live_ecosystem_registry',
+      vocabulary: Array.isArray(liveRegistry.vocabulary) ? liveRegistry.vocabulary : [...AGENT_ZERO_LIVE_REGISTRY_STATES],
+      required_items: Array.isArray(liveRegistry.required_items) ? liveRegistry.required_items : [...REQUIRED_AGENT_ZERO_LIVE_REGISTRY_ITEMS],
+      missing_required_items: Array.isArray(liveRegistry.missing_required_items) ? liveRegistry.missing_required_items : [],
+      totals: pickRecord(liveRegistry.totals),
+      items: Array.isArray(liveRegistry.items) ? liveRegistry.items : [],
+      secrets_exposed: false,
     },
     schema_summary: {
       heygen_schema_visible: Boolean(bridge.heygen_schema_visible || tools.heygen_schema_visible),

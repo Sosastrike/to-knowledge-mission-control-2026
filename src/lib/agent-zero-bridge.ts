@@ -96,6 +96,20 @@ export type EcosystemAccessState =
   | 'not_connected'
   | 'unknown'
 
+export type AgentZeroReadOnlyEndpointSummary = {
+  endpoint: string
+  method: 'GET'
+  mcp_server_name: string | null
+  status: EcosystemAccessState
+  reachable: boolean
+  tool_count: number | null
+  schema_available: boolean
+  execution_enabled: false
+  bridge_session_required: true
+  blocked_reason: string | null
+  note: string
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: false
   bridge_session_required: true
@@ -139,7 +153,14 @@ export type AgentZeroReadOnlyContext = {
       transport: string
       tool_count: number | null
       access: EcosystemAccessState
+      reachable: boolean
+      schema_available: boolean
+      execution_enabled: false
+      bridge_session_required: true
+      blocked_reason: string | null
+      tools_endpoint: string
     }>
+    endpoint_summaries: AgentZeroReadOnlyEndpointSummary[]
     tool_schema_summary: {
       tools_total: number
       schema_available: boolean
@@ -522,7 +543,8 @@ export function buildAgentZeroReadOnlyContext(input: {
   skillNames?: string[]
   integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
   toolRegistry?: Array<{ id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
-  mcpServers?: Array<{ name: string; status?: string; transport?: string; tool_count?: number | null }>
+  mcpServers?: Array<{ name: string; status?: string; transport?: string; tool_count?: number | null; reachable?: boolean; schema_available?: boolean; blocked_reason?: string | null; tools_endpoint?: string }>
+  mcpEndpointSummaries?: AgentZeroReadOnlyEndpointSummary[]
   mcpToolSchemaSummary?: { tools_total?: number; schema_available?: boolean; required_fields?: string[]; write_tools_total?: number; read_tools_total?: number }
   mcpVisible?: boolean
   zapierVisible?: boolean
@@ -582,8 +604,19 @@ export function buildAgentZeroReadOnlyContext(input: {
       transport: server.transport || 'unknown',
       tool_count: typeof server.tool_count === 'number' ? server.tool_count : null,
       access: stateToAccess(server.status || 'unknown'),
+      reachable: Boolean(server.reachable ?? /(connected|visible|ok|ready|active)/i.test(server.status || '')),
+      schema_available: Boolean(server.schema_available),
+      execution_enabled: false as const,
+      bridge_session_required: true as const,
+      blocked_reason: server.blocked_reason || null,
+      tools_endpoint: server.tools_endpoint || `/api/mcp/servers/${encodeURIComponent(server.name)}/tools`,
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
+  const endpointSummaries = (input.mcpEndpointSummaries || []).map((endpoint) => ({
+    ...endpoint,
+    execution_enabled: false as const,
+    bridge_session_required: true as const,
+  }))
   const mcpToolSummary = {
     tools_total: Number(input.mcpToolSchemaSummary?.tools_total || input.zapierToolsTotal || 0),
     schema_available: Boolean(input.mcpToolSchemaSummary?.schema_available || input.heygenSchemaVisible),
@@ -644,6 +677,7 @@ export function buildAgentZeroReadOnlyContext(input: {
       visible: Boolean(input.mcpVisible || mcpServers.length),
       status: input.mcpVisible || mcpServers.length ? 'visible' : 'blocked',
       servers: mcpServers,
+      endpoint_summaries: endpointSummaries,
       tool_schema_summary: mcpToolSummary,
       execution_enabled: false,
       writes_enabled: false,
@@ -760,6 +794,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'Bridge Session execution is not active in this chat. If execution is requested, explain that a separate owner-approved Bridge Session and scoped adapter are required.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
+    'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

@@ -83,7 +83,22 @@ describe('Agent Zero read-only bridge connector', () => {
         { id: 'mcp.zapier.tools.schema', status: 'connected', source: 'mcp_schema_passthrough', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
         { id: 'build_wiki.farmer.status', status: 'visible', source: 'mission_control_build_wiki', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
       ],
-      mcpServers: [{ name: 'zapier', status: 'connected', transport: 'http', tool_count: 42 }],
+      mcpServers: [{ name: 'zapier', status: 'connected', transport: 'http', tool_count: 42, schema_available: true }],
+      mcpEndpointSummaries: [
+        {
+          endpoint: '/api/mcp/servers/zapier/tools',
+          method: 'GET',
+          mcp_server_name: 'zapier',
+          status: 'connected',
+          reachable: true,
+          tool_count: 42,
+          schema_available: true,
+          execution_enabled: false,
+          bridge_session_required: true,
+          blocked_reason: null,
+          note: 'Read-only schema summary.',
+        },
+      ],
       mcpToolSchemaSummary: {
         tools_total: 42,
         schema_available: true,
@@ -120,6 +135,23 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.bridge.provider_registry.find((provider) => provider.id === 'agent_zero')?.execution_enabled).toBe(false)
     expect(context.bridge.mcp_servers).toEqual(['zapier'])
     expect(context.mcp.servers[0]).toMatchObject({ name: 'zapier', access: 'connected', tool_count: 42 })
+    expect(context.mcp.servers[0]).toMatchObject({
+      reachable: true,
+      schema_available: true,
+      execution_enabled: false,
+      bridge_session_required: true,
+      blocked_reason: null,
+      tools_endpoint: '/api/mcp/servers/zapier/tools',
+    })
+    expect(context.mcp.endpoint_summaries[0]).toMatchObject({
+      endpoint: '/api/mcp/servers/zapier/tools',
+      mcp_server_name: 'zapier',
+      reachable: true,
+      tool_count: 42,
+      schema_available: true,
+      execution_enabled: false,
+      bridge_session_required: true,
+    })
     expect(context.mcp.tool_schema_summary.tools_total).toBe(42)
     expect(context.mcp.tool_schema_summary.required_fields).toContain('instructions')
     expect(context.mcp.execution_enabled).toBe(false)

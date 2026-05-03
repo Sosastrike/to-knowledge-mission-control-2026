@@ -7,6 +7,7 @@ import { getDatabase } from '@/lib/db'
 import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
 import {
   type AgentZeroReadOnlyContext,
+  type AgentZeroReadOnlyEndpointSummary,
   type EcosystemAccessState,
   buildAgentZeroReadOnlyContext,
 } from '@/lib/agent-zero-bridge'
@@ -117,6 +118,31 @@ function curatedZapierTools(tools: ZapierToolRecord[]): ZapierToolRecord[] {
   return Array.from(selected.values()).slice(0, 75)
 }
 
+function endpointSummary(input: {
+  endpoint: string
+  mcp_server_name?: string | null
+  status: EcosystemAccessState
+  reachable: boolean
+  tool_count?: number | null
+  schema_available?: boolean
+  blocked_reason?: string | null
+  note: string
+}): AgentZeroReadOnlyEndpointSummary {
+  return {
+    endpoint: input.endpoint,
+    method: 'GET',
+    mcp_server_name: input.mcp_server_name ?? null,
+    status: input.status,
+    reachable: input.reachable,
+    tool_count: typeof input.tool_count === 'number' ? input.tool_count : null,
+    schema_available: Boolean(input.schema_available),
+    execution_enabled: false,
+    bridge_session_required: true,
+    blocked_reason: input.blocked_reason || null,
+    note: input.note,
+  }
+}
+
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
   const [providersResult, zapierResult, mcpZapierResult, brainResult, timerActive] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
@@ -183,6 +209,70 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     ((mcpZapierResult as any).ok && ((mcpZapierResult as any).tools || []).some((tool: any) => tool.schema_available))
       || heygenRequiredFields.length > 0,
   )
+  const mcpReachable = Boolean((mcpZapierResult as any).mcp_reachable || (zapierResult as any).mcp_reachable)
+  const zapierReachable = Boolean((zapierResult as any).connected || (zapierResult as any).mcp_reachable)
+  const zapierBlocker = String((mcpZapierResult as any).blocker || (zapierResult as any).blocker || '').trim() || null
+  const endpointSummaries = [
+    endpointSummary({
+      endpoint: '/api/bridge/preflight',
+      status: 'connected',
+      reachable: true,
+      note: 'Bridge preflight is visible read-only for routing decisions; it does not execute tools.',
+    }),
+    endpointSummary({
+      endpoint: '/api/bridge/providers',
+      status: providers.length > 0 ? 'visible' : 'blocked',
+      reachable: providers.length > 0,
+      blocked_reason: providers.length > 0 ? null : 'provider_registry_empty_or_unreachable',
+      note: 'Bridge provider registry is visible through Mission Control.',
+    }),
+    endpointSummary({
+      endpoint: '/api/bridge/providers/:id',
+      status: providers.length > 0 ? 'visible' : 'blocked',
+      reachable: providers.length > 0,
+      blocked_reason: providers.length > 0 ? null : 'provider_detail_requires_provider_registry',
+      note: 'Provider detail route is available for individual read-only provider records.',
+    }),
+    endpointSummary({
+      endpoint: '/api/mcp/list',
+      status: mcpReachable || mcpToolCount > 0 ? 'visible' : 'blocked',
+      reachable: mcpReachable || mcpToolCount > 0,
+      tool_count: mcpToolCount,
+      schema_available: mcpSchemaAvailable,
+      blocked_reason: mcpReachable || mcpToolCount > 0 ? null : zapierBlocker,
+      note: 'MCP server list is visible read-only; execution is disabled.',
+    }),
+    endpointSummary({
+      endpoint: '/api/mcp/servers/zapier/tools',
+      mcp_server_name: 'zapier',
+      status: (mcpZapierResult as any).ok ? 'connected' : (zapierReachable ? 'visible' : 'blocked'),
+      reachable: Boolean((mcpZapierResult as any).ok || zapierReachable),
+      tool_count: mcpToolCount,
+      schema_available: mcpSchemaAvailable,
+      blocked_reason: (mcpZapierResult as any).ok ? null : zapierBlocker,
+      note: 'Zapier MCP tools/schema summary is read-only. No MCP tool invocation is enabled.',
+    }),
+    endpointSummary({
+      endpoint: '/api/zapier/tools',
+      mcp_server_name: 'zapier',
+      status: (zapierResult as any).connected ? 'visible' : 'blocked',
+      reachable: Boolean((zapierResult as any).connected),
+      tool_count: Number((zapierResult as any).tools_total || zapierTools.length || 0),
+      schema_available: heygenRequiredFields.length > 0 || mcpSchemaAvailable,
+      blocked_reason: (zapierResult as any).connected ? null : String((zapierResult as any).blocker || zapierBlocker || 'zapier_tool_inventory_unavailable'),
+      note: 'Canonical Zapier tool inventory is visible read-only when configured; writes remain disabled.',
+    }),
+    endpointSummary({
+      endpoint: '/api/bridge/zapier/tools/search',
+      mcp_server_name: 'zapier',
+      status: (zapierResult as any).heygen_found ? 'visible' : ((zapierResult as any).connected ? 'configured' : 'blocked'),
+      reachable: Boolean((zapierResult as any).connected),
+      tool_count: Number((zapierResult as any).heygen_tools?.length || 0),
+      schema_available: heygenRequiredFields.length > 0,
+      blocked_reason: (zapierResult as any).connected ? null : String((zapierResult as any).blocker || zapierBlocker || 'zapier_search_unavailable'),
+      note: 'Zapier tool search is visible read-only; use q=heygen for schema discovery. No execution is enabled.',
+    }),
+  ]
   const integrationItems = [
     { id: 'mission_control', status: 'reachable', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
     { id: 'bridge', status: providers.length > 0 ? 'visible' : 'degraded', visibility: 'visible' as const, direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
@@ -288,7 +378,12 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
         : ((zapierResult as any).mcp_reachable || (zapierResult as any).connected ? 'visible_cached_or_bridge_inventory' : 'blocked'),
       transport: 'http',
       tool_count: mcpToolCount || null,
+      reachable: Boolean((mcpZapierResult as any).ok || zapierReachable),
+      schema_available: mcpSchemaAvailable,
+      blocked_reason: (mcpZapierResult as any).ok ? null : zapierBlocker,
+      tools_endpoint: '/api/mcp/servers/zapier/tools',
     }],
+    mcpEndpointSummaries: endpointSummaries,
     mcpToolSchemaSummary: {
       tools_total: mcpToolCount,
       schema_available: mcpSchemaAvailable,

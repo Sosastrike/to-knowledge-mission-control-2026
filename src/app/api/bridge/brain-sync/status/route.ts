@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
       count: contextSources.reduce((total, row) => total + (typeof row.count === 'number' ? row.count : 0), 0),
       details: {
         endpoint: '/api/brain/context',
-        agent_id: 'tony',
+        agent_id: 'agent_zero',
         source_count: contextSources.length,
         agent_consumers: (context.payload as any)?.agent_consumers || [],
       },

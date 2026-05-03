@@ -478,7 +478,7 @@ function TaskDrawer({ ticket, onClose }) {
                 const next = (window.AGENTS || []).find(a => a.role === 'tony') || (window.AGENTS || []).find(a => a.id === 'agent-zero');
                 if (next) patch({ agent: next.id }, `Escalated to ${next.name}`);
               }}>
-                <I.Flag/> Escalate to Tony
+                <I.Flag/> Escalate to Agent Zero
               </button>
               <button className="btn sm" onClick={()=>{
                 navigator.clipboard?.writeText(`${location.origin}/#ticket=${live.id}`);

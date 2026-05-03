@@ -535,7 +535,7 @@ html.brain-popout-mode body { margin: 0; background: #05070f; color: #e8ecf7; }
   box-shadow: 0 0 0 2px rgba(8,11,22,0.85);
 }
 
-/* ============== LEGEND · special rows (Tony / Agent 0) ============== */
+/* ============== LEGEND · special rows (Agent Zero / Hermes) ============== */
 .brain-legend-textcol {
   display:flex; flex-direction:column; min-width: 0;
   flex: 1 1 auto;

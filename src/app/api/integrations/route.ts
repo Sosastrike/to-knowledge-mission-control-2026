@@ -79,7 +79,7 @@ const INTEGRATIONS: IntegrationDef[] = [
 
   // Messaging
   { id: 'telegram', name: 'Telegram', category: 'messaging', envVars: ['TELEGRAM_BOT_TOKEN'], vaultItem: 'openclaw-telegram-bot-token', testable: true },
-  { id: 'discord', name: 'Discord (Tony)', category: 'messaging', envVars: ['DISCORD_TOKEN_TONY'] },
+  { id: 'discord', name: 'Discord (legacy)', category: 'messaging', envVars: ['DISCORD_TOKEN_TONY'] },
 
   // Dev Tools
   { id: 'github', name: 'GitHub', category: 'devtools', envVars: ['GITHUB_TOKEN'], vaultItem: 'openclaw-github-token', testable: true },

@@ -71,6 +71,20 @@ function detectHermesBinary(): { path: string | null; version: string | null; er
   return { path: null, version: null, error: 'hermes_binary_not_found' }
 }
 
+
+function isHermesSystemdActive(): boolean {
+  try {
+    const result = spawnSync('systemctl', ['--user', 'is-active', 'hermes-gateway.service'], {
+      stdio: 'pipe',
+      timeout: 3000,
+      env: { ...process.env },
+    })
+    return result.status === 0 && result.stdout?.toString().trim() === 'active'
+  } catch {
+    return false
+  }
+}
+
 function findSandboxHomes(): string[] {
   const sandboxRoot = '/home/tony/sandbox'
   try {
@@ -133,19 +147,19 @@ export async function GET(request: NextRequest) {
   const activeSessions = installed ? scanHermesSessions(25).filter((session) => session.isActive).length : 0
   const cronJobCount = installed ? getHermesTasks().cronJobs.length : 0
   const memoryEntries = installed ? getHermesMemory().agentMemoryEntries : 0
-  const gatewayRunning = installed ? isHermesGatewayRunning() : false
+  const gatewayRunning = installed ? (isHermesGatewayRunning() || isHermesSystemdActive()) : false
 
   return NextResponse.json({
     ok: true,
-    mode: 'hermes_sandbox_specialist_status_read_only',
+    mode: 'hermes_lieutenant_status_read_only',
     generated_at: new Date().toISOString(),
     agent: {
       id: 'hermes',
       name: 'Hermes',
-      role: 'sandbox skill/workflow specialist',
-      allowed_behavior: ['sandbox testing', 'workflow analysis', 'skill review', 'recommendations'],
-      disallowed_behavior: ['production bridge execution', 'public gateway exposure', 'legacy memory writes', 'credential changes'],
-      execution_permission: 'sandbox_read_only_until_owner_approval',
+      role: 'lieutenant / skill and workflow specialist',
+      allowed_behavior: ['read-only health/status checks', 'workflow analysis', 'skill review', 'recommendations for Agent Zero'],
+      disallowed_behavior: ['production bridge execution without Bridge Session', 'public gateway exposure', 'legacy memory writes', 'credential changes'],
+      execution_permission: 'lieutenant_read_only_until_bridge_session_approval',
       production_bridge_enabled: false,
       owner_approval_required_for_production_bridge: true,
     },
@@ -162,24 +176,25 @@ export async function GET(request: NextRequest) {
       cron_jobs: cronJobCount,
       memory_entries_read_only: memoryEntries,
       gateway_pid_running: gatewayRunning,
+      gateway_systemd_active: isHermesSystemdActive(),
       production_gateway_enabled: false,
       public_ports_enabled: false,
-      tony_memory_connection_enabled: false,
+      legacy_memory_connection_enabled: false,
       credential_changes_enabled: false,
     },
     provider_registry: {
       state: provider?.state || (installed ? 'sandbox' : 'not_connected'),
       category: provider?.category || 'agent',
       last_checked_at: checkedAtToIso(provider?.last_checked),
-      notes: provider?.detail?.notes || 'Hermes is visible as sandbox specialist only.',
+      notes: provider?.detail?.notes || 'Hermes is visible as Agent Zero lieutenant in read-only/degraded mode until live chat and Bridge Session execution are proven.',
       limitation: 'Production bridge disabled until separate owner approval; no public ports, legacy memory connection, or credential changes are enabled here.',
       error: provider?.detail?.error || providerStatus.warning || null,
-      next_action: provider?.next_action || 'Keep Hermes sandbox/read-only until owner approves production bridge wiring.',
+      next_action: provider?.next_action || 'Keep Hermes lieutenant read-only/degraded until health, chat/API, and owner-approved Bridge Session execution are proven.',
     },
     safety: {
       production_gateway_changes_enabled: false,
       public_port_changes_enabled: false,
-      tony_memory_connection_changed: false,
+      legacy_memory_connection_changed: false,
       credential_changes_enabled: false,
       execution_permissions_changed: false,
       protected_actions_created: false,

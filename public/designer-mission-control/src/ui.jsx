@@ -103,14 +103,14 @@ function DemoBanner() {
       <I.Info size={13} style={{color:'oklch(0.82 0.14 85)', flexShrink:0}}/>
       <div className="demo-banner-main">
         <span>
-          <b style={{color:'var(--fg-0)'}}>Live read-only mode.</b> Status data is live. Execution approvals go through <b>Tony in Telegram</b> with Approve/Deny buttons. Mission Control shows status and history only; broad protected writes stay locked as <code>OWNER_APPROVAL_REQUIRED</code> or HTTP 423.
+          <b style={{color:'var(--fg-0)'}}>Live read-only mode.</b> Status data is live. Execution approvals go through <b>Agent Zero Bridge Session</b> with owner Approve/Deny controls. Mission Control shows status and history only; broad protected writes stay locked as <code>OWNER_APPROVAL_REQUIRED</code> or HTTP 423.
         </span>
         <div className="approval-system-status" role="status" aria-label="Approval system status">
           <div>
             <strong>Approval system status</strong>
             <span className="mock-badge">Read-only mirror</span>
           </div>
-          <p>No approvals are approved from this screen. Active pending requests appear only when Tony sends a real Telegram Approve/Deny request.</p>
+          <p>No approvals are approved from this screen. Active pending requests appear only when Agent Zero creates a real owner approval request.</p>
           <small>Completed, denied, expired, and failed approvals move to history instead of staying in the active queue.</small>
         </div>
       </div>

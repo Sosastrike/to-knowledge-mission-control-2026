@@ -9,7 +9,7 @@
 //   - Fetch live agent list from existing /api/agents (mission-control's
 //     own registry, behind requireRole('viewer'))
 //   - Render tier-laned canvas (commander · lieutenant · specialist · worker)
-//   - Render external/tailnet section (Agent Zero · Hermes sandbox ·
+//   - Render external/tailnet section (Agent Zero · Hermes lieutenant ·
 //     OpenClaw Gateway · Bridge Mode)
 //   - Show "PHASE A — READ-ONLY" header chip
 //   - Every disabled mutation control carries a visible
@@ -965,8 +965,8 @@ interface Props {
 
 // Static reference for the 4 tiers (per spec §1)
 const TIER_DEFS: Array<{ id: string; label: string; sub: string }> = [
-  { id: 'commander', label: 'Commander', sub: 'Owner-assistant; routes work, sets priorities' },
-  { id: 'lieutenant', label: 'Lieutenants', sub: 'Cluster owners; report to commanders' },
+  { id: 'commander', label: 'Commander', sub: 'Agent Zero routes work, owns Bridge sessions, and reports to the Owner' },
+  { id: 'lieutenant', label: 'Lieutenant', sub: 'Hermes supports Agent Zero with skills, workflows, and plans' },
   { id: 'specialist', label: 'Specialists', sub: 'Domain-specific workers' },
   { id: 'worker', label: 'Workers', sub: 'Long-running task agents' },
 ]
@@ -977,7 +977,8 @@ const TIER_DEFS: Array<{ id: string; label: string; sub: string }> = [
 const KNOWN_TIER_OF: Record<string, string> = {
   agent_zero: 'commander',
   tony_legacy:'archive',
-  main:       'commander',  // alias used by /api/agents
+  main:       'commander',  // Agent Zero commander alias used by /api/agents
+  hermes:     'lieutenant',
   archivist:  'specialist',
   atlas:      'lieutenant',
   builder:    'specialist',
@@ -2227,7 +2228,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
           <strong className={styles.externalTitle}>Agent Zero</strong>
           <span className={styles.externalBadge}>loading</span>
         </div>
-        <p className={styles.externalDescription}>Loading Agent Zero reviewer/supervisor status…</p>
+        <p className={styles.externalDescription}>Loading Agent Zero commander status…</p>
       </div>
     )
   }
@@ -2375,7 +2376,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
       )}
       <div className={styles.agentZeroTestBox}>
         <label className={styles.agentZeroTestLabel} htmlFor="agent-zero-test-message">
-          Agent Zero read-only test
+          Agent Zero commander test
         </label>
         <textarea
           id="agent-zero-test-message"
@@ -2415,7 +2416,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
           <strong className={styles.externalTitle}>Hermes</strong>
           <span className={styles.externalBadge}>loading</span>
         </div>
-        <p className={styles.externalDescription}>Loading Hermes sandbox specialist status…</p>
+        <p className={styles.externalDescription}>Loading Hermes lieutenant specialist status…</p>
       </div>
     )
   }
@@ -2434,12 +2435,12 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
         <span className={styles.externalBadge}>{install.installed ? 'Sandbox specialist' : 'Not installed'}</span>
       </div>
       <p className={styles.externalDescription}>
-        Sandbox skill/workflow specialist only. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval.
+        Lieutenant / skill and workflow specialist. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval and live health proof.
       </p>
       <dl className={styles.externalDetails}>
         <div className={styles.externalDetailRow}>
           <dt>Role</dt>
-          <dd>{agent.role || 'sandbox skill/workflow specialist'}</dd>
+          <dd>{agent.role || 'lieutenant / skill and workflow specialist'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Allowed behavior</dt>
@@ -2482,7 +2483,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
         <p className={styles.providerAction}>Status warning: {provider.error || install.version_error}</p>
       )}
       <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, legacy memory connection, or credentials are changed by this surface.'}</p>
-      <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes sandbox/read-only until owner approves production bridge wiring.'}</p>
+      <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes lieutenant/read-only until owner approves production bridge wiring.'}</p>
     </div>
   )
 }
@@ -3314,10 +3315,41 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     worker: [],
     other: [],
   }
-  for (const a of agents) {
+  const canonicalHierarchyRows: AgentRow[] = [
+    {
+      id: 'agent_zero',
+      name: 'Agent Zero',
+      status: 'active',
+      role: 'Commander / ecosystem lead',
+      template: 'Bridge Session required',
+      channels: ['Mission Control', 'Bridge/MCP', 'Brain Sync'],
+      skills: ['command', 'planning', 'adapter-scoped execution'],
+    },
+    {
+      id: 'hermes',
+      name: 'Hermes',
+      status: hermes.installed ? 'degraded' : 'blocked',
+      role: 'Lieutenant / skill and workflow specialist',
+      template: hermes.installed ? 'read-only onboarding pending' : 'not reachable',
+      channels: ['Mission Control read-only status'],
+      skills: ['skills', 'workflows', 'automation plans'],
+    },
+  ]
+  const activeHierarchyRows = [
+    ...canonicalHierarchyRows,
+    ...agents.filter((agent) => {
+      const id = String(agent.id || '').toLowerCase()
+      const name = String(agent.name || '').toLowerCase()
+      if (['agent_zero', 'hermes', 'tony', 'tony_legacy'].includes(id)) return false
+      if (name === 'tony' || name.includes('tony legacy')) return false
+      return true
+    }),
+  ]
+  for (const a of activeHierarchyRows) {
     const id = (a.id || a.name || '').toLowerCase()
     const tier = KNOWN_TIER_OF[id] || 'other'
-    buckets[tier].push(a)
+    if (!buckets[tier]) buckets.other.push(a)
+    else buckets[tier].push(a)
   }
   const activeApprovalCount = approvalQueue?.active_approvals?.length ?? approvalQueue?.summary?.active_pending ?? 0
   const activeQueueVisible = Boolean(approvalQueue?.active_queue_visible || activeApprovalCount > 0)
@@ -3352,7 +3384,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         </div>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{hermes.installed ? '✓' : '—'}</div>
-          <div className={styles.statLabel}>Hermes sandbox</div>
+          <div className={styles.statLabel}>Hermes lieutenant</div>
         </div>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{bridge.plansFound}</div>
@@ -3982,7 +4014,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 <strong className={styles.externalTitle}>Agent Zero</strong>
                 <span className={styles.externalBadge}>status error</span>
               </div>
-              <p className={styles.externalDescription}>Could not load Agent Zero reviewer status: {agentZeroReviewerError}</p>
+              <p className={styles.externalDescription}>Could not load Agent Zero commander status: {agentZeroReviewerError}</p>
               <dl className={styles.externalDetails}>
                 <div className={styles.externalDetailRow}>
                   <dt>Role</dt>
@@ -4003,7 +4035,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                 <strong className={styles.externalTitle}>Hermes</strong>
                 <span className={styles.externalBadge}>status error</span>
               </div>
-              <p className={styles.externalDescription}>Could not load Hermes sandbox status: {hermesSandboxError}</p>
+              <p className={styles.externalDescription}>Could not load Hermes lieutenant status: {hermesSandboxError}</p>
               <dl className={styles.externalDetails}>
                 <div className={styles.externalDetailRow}>
                   <dt>Role</dt>

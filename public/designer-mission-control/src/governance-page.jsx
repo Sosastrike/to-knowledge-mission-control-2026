@@ -169,7 +169,7 @@ function UnlockModal({ open, reason, onClose, onUnlocked }) {
             <p className="muted xsmall">
               {isSet
                 ? 'This action changes a protected setting. Enter the master password to unlock the session for 15 minutes.'
-                : 'No master password is configured yet. Set one now — it will gate all future edits to Tony\'s voice, memory, routing, bio, and tool permissions.'}
+                : 'No master password is configured yet. Set one now — it will gate all future edits to Agent Zero voice, memory, routing, bio, and tool permissions.'}
             </p>
           </div>
         </div>
@@ -712,7 +712,7 @@ function TabMasterLock({ unlocked, onUnlockRequest }) {
         </div>
         <div className="card-body">
           <div className="gov-protect-grid">
-            <ProtectRow icon="Brain"  label="Tony's memory"                  note="Identity, recognition rules, voice pipeline."/>
+            <ProtectRow icon="Brain"  label="Agent Zero memory"                  note="Identity, recognition rules, voice pipeline."/>
             <ProtectRow icon="Radio"  label="Voice providers"                 note="STT (Whisper) and TTS (ElevenLabs)."/>
             <ProtectRow icon="Radio"  label="Normal chat provider"            note="Approved chat path — not OpenRouter."/>
             <ProtectRow icon="Agents" label="Task / job provider"             note="OpenRouter model choice."/>

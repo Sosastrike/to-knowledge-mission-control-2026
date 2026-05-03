@@ -32,7 +32,7 @@
 // Tiers (data-driven, not hardcoded):
 //   commander | lieutenant | specialist | worker | tool
 //
-// Tony and Agent Zero are SEEDED as commanders. They are not
+// Agent Zero is seeded as commander and Hermes as lieutenant; Tony Legacy is retired. They are not
 // special in code — any agent can be promoted to commander via
 // promote(id, 'commander') after an owner approval.
 // ============================================================
@@ -49,7 +49,7 @@
 
   // --------------------------------------------------------
   // SEED — three real systems wired in.
-  // 1. Mission Control / ClaudeClaw → Tony, Agent Zero
+  // 1. Mission Control / Bridge → Agent Zero commander, Hermes lieutenant
   // 2. OpenClaw / Gateway / Skills  → Hermes (proto), Codex,
   //                                   GitHub, Slack, FireCrawl,
   //                                   Browse, Deploy, Pndr, Zapier,
@@ -59,45 +59,45 @@
   // Coords are tier-laned: y derived from tier, x evenly spread.
   // --------------------------------------------------------
   const SEED_AGENTS = [
-    { id:'tony', display_name:'Tony', system_name:'tony', kind:'agent',
-      tier:'commander', role:'Operational leader',
-      description:'Executive conductor. Owns ticket flow, sets priorities, requires owner approval for protected actions.',
-      owner:'luis@to-knowledge.io', cluster:'ClaudeClaw',
-      status:'online', health_score:0.98, current_ticket_id:'tkt_4821',
-      current_task_summary:'Reviewing FireCrawl rate-limit incident; coordinating handoff to Codex.',
-      permissions:['read:all','write:tickets','approve:medium','escalate:high'],
-      capabilities:['plan','delegate','escalate','approve','summarize'],
-      engines:['eng_openrouter','eng_mcp_gateway'],
-      reports_to:null, supervises:['agent_zero','hermes','codex','meridian'],
-      handoff_targets:['agent_zero','hermes','codex'],
-      cost_today:4.82, token_usage_today:182_400,
-      model_provider:'openrouter', default_model:'anthropic/claude-sonnet-4.5',
-      risk_level:'high', approval_required_actions:['retire_agent','rotate_credential','deploy','firewall_change'],
-      memory_access_level:'full', brain_sync_enabled:true, harness_routing_enabled:true,
-      source_of_truth:'tony_memory', confidence_level:0.94, sync_state:'synced', last_sync_at:now(),
-      created_at:'2025-09-01T00:00:00Z', updated_at:now(),
-      color_token:'--accent', icon:'Crown', badge:'Commander', notes:'Locked. Cannot be retired.',
-      locked:true,
-    },
     { id:'agent_zero', display_name:'Agent Zero', system_name:'agent-zero', kind:'agent',
-      tier:'commander', role:'Supervisor / Reviewer',
-      description:'Reviews behavior, recommends better workflows, detects bad decisions, supports cost/token optimization.',
-      owner:'luis@to-knowledge.io', cluster:'Agent Zero',
-      status:'online', health_score:0.96, current_ticket_id:'tkt_4819',
-      current_task_summary:'Auditing 3 agents flagged for high-cost loops; preparing recommendation.',
-      permissions:['read:all','review:all','flag:behavior','recommend:workflow'],
-      capabilities:['review','recommend','flag','optimize'],
+      tier:'commander', role:'Ecosystem commander',
+      description:'Primary command agent for Mission Control, Bridge, Brain, tools, models, skills, integrations, and agents. Executes only through owner-approved Bridge Sessions and registered adapters.',
+      owner:'luis@to-knowledge.io', cluster:'Mission Control',
+      status:'online', health_score:0.96, current_ticket_id:'agent_zero_cutover',
+      current_task_summary:'Commanding the ecosystem through Mission Control / Bridge; production restart and model credential blockers are reported honestly.',
+      permissions:['read:all','review:all','request:bridge_session','execute:approved_adapters'],
+      capabilities:['command','plan','delegate','review','report','adapter_scoped_execute'],
       engines:['eng_openrouter','eng_mcp_gateway'],
-      reports_to:'tony', supervises:['hermes','codex','meridian'],
-      handoff_targets:['tony','hermes'],
+      reports_to:'owner', supervises:['hermes','codex','meridian','eng_openrouter','eng_mcp_gateway','mem_obsidian','mem_mempalace','mem_graphify'],
+      handoff_targets:['hermes','codex'],
       cost_today:1.24, token_usage_today:48_900,
       model_provider:'openrouter', default_model:'anthropic/claude-sonnet-4.5',
-      risk_level:'medium', approval_required_actions:['flag:critical','override:tony'],
+      risk_level:'medium', approval_required_actions:['open_bridge_session','external_write','memory_write','buildwiki_run_now','connector_execution'],
       memory_access_level:'read', brain_sync_enabled:true, harness_routing_enabled:true,
-      source_of_truth:'agent_zero_memory', confidence_level:0.91, sync_state:'synced', last_sync_at:now(),
+      source_of_truth:'mission_control_bridge', confidence_level:0.91, sync_state:'synced', last_sync_at:now(),
       created_at:'2025-09-15T00:00:00Z', updated_at:now(),
-      color_token:'--cmd-2', icon:'ShieldCheck', badge:'Commander · Reviewer',
+      color_token:'--cmd-2', icon:'ShieldCheck', badge:'Commander',
       locked:true,
+    },
+    { id:'tony_legacy', display_name:'Tony Legacy', system_name:'tony-legacy', kind:'agent',
+      tier:'worker', role:'Retired commander archive',
+      description:'Historical Tony workflow retained for audit and rollback only. Hidden from active owner-facing hierarchy.',
+      owner:'luis@to-knowledge.io', cluster:'Archive',
+      status:'retired', health_score:0, current_ticket_id:null,
+      current_task_summary:'Retired. Must not answer as commander, own Brain Sync, or own new reports.',
+      permissions:['read:archive'],
+      capabilities:['archive_lookup'],
+      engines:[],
+      reports_to:null, supervises:[],
+      handoff_targets:[],
+      cost_today:0, token_usage_today:0,
+      model_provider:null, default_model:null,
+      risk_level:'low', approval_required_actions:[],
+      memory_access_level:'none', brain_sync_enabled:false, harness_routing_enabled:false,
+      source_of_truth:'legacy_archive', confidence_level:1, sync_state:'retired', last_sync_at:now(),
+      created_at:'2025-09-01T00:00:00Z', updated_at:now(),
+      color_token:'--muted', icon:'Archive', badge:'Retired · hidden', notes:'Archived only. Not an active commander.',
+      locked:true, hidden:true,
     },
     { id:'meridian', display_name:'Meridian (proto)', system_name:'meridian', kind:'agent',
       tier:'lieutenant', role:'Integrations Commander (proposed)',
@@ -108,8 +108,8 @@
       permissions:['read:integrations','write:integrations'],
       capabilities:['route','reconnect','probe'],
       engines:['eng_zapier','eng_n8n','eng_mcp_gateway'],
-      reports_to:'tony', supervises:['eng_zapier','eng_n8n','eng_github','eng_slack'],
-      handoff_targets:['tony','agent_zero','hermes'],
+      reports_to:'agent_zero', supervises:['eng_zapier','eng_n8n','eng_github','eng_slack'],
+      handoff_targets:['agent_zero','agent_zero','hermes'],
       cost_today:0.32, token_usage_today:11_200,
       model_provider:'openrouter', default_model:'anthropic/claude-haiku-4.5',
       risk_level:'medium', approval_required_actions:['promote_self','disconnect_critical'],
@@ -121,16 +121,16 @@
       promotable_to:['commander'],
     },
     { id:'hermes', display_name:'Hermes / Hermit', system_name:'hermes', kind:'agent',
-      tier:'specialist', role:'Skill / Workflow / Integration specialist',
-      description:'Proposes skills, workflows, integrations. Future commander candidate.',
+      tier:'lieutenant', role:'Lieutenant / Skill and workflow specialist',
+      description:'Assists Agent Zero with skills, workflows, integrations, automations, and operational plans. Execution remains Bridge Session gated.',
       owner:'luis@to-knowledge.io', cluster:'OpenClaw',
-      status:'busy', health_score:0.93, current_ticket_id:'tkt_4823',
+      status:'degraded', health_score:0.93, current_ticket_id:'tkt_4823',
       current_task_summary:'Drafting workflow: "Reviewed-PR → Slack #releases → Deploy".',
       permissions:['read:skills','write:skills','propose:workflow'],
       capabilities:['propose','compose','draft'],
       engines:['eng_github','eng_slack','eng_mcp_gateway'],
       reports_to:'agent_zero', supervises:['eng_github','eng_slack','eng_pndr'],
-      handoff_targets:['tony','agent_zero','codex'],
+      handoff_targets:['agent_zero','codex'],
       cost_today:0.91, token_usage_today:34_100,
       model_provider:'openrouter', default_model:'anthropic/claude-sonnet-4.5',
       risk_level:'low', approval_required_actions:['publish_workflow'],
@@ -138,8 +138,8 @@
       sync_state:'synced', last_sync_at:now(),
       confidence_level:0.86,
       created_at:'2026-01-10T00:00:00Z', updated_at:now(),
-      icon:'Sparkles', badge:'Specialist',
-      promotable_to:['lieutenant','commander'],
+      icon:'Sparkles', badge:'Lieutenant · pending',
+      promotable_to:['commander'],
     },
     { id:'codex', display_name:'Codex', system_name:'codex', kind:'agent',
       tier:'specialist', role:'Code review / executor',
@@ -150,8 +150,8 @@
       permissions:['read:repos','write:reviews','comment:pr'],
       capabilities:['review','test','comment','suggest_fix'],
       engines:['eng_github','eng_mcp_gateway'],
-      reports_to:'tony', supervises:[],
-      handoff_targets:['tony','hermes'],
+      reports_to:'agent_zero', supervises:[],
+      handoff_targets:['agent_zero','hermes'],
       cost_today:0.62, token_usage_today:22_800,
       model_provider:'openrouter', default_model:'anthropic/claude-sonnet-4.5',
       risk_level:'low', approval_required_actions:['merge_pr','force_push'],
@@ -170,7 +170,7 @@
       current_task_summary:null,
       permissions:[], capabilities:[],
       engines:[],
-      reports_to:'tony', supervises:[], handoff_targets:[],
+      reports_to:'agent_zero', supervises:[], handoff_targets:[],
       cost_today:0, token_usage_today:0,
       risk_level:'low', approval_required_actions:[],
       memory_access_level:'none', brain_sync_enabled:false, harness_routing_enabled:false,
@@ -290,9 +290,9 @@
       risk_level:'medium', circuit_breaker:'closed',
       icon:'Network', badge:'Queue',
     },
-    { id:'mem_tony', display_name:'Tony Memory', system_name:'tony-memory', kind:'memory',
+    { id:'mem_tony', display_name:'Legacy Memory', system_name:'tony-memory', kind:'memory',
       tier:'tool', role:'Source of truth',
-      description:'Tony\'s long-term memory. Source of truth for ticket history.',
+      description:'Legacy commander memory retained as archive; Agent Zero is the active command source.',
       cluster:'ClaudeClaw',
       status:'online', health_score:0.99,
       transport:'local', endpoint:'sqlite://memory/tony.db',
@@ -377,7 +377,7 @@
   const SEED_COST = {
     spend_today: 18.42, budget_today: 50.00,
     by_agent: [
-      { id:'tony', spend:4.82, tokens:182_400, severity:'ok' },
+      { id:'agent_zero', spend:1.24, tokens:48_900, severity:'ok' },
       { id:'agent_zero', spend:1.24, tokens:48_900, severity:'ok' },
       { id:'hermes', spend:0.91, tokens:34_100, severity:'ok' },
       { id:'codex', spend:0.62, tokens:22_800, severity:'ok' },
@@ -403,8 +403,9 @@
 
   const seedWithPositions = (() => {
     const perTier = {};
-    SEED_AGENTS.forEach(a => { perTier[a.tier] = (perTier[a.tier] || 0) + 1; });
-    return SEED_AGENTS.map((a, i) => positionAgent(a, i, perTier));
+    const visibleSeedAgents = SEED_AGENTS.filter(a => !a.hidden && a.status !== 'retired');
+    visibleSeedAgents.forEach(a => { perTier[a.tier] = (perTier[a.tier] || 0) + 1; });
+    return visibleSeedAgents.map((a, i) => positionAgent(a, i, perTier));
   })();
 
   // --------------------------------------------------------

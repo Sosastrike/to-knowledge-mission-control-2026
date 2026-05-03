@@ -58,7 +58,7 @@ const BACKEND_READINESS = [
     permission: 'owner',
     sensitivity: 'destructive',
     status: 'destructive',
-    note: 'Tony and Agent 0 are structurally protected and cannot be removed.',
+    note: 'Agent Zero is structurally protected as commander; Tony Legacy is archived and hidden from active hierarchy.',
   },
   {
     id: 'users.role',

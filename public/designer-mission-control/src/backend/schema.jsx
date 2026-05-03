@@ -15,9 +15,9 @@ const SCHEMA = {
     indexes: ['email'],
     // Hard invariants enforced in the adapter:
     invariants: [
-      'Exactly one row with isTony=true (Tony, owner).',
+      'Exactly one protected commander row for Agent Zero; Tony Legacy remains archived only.',
       'Exactly one row with isAgent=true (Agent 0, system).',
-      'isTony and isAgent rows cannot be deleted.',
+      'Commander and archived legacy rows cannot be deleted from this UI.',
     ],
   },
   workspace_role_assignments: {
@@ -25,7 +25,7 @@ const SCHEMA = {
     fields: ['user_id','role','assigned_by','assigned_at'],
     // role enum: owner | admin | manager | agent | viewer | system
     invariants: [
-      'Exactly one role=owner assignment, bound to the isTony user.',
+      'Exactly one active commander assignment, bound to Agent Zero.',
       'Exactly one role=system assignment, bound to the isAgent user.',
       'Only an owner can grant role=owner (never exposed in UI).',
     ],
@@ -252,7 +252,7 @@ const ROLE_PERMISSIONS = {
     'alerts.resolve':   true,
     // ── Agent 0 · creator/owner-only ───────────────────────
     // Agent 0 is the brain-management / knowledge-oversight specialist,
-    // subordinate to Tony. Every Agent 0 request MUST route through the
+    // subordinate to Agent Zero. Every protected Agent Zero request MUST route through the
     // owner. No other role — not even admin — may invoke Agent 0 directly.
     // Enforced in api-client._requireRole and on the server's POST
     // /api/agent-zero/request handler (see server-scaffold.md).

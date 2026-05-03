@@ -9,9 +9,9 @@
 //     SMTP send) is visibly labeled with <BackendRequired id="…"/>
 //     — the chip's tooltip names the exact endpoint + DB table it
 //     will need. Copy lives in src/backend-readiness.jsx.
-//   - Tony is locked as Owner and cannot be demoted, suspended,
-//     or removed. Agent 0 is the SYSTEM actor — backend-controlled,
-//     immutable from the UI.
+//   - Agent Zero is locked as commander and cannot be demoted, suspended,
+//     or removed here. Hermes is lieutenant/read-only until proven.
+//     Tony Legacy is archived and hidden from active hierarchy.
 // ============================================================
 
 // ─── Local persistence helper ───────────────────────────────
@@ -62,8 +62,8 @@ function useAdminStore(key, initial){
 
 // ─── Seeds ──────────────────────────────────────────────────
 const USERS_SEED = [
-  { id:'u_tony',    name:'Tony',           email:'tony@toknowledge.ai',    role:'owner',  twoFA:'enforced',   active:true,  invited:'2024-01-12', isTony:true,    title:'Chief Operational Leader' },
-  { id:'u_agent0',  name:'Agent 0',        email:'agent0@toknowledge.ai',  role:'system', twoFA:'service',    active:true,  invited:'2024-01-12', isAgent:true,   title:'Brain & Knowledge Operations' },
+  { id:'u_agent_zero', name:'Agent Zero',     email:'agent-zero@toknowledge.ai', role:'owner',  twoFA:'service', active:true, invited:'2024-01-12', isTony:true, title:'Ecosystem Commander' },
+  { id:'u_hermes',     name:'Hermes',         email:'hermes@toknowledge.ai', role:'system', twoFA:'service', active:true, invited:'2026-04-28', isAgent:true, title:'Lieutenant · Skills & Workflows' },
   { id:'u_amelia',  name:'Amelia Karlsson',email:'amelia@toknowledge.ai',  role:'admin',  twoFA:'enforced',   active:true,  invited:'2024-02-04' },
   { id:'u_rafael',  name:'Rafael Mendes',  email:'rafa@toknowledge.ai',    role:'admin',  twoFA:'on',         active:true,  invited:'2024-02-18' },
   { id:'u_yusuf',   name:'Yusuf Demir',    email:'yusuf@toknowledge.ai',   role:'manager',twoFA:'on',         active:true,  invited:'2024-03-01' },
@@ -75,7 +75,7 @@ const USERS_SEED = [
 // This is read by the Security page and shown on each user row so the
 // connection between policy and people is never guessed.
 const ROLE_DEFS = [
-  { id:'owner',   label:'Owner',     twoFaCadence:'monthly', scope:'Full control of workspace, billing, deletion. Cannot be revoked from Tony.' },
+  { id:'owner',   label:'Owner',     twoFaCadence:'monthly', scope:'Full control of workspace, billing, deletion. Active commander surface is Agent Zero.' },
   { id:'admin',   label:'Admin',     twoFaCadence:'weekly',  scope:'All settings except billing & workspace deletion.' },
   { id:'manager', label:'Manager',   twoFaCadence:'daily',   scope:'Tickets, agents, schedule. Read-only on integrations & security.' },
   { id:'agent',   label:'Agent',     twoFaCadence:'daily',   scope:'Operate own queue, read knowledge base, draft meetings.' },
@@ -175,7 +175,7 @@ function UsersRolesPage(){
         <span>
           Local persistence only. Inviting users does not send real emails — see{' '}
           <b>Backend readiness</b> for the endpoints needed (<span className="mono xsmall">POST /api/users/invite</span>,{' '}
-          <span className="mono xsmall">POST /api/mail/send</span>). Tony is locked as Owner; Agent 0 is SYSTEM and cannot be edited.
+          <span className="mono xsmall">POST /api/mail/send</span>). Agent Zero is locked as commander; Hermes is SYSTEM/lieutenant and cannot be edited here.
         </span>
       </div>
 
@@ -199,7 +199,7 @@ function UsersRolesPage(){
                         <div style={{color:'var(--fg-0)'}}>{u.name}</div>
                         {u.title && <div className="muted xsmall">{u.title}</div>}
                       </div>
-                      {u.isTony && <span className="tag accent" title="Owner — locked to Tony. Cannot be removed or demoted.">OWNER · LOCKED</span>}
+                      {u.isTony && <span className="tag accent" title="Owner/commander — locked to Agent Zero. Cannot be removed or demoted here.">OWNER · LOCKED</span>}
                       {u.isAgent && <span className="tag" style={{background:'rgba(161,107,255,0.15)', color:'#a16bff', borderColor:'rgba(161,107,255,0.3)'}} title="System actor · backend-controlled. Cannot be edited from UI.">SYSTEM</span>}
                     </span>
                   </td>
@@ -207,7 +207,7 @@ function UsersRolesPage(){
                   <td>
                     <select className="select" value={u.role} disabled={locked}
                             onChange={e => updateUser(u.id, { role: e.target.value })}
-                            title={u.isTony ? 'Owner role is locked to Tony' : u.isAgent ? 'System actor — backend-controlled' : 'Change role'}>
+                            title={u.isTony ? 'Owner/commander role is locked to Agent Zero' : u.isAgent ? 'System actor — backend-controlled' : 'Change role'}>
                       {ROLE_DEFS.filter(r => (r.id !== 'system' || u.isAgent) && (r.id !== 'owner' || u.isTony)).map(r => (
                         <option key={r.id} value={r.id}>{r.label}</option>
                       ))}
@@ -1151,7 +1151,7 @@ const MODELS_SEED = [
 ];
 
 const AGENT_CLASSES = [
-  { k:'primaryAgent', label:'Tony (orchestrator)',    desc:'Default model for the primary agent loop.' },
+  { k:'primaryAgent', label:'Agent Zero (commander)',    desc:'Default model for the primary agent loop.' },
   { k:'research',     label:'Research agents',        desc:'Deep research, synthesis, long context.' },
   { k:'inbox',        label:'Inbox · drafting',       desc:'Email triage, replies, low-stakes drafting.' },
   { k:'scheduler',    label:'Scheduler',              desc:'Calendar reasoning, reminder parsing.' },

@@ -338,7 +338,7 @@ function AboutPage() {
           <div className="hstack" style={{justifyContent:'space-between', padding:'8px 0', borderTop:'1px solid var(--line-1)', marginTop:6}}>
             <div style={{color:'var(--fg-0)'}}>Policy docs</div><span className="mono xsmall">~/.openclaw/governance/</span>
           </div>
-          <div className="muted xsmall" style={{marginTop:6}}>Agents: Tony, Archivist, Atlas, Builder, Echo, Forge, Growth, Loom, Operator, Pacman, QA, Researcher</div>
+          <div className="muted xsmall" style={{marginTop:6}}>Agents: Agent Zero, Hermes, Archivist, Atlas, Builder, Echo, Forge, Growth, Loom, Operator, Pacman, QA, Researcher</div>
         </div>
       </div>
     </div>

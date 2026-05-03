@@ -147,8 +147,8 @@ describe('Agent Zero read-only bridge connector', () => {
         },
         {
           name: 'engineering-test',
-          source: 'claudeclaw_tony',
-          source_label: 'ClaudeClaw/Tony skills',
+          source: 'claudeclaw_legacy',
+          source_label: 'ClaudeClaw legacy skills',
           description: 'Run tests and report results.',
           dependencies: ['scripts'],
           missing_dependencies: [],
@@ -180,7 +180,7 @@ describe('Agent Zero read-only bridge connector', () => {
       ],
       skillSources: [
         { source: 'agent_zero', label: 'Agent Zero deployed skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
-        { source: 'claudeclaw_tony', label: 'ClaudeClaw/Tony skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'claudeclaw_legacy', label: 'ClaudeClaw legacy skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
         { source: 'home_claude', label: 'Safe home Claude skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
       ],
       integrationItems: [

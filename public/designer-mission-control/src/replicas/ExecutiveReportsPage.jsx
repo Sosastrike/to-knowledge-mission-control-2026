@@ -18,7 +18,7 @@ const REPORT_TYPES = [
   ['task_completion', 'Task completion report'],
 ];
 
-const REPORT_AGENTS = ['Tony', 'Agent 0', 'Hermes', 'Researcher', 'Builder', 'Operator', 'Pac-Man', 'Forge', 'Loom'];
+const REPORT_AGENTS = ['Agent Zero', 'Hermes', 'Researcher', 'Builder', 'Operator', 'Pac-Man', 'Forge', 'Loom'];
 
 function ReportStatePill({ state }) {
   const map = {
@@ -43,7 +43,7 @@ function defaultForm() {
   return {
     name: 'Daily executive report',
     report_type: 'daily',
-    assigned_agent: 'Tony',
+    assigned_agent: 'Agent Zero',
     schedule_text: 'daily at 9am',
     enabled: true,
     criteria_text: 'Focus: Mission Control health, task completions, approvals, blockers, and next actions.',
@@ -62,7 +62,7 @@ function formFromReport(report) {
   return {
     name: report.name || '',
     report_type: report.report_type || 'daily',
-    assigned_agent: report.assigned_agent || 'Tony',
+    assigned_agent: report.assigned_agent || 'Agent Zero',
     schedule_text: report.schedule_text || 'daily at 9am',
     enabled: !!report.enabled,
     criteria_text: report.criteria?.owner_instructions || JSON.stringify(report.criteria || {}, null, 2),
@@ -211,7 +211,7 @@ function ExecutiveReportsPage() {
       </div>
 
       <div className="ns-banner info">
-        <strong>Canonical path:</strong>&nbsp; Report definitions live in Mission Control <code>/api/reports</code>. Tony can create definitions through the same API. Protected generation/delivery still uses Tony Telegram approvals.
+        <strong>Canonical path:</strong>&nbsp; Report definitions live in Mission Control <code>/api/reports</code>. Agent Zero can create definitions through the same API. Protected generation/delivery uses Agent Zero Bridge Session approval.
       </div>
       {error && <div className="ns-banner danger">{error}</div>}
       {toast && <div className={`ns-banner ${toast.kind}`}>{toast.msg}</div>}

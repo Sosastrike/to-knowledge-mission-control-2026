@@ -8,7 +8,7 @@
    Owner-only constraint per spec:
    • Agent 0 is the *only* runner — every "Start" / "Run" surface
      reads `runner: Agent 0` as a locked field, not a select.
-   • Tony / other agents see view-only chrome (we render the same
+   • Agent Zero / other agents see view-only chrome (we render the same
      UI but disable mutating buttons via .mf-locked).
 
    Honesty rules carried over from the rest of Mission Control:

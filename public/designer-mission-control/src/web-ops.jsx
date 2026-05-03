@@ -72,7 +72,7 @@ const WEBOPS_SESSIONS_SEED = [
   {
     id:'WS-4412',
     providerId:'firecrawl',
-    agent:'Tony',
+    agent:'Agent Zero',
     project:'BluePeak renewal',
     task:'Confirm renewal pricing tiers',
     domain:'bluepeak.io',
@@ -88,7 +88,7 @@ const WEBOPS_SESSIONS_SEED = [
     extracted:3,
     warnings:0,
     errors:0,
-    summary:'Tony is navigating the target website to locate pricing information.',
+    summary:'Agent Zero is reviewing the target website to locate pricing information.',
   },
   {
     id:'WS-4411',
@@ -198,13 +198,13 @@ const WEBOPS_SESSIONS_SEED = [
 ];
 
 const WEBOPS_EVENTS_SEED = [
-  { t:'14:32:18', sessionId:'WS-4412', agent:'Tony',     kind:'navigate',  human:'Opened bluepeak.io/pricing to look for renewal tiers.' },
-  { t:'14:32:02', sessionId:'WS-4412', agent:'Tony',     kind:'action',    human:'Dismissed cookie banner and expanded "Enterprise" section.' },
+  { t:'14:32:18', sessionId:'WS-4412', agent:'Agent Zero',     kind:'navigate',  human:'Opened bluepeak.io/pricing to look for renewal tiers.' },
+  { t:'14:32:02', sessionId:'WS-4412', agent:'Agent Zero',     kind:'action',    human:'Dismissed cookie banner and expanded "Enterprise" section.' },
   { t:'14:31:40', sessionId:'WS-4411', agent:'Atlas',    kind:'action',    human:'Filled refund amount $248.00 and submitted first step.' },
   { t:'14:31:12', sessionId:'WS-4411', agent:'Atlas',    kind:'warning',   human:'Stripe requires 2-step confirmation — waiting up to 2 minutes.' },
   { t:'14:30:44', sessionId:'WS-4410', agent:'Research', kind:'extract',   human:'Extracted 3 new competitor tier prices from nestservices.com.' },
   { t:'14:30:11', sessionId:'WS-4409', agent:'Orion',    kind:'blocked',   human:'FedEx returned CAPTCHA — escalating to human-in-the-loop.' },
-  { t:'14:28:04', sessionId:'WS-4412', agent:'Tony',     kind:'start',     human:'Session started via Firecrawl (crawler). Target: bluepeak.io.' },
+  { t:'14:28:04', sessionId:'WS-4412', agent:'Agent Zero',     kind:'start',     human:'Session started via Firecrawl (crawler). Target: bluepeak.io.' },
   { t:'14:24:18', sessionId:'WS-4411', agent:'Atlas',    kind:'start',     human:'Session started via Playwright (browser). Target: portal.stripe.com.' },
   { t:'14:22:40', sessionId:'WS-4408', agent:'Lyra',     kind:'sync',      human:'Stripe status snapshot added to shared memory (MemPalace).' },
   { t:'14:18:03', sessionId:'WS-4407', agent:'Atlas',    kind:'error',     human:'SSO redirect loop detected — Atlas paused the session.' },
@@ -218,7 +218,7 @@ const WEBOPS_PROJECTS_SEED = [
     providerId:'firecrawl',
     target:'https://bluepeak.io/pricing',
     schedule:'one-off',             // one-off | hourly | daily | weekly | cron
-    owner:'Tony',
+    owner:'Agent Zero',
     project:'BluePeak renewal',
     status:'running',
     nextRun:'—',
@@ -479,7 +479,7 @@ function NewWebOpsProjectModal({ onClose, onCreate, providers }) {
   const [prompt, setPrompt] = React.useState('');
   const [schema, setSchema] = React.useState('');
   const [schedule, setSchedule] = React.useState('one-off');
-  const [owner, setOwner] = React.useState('Tony');
+  const [owner, setOwner] = React.useState('Agent Zero');
   const [err, setErr] = React.useState(null);
 
   const eligibleProviders = providers.filter(p => p.status!=='offline' && (p.modes||[]).includes(mode) || (p.modes||[]).includes('session'));
@@ -671,7 +671,7 @@ function NewWebOpsProjectModal({ onClose, onCreate, providers }) {
 
               <div className="stat-label" style={{marginBottom:4}}>Owner / responsible agent</div>
               <select className="select" value={owner} onChange={e=>setOwner(e.target.value)} style={{width:'100%'}}>
-                {['Tony','Atlas','Orion','Lyra','Research','Ops'].map(a => <option key={a} value={a}>{a}</option>)}
+                {['Agent Zero','Hermes','Atlas','Orion','Lyra','Research','Ops'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </>
           )}
@@ -1082,7 +1082,7 @@ function WebOpsDrawer({ onClose, initialTab }) {
     toast(paused ? `Resumed · ${proj.name}` : `Paused · ${proj.name}`, paused?'ok':'warn');
   };
 
-  const REASSIGN_AGENTS = ['Tony','Atlas','Orion','Lyra','Research','Isaac'].filter(a => a!==sel?.agent);
+  const REASSIGN_AGENTS = ['Agent Zero','Hermes','Atlas','Orion','Lyra','Research','Isaac'].filter(a => a!==sel?.agent);
 
   return (
     <WorkspaceOverlay

@@ -377,17 +377,17 @@ function readSkillRegistry(): SkillRegistryReadResult {
       root: '/home/tony/agent-zero-deploy/data/skills',
     },
     {
-      source: 'claudeclaw_tony' as const,
+      source: 'claudeclaw_legacy' as const,
       label: 'ClaudeClaw legacy skills',
       root: '/home/tony/claudeclaw/skills',
     },
     {
-      source: 'claudeclaw_tony' as const,
+      source: 'claudeclaw_legacy' as const,
       label: 'ClaudeClaw legacy vendor skills',
       root: '/home/tony/claudeclaw/vendor/skills',
     },
     {
-      source: 'claudeclaw_tony' as const,
+      source: 'claudeclaw_legacy' as const,
       label: 'ClaudeClaw project Claude skills',
       root: '/home/tony/claudeclaw/.claude/skills',
     },

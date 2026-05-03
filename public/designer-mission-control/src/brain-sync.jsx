@@ -38,7 +38,7 @@ const BRAIN_SYNC = {
 
 const AGENT_MEMORY_USAGE = [
   { agent:'Atlas',     project:'BluePeak renewal',     task:'Draft renewal terms',       time:'4h 12m', skill:'refund-flow',   model:'sonnet-4.5', tool:'MemPalace.search', reads:28, writes:12 },
-  { agent:'Tony',      project:'Project X',            task:'Stakeholder summary',       time:'14m',    skill:'summarization', model:'haiku-4.5',  tool:'MemPalace.query',  reads:9,  writes:2 },
+  { agent:'Agent Zero',      project:'Project X',            task:'Stakeholder summary',       time:'14m',    skill:'summarization', model:'haiku-4.5',  tool:'MemPalace.query',  reads:9,  writes:2 },
   { agent:'Orion',     project:'Support tier-2',       task:'@sofia_m · Telegram',       time:'2h 48m', skill:'refund-flow',   model:'haiku-4.5',  tool:'Graphify.query',   reads:14, writes:0 },
   { agent:'Research',  project:'Q2 market scan',       task:'Competitor deep-dive',      time:'7h 04m', skill:'brief-weekly',  model:'opus-4.1',   tool:'Obsidian.read',    reads:52, writes:0 },
   { agent:'Lyra',      project:'Anomaly detection',    task:'Refund gateway probe',      time:'3h 51m', skill:'memory-trim',   model:'sonnet-4.5', tool:'Graphify.query',   reads:47, writes:3 },

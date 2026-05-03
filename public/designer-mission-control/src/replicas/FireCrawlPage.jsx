@@ -5,7 +5,7 @@
 // No mocked activity. Live feed says "backend_required" until SDK wired.
 // ============================================================
 
-const FC_AGENTS = ['Tony', 'Agent 0', 'Researcher', 'Builder', 'Operator', 'Marketing', 'Support'];
+const FC_AGENTS = ['Agent Zero', 'Hermes', 'Researcher', 'Builder', 'Operator', 'Marketing', 'Support'];
 
 function FcStatePill({ state }) {
   const map = {

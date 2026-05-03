@@ -10,7 +10,7 @@ local adapter. The API client method names map 1:1 to routes.
 - **Reauth cap: 72 hours (3 days), enforced server-side** — `security.policy.reauthHours` is clamped to `[1, 72]` on write. The UI cannot bypass.
 - All `security.*` and `users.*` mutations MUST append to `audit_events`.
 - Destructive actions (`users.delete`, `token.revoke`, `session.revoke_all`, `ip.remove`) require role=`owner` OR explicit capability grant.
-- Tony (`isTony`) and Agent 0 (`isAgent`) are structurally protected. Any attempt to delete, suspend, or change their role returns `409 INVARIANT_PROTECTED_USER` / `INVARIANT_PROTECTED_ROLE`.
+- Agent Zero commander and archived legacy records are structurally protected. Any attempt to delete, suspend, or change their role returns `409 INVARIANT_PROTECTED_USER` / `INVARIANT_PROTECTED_ROLE`.
 
 ## Routes
 
@@ -24,7 +24,7 @@ local adapter. The API client method names map 1:1 to routes.
 | POST   | `/api/mail/send`          | admin  | `mail.send` | SMTP dispatch; backend-required |
 
 ### Agent 0 · brain-oversight specialist (owner-only)
-Agent 0 is a first-class entity subordinate to Tony, responsible for keeping the brain organized, auditing knowledge + tool usage discipline, and assisting Tony with higher-order coordination. It is **reserved for the creator/owner's special requests** — no other role, not even admin, may invoke Agent 0 directly.
+Agent Zero is the first-class ecosystem commander responsible for Mission Control, Bridge, and Brain coordination. Hermes is the lieutenant for skills and workflows. Protected actions require Bridge Session approval.
 
 Enforcement:
 - Schema capability `agent_zero.request` is `true` **only for role=owner** in `ROLE_PERMISSIONS` (`src/backend/schema.jsx`).

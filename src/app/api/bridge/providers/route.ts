@@ -57,14 +57,23 @@ function retireTonyProvider(provider: BridgeProvider): BridgeProvider {
   }
 }
 
-function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZeroEcosystemAgentRecord): BridgeProvider[] {
+function isArchivedProvider(provider: BridgeProvider): boolean {
+  const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
+  return provider.hidden === true || id === 'tony' || id === 'tony_legacy'
+}
+
+function visibleProviders(providers: BridgeProvider[], includeLegacy: boolean): BridgeProvider[] {
+  return includeLegacy ? providers : providers.filter((provider) => !isArchivedProvider(provider))
+}
+
+function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZeroEcosystemAgentRecord, includeLegacy = false): BridgeProvider[] {
   const normalizedProviders = providers
     .filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
     .map(retireTonyProvider)
-  return [
+  return visibleProviders([
     ...normalizedProviders,
     agentZero,
-  ].sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
+  ], includeLegacy).sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
 }
 
 function summarizeProviders(providers: BridgeProvider[]) {
@@ -78,7 +87,7 @@ function summarizeProviders(providers: BridgeProvider[]) {
   }
 }
 
-function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentRecord) {
+function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentRecord, includeLegacy = false) {
   const now = Date.now()
   const providers = mergeAgentZeroProvider([
     {
@@ -190,7 +199,7 @@ function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentReco
       },
       next_action: 'Use gateway health endpoints for authoritative status.',
     },
-  ], agentZero)
+  ], agentZero, includeLegacy)
   return {
     ok: true,
     mode: 'bridge_provider_registry_fallback_read_only',
@@ -209,6 +218,7 @@ export async function GET(request: NextRequest) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { searchParams } = new URL(request.url)
+  const includeLegacy = searchParams.get('include_legacy') === '1'
   const agentZeroRecordPromise = buildAgentZeroEcosystemAgentRecord({
     verifyChat: searchParams.get('agent_zero_chat') !== '0',
     chatTimeoutMs: 12000,
@@ -261,7 +271,7 @@ export async function GET(request: NextRequest) {
 
   const token = readDashboardToken()
   if (!token) {
-    return NextResponse.json(fallbackProviders('claudeclaw_dashboard_token_missing', await agentZeroRecordPromise), {
+    return NextResponse.json(fallbackProviders('claudeclaw_dashboard_token_missing', await agentZeroRecordPromise, includeLegacy), {
       headers: { 'Cache-Control': 'no-store' },
     })
   }
@@ -292,7 +302,7 @@ export async function GET(request: NextRequest) {
       const upstreamProviders = Array.isArray(upstreamPayload.providers)
         ? (upstreamPayload.providers.filter((item): item is BridgeProvider => Boolean(item && typeof item === 'object')) as BridgeProvider[])
         : []
-      const providers = mergeAgentZeroProvider(upstreamProviders, await agentZeroRecordPromise)
+      const providers = mergeAgentZeroProvider(upstreamProviders, await agentZeroRecordPromise, includeLegacy)
       payload = {
         ok: response.ok,
         mode: 'bridge_provider_registry_proxy_read_only',
@@ -311,7 +321,7 @@ export async function GET(request: NextRequest) {
     })
   } catch {
     logger.warn('bridge providers proxy failed')
-    return NextResponse.json(fallbackProviders('claudeclaw_bridge_providers_unreachable', await agentZeroRecordPromise), {
+    return NextResponse.json(fallbackProviders('claudeclaw_bridge_providers_unreachable', await agentZeroRecordPromise, includeLegacy), {
       headers: { 'Cache-Control': 'no-store' },
     })
   }

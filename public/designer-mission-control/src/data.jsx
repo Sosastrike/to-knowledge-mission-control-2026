@@ -147,7 +147,7 @@ const SYS_HEALTH = {
 
 // Saved agent groups for the Live Meetings invite picker — quick-pick
 // rosters that map to the operational silos already in the AGENTS table.
-// Tony is intentionally NOT in any group: he's escalation-only and is
+// Agent Zero is the active commander; Tony Legacy is intentionally not in active groups and is
 // reachable only via the dashboard's Escalate flow.
 const AGENT_GROUPS = {
   Exec:     ['main',      'insight'],            // orchestration + memory

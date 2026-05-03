@@ -1439,7 +1439,7 @@ const migrations: Migration[] = [
           tenant_id INTEGER NOT NULL DEFAULT 1,
           name TEXT NOT NULL,
           report_type TEXT NOT NULL,
-          assigned_agent TEXT NOT NULL DEFAULT 'Tony',
+          assigned_agent TEXT NOT NULL DEFAULT 'Agent Zero',
           schedule_text TEXT NOT NULL,
           cron_expr TEXT NOT NULL,
           timezone TEXT NOT NULL DEFAULT 'America/New_York',

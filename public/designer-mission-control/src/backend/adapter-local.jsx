@@ -314,13 +314,13 @@ function _emit(){ _subs.forEach(fn => fn()); }
 function _checkInvariants(table, row, op){
   if (table === 'workspace_users' && op === 'delete') {
     if (row.isTony || row.isAgent) {
-      const e = new Error('Tony and Agent 0 are structurally protected and cannot be deleted.');
+      const e = new Error('Agent Zero is structurally protected and Tony Legacy is archived.');
       e.code = 'INVARIANT_PROTECTED_USER'; throw e;
     }
   }
   if (table === 'workspace_users' && op === 'update') {
     if (row.isTony && row.active === false) {
-      const e = new Error('Owner (Tony) cannot be suspended.');
+      const e = new Error('Owner/commander protected record cannot be suspended here.');
       e.code = 'INVARIANT_PROTECTED_USER'; throw e;
     }
     if (row.isAgent && row.active === false) {
@@ -329,11 +329,11 @@ function _checkInvariants(table, row, op){
     }
   }
   if (table === 'workspace_role_assignments' && op === 'update') {
-    // protect role of Tony + Agent 0
+    // protect role of Agent Zero commander and archived legacy records
     const users = _load('workspace_users');
     const u = users.find(x => x.id === row.user_id);
     if (u?.isTony && row.role !== 'owner') {
-      const e = new Error('Tony is locked as Owner.');
+      const e = new Error('Agent Zero is locked as commander.');
       e.code = 'INVARIANT_PROTECTED_ROLE'; throw e;
     }
     if (u?.isAgent && row.role !== 'system') {

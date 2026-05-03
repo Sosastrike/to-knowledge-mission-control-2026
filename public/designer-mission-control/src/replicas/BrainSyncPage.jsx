@@ -6,7 +6,7 @@
 //   - Organic oval/football footprint inside the rectangular card
 //   - Continuous drift + curl-noise motion (never still)
 //   - Particle "traffic" along edges — pulses on events
-//   - Category-colored: Tony, Agent Zero, Agents, Memories, Skills,
+//   - Category-colored: Agent Zero, Hermes, Knowledge systems, Agents, Memories, Skills,
 //     Obsidian, MemPalace, Graphify, External
 //   - Visible side legend with live counts
 //   - Expand + Pop-out open the SAME live canvas, larger
@@ -19,22 +19,21 @@
 // ============================================================
 
 // ---------- Category palette (required) ----------
-// Tony and Agent 0 are first-class entities with tagline + role. The canvas
-// renders them as oversized hubs with persistent labels (see BrainCanvasStage).
-// Agent 0 is subordinate to Tony and reserved for the creator/owner's
-// special requests — enforced in schema.ROLE_PERMISSIONS['agent_zero.request'].
+// Agent Zero and Hermes are first-class entities with tagline + role. The canvas
+// renders Agent Zero as the primary hub and Hermes as the lieutenant hub.
+// Agent Zero reports to the Owner and all protected writes go through Bridge Session approval.
 // Tier drives rendering. "commander" hubs render large with a persistent
 // label, ring, and (optionally) a rotating oversight ring. Promoting a new
 // agent to commander is therefore a pure data change — add an entry to
 // COMMANDERS below (or set tier='commander' on an agent row in the DB) and
 // the canvas picks it up. No JSX changes required.
 const BRAIN_CATEGORIES = [
-  { id:'tony',       name:'Tony',           color:'#6bb3ff', count: 1,       nodes: 1,
-    role:'Orchestrator', tagline:'Creator · Owner', special:true, tier:'commander' },
-  { id:'agentzero',  name:'Agent 0',        color:'#ff4f8a', count: 1,       nodes: 1,
-    role:'Brain Oversight Specialist', tagline:'Owner-only · Subordinate to Tony', special:true, tier:'commander' },
-  { id:'meridian',   name:'Meridian',       color:'#ffb547', count: 1,       nodes: 1,
-    role:'Integrations Commander', tagline:'Governs FireCrawl · Zapier · n8n · MCP · Skills', special:true, tier:'commander' },
+  { id:'agentzero',  name:'Agent Zero',     color:'#6bb3ff', count: 1,       nodes: 1,
+    role:'Primary brain operator', tagline:'Commander · reports to Owner', special:true, tier:'commander' },
+  { id:'hermes',     name:'Hermes',         color:'#ff4f8a', count: 1,       nodes: 1,
+    role:'Lieutenant / Skill workflow specialist', tagline:'Supports Agent Zero · read-only pending proof', special:true, tier:'lieutenant' },
+  { id:'brainsync',  name:'Brain Sync',     color:'#ffb547', count: 1,       nodes: 1,
+    role:'Knowledge sync system', tagline:'Obsidian · MemPalace · Graphify · Build-Wiki', special:true, tier:'system' },
   { id:'agents',     name:'Other agents',   color:'#a16bff', count: 14,      nodes: 14  },
   { id:'memories',   name:'Memories',       color:'#ff9644', count: 87112,   nodes: 280 },
   { id:'skills',     name:'Skills',         color:'#3ddc84', count: 642,     nodes: 120 },
@@ -139,8 +138,8 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
   const NEURAL_MOTION = NM.isMotion;
   // Sector centroids — used by ALL non-original modes.
   const NM_SECTOR_CENTROIDS = {
-    tony:        { cx: 0.50, cy: 0.50 },
-    'agent zero':{ cx: 0.50, cy: 0.32 },
+    agentzero:   { cx: 0.50, cy: 0.50 },
+    hermes:      { cx: 0.50, cy: 0.32 },
     agents:      { cx: 0.30, cy: 0.45 },
     memories:    { cx: 0.72, cy: 0.45 },
     skills:      { cx: 0.25, cy: 0.70 },
@@ -164,34 +163,33 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     // Aspect ratio: 1.6 wide : 0.9 tall
     const aspectX = 1.6, aspectY = 0.9;
 
-    // Special "hub" nodes for Tony + Agent 0. Tony is the primary orchestrator
-    // (larger, warm blue) and Agent 0 is the brain-oversight specialist
-    // (slightly smaller, pink, with a persistent ring + always-on label so
-    // it's never mistaken for a regular agent node).
+    // Special hub nodes for Agent Zero + Hermes. Agent Zero is the primary
+    // operator and Hermes is the lieutenant / skill-workflow specialist
+    // (smaller, pink, with a persistent ring + always-on label).
     // Hubs are the tier='commander' agents. Adding another commander = one
     // more row here, and a (x,y,r) layout slot. The render path below is
     // entirely driven by `isHub` + `commanderId` — no commander-specific
     // branches except optional flags (oversight ring, governs-list, etc.).
     // Hierarchy:
-    //   Tony is the center of the universe — biggest, fixed at exact center.
-    //   Agent 0 and Meridian are subordinate commanders — smaller, equal to
-    //   each other, and continuously orbit Tony on a slow elliptical path
+    //   Agent Zero is the active brain nucleus — biggest, fixed at exact center.
+    //   Hermes and Brain Sync are secondary hubs — smaller and continuously
+    //   orbit Agent Zero on a slow elliptical path
     //   (opposite phases so they never overlap). Their integration nodes
     //   travel with them.
-    const TONY_CX = 0.50, TONY_CY = 0.50;
+    const COMMANDER_CX = 0.50, COMMANDER_CY = 0.50;
     const COMMANDER_ORBIT_RX = 0.16;
     const COMMANDER_ORBIT_RY = 0.13;
     const COMMANDER_ORBIT_PERIOD = 60; // seconds for a full lap — calm, not dizzying
     const hubs = [
-      { cat: BRAIN_CATEGORIES[0], x: TONY_CX, y: TONY_CY, r: 6.5, isHub: true, label:'TONY',     commanderId:'tony' },
-      { cat: BRAIN_CATEGORIES[1], x: TONY_CX, y: TONY_CY - COMMANDER_ORBIT_RY, r: 4.5, isHub: true, label:'AGENT 0',  commanderId:'agentzero', oversight: true,
-        orbitsTony: true, orbitPhase: 0,           orbitDir: 1 },
-      { cat: BRAIN_CATEGORIES[2], x: TONY_CX, y: TONY_CY + COMMANDER_ORBIT_RY, r: 4.5, isHub: true, label:'MERIDIAN', commanderId:'meridian',  governs: ['firecrawl','zapier','n8n','mcp'],
-        orbitsTony: true, orbitPhase: Math.PI,     orbitDir: 1 },
+      { cat: BRAIN_CATEGORIES[0], x: COMMANDER_CX, y: COMMANDER_CY, r: 6.5, isHub: true, label:'AGENT ZERO', commanderId:'agentzero' },
+      { cat: BRAIN_CATEGORIES[1], x: COMMANDER_CX, y: COMMANDER_CY - COMMANDER_ORBIT_RY, r: 4.5, isHub: true, label:'HERMES', commanderId:'hermes', oversight: true,
+        orbitsCommander: true, orbitPhase: 0,           orbitDir: 1 },
+      { cat: BRAIN_CATEGORIES[2], x: COMMANDER_CX, y: COMMANDER_CY + COMMANDER_ORBIT_RY, r: 4.5, isHub: true, label:'BRAIN SYNC', commanderId:'brainsync',  governs: ['obsidian','mempalace','graphify','buildwiki'],
+        orbitsCommander: true, orbitPhase: Math.PI,     orbitDir: 1 },
     ];
-    const HUB_TONY_INDEX = 0;
-    const HUB_A0_INDEX = 1;
-    const HUB_MERIDIAN_INDEX = 2;
+    const HUB_AGENT_ZERO_INDEX = 0;
+    const HUB_HERMES_INDEX = 1;
+    const HUB_BRAIN_SYNC_INDEX = 2;
 
     // Place hubs
     for (const h of hubs) {
@@ -211,11 +209,11 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       });
     }
 
-    // ─── Integration nodes (Meridian's domain) ─────────────────
+    // ─── Integration nodes (Brain Sync's domain) ─────────────────
     // These are real entities — each one corresponds to a wired-up
     // integration in patch-v2 (see /api/integrations/{firecrawl,zapier,n8n,mcp}).
-    // They render as small named nodes around Meridian, with edges to
-    // Meridian so the canvas reflects the actual governance link, and
+    // They render as small named nodes around Brain Sync, with edges to
+    // Brain Sync so the canvas reflects the actual governance link, and
     // are tagged so traffic particles light them up on real events.
     const INTEGRATION_NODES = [
       { id:'firecrawl', label:'FIRECRAWL', color:'#ff8a3d', dx: +0.055, dy: -0.025 },
@@ -223,15 +221,15 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       { id:'n8n',       label:'n8n',       color:'#ea4b71', dx: +0.025, dy: +0.060 },
       { id:'mcp',       label:'MCP',       color:'#7dd3fc', dx: -0.030, dy: +0.055 },
     ];
-    const meridianHub = hubs[2];
+    const brainSyncHub = hubs[2];
     const integrationNodeIds = {};
     for (const ig of INTEGRATION_NODES) {
       const nid = idx++;
       integrationNodeIds[ig.id] = nid;
       nodes.push({
         id: nid,
-        x: meridianHub.x + ig.dx,
-        y: meridianHub.y + ig.dy,
+        x: brainSyncHub.x + ig.dx,
+        y: brainSyncHub.y + ig.dy,
         vx: 0, vy: 0,
         r: 1.8,
         color: ig.color,
@@ -239,7 +237,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         integrationId: ig.id,
         isHub: false,
         isIntegration: true,
-        parentHubId: HUB_MERIDIAN_INDEX,
+        parentHubId: HUB_BRAIN_SYNC_INDEX,
         parentDx: ig.dx,
         parentDy: ig.dy,
         label: ig.label,
@@ -248,16 +246,16 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         speakPeriod: 11 + Math.random() * 4,
         speakPhase:  Math.random() * 9,
       });
-      // Solid edge Meridian → integration (governance is direct, not dashed)
-      edges.push({ a: HUB_MERIDIAN_INDEX, b: nid, op: 0.32, governance: true });
+      // Solid edge Brain Sync → integration (governance is direct, not dashed)
+      edges.push({ a: HUB_BRAIN_SYNC_INDEX, b: nid, op: 0.32, governance: true });
     }
-    // Tony coordinates with Meridian (commander-to-commander link, brighter)
-    edges.push({ a: HUB_TONY_INDEX, b: HUB_MERIDIAN_INDEX, op: 0.40, commanderLink: true });
-    // Agent 0 oversees Meridian as part of brain-hygiene (dashed, faint)
-    edges.push({ a: HUB_A0_INDEX,   b: HUB_MERIDIAN_INDEX, op: 0.18, support: true });
+    // Agent Zero coordinates with Brain Sync (commander-to-commander link, brighter)
+    edges.push({ a: HUB_AGENT_ZERO_INDEX, b: HUB_BRAIN_SYNC_INDEX, op: 0.40, commanderLink: true });
+    // Agent Zero oversees Brain Sync as part of brain-hygiene (dashed, faint)
+    edges.push({ a: HUB_HERMES_INDEX,   b: HUB_BRAIN_SYNC_INDEX, op: 0.18, support: true });
 
     // ─── Support-agent constellation ──────────────────────────
-    // Per design rule: Tony + Agent 0 stay as the two dominant brains.
+    // Per design rule: Agent Zero + Agent Zero stay as the two dominant brains.
     // Every other agent in the system shows up here as a *very small*
     // satellite — a tiny nucleus on a slow elliptical orbit between the
     // two hubs, with faint links back to BOTH (it's a governance/support
@@ -266,7 +264,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     // agent in the backend never changes node identity — only the label.
     //
     // Visual budget (locked):
-    //   • core ~1.4px (≈ 22% of Tony's size)
+    //   • core ~1.4px (≈ 22% of Agent Zero's size)
     //   • halo small (×3 of core, vs ×11 for hubs)
     //   • label only visible during a "speak" pulse beat (every 8–14s
     //     per agent, staggered) — keeps the map clean at idle.
@@ -282,11 +280,11 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     ];
     // Satellites encircle the *pair* of hubs as a single grouped constellation,
     // sitting on a wider, shallower ellipse that wraps around both. They never
-    // cross the centerline between Tony and Agent 0 — that empty spine stays
+    // cross the centerline between Agent Zero and Agent Zero — that empty spine stays
     // reserved for the two cores so the eye reads them as the dominant pair.
     const orbitCx = (hubs[0].x + hubs[1].x) / 2;
     const orbitCy = (hubs[0].y + hubs[1].y) / 2;
-    const orbitRx = 0.36;  // wide — wraps Tony + commander orbit with breathing room
+    const orbitRx = 0.36;  // wide — wraps Agent Zero + commander orbit with breathing room
     const orbitRy = 0.26;  // taller — keeps support agents clear of the commander ring
     SUPPORT_AGENTS.forEach((a, i) => {
       // Bias initial phases AWAY from the horizontal axis (the hub spine) so
@@ -325,18 +323,18 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         speakPhase:  Math.random() * 9,
         // Cache hub indices so the renderer can draw the two faint
         // governance connectors without re-searching every frame.
-        linkTonyId: HUB_TONY_INDEX,
-        linkA0Id:   HUB_A0_INDEX,
+        linkCommanderId: HUB_AGENT_ZERO_INDEX,
+        linkA0Id:   HUB_HERMES_INDEX,
       });
     });
     // Edges from each satellite → both hubs. Stored on the edges array
     // so they participate in normal traffic-particle routing too —
-    // Tony pinging a satellite, or Agent 0 acknowledging one, are
+    // Agent Zero pinging a satellite, or Agent Zero acknowledging one, are
     // first-class system events and visible as glints when they happen.
     const supportNodeIds = nodes.filter(n => n.isSupportAgent).map(n => n.id);
     for (const sid of supportNodeIds) {
-      edges.push({ a: HUB_TONY_INDEX, b: sid, op: 0.10, support: true });
-      edges.push({ a: HUB_A0_INDEX,   b: sid, op: 0.09, support: true });
+      edges.push({ a: HUB_AGENT_ZERO_INDEX, b: sid, op: 0.10, support: true });
+      edges.push({ a: HUB_HERMES_INDEX,   b: sid, op: 0.09, support: true });
     }
 
     // Other categories - distributed in organic clusters INSIDE the oval
@@ -406,7 +404,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     }
 
     // Edges:
-    //   - Hub edges: Tony & Agent Zero each connect to ~120 nodes (dense fan)
+    //   - Hub edges: Agent Zero & Hermes each connect to ~120 nodes (dense fan)
     //   - Intra-category: each non-hub connects to 2-3 same-category neighbors
     //   - Cross-category: ~8% of nodes have a bridge to another category
     const nonHubs = nodes.filter(n => !n.isHub);
@@ -443,7 +441,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
     // Hundreds of dim points that drift slowly in the background. They are
     // pure decoration (no edges, no events, never participate in particle
     // routing) — their job is to sell the "living universe" feeling without
-    // adding any visual weight that could rival Tony / Agent 0. Three depth
+    // adding any visual weight that could rival Agent Zero / Hermes. Three depth
     // layers (far / mid / near) for parallax. Generated once per mount.
     const stars = [];
     const STAR_COUNT = 320;
@@ -617,15 +615,15 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       // Drift + curl noise (cheap)
       for (const n of g.nodes) {
         if (n.isHub) {
-          // Tony stays fixed dead-center. Agent 0 and Meridian orbit Tony
+          // Agent Zero stays fixed dead-center. Agent Zero and Brain Sync orbit Agent Zero
           // closely and energetically — tight radius (~20 units in screen
           // space at the default canvas size) and a fast 12-second lap so
           // the motion reads as constant urgent activity, not drift.
-          if (n.orbitsTony) {
-            // Wide orbit so commanders never crowd Tony, each other, or the
-            // support-agent ring. Agent 0 and Meridian sit on opposite
-            // sides of Tony at all times (180° phase). Radius is tuned so
-            // the commander hubs + their satellite tools never touch Tony
+          if (n.orbitsCommander) {
+            // Wide orbit so commanders never crowd Agent Zero, each other, or the
+            // support-agent ring. Agent Zero and Brain Sync sit on opposite
+            // sides of Agent Zero at all times (180° phase). Radius is tuned so
+            // the commander hubs + their satellite tools never touch Agent Zero
             // and never reach the outer support orbit.
             const orbitT = (t / 14) * Math.PI * 2 * n.orbitDir + n.orbitPhase;
             const _baseNx = 0.50 + Math.cos(orbitT) * 0.20;
@@ -642,13 +640,13 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
           }
           continue;
         }
-        // Integration nodes (FireCrawl/Zapier/n8n/MCP) travel with Meridian —
-        // they're Meridian's satellites, computed every frame relative to
-        // Meridian's CURRENT position so the cluster moves as a unit.
+        // Integration nodes (FireCrawl/Zapier/n8n/MCP) travel with Brain Sync —
+        // they're Brain Sync's satellites, computed every frame relative to
+        // Brain Sync's CURRENT position so the cluster moves as a unit.
         if (n.isIntegration) {
-          const meridian = g.nodes[n.parentHubId];
-          n.x = meridian.x + n.parentDx;
-          n.y = meridian.y + n.parentDy;
+          const brainsync = g.nodes[n.parentHubId];
+          n.x = brainsync.x + n.parentDx;
+          n.y = brainsync.y + n.parentDy;
           continue;
         }
         // Support agents follow a deterministic slow orbit between the
@@ -741,7 +739,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       for (let i = 0; i < g.edges.length; i++) {
         const e = g.edges[i];
         const A = g.nodes[e.a], B = g.nodes[e.b];
-        // Support-agent governance connectors (Tony↔satellite,
+        // Support-agent governance connectors (Agent Zero↔satellite,
         // AgentZero↔satellite) get a softer dashed treatment so they
         // read as "supporting / governance link" rather than data flow.
         if (e.support) {
@@ -833,7 +831,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
           continue;
         }
 
-        // Integration nodes (FireCrawl, Zapier, n8n, MCP) — Meridian's domain.
+        // Integration nodes (FireCrawl, Zapier, n8n, MCP) — Brain Sync's domain.
         // Always-on label so the user can see exactly what's wired in.
         if (n.isIntegration) {
           const speakT = ((t + n.speakPhase) % n.speakPeriod) / n.speakPeriod;
@@ -873,8 +871,8 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
           // Outer ring
           ctx.strokeStyle = n.color; ctx.lineWidth = 1.4;
           ctx.beginPath(); ctx.arc(px, py, radius+4, 0, Math.PI*2); ctx.stroke();
-          // Agent 0 gets a second, rotating "oversight" ring so it's
-          // unmistakably a different kind of entity from Tony.
+          // Agent Zero gets a second, rotating "oversight" ring so it's
+          // unmistakably a different kind of entity from Agent Zero.
           if (n.oversight) {
             const rr = radius + 10 + Math.sin(t*1.6 + n.phase) * 1.2;
             ctx.strokeStyle = hexWithAlpha(n.color, 0.55);
@@ -903,8 +901,8 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         spawnTraffic(3 + Math.floor(Math.random()*3));
       }
 
-      // Commander comms — Tony is in constant active conversation with
-      // Agent 0 and Meridian. We spawn dedicated bidirectional particles
+      // Commander comms — Agent Zero is in constant active conversation with
+      // Agent Zero and Brain Sync. We spawn dedicated bidirectional particles
       // along those two specific edges every ~250-450ms so the user can
       // literally see them talking to him. This is in addition to the
       // ambient traffic above (which scatters across the whole graph).
@@ -912,13 +910,13 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
       const commInterval = 0.25 + Math.random() * 0.20;
       if (g.lastCommanderComm > commInterval) {
         g.lastCommanderComm = 0;
-        // Find Tony↔Agent0 and Tony↔Meridian edges, fire particles in
+        // Find Agent Zero↔Agent0 and Agent Zero↔Brain Sync edges, fire particles in
         // alternating directions so it reads as conversation.
         for (let i = 0; i < g.edges.length; i++) {
           const e = g.edges[i];
           if (!e.commanderLink && !(e.support && e.b === 2)) continue;
-          // Pick direction: roughly half the time Tony→commander, half
-          // commander→Tony, so the dialogue feels two-way.
+          // Pick direction: roughly half the time Agent Zero→commander, half
+          // commander→Agent Zero, so the dialogue feels two-way.
           const reversed = Math.random() < 0.5;
           const startNode = g.nodes[reversed ? e.b : e.a];
           g.particles.push({
@@ -989,7 +987,7 @@ function useBrainGraph({ running = true, densityScale = 1.0 } = {}) {
         if (n) {
           const px = n.x * w, py = n.y * h;
           const lines = n.isHub
-            ? [n.label, n.oversight ? 'Brain Oversight Specialist' : 'Orchestrator · Owner']
+            ? [n.label, n.oversight ? 'Primary Brain Operator' : 'Orchestrator · Owner']
             : [n.label, 'Support agent'];
           ctx.font = '600 11px -apple-system, Inter, system-ui, sans-serif';
           const widest = Math.max(...lines.map(l => ctx.measureText(l).width));
@@ -1277,7 +1275,7 @@ function KpiStrip({ pulse, history }) {
         <div className="brain-kpi-head">
           <span className="brain-kpi-ico" style={{background:'rgba(107,179,255,0.16)'}}><I.Activity size={12} style={{color:'#6bb3ff'}}/></span>
           <span className="brain-kpi-label">BRAIN SYNC</span>
-          <span className="brain-mock-pill" title="Live read-only — UI can read live status but cannot write/sync protected brain data yet. Memory writes go through Tony \u2192 Telegram approval (not wired yet)."><span className="mock-dot"/>Live read-only</span>
+          <span className="brain-mock-pill" title="Live read-only — UI can read live status but cannot write/sync protected brain data yet. Memory writes go through Agent Zero Bridge Session approval (not wired yet)."><span className="mock-dot"/>Live read-only</span>
           <span className="spacer"/>
           <span className="mono xsmall" style={{color:'var(--fg-0)'}}>{pulse.toLocaleString()} pulses / min</span>
         </div>
@@ -1405,12 +1403,12 @@ function BrainPopoutView(){
 
 // ---------- Main page ----------
 
-// ── Agent 0 surface ─────────────────────────────────────────
-// Agent 0 must be unmistakable in Brain Sync. These two components make it
+// ── Agent Zero surface ─────────────────────────────────────────
+// Agent Zero must be unmistakable in Brain Sync. These two components make it
 // a first-class entity in the page chrome (banner) and in the inspector
 // rail (card with role, scope, owner-only gate). The owner-only rule is
 // enforced by schema.ROLE_PERMISSIONS['agent_zero.request']; the UI reads
-// that permission so non-owners see the card but cannot invoke Agent 0.
+// that permission so non-owners see the card but cannot invoke Agent Zero.
 
 function useIsOwner(){
   const [isOwner, setIsOwner] = React.useState(false);
@@ -1438,14 +1436,14 @@ function AgentZeroBanner(){
       </div>
       <div className="a0b-text">
         <div className="a0b-title">
-          <span className="a0b-badge">AGENT 0</span>
-          <span className="a0b-role">Brain Oversight Specialist</span>
+          <span className="a0b-badge">AGENT ZERO</span>
+          <span className="a0b-role">Primary Brain Operator</span>
           <span className={`a0b-access ${isOwner?'ok':'denied'}`}>
             {isOwner ? '● Owner access' : '● Owner-only'}
           </span>
         </div>
         <div className="a0b-sub">
-          Subordinate to Tony · Keeps the brain organized, audits knowledge &amp; tool-use, and assists Tony with higher-order coordination.
+          Primary brain operator · Agent Zero keeps the brain organized, audits knowledge and tool use, and reports to the Owner.
           {!isOwner && <> <b>Not available for your role</b> — switch to the creator/owner persona to interact.</>}
         </div>
       </div>
@@ -1454,13 +1452,13 @@ function AgentZeroBanner(){
         className="btn sm"
         disabled={!isOwner}
         title={isOwner
-          ? 'Opens the Agent 0 request flow — backend endpoint POST /api/agent-zero/request is not wired yet.'
-          : 'Disabled — Agent 0 is reserved for the creator/owner.'}
+          ? 'Opens the Agent Zero request flow — backend endpoint POST /api/agent-zero/request is not wired yet.'
+          : 'Disabled — Agent Zero is reserved for the creator/owner.'}
         onClick={()=>{
           if (!isOwner) return;
-          window.pushToast?.('warn', 'Agent 0 request flow · backend endpoint not wired yet. Enforced server-side via schema.agent_zero.request.');
+          window.pushToast?.('warn', 'Agent Zero request flow · backend endpoint not wired yet. Enforced server-side via schema.agent_zero.request.');
         }}>
-        Request Agent 0 <I.ArrowRight size={11}/>
+        Request Agent Zero <I.ArrowRight size={11}/>
       </button>
     </div>
   );
@@ -1472,17 +1470,17 @@ function AgentZeroCard(){
     <div className="card brain-side-card agent-zero-card">
       <div className="card-head">
         <div className="card-title" style={{fontSize:11, letterSpacing:'0.1em', display:'flex', alignItems:'center', gap:8}}>
-          <span className="a0-dot"/>AGENT 0 · OVERSIGHT
+          <span className="a0-dot"/>AGENT ZERO · COMMANDER
           <span className="spacer"/>
           <span className={`tag xsmall ${isOwner?'ok':'warn'}`}>{isOwner?'Unlocked':'Owner-only'}</span>
         </div>
       </div>
       <div className="card-body vstack" style={{gap:10}}>
         <div className="a0c-grid">
-          <div><div className="muted xsmall">Role</div><div className="a0c-val">Brain-management specialist</div></div>
-          <div><div className="muted xsmall">Reports to</div><div className="a0c-val">Tony (creator · owner)</div></div>
+          <div><div className="muted xsmall">Role</div><div className="a0c-val">Primary brain operator</div></div>
+          <div><div className="muted xsmall">Reports to</div><div className="a0c-val">Owner / Creator</div></div>
           <div><div className="muted xsmall">Scope</div><div className="a0c-val">Knowledge graph hygiene, tool-use discipline, higher-order coordination</div></div>
-          <div><div className="muted xsmall">Access</div><div className="a0c-val">Creator/owner special requests only</div></div>
+          <div><div className="muted xsmall">Access</div><div className="a0c-val">Owner-approved Bridge Session actions only</div></div>
         </div>
 
         <div className="a0c-rule">
@@ -1499,10 +1497,10 @@ function AgentZeroCard(){
           <button
             className="btn sm"
             disabled={!isOwner}
-            title={isOwner ? 'Open Agent 0 request flow' : 'Reserved for owner'}
+            title={isOwner ? 'Open Agent Zero request flow' : 'Reserved for owner'}
             onClick={()=>{
               if (!isOwner) return;
-              window.pushToast?.('warn', 'Agent 0 request flow · endpoint not wired');
+              window.pushToast?.('warn', 'Agent Zero request flow · endpoint not wired');
             }}>
             Request task <I.ArrowRight size={11}/>
           </button>
@@ -1552,7 +1550,7 @@ function BrainSyncReadinessBanner(){
             <li>Graphify live graph updates</li>
             <li>Pac-Man real-time event feed</li>
             <li>Brain Sync write events</li>
-            <li>Memory write approvals (gated through Tony → Telegram)</li>
+            <li>Memory write approvals (gated through Agent Zero Bridge Session)</li>
           </ul>
         </div>
       </div>

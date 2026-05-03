@@ -218,7 +218,7 @@ const _UI_AUDIT_ACTIONS = new Set([
   'meeting.agent.invite',     // Live Meetings invite tab → adds an agent seat
   'meeting.agent.remove',     // Live Meetings invite tab → removes an agent seat
   'meeting.link.copy',        // Live Meetings → copy share link
-  'dashboard.escalation.send',// Dashboard → Escalate flow (Tony / A0 / Pacman)
+  'dashboard.escalation.send',// Dashboard → Escalate flow (Agent Zero / Hermes / Pacman)
   'dashboard.broadcast.send', // Dashboard → Broadcast flow
   'escalation.raise',         // Dashboard → Escalate modal real action
   'ticket.create',            // Dashboard → New ticket modal

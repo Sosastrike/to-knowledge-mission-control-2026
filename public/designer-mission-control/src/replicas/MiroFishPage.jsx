@@ -2,7 +2,7 @@
 // MiroFishPage — Prediction & Simulation Lab
 //
 // First-class Mission Control module. Sits next to Brain Sync.
-// Owner-only constraint: Agent 0 is THE runner — Tony / others
+// Owner-only constraint: Agent 0 is THE runner — Agent Zero / other agents
 // view-only. Backend repo (To-Knowledge-MiroFish) isn't installed
 // yet, so the install banner is permanent and the Start button
 // is disabled. Streams (feed / cost / confidence) animate from
@@ -395,7 +395,7 @@ function MfHeader({ status, runner, queue, lastSuccess, costToday, model }) {
         <div className="mf-mini">
           <span><span className={`mf-status-pill is-${status}`}><span className="mf-sp-dot"/>{status === 'running' ? 'Running' : status === 'online' ? 'Online' : status === 'degraded' ? 'Degraded' : status === 'offline' ? 'Offline' : 'Error'}</span></span>
           <span className="mf-owner"><span className="mf-owner-dot"/>Runner · {runner}</span>
-          <span className="mf-muted">Tony · request &amp; view · Other agents · view-only</span>
+          <span className="mf-muted">Agent Zero · request &amp; view · other agents · view-only</span>
         </div>
       </div>
 

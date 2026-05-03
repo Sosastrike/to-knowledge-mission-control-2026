@@ -11,7 +11,7 @@
   --tier-worker-size:42px;
   --tier-tool-size:  36px;
 
-  --cmd-1: oklch(0.78 0.13 var(--accent-hue, 250));   /* commander 1 (Tony) */
+  --cmd-1: oklch(0.78 0.13 var(--accent-hue, 250));   /* commander 1 (Agent Zero) */
   --cmd-2: oklch(0.72 0.15 165);                      /* commander 2 (Agent Zero) */
   --tier-lt: oklch(0.74 0.13 220);
   --tier-spec: oklch(0.74 0.10 270);

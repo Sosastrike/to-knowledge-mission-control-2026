@@ -138,7 +138,7 @@ export type AgentZeroSkillSafeMode = 'metadata_only' | 'blocked'
 
 export type AgentZeroSkillRegistryItem = {
   name: string
-  source: 'agent_zero' | 'claudeclaw_tony' | 'mission_control_repo' | 'home_claude' | 'database'
+  source: 'agent_zero' | 'claudeclaw_legacy' | 'mission_control_repo' | 'home_claude' | 'database'
   source_label: string
   description: string
   dependencies: string[]

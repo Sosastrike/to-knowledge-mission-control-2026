@@ -201,7 +201,7 @@ function AddAgentWizard({ open, onClose }) {
                     <option key={c.id} value={c.id}>{c.display_name} · {c.tier}</option>
                   ))}
                 </select>
-                <div className="hint">Defaults to Tony. Any current commander may supervise. Future commanders appear here automatically.</div>
+                <div className="hint">Defaults to Agent Zero. Hermes may assist as lieutenant. Future commanders appear here automatically after owner approval.</div>
               </div>
               <div className="an-field">
                 <label>Default model</label>

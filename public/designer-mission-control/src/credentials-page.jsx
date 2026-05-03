@@ -24,7 +24,7 @@ const CRED_SERVICES = [
   {
     id: 'openrouter',
     label: 'OpenRouter',
-    blurb: 'All LLM traffic (Tony, agents, embeddings). Single API key.',
+    blurb: 'All LLM traffic (Agent Zero, agents, embeddings). Single API key.',
     link: { href: 'https://openrouter.ai/keys', label: 'openrouter.ai/keys' },
     fields: [
       { id: 'api_key', label: 'API Key', sensitive: true, placeholder: 'sk-or-v1-…', help: 'Starts with sk-or-v1-.' },
@@ -56,11 +56,11 @@ const CRED_SERVICES = [
   {
     id: 'elevenlabs',
     label: 'ElevenLabs',
-    blurb: 'Tony\'s voice (TTS). Approved provider — do not swap without Governance approval.',
+    blurb: 'Agent Zero voice (TTS). Approved provider — do not swap without Governance approval.',
     link: { href: 'https://elevenlabs.io/app/settings/api-keys', label: 'elevenlabs.io/app/settings/api-keys' },
     fields: [
       { id: 'api_key',           label: 'API Key',          sensitive: true,  placeholder: 'xi-api-key…' },
-      { id: 'default_voice_id',  label: 'Default Voice ID', sensitive: false, placeholder: 'e.g. 21m00Tcm4TlvDq8ikWAM', help: 'Voice Tony uses unless overridden per utterance.', optional: true },
+      { id: 'default_voice_id',  label: 'Default Voice ID', sensitive: false, placeholder: 'e.g. 21m00Tcm4TlvDq8ikWAM', help: 'Voice Agent Zero uses unless overridden per utterance.', optional: true },
     ],
   },
   {

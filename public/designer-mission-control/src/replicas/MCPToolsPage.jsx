@@ -108,7 +108,7 @@ function MCPToolsPage() {
           <table className="ns-table">
             <thead><tr>
               <th>Name</th><th>Transport</th><th>Status</th><th>Auth</th>
-              <th>Tools</th><th>Visible to Tony</th><th>Visible to sub-agents</th>
+              <th>Tools</th><th>Visible to Agent Zero</th><th>Visible to sub-agents</th>
               <th>Last error</th><th></th>
             </tr></thead>
             <tbody>

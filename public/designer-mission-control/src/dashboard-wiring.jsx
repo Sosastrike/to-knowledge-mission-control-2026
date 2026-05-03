@@ -71,25 +71,25 @@ function WireModal({ title, subtitle, onClose, footer, children, width = 520 }) 
   );
 }
 
-// ─── Escalation — routes ONLY to Tony, Agent 0, Pacman ────────────────
+// ─── Escalation — routes ONLY to Agent Zero, Hermes, Pacman ────────────────
 //
 // Frozen routing rule per spec:
-//   Tony    = operational leader
-//   Agent 0 = behavior / knowledge / supervision review
+//   Agent Zero = ecosystem commander
+//   Hermes     = skill and workflow lieutenant
 //   Pacman  = security oversight
 //
 // No other agent is a valid escalation target. The list below is NOT pulled
 // from window.AGENTS dynamically — it is hard-wired so a future seed change
 // cannot silently broaden the blast radius.
 const ESCALATION_TARGETS = [
-  { id: 'tony',      name: 'Tony',    role: 'Operational leader',              rationale: 'Cross-team coordination and ops ownership.' },
-  { id: 'agent-zero', name: 'Agent 0', role: 'Behavior · knowledge · supervision', rationale: 'Policy, supervision, knowledge integrity.' },
+  { id: 'agent-zero', name: 'Agent Zero', role: 'Ecosystem commander', rationale: 'Mission Control, Bridge, Brain, tools, models, and agent command.' },
+  { id: 'hermes', name: 'Hermes', role: 'Lieutenant · skills · workflows', rationale: 'Skill creation, workflow planning, and operational methods.' },
   { id: 'pacman',    name: 'Pacman',  role: 'Security oversight',              rationale: 'Credential, access, and policy-breach review.' },
 ];
 
 function EscalateModal({ context, onClose }) {
   // context: { kind: 'ticket'|'alert'|'general', id, title }
-  const [targets, setTargets] = React.useState(() => new Set(['tony']));
+  const [targets, setTargets] = React.useState(() => new Set(['agent-zero']));
   const [reason, setReason] = React.useState('');
   const [urgency, setUrgency] = React.useState('med');
   const [submitting, setSubmitting] = React.useState(false);
@@ -138,7 +138,7 @@ function EscalateModal({ context, onClose }) {
         ok: true,
         audited,
         msg: audited
-          ? `Escalation recorded to audit log · routed to ${payload.targets.map(t=>t==='agent-zero'?'Agent 0':t.charAt(0).toUpperCase()+t.slice(1)).join(', ')}.`
+          ? `Escalation recorded to audit log · routed to ${payload.targets.map(t=>t==='agent-zero'?'Agent Zero':t==='hermes'?'Hermes':t.charAt(0).toUpperCase()+t.slice(1)).join(', ')}.`
           : 'Escalation captured locally. /api/escalations endpoint not yet wired — see audit log once backend ships.',
       });
       setTimeout(() => onClose(), 1400);
@@ -169,7 +169,7 @@ function EscalateModal({ context, onClose }) {
       <div>
         <div className="stat-label" style={{marginBottom:6}}>Route to</div>
         <div className="muted xsmall" style={{marginBottom:10}}>
-          Escalations go only to Tony, Agent 0, and Pacman. This list is frozen.
+          Escalations go only to Agent Zero, Hermes, and Pacman. This list is frozen.
         </div>
         <div className="vstack" style={{gap:6}}>
           {ESCALATION_TARGETS.map(t => {

@@ -11,7 +11,7 @@
 //   - Runtime pulls from /api/agents + SSE stream if server is up;
 //     falls back to window.AGENTS seed read-only and says so.
 //   - Role change / delete / create call /api/agents (admin-gated);
-//     Tony + agent-zero are hard-protected in UI AND server.
+//     Agent Zero is hard-protected as commander; Tony Legacy is archived.
 //   - Channels tab lists from /api/channels (9-catalogue) and grants
 //     per agent via POST/DELETE /api/agents/:id/channels.
 //   - Credentials tab is view-only — deep-links to Settings → Credentials
@@ -214,7 +214,7 @@
           <div style={{flex:1, minWidth:0}}>
             <div className="hstack" style={{gap:8}}>
               <div style={{color:'var(--fg-0)', fontSize:16, fontWeight:500}}>{agent.name}</div>
-              {prot && <span className="tag" title="Tony / Agent 0 cannot be deleted or have roles changed"><I.Lock size={10}/> PROTECTED</span>}
+              {prot && <span className="tag" title="Agent Zero cannot be deleted or have commander role changed; Tony Legacy is archived"><I.Lock size={10}/> PROTECTED</span>}
               {deleted && <span className="tag err">DELETED</span>}
             </div>
             <div className="muted xsmall mono">id={agent.id} · role={agent.role} · model={agent.model || '—'}</div>
@@ -280,7 +280,7 @@
             <button className="btn sm" disabled={!httpReady || busy.reconnect} onClick={()=>act('reconnect')}><I.Refresh size={11}/> Reconnect channels</button>
             <div className="spacer"/>
             {prot
-              ? <button className="btn sm danger" disabled title="Tony / Agent 0 cannot be deleted."><I.Trash size={11}/> Delete (protected)</button>
+              ? <button className="btn sm danger" disabled title="Agent Zero cannot be deleted. Tony Legacy is archived."><I.Trash size={11}/> Delete (protected)</button>
               : <DeleteBlock act={act} busy={busy} httpReady={httpReady} agentName={agent.name}/>
             }
           </div>

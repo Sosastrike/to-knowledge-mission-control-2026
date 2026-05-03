@@ -76,6 +76,7 @@ export type AgentZeroEcosystemAgentRecord = {
     test_chat_endpoint: '/api/bridge/agent-zero/test-chat'
     ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem'
     bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session'
+    execution_gateway_endpoint: '/api/bridge/agent-zero/execute'
     capabilities_source: 'mission_control_context'
     mode: 'read_only'
     execution_enabled: false
@@ -804,6 +805,7 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
       test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
       ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
       bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
+      execution_gateway_endpoint: '/api/bridge/agent-zero/execute',
       capabilities_source: 'mission_control_context',
       mode: 'read_only',
       execution_enabled: false,
@@ -1164,6 +1166,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         '/api/bridge/agent-zero/status',
         '/api/bridge/agent-zero/test-chat',
         '/api/bridge/agent-zero/ecosystem',
+        '/api/bridge/agent-zero/execute',
         '/api/bridge/agent-zero/reports',
         '/api/bridge/agent-zero/google-drive/status',
         '/api/bridge/agent-zero/google-drive/upload-report',
@@ -1462,7 +1465,8 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'You are Agent Zero in a Mission Control ecosystem test.',
     'You may use only the JSON context below. Do not claim direct access beyond it.',
     'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
-    'If bridge_session.execution_enabled is true, work only inside the listed bridge_session scope and ensure each action is audited through /api/bridge/agent-zero/bridge-session/audit. Do not ask for repeated approval for small steps inside the active session.',
+    'If bridge_session.execution_enabled is true, execute only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for repeated approval for small steps inside the active session.',
+    'Never request raw shell, arbitrary filesystem, root, Docker socket, or direct secret access. If an adapter is blocked or missing, say it is blocked instead of pretending.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
     'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',

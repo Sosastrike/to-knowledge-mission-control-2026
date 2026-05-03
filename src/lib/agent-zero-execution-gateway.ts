@@ -1,0 +1,745 @@
+import Database from 'better-sqlite3'
+import {
+  createAgentZeroReport,
+  redactUnsafeOwnerText,
+  type AgentZeroReportCreationResult,
+} from './agent-zero-report-delivery'
+import {
+  lookupAgentZeroGoogleDriveFolder,
+  uploadAgentZeroGoogleDriveTestFile,
+  uploadAgentZeroReportToGoogleDrive,
+  verifyAgentZeroGoogleDriveLink,
+} from './agent-zero-google-drive-delivery'
+import {
+  lookupAgentZeroOneDriveFolder,
+  uploadAgentZeroOneDriveTestFile,
+  uploadAgentZeroReportToOneDrive,
+  verifyAgentZeroOneDriveLink,
+} from './agent-zero-onedrive-delivery'
+import {
+  readLatestAgentZeroBridgeSession,
+  recordAgentZeroBridgeSessionAudit,
+  type AgentZeroBridgeSessionObject,
+  type AgentZeroBridgeSessionRequester,
+} from './agent-zero-bridge-session'
+
+export const AGENT_ZERO_EXECUTION_GATEWAY_ROUTE = '/api/bridge/agent-zero/execute'
+
+export type AgentZeroExecutionCategory =
+  | 'report_creation'
+  | 'mission_control_attachment'
+  | 'obsidian_adapter'
+  | 'mempalace_adapter'
+  | 'buildwiki_run_now'
+  | 'google_drive_delivery'
+  | 'onedrive_delivery'
+  | 'mcp_tool'
+
+export type AgentZeroExecutionStatus = 'completed' | 'blocked' | 'failed'
+
+export type AgentZeroExecutionAdapterSummary = {
+  action: string
+  category: AgentZeroExecutionCategory
+  label: string
+  description: string
+  status: 'available' | 'blocked'
+  execution_enabled: boolean
+  writes_enabled: boolean
+  bridge_session_required: true
+  allowed_scope_keys: string[]
+  blocked_reason: string | null
+  safety: {
+    raw_shell_enabled: false
+    arbitrary_filesystem_enabled: false
+    root_enabled: false
+    docker_socket_enabled: false
+    direct_secret_reads_enabled: false
+  }
+}
+
+type AdapterHandlerResult = {
+  ok: boolean
+  status: AgentZeroExecutionStatus
+  normal_reply: string
+  blocked_reason: string | null
+  result: Record<string, unknown>
+}
+
+type AdapterDefinition = AgentZeroExecutionAdapterSummary & {
+  handler: (input: AgentZeroExecutionGatewayInput, session: AgentZeroBridgeSessionObject) => Promise<AdapterHandlerResult>
+}
+
+export type AgentZeroExecutionGatewayInput = {
+  db?: Database.Database
+  requester: AgentZeroBridgeSessionRequester
+  bridgeSessionId?: string | null
+  action: string
+  input?: Record<string, unknown>
+  reportRoot?: string
+  now?: Date
+}
+
+export type AgentZeroExecutionGatewayResult = {
+  ok: boolean
+  http_status: number
+  mode: 'agent_zero_bridge_execution_gateway'
+  action: string
+  adapter_registered: boolean
+  adapter: AgentZeroExecutionAdapterSummary | null
+  bridge_session_required: true
+  bridge_session: Pick<AgentZeroBridgeSessionObject, 'session_id' | 'status' | 'expires_at' | 'execution_enabled' | 'blocked_reason'>
+  execution_enabled: boolean
+  accepted_for_execution: boolean
+  writes_enabled: boolean
+  status: AgentZeroExecutionStatus
+  result_checked: true
+  no_fake_done: true
+  raw_local_paths_exposed: false
+  raw_shell_enabled: false
+  arbitrary_filesystem_enabled: false
+  root_enabled: false
+  docker_socket_enabled: false
+  direct_secret_reads_enabled: false
+  audit: {
+    started: boolean
+    finished: boolean
+    start_event_id: string | null
+    finish_event_id: string | null
+    blocked_reason: string | null
+  }
+  result: Record<string, unknown> | null
+  normal_reply: string
+  blocked_reason: string | null
+  error: string | null
+}
+
+const SAFETY = {
+  raw_shell_enabled: false,
+  arbitrary_filesystem_enabled: false,
+  root_enabled: false,
+  docker_socket_enabled: false,
+  direct_secret_reads_enabled: false,
+} as const
+
+const FORBIDDEN_ACTION_RE = /\b(shell|exec|command|filesystem|file\.read|secret|docker|root|sudo|env|credential)\b/i
+
+function stringInput(input: Record<string, unknown> | undefined, key: string, fallback = ''): string {
+  const value = input?.[key]
+  return typeof value === 'string' ? redactUnsafeOwnerText(value).slice(0, 4000) : fallback
+}
+
+function objectInput(input: Record<string, unknown> | undefined, key: string): Record<string, unknown> | undefined {
+  const value = input?.[key]
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined
+}
+
+function arrayInput(input: Record<string, unknown> | undefined, key: string): unknown[] | undefined {
+  const value = input?.[key]
+  return Array.isArray(value) ? value : undefined
+}
+
+function safeJson(value: unknown): unknown {
+  if (typeof value === 'string') return redactUnsafeOwnerText(value)
+  if (!value || typeof value !== 'object') return value
+  if (Array.isArray(value)) return value.map(safeJson)
+  const output: Record<string, unknown> = {}
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    const lowered = key.toLowerCase()
+    if (
+      lowered === 'internal' ||
+      lowered.endsWith('_path') ||
+      lowered.endsWith('_dir') ||
+      lowered.includes('secret') ||
+      lowered.includes('password') ||
+      lowered.includes('api_key') ||
+      lowered.includes('private_key') ||
+      lowered.includes('access_key') ||
+      (lowered.includes('token') && lowered !== 'no_tokens_exposed')
+    ) continue
+    output[key] = safeJson(raw)
+  }
+  return output
+}
+
+function reportExternalDeliveryBlocked(report: AgentZeroReportCreationResult): boolean {
+  return report.report.delivery_channels.some((channel) =>
+    channel.requested && channel.external_write && channel.status === 'blocked')
+}
+
+function publicReportResult(report: AgentZeroReportCreationResult): Record<string, unknown> {
+  return {
+    report: report.report,
+    attachments: report.attachments,
+    mission_control_report_link: report.report.mission_control_url,
+    raw_local_paths_exposed: false,
+  }
+}
+
+function blockedResult(normalReply: string, blockedReason: string, extra: Record<string, unknown> = {}): AdapterHandlerResult {
+  return {
+    ok: false,
+    status: 'blocked',
+    normal_reply: redactUnsafeOwnerText(normalReply),
+    blocked_reason: blockedReason,
+    result: {
+      ...extra,
+      accepted_for_execution: false,
+      no_fake_done: true,
+      raw_local_paths_exposed: false,
+    },
+  }
+}
+
+function adapterSummaries(): AgentZeroExecutionAdapterSummary[] {
+  return ADAPTERS.map(({ handler: _handler, ...summary }) => summary)
+}
+
+const ADAPTERS: AdapterDefinition[] = [
+  {
+    action: 'agent_zero.report.create',
+    category: 'report_creation',
+    label: 'Create Agent Zero report',
+    description: 'Creates a Markdown/PDF report and exposes Mission Control download links without raw local paths.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['agent_zero.reports.create', 'agent_zero.report.create'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const report = await createAgentZeroReport({
+        title: stringInput(request.input, 'title', 'Agent Zero Execution Report'),
+        summary: stringInput(request.input, 'summary', 'Agent Zero created this report through the Bridge execution gateway.'),
+        ownerMessage: stringInput(request.input, 'owner_message'),
+        requestedDelivery: request.input?.requested_delivery || request.input?.requestedDelivery,
+        source: 'api',
+        sections: arrayInput(request.input, 'sections') || [
+          { heading: 'Execution gateway', body: 'Agent Zero created this report through a scoped Bridge Session adapter.' },
+        ],
+        root: request.reportRoot,
+      })
+      const deliveryBlocked = reportExternalDeliveryBlocked(report)
+      return {
+        ok: !deliveryBlocked,
+        status: deliveryBlocked ? 'blocked' : 'completed',
+        normal_reply: report.report.normal_reply,
+        blocked_reason: deliveryBlocked ? 'requested_external_delivery_blocked' : null,
+        result: {
+          ...publicReportResult(report),
+          report_created: true,
+          delivery_status: deliveryBlocked ? 'blocked' : 'available',
+        },
+      }
+    },
+  },
+  {
+    action: 'mission_control.report.attach',
+    category: 'mission_control_attachment',
+    label: 'Expose report through Mission Control',
+    description: 'Returns Mission Control report links only; Telegram file sending is not enabled by this adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['agent_zero.reports.create', 'mission_control.report.attach'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const report = await createAgentZeroReport({
+        title: stringInput(request.input, 'title', 'Agent Zero Mission Control Attachment'),
+        summary: stringInput(request.input, 'summary', 'Agent Zero created a Mission Control report link.'),
+        ownerMessage: stringInput(request.input, 'owner_message'),
+        requestedDelivery: { provider: 'mission_control' },
+        source: 'api',
+        sections: arrayInput(request.input, 'sections') || [
+          { heading: 'Attachment', body: 'This report is available through Mission Control links only.' },
+        ],
+        root: request.reportRoot,
+      })
+      return {
+        ok: true,
+        status: 'completed',
+        normal_reply: 'Done. The report is ready in Mission Control.',
+        blocked_reason: null,
+        result: publicReportResult(report),
+      }
+    },
+  },
+  {
+    action: 'google_drive.folder_lookup',
+    category: 'google_drive_delivery',
+    label: 'Google Drive folder lookup',
+    description: 'Registered delivery adapter. Currently reports blocked unless a connector invocation adapter is configured.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['google_drive_if_connector_configured'],
+    blocked_reason: 'google_drive_folder_lookup_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = await lookupAgentZeroGoogleDriveFolder({ folder: stringInput(request.input, 'folder') || null })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'google_drive.upload_test_file',
+    category: 'google_drive_delivery',
+    label: 'Google Drive upload test file',
+    description: 'External write adapter placeholder. It blocks honestly until upload connector invocation exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['google_drive_if_connector_configured'],
+    blocked_reason: 'google_drive_upload_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request, session) => {
+      const result = await uploadAgentZeroGoogleDriveTestFile({ folder: stringInput(request.input, 'folder') || null, bridgeSessionId: session.session_id })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'google_drive.upload_report_pdf',
+    category: 'google_drive_delivery',
+    label: 'Google Drive upload report',
+    description: 'External report upload adapter placeholder. It blocks honestly until upload connector invocation exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['google_drive_if_connector_configured'],
+    blocked_reason: 'google_drive_upload_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request, session) => {
+      const result = await uploadAgentZeroReportToGoogleDrive({
+        reportId: stringInput(request.input, 'report_id') || null,
+        folder: stringInput(request.input, 'folder') || null,
+        bridgeSessionId: session.session_id,
+      })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'google_drive.verify_link',
+    category: 'google_drive_delivery',
+    label: 'Google Drive verify link',
+    description: 'Registered verification adapter. It blocks until link verification is configured.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['google_drive_if_connector_configured'],
+    blocked_reason: 'google_drive_link_verification_adapter_not_configured',
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = await verifyAgentZeroGoogleDriveLink({ link: stringInput(request.input, 'link') || null })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'onedrive.folder_lookup',
+    category: 'onedrive_delivery',
+    label: 'OneDrive folder lookup',
+    description: 'Registered delivery adapter. Currently reports blocked unless a connector invocation adapter is configured.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['onedrive_if_connector_configured'],
+    blocked_reason: 'onedrive_folder_lookup_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = await lookupAgentZeroOneDriveFolder({ folder: stringInput(request.input, 'folder') || null })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'onedrive.upload_test_file',
+    category: 'onedrive_delivery',
+    label: 'OneDrive upload test file',
+    description: 'External write adapter placeholder. It blocks honestly until upload connector invocation exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['onedrive_if_connector_configured'],
+    blocked_reason: 'onedrive_upload_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request, session) => {
+      const result = await uploadAgentZeroOneDriveTestFile({ folder: stringInput(request.input, 'folder') || null, bridgeSessionId: session.session_id })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'onedrive.upload_report_pdf',
+    category: 'onedrive_delivery',
+    label: 'OneDrive upload report',
+    description: 'External report upload adapter placeholder. It blocks honestly until upload connector invocation exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['onedrive_if_connector_configured'],
+    blocked_reason: 'onedrive_upload_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request, session) => {
+      const result = await uploadAgentZeroReportToOneDrive({
+        reportId: stringInput(request.input, 'report_id') || null,
+        folder: stringInput(request.input, 'folder') || null,
+        bridgeSessionId: session.session_id,
+      })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'onedrive.verify_link',
+    category: 'onedrive_delivery',
+    label: 'OneDrive verify link',
+    description: 'Registered verification adapter. It blocks until link verification is configured.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['onedrive_if_connector_configured'],
+    blocked_reason: 'onedrive_link_verification_adapter_not_configured',
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = await verifyAgentZeroOneDriveLink({ link: stringInput(request.input, 'link') || null })
+      return blockedResult(result.normal_reply, result.blocked_reason, result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'buildwiki.run_now',
+    category: 'buildwiki_run_now',
+    label: 'Build-Wiki Run Now',
+    description: 'Scoped Build-Wiki action. This gateway will not run systemctl directly; it requires the registered dispatcher adapter to accept a Bridge Session id.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['buildwiki.run_now'],
+    blocked_reason: 'buildwiki_run_now_bridge_session_dispatch_adapter_not_wired',
+    safety: SAFETY,
+    handler: async () => blockedResult(
+      'Build-Wiki Run Now is blocked until the registered dispatcher accepts this Bridge Session id.',
+      'buildwiki_run_now_bridge_session_dispatch_adapter_not_wired',
+      {
+        action: 'buildwiki.run_now',
+        target_service: 'opencloud-docs-farmer.service',
+        direct_systemctl_from_gateway: false,
+      },
+    ),
+  },
+  {
+    action: 'obsidian.write',
+    category: 'obsidian_adapter',
+    label: 'Obsidian write',
+    description: 'Write adapter placeholder. It blocks unless a separately enabled Obsidian write adapter exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.write_adapter'],
+    blocked_reason: 'obsidian_write_adapter_not_enabled',
+    safety: SAFETY,
+    handler: async () => blockedResult('Obsidian write is blocked because the write adapter is not enabled.', 'obsidian_write_adapter_not_enabled'),
+  },
+  {
+    action: 'mempalace.write',
+    category: 'mempalace_adapter',
+    label: 'MemPalace write',
+    description: 'Write adapter placeholder. It blocks unless a separately enabled MemPalace write adapter exists.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.write_adapter'],
+    blocked_reason: 'mempalace_write_adapter_not_enabled',
+    safety: SAFETY,
+    handler: async () => blockedResult('MemPalace write is blocked because the write adapter is not enabled.', 'mempalace_write_adapter_not_enabled'),
+  },
+  {
+    action: 'mcp.tool.execute',
+    category: 'mcp_tool',
+    label: 'MCP tool execution',
+    description: 'MCP execution placeholder. It blocks unless the requested tool has a registered invocation adapter and Bridge Session scope.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mcp.tool.execute'],
+    blocked_reason: 'mcp_tool_execution_adapter_not_configured',
+    safety: SAFETY,
+    handler: async (request) => blockedResult(
+      'MCP tool execution is blocked because no invocation adapter is configured for this tool.',
+      'mcp_tool_execution_adapter_not_configured',
+      {
+        requested_server: stringInput(request.input, 'server') || null,
+        requested_tool: stringInput(request.input, 'tool') || null,
+        tool_input_shape_visible: Boolean(objectInput(request.input, 'tool_input')),
+        tool_invoked: false,
+      },
+    ),
+  },
+]
+
+export function listAgentZeroExecutionAdapters(): AgentZeroExecutionAdapterSummary[] {
+  return adapterSummaries()
+}
+
+function findAdapter(action: string): AdapterDefinition | null {
+  return ADAPTERS.find((adapter) => adapter.action === action) || null
+}
+
+function sessionAllows(adapter: AdapterDefinition, session: AgentZeroBridgeSessionObject): boolean {
+  const allowed = new Set([
+    ...(session.allowed_tools || []),
+    ...(session.allowed_integrations || []),
+    ...(session.allowed_models || []),
+    ...(session.allowed_brain_access || []),
+  ])
+  return adapter.allowed_scope_keys.some((key) => allowed.has(key)) || allowed.has(adapter.action)
+}
+
+function publicSession(session: AgentZeroBridgeSessionObject): AgentZeroExecutionGatewayResult['bridge_session'] {
+  return {
+    session_id: session.session_id,
+    status: session.status,
+    expires_at: session.expires_at,
+    execution_enabled: session.execution_enabled,
+    blocked_reason: session.blocked_reason,
+  }
+}
+
+function baseResult(input: {
+  action: string
+  adapter: AgentZeroExecutionAdapterSummary | null
+  session: AgentZeroBridgeSessionObject
+  ok: boolean
+  httpStatus: number
+  accepted: boolean
+  status: AgentZeroExecutionStatus
+  normalReply: string
+  blockedReason: string | null
+  error?: string | null
+  result?: Record<string, unknown> | null
+  audit?: Partial<AgentZeroExecutionGatewayResult['audit']>
+}): AgentZeroExecutionGatewayResult {
+  return {
+    ok: input.ok,
+    http_status: input.httpStatus,
+    mode: 'agent_zero_bridge_execution_gateway',
+    action: input.action,
+    adapter_registered: Boolean(input.adapter),
+    adapter: input.adapter,
+    bridge_session_required: true,
+    bridge_session: publicSession(input.session),
+    execution_enabled: input.session.execution_enabled,
+    accepted_for_execution: input.accepted,
+    writes_enabled: Boolean(input.accepted && input.adapter?.writes_enabled),
+    status: input.status,
+    result_checked: true,
+    no_fake_done: true,
+    raw_local_paths_exposed: false,
+    raw_shell_enabled: false,
+    arbitrary_filesystem_enabled: false,
+    root_enabled: false,
+    docker_socket_enabled: false,
+    direct_secret_reads_enabled: false,
+    audit: {
+      started: Boolean(input.audit?.started),
+      finished: Boolean(input.audit?.finished),
+      start_event_id: input.audit?.start_event_id || null,
+      finish_event_id: input.audit?.finish_event_id || null,
+      blocked_reason: input.audit?.blocked_reason || null,
+    },
+    result: input.result ? safeJson(input.result) as Record<string, unknown> : null,
+    normal_reply: redactUnsafeOwnerText(input.normalReply),
+    blocked_reason: input.blockedReason,
+    error: input.error || null,
+  }
+}
+
+export async function executeAgentZeroBridgeAction(input: AgentZeroExecutionGatewayInput): Promise<AgentZeroExecutionGatewayResult> {
+  const action = String(input.action || '').trim()
+  const sessionRead = readLatestAgentZeroBridgeSession({
+    db: input.db,
+    workspaceId: input.requester.workspaceId,
+    tenantId: input.requester.tenantId,
+    sync: true,
+    now: input.now,
+  })
+  const session = sessionRead.session
+  const adapter = findAdapter(action)
+
+  if (!adapter || FORBIDDEN_ACTION_RE.test(action)) {
+    return baseResult({
+      action,
+      adapter: adapter ? adapterSummaries().find((item) => item.action === action) || null : null,
+      session,
+      ok: false,
+      httpStatus: 400,
+      accepted: false,
+      status: 'blocked',
+      normalReply: 'That action is not available through the Agent Zero Bridge execution gateway.',
+      blockedReason: adapter ? 'forbidden_gateway_action' : 'adapter_not_registered',
+      result: { registered_actions: adapterSummaries().map((item) => item.action), action_invoked: false },
+    })
+  }
+
+  const adapterSummary = adapterSummaries().find((item) => item.action === action) || null
+  const active = sessionRead.persistence_ready && session.status === 'active' && session.execution_enabled
+  if (!active || !session.session_id || (input.bridgeSessionId && input.bridgeSessionId !== session.session_id)) {
+    return baseResult({
+      action,
+      adapter: adapterSummary,
+      session,
+      ok: false,
+      httpStatus: 423,
+      accepted: false,
+      status: 'blocked',
+      normalReply: 'Agent Zero needs an active Bridge Session before this adapter can run.',
+      blockedReason: !sessionRead.persistence_ready
+        ? 'bridge_session_persistence_not_applied'
+        : input.bridgeSessionId && input.bridgeSessionId !== session.session_id
+          ? 'bridge_session_id_mismatch'
+          : 'active_bridge_session_required',
+    })
+  }
+
+  if (!sessionAllows(adapter, session)) {
+    const blockedAudit = recordAgentZeroBridgeSessionAudit({
+      db: input.db,
+      sessionId: session.session_id,
+      requester: input.requester,
+      action,
+      target: adapter.category,
+      outcome: 'blocked',
+      metadata: {
+        reason: 'adapter_not_in_bridge_session_scope',
+        allowed_scope_keys: adapter.allowed_scope_keys,
+      },
+      now: input.now,
+    })
+    return baseResult({
+      action,
+      adapter: adapterSummary,
+      session: blockedAudit.session || session,
+      ok: false,
+      httpStatus: 403,
+      accepted: false,
+      status: 'blocked',
+      normalReply: 'That adapter is outside the active Agent Zero Bridge Session scope.',
+      blockedReason: 'adapter_not_in_bridge_session_scope',
+      audit: {
+        finished: Boolean(blockedAudit.ok),
+        finish_event_id: blockedAudit.audit_event?.id || null,
+        blocked_reason: blockedAudit.blocked_reason,
+      },
+    })
+  }
+
+  const started = recordAgentZeroBridgeSessionAudit({
+    db: input.db,
+    sessionId: session.session_id,
+    requester: input.requester,
+    action,
+    target: adapter.category,
+    outcome: 'started',
+    metadata: {
+      adapter_registered: true,
+      writes_enabled: adapter.writes_enabled,
+      raw_shell_enabled: false,
+      docker_socket_enabled: false,
+      direct_secret_reads_enabled: false,
+    },
+    now: input.now,
+  })
+  if (!started.ok) {
+    return baseResult({
+      action,
+      adapter: adapterSummary,
+      session: started.session || session,
+      ok: false,
+      httpStatus: started.http_status,
+      accepted: false,
+      status: 'blocked',
+      normalReply: 'Agent Zero execution is blocked because the Bridge Session audit could not be started.',
+      blockedReason: started.blocked_reason || 'bridge_session_audit_start_failed',
+      audit: { blocked_reason: started.blocked_reason },
+    })
+  }
+
+  try {
+    const adapterResult = await adapter.handler(input, started.session)
+    const finished = recordAgentZeroBridgeSessionAudit({
+      db: input.db,
+      sessionId: started.session.session_id,
+      requester: input.requester,
+      action,
+      target: adapter.category,
+      outcome: adapterResult.status,
+      metadata: {
+        result_checked: true,
+        adapter_status: adapterResult.status,
+        blocked_reason: adapterResult.blocked_reason,
+        no_fake_done: true,
+      },
+      now: input.now,
+    })
+    return baseResult({
+      action,
+      adapter: adapterSummary,
+      session: finished.session || started.session,
+      ok: adapterResult.ok,
+      httpStatus: adapterResult.status === 'completed' ? 200 : 423,
+      accepted: adapterResult.status === 'completed',
+      status: adapterResult.status,
+      normalReply: adapterResult.normal_reply,
+      blockedReason: adapterResult.blocked_reason,
+      result: adapterResult.result,
+      audit: {
+        started: true,
+        finished: Boolean(finished.ok),
+        start_event_id: started.audit_event?.id || null,
+        finish_event_id: finished.audit_event?.id || null,
+        blocked_reason: finished.blocked_reason,
+      },
+    })
+  } catch (error) {
+    const finished = recordAgentZeroBridgeSessionAudit({
+      db: input.db,
+      sessionId: started.session.session_id,
+      requester: input.requester,
+      action,
+      target: adapter.category,
+      outcome: 'failed',
+      metadata: {
+        result_checked: true,
+        error: error instanceof Error ? error.message.slice(0, 200) : 'adapter_execution_failed',
+      },
+      now: input.now,
+    })
+    return baseResult({
+      action,
+      adapter: adapterSummary,
+      session: finished.session || started.session,
+      ok: false,
+      httpStatus: 500,
+      accepted: false,
+      status: 'failed',
+      normalReply: 'Agent Zero could not complete that adapter action.',
+      blockedReason: null,
+      error: error instanceof Error ? error.message.slice(0, 300) : 'adapter_execution_failed',
+      audit: {
+        started: true,
+        finished: Boolean(finished.ok),
+        start_event_id: started.audit_event?.id || null,
+        finish_event_id: finished.audit_event?.id || null,
+        blocked_reason: finished.blocked_reason,
+      },
+    })
+  }
+}

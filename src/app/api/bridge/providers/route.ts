@@ -222,6 +222,7 @@ export async function GET(request: NextRequest) {
       test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
       ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
       bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
+      execution_gateway_endpoint: '/api/bridge/agent-zero/execute',
       capabilities_source: 'mission_control_context',
       mode: 'read_only',
       execution_enabled: false,

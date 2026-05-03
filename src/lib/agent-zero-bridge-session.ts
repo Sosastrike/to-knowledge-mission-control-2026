@@ -121,6 +121,7 @@ const DEFAULT_ALLOWED_TOOLS = [
   'mission_control.status',
   'bridge.providers.list',
   'mcp.tools.schema_read',
+  'mcp.tool.execute',
   'agent_zero.reports.create',
   'buildwiki.run_now',
   'google_drive.delivery_adapter_if_configured',

@@ -211,7 +211,7 @@ function buildNormalReply(channels: AgentZeroReportDeliveryChannel[]): string {
     return 'I created the report in Mission Control, but OneDrive delivery is blocked because OneDrive delivery is not configured yet.'
   }
   if (requestedBlocked.some((channel) => channel.provider === 'google_drive')) {
-    return 'I created the report in Mission Control, but Google Drive delivery is blocked because Google Drive report delivery is not configured yet.'
+    return 'Google Drive upload is blocked because the upload connector is not configured.'
   }
   if (requestedBlocked.some((channel) => channel.provider === 'telegram')) {
     return 'I created the report in Mission Control, but Telegram PDF attachment is blocked because no approved document attachment route is configured.'

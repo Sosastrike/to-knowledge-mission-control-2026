@@ -57,6 +57,24 @@ describe('Agent Zero report delivery surface', () => {
     expect(result.report.normal_reply).not.toContain('/home/tony')
   })
 
+
+  it('uses the required Google Drive blocked message without fake done', async () => {
+    const root = makeRoot()
+    const result = await createAgentZeroReport({
+      root,
+      title: 'Google Drive Requested Report',
+      summary: 'Owner asked for Google Drive delivery.',
+      ownerMessage: 'Create the report and send it to Google Drive',
+      requestedDelivery: { provider: 'google_drive' },
+    })
+
+    const drive = result.report.delivery_channels.find((channel) => channel.provider === 'google_drive')
+    expect(drive).toMatchObject({ requested: true, status: 'blocked', external_write: true, requires_bridge_session: true })
+    expect(result.report.normal_reply).toBe('Google Drive upload is blocked because the upload connector is not configured.')
+    expect(result.report.normal_reply.startsWith('Done')).toBe(false)
+    expect(result.report.normal_reply).not.toContain('/home/tony')
+  })
+
   it('blocks Telegram attachment until an approved document route exists', async () => {
     const root = makeRoot()
     const result = await createAgentZeroReport({

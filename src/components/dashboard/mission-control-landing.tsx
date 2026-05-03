@@ -75,7 +75,7 @@ export function MissionControlLanding() {
             <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Primary surface</div>
             <h2 className="mt-2 text-lg font-semibold text-foreground">Agent Network</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Read-only Phase A view for Tony, Agent Zero, Hermes, OpenClaw Gateway, and the ClaudeClaw specialist agents.
+              Read-only view for Agent Zero, Hermes, OpenClaw Gateway, and legacy ClaudeClaw specialist agents.
             </p>
             <Button className="mt-4" variant="secondary" onClick={() => navigateToPanel('agents')}>
               Go to /agents

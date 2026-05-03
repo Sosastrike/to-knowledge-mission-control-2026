@@ -250,7 +250,7 @@ function buildDecision(input: PreflightRequest, taskType: TaskType, connector: s
 }
 
 function routeFor(agentId: string, taskType: TaskType, connector: string | null) {
-  const normalizedAgent = normalize(agentId) || 'tony'
+  const normalizedAgent = normalize(agentId) || 'agent_zero'
 
   if (connector === 'zapier') {
     return {
@@ -263,7 +263,7 @@ function routeFor(agentId: string, taskType: TaskType, connector: string | null)
   if (connector === 'hermes' || normalizedAgent === 'hermes') {
     return {
       primary: 'hermes_sandbox_read_only',
-      fallback: 'tony_planning_route',
+      fallback: 'agent_zero_planning_route',
       notes: ['Hermes is sandbox/test-only and not production-authorized for protected execution.'],
     }
   }
@@ -271,13 +271,13 @@ function routeFor(agentId: string, taskType: TaskType, connector: string | null)
   if (normalizedAgent === 'agent_zero' || taskType === 'agent_request') {
     return {
       primary: 'agent_zero_observe_review',
-      fallback: 'tony_operational_decision',
+      fallback: 'agent_zero_operational_decision',
       notes: ['Agent Zero is observe/recommend/review only until owner-approved execution exists.'],
     }
   }
 
   return {
-    primary: taskType === 'code_change' ? 'codex_backend_runtime_lane' : 'tony_claude_cli_direct',
+    primary: taskType === 'code_change' ? 'codex_backend_runtime_lane' : 'agent_zero_bridge_session_route',
     fallback: 'ollama_local_backup_for_safe_read_only_analysis',
     notes: ['OpenRouter remains a protected model-routing fallback, not an automatic switch.'],
   }
@@ -324,7 +324,7 @@ export async function GET(request: NextRequest) {
       note: 'This is process-local read-only visibility. Approval persistence is not connected and no approval request is created.',
     },
     example_request: {
-      agent_id: 'tony',
+      agent_id: 'agent_zero',
       owner_goal: 'Prepare a Zapier email automation plan',
       connector: 'zapier',
       requested_action: 'plan only',
@@ -374,7 +374,7 @@ export async function POST(request: NextRequest) {
         missing_credentials: [],
       }
   }
-  const selectedRoute = routeFor(input.agent_id || 'tony', taskType, connector)
+  const selectedRoute = routeFor(input.agent_id || 'agent_zero', taskType, connector)
   const credentialNames = connector ? CONNECTOR_CREDENTIALS[connector] || [] : []
 
   const correlationId = `pf_${Date.now()}_${randomUUID().slice(0, 8)}`
@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
   latestPreflightResult = {
     id: correlationId,
     generated_at: generatedAt,
-    agent_id: input.agent_id || 'tony',
+    agent_id: input.agent_id || 'agent_zero',
     task_type: taskType,
     connector,
     decision: decision.state,
@@ -436,7 +436,7 @@ export async function POST(request: NextRequest) {
       execution_enabled: false,
       approval_request_created: false,
       approved_for_execution: false,
-      agent_id: input.agent_id || 'tony',
+      agent_id: input.agent_id || 'agent_zero',
       task_type: taskType,
       connector,
       owner_goal: input.owner_goal || null,

@@ -38,10 +38,31 @@ type BridgeProvider = {
   [key: string]: unknown
 }
 
+function retireTonyProvider(provider: BridgeProvider): BridgeProvider {
+  const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
+  if (id !== 'tony') return provider
+  return {
+    ...provider,
+    id: 'tony_legacy',
+    name: 'Tony Legacy',
+    category: 'agent',
+    state: 'retired',
+    status: 'retired',
+    hidden: true,
+    detail: {
+      ...(typeof provider.detail === 'object' && provider.detail ? provider.detail as Record<string, unknown> : {}),
+      notes: 'Tony is retired/archived. Agent Zero is the active ecosystem commander; ClaudeClaw may remain only as legacy transport/backend until fully decommissioned.',
+    },
+    next_action: 'Use Agent Zero as commander. Show Tony only in archived diagnostics when explicitly requested.',
+  }
+}
+
 function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZeroEcosystemAgentRecord): BridgeProvider[] {
-  const withoutAgentZero = providers.filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
+  const normalizedProviders = providers
+    .filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
+    .map(retireTonyProvider)
   return [
-    ...withoutAgentZero,
+    ...normalizedProviders,
     agentZero,
   ].sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
 }
@@ -61,19 +82,19 @@ function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentReco
   const now = Date.now()
   const providers = mergeAgentZeroProvider([
     {
-      id: 'tony',
-      name: 'Tony',
+      id: 'tony_legacy',
+      name: 'Tony Legacy',
       category: 'agent',
-      state: 'degraded',
+      state: 'retired',
       last_checked: now,
       detail: {
         endpoint: CLAUDECLAW_BRIDGE_PROVIDERS_URL,
         credential_name: 'DASHBOARD_TOKEN',
         credential_present: Boolean(readDashboardToken()),
-        notes: 'ClaudeClaw provider proxy is unavailable; fallback is read-only and does not change routing.',
+        notes: 'Tony is retired/archived. ClaudeClaw provider proxy is legacy transport/status only and does not make Tony commander.',
         error,
       },
-      next_action: 'Restore ClaudeClaw /api/bridge/providers proxy for live Tony/provider status.',
+      next_action: 'Use Agent Zero as active commander; keep Tony visible only as legacy/archived diagnostics.',
     },
     {
       id: 'hermes',
@@ -138,7 +159,7 @@ function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentReco
       last_checked: now,
       detail: {
         endpoint: 'http://127.0.0.1:11434',
-        notes: 'Emergency local backup only. Tony routing is not changed.',
+        notes: 'Emergency local backup only. Agent Zero routing is not changed.',
         error,
       },
       next_action: 'Use only as emergency/local backup when approved by Bridge Mode.',
@@ -151,7 +172,7 @@ function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentReco
       last_checked: now,
       detail: {
         endpoint: 'claude CLI',
-        notes: 'Fallback registry cannot run model probes. Tony primary route remains claude_cli_direct.',
+        notes: 'Fallback registry cannot run model probes. Claude CLI remains a legacy ClaudeClaw capability until Agent Zero routing is fully loaded.',
         error,
       },
       next_action: 'Use ClaudeClaw proxy for live Claude CLI route status.',

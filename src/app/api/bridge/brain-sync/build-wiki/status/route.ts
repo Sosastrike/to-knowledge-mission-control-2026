@@ -467,7 +467,7 @@ export async function GET(request: NextRequest) {
         approval: canonical.approval,
         run: canonical.run,
         linked_task: canonical.linked_task,
-        approval_channel: 'Tony -> Telegram',
+        approval_channel: 'Agent Zero -> owner channel',
         web_approval_enabled: false,
         dispatch_surface: 'telegram_callback_only',
         endpoints: {
@@ -521,7 +521,7 @@ export async function GET(request: NextRequest) {
       no_execution_enabled: true,
       no_secret_exposure: true,
       no_env_writes: true,
-      no_tony_routing_change: true,
+      no_agent_zero_routing_change: true,
       no_zapier_writes: true,
       single_vault: true,
       run_now_dispatch_scope: BUILDWIKI_TARGET_SERVICE,

@@ -24,18 +24,18 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    mode: 'agent_zero_ecosystem_agent_status_bridge_session_execution',
+    mode: 'agent_zero_commander_status_bridge_session_execution',
     generated_at: agentZero.last_checked_at,
     agent: {
       id: agentZero.id,
       name: agentZero.name,
       status: agentZero.status,
-      role: 'reviewer / supervisor',
+      role: 'ecosystem commander',
       mode: agentZero.mode,
       health_url: agentZero.health_url,
       chat_route: agentZero.chat_route,
       capabilities_source: agentZero.capabilities_source,
-      allowed_behavior: ['observe', 'recommend', 'review', 'execute through approved Bridge Session adapters only'],
+      allowed_behavior: ['command through Mission Control / Bridge', 'live-query ecosystem context', 'execute through approved Bridge Session adapters only'],
       disallowed_behavior: ['execute without active Bridge Session', 'change Docker/config', 'change permissions', 'bypass owner approval', 'use raw shell/root/Docker socket/direct secrets'],
       execution_permission: bridgeSession.execution_enabled ? 'scoped_bridge_session_active' : 'bridge_session_execution_available_but_session_not_active',
       execution_enabled: agentZero.execution_enabled,

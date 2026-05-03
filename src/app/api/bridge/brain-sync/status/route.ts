@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       payload: { error: error instanceof Error ? error.message : 'memory_sync_status_failed' },
     })),
     fetchClaudeClawJson<{ source_status?: SourceStatus[]; agent_consumers?: unknown[]; write_contract?: unknown }>(
-      '/api/brain/context?q=brain%20sync%20status&agent_id=tony&limit=5',
+      '/api/brain/context?q=brain%20sync%20status&agent_id=agent_zero&limit=5',
       {},
       12000,
     ).catch((error) => ({
@@ -131,11 +131,11 @@ export async function GET(request: NextRequest) {
 
   const sources = [
     normalizeSource({
-      source: 'tony_memory',
+      source: 'agent_zero_brain',
       state: context.ok ? 'available' : 'not_connected',
       summary: context.ok
-        ? 'Tony memory context is reading the shared brain layer through ClaudeClaw /api/brain/context.'
-        : 'Tony memory context is not reachable through the shared brain endpoint.',
+        ? 'Agent Zero brain context is reading the shared brain layer through Mission Control /api/brain/context.'
+        : 'Agent Zero brain context is not reachable through the shared brain endpoint.',
       count: contextSources.reduce((total, row) => total + (typeof row.count === 'number' ? row.count : 0), 0),
       details: {
         endpoint: '/api/brain/context',

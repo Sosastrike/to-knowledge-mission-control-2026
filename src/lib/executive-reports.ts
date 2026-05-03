@@ -82,9 +82,12 @@ const DEFAULT_SCHEDULES: Record<ExecutiveReportType, string> = {
 }
 
 const AGENT_ALIASES: Record<string, string> = {
-  tony: 'Tony',
-  'agent 0': 'Agent 0',
-  agent0: 'Agent 0',
+  tony: 'Tony Legacy',
+  'tony legacy': 'Tony Legacy',
+  'agent 0': 'Agent Zero',
+  agent0: 'Agent Zero',
+  agent_zero: 'Agent Zero',
+  'agent zero': 'Agent Zero',
   hermes: 'Hermes',
   hermit: 'Hermes',
 }
@@ -108,7 +111,7 @@ function parseJson<T>(text: string | null | undefined, fallback: T): T {
 }
 
 function normalizeAgent(value: unknown): string {
-  const raw = cleanBounded(value, 'Tony', 80)
+  const raw = cleanBounded(value, 'Agent Zero', 80)
   return AGENT_ALIASES[raw.toLowerCase()] || raw
 }
 
@@ -383,9 +386,9 @@ export function buildTonyReportCreationContract(input: ExecutiveReportInput) {
     .digest('hex')
   return {
     canonical_endpoint: '/api/reports',
-    actor: 'Tony or Mission Control operator',
+    actor: 'Agent Zero or Mission Control operator',
     shared_brain_required: true,
-    approval_system: 'canonical Tony Telegram approvals when protected execution is needed',
+    approval_system: 'canonical Agent Zero owner-channel approvals when protected execution is needed',
     execution_enabled: false,
     report_delivery_enabled: false,
     contract_hash: contractHash,
@@ -402,7 +405,7 @@ export function reviewExecutiveReportsPlan() {
     { check: 'no external writes', passed: true, detail: 'CRUD only changes Mission Control report definitions' },
     { check: 'no duplicate report system', passed: true, detail: 'standup archive is kept as history source; scheduled_reports is canonical scheduler UI' },
     { check: 'schedule computable', passed: true, detail: 'natural schedule/cron parser computes next_run_at' },
-    { check: 'agent assignment explicit', passed: true, detail: 'Tony, Agent 0, Hermes, or custom agent names are stored' },
+    { check: 'agent assignment explicit', passed: true, detail: 'Agent Zero, Tony Legacy, Hermes, or custom agent names are stored' },
     { check: 'history visible', passed: true, detail: 'scheduled_report_runs is the canonical history table' },
     { check: 'safe rollback', passed: true, detail: 'soft delete for report definitions; git revert for code' },
   ]

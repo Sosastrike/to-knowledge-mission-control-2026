@@ -236,7 +236,7 @@ async function readTelegramApprovalQueue() {
       persistence: 'claudeclaw_telegram_approvals_connected',
       approval_queue_connected: true,
       active_queue_visible: activeApprovals.length > 0,
-      canonical_channel: payload.canonical_channel || 'Tony -> Telegram',
+      canonical_channel: payload.canonical_channel || 'Agent Zero -> owner channel',
       execution_enabled: false,
       exact_scope_execution_enabled: true,
       broad_connector_execution_enabled: false,
@@ -245,14 +245,14 @@ async function readTelegramApprovalQueue() {
       approvals: approvals.map((row) => mapTelegramApprovalRow(row, generatedAt)),
       summary,
       ui_placeholder: {
-        title: activeApprovals.length > 0 ? 'Approval Queue — Tony → Telegram' : 'Approval system status',
+        title: activeApprovals.length > 0 ? 'Approval Queue — Agent Zero owner channel' : 'Approval system status',
         state: activeApprovals.length > 0 ? 'PENDING' : 'NO_PENDING_APPROVALS',
         message: activeApprovals.length > 0
           ? 'Pending owner decisions are waiting in Telegram. Use the Approve/Deny buttons there.'
           : 'No approvals pending. Completed, denied, expired, and failed requests are shown in approval history only.',
         next_backend_step: activeApprovals.length > 0
           ? 'Wait for owner decision in Telegram, then mirror the canonical status here.'
-          : 'No owner action required unless Tony sends a new Telegram approval request.',
+          : 'No owner action required unless Agent Zero creates a new owner approval request.',
         no_fake_approval_requests: true,
         approval_request_created: false,
         protected_actions_locked: true,

@@ -378,12 +378,12 @@ function readSkillRegistry(): SkillRegistryReadResult {
     },
     {
       source: 'claudeclaw_tony' as const,
-      label: 'ClaudeClaw/Tony skills',
+      label: 'ClaudeClaw legacy skills',
       root: '/home/tony/claudeclaw/skills',
     },
     {
       source: 'claudeclaw_tony' as const,
-      label: 'ClaudeClaw/Tony vendor skills',
+      label: 'ClaudeClaw legacy vendor skills',
       root: '/home/tony/claudeclaw/vendor/skills',
     },
     {
@@ -2096,7 +2096,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       proxy_access: true,
     })),
     agents: providers
-      .filter((provider) => ['tony', 'agent_zero', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
+      .filter((provider) => ['agent_zero', 'tony_legacy', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
       .map((provider) => ({
         id: String(provider.id || provider.name || ''),
         status: String(provider.state || 'unknown'),

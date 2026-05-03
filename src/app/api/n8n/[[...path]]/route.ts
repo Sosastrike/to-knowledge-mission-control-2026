@@ -44,7 +44,7 @@ async function statusPayload() {
     credentials_configured: null,
     webhook_status: null,
     last_execution: null,
-    assigned_agents: ['Tony', 'Agent 0', 'Builder', 'Operator'],
+    assigned_agents: ['Agent Zero', 'Builder', 'Operator'],
     credential_names: ['N8N_BASE_URL', 'N8N_API_KEY'],
   }
 }

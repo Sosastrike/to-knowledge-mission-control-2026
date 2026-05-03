@@ -34,7 +34,7 @@ function buildPreview(input: TelegramApprovalPreviewRequest) {
     : 30
 
   return {
-    channel: 'Tony -> Telegram owner approval',
+    channel: 'Agent Zero -> owner-channel approval',
     recipient: 'owner',
     send_state: 'DISABLED',
     approval_request_created: false,
@@ -71,9 +71,9 @@ export async function GET(request: NextRequest) {
     endpoint: {
       method: 'POST',
       path: '/api/bridge/telegram-approval-preview',
-      description: 'Returns a disabled Tony-to-Telegram approval message preview without sending or persisting.',
+      description: 'Returns a disabled Agent Zero owner-channel approval message preview without sending or persisting.',
     },
-    owner_channel: 'Tony -> Telegram',
+    owner_channel: 'Agent Zero -> owner channel',
     accepted_fields: [
       'owner_goal',
       'action_label',

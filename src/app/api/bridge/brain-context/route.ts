@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url)
   const q = url.searchParams.get('q') || url.searchParams.get('query') || ''
-  const agentId = url.searchParams.get('agent_id') || 'tony'
+  const agentId = url.searchParams.get('agent_id') || 'agent_zero'
   const limit = url.searchParams.get('limit') || '10'
   const upstream = await fetchClaudeClawJson<BrainContextPayload>(
     `/api/brain/context?q=${encodeURIComponent(q)}&agent_id=${encodeURIComponent(agentId)}&limit=${encodeURIComponent(limit)}`,

@@ -65,7 +65,7 @@ export function getFirecrawlStatus(root = process.cwd()) {
     api: { reachable: sdkLoaded },
     jobs: { active: 0, queued: 0, completed: 0, failed: 0 },
     last_successful_crawl: null,
-    assigned_agents: ['Tony', 'Agent 0', 'Researcher', 'Builder', 'Operator', 'Marketing', 'Support'],
+    assigned_agents: ['Agent Zero', 'Researcher', 'Builder', 'Operator', 'Marketing', 'Support'],
     cost_today_usd: null,
     nextAction,
     next_action: nextAction,

@@ -24,7 +24,7 @@ describe('Executive Reports / Scheduled Reports', () => {
 
     expect(report.name).toBe('Morning owner brief')
     expect(report.report_type).toBe('morning')
-    expect(report.assigned_agent).toBe('Agent 0')
+    expect(report.assigned_agent).toBe('Agent Zero')
     expect(report.cron_expr).toBe('0 8 * * *')
     expect(report.enabled).toBe(true)
     expect(report.next_run_at).toEqual(expect.any(Number))
@@ -45,10 +45,10 @@ describe('Executive Reports / Scheduled Reports', () => {
     expect(next).toBeGreaterThan(0)
   })
 
-  it('exposes Tony report creation through the same canonical API contract', () => {
+  it('exposes Agent Zero report creation through the same canonical API contract', () => {
     const contract = buildTonyReportCreationContract({
       report_type: 'approval_audit',
-      assigned_agent: 'Tony',
+      assigned_agent: 'Agent Zero',
       schedule_text: 'daily at 5pm',
       criteria: { include: ['approvals', 'audit'] },
     })

@@ -180,7 +180,7 @@ const APPROVAL_FLOW = {
     },
     {
       order: 4,
-      name: 'Tony-to-Telegram approval preview',
+      name: 'Agent Zero owner-channel approval preview',
       endpoint: '/api/bridge/telegram-approval-preview',
       state: 'READ_ONLY',
       record_required_later: 'telegram_message_id and callback_nonce',

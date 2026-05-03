@@ -19,7 +19,7 @@
 //   - call any mutation endpoint (no POST/PATCH/DELETE)
 //   - subscribe to SSE
 //   - render approval state changes
-//   - mutate Tony / Agent Zero / governance / credentials
+//   - mutate Agent Zero commander / governance / credentials
 // ─────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react'
 import styles from './agent-network.module.css'
@@ -975,7 +975,8 @@ const TIER_DEFS: Array<{ id: string; label: string; sub: string }> = [
 // seed data so the layout has correct tier placement before live RBAC lands).
 // Phase B replaces this with the `agents.tier` column from spec §2.
 const KNOWN_TIER_OF: Record<string, string> = {
-  tony:       'commander',
+  agent_zero: 'commander',
+  tony_legacy:'archive',
   main:       'commander',  // alias used by /api/agents
   archivist:  'specialist',
   atlas:      'lieutenant',
@@ -991,7 +992,7 @@ const KNOWN_TIER_OF: Record<string, string> = {
 }
 
 const KNOWN_PROTECTED: Record<string, boolean> = {
-  tony: true,
+  agent_zero: true,
   main: true,
   // agent_zero is handled in the External section (it's not in MC's /api/agents)
 }
@@ -1505,7 +1506,7 @@ function BrainSyncReadOnlyStatusCard({ payload }: { payload: BrainSyncReadOnlyPa
           <span>needs setup: {summary.needs_owner_setup ?? 0}</span>
         </div>
         <p className={styles.providerNotes}>
-          Tony memory, MemPalace, Obsidian, Graphify, and planned Brain Sync are shown as read-only visibility. No memory write or protected memory change is enabled here.
+          Agent Zero Brain, MemPalace, Obsidian, Graphify, and planned Brain Sync are shown as read-only visibility. No memory write or protected memory change is enabled here.
         </p>
         <p className={styles.providerNotes}>
           Planned: {brainSync.planned_status || 'unknown'} · Available: {brainSync.available_status || 'unknown'} · Generated: {payload.generated_at || 'unknown'}
@@ -1776,7 +1777,7 @@ function ApprovalQueueCard({ payload, refreshedAt }: { payload: ApprovalQueuePay
           ))}
         </ul>
       ) : (
-        <p className={styles.providerNotes}>No approvals pending. When Tony sends a new Approve/Deny request, this card will switch back to an active queue with the linked task id and audit events.</p>
+        <p className={styles.providerNotes}>No approvals pending. When Agent Zero creates a new Approve/Deny request, this card will switch back to an active queue with the linked task id and audit events.</p>
       )}
       {historyApprovals.length > 0 && (
         <>
@@ -1851,13 +1852,13 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
       <p className={styles.providerNotes}>Sources: {payload.active_sources?.length ?? farmer?.sources_count ?? 0} active · {payload.available_source_expansions?.length ?? 0} available local additions</p>
       <p className={styles.providerNotes}>Destination: {destination.obsidian_path || '/home/tony/obsidian-vault/08-Wiki/OpenCloud/'}</p>
       <ul className={styles.connectorList}>
-        <li><span>Run Now<br /><small>Creates Tony → Telegram approval only; dispatch stays exact-scope.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
+        <li><span>Run Now<br /><small>Creates Agent Zero owner-channel approval only; dispatch stays exact-scope.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Pause / Resume<br /><small>Timer-only control; no service rewrite from this card.</small></span><strong>{timerControl?.offered_action ? `${timerControl.offered_action}: ${controls[`${timerControl.offered_action}_sync`] || 'OWNER_APPROVAL_REQUIRED'}` : 'not applicable'}</strong></li>
         <li><span>Add Local Source<br /><small>Approval-driven source-list change; SMB/external farmers stay disabled.</small></span><strong>{controls.add_local_source || addSource?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Latest files/logs<br /><small>Read-only browser visibility, secret-scanned.</small></span><strong>READ_ONLY</strong></li>
       </ul>
       <p className={styles.providerNotes}>Run state: {runNow?.ui_state || 'idle'} · Timer-control state: {timerControl?.ui_state || 'idle'} · Add-source state: {addSource?.ui_state || 'idle'}</p>
-      <p className={styles.providerNotes}>Invariants: no .env writes, no Zapier writes, no Tony routing changes, no external farmer enablement.</p>
+      <p className={styles.providerNotes}>Invariants: no .env writes, no Zapier writes, no Agent Zero routing changes, no external farmer enablement.</p>
     </div>
   )
 }
@@ -1884,7 +1885,7 @@ function BuildWikiRunNowCard({
       <div className={styles.providerMeta}>
         <span>action: buildwiki.run_now</span>
         <span>scope: opencloud-docs-farmer.service only</span>
-        <span>approval: Tony → Telegram</span>
+        <span>approval: Agent Zero → owner channel</span>
         <span>execution: after button approval only</span>
       </div>
       <p className={styles.providerNotes}>
@@ -2093,7 +2094,7 @@ function TelegramApprovalPreviewCard({ payload }: { payload: TelegramApprovalPre
     return (
       <div className={styles.providerCard}>
         <div className={styles.providerHead}>
-          <strong className={styles.providerName}>Tony → Telegram Approval Preview</strong>
+          <strong className={styles.providerName}>Agent Zero Owner Approval Preview</strong>
           <span className={styles.providerState}>waiting</span>
         </div>
         <p className={styles.providerNotes}>No Telegram approval preview loaded yet.</p>
@@ -2106,12 +2107,12 @@ function TelegramApprovalPreviewCard({ payload }: { payload: TelegramApprovalPre
       <div className={styles.providerHead}>
         <div className={styles.providerTitleWrap}>
           <StatusDot status="degraded" />
-          <strong className={styles.providerName}>Tony → Telegram Approval Preview</strong>
+          <strong className={styles.providerName}>Agent Zero Owner Approval Preview</strong>
         </div>
         <span className={styles.providerState}>{payload.preview.send_state || 'DISABLED'}</span>
       </div>
       <div className={styles.providerMeta}>
-        <span>channel: {payload.preview.channel || 'Tony -> Telegram'}</span>
+        <span>channel: {payload.preview.channel || 'Agent Zero -> owner channel'}</span>
         <span>persistence: {payload.preview.persistence_state || 'not connected'}</span>
         <span>callback: {payload.preview.callback_state || 'BACKEND_REQUIRED'}</span>
         <span>created: {payload.approval_request_created ? 'yes' : 'no'}</span>
@@ -2139,7 +2140,7 @@ function AgentCard({ agent }: { agent: AgentRow }) {
       <div className={styles.agentCardHead}>
         <StatusDot status={status} />
         <strong className={styles.agentName}>{(agent.name || id).toString()}</strong>
-        {isProtected && <span className={styles.lockChip} title="Tony / Agent 0 cannot be modified">🔒 Protected</span>}
+        {isProtected && <span className={styles.lockChip} title="Agent Zero commander and archived agents cannot be modified here">🔒 Protected</span>}
       </div>
       <div className={styles.agentMeta}>
         {agent.role && <span className={styles.metaItem}>role: {agent.role}</span>}
@@ -2292,7 +2293,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Role</dt>
-          <dd>{agent.role || 'reviewer / supervisor'}</dd>
+          <dd>{agent.role || 'ecosystem commander'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Allowed behavior</dt>
@@ -2480,7 +2481,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       {(provider.error || install.version_error) && (
         <p className={styles.providerAction}>Status warning: {provider.error || install.version_error}</p>
       )}
-      <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, Tony memory connection, or credentials are changed by this surface.'}</p>
+      <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, legacy memory connection, or credentials are changed by this surface.'}</p>
       <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes sandbox/read-only until owner approves production bridge wiring.'}</p>
     </div>
   )
@@ -2946,13 +2947,13 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
 
     Promise.all([
       requestPreflight({
-        agent_id: 'tony',
+        agent_id: 'agent_zero',
         task_type: 'status_check',
         owner_goal: 'Show current Mission Control Bridge Mode status.',
         requested_action: 'read status only',
       }),
       requestPreflight({
-        agent_id: 'tony',
+        agent_id: 'agent_zero',
         task_type: 'connector_write',
         connector: 'zapier',
         owner_goal: 'Example protected Zapier write check.',
@@ -3728,7 +3729,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <header className={styles.externalSectionHeader}>
           <h2 className={styles.tierTitle}>Telegram Approval Preview</h2>
           <span className={styles.tierSub}>
-            Disabled Tony-to-Telegram preview from <code>/api/bridge/telegram-approval-preview</code>
+            Disabled Agent Zero owner-channel preview from <code>/api/bridge/telegram-approval-preview</code>
           </span>
         </header>
         {telegramApprovalPreviewState === 'waiting' && (
@@ -3798,11 +3799,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               )}
               <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                 <li>Current state: <strong>{approvalReadiness?.production_migration_applied ? 'READ_ONLY' : 'BACKEND_REQUIRED'}</strong></li>
-                <li>Approval channel: <strong>Tony → Telegram</strong></li>
+                <li>Approval channel: <strong>Agent Zero → owner channel</strong></li>
                 <li>Execution state: <strong>locked</strong></li>
                 <li>What is missing: {approvalReadiness?.production_migration_applied ? 'more owner-approved scoped execution runners' : 'production bridge approval/audit migration for broad connector actions'}</li>
-                <li>Pending approvals: <strong>{activeApprovalCount}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (Tony Telegram queue fallback)'}</li>
-                <li>Next backend step: extend the existing Tony Telegram approval path to more protected actions.</li>
+                <li>Pending approvals: <strong>{activeApprovalCount}</strong>{approvalQueue?.approval_queue_connected ? ' visible in read-only mode' : ' (Agent Zero owner-channel queue fallback)'}</li>
+                <li>Next backend step: extend the existing Agent Zero owner-channel approval path to more protected actions.</li>
               </ul>
               <p style={{ marginTop: 8 }}>
                 This panel does not apply migrations, send approvals, or unlock connector execution.
@@ -3816,7 +3817,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
                     <strong className={styles.providerName}>Brain Sync Source Status</strong>
                     <span className={styles.providerState}>loading</span>
                   </div>
-                  <p className={styles.providerNotes}>Loading read-only Tony memory, MemPalace, Obsidian, and Graphify status…</p>
+                  <p className={styles.providerNotes}>Loading read-only Agent Zero Brain, MemPalace, Obsidian, and Graphify status…</p>
                 </div>
               )}
               {brainSyncStatusState === 'error' && (
@@ -3918,7 +3919,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         {zapierToolsState === 'ok' && (
           <>
             <div className={styles.preflightNotice}>
-              Tony and every agent must check this bridge before claiming a Zapier/HeyGen tool is missing. This panel never invokes Zapier tools and never enables writes.
+              Agent Zero and every agent must check this bridge before claiming a Zapier/HeyGen tool is missing. This panel never invokes Zapier tools and never enables writes.
             </div>
             <div className={styles.providerGrid}>
               <ZapierToolBridgeCard payload={zapierTools} />
@@ -4050,7 +4051,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       {/* Footer with Phase B notice */}
       <footer className={styles.footer}>
         <div className={styles.footerNote}>
-          <strong>Phase B</strong> — full mutation surface (8 DB tables · ~18 API routes · SSE for brain_sync &amp; harness · TTL job for approvals · server-enforced HTTP 423 for Tony/Agent 0 · audit-chain double-emit) is gated on per-item owner approval. See <code>.designer-review/path-a-section-2-agent-network-refinement.md</code>.
+          <strong>Phase B</strong> — full mutation surface (8 DB tables · ~18 API routes · SSE for brain_sync &amp; harness · TTL job for approvals · server-enforced HTTP 423 for Agent Zero commander actions · audit-chain double-emit) is gated on per-item owner approval. See <code>.designer-review/path-a-section-2-agent-network-refinement.md</code>.
         </div>
         <div className={styles.footerMeta}>
           <span>© 2025 To-Knowledge</span>

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     action: 'deny',
     reason: 'canonical_approval_decisions_are_telegram_only',
     current_state: 'OWNER_APPROVAL_REQUIRED',
-    approval_channel: 'Tony -> Telegram',
+    approval_channel: 'Agent Zero -> owner channel',
     decision_surface: 'Telegram inline Approve/Deny buttons only',
     persistence: 'canonical_telegram_approval_queue',
     http_status_when_blocked: 423,
@@ -29,6 +29,6 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     no_duplicate_approval_system: true,
     approval_request_created: false,
     accepted_for_execution: false,
-    next_action: 'Use the canonical Tony Telegram Approve/Deny buttons for this exact approval id. Mission Control mirrors state but does not deny directly.',
+    next_action: 'Use the canonical Agent Zero owner-channel Approve/Deny decision for this exact approval id. Mission Control mirrors state but does not deny directly.',
   })
 }

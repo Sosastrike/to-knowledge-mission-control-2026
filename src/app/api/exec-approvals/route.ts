@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         canonical_approval_queue: canonical,
         legacy_gateway_approvals: [],
         mode: 'canonical_telegram_approvals_with_gateway_unavailable',
-        approval_channel: 'Tony -> Telegram',
+        approval_channel: 'Agent Zero -> owner channel',
         decision_surface: 'Telegram inline Approve/Deny buttons only',
       })
     }
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       canonical_approval_queue: canonical,
       legacy_gateway_approvals: data?.approvals || [],
       mode: canonical ? 'canonical_telegram_approvals_with_gateway_mirror' : 'legacy_gateway_approvals_only',
-      approval_channel: canonical ? 'Tony -> Telegram' : 'legacy_gateway',
+      approval_channel: canonical ? 'Agent Zero -> owner channel' : 'legacy_gateway',
       decision_surface: canonical ? 'Telegram inline Approve/Deny buttons only' : 'legacy gateway approval surface',
     })
   } catch (err: any) {
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
       canonical_approval_queue: canonical,
       legacy_gateway_approvals: [],
       mode: 'canonical_telegram_approvals_with_gateway_unreachable',
-      approval_channel: 'Tony -> Telegram',
+      approval_channel: 'Agent Zero -> owner channel',
       decision_surface: 'Telegram inline Approve/Deny buttons only',
     })
   }
@@ -218,10 +218,10 @@ export async function POST(request: NextRequest) {
     ok: false,
     error: 'legacy_exec_approval_decision_disabled',
     approval_id: body.id,
-    approval_channel: 'Tony -> Telegram',
+    approval_channel: 'Agent Zero -> owner channel',
     decision_surface: 'Telegram inline Approve/Deny buttons only',
     execution_enabled: false,
     no_duplicate_approval_system: true,
-    next_action: 'Use the canonical Tony Telegram Approve/Deny buttons for this exact approval id.',
+    next_action: 'Use the canonical Agent Zero owner-channel Approve/Deny decision for this exact approval id.',
   }, { status: 423 })
 }

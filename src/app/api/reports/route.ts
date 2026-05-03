@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         mempalace_writes_enabled: false,
         external_connector_writes_enabled: false,
         zapier_writes_enabled: false,
-        approval_system: 'canonical Tony Telegram approvals for protected execution only',
+        approval_system: 'canonical Agent Zero owner-channel approvals for protected execution only',
       },
     }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       report,
-      tony_contract: buildTonyReportCreationContract(body),
+      agent_zero_contract: buildTonyReportCreationContract(body),
       execution_enabled: false,
       next_action: 'Report definition saved. Generation/delivery runners stay locked until separately approved.',
     }, { status: 201, headers: { 'Cache-Control': 'no-store' } })

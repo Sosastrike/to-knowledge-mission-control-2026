@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 //
 // Creates an approval request for action `buildwiki.run_now` with target hard-
 // coded to opencloud-docs-farmer.service. Returns the approval id immediately;
-// no service is started here. The canonical Tony Telegram approval callback is
+// no service is started here. The canonical Agent Zero owner-channel approval callback is
 // the only active path that can start opencloud-docs-farmer.service for this
 // action.
 //
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         mode: 'telegram_run_now_read_only',
         generated_at: new Date().toISOString(),
         persistence_ready: true,
-        approval_channel: 'Tony -> Telegram',
+        approval_channel: 'Agent Zero -> owner channel',
         target_service: BUILDWIKI_TARGET_SERVICE,
         ui_state: telegramLatest.ui_state,
         is_terminal: telegramLatest.is_terminal,
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
           approval_state: payload.approval.status,
           telegram_message_id: payload.approval.telegram_message_id,
           linked_task: payload.linked_task || null,
-          approval_channel: 'Tony -> Telegram',
+          approval_channel: 'Agent Zero -> owner channel',
           target_service: BUILDWIKI_TARGET_SERVICE,
           execution_enabled: false,
           accepted_for_execution: false,

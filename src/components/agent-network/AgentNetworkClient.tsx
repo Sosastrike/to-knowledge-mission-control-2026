@@ -651,7 +651,11 @@ interface AgentZeroReviewerPayload {
   agent?: {
     id?: string
     name?: string
+    status?: string
     role?: string
+    health_url?: string
+    chat_route?: string
+    capabilities_source?: string
     allowed_behavior?: string[]
     disallowed_behavior?: string[]
     execution_permission?: string
@@ -680,6 +684,10 @@ interface AgentZeroReviewerPayload {
     status?: string
     can_see_mission_control?: boolean | string
     agent_zero_api_key_configured?: boolean
+    auth_status?: string
+    health_status?: string
+    chat_status?: string
+    agent_zero_called?: boolean
     context_mode?: string
     test_chat_endpoint?: string
     ecosystem_context_endpoint?: string
@@ -691,8 +699,14 @@ interface AgentZeroReviewerPayload {
     state?: string
     category?: string
     last_checked_at?: string | null
+    health_status?: string
+    auth_status?: string
+    chat_status?: string
+    execution_enabled?: boolean
+    bridge_session_required?: boolean
     notes?: string | null
     error?: string | null
+    blocker?: string | null
     next_action?: string | null
   }
   safety?: {
@@ -2223,6 +2237,10 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
   const connector = payload.mission_control_connector || {}
   const provider = payload.provider_registry || {}
   const safety = payload.safety || {}
+  const ecosystemState = String(provider.state || agent.status || 'unknown')
+  const healthStatus = String(provider.health_status || connector.health_status || (tailnet.reachable ? 'healthy' : 'unreachable'))
+  const authStatus = String(provider.auth_status || connector.auth_status || (connector.agent_zero_api_key_configured ? 'configured' : 'missing'))
+  const chatStatus = String(provider.chat_status || connector.chat_status || 'unknown')
   const connectorStatus = connector.status
     ? connector.status.replace(/_/g, ' ')
     : 'unknown'
@@ -2262,12 +2280,16 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
     <div className={styles.externalCard}>
       <div className={styles.externalHead}>
         <strong className={styles.externalTitle}>{agent.name || 'Agent Zero'}</strong>
-        <span className={styles.externalBadge}>{tailnet.reachable ? 'Tailnet reachable' : 'Tailnet check failed'}</span>
+        <span className={styles.externalBadge}>{ecosystemState}</span>
       </div>
       <p className={styles.externalDescription}>
-        Reviewer/supervisor only. Agent Zero may observe, recommend, and review. It is not an executor in Mission Control.
+        Real ecosystem agent in read-only mode. Agent Zero can use Mission Control context for observe, recommend, and review work; execution stays disabled.
       </p>
       <dl className={styles.externalDetails}>
+        <div className={styles.externalDetailRow}>
+          <dt>Status</dt>
+          <dd>{ecosystemState}</dd>
+        </div>
         <div className={styles.externalDetailRow}>
           <dt>Role</dt>
           <dd>{agent.role || 'reviewer / supervisor'}</dd>
@@ -2278,19 +2300,19 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Execution</dt>
-          <dd>{agent.execution_enabled ? 'enabled' : 'disabled until owner approval'}</dd>
+          <dd>{agent.execution_enabled || provider.execution_enabled ? 'enabled' : 'disabled'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Mode</dt>
-          <dd>{agent.mode || 'read_only_test'}</dd>
+          <dd>{agent.mode || 'read_only'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>Tailnet endpoint</dt>
-          <dd>{tailnet.endpoint || 'http://100.116.35.95:50080/'}</dd>
+          <dt>Health URL</dt>
+          <dd>{agent.health_url || 'configured'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>Tailnet status</dt>
-          <dd>{tailnet.http_status ? `HTTP ${tailnet.http_status}` : 'not reachable'}{tailnet.latency_ms != null ? ` · ${tailnet.latency_ms}ms` : ''}</dd>
+          <dt>Health status</dt>
+          <dd>{healthStatus}{tailnet.http_status ? ` · HTTP ${tailnet.http_status}` : ''}{tailnet.latency_ms != null ? ` · ${tailnet.latency_ms}ms` : ''}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Version</dt>
@@ -2305,12 +2327,24 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
           <dd>{connectorStatus}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>API auth</dt>
-          <dd>{connector.agent_zero_api_key_configured ? 'configured' : 'missing'}</dd>
+          <dt>Auth status</dt>
+          <dd>{authStatus}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>Test channel</dt>
-          <dd>{connector.test_chat_endpoint || '/api/bridge/agent-zero/test-chat'}</dd>
+          <dt>Chat status</dt>
+          <dd>{chatStatus}{connector.agent_zero_called ? ' · live call passed' : ''}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Last checked</dt>
+          <dd>{provider.last_checked_at || payload.generated_at || 'unknown'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Chat route</dt>
+          <dd>{agent.chat_route || connector.test_chat_endpoint || '/api/bridge/agent-zero/test-chat'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Capabilities</dt>
+          <dd>{agent.capabilities_source || 'mission_control_context'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Ecosystem context</dt>
@@ -2318,7 +2352,7 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Bridge Session</dt>
-          <dd>{connector.bridge_session_execution_enabled ? 'enabled' : 'locked until scoped owner approval'}</dd>
+          <dd>{provider.bridge_session_required || agent.bridge_session_required ? 'required for execution' : 'not required'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Provider state</dt>
@@ -2334,6 +2368,9 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
       )}
       {connector.blocker && (
         <p className={styles.providerAction}>Connector blocker: {connector.blocker}</p>
+      )}
+      {provider.blocker && (
+        <p className={styles.providerAction}>Provider blocker: {provider.blocker}</p>
       )}
       <div className={styles.agentZeroTestBox}>
         <label className={styles.agentZeroTestLabel} htmlFor="agent-zero-test-message">

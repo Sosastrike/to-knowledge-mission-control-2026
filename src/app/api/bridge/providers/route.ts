@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import {
+  buildAgentZeroEcosystemAgentRecord,
+  type AgentZeroEcosystemAgentRecord,
+} from '@/lib/agent-zero-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,9 +30,36 @@ function readDashboardToken(): string {
   }
 }
 
-function fallbackProviders(error: string) {
+type BridgeProvider = {
+  id?: string
+  name?: string
+  state?: string
+  status?: string
+  [key: string]: unknown
+}
+
+function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZeroEcosystemAgentRecord): BridgeProvider[] {
+  const withoutAgentZero = providers.filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
+  return [
+    ...withoutAgentZero,
+    agentZero,
+  ].sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
+}
+
+function summarizeProviders(providers: BridgeProvider[]) {
+  return {
+    total: providers.length,
+    by_state: providers.reduce((acc, provider) => {
+      const state = String(provider.state || provider.status || 'unknown')
+      acc[state] = (acc[state] || 0) + 1
+      return acc
+    }, {} as Record<string, number>),
+  }
+}
+
+function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentRecord) {
   const now = Date.now()
-  const providers = [
+  const providers = mergeAgentZeroProvider([
     {
       id: 'tony',
       name: 'Tony',
@@ -43,19 +74,6 @@ function fallbackProviders(error: string) {
         error,
       },
       next_action: 'Restore ClaudeClaw /api/bridge/providers proxy for live Tony/provider status.',
-    },
-    {
-      id: 'agent_zero',
-      name: 'Agent Zero',
-      category: 'agent',
-      state: 'degraded',
-      last_checked: now,
-      detail: {
-        endpoint: 'http://100.116.35.95:50080/',
-        notes: 'Fallback registry cannot probe Agent Zero from this endpoint without the ClaudeClaw provider proxy.',
-        error,
-      },
-      next_action: 'Use Bridge Mode capability matrix and Agent Zero readiness until provider proxy returns.',
     },
     {
       id: 'hermes',
@@ -151,7 +169,7 @@ function fallbackProviders(error: string) {
       },
       next_action: 'Use gateway health endpoints for authoritative status.',
     },
-  ]
+  ], agentZero)
   return {
     ok: true,
     mode: 'bridge_provider_registry_fallback_read_only',
@@ -159,13 +177,7 @@ function fallbackProviders(error: string) {
     error,
     generated_at: new Date().toISOString(),
     providers,
-    summary: {
-      total: providers.length,
-      by_state: providers.reduce((acc, provider) => {
-        acc[provider.state] = (acc[provider.state] || 0) + 1
-        return acc
-      }, {} as Record<string, number>),
-    },
+    summary: summarizeProviders(providers),
     no_execution_enabled: true,
     no_routing_changes_enabled: true,
   }
@@ -175,14 +187,61 @@ export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
+  const { searchParams } = new URL(request.url)
+  const agentZeroRecordPromise = buildAgentZeroEcosystemAgentRecord({
+    verifyChat: searchParams.get('agent_zero_chat') !== '0',
+    chatTimeoutMs: 12000,
+  }).catch((error) => ({
+    id: 'agent_zero',
+    name: 'Agent Zero',
+    category: 'agent',
+    status: 'offline',
+    state: 'offline',
+    mode: 'read_only',
+    execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+    health_url: 'configured',
+    chat_route: '/api/bridge/agent-zero/test-chat',
+    capabilities_source: 'mission_control_context',
+    health_status: 'unreachable',
+    auth_status: 'missing',
+    chat_status: 'blocked',
+    agent_zero_called: false,
+    last_checked: Date.now(),
+    last_checked_at: new Date().toISOString(),
+    detail: {
+      endpoint: 'http://100.116.35.95:50080/',
+      health_endpoint: 'http://100.116.35.95:50080/api/health',
+      chat_endpoint: 'http://100.116.35.95:50080/api/api_message',
+      health_http_status: null,
+      health_latency_ms: null,
+      version: null,
+      commit_hash: null,
+      api_key_configured: false,
+      test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
+      ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
+      bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
+      capabilities_source: 'mission_control_context',
+      mode: 'read_only',
+      execution_enabled: false,
+      bridge_session_required: true,
+      direct_access: false,
+      proxy_access: true,
+      blocker: error instanceof Error ? error.message : 'agent_zero_status_probe_failed',
+      notes: 'Agent Zero status probe failed; execution remains disabled.',
+      error: error instanceof Error ? error.message : 'agent_zero_status_probe_failed',
+    },
+    next_action: 'Restore Agent Zero health/auth before read-only ecosystem tests.',
+  } satisfies AgentZeroEcosystemAgentRecord))
+
   const token = readDashboardToken()
   if (!token) {
-    return NextResponse.json(fallbackProviders('claudeclaw_dashboard_token_missing'), {
+    return NextResponse.json(fallbackProviders('claudeclaw_dashboard_token_missing', await agentZeroRecordPromise), {
       headers: { 'Cache-Control': 'no-store' },
     })
   }
 
-  const { searchParams } = new URL(request.url)
   const upstream = new URL(CLAUDECLAW_BRIDGE_PROVIDERS_URL)
   upstream.searchParams.set('token', token)
   if (searchParams.get('force') === '1') upstream.searchParams.set('force', '1')
@@ -205,13 +264,20 @@ export async function GET(request: NextRequest) {
     }
 
     if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      const upstreamPayload = payload as Record<string, unknown>
+      const upstreamProviders = Array.isArray(upstreamPayload.providers)
+        ? (upstreamPayload.providers.filter((item): item is BridgeProvider => Boolean(item && typeof item === 'object')) as BridgeProvider[])
+        : []
+      const providers = mergeAgentZeroProvider(upstreamProviders, await agentZeroRecordPromise)
       payload = {
         ok: response.ok,
         mode: 'bridge_provider_registry_proxy_read_only',
         upstream_ok: response.ok,
         no_execution_enabled: true,
         no_routing_changes_enabled: true,
-        ...(payload as Record<string, unknown>),
+        ...upstreamPayload,
+        providers,
+        summary: summarizeProviders(providers),
       }
     }
 
@@ -221,7 +287,7 @@ export async function GET(request: NextRequest) {
     })
   } catch {
     logger.warn('bridge providers proxy failed')
-    return NextResponse.json(fallbackProviders('claudeclaw_bridge_providers_unreachable'), {
+    return NextResponse.json(fallbackProviders('claudeclaw_bridge_providers_unreachable', await agentZeroRecordPromise), {
       headers: { 'Cache-Control': 'no-store' },
     })
   }

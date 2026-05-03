@@ -42,6 +42,52 @@ export type AgentZeroRuntimeProbe = {
   error: string | null
 }
 
+export type AgentZeroEcosystemAgentState = 'connected' | 'degraded' | 'offline'
+
+export type AgentZeroEcosystemAgentRecord = {
+  id: 'agent_zero'
+  name: 'Agent Zero'
+  category: 'agent'
+  status: AgentZeroEcosystemAgentState
+  state: AgentZeroEcosystemAgentState
+  mode: 'read_only'
+  execution_enabled: false
+  writes_enabled: false
+  bridge_session_required: true
+  health_url: 'configured'
+  chat_route: '/api/bridge/agent-zero/test-chat'
+  capabilities_source: 'mission_control_context'
+  health_status: 'healthy' | 'unreachable'
+  auth_status: 'configured' | 'missing'
+  chat_status: 'working' | 'blocked' | 'not_checked'
+  agent_zero_called: boolean
+  last_checked: number
+  last_checked_at: string
+  detail: {
+    endpoint: string
+    health_endpoint: string
+    chat_endpoint: string
+    health_http_status: number | null
+    health_latency_ms: number | null
+    version: string | null
+    commit_hash: string | null
+    api_key_configured: boolean
+    test_chat_endpoint: '/api/bridge/agent-zero/test-chat'
+    ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem'
+    bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session'
+    capabilities_source: 'mission_control_context'
+    mode: 'read_only'
+    execution_enabled: false
+    bridge_session_required: true
+    direct_access: false
+    proxy_access: true
+    blocker: string | null
+    notes: string
+    error: string | null
+  }
+  next_action: string
+}
+
 export type EcosystemAccessState =
   | 'connected'
   | 'configured'
@@ -380,6 +426,94 @@ export async function probeAgentZeroRuntime(baseUrl = getAgentZeroBaseUrl()): Pr
   }
 }
 
+export async function buildAgentZeroEcosystemAgentRecord(input: {
+  verifyChat?: boolean
+  chatTimeoutMs?: number
+  context?: AgentZeroReadOnlyContext
+} = {}): Promise<AgentZeroEcosystemAgentRecord> {
+  const runtime = await probeAgentZeroRuntime()
+  const apiKey = getAgentZeroApiKeyState()
+  const now = Date.now()
+  let chatStatus: AgentZeroEcosystemAgentRecord['chat_status'] = 'not_checked'
+  let agentZeroCalled = false
+  let chatBlocker: string | null = null
+
+  if (runtime.reachable && apiKey.present && input.verifyChat) {
+    const result = await sendAgentZeroReadOnlyMessage({
+      ownerMessage: 'Mission Control provider registry health check. Reply with one short sentence confirming read-only ecosystem context is visible. Do not execute anything.',
+      context: input.context || buildAgentZeroReadOnlyContext({ providerIds: ['agent_zero'] }),
+      timeoutMs: input.chatTimeoutMs ?? 12000,
+    })
+    agentZeroCalled = result.agent_zero_called
+    chatStatus = result.ok ? 'working' : 'blocked'
+    chatBlocker = result.ok ? null : (result.blocker || result.error || `agent_zero_chat_http_${result.status}`)
+  } else if (runtime.reachable && apiKey.present) {
+    chatStatus = 'not_checked'
+  } else {
+    chatStatus = 'blocked'
+    chatBlocker = runtime.reachable ? 'agent_zero_external_api_key_missing' : 'agent_zero_health_unreachable'
+  }
+
+  const state: AgentZeroEcosystemAgentState = !runtime.reachable || !runtime.health_ok
+    ? 'offline'
+    : apiKey.present && (chatStatus === 'working' || !input.verifyChat)
+      ? 'connected'
+      : 'degraded'
+  const blocker = state === 'offline'
+    ? (runtime.error || 'Agent Zero Tailnet health endpoint is not reachable.')
+    : state === 'degraded'
+      ? (chatBlocker || 'Agent Zero health works, but Mission Control cannot complete authenticated test-chat yet.')
+      : null
+
+  return {
+    id: 'agent_zero',
+    name: 'Agent Zero',
+    category: 'agent',
+    status: state,
+    state,
+    mode: 'read_only',
+    execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+    health_url: 'configured',
+    chat_route: '/api/bridge/agent-zero/test-chat',
+    capabilities_source: 'mission_control_context',
+    health_status: runtime.reachable && runtime.health_ok ? 'healthy' : 'unreachable',
+    auth_status: apiKey.present ? 'configured' : 'missing',
+    chat_status: chatStatus,
+    agent_zero_called: agentZeroCalled,
+    last_checked: now,
+    last_checked_at: new Date(now).toISOString(),
+    detail: {
+      endpoint: runtime.web_endpoint,
+      health_endpoint: runtime.health_endpoint,
+      chat_endpoint: runtime.chat_endpoint,
+      health_http_status: runtime.http_status,
+      health_latency_ms: runtime.latency_ms,
+      version: runtime.version,
+      commit_hash: runtime.commit_hash,
+      api_key_configured: apiKey.present,
+      test_chat_endpoint: '/api/bridge/agent-zero/test-chat',
+      ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
+      bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
+      capabilities_source: 'mission_control_context',
+      mode: 'read_only',
+      execution_enabled: false,
+      bridge_session_required: true,
+      direct_access: false,
+      proxy_access: true,
+      blocker,
+      notes: 'Agent Zero is active as a read-only ecosystem agent through Mission Control context. Execution remains disabled until a separately approved Bridge Session and scoped adapter exist.',
+      error: blocker,
+    },
+    next_action: state === 'connected'
+      ? 'Use /api/bridge/agent-zero/test-chat for read-only Agent Zero ecosystem questions. Execution remains disabled.'
+      : state === 'degraded'
+        ? 'Fix Agent Zero API auth/test-chat before treating Agent Zero as connected.'
+        : 'Restore Agent Zero Tailnet health before read-only ecosystem tests.',
+  }
+}
+
 export function buildAgentZeroReadOnlyContext(input: {
   providerIds?: string[]
   providerRegistry?: Array<{ id?: string; name?: string; state?: string; category?: string; execution_enabled?: boolean; direct_access?: boolean; proxy_access?: boolean }>
@@ -655,6 +789,7 @@ export async function sendAgentZeroReadOnlyMessage(input: {
   context: AgentZeroReadOnlyContext
   env?: EnvLike
   baseUrl?: string
+  timeoutMs?: number
 }): Promise<AgentZeroReadOnlyMessageResult> {
   const key = readAgentZeroApiKey(input.env)
   if (!key) {
@@ -681,7 +816,7 @@ export async function sendAgentZeroReadOnlyMessage(input: {
     const response = await fetch(endpoint, {
       method: 'POST',
       cache: 'no-store',
-      signal: AbortSignal.timeout(45000),
+      signal: AbortSignal.timeout(input.timeoutMs ?? 45000),
       headers: {
         'Content-Type': 'application/json',
         'X-API-KEY': key.value,

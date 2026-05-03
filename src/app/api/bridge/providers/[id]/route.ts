@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { buildAgentZeroEcosystemAgentRecord } from '@/lib/agent-zero-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,24 @@ export async function GET(
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const { id } = await params
+  if (normalizeProviderId(id) === 'agent_zero') {
+    const provider = await buildAgentZeroEcosystemAgentRecord({
+      verifyChat: true,
+      chatTimeoutMs: 12000,
+    })
+    return NextResponse.json(
+      {
+        ok: true,
+        mode: 'bridge_provider_detail_agent_zero_read_only',
+        upstream_ok: true,
+        provider,
+        execution_enabled: false,
+        no_routing_changes_enabled: true,
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
+
   const token = readDashboardToken()
   if (!token) {
     return NextResponse.json(

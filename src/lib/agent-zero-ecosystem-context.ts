@@ -9,6 +9,7 @@ import { getDatabase } from '@/lib/db'
 import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getGitHubToken } from '@/lib/github'
+import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
 import {
   type AgentZeroCapabilityState,
   type AgentZeroBrainApiSummary,
@@ -900,7 +901,7 @@ function endpointSummary(input: {
 }
 
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
-  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, timerActive, githubToken] = await Promise.all([
+  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, obsidianAdapterStatus, timerActive, githubToken] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
       status: 503,
@@ -944,6 +945,24 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       ok: false,
       status: 503,
       payload: {},
+    })),
+    Promise.resolve(getAgentZeroObsidianStatus()).catch(() => ({
+      ok: false,
+      mode: 'agent_zero_obsidian_read_only_adapter' as const,
+      status: 'blocked' as const,
+      vault_visible: false,
+      vault_path_status: 'missing' as const,
+      note_count: 0,
+      indexed: false,
+      last_indexed_at: null,
+      available_actions: ['status' as const],
+      read_only: true as const,
+      write_enabled: false as const,
+      execution_enabled: false as const,
+      direct_filesystem_exposed: false as const,
+      direct_access: false as const,
+      proxy_access: true as const,
+      blockers: ['obsidian_adapter_status_failed'],
     })),
     readBuildWikiTimerActive(),
     getGitHubToken().catch(() => null),
@@ -1231,6 +1250,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const graphifyEdges = numberFromDetails(graphifyDetails, 'edges')
   const brainContextReachable = Boolean((brainContextResult as any).ok && (brainContextResult.payload as BrainContextPayload)?.ok !== false)
   const brainWriteContractReachable = Boolean((brainWriteContractResult as any).ok)
+  const obsidianAdapterConnected = obsidianAdapterStatus.status === 'connected'
   const brainLastSyncAt = [
     obsidianSync?.last_success_at,
     mempalaceSync?.last_success_at,
@@ -1281,6 +1301,30 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       endpoint: '/api/bridge/brain-sync/build-wiki/status',
       status: 'connected',
       purpose: 'Build-Wiki/Farmer read-only status inside the shared brain surface.',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/obsidian?action=status',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero Obsidian adapter vault status. This exposes status only, not raw filesystem access.',
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/obsidian?action=search&q=...',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero Obsidian adapter note search. Results return safe snippets and relative note identifiers only.',
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/obsidian?action=read&path=...|title=...',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero Obsidian adapter safe-note read. Returns bounded redacted previews through Mission Control only.',
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    brainApi({
+      endpoint: '/api/bridge/agent-zero/obsidian?action=summarize&path=...|title=...',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      purpose: 'Agent Zero Obsidian adapter note summary. No LLM/tool execution is required.',
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
     }),
   ]
   const brainWriteApis: AgentZeroBrainApiSummary[] = [
@@ -1355,19 +1399,35 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       sync: obsidianSync,
       context: brainContextBySource.get('obsidian'),
       contract: brainContractBySource.get('obsidian'),
-      readAdapter: brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? 'available' : 'status_only',
+      status: obsidianAdapterConnected ? 'connected' : undefined,
+      rawState: obsidianAdapterConnected ? 'adapter_read_ready' : undefined,
+      statusVisible: obsidianAdapterConnected || undefined,
+      readAdapter: obsidianAdapterConnected
+        ? 'available'
+        : brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? 'available' : 'status_only',
       writeAdapter: 'blocked',
-      readContentEnabled: brainContractBySource.get('obsidian')?.current_status === 'read_ready' && brainContextReachable,
-      pathStatus: pathStatusFromDetails(obsidianDetails, ['vault_path']),
-      indexStatus: obsidianMdFiles !== null ? 'visible' : 'unknown',
-      availableReadApis: ['/api/bridge/brain-sync/status', '/api/bridge/brain-context', '/api/memory/search'],
+      readContentEnabled: obsidianAdapterConnected || (brainContractBySource.get('obsidian')?.current_status === 'read_ready' && brainContextReachable),
+      pathStatus: obsidianAdapterStatus.vault_path_status === 'present' ? 'present' : pathStatusFromDetails(obsidianDetails, ['vault_path']),
+      indexStatus: obsidianAdapterStatus.indexed || obsidianMdFiles !== null ? 'visible' : 'unknown',
+      availableReadApis: [
+        '/api/bridge/brain-sync/status',
+        '/api/bridge/brain-context',
+        '/api/memory/search',
+        '/api/bridge/agent-zero/obsidian?action=status',
+        '/api/bridge/agent-zero/obsidian?action=search&q=...',
+        '/api/bridge/agent-zero/obsidian?action=read&path=...|title=...',
+        '/api/bridge/agent-zero/obsidian?action=summarize&path=...|title=...',
+      ],
       availableWriteApis: [],
       blockers: [
         'obsidian_writes_disabled',
-        ...(brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? [] : ['obsidian_content_read_adapter_not_proven']),
+        ...(obsidianAdapterConnected || brainContractBySource.get('obsidian')?.current_status === 'read_ready' ? [] : ['obsidian_content_read_adapter_not_proven']),
+        ...obsidianAdapterStatus.blockers,
       ],
-      summary: obsidianSync?.summary || brainContextBySource.get('obsidian')?.detail || 'Obsidian status is not visible.',
-      notes: 'Filesystem/vault presence is not the same as an Agent Zero tool. Agent Zero can use only Mission Control proxy/status/context surfaces.',
+      summary: obsidianAdapterConnected
+        ? `Obsidian read-only adapter is connected with ${obsidianAdapterStatus.note_count} safe markdown notes visible.`
+        : obsidianSync?.summary || brainContextBySource.get('obsidian')?.detail || 'Obsidian status is not visible.',
+      notes: 'Filesystem/vault presence is not the same as direct Agent Zero filesystem access. Agent Zero can use only the Mission Control Obsidian adapter and proxy/status/context surfaces.',
     }),
     brainSourceRegistryItem({
       id: 'mempalace',
@@ -1624,6 +1684,46 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       readOnly: true,
       requiresBridgeSession: false,
       blockedReason: brainSources.length > 0 ? null : 'brain_sync_status_unavailable',
+    }),
+    toolRegistryItem({
+      id: 'obsidian.adapter.status',
+      name: 'Obsidian adapter vault status',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_obsidian_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'obsidian.adapter.search',
+      name: 'Obsidian adapter safe note search',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_obsidian_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'obsidian.adapter.read',
+      name: 'Obsidian adapter safe note read',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_obsidian_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
+    }),
+    toolRegistryItem({
+      id: 'obsidian.adapter.summarize',
+      name: 'Obsidian adapter note summary',
+      status: obsidianAdapterConnected ? 'connected' : 'blocked',
+      source: 'mission_control_agent_zero_obsidian_adapter',
+      category: 'brain',
+      readOnly: true,
+      requiresBridgeSession: false,
+      blockedReason: obsidianAdapterConnected ? null : obsidianAdapterStatus.blockers.join(';') || 'obsidian_adapter_blocked',
     }),
     ...mcpToolRegistry,
     ...fallbackZapierToolRegistry,

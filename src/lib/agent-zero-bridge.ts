@@ -130,6 +130,34 @@ export type AgentZeroModelProviderSummary = {
   blocked_reason: string | null
 }
 
+export type AgentZeroSkillSafeMode = 'metadata_only' | 'blocked'
+
+export type AgentZeroSkillRegistryItem = {
+  name: string
+  source: 'agent_zero' | 'claudeclaw_tony' | 'mission_control_repo' | 'home_claude' | 'database'
+  source_label: string
+  description: string
+  dependencies: string[]
+  missing_dependencies: string[]
+  blocked_dependencies: string[]
+  safe_mode: AgentZeroSkillSafeMode
+  status: EcosystemAccessState
+  execution_enabled: false
+  writes_enabled: false
+  direct_access: false
+  proxy_access: true
+  blocked_reason: string | null
+}
+
+export type AgentZeroSkillSourceSummary = {
+  source: AgentZeroSkillRegistryItem['source']
+  label: string
+  status: EcosystemAccessState
+  total: number
+  safe_mode: AgentZeroSkillSafeMode
+  blocked_reason: string | null
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: false
   bridge_session_required: true
@@ -225,6 +253,12 @@ export type AgentZeroReadOnlyContext = {
     registry_status: EcosystemAccessState
     total: number
     sample: string[]
+    sources: AgentZeroSkillSourceSummary[]
+    registry: AgentZeroSkillRegistryItem[]
+    blocked_total: number
+    missing_dependencies_total: number
+    execution_enabled: false
+    bridge_session_required: true
     writes_enabled: false
   }
   tools: {
@@ -566,6 +600,8 @@ export function buildAgentZeroReadOnlyContext(input: {
   modelCatalog?: Array<{ alias: string; provider: string; name: string }>
   modelProviderRegistry?: AgentZeroModelProviderSummary[]
   skillNames?: string[]
+  skillRegistry?: AgentZeroSkillRegistryItem[]
+  skillSources?: AgentZeroSkillSourceSummary[]
   integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
   toolRegistry?: Array<{ id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
   mcpServers?: Array<{ name: string; status?: string; transport?: string; tool_count?: number | null; reachable?: boolean; schema_available?: boolean; blocked_reason?: string | null; tools_endpoint?: string }>
@@ -616,7 +652,56 @@ export function buildAgentZeroReadOnlyContext(input: {
     }))
     .filter((provider) => provider.id && provider.name)
     .sort((a, b) => a.id.localeCompare(b.id))
-  const skillNames = Array.from(new Set((input.skillNames || []).filter(Boolean))).sort()
+  const skillRegistry = (input.skillRegistry || [])
+    .map((skill) => ({
+      name: skill.name,
+      source: skill.source,
+      source_label: skill.source_label,
+      description: skill.description || '',
+      dependencies: Array.from(new Set(skill.dependencies || [])).sort(),
+      missing_dependencies: Array.from(new Set(skill.missing_dependencies || [])).sort(),
+      blocked_dependencies: Array.from(new Set(skill.blocked_dependencies || [])).sort(),
+      safe_mode: skill.safe_mode,
+      status: skill.status,
+      execution_enabled: false as const,
+      writes_enabled: false as const,
+      direct_access: false as const,
+      proxy_access: true as const,
+      blocked_reason: skill.blocked_reason || null,
+    }))
+    .filter((skill) => skill.name)
+    .sort((a, b) => `${a.source}:${a.name}`.localeCompare(`${b.source}:${b.name}`))
+  const skillNames = Array.from(new Set([
+    ...(input.skillNames || []),
+    ...skillRegistry.map((skill) => skill.name),
+  ].filter(Boolean))).sort()
+  const derivedSkillSources = new Map<AgentZeroSkillSourceSummary['source'], AgentZeroSkillSourceSummary>()
+  for (const skill of skillRegistry) {
+    const existing = derivedSkillSources.get(skill.source)
+    if (existing) {
+      existing.total += 1
+      if (skill.status === 'blocked') existing.status = 'visible'
+      continue
+    }
+    derivedSkillSources.set(skill.source, {
+      source: skill.source,
+      label: skill.source_label,
+      status: 'visible',
+      total: 1,
+      safe_mode: 'metadata_only',
+      blocked_reason: null,
+    })
+  }
+  const skillSources = (input.skillSources || Array.from(derivedSkillSources.values()))
+    .map((source) => ({
+      source: source.source,
+      label: source.label,
+      status: source.status,
+      total: Number(source.total || 0),
+      safe_mode: source.safe_mode,
+      blocked_reason: source.blocked_reason || null,
+    }))
+    .sort((a, b) => a.source.localeCompare(b.source))
   const agents = (input.agents || []).map((agent) => ({
     id: agent.id,
     status: agent.status || 'unknown',
@@ -757,6 +842,12 @@ export function buildAgentZeroReadOnlyContext(input: {
       registry_status: skillNames.length > 0 ? 'visible' : 'unknown',
       total: skillNames.length,
       sample: skillNames.slice(0, 25),
+      sources: skillSources,
+      registry: skillRegistry.slice(0, 100),
+      blocked_total: skillRegistry.filter((skill) => skill.status === 'blocked').length,
+      missing_dependencies_total: skillRegistry.filter((skill) => skill.missing_dependencies.length > 0 || skill.blocked_dependencies.length > 0).length,
+      execution_enabled: false,
+      bridge_session_required: true,
       writes_enabled: false,
     },
     tools: {
@@ -848,6 +939,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
     'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
     'For model questions, use models.provider_registry and models.catalog. Do not claim a model/provider is usable when its status is blocked; credential presence is boolean only and never a key value.',
+    'For skill questions, use skills.registry and skills.sources. Do not claim unregistered skills; mark blocked or dependency-limited skills honestly.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

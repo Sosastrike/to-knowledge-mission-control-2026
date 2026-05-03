@@ -128,6 +128,61 @@ describe('Agent Zero read-only bridge connector', () => {
         },
       ],
       skillNames: ['browser-use', 'documents'],
+      skillRegistry: [
+        {
+          name: 'a0-development',
+          source: 'agent_zero',
+          source_label: 'Agent Zero deployed skills',
+          description: 'Development guide for extending Agent Zero.',
+          dependencies: ['SKILL.md'],
+          missing_dependencies: [],
+          blocked_dependencies: [],
+          safe_mode: 'metadata_only',
+          status: 'visible',
+          execution_enabled: false,
+          writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+        {
+          name: 'engineering-test',
+          source: 'claudeclaw_tony',
+          source_label: 'ClaudeClaw/Tony skills',
+          description: 'Run tests and report results.',
+          dependencies: ['scripts'],
+          missing_dependencies: [],
+          blocked_dependencies: ['scripts:execution_disabled_in_read_only_context'],
+          safe_mode: 'metadata_only',
+          status: 'visible',
+          execution_enabled: false,
+          writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+        {
+          name: 'legacy-empty-skill',
+          source: 'home_claude',
+          source_label: 'Safe home Claude skills',
+          description: 'Skill directory is visible, but metadata is missing.',
+          dependencies: [],
+          missing_dependencies: ['SKILL.md_or_skill.json'],
+          blocked_dependencies: [],
+          safe_mode: 'blocked',
+          status: 'blocked',
+          execution_enabled: false,
+          writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: 'skill_metadata_missing',
+        },
+      ],
+      skillSources: [
+        { source: 'agent_zero', label: 'Agent Zero deployed skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'claudeclaw_tony', label: 'ClaudeClaw/Tony skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'home_claude', label: 'Safe home Claude skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+      ],
       integrationItems: [
         { id: 'mission_control', status: 'reachable', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
         { id: 'google_drive', status: 'visible_via_zapier_schema', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
@@ -221,6 +276,14 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.models.bridge_session_required).toBe(true)
     expect(context.models.credential_values_exposed).toBe(false)
     expect(context.skills.writes_enabled).toBe(false)
+    expect(context.skills.execution_enabled).toBe(false)
+    expect(context.skills.bridge_session_required).toBe(true)
+    expect(context.skills.registry.find((skill) => skill.name === 'a0-development')?.source).toBe('agent_zero')
+    expect(context.skills.registry.find((skill) => skill.name === 'engineering-test')?.blocked_dependencies).toContain('scripts:execution_disabled_in_read_only_context')
+    expect(context.skills.registry.find((skill) => skill.name === 'legacy-empty-skill')?.status).toBe('blocked')
+    expect(context.skills.blocked_total).toBe(1)
+    expect(context.skills.missing_dependencies_total).toBe(2)
+    expect(context.skills.sources.map((source) => source.source)).toContain('home_claude')
     expect(context.tools.registry.find((tool) => tool.id === 'mcp.zapier.tools.schema')?.execution_enabled).toBe(false)
     expect(context.tools.google_drive_visible).toBe(true)
     expect(context.tools.onedrive_visible).toBe(false)
@@ -240,6 +303,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('Bridge Session execution is not active')
     expect(prompt).toContain('Do not enumerate your internal Agent Zero tools')
     expect(prompt).toContain('models.provider_registry')
+    expect(prompt).toContain('skills.registry')
     expect(prompt).toContain('direct access versus Mission Control proxy')
     expect(prompt).toContain('"heygen_schema_visible":true')
     expect(prompt).toContain('"execution_enabled":false')

@@ -1,4 +1,6 @@
 import { execFile } from 'node:child_process'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import { fetchClaudeClawJson } from '@/lib/claudeclaw-telegram-approvals'
 import { getMcpServerTools } from '@/lib/mcp-server-tool-schemas'
 import { getZapierToolBridge, type ZapierToolRecord } from '@/lib/zapier-tool-bridge'
@@ -10,6 +12,8 @@ import {
   type AgentZeroModelProviderSummary,
   type AgentZeroReadOnlyContext,
   type AgentZeroReadOnlyEndpointSummary,
+  type AgentZeroSkillRegistryItem,
+  type AgentZeroSkillSourceSummary,
   type EcosystemAccessState,
   buildAgentZeroReadOnlyContext,
 } from '@/lib/agent-zero-bridge'
@@ -49,6 +53,11 @@ function execFileText(command: string, args: string[], timeout = 2500): Promise<
   })
 }
 
+type SkillRegistryReadResult = {
+  items: AgentZeroSkillRegistryItem[]
+  sources: AgentZeroSkillSourceSummary[]
+}
+
 function readSkillNames(): string[] {
   try {
     const db = getDatabase()
@@ -58,6 +67,334 @@ function readSkillNames(): string[] {
     return rows.map((row) => String(row.name || '')).filter(Boolean)
   } catch {
     return []
+  }
+}
+
+function sanitizeDescription(value: string): string {
+  return value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 260)
+}
+
+function parseFrontmatterValue(frontmatter: string, key: string): string | null {
+  const match = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'mi'))
+  if (!match) return null
+  return match[1].trim().replace(/^['"]|['"]$/g, '')
+}
+
+function parseFrontmatterList(frontmatter: string, key: string): string[] {
+  const inline = parseFrontmatterValue(frontmatter, key)
+  if (inline) {
+    if (inline.startsWith('[') && inline.endsWith(']')) {
+      return inline
+        .slice(1, -1)
+        .split(',')
+        .map((item) => item.trim().replace(/^['"]|['"]$/g, ''))
+        .filter(Boolean)
+    }
+    return [inline].filter(Boolean)
+  }
+
+  const block = frontmatter.match(new RegExp(`^${key}:\\s*\\n((?:\\s+-\\s+.+\\n?)+)`, 'mi'))
+  if (!block) return []
+  return block[1]
+    .split('\n')
+    .map((line) => line.replace(/^\s+-\s+/, '').trim().replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean)
+}
+
+function readSkillMarkdownMetadata(skillDoc: string): { name: string | null; description: string; dependencies: string[] } {
+  const content = readFileSync(skillDoc, 'utf8').slice(0, 20000)
+  const frontmatter = content.startsWith('---\n') ? content.match(/^---\n([\s\S]*?)\n---/)?.[1] || '' : ''
+  const name = frontmatter ? parseFrontmatterValue(frontmatter, 'name') : null
+  const description = frontmatter
+    ? parseFrontmatterValue(frontmatter, 'description')
+    : null
+  const dependencies = frontmatter
+    ? [
+        ...parseFrontmatterList(frontmatter, 'dependencies'),
+        ...parseFrontmatterList(frontmatter, 'tools').map((tool) => `tool:${tool}`),
+      ]
+    : []
+
+  if (description) return { name, description: sanitizeDescription(description), dependencies }
+
+  const firstBodyLine = content
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith('---') && !line.startsWith('#') && !line.includes(':'))
+  return {
+    name,
+    description: sanitizeDescription(firstBodyLine || 'Skill metadata visible; no description declared.'),
+    dependencies,
+  }
+}
+
+function readSkillJsonMetadata(skillJson: string): { name: string | null; description: string; dependencies: string[] } {
+  const json = JSON.parse(readFileSync(skillJson, 'utf8')) as {
+    name?: string
+    description?: string
+    tools?: string[]
+    dependencies?: string[]
+  }
+  return {
+    name: json.name || null,
+    description: sanitizeDescription(json.description || 'Skill metadata visible; no description declared.'),
+    dependencies: [
+      ...(Array.isArray(json.dependencies) ? json.dependencies : []),
+      ...(Array.isArray(json.tools) ? json.tools.map((tool) => `tool:${tool}`) : []),
+    ],
+  }
+}
+
+function skillDependencyMetadata(skillPath: string, baseDependencies: string[]): {
+  dependencies: string[]
+  missing_dependencies: string[]
+  blocked_dependencies: string[]
+} {
+  const dependencies = new Set(baseDependencies.filter(Boolean))
+  const missing = new Set<string>()
+  const blocked = new Set<string>()
+
+  const requirementsPath = join(skillPath, 'requirements.txt')
+  const packagePath = join(skillPath, 'package.json')
+  const scriptsPath = join(skillPath, 'scripts')
+
+  if (existsSync(requirementsPath)) dependencies.add('python:requirements.txt')
+  if (existsSync(packagePath)) dependencies.add('node:package.json')
+  if (existsSync(scriptsPath)) dependencies.add('scripts')
+
+  for (const dependency of Array.from(dependencies)) {
+    if (dependency.startsWith('tool:')) blocked.add(`${dependency}:execution_disabled_in_read_only_context`)
+    if (dependency === 'scripts') blocked.add('scripts:execution_disabled_in_read_only_context')
+  }
+
+  return {
+    dependencies: Array.from(dependencies).sort(),
+    missing_dependencies: Array.from(missing).sort(),
+    blocked_dependencies: Array.from(blocked).sort(),
+  }
+}
+
+function scanSkillRoot(input: {
+  source: AgentZeroSkillRegistryItem['source']
+  label: string
+  root: string
+  includeBlockedDirectories?: boolean
+}): SkillRegistryReadResult {
+  const items: AgentZeroSkillRegistryItem[] = []
+  if (!existsSync(input.root)) {
+    return {
+      items,
+      sources: [{
+        source: input.source,
+        label: input.label,
+        status: 'blocked',
+        total: 0,
+        safe_mode: 'blocked',
+        blocked_reason: 'skill_root_missing_or_unreadable',
+      }],
+    }
+  }
+
+  let entries: string[] = []
+  try {
+    entries = readdirSync(input.root).sort()
+  } catch {
+    return {
+      items,
+      sources: [{
+        source: input.source,
+        label: input.label,
+        status: 'blocked',
+        total: 0,
+        safe_mode: 'blocked',
+        blocked_reason: 'skill_root_unreadable',
+      }],
+    }
+  }
+
+  for (const entry of entries) {
+    const skillPath = join(input.root, entry)
+    try {
+      if (!statSync(skillPath).isDirectory()) continue
+    } catch {
+      continue
+    }
+
+    const skillDoc = join(skillPath, 'SKILL.md')
+    const skillJson = join(skillPath, 'skill.json')
+    let name = entry
+    let description = 'Skill directory is visible, but metadata is missing.'
+    let dependencies: string[] = []
+    let status: EcosystemAccessState = 'visible'
+    let safeMode: AgentZeroSkillRegistryItem['safe_mode'] = 'metadata_only'
+    const missingDependencies: string[] = []
+    let blockedReason: string | null = null
+
+    try {
+      if (existsSync(skillDoc)) {
+        const metadata = readSkillMarkdownMetadata(skillDoc)
+        name = metadata.name || entry
+        description = metadata.description
+        dependencies = metadata.dependencies
+      } else if (existsSync(skillJson)) {
+        const metadata = readSkillJsonMetadata(skillJson)
+        name = metadata.name || entry
+        description = metadata.description
+        dependencies = metadata.dependencies
+      } else if (input.includeBlockedDirectories) {
+        status = 'blocked'
+        safeMode = 'blocked'
+        missingDependencies.push('SKILL.md_or_skill.json')
+        blockedReason = 'skill_metadata_missing'
+      } else {
+        continue
+      }
+    } catch {
+      status = 'blocked'
+      safeMode = 'blocked'
+      missingDependencies.push('readable_skill_metadata')
+      blockedReason = 'skill_metadata_unreadable'
+    }
+
+    const dependencyMetadata = skillDependencyMetadata(skillPath, dependencies)
+    items.push({
+      name,
+      source: input.source,
+      source_label: input.label,
+      description,
+      dependencies: dependencyMetadata.dependencies,
+      missing_dependencies: Array.from(new Set([...missingDependencies, ...dependencyMetadata.missing_dependencies])).sort(),
+      blocked_dependencies: dependencyMetadata.blocked_dependencies,
+      safe_mode: safeMode,
+      status,
+      execution_enabled: false,
+      writes_enabled: false,
+      direct_access: false,
+      proxy_access: true,
+      blocked_reason: blockedReason,
+    })
+  }
+
+  return {
+    items,
+    sources: [{
+      source: input.source,
+      label: input.label,
+      status: items.length > 0 ? 'visible' : 'blocked',
+      total: items.length,
+      safe_mode: items.length > 0 ? 'metadata_only' : 'blocked',
+      blocked_reason: items.length > 0 ? null : 'no_skills_discovered',
+    }],
+  }
+}
+
+function readDatabaseSkills(): AgentZeroSkillRegistryItem[] {
+  try {
+    const db = getDatabase()
+    const rows = db
+      .prepare('SELECT name, source, description, security_status FROM skills ORDER BY source, name LIMIT 200')
+      .all() as Array<{ name?: string; source?: string; description?: string | null; security_status?: string | null }>
+    return rows
+      .map((row) => ({
+        name: String(row.name || '').trim(),
+        source: 'database' as const,
+        source_label: `db:${String(row.source || 'skills')}`,
+        description: sanitizeDescription(row.description || 'Mission Control database skill record.'),
+        dependencies: [],
+        missing_dependencies: [],
+        blocked_dependencies: [],
+        safe_mode: 'metadata_only' as const,
+        status: accessFromVisibility(row.security_status || 'visible'),
+        execution_enabled: false as const,
+        writes_enabled: false as const,
+        direct_access: false as const,
+        proxy_access: true as const,
+        blocked_reason: accessFromVisibility(row.security_status || 'visible') === 'blocked' ? 'database_skill_security_status_blocked' : null,
+      }))
+      .filter((skill) => skill.name)
+  } catch {
+    return []
+  }
+}
+
+function readSkillRegistry(): SkillRegistryReadResult {
+  const roots = [
+    {
+      source: 'agent_zero' as const,
+      label: 'Agent Zero deployed skills',
+      root: '/home/tony/agent-zero-deploy/data/skills',
+    },
+    {
+      source: 'claudeclaw_tony' as const,
+      label: 'ClaudeClaw/Tony skills',
+      root: '/home/tony/claudeclaw/skills',
+    },
+    {
+      source: 'claudeclaw_tony' as const,
+      label: 'ClaudeClaw/Tony vendor skills',
+      root: '/home/tony/claudeclaw/vendor/skills',
+    },
+    {
+      source: 'claudeclaw_tony' as const,
+      label: 'ClaudeClaw project Claude skills',
+      root: '/home/tony/claudeclaw/.claude/skills',
+    },
+    {
+      source: 'mission_control_repo' as const,
+      label: 'Mission Control repo skills',
+      root: join(process.cwd(), 'skills'),
+    },
+    ...(process.env.AGENT_ZERO_INCLUDE_HOME_CLAUDE_SKILLS === 'false'
+      ? []
+      : [{
+          source: 'home_claude' as const,
+          label: 'Safe home Claude skills',
+          root: '/home/tony/.claude/skills',
+          includeBlockedDirectories: true,
+        }]),
+  ]
+
+  const items: AgentZeroSkillRegistryItem[] = []
+  const sourceMap = new Map<string, AgentZeroSkillSourceSummary>()
+  for (const root of roots) {
+    const result = scanSkillRoot(root)
+    items.push(...result.items)
+    for (const source of result.sources) {
+      const key = `${source.source}:${source.label}`
+      sourceMap.set(key, source)
+    }
+  }
+
+  const dbSkills = readDatabaseSkills()
+  items.push(...dbSkills)
+  if (dbSkills.length > 0) {
+    sourceMap.set('database:Mission Control skills database', {
+      source: 'database',
+      label: 'Mission Control skills database',
+      status: 'visible',
+      total: dbSkills.length,
+      safe_mode: 'metadata_only',
+      blocked_reason: null,
+    })
+  }
+
+  const seen = new Set<string>()
+  const deduped = items
+    .filter((skill) => {
+      const key = `${skill.source}:${skill.source_label}:${skill.name}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => `${a.source}:${a.name}`.localeCompare(`${b.source}:${b.name}`))
+    .slice(0, 150)
+
+  return {
+    items: deduped,
+    sources: Array.from(sourceMap.values()).sort((a, b) => `${a.source}:${a.label}`.localeCompare(`${b.source}:${b.label}`)),
   }
 }
 
@@ -402,6 +739,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const heygenRequiredFields = Array.isArray((zapierResult as any).required_fields)
     ? ((zapierResult as any).required_fields as string[])
     : []
+  const skillRegistry = readSkillRegistry()
   const schemaRequiredFields = Array.from(new Set([
     ...((mcpZapierResult as any).tools || []).flatMap((tool: any) => Array.isArray(tool.required_fields) ? tool.required_fields : []),
     ...heygenRequiredFields,
@@ -577,6 +915,8 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       models: allModels.map((model) => ({ provider: model.provider, name: model.name })),
     }),
     skillNames,
+    skillRegistry: skillRegistry.items,
+    skillSources: skillRegistry.sources,
     integrationItems,
     toolRegistry,
     mcpServers: [{

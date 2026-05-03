@@ -110,6 +110,26 @@ export type AgentZeroReadOnlyEndpointSummary = {
   note: string
 }
 
+export type AgentZeroModelProviderStatus = 'connected' | 'configured' | 'blocked'
+
+export type AgentZeroModelProviderSummary = {
+  id: string
+  name: string
+  status: AgentZeroModelProviderStatus
+  credential_present: boolean
+  credential_names: string[]
+  credential_values_exposed: false
+  model_count: number
+  models: string[]
+  best_use_case: string
+  execution_mode: string
+  execution_enabled: false
+  bridge_session_required: true
+  direct_access: false
+  proxy_access: true
+  blocked_reason: string | null
+}
+
 export type AgentZeroReadOnlyContext = {
   execution_enabled: false
   bridge_session_required: true
@@ -194,7 +214,11 @@ export type AgentZeroReadOnlyContext = {
       provider: string
       name: string
     }>
+    provider_registry: AgentZeroModelProviderSummary[]
     openrouter_status: EcosystemAccessState
+    execution_enabled: false
+    bridge_session_required: true
+    credential_values_exposed: false
   }
   skills: {
     visible: boolean
@@ -540,6 +564,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   providerRegistry?: Array<{ id?: string; name?: string; state?: string; category?: string; execution_enabled?: boolean; direct_access?: boolean; proxy_access?: boolean }>
   agents?: Array<{ id: string; status?: string; role?: string; execution_enabled?: boolean; direct_access?: boolean; proxy_access?: boolean }>
   modelCatalog?: Array<{ alias: string; provider: string; name: string }>
+  modelProviderRegistry?: AgentZeroModelProviderSummary[]
   skillNames?: string[]
   integrationItems?: Array<{ id: string; status?: string; visibility?: 'configured' | 'visible' | 'blocked' | 'unknown'; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
   toolRegistry?: Array<{ id: string; status?: EcosystemAccessState; source?: string; direct_access?: boolean; proxy_access?: boolean; execution_enabled?: boolean; writes_enabled?: boolean }>
@@ -571,6 +596,26 @@ export function buildAgentZeroReadOnlyContext(input: {
   })).filter((provider) => provider.id || provider.name)
   const modelCatalog = (input.modelCatalog || []).slice(0, 40)
   const modelProviders = Array.from(new Set(modelCatalog.map((model) => model.provider).filter(Boolean))).sort()
+  const modelProviderRegistry = (input.modelProviderRegistry || [])
+    .map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      status: provider.status,
+      credential_present: Boolean(provider.credential_present),
+      credential_names: Array.from(new Set(provider.credential_names || [])).sort(),
+      credential_values_exposed: false as const,
+      model_count: Number(provider.model_count || provider.models?.length || 0),
+      models: Array.from(new Set(provider.models || [])).slice(0, 40),
+      best_use_case: provider.best_use_case,
+      execution_mode: provider.execution_mode,
+      execution_enabled: false as const,
+      bridge_session_required: true as const,
+      direct_access: false as const,
+      proxy_access: true as const,
+      blocked_reason: provider.blocked_reason || null,
+    }))
+    .filter((provider) => provider.id && provider.name)
+    .sort((a, b) => a.id.localeCompare(b.id))
   const skillNames = Array.from(new Set((input.skillNames || []).filter(Boolean))).sort()
   const agents = (input.agents || []).map((agent) => ({
     id: agent.id,
@@ -633,9 +678,12 @@ export function buildAgentZeroReadOnlyContext(input: {
     execution_enabled: Boolean(tool.execution_enabled),
     writes_enabled: Boolean(tool.writes_enabled),
   }))
-  const openrouterStatus = input.integrationItems?.find((item) => item.id === 'openrouter')?.visibility === 'visible'
-    ? 'visible'
-    : providers.includes('openrouter') ? 'visible' : 'unknown'
+  const openrouterModelProvider = modelProviderRegistry.find((provider) => provider.id === 'openrouter')
+  const openrouterStatus = openrouterModelProvider
+    ? stateToAccess(openrouterModelProvider.status)
+    : input.integrationItems?.find((item) => item.id === 'openrouter')?.visibility === 'visible'
+      ? 'visible'
+      : providers.includes('openrouter') ? 'visible' : 'unknown'
   const obsidianStatus = brainSourceStatus(brainSources, 'obsidian')
   const mempalaceStatus = brainSourceStatus(brainSources, 'mempalace')
   const graphifyStatus = brainSourceStatus(brainSources, 'graphify')
@@ -698,7 +746,11 @@ export function buildAgentZeroReadOnlyContext(input: {
         provider: model.provider,
         name: model.name,
       })),
+      provider_registry: modelProviderRegistry,
       openrouter_status: openrouterStatus as EcosystemAccessState,
+      execution_enabled: false,
+      bridge_session_required: true,
+      credential_values_exposed: false,
     },
     skills: {
       visible: skillNames.length > 0,
@@ -795,6 +847,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'Do not enumerate your internal Agent Zero tools unless they are present in the JSON context.',
     'For tools, models, agents, integrations, skills, OpenCloud, or Build-Wiki, report only what the JSON context explicitly shows.',
     'For MCP/tool questions, use mcp.servers, mcp.endpoint_summaries, mcp.tool_schema_summary, tools.registry, models, and integrations from the JSON context.',
+    'For model questions, use models.provider_registry and models.catalog. Do not claim a model/provider is usable when its status is blocked; credential presence is boolean only and never a key value.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
     'If a category is not present in the JSON context, say it is not visible through the Mission Control bridge.',
     'If the owner asks whether you can see Mission Control, answer yes only if this context is present.',

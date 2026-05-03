@@ -74,6 +74,59 @@ describe('Agent Zero read-only bridge connector', () => {
         { alias: 'sonnet', provider: 'anthropic', name: 'anthropic/claude-sonnet-4-6' },
         { alias: 'gpt-4.1', provider: 'openai', name: 'openai/gpt-4.1' },
       ],
+      modelProviderRegistry: [
+        {
+          id: 'openrouter',
+          name: 'OpenRouter',
+          status: 'connected',
+          credential_present: true,
+          credential_names: ['OPENROUTER_API_KEY'],
+          credential_values_exposed: false,
+          model_count: 2,
+          models: ['anthropic/claude-sonnet-4-6', 'openai/gpt-4.1'],
+          best_use_case: 'Router/fallback access to hosted models.',
+          execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+          execution_enabled: false,
+          bridge_session_required: true,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+        {
+          id: 'anthropic',
+          name: 'Anthropic / Claude',
+          status: 'configured',
+          credential_present: true,
+          credential_names: ['ANTHROPIC_API_KEY'],
+          credential_values_exposed: false,
+          model_count: 1,
+          models: ['anthropic/claude-sonnet-4-6'],
+          best_use_case: 'High-quality reasoning and coding.',
+          execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+          execution_enabled: false,
+          bridge_session_required: true,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+        {
+          id: 'openai',
+          name: 'OpenAI',
+          status: 'blocked',
+          credential_present: false,
+          credential_names: ['OPENAI_API_KEY'],
+          credential_values_exposed: false,
+          model_count: 1,
+          models: ['openai/gpt-4.1'],
+          best_use_case: 'General assistant work.',
+          execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+          execution_enabled: false,
+          bridge_session_required: true,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: 'openai_not_configured_or_not_visible_in_provider_registry',
+        },
+      ],
       skillNames: ['browser-use', 'documents'],
       integrationItems: [
         { id: 'mission_control', status: 'reachable', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },
@@ -159,6 +212,14 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.agents.items.find((agent) => agent.id === 'agent_zero')?.execution_enabled).toBe(false)
     expect(context.agents.items.find((agent) => agent.id === 'tony')?.execution_enabled).toBe(false)
     expect(context.models.providers).toContain('openai')
+    expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.status).toBe('connected')
+    expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.credential_present).toBe(true)
+    expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.credential_values_exposed).toBe(false)
+    expect(context.models.provider_registry.find((provider) => provider.id === 'openai')?.status).toBe('blocked')
+    expect(context.models.provider_registry.find((provider) => provider.id === 'openai')?.blocked_reason).toBe('openai_not_configured_or_not_visible_in_provider_registry')
+    expect(context.models.execution_enabled).toBe(false)
+    expect(context.models.bridge_session_required).toBe(true)
+    expect(context.models.credential_values_exposed).toBe(false)
     expect(context.skills.writes_enabled).toBe(false)
     expect(context.tools.registry.find((tool) => tool.id === 'mcp.zapier.tools.schema')?.execution_enabled).toBe(false)
     expect(context.tools.google_drive_visible).toBe(true)
@@ -178,6 +239,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('Do not run tools')
     expect(prompt).toContain('Bridge Session execution is not active')
     expect(prompt).toContain('Do not enumerate your internal Agent Zero tools')
+    expect(prompt).toContain('models.provider_registry')
     expect(prompt).toContain('direct access versus Mission Control proxy')
     expect(prompt).toContain('"heygen_schema_visible":true')
     expect(prompt).toContain('"execution_enabled":false')

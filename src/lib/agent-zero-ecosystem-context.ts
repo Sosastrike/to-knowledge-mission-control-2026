@@ -6,6 +6,8 @@ import { getAllModels } from '@/lib/models'
 import { getDatabase } from '@/lib/db'
 import { deriveRunNowUiState, readLatestRunNow } from '@/lib/build-wiki-run-now'
 import {
+  type AgentZeroModelProviderStatus,
+  type AgentZeroModelProviderSummary,
   type AgentZeroReadOnlyContext,
   type AgentZeroReadOnlyEndpointSummary,
   type EcosystemAccessState,
@@ -16,6 +18,7 @@ type ProviderStatus = {
   id?: string
   name?: string
   state?: string
+  status?: string
   category?: string
   type?: string
 }
@@ -87,6 +90,206 @@ function accessFromVisibility(value: string | null | undefined): EcosystemAccess
   if (/(visible|read_only|degraded|partial|cached)/.test(text)) return 'visible'
   if (/(missing|blocked|not_visible|not_connected|unavailable|failed|error|denied|locked)/.test(text)) return 'blocked'
   return 'unknown'
+}
+
+function hasCredential(names: string[]): boolean {
+  return names.some((name) => Boolean(process.env[name]?.trim()))
+}
+
+function normalizedProviderText(provider: ProviderStatus): string {
+  return [
+    provider.id,
+    provider.name,
+    provider.category,
+    provider.type,
+  ]
+    .map((value) => String(value || '').toLowerCase())
+    .join(' ')
+}
+
+function providerStateFor(providers: ProviderStatus[], ids: string[]): string | null {
+  const needles = ids.map((id) => id.toLowerCase())
+  const provider = providers.find((item) => {
+    const text = normalizedProviderText(item)
+    return needles.some((needle) => text.includes(needle))
+  })
+  return provider ? String(provider.state || provider.status || 'visible') : null
+}
+
+function modelProviderStatus(input: {
+  credentialPresent: boolean
+  providerState: string | null
+  localConfigured?: boolean
+}): AgentZeroModelProviderStatus {
+  const access = accessFromVisibility(input.providerState)
+  if (access === 'connected') return 'connected'
+  if (input.credentialPresent || input.localConfigured || access === 'configured' || access === 'visible') return 'configured'
+  return 'blocked'
+}
+
+function buildModelProviderRegistry(input: {
+  providers: ProviderStatus[]
+  models: Array<{ provider: string; name: string }>
+}): AgentZeroModelProviderSummary[] {
+  const modelsByProvider = new Map<string, string[]>()
+  for (const model of input.models) {
+    const key = model.provider.toLowerCase()
+    modelsByProvider.set(key, [...(modelsByProvider.get(key) || []), model.name])
+  }
+
+  const build = (provider: {
+    id: string
+    name: string
+    modelProvider?: string
+    providerIds?: string[]
+    credentialNames: string[]
+    bestUseCase: string
+    executionMode: string
+    localConfigured?: boolean
+    includeBlocked?: boolean
+  }): AgentZeroModelProviderSummary | null => {
+    const providerState = providerStateFor(input.providers, provider.providerIds || [provider.id, provider.name])
+    const credentialPresent = hasCredential(provider.credentialNames)
+    const status = modelProviderStatus({
+      credentialPresent,
+      providerState,
+      localConfigured: provider.localConfigured,
+    })
+    const modelProvider = provider.modelProvider || provider.id
+    const models = modelsByProvider.get(modelProvider.toLowerCase()) || []
+    if (!provider.includeBlocked && status === 'blocked') return null
+
+    return {
+      id: provider.id,
+      name: provider.name,
+      status,
+      credential_present: credentialPresent,
+      credential_names: provider.credentialNames,
+      credential_values_exposed: false,
+      model_count: models.length,
+      models,
+      best_use_case: provider.bestUseCase,
+      execution_mode: provider.executionMode,
+      execution_enabled: false,
+      bridge_session_required: true,
+      direct_access: false,
+      proxy_access: true,
+      blocked_reason: status === 'blocked'
+        ? `${provider.id}_not_configured_or_not_visible_in_provider_registry`
+        : null,
+    }
+  }
+
+  const allModelNames = Array.from(new Set(input.models.map((model) => model.name))).slice(0, 40)
+  const openRouterState = providerStateFor(input.providers, ['openrouter', 'open router'])
+  const openRouterCredential = hasCredential(['OPENROUTER_API_KEY'])
+  const openRouterStatus = modelProviderStatus({
+    credentialPresent: openRouterCredential,
+    providerState: openRouterState,
+  })
+
+  const requiredProviders: AgentZeroModelProviderSummary[] = [
+    {
+      id: 'openrouter',
+      name: 'OpenRouter',
+      status: openRouterStatus,
+      credential_present: openRouterCredential,
+      credential_names: ['OPENROUTER_API_KEY'],
+      credential_values_exposed: false,
+      model_count: allModelNames.length,
+      models: allModelNames,
+      best_use_case: 'Router/fallback access to hosted models when configured through Mission Control.',
+      execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+      execution_enabled: false,
+      bridge_session_required: true,
+      direct_access: false,
+      proxy_access: true,
+      blocked_reason: openRouterStatus === 'blocked' ? 'openrouter_not_configured_or_not_visible_in_provider_registry' : null,
+    },
+    build({
+      id: 'anthropic',
+      name: 'Anthropic / Claude',
+      modelProvider: 'anthropic',
+      providerIds: ['anthropic', 'claude'],
+      credentialNames: ['ANTHROPIC_API_KEY', 'CLAUDE_API_KEY'],
+      bestUseCase: 'High-quality reasoning, coding, analysis, and agent planning.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+      includeBlocked: true,
+    })!,
+    build({
+      id: 'openai',
+      name: 'OpenAI',
+      modelProvider: 'openai',
+      providerIds: ['openai'],
+      credentialNames: ['OPENAI_API_KEY'],
+      bestUseCase: 'General assistant work, coding support, fast/cheap GPT-class routing, and report drafting.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+      includeBlocked: true,
+    })!,
+    build({
+      id: 'google',
+      name: 'Gemini / Google',
+      modelProvider: 'google',
+      providerIds: ['google', 'gemini'],
+      credentialNames: ['GOOGLE_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY'],
+      bestUseCase: 'Gemini long-context, multimodal, and Google-family reasoning tasks when configured.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+      includeBlocked: true,
+    })!,
+    build({
+      id: 'groq',
+      name: 'Groq',
+      modelProvider: 'groq',
+      providerIds: ['groq'],
+      credentialNames: ['GROQ_API_KEY'],
+      bestUseCase: 'Very low-latency hosted inference for lightweight or speed-sensitive work.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+      includeBlocked: true,
+    })!,
+    build({
+      id: 'ollama',
+      name: 'Ollama / Local',
+      modelProvider: 'ollama',
+      providerIds: ['ollama', 'local'],
+      credentialNames: [],
+      bestUseCase: 'Local/private fallback tasks where latency and model quality are acceptable.',
+      executionMode: 'local_status_visible_read_only; execution_requires_owner_approved_bridge_session_and_local_adapter',
+      localConfigured: Boolean(process.env.OLLAMA_HOST?.trim()) || Boolean(providerStateFor(input.providers, ['ollama', 'local'])),
+      includeBlocked: true,
+    })!,
+  ]
+
+  const optionalProviders = [
+    build({
+      id: 'moonshot',
+      name: 'Moonshot / Kimi',
+      modelProvider: 'moonshot',
+      providerIds: ['moonshot', 'kimi'],
+      credentialNames: ['MOONSHOT_API_KEY', 'KIMI_API_KEY'],
+      bestUseCase: 'Alternative hosted model routing when explicitly configured.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+    }),
+    build({
+      id: 'venice',
+      name: 'Venice AI',
+      modelProvider: 'venice',
+      providerIds: ['venice'],
+      credentialNames: ['VENICE_API_KEY'],
+      bestUseCase: 'Alternative hosted open-model routing when explicitly configured.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+    }),
+    build({
+      id: 'minimax',
+      name: 'MiniMax',
+      modelProvider: 'minimax',
+      providerIds: ['minimax'],
+      credentialNames: ['MINIMAX_API_KEY'],
+      bestUseCase: 'Cost-sensitive hosted coding and general tasks when explicitly configured.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+    }),
+  ].filter((provider): provider is AgentZeroModelProviderSummary => Boolean(provider))
+
+  return [...requiredProviders, ...optionalProviders]
 }
 
 function curatedZapierTools(tools: ZapierToolRecord[]): ZapierToolRecord[] {
@@ -181,6 +384,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const providers = Array.isArray((providersResult.payload as any)?.providers)
     ? ((providersResult.payload as any).providers as ProviderStatus[])
     : []
+  const allModels = getAllModels()
   const providerIds = providers.map(providerId).filter(Boolean)
   const providerSet = new Set(providerIds.map((provider) => provider.toLowerCase()))
   const zapierTools = Array.isArray((zapierResult as any).tools)
@@ -367,7 +571,11 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
         direct_access: false,
         proxy_access: true,
       })),
-    modelCatalog: getAllModels().map((model) => ({ alias: model.alias, provider: model.provider, name: model.name })),
+    modelCatalog: allModels.map((model) => ({ alias: model.alias, provider: model.provider, name: model.name })),
+    modelProviderRegistry: buildModelProviderRegistry({
+      providers,
+      models: allModels.map((model) => ({ provider: model.provider, name: model.name })),
+    }),
     skillNames,
     integrationItems,
     toolRegistry,

@@ -680,14 +680,6 @@ interface AgentZeroReviewerPayload {
     status?: string
     can_see_mission_control?: boolean | string
     agent_zero_api_key_configured?: boolean
-    api_key_present?: boolean
-    api_key_configured_env_name?: string | null
-    api_key_source_type?: string | null
-    api_key_source_path?: string | null
-    api_key_redacted?: string | null
-    accepted_api_key_env_names?: string[]
-    accepted_api_key_file_env_name?: string
-    accepted_systemd_credential_names?: string[]
     context_mode?: string
     test_chat_endpoint?: string
     blocker?: string | null
@@ -2310,8 +2302,8 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
           <dd>{connectorStatus}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>Auth source</dt>
-          <dd>{connector.api_key_present ? (connector.api_key_source_type || 'configured') : 'missing'}</dd>
+          <dt>API auth</dt>
+          <dd>{connector.agent_zero_api_key_configured ? 'configured' : 'missing'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Test channel</dt>

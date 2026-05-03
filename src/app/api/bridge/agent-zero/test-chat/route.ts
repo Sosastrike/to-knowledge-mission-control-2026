@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     generated_at: new Date().toISOString(),
     label: 'Agent Zero — read-only ecosystem test',
     runtime: runtimeStatus,
-    api_key: apiKey,
+    agent_zero_api_key_configured: apiKey.present,
     context,
     status: runtimeStatus.reachable
       ? (apiKey.present ? 'ready_for_read_only_chat' : 'blocked_missing_agent_zero_api_key')

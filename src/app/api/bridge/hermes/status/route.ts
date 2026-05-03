@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
+import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-context'
 import { isHermesInstalled, isHermesGatewayRunning, scanHermesSessions } from '@/lib/hermes-sessions'
 import { getHermesTasks } from '@/lib/hermes-tasks'
 import { getHermesMemory } from '@/lib/hermes-memory'
@@ -136,9 +137,10 @@ export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const [providerStatus, binary] = await Promise.all([
+  const [providerStatus, binary, ecosystemContext] = await Promise.all([
     readProviderStatus(),
     Promise.resolve(detectHermesBinary()),
+    buildAgentZeroEcosystemContext(),
   ])
 
   const provider = providerStatus.provider
@@ -190,6 +192,16 @@ export async function GET(request: NextRequest) {
       limitation: 'Production bridge disabled until separate owner approval; no public ports, legacy memory connection, or credential changes are enabled here.',
       error: provider?.detail?.error || providerStatus.warning || null,
       next_action: provider?.next_action || 'Keep Hermes lieutenant read-only/degraded until health, chat/API, and owner-approved Bridge Session execution are proven.',
+    },
+    shared_skill_runtime: {
+      ...ecosystemContext.skills.shared_runtime,
+      visible_to_hermes: true,
+      visible_to_agent_zero: true,
+      registry_source: 'OpenClaw+ shared skills/runtime layer',
+      registry_total: ecosystemContext.skills.total,
+      sources: ecosystemContext.skills.sources,
+      registry: ecosystemContext.skills.registry,
+      note: 'Hermes and Agent Zero see the same OpenClaw+ skill registry. Tony is retired and does not own the skill system.',
     },
     safety: {
       production_gateway_changes_enabled: false,

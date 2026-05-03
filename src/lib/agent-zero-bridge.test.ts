@@ -9,6 +9,29 @@ import {
   sendAgentZeroReadOnlyMessage,
 } from './agent-zero-bridge'
 
+const sharedSkillFields = (name: string, source: string) => ({
+  path: `/home/tony/.openclaw/skills/${name}`,
+  skill_doc_path: `/home/tony/.openclaw/skills/${name}/SKILL.md`,
+  required_tools: source === 'home_claude' ? [] : ['mission_control.read'],
+  required_credentials: [],
+  execution_requirements: ['bridge_session_required_for_execution'],
+  blocked_reasons: source === 'home_claude' ? ['skill_metadata_missing'] : [],
+  runtime_layer: 'OpenClaw+' as const,
+  shared_runtime: true as const,
+  owner_agent: null,
+  available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+  tony_owns_skill_system: false as const,
+})
+
+const sharedSkillSourceFields = (root: string) => ({
+  root_path: root,
+  runtime_layer: 'OpenClaw+' as const,
+  shared_runtime: true as const,
+  owner_agent: null,
+  available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+  tony_owns_skill_system: false as const,
+})
+
 describe('Agent Zero read-only bridge connector', () => {
   it('reports missing external API auth without exposing a secret', () => {
     const state = getAgentZeroApiKeyState({})
@@ -133,6 +156,7 @@ describe('Agent Zero read-only bridge connector', () => {
           name: 'a0-development',
           source: 'agent_zero',
           source_label: 'Agent Zero deployed skills',
+          ...sharedSkillFields('a0-development', 'agent_zero'),
           description: 'Development guide for extending Agent Zero.',
           dependencies: ['SKILL.md'],
           missing_dependencies: [],
@@ -147,8 +171,9 @@ describe('Agent Zero read-only bridge connector', () => {
         },
         {
           name: 'engineering-test',
-          source: 'claudeclaw_legacy',
-          source_label: 'ClaudeClaw legacy skills',
+          source: 'openclaw_plus',
+          source_label: 'OpenClaw+ shared runtime skills',
+          ...sharedSkillFields('engineering-test', 'openclaw_plus'),
           description: 'Run tests and report results.',
           dependencies: ['scripts'],
           missing_dependencies: [],
@@ -165,6 +190,7 @@ describe('Agent Zero read-only bridge connector', () => {
           name: 'legacy-empty-skill',
           source: 'home_claude',
           source_label: 'Safe home Claude skills',
+          ...sharedSkillFields('legacy-empty-skill', 'home_claude'),
           description: 'Skill directory is visible, but metadata is missing.',
           dependencies: [],
           missing_dependencies: ['SKILL.md_or_skill.json'],
@@ -179,9 +205,9 @@ describe('Agent Zero read-only bridge connector', () => {
         },
       ],
       skillSources: [
-        { source: 'agent_zero', label: 'Agent Zero deployed skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
-        { source: 'claudeclaw_legacy', label: 'ClaudeClaw legacy skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
-        { source: 'home_claude', label: 'Safe home Claude skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'agent_zero', label: 'Agent Zero deployed skills', ...sharedSkillSourceFields('/home/tony/agent-zero-deploy/data/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'openclaw_plus', label: 'OpenClaw+ shared runtime skills', ...sharedSkillSourceFields('/home/tony/.openclaw/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+        { source: 'home_claude', label: 'Safe home Claude skills', ...sharedSkillSourceFields('/home/tony/.claude/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
       ],
       integrationItems: [
         { id: 'mission_control', status: 'reachable', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false },

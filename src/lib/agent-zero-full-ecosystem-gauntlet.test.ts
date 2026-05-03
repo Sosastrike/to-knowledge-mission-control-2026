@@ -56,6 +56,29 @@ type ScenarioResult = {
   failures: FailureKind[]
 }
 
+const sharedSkillFields = (name: string, source: string) => ({
+  path: `/home/tony/.openclaw/skills/${name}`,
+  skill_doc_path: `/home/tony/.openclaw/skills/${name}/SKILL.md`,
+  required_tools: source === 'home_claude' ? [] : ['mission_control.read'],
+  required_credentials: [],
+  execution_requirements: ['bridge_session_required_for_execution'],
+  blocked_reasons: source === 'home_claude' ? ['skill_metadata_missing'] : [],
+  runtime_layer: 'OpenClaw+' as const,
+  shared_runtime: true as const,
+  owner_agent: null,
+  available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+  tony_owns_skill_system: false as const,
+})
+
+const sharedSkillSourceFields = (root: string) => ({
+  root_path: root,
+  runtime_layer: 'OpenClaw+' as const,
+  shared_runtime: true as const,
+  owner_agent: null,
+  available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+  tony_owns_skill_system: false as const,
+})
+
 const gauntletCount = Number(process.env.AGENT_ZERO_GAUNTLET_COUNT || 10000)
 const minimumGauntletCount = 10000
 
@@ -139,6 +162,7 @@ function buildGauntletContext(): AgentZeroReadOnlyContext {
         name: 'agent-zero-reporting',
         source: 'agent_zero',
         source_label: 'Agent Zero deployed skills',
+        ...sharedSkillFields('agent-zero-reporting', 'agent_zero'),
         description: 'Create Mission Control reports through the approved report adapter.',
         dependencies: ['agent_zero_report_adapter'],
         missing_dependencies: [],
@@ -155,6 +179,7 @@ function buildGauntletContext(): AgentZeroReadOnlyContext {
         name: 'bridge-review',
         source: 'mission_control_repo',
         source_label: 'Mission Control repository skills',
+        ...sharedSkillFields('bridge-review', 'mission_control_repo'),
         description: 'Review Bridge/MCP visibility and readiness.',
         dependencies: ['bridge_registry'],
         missing_dependencies: [],
@@ -171,6 +196,7 @@ function buildGauntletContext(): AgentZeroReadOnlyContext {
         name: 'future-video-skill',
         source: 'home_claude',
         source_label: 'Safe home Claude skills',
+        ...sharedSkillFields('future-video-skill', 'home_claude'),
         description: 'Future media workflow skill with missing metadata.',
         dependencies: [],
         missing_dependencies: ['SKILL.md_or_skill.json'],
@@ -185,9 +211,9 @@ function buildGauntletContext(): AgentZeroReadOnlyContext {
       },
     ],
     skillSources: [
-      { source: 'agent_zero', label: 'Agent Zero deployed skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
-      { source: 'mission_control_repo', label: 'Mission Control repository skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
-      { source: 'home_claude', label: 'Safe home Claude skills', status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+      { source: 'agent_zero', label: 'Agent Zero deployed skills', ...sharedSkillSourceFields('/home/tony/agent-zero-deploy/data/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+      { source: 'mission_control_repo', label: 'Mission Control repository skills', ...sharedSkillSourceFields('/home/tony/mission-control/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
+      { source: 'home_claude', label: 'Safe home Claude skills', ...sharedSkillSourceFields('/home/tony/.claude/skills'), status: 'visible', total: 1, safe_mode: 'metadata_only', blocked_reason: null },
     ],
     integrationItems: [
       { id: 'mission_control', status: 'connected', visibility: 'visible', direct_access: false, proxy_access: true, execution_enabled: false, writes_enabled: false, read_only: true, requires_bridge_session: false },

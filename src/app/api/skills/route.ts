@@ -135,6 +135,22 @@ function normalizeComparableName(value: string): string {
 }
 
 function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
+  const sharedRuntime = {
+    runtime_layer: 'OpenClaw+',
+    owner_agent: null,
+    active_commander: 'agent_zero',
+    lieutenant: 'hermes',
+    available_to_agents: ['agent_zero', 'hermes'],
+    tony_owns_skill_system: false,
+    paths_visible: true,
+    required_tools_visible: true,
+    required_credentials_visible: true,
+    execution_requirements_visible: true,
+    blocked_reasons_visible: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required_for_execution: true,
+  }
   const filesystem = skills.map((skill) => ({
     id: skill.id,
     name: skill.name,
@@ -169,6 +185,7 @@ function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
 
   return {
     ok: true,
+    shared_runtime: sharedRuntime,
     filesystem,
     agent,
     npx: [],

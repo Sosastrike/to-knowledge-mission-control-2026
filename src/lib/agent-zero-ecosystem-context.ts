@@ -153,21 +153,66 @@ function parseFrontmatterList(frontmatter: string, key: string): string[] {
     .filter(Boolean)
 }
 
-function readSkillMarkdownMetadata(skillDoc: string): { name: string | null; description: string; dependencies: string[] } {
+type SkillFileMetadata = {
+  name: string | null
+  description: string
+  dependencies: string[]
+  requiredTools: string[]
+  requiredCredentials: string[]
+  executionRequirements: string[]
+}
+
+function normalizeCredentialName(value: string): string | null {
+  const cleaned = value.trim().replace(/^env:/i, '').replace(/^credential:/i, '')
+  if (!cleaned || !/^[A-Z0-9_][A-Z0-9_.-]{1,80}$/i.test(cleaned)) return null
+  return cleaned.toUpperCase().replace(/[^A-Z0-9_]/g, '_')
+}
+
+function normalizeToolRequirement(value: string): string | null {
+  const cleaned = value.trim().replace(/^tool:/i, '')
+  if (!cleaned || cleaned.length > 120) return null
+  return cleaned
+}
+
+function readSkillMarkdownMetadata(skillDoc: string): SkillFileMetadata {
   const content = readFileSync(skillDoc, 'utf8').slice(0, 20000)
   const frontmatter = content.startsWith('---\n') ? content.match(/^---\n([\s\S]*?)\n---/)?.[1] || '' : ''
   const name = frontmatter ? parseFrontmatterValue(frontmatter, 'name') : null
   const description = frontmatter
     ? parseFrontmatterValue(frontmatter, 'description')
     : null
+  const tools = frontmatter
+    ? parseFrontmatterList(frontmatter, 'tools').map(normalizeToolRequirement).filter((tool): tool is string => Boolean(tool))
+    : []
+  const requiredCredentials = frontmatter
+    ? [
+        ...parseFrontmatterList(frontmatter, 'credentials'),
+        ...parseFrontmatterList(frontmatter, 'required_credentials'),
+        ...parseFrontmatterList(frontmatter, 'credential_names'),
+        ...parseFrontmatterList(frontmatter, 'env'),
+      ].map(normalizeCredentialName).filter((credential): credential is string => Boolean(credential))
+    : []
   const dependencies = frontmatter
     ? [
         ...parseFrontmatterList(frontmatter, 'dependencies'),
-        ...parseFrontmatterList(frontmatter, 'tools').map((tool) => `tool:${tool}`),
+        ...tools.map((tool) => `tool:${tool}`),
+        ...requiredCredentials.map((credential) => `credential:${credential}`),
       ]
     : []
+  const executionRequirements = frontmatter
+    ? parseFrontmatterList(frontmatter, 'execution_requirements')
+    : []
 
-  if (description) return { name, description: sanitizeDescription(description), dependencies }
+  if (description) {
+    return {
+      name,
+      description: sanitizeDescription(description),
+      dependencies,
+      requiredTools: tools,
+      requiredCredentials,
+      executionRequirements,
+    }
+  }
 
   const firstBodyLine = content
     .split('\n')
@@ -177,52 +222,116 @@ function readSkillMarkdownMetadata(skillDoc: string): { name: string | null; des
     name,
     description: sanitizeDescription(firstBodyLine || 'Skill metadata visible; no description declared.'),
     dependencies,
+    requiredTools: tools,
+    requiredCredentials,
+    executionRequirements,
   }
 }
 
-function readSkillJsonMetadata(skillJson: string): { name: string | null; description: string; dependencies: string[] } {
+function readSkillJsonMetadata(skillJson: string): SkillFileMetadata {
   const json = JSON.parse(readFileSync(skillJson, 'utf8')) as {
     name?: string
     description?: string
     tools?: string[]
     dependencies?: string[]
+    credentials?: string[]
+    required_credentials?: string[]
+    credential_names?: string[]
+    execution_requirements?: string[]
   }
+  const requiredTools = (Array.isArray(json.tools) ? json.tools : [])
+    .map(normalizeToolRequirement)
+    .filter((tool): tool is string => Boolean(tool))
+  const requiredCredentials = [
+    ...(Array.isArray(json.credentials) ? json.credentials : []),
+    ...(Array.isArray(json.required_credentials) ? json.required_credentials : []),
+    ...(Array.isArray(json.credential_names) ? json.credential_names : []),
+  ].map(normalizeCredentialName).filter((credential): credential is string => Boolean(credential))
   return {
     name: json.name || null,
     description: sanitizeDescription(json.description || 'Skill metadata visible; no description declared.'),
     dependencies: [
       ...(Array.isArray(json.dependencies) ? json.dependencies : []),
-      ...(Array.isArray(json.tools) ? json.tools.map((tool) => `tool:${tool}`) : []),
+      ...requiredTools.map((tool) => `tool:${tool}`),
+      ...requiredCredentials.map((credential) => `credential:${credential}`),
     ],
+    requiredTools,
+    requiredCredentials,
+    executionRequirements: Array.isArray(json.execution_requirements) ? json.execution_requirements : [],
   }
 }
 
 function skillDependencyMetadata(skillPath: string, baseDependencies: string[]): {
   dependencies: string[]
+  required_tools: string[]
+  required_credentials: string[]
+  execution_requirements: string[]
   missing_dependencies: string[]
   blocked_dependencies: string[]
+  blocked_reasons: string[]
 } {
   const dependencies = new Set(baseDependencies.filter(Boolean))
+  const requiredTools = new Set<string>()
+  const requiredCredentials = new Set<string>()
+  const executionRequirements = new Set<string>()
   const missing = new Set<string>()
   const blocked = new Set<string>()
+  const blockedReasons = new Set<string>()
 
   const requirementsPath = join(skillPath, 'requirements.txt')
   const packagePath = join(skillPath, 'package.json')
   const scriptsPath = join(skillPath, 'scripts')
 
-  if (existsSync(requirementsPath)) dependencies.add('python:requirements.txt')
-  if (existsSync(packagePath)) dependencies.add('node:package.json')
-  if (existsSync(scriptsPath)) dependencies.add('scripts')
+  if (existsSync(requirementsPath)) {
+    dependencies.add('python:requirements.txt')
+    executionRequirements.add('python_dependencies_required')
+  }
+  if (existsSync(packagePath)) {
+    dependencies.add('node:package.json')
+    executionRequirements.add('node_dependencies_required')
+  }
+  if (existsSync(scriptsPath)) {
+    dependencies.add('scripts')
+    executionRequirements.add('scripts_require_bridge_session')
+  }
 
   for (const dependency of Array.from(dependencies)) {
-    if (dependency.startsWith('tool:')) blocked.add(`${dependency}:execution_disabled_in_read_only_context`)
-    if (dependency === 'scripts') blocked.add('scripts:execution_disabled_in_read_only_context')
+    if (dependency.startsWith('tool:')) {
+      const tool = normalizeToolRequirement(dependency)
+      if (tool) requiredTools.add(tool)
+      executionRequirements.add('tools_require_bridge_session')
+      blocked.add(`${dependency}:execution_disabled_in_read_only_context`)
+      blockedReasons.add(`${dependency}:bridge_session_required`)
+    }
+    if (dependency.startsWith('credential:') || dependency.startsWith('env:')) {
+      const credential = normalizeCredentialName(dependency)
+      if (credential) {
+        requiredCredentials.add(credential)
+        executionRequirements.add('credentials_required')
+        if (!process.env[credential]?.trim()) {
+          missing.add(`credential:${credential}`)
+          blockedReasons.add(`credential:${credential}:missing`)
+        }
+      }
+    }
+    if (dependency.startsWith('execution:')) {
+      const requirement = dependency.replace(/^execution:/i, '').trim()
+      if (requirement) executionRequirements.add(requirement)
+    }
+    if (dependency === 'scripts') {
+      blocked.add('scripts:execution_disabled_in_read_only_context')
+      blockedReasons.add('scripts_require_bridge_session')
+    }
   }
 
   return {
     dependencies: Array.from(dependencies).sort(),
+    required_tools: Array.from(requiredTools).sort(),
+    required_credentials: Array.from(requiredCredentials).sort(),
+    execution_requirements: Array.from(executionRequirements).sort(),
     missing_dependencies: Array.from(missing).sort(),
     blocked_dependencies: Array.from(blocked).sort(),
+    blocked_reasons: Array.from(blockedReasons).sort(),
   }
 }
 
@@ -239,8 +348,14 @@ function scanSkillRoot(input: {
       sources: [{
         source: input.source,
         label: input.label,
+        root_path: input.root,
         status: 'blocked',
         total: 0,
+        runtime_layer: 'OpenClaw+',
+        shared_runtime: true,
+        owner_agent: null,
+        available_to_agents: ['agent_zero', 'hermes'],
+        tony_owns_skill_system: false,
         safe_mode: 'blocked',
         blocked_reason: 'skill_root_missing_or_unreadable',
       }],
@@ -256,8 +371,14 @@ function scanSkillRoot(input: {
       sources: [{
         source: input.source,
         label: input.label,
+        root_path: input.root,
         status: 'blocked',
         total: 0,
+        runtime_layer: 'OpenClaw+',
+        shared_runtime: true,
+        owner_agent: null,
+        available_to_agents: ['agent_zero', 'hermes'],
+        tony_owns_skill_system: false,
         safe_mode: 'blocked',
         blocked_reason: 'skill_root_unreadable',
       }],
@@ -288,11 +409,17 @@ function scanSkillRoot(input: {
         name = metadata.name || entry
         description = metadata.description
         dependencies = metadata.dependencies
+        dependencies.push(...metadata.requiredTools.map((tool) => `tool:${tool}`))
+        dependencies.push(...metadata.requiredCredentials.map((credential) => `credential:${credential}`))
+        dependencies.push(...metadata.executionRequirements.map((requirement) => `execution:${requirement}`))
       } else if (existsSync(skillJson)) {
         const metadata = readSkillJsonMetadata(skillJson)
         name = metadata.name || entry
         description = metadata.description
         dependencies = metadata.dependencies
+        dependencies.push(...metadata.requiredTools.map((tool) => `tool:${tool}`))
+        dependencies.push(...metadata.requiredCredentials.map((credential) => `credential:${credential}`))
+        dependencies.push(...metadata.executionRequirements.map((requirement) => `execution:${requirement}`))
       } else if (input.includeBlockedDirectories) {
         status = 'blocked'
         safeMode = 'blocked'
@@ -309,14 +436,32 @@ function scanSkillRoot(input: {
     }
 
     const dependencyMetadata = skillDependencyMetadata(skillPath, dependencies)
+    const blockedReasons = Array.from(new Set([
+      ...(blockedReason ? [blockedReason] : []),
+      ...dependencyMetadata.blocked_reasons,
+    ])).sort()
     items.push({
       name,
       source: input.source,
       source_label: input.label,
+      path: skillPath,
+      skill_doc_path: existsSync(skillDoc) ? skillDoc : (existsSync(skillJson) ? skillJson : null),
       description,
       dependencies: dependencyMetadata.dependencies,
+      required_tools: dependencyMetadata.required_tools,
+      required_credentials: dependencyMetadata.required_credentials,
+      execution_requirements: Array.from(new Set([
+        ...dependencyMetadata.execution_requirements,
+        'bridge_session_required_for_execution',
+      ])).sort(),
       missing_dependencies: Array.from(new Set([...missingDependencies, ...dependencyMetadata.missing_dependencies])).sort(),
       blocked_dependencies: dependencyMetadata.blocked_dependencies,
+      blocked_reasons: blockedReasons,
+      runtime_layer: 'OpenClaw+',
+      shared_runtime: true,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'],
+      tony_owns_skill_system: false,
       safe_mode: safeMode,
       status,
       execution_enabled: false,
@@ -332,8 +477,14 @@ function scanSkillRoot(input: {
     sources: [{
       source: input.source,
       label: input.label,
+      root_path: input.root,
       status: items.length > 0 ? 'visible' : 'blocked',
       total: items.length,
+      runtime_layer: 'OpenClaw+',
+      shared_runtime: true,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'],
+      tony_owns_skill_system: false,
       safe_mode: items.length > 0 ? 'metadata_only' : 'blocked',
       blocked_reason: items.length > 0 ? null : 'no_skills_discovered',
     }],
@@ -344,17 +495,28 @@ function readDatabaseSkills(): AgentZeroSkillRegistryItem[] {
   try {
     const db = getDatabase()
     const rows = db
-      .prepare('SELECT name, source, description, security_status FROM skills ORDER BY source, name LIMIT 200')
-      .all() as Array<{ name?: string; source?: string; description?: string | null; security_status?: string | null }>
+      .prepare('SELECT name, source, path, description, security_status FROM skills ORDER BY source, name LIMIT 200')
+      .all() as Array<{ name?: string; source?: string; path?: string | null; description?: string | null; security_status?: string | null }>
     return rows
       .map((row) => ({
         name: String(row.name || '').trim(),
         source: 'database' as const,
         source_label: `db:${String(row.source || 'skills')}`,
+        path: row.path || null,
+        skill_doc_path: row.path ? join(row.path, 'SKILL.md') : null,
         description: sanitizeDescription(row.description || 'Mission Control database skill record.'),
         dependencies: [],
+        required_tools: [],
+        required_credentials: [],
+        execution_requirements: ['bridge_session_required_for_execution'],
         missing_dependencies: [],
         blocked_dependencies: [],
+        blocked_reasons: [],
+        runtime_layer: 'OpenClaw+' as const,
+        shared_runtime: true as const,
+        owner_agent: null,
+        available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+        tony_owns_skill_system: false as const,
         safe_mode: 'metadata_only' as const,
         status: accessFromVisibility(row.security_status || 'visible'),
         execution_enabled: false as const,
@@ -377,19 +539,49 @@ function readSkillRegistry(): SkillRegistryReadResult {
       root: '/home/tony/agent-zero-deploy/data/skills',
     },
     {
-      source: 'claudeclaw_legacy' as const,
-      label: 'ClaudeClaw legacy skills',
+      source: 'agent_zero' as const,
+      label: 'Agent Zero deployed user skills',
+      root: '/home/tony/agent-zero-deploy/data/usr/skills',
+    },
+    {
+      source: 'openclaw_plus' as const,
+      label: 'OpenClaw+ shared skills',
+      root: '/home/tony/.openclaw/skills',
+    },
+    {
+      source: 'openclaw_plus' as const,
+      label: 'OpenClaw+ workspace skills',
+      root: '/home/tony/.openclaw/workspace/skills',
+    },
+    {
+      source: 'openclaw_plus' as const,
+      label: 'OpenClaw+ runtime skills',
       root: '/home/tony/claudeclaw/skills',
     },
     {
-      source: 'claudeclaw_legacy' as const,
-      label: 'ClaudeClaw legacy vendor skills',
+      source: 'openclaw_plus' as const,
+      label: 'OpenClaw+ vendor skills',
       root: '/home/tony/claudeclaw/vendor/skills',
     },
     {
-      source: 'claudeclaw_legacy' as const,
-      label: 'ClaudeClaw project Claude skills',
+      source: 'openclaw_plus' as const,
+      label: 'OpenClaw+ project Claude skills',
       root: '/home/tony/claudeclaw/.claude/skills',
+    },
+    {
+      source: 'hermes' as const,
+      label: 'Hermes shared skills',
+      root: '/home/tony/.hermes/skills',
+    },
+    {
+      source: 'hermes' as const,
+      label: 'Hermes agent skills',
+      root: '/home/tony/.hermes/hermes-agent/skills',
+    },
+    {
+      source: 'hermes' as const,
+      label: 'Hermes sandbox skills',
+      root: '/home/tony/sandbox/hermes-home-20260428/skills',
     },
     {
       source: 'mission_control_repo' as const,
@@ -423,8 +615,14 @@ function readSkillRegistry(): SkillRegistryReadResult {
     sourceMap.set('database:Mission Control skills database', {
       source: 'database',
       label: 'Mission Control skills database',
+      root_path: null,
       status: 'visible',
       total: dbSkills.length,
+      runtime_layer: 'OpenClaw+',
+      shared_runtime: true,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'],
+      tony_owns_skill_system: false,
       safe_mode: 'metadata_only',
       blocked_reason: null,
     })

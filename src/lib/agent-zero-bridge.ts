@@ -138,12 +138,23 @@ export type AgentZeroSkillSafeMode = 'metadata_only' | 'blocked'
 
 export type AgentZeroSkillRegistryItem = {
   name: string
-  source: 'agent_zero' | 'claudeclaw_legacy' | 'mission_control_repo' | 'home_claude' | 'database'
+  source: 'agent_zero' | 'openclaw_plus' | 'hermes' | 'mission_control_repo' | 'home_claude' | 'database'
   source_label: string
+  path: string | null
+  skill_doc_path: string | null
   description: string
   dependencies: string[]
+  required_tools: string[]
+  required_credentials: string[]
+  execution_requirements: string[]
   missing_dependencies: string[]
   blocked_dependencies: string[]
+  blocked_reasons: string[]
+  runtime_layer: 'OpenClaw+'
+  shared_runtime: true
+  owner_agent: null
+  available_to_agents: Array<'agent_zero' | 'hermes'>
+  tony_owns_skill_system: false
   safe_mode: AgentZeroSkillSafeMode
   status: EcosystemAccessState
   execution_enabled: false
@@ -156,8 +167,14 @@ export type AgentZeroSkillRegistryItem = {
 export type AgentZeroSkillSourceSummary = {
   source: AgentZeroSkillRegistryItem['source']
   label: string
+  root_path: string | null
   status: EcosystemAccessState
   total: number
+  runtime_layer: 'OpenClaw+'
+  shared_runtime: true
+  owner_agent: null
+  available_to_agents: Array<'agent_zero' | 'hermes'>
+  tony_owns_skill_system: false
   safe_mode: AgentZeroSkillSafeMode
   blocked_reason: string | null
 }
@@ -521,6 +538,22 @@ export type AgentZeroReadOnlyContext = {
     registry_status: EcosystemAccessState
     total: number
     sample: string[]
+    shared_runtime: {
+      runtime_layer: 'OpenClaw+'
+      owner_agent: null
+      active_commander: 'agent_zero'
+      lieutenant: 'hermes'
+      available_to_agents: Array<'agent_zero' | 'hermes'>
+      tony_owns_skill_system: false
+      paths_visible: boolean
+      required_tools_visible: boolean
+      required_credentials_visible: boolean
+      execution_requirements_visible: boolean
+      blocked_reasons_visible: boolean
+      execution_enabled: false
+      writes_enabled: false
+      bridge_session_required_for_execution: true
+    }
     sources: AgentZeroSkillSourceSummary[]
     registry: AgentZeroSkillRegistryItem[]
     blocked_total: number
@@ -1228,9 +1261,9 @@ function buildAgentZeroLiveRegistry(input: {
       configured: input.skillNames.length > 0 || input.skillRegistry.length > 0,
       readOnly: true,
       blocked: input.skillNames.length === 0 && input.skillRegistry.length === 0,
-      source: 'mission_control_skill_registry',
+      source: 'openclaw_plus_shared_skill_runtime',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'Skill metadata is visible; skill/script execution remains disabled unless an approved adapter exists.',
+      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, and blocked reasons are visible; Tony does not own the skill system.',
       counts: { skills: input.skillNames.length || input.skillRegistry.length },
     }),
     liveRegistryItem({
@@ -1463,10 +1496,21 @@ export function buildAgentZeroReadOnlyContext(input: {
       name: skill.name,
       source: skill.source,
       source_label: skill.source_label,
+      path: skill.path || null,
+      skill_doc_path: skill.skill_doc_path || null,
       description: skill.description || '',
       dependencies: Array.from(new Set(skill.dependencies || [])).sort(),
+      required_tools: Array.from(new Set(skill.required_tools || [])).sort(),
+      required_credentials: Array.from(new Set(skill.required_credentials || [])).sort(),
+      execution_requirements: Array.from(new Set(skill.execution_requirements || [])).sort(),
       missing_dependencies: Array.from(new Set(skill.missing_dependencies || [])).sort(),
       blocked_dependencies: Array.from(new Set(skill.blocked_dependencies || [])).sort(),
+      blocked_reasons: Array.from(new Set(skill.blocked_reasons || [])).sort(),
+      runtime_layer: 'OpenClaw+' as const,
+      shared_runtime: true as const,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+      tony_owns_skill_system: false as const,
       safe_mode: skill.safe_mode,
       status: skill.status,
       execution_enabled: false as const,
@@ -1492,8 +1536,14 @@ export function buildAgentZeroReadOnlyContext(input: {
     derivedSkillSources.set(skill.source, {
       source: skill.source,
       label: skill.source_label,
+      root_path: null,
       status: 'visible',
       total: 1,
+      runtime_layer: 'OpenClaw+' as const,
+      shared_runtime: true as const,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+      tony_owns_skill_system: false as const,
       safe_mode: 'metadata_only',
       blocked_reason: null,
     })
@@ -1502,8 +1552,14 @@ export function buildAgentZeroReadOnlyContext(input: {
     .map((source) => ({
       source: source.source,
       label: source.label,
+      root_path: source.root_path || null,
       status: source.status,
       total: Number(source.total || 0),
+      runtime_layer: 'OpenClaw+' as const,
+      shared_runtime: true as const,
+      owner_agent: null,
+      available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+      tony_owns_skill_system: false as const,
       safe_mode: source.safe_mode,
       blocked_reason: source.blocked_reason || null,
     }))
@@ -1811,6 +1867,22 @@ export function buildAgentZeroReadOnlyContext(input: {
       registry_status: skillNames.length > 0 ? 'visible' : 'unknown',
       total: skillNames.length,
       sample: skillNames.slice(0, 25),
+      shared_runtime: {
+        runtime_layer: 'OpenClaw+',
+        owner_agent: null,
+        active_commander: 'agent_zero',
+        lieutenant: 'hermes',
+        available_to_agents: ['agent_zero', 'hermes'],
+        tony_owns_skill_system: false,
+        paths_visible: skillRegistry.some((skill) => Boolean(skill.path)),
+        required_tools_visible: true,
+        required_credentials_visible: true,
+        execution_requirements_visible: true,
+        blocked_reasons_visible: true,
+        execution_enabled: false,
+        writes_enabled: false,
+        bridge_session_required_for_execution: true,
+      },
       sources: skillSources,
       registry: skillRegistry.slice(0, 100),
       blocked_total: skillRegistry.filter((skill) => skill.status === 'blocked').length,
@@ -2165,7 +2237,8 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'If Mission Control already has a report or file link, do not ask the owner to send it again; refer to the available Mission Control link.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the Mission Control live access summary.',
     'For model questions, use models.provider_registry and the live model registry summary. Do not claim a model/provider is usable when its status is blocked.',
-    'For skill questions, use skills.registry and the live skill registry summary. Do not claim unregistered skills.',
+    'For skill questions, use skills.shared_runtime and skills.registry. OpenClaw+ is the shared skills/runtime layer for both Agent Zero and Hermes; Tony does not own the skill system.',
+    'When describing skills, include visible skill paths, required tools, required credential names, execution requirements, and blocked reasons when available. Never expose credential values.',
     'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked exactly as shown.',
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry and the live brain endpoints.',
     'For report delivery, use delivery.agent_zero_report_create_endpoint and Mission Control links only. Do not expose local paths, raw filenames, or task IDs.',

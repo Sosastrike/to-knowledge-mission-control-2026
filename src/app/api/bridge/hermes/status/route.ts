@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { requireRole } from '@/lib/auth'
@@ -112,6 +112,33 @@ function findSandboxHomes(): string[] {
   }
 }
 
+function isNonEmptyFile(path: string): boolean {
+  try {
+    const stat = statSync(path)
+    return stat.isFile() && stat.size > 0
+  } catch {
+    return false
+  }
+}
+
+function getHermesAuthStatus() {
+  const homeDir = config.homeDir || process.env.HOME || ''
+  const hermesHome = join(homeDir, '.hermes')
+  const authJsonConfigured = isNonEmptyFile(join(hermesHome, 'auth.json'))
+  const envFileConfigured = isNonEmptyFile(join(hermesHome, '.env'))
+  const configFileConfigured = isNonEmptyFile(join(hermesHome, 'config.yaml'))
+
+  return {
+    auth_configured: authJsonConfigured || envFileConfigured || configFileConfigured,
+    source_types: {
+      auth_json: authJsonConfigured,
+      env_file: envFileConfigured,
+      config_file: configFileConfigured,
+    },
+    values_exposed: false,
+  }
+}
+
 function checkedAtToIso(value: number | undefined): string | null {
   if (!Number.isFinite(value)) return null
   const timestamp = value as number
@@ -165,6 +192,7 @@ export async function GET(request: NextRequest) {
   const gatewaySystemdActive = isHermesSystemdActive()
   const gatewayProcessRunning = isHermesGatewayProcessRunning()
   const gatewayRunning = installed ? (isHermesGatewayRunning() || gatewaySystemdActive || gatewayProcessRunning) : false
+  const authStatus = getHermesAuthStatus()
 
   return NextResponse.json({
     ok: true,
@@ -200,6 +228,7 @@ export async function GET(request: NextRequest) {
       legacy_memory_connection_enabled: false,
       credential_changes_enabled: false,
     },
+    auth: authStatus,
     provider_registry: {
       state: provider?.state || (installed ? 'sandbox' : 'not_connected'),
       category: provider?.category || 'agent',

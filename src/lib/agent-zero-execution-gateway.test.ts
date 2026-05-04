@@ -84,9 +84,11 @@ const requester = {
 }
 
 function approveSession(db: Database.Database) {
-  const created = createOrReuseAgentZeroBridgeSession({ db, requester, now: new Date('2026-05-03T14:00:00.000Z') })
+  const now = new Date()
+  const resolvedAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+  const created = createOrReuseAgentZeroBridgeSession({ db, requester, now })
   db.prepare(`UPDATE bridge_approval_requests SET approval_state = 'approved', resolved_at = ?, resolved_by = 'owner' WHERE id = ?`)
-    .run('2026-05-03T14:05:00.000Z', created.session.approval_request_id)
+    .run(resolvedAt, created.session.approval_request_id)
   return created.session.session_id
 }
 

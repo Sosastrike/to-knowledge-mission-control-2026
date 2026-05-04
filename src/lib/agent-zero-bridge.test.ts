@@ -737,6 +737,40 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(reply).not.toMatch(/^Created /)
   })
 
+
+  it('answers mixed capability and brain prompts with the full registry summary', () => {
+    const context = buildAgentZeroReadOnlyContext({
+      modelProviderRegistry: [
+        { id: 'openrouter', name: 'OpenRouter', status: 'configured', credential_present: true, credential_names: ['OPENROUTER_API_KEY'], credential_values_exposed: false, model_count: 1, models: ['anthropic/claude-sonnet-4-6'], best_use_case: 'Router/fallback access to hosted models.', execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session', execution_enabled: false, bridge_session_required: true, direct_access: false, proxy_access: true, blocked_reason: null },
+      ],
+      skillNames: ['engineering-test'],
+      integrationRegistry: [
+        { id: 'firecrawl', name: 'Firecrawl', category: 'crawler', status: 'blocked', credential_present: false, missing_credential: true, credential_names: ['FIRECRAWL_API_KEY'], credential_values_exposed: false, read_only: true, write_enabled: false, requires_bridge_session: true, execution_enabled: false, direct_access: false, proxy_access: true, tool_count: null, source: 'mission_control_firecrawl_status', blocked_reason: 'credential_required', notes: 'Credential required.' },
+      ],
+      brainSources: [{ source: 'obsidian', status: 'connected', summary: 'visible' }],
+    })
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'What tools, models, skills, integrations, and brain systems can you see?',
+      context,
+    })
+
+    expect(reply).toContain('Mission Control through the live Bridge')
+    expect(reply).toContain('models')
+    expect(reply).toContain('OpenClaw+ skills')
+    expect(reply).toContain('integrations')
+  })
+
+  it('blocks email sends from read-only chat with a bridge session explanation', () => {
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'Send a test email.',
+      context: buildAgentZeroReadOnlyContext(),
+    })
+
+    expect(reply).toContain('Email send is blocked')
+    expect(reply).toContain('Bridge Session')
+    expect(reply).toContain('I did not send an email')
+  })
+
   it('answers Tony active checks without contradictory yes wording', () => {
     const reply = buildAgentZeroReadOnlyContractReply({
       ownerMessage: 'Is Tony still active?',

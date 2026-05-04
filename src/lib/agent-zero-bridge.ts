@@ -838,6 +838,7 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   upstreamReturnedLocalArtifact?: boolean
 }): string | null {
   const upstreamUnsafe = Boolean(input.upstreamReturnedLocalArtifact || (input.upstreamText && AGENT_ZERO_LOCAL_ARTIFACT_PATTERN.test(input.upstreamText)))
+  const asksBroadCapability = /(tools|models|skills|integrations|mcps?|providers|agents|what\s+can\s+you\s+see|capabilit)/i.test(input.ownerMessage)
 
   if (/live-query\s+mission\s+control|can\s+you\s+(?:see|query|live-query).*mission\s+control/i.test(input.ownerMessage)) {
     return 'Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.'
@@ -851,8 +852,14 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   if (/firecrawl/i.test(input.ownerMessage)) {
     return `${integrationLine(input.context, 'firecrawl', 'Firecrawl')}. I did not execute a crawl.`
   }
+  if (/\b(email|agentmail|send\s+(?:a\s+)?test\s+email)\b/i.test(input.ownerMessage)) {
+    return 'Email send is blocked from read-only chat. It requires an owner-approved Bridge Session and the registered AgentMail adapter; I did not send an email.'
+  }
   if (/(build[-\s]?wiki|farmer|run\s+now)/i.test(input.ownerMessage)) {
     return 'Build-Wiki Run Now is prepared but not executed. It requires an owner-approved Bridge Session and remains scoped only to opencloud-docs-farmer.service.'
+  }
+  if (asksBroadCapability) {
+    return buildCapabilityRegistryReply(input.context)
   }
   if (/(obsidian|mempalace|graphify|brain\s*sync|brain system)/i.test(input.ownerMessage)) {
     return [
@@ -866,9 +873,6 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   if (/openclaw\+?|shared\s+skills/i.test(input.ownerMessage)) {
     const sources = input.context.skills.sources.map((source) => `${source.label}: ${source.status}, ${source.total} skills`).join('; ')
     return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, Tony does not own it, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} Skill execution requires an owner-approved Bridge Session.`
-  }
-  if (/(tools|models|skills|integrations|mcps?|providers|agents|what\s+can\s+you\s+see|capabilit)/i.test(input.ownerMessage)) {
-    return buildCapabilityRegistryReply(input.context)
   }
   if (/(create|make|prepare).*(report|pdf|document)|attach.*(?:report|pdf|document)|report.*attach/i.test(input.ownerMessage)) {
     return 'I created the report in Mission Control. Use the Mission Control report link; external delivery and Telegram PDF attachment remain blocked unless their approved adapters are configured.'

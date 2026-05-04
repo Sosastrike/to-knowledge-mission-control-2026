@@ -2463,6 +2463,34 @@ function AgentZeroReviewerCard({ payload }: { payload: AgentZeroReviewerPayload 
 }
 
 function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }) {
+  const testChatEndpoint = payload?.test_chat_endpoint || '/api/bridge/hermes/test-chat'
+  const [testMessage, setTestMessage] = useState('Can you see Mission Control? Answer yes or no.')
+  const [testState, setTestState] = useState<'idle' | 'running' | 'ok' | 'error'>('idle')
+  const [testResult, setTestResult] = useState<string>('')
+
+  async function runHermesReadOnlyTest() {
+    setTestState('running')
+    setTestResult('')
+    try {
+      const response = await fetch(testChatEndpoint, {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: testMessage }),
+      })
+      const data = await response.json().catch(() => ({}))
+      const called = data?.hermes_called === true ? 'called' : 'not called'
+      const blocker = data?.blocker ? ` Blocker: ${String(data.blocker).replace(/[_-]+/g, ' ')}.` : ''
+      const reply = typeof data?.response_text === 'string' ? data.response_text : (data?.error || `HTTP ${response.status}`)
+      setTestResult(`Hermes ${called}. ${reply}${blocker}`)
+      setTestState(response.ok && data?.hermes_called === true ? 'ok' : 'error')
+    } catch (error) {
+      setTestResult((error as Error).message || 'Hermes test failed')
+      setTestState('error')
+    }
+  }
+
   if (!payload) {
     return (
       <div className={styles.externalCard}>
@@ -2482,7 +2510,6 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   const safety = payload.safety || {}
   const sandboxHomes = Array.isArray(install.sandbox_homes) ? install.sandbox_homes : []
   const statusEndpoint = payload.status_endpoint || '/api/bridge/hermes/status'
-  const testChatEndpoint = payload.test_chat_endpoint || '/api/bridge/hermes/test-chat'
   const hermesStatus = getHermesHierarchyStatus({
     installed: install.installed === true,
     reachable: payload.reachable === true || runtime.gateway_pid_running === true,
@@ -2575,6 +2602,34 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       {payload.blocker && (
         <p className={styles.providerAction}>Connector blocker: {payload.blocker}</p>
       )}
+      <div className={styles.agentZeroTestBox}>
+        <label className={styles.agentZeroTestLabel} htmlFor="hermes-test-message">
+          Open Hermes Test Chat
+        </label>
+        <textarea
+          id="hermes-test-message"
+          className={styles.agentZeroTestInput}
+          value={testMessage}
+          rows={3}
+          onChange={(event) => setTestMessage(event.target.value)}
+          disabled={testState === 'running'}
+        />
+        <div className={styles.agentActions}>
+          <button
+            type="button"
+            className={testState === 'running' ? styles.btnDisabled : styles.btnPrimary}
+            disabled={testState === 'running' || !testMessage.trim()}
+            onClick={runHermesReadOnlyTest}
+          >
+            {testState === 'running' ? 'Checking...' : 'Ask Hermes read-only'}
+          </button>
+        </div>
+        {testResult && (
+          <p className={testState === 'ok' ? styles.providerNotes : styles.providerAction}>
+            {testResult}
+          </p>
+        )}
+      </div>
       <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, legacy memory connection, or credentials are changed by this surface.'}</p>
       <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes lieutenant/read-only until owner approves production bridge wiring.'}</p>
     </div>

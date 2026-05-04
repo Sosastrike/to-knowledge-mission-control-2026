@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { AgentZeroBridgeSessionObject } from './agent-zero-bridge-session'
+import { defaultAgentZeroBridgeSessionObject, type AgentZeroBridgeSessionObject } from './agent-zero-bridge-session'
 import { inferSkillRoleTags, type SkillRoleTag } from '@/lib/skill-role-tags'
 
 export const AGENT_ZERO_DEFAULT_BASE_URL = 'http://100.116.35.95:50080'
@@ -2250,41 +2250,14 @@ export function buildAgentZeroReadOnlyContext(input: {
       external_delivery_writes_enabled: false,
     },
     bridge_session: {
-      ...(bridgeSession || {
-        session_id: null,
-        owner_id: null,
-        agent_id: 'agent_zero' as const,
-        started_at: null,
-        expires_at: null,
-        scope: 'Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission.',
+      ...(bridgeSession || defaultAgentZeroBridgeSessionObject({
+        status: input.bridgeSessionAvailable ? 'pending_approval' : 'not_requested',
+        blocked_reason: input.bridgeSessionAvailable ? 'owner_approval_required' : null,
         allowed_tools: ['all_registered_tools', 'all_registered_execution_adapters', 'read_only.ecosystem_context', 'review.recommendation'],
         allowed_integrations: ['all_registered_integrations', 'mission_control', 'bridge', 'agentmail_if_configured'],
-        allowed_models: ['openrouter_if_configured', 'openai_if_configured', 'anthropic_if_configured', 'gemini_if_configured', 'groq_if_configured', 'local_models_if_configured'],
-        allowed_skills: ['all_registered_skills', 'openclaw_plus_shared_runtime', 'agent_zero_skills', 'hermes_skills', 'mission_control_repo_skills'],
         allowed_brain_access: ['all_registered_brain_adapters', 'brain_sync.status'],
-        allowed_delivery_surfaces: ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'agentmail_if_connector_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured'],
-        safety_contract: {
-          one_bridge_session_approval_model: true,
-          no_approval_spam: true,
-          every_action_audited: true,
-          no_fake_completion: true,
-          raw_root_shell_enabled: false,
-          docker_socket_enabled: false,
-          direct_secret_reads_enabled: false,
-          raw_arbitrary_filesystem_enabled: false,
-        },
-        audit_log: [],
-        execution_enabled: false,
-        bridge_session_required: true,
-        status: input.bridgeSessionAvailable ? 'pending_approval' as const : 'not_requested' as const,
-        approval_request_id: null,
-        approval_state: null,
-        approval_prompt: 'Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, and delivery surfaces available in this environment for this mission.\nDuration: 12 hours.\nRule: Every action is audited. Agent Zero must not fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?',
-        duplicate_prompt_prevented: false,
-        no_approval_spam: true as const,
-        blocked_reason: input.bridgeSessionAvailable ? 'owner_approval_required' : null,
-        note: 'Agent Zero may see ecosystem context and recommend actions. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
-      }),
+        note: 'Agent Zero may see ecosystem context and recommend actions. Hermes may plan/design/suggest. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
+      })),
       available: Boolean(bridgeSession?.session_id || input.bridgeSessionAvailable),
       allowed_scopes: bridgeSessionActive
         ? [

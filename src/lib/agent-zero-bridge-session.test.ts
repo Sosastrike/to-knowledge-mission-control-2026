@@ -4,6 +4,7 @@ import {
   AGENT_ZERO_BRIDGE_SESSION_ACTION,
   AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT,
   createOrReuseAgentZeroBridgeSession,
+  evaluateHermesBridgeSessionAction,
   ensureAgentZeroBridgeSessionTables,
   readLatestAgentZeroBridgeSession,
   recordAgentZeroBridgeSessionAudit,
@@ -92,6 +93,14 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(result.session.execution_enabled).toBe(false)
     expect(result.session.approval_prompt).toBe(AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT)
     expect(result.session.scope).toContain('tools, skills, models, agents, integrations, Brain adapters')
+    expect(result.session.participants.map((participant) => participant.agent_id)).toEqual(['agent_zero', 'hermes'])
+    expect(result.session.agent_zero_authority.approves_and_delegates_hermes_actions).toBe(true)
+    expect(result.session.hermes_permissions.default_allowed_actions).toContain('hermes.plan')
+    expect(result.session.hermes_permissions.default_allowed_actions).toContain('hermes.workflow_plan')
+    expect(result.session.hermes_permissions.explicit_execution_actions).toContain('hermes.report.draft')
+    expect(result.session.hermes_permissions.explicit_execution_actions).toContain('hermes.skill_spec.draft')
+    expect(result.session.hermes_permissions.external_email_requires_domain_allow_list).toBe(true)
+    expect(result.session.hermes_permissions.blocked_actions).toContain('hermes.raw_shell')
     expect(result.session.allowed_tools).toContain('all_registered_tools')
     expect(result.session.allowed_tools).toContain('all_registered_execution_adapters')
     expect(result.session.allowed_skills).toContain('all_registered_skills')
@@ -106,6 +115,7 @@ describe('Agent Zero Bridge Session approval gate', () => {
       one_bridge_session_approval_model: true,
       no_approval_spam: true,
       every_action_audited: true,
+      every_agent_zero_and_hermes_action_audited: true,
       no_fake_completion: true,
       raw_root_shell_enabled: false,
       docker_socket_enabled: false,
@@ -119,6 +129,9 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(approval.reason).toBe(AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT)
     const scope = JSON.parse(approval.approval_scope_json)
     expect(scope.one_bridge_session_approval_model).toBe(true)
+    expect(scope.participants.map((participant: any) => participant.agent_id)).toEqual(['agent_zero', 'hermes'])
+    expect(scope.agent_zero_authority.approves_and_delegates_hermes_actions).toBe(true)
+    expect(scope.hermes_permissions.default_allowed_actions).toContain('hermes.plan')
     expect(scope.allowed_skills).toContain('all_registered_skills')
     expect(scope.allowed_delivery_surfaces).toContain('all_registered_delivery_surfaces')
     expect(scope.raw_root_shell_enabled).toBe(false)
@@ -177,6 +190,102 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(audited.audit_event).toMatchObject({ action: 'mcp.tools.schema_read', target: 'zapier', outcome: 'allowed' })
     expect(audited.session.safety_contract.direct_secret_reads_enabled).toBe(false)
     expect(JSON.stringify(audited)).not.toMatch(/sk-[A-Za-z0-9]|AIzaSy|xox[baprs]-/)
+  })
+
+  it('audits Hermes actions inside the same Agent Zero Bridge Session', () => {
+    const db = setupDb()
+    const created = createOrReuseAgentZeroBridgeSession({ db, requester })
+    db.prepare(`UPDATE bridge_approval_requests SET approval_state = 'approved', resolved_at = ? WHERE id = ?`)
+      .run('2026-05-03T14:05:00.000Z', created.session.approval_request_id)
+
+    const audited = recordAgentZeroBridgeSessionAudit({
+      db,
+      requester,
+      sessionId: created.session.session_id,
+      agentId: 'hermes',
+      action: 'hermes.skill_spec.draft',
+      target: 'email-triage-skill-draft',
+      metadata: { delegated_by_agent_zero: true },
+      now: new Date('2026-05-03T14:06:00.000Z'),
+    })
+
+    expect(audited.ok).toBe(true)
+    expect(audited.audit_event).toMatchObject({
+      action: 'hermes.skill_spec.draft',
+      target: 'email-triage-skill-draft',
+      outcome: 'allowed',
+    })
+    expect(audited.audit_event?.metadata).toMatchObject({
+      audited_agent_id: 'hermes',
+      agent_zero_remains_commander: true,
+      hermes_execution_requires_delegation: true,
+    })
+    const row = db.prepare(`SELECT agent_id FROM bridge_session_audit_events WHERE action = 'hermes.skill_spec.draft' LIMIT 1`).get() as any
+    expect(row.agent_id).toBe('hermes')
+  })
+
+  it('allows Hermes planning by default but gates execution on active session, delegation, connector, and domain rules', () => {
+    const pending = createOrReuseAgentZeroBridgeSession({ db: setupDb(), requester }).session
+    const planning = evaluateHermesBridgeSessionAction({ session: pending, action: 'plan' })
+    expect(planning.ok).toBe(true)
+    expect(planning.execution_enabled).toBe(false)
+    expect(planning.normal_reply).toContain('Hermes may plan')
+
+    const blockedExecution = evaluateHermesBridgeSessionAction({ session: pending, action: 'draft_skill_spec', delegatedByAgentZero: true })
+    expect(blockedExecution.ok).toBe(false)
+    expect(blockedExecution.blocked_reason).toBe('owner_approval_pending')
+
+    const db = setupDb()
+    const created = createOrReuseAgentZeroBridgeSession({ db, requester })
+    db.prepare(`UPDATE bridge_approval_requests SET approval_state = 'approved', resolved_at = ? WHERE id = ?`)
+      .run('2026-05-03T14:05:00.000Z', created.session.approval_request_id)
+    const active = readLatestAgentZeroBridgeSession({ db, sync: true, now: new Date('2026-05-03T14:06:00.000Z') }).session
+
+    const noDelegate = evaluateHermesBridgeSessionAction({ session: active, action: 'draft_skill_spec' })
+    expect(noDelegate.ok).toBe(false)
+    expect(noDelegate.blocked_reason).toBe('agent_zero_delegation_required')
+
+    const draftSkill = evaluateHermesBridgeSessionAction({ session: active, action: 'draft_skill_spec', delegatedByAgentZero: true })
+    expect(draftSkill.ok).toBe(true)
+    expect(draftSkill.execution_enabled).toBe(true)
+
+    const obsidianWrite = evaluateHermesBridgeSessionAction({ session: active, action: 'obsidian_write', delegatedByAgentZero: true })
+    expect(obsidianWrite.ok).toBe(true)
+
+    const mempalaceWrite = evaluateHermesBridgeSessionAction({ session: active, action: 'mempalace_write', delegatedByAgentZero: true })
+    expect(mempalaceWrite.ok).toBe(true)
+
+    const missingConnector = evaluateHermesBridgeSessionAction({ session: active, action: 'registered_adapter_execute', delegatedByAgentZero: true, connectorConfigured: false })
+    expect(missingConnector.ok).toBe(false)
+    expect(missingConnector.normal_reply).toContain('connector missing or not configured')
+
+    const emailNoDomain = evaluateHermesBridgeSessionAction({ session: active, action: 'external_email_send', delegatedByAgentZero: true, connectorConfigured: true, domainAllowed: false })
+    expect(emailNoDomain.ok).toBe(false)
+    expect(emailNoDomain.blocked_reason).toBe('agentmail_domain_allow_list_required')
+
+    const emailAllowed = evaluateHermesBridgeSessionAction({ session: active, action: 'external_email_send', delegatedByAgentZero: true, connectorConfigured: true, domainAllowed: true })
+    expect(emailAllowed.ok).toBe(true)
+    expect(emailAllowed.execution_enabled).toBe(true)
+  })
+
+  it('keeps raw shell, Docker socket, secret reads, and direct Build-Wiki execution blocked for Hermes', () => {
+    const db = setupDb()
+    const created = createOrReuseAgentZeroBridgeSession({ db, requester })
+    db.prepare(`UPDATE bridge_approval_requests SET approval_state = 'approved', resolved_at = ? WHERE id = ?`)
+      .run('2026-05-03T14:05:00.000Z', created.session.approval_request_id)
+    const active = readLatestAgentZeroBridgeSession({ db, sync: true, now: new Date('2026-05-03T14:06:00.000Z') }).session
+
+    expect(evaluateHermesBridgeSessionAction({ session: active, action: 'raw_shell', delegatedByAgentZero: true }).blocked_reason)
+      .toBe('hermes_raw_shell_forbidden')
+    expect(evaluateHermesBridgeSessionAction({ session: active, action: 'docker_socket', delegatedByAgentZero: true }).blocked_reason)
+      .toBe('hermes_docker_socket_forbidden')
+    expect(evaluateHermesBridgeSessionAction({ session: active, action: 'secret_read', delegatedByAgentZero: true }).blocked_reason)
+      .toBe('hermes_direct_secret_read_forbidden')
+    expect(evaluateHermesBridgeSessionAction({ session: active, action: 'buildwiki_suggest' }).ok)
+      .toBe(true)
+    const buildWikiExecute = evaluateHermesBridgeSessionAction({ session: active, action: 'buildwiki_execute', delegatedByAgentZero: true })
+    expect(buildWikiExecute.ok).toBe(false)
+    expect(buildWikiExecute.blocked_reason).toBe('hermes_may_suggest_buildwiki_agent_zero_must_execute_scoped_adapter')
   })
 
   it('expires automatically', () => {

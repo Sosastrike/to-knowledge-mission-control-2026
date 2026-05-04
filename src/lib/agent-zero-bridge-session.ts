@@ -12,9 +12,9 @@ export const AGENT_ZERO_BRIDGE_SESSION_CATEGORY = 'agent_execution'
 
 export const AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT = [
   'Approval needed: Open Agent Zero Bridge Session.',
-  'Scope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, and delivery surfaces available in this environment for this mission.',
+  'Scope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.',
   'Duration: 12 hours.',
-  'Rule: Every action is audited. Agent Zero must not fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.',
+  'Rule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.',
   'Approve or deny?',
 ].join('\n')
 
@@ -37,6 +37,29 @@ export type AgentZeroBridgeSessionObject = {
   session_id: string | null
   owner_id: number | null
   agent_id: 'agent_zero'
+  participants: Array<{
+    agent_id: 'agent_zero' | 'hermes'
+    role: 'commander' | 'lieutenant_skill_workflow_specialist'
+    authority: string
+    planning_enabled: boolean
+    execution_enabled: boolean
+    execution_requires_explicit_scope: boolean
+  }>
+  agent_zero_authority: {
+    commander: true
+    approves_and_delegates_hermes_actions: true
+    final_owner_facing_responsibility: true
+  }
+  hermes_permissions: {
+    role: 'lieutenant_skill_workflow_specialist'
+    default_allowed_actions: string[]
+    explicit_execution_actions: string[]
+    execution_enabled: boolean
+    execution_requires_agent_zero_delegation: true
+    execution_requires_explicit_session_scope: true
+    external_email_requires_domain_allow_list: true
+    blocked_actions: string[]
+  }
   started_at: string | null
   expires_at: string | null
   scope: string
@@ -51,6 +74,7 @@ export type AgentZeroBridgeSessionObject = {
     one_bridge_session_approval_model: true
     no_approval_spam: true
     every_action_audited: true
+    every_agent_zero_and_hermes_action_audited: true
     no_fake_completion: true
     raw_root_shell_enabled: false
     docker_socket_enabled: false
@@ -129,7 +153,41 @@ export type AgentZeroBridgeSessionRequester = {
   tenantId: number
 }
 
-const DEFAULT_SCOPE = 'Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission.'
+export type BridgeSessionAgentId = 'agent_zero' | 'hermes'
+
+export type HermesBridgeSessionActionKind =
+  | 'plan'
+  | 'design'
+  | 'suggest'
+  | 'draft_report'
+  | 'draft_skill_spec'
+  | 'obsidian_write'
+  | 'mempalace_write'
+  | 'buildwiki_suggest'
+  | 'buildwiki_execute'
+  | 'external_email_send'
+  | 'registered_adapter_execute'
+  | 'raw_shell'
+  | 'docker_socket'
+  | 'secret_read'
+
+export type HermesBridgeSessionActionReadiness = {
+  ok: boolean
+  agent_id: 'hermes'
+  action: HermesBridgeSessionActionKind
+  execution_enabled: boolean
+  allowed: boolean
+  delegated_by_agent_zero: boolean
+  bridge_session_active: boolean
+  registered_adapter_required: true
+  connector_configured: boolean | null
+  domain_allowed: boolean | null
+  blocked_reason: string | null
+  normal_reply: string
+  audit_required: true
+}
+
+const DEFAULT_SCOPE = 'Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes participates as lieutenant for planning/design/recommendations by default and may execute only explicitly allowed registered adapters delegated by Agent Zero.'
 const DEFAULT_ALLOWED_TOOLS = [
   'all_registered_tools',
   'all_registered_execution_adapters',
@@ -158,18 +216,86 @@ const DEFAULT_ALLOWED_MODELS = ['openrouter_if_configured', 'openai_if_configure
 const DEFAULT_ALLOWED_SKILLS = ['all_registered_skills', 'openclaw_plus_shared_runtime', 'agent_zero_skills', 'hermes_skills', 'mission_control_repo_skills']
 const DEFAULT_ALLOWED_BRAIN_ACCESS = ['all_registered_brain_adapters', 'brain_sync.status', 'obsidian.read_adapter', 'obsidian.write_adapter', 'mempalace.read_adapter', 'mempalace.write_adapter', 'graphify.status', 'brain_watchers.status']
 const DEFAULT_ALLOWED_DELIVERY_SURFACES = ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'agentmail_if_connector_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured']
-const BLOCKED_SCOPES = ['broad_shell', 'docker_socket', 'root_system_access', 'credential_exfiltration', 'auth_bypass', 'smb_mount_without_separate_smb_phase', 'memory_write_without_explicit_owner_scope']
+const HERMES_DEFAULT_ALLOWED_ACTIONS = [
+  'hermes.plan',
+  'hermes.design',
+  'hermes.suggest',
+  'hermes.workflow_plan',
+  'hermes.integration_mapping',
+  'hermes.failure_analysis',
+  'hermes.docs_report_outline',
+]
+const HERMES_EXPLICIT_EXECUTION_ACTIONS = [
+  'hermes.report.draft',
+  'hermes.skill_spec.draft',
+  'hermes.obsidian.write_via_adapter',
+  'hermes.mempalace.write_via_adapter',
+  'hermes.registered_adapter.execute_if_scoped',
+]
+const HERMES_BLOCKED_ACTIONS = [
+  'hermes.raw_shell',
+  'hermes.root_access',
+  'hermes.docker_socket',
+  'hermes.direct_secret_read',
+  'hermes.external_email_without_allow_list',
+  'hermes.buildwiki_direct_execution',
+  'hermes.unregistered_adapter',
+]
+const BLOCKED_SCOPES = ['broad_shell', 'docker_socket', 'root_system_access', 'credential_exfiltration', 'auth_bypass', 'smb_mount_without_separate_smb_phase', 'memory_write_without_explicit_owner_scope', 'hermes_direct_buildwiki_execution', 'hermes_external_email_without_domain_allow_list', 'hermes_unregistered_adapter_execution']
 
 function defaultSafetyContract(): AgentZeroBridgeSessionObject['safety_contract'] {
   return {
     one_bridge_session_approval_model: true,
     no_approval_spam: true,
     every_action_audited: true,
+    every_agent_zero_and_hermes_action_audited: true,
     no_fake_completion: true,
     raw_root_shell_enabled: false,
     docker_socket_enabled: false,
     direct_secret_reads_enabled: false,
     raw_arbitrary_filesystem_enabled: false,
+  }
+}
+
+function defaultParticipants(executionEnabled = false): AgentZeroBridgeSessionObject['participants'] {
+  return [
+    {
+      agent_id: 'agent_zero',
+      role: 'commander',
+      authority: 'Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.',
+      planning_enabled: true,
+      execution_enabled: executionEnabled,
+      execution_requires_explicit_scope: true,
+    },
+    {
+      agent_id: 'hermes',
+      role: 'lieutenant_skill_workflow_specialist',
+      authority: 'Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.',
+      planning_enabled: true,
+      execution_enabled: executionEnabled,
+      execution_requires_explicit_scope: true,
+    },
+  ]
+}
+
+function defaultAgentZeroAuthority(): AgentZeroBridgeSessionObject['agent_zero_authority'] {
+  return {
+    commander: true,
+    approves_and_delegates_hermes_actions: true,
+    final_owner_facing_responsibility: true,
+  }
+}
+
+function defaultHermesPermissions(executionEnabled = false): AgentZeroBridgeSessionObject['hermes_permissions'] {
+  return {
+    role: 'lieutenant_skill_workflow_specialist',
+    default_allowed_actions: HERMES_DEFAULT_ALLOWED_ACTIONS,
+    explicit_execution_actions: HERMES_EXPLICIT_EXECUTION_ACTIONS,
+    execution_enabled: executionEnabled,
+    execution_requires_agent_zero_delegation: true,
+    execution_requires_explicit_session_scope: true,
+    external_email_requires_domain_allow_list: true,
+    blocked_actions: HERMES_BLOCKED_ACTIONS,
   }
 }
 
@@ -189,8 +315,15 @@ function parseTime(value: string | null): number | null {
 
 function stableJson(value: unknown): string {
   if (!value || typeof value !== 'object') return '{}'
-  const keys = Object.keys(value as Record<string, unknown>).sort()
-  return JSON.stringify(value, keys)
+  const normalize = (nested: unknown): unknown => {
+    if (Array.isArray(nested)) return nested.map(normalize)
+    if (!nested || typeof nested !== 'object') return nested
+    return Object.keys(nested as Record<string, unknown>).sort().reduce((acc, key) => {
+      acc[key] = normalize((nested as Record<string, unknown>)[key])
+      return acc
+    }, {} as Record<string, unknown>)
+  }
+  return JSON.stringify(normalize(value))
 }
 
 function jsonArray(value: unknown, fallback: string[]): string[] {
@@ -277,6 +410,9 @@ export function defaultAgentZeroBridgeSessionObject(input: Partial<AgentZeroBrid
     session_id: input.session_id || null,
     owner_id: typeof input.owner_id === 'number' ? input.owner_id : null,
     agent_id: 'agent_zero',
+    participants: input.participants || defaultParticipants(Boolean(input.execution_enabled)),
+    agent_zero_authority: input.agent_zero_authority || defaultAgentZeroAuthority(),
+    hermes_permissions: input.hermes_permissions || defaultHermesPermissions(Boolean(input.execution_enabled)),
     started_at: input.started_at || null,
     expires_at: input.expires_at || null,
     scope: input.scope || DEFAULT_SCOPE,
@@ -298,7 +434,7 @@ export function defaultAgentZeroBridgeSessionObject(input: Partial<AgentZeroBrid
     duplicate_prompt_prevented: Boolean(input.duplicate_prompt_prevented),
     no_approval_spam: true,
     blocked_reason: input.blocked_reason || null,
-    note: input.note || 'Agent Zero needs one owner-approved Bridge Session before scoped execution can run.',
+    note: input.note || 'Agent Zero needs one owner-approved Bridge Session before scoped execution can run. Hermes may plan/design/suggest by default and execute only explicitly scoped registered adapters delegated by Agent Zero.',
   }
 }
 
@@ -365,6 +501,9 @@ function sessionObjectFromRow(db: Database.Database, session: SessionRow, approv
     safety_contract: defaultSafetyContract(),
     audit_log: readAuditLog(db, session.id),
     execution_enabled: executionEnabled,
+    participants: defaultParticipants(executionEnabled),
+    agent_zero_authority: defaultAgentZeroAuthority(),
+    hermes_permissions: defaultHermesPermissions(executionEnabled),
     status: state,
     approval_request_id: session.approval_request_id,
     approval_state: approval?.approval_state || null,
@@ -522,6 +661,9 @@ export function createOrReuseAgentZeroBridgeSession(input: {
       docker_socket_enabled: false,
       direct_secret_reads_enabled: false,
       raw_arbitrary_filesystem_enabled: false,
+      participants: defaultParticipants(false),
+      agent_zero_authority: defaultAgentZeroAuthority(),
+      hermes_permissions: defaultHermesPermissions(false),
       rule: 'Agent Zero must not fake completion, spam approvals, use raw root shell, use Docker socket, or read secrets directly.',
       allowed_tools: DEFAULT_ALLOWED_TOOLS,
       allowed_integrations: DEFAULT_ALLOWED_INTEGRATIONS,
@@ -623,9 +765,13 @@ export function createOrReuseAgentZeroBridgeSession(input: {
           one_bridge_session_approval_model: true,
           no_approval_spam: true,
           every_action_audited: true,
+          every_agent_zero_and_hermes_action_audited: true,
           no_fake_completion: true,
           blocked_scopes: BLOCKED_SCOPES,
           safety_contract: defaultSafetyContract(),
+          participants: defaultParticipants(false),
+          agent_zero_authority: defaultAgentZeroAuthority(),
+          hermes_permissions: defaultHermesPermissions(false),
           execution_enabled: false,
         }),
         correlationId,
@@ -651,7 +797,10 @@ export function createOrReuseAgentZeroBridgeSession(input: {
           one_bridge_session_approval_model: true,
           no_approval_spam: true,
           every_action_audited: true,
+          every_agent_zero_and_hermes_action_audited: true,
           blocked_scopes: BLOCKED_SCOPES,
+          participants: defaultParticipants(false),
+          hermes_permissions: defaultHermesPermissions(false),
         }),
       )
 
@@ -696,6 +845,7 @@ export function recordAgentZeroBridgeSessionAudit(input: {
   db?: Database.Database
   sessionId?: string | null
   requester: AgentZeroBridgeSessionRequester
+  agentId?: BridgeSessionAgentId
   action: string
   target?: string | null
   outcome?: string
@@ -725,16 +875,20 @@ export function recordAgentZeroBridgeSessionAudit(input: {
     const auditId = `bsa_${randomUUID()}`
     const actor = input.requester.username || 'mission-control'
     const ownerId = realUserIdOrNull(db, input.requester.userId)
+    const agentId: BridgeSessionAgentId = input.agentId === 'hermes' ? 'hermes' : 'agent_zero'
     const metadataJson = stableJson({
       ...(input.metadata || {}),
       bridge_session_scope_checked: true,
       no_repeated_owner_approval: true,
+      audited_agent_id: agentId,
+      agent_zero_remains_commander: true,
+      hermes_execution_requires_delegation: true,
     })
     db.prepare(`
       INSERT INTO bridge_session_audit_events (
         id, workspace_id, tenant_id, session_id, approval_request_id, actor, actor_user_id,
         agent_id, action, target, outcome, metadata_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'agent_zero', ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       auditId,
       input.requester.workspaceId,
@@ -743,6 +897,7 @@ export function recordAgentZeroBridgeSessionAudit(input: {
       read.session.approval_request_id,
       actor,
       ownerId,
+      agentId,
       String(input.action || 'agent_zero.action').slice(0, 160),
       input.target ? String(input.target).slice(0, 260) : null,
       String(input.outcome || 'allowed').slice(0, 80),
@@ -779,4 +934,72 @@ export function recordAgentZeroBridgeSessionAudit(input: {
 
 export function getAgentZeroBridgeSessionBlockedScopes(): string[] {
   return BLOCKED_SCOPES
+}
+
+function actionInSessionScope(session: AgentZeroBridgeSessionObject, action: string): boolean {
+  const joined = [
+    ...session.allowed_tools,
+    ...session.allowed_integrations,
+    ...session.allowed_models,
+    ...session.allowed_skills,
+    ...session.allowed_brain_access,
+    ...session.allowed_delivery_surfaces,
+    ...session.hermes_permissions.explicit_execution_actions,
+  ].join(' ')
+  return joined.includes(action)
+    || (action.includes('report') && joined.includes('hermes.report.draft'))
+    || (action.includes('skill') && joined.includes('hermes.skill_spec.draft'))
+    || (action.includes('obsidian') && joined.includes('obsidian.write_adapter'))
+    || (action.includes('mempalace') && joined.includes('mempalace.write_adapter'))
+    || ((action.includes('agentmail') || action === 'external_email_send') && joined.includes('agentmail_if_configured'))
+    || (action.includes('registered_adapter') && joined.includes('all_registered_execution_adapters'))
+}
+
+export function evaluateHermesBridgeSessionAction(input: {
+  session: AgentZeroBridgeSessionObject
+  action: HermesBridgeSessionActionKind
+  delegatedByAgentZero?: boolean
+  connectorConfigured?: boolean | null
+  domainAllowed?: boolean | null
+}): HermesBridgeSessionActionReadiness {
+  const session = input.session
+  const active = session.status === 'active' && session.execution_enabled
+  const delegated = Boolean(input.delegatedByAgentZero)
+  const connectorConfigured = typeof input.connectorConfigured === 'boolean' ? input.connectorConfigured : null
+  const domainAllowed = typeof input.domainAllowed === 'boolean' ? input.domainAllowed : null
+  const planningAllowed = input.action === 'plan' || input.action === 'design' || input.action === 'suggest' || input.action === 'buildwiki_suggest'
+
+  let blockedReason: string | null = null
+  if (input.action === 'raw_shell') blockedReason = 'hermes_raw_shell_forbidden'
+  else if (input.action === 'docker_socket') blockedReason = 'hermes_docker_socket_forbidden'
+  else if (input.action === 'secret_read') blockedReason = 'hermes_direct_secret_read_forbidden'
+  else if (!active && !planningAllowed) blockedReason = session.blocked_reason || 'active_bridge_session_required'
+  else if (!delegated && !planningAllowed) blockedReason = 'agent_zero_delegation_required'
+  else if (input.action === 'buildwiki_execute') blockedReason = 'hermes_may_suggest_buildwiki_agent_zero_must_execute_scoped_adapter'
+  else if ((input.action === 'external_email_send' || input.action === 'registered_adapter_execute') && connectorConfigured === false) blockedReason = 'connector_missing_or_not_configured'
+  else if (input.action === 'external_email_send' && domainAllowed !== true) blockedReason = 'agentmail_domain_allow_list_required'
+  else if (!planningAllowed && !actionInSessionScope(session, input.action)) blockedReason = 'hermes_action_not_in_bridge_session_scope'
+
+  const allowed = !blockedReason
+  const executionEnabled = allowed && !planningAllowed
+
+  return {
+    ok: allowed,
+    agent_id: 'hermes',
+    action: input.action,
+    execution_enabled: executionEnabled,
+    allowed,
+    delegated_by_agent_zero: delegated,
+    bridge_session_active: active,
+    registered_adapter_required: true,
+    connector_configured: connectorConfigured,
+    domain_allowed: domainAllowed,
+    blocked_reason: blockedReason,
+    normal_reply: allowed
+      ? planningAllowed
+        ? 'Hermes may plan, design, or suggest. Agent Zero remains commander for review and any execution.'
+        : 'Hermes may use the scoped registered adapter delegated by Agent Zero inside the active Bridge Session.'
+      : `Hermes is blocked: ${(blockedReason || 'unknown').replace(/[_-]+/g, ' ')}.`,
+    audit_required: true,
+  }
 }

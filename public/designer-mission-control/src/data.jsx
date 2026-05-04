@@ -1,7 +1,8 @@
 // Mock data for the prototype
 
 const AGENTS = [
-  { id: 'main',       name: 'Main',       role: 'Primary orchestrator',     status: 'live',    load: 62, handled: 1284, sla: 99.4, channels: ['TG','WA','SL'], model: 'sonnet-4.6', since: '84d' },
+  { id: 'agent-zero', name: 'Agent Zero', role: 'Ecosystem commander',      status: 'live',    load: 62, handled: 1284, sla: 99.4, channels: ['TG','WA','SL'], model: 'sonnet-4.6', since: '84d' },
+  { id: 'hermes',     name: 'Hermes',     role: 'Lieutenant / skill-workflow specialist', status: 'idle', load: 18, handled: 0, sla: 100, channels: ['MC'], model: 'openrouter', since: 'onboarding' },
   { id: 'research',   name: 'Research',   role: 'Deep research & synthesis',status: 'live',    load: 48, handled: 412,  sla: 99.1, channels: ['TG','SL'],      model: 'opus-4.6',   since: '42d' },
   { id: 'scheduler',  name: 'Scheduler',  role: 'Calendar & reminders',     status: 'live',    load: 28, handled: 806,  sla: 99.8, channels: ['TG','GM'],      model: 'haiku-4.5',  since: '61d' },
   { id: 'inbox',      name: 'Inbox',      role: 'Gmail triage & drafting',  status: 'live',    load: 54, handled: 533,  sla: 98.9, channels: ['GM'],           model: 'sonnet-4.6', since: '38d' },
@@ -25,22 +26,22 @@ const TICKETS = [
   { id: 'TSK-4808', title: 'Draft replies to 12 priority emails',         agent: 'inbox',     progress: 35, priority: 'high', deadline: '13:00', status: 'wip',      lane: 'Inbox',     start: 0.02, end: 0.26, customer: 'Amelia K.' },
   { id: 'TSK-4821', title: 'Schedule 1:1 with Rafael · next Tue AM',       agent: 'scheduler', progress: 78, priority: 'med',  deadline: '16:45', status: 'wip',      lane: 'Scheduler', start: 0.22, end: 0.58, customer: 'Amelia K.' },
   { id: 'TSK-4819', title: 'Compile: all memories tagged "pricing"',       agent: 'research',  progress: 100,priority: 'low',  deadline: '11:15', status: 'complete', lane: 'Research',  start: 0.06, end: 0.18, customer: 'Amelia K.' },
-  { id: 'TSK-4825', title: 'Daily standup summary post in #team',          agent: 'main',      progress: 18, priority: 'med',  deadline: '18:00', status: 'assigned', lane: 'Main',      start: 0.64, end: 0.92, customer: 'Team' },
+  { id: 'TSK-4825', title: 'Daily standup summary post in #team',          agent: 'agent-zero',progress: 18, priority: 'med',  deadline: '18:00', status: 'assigned', lane: 'Main',      start: 0.64, end: 0.92, customer: 'Team' },
   { id: 'TSK-4827', title: 'Auto-brief participants for Nest meeting',      agent: 'direct',    progress: 40, priority: 'med',  deadline: '15:30', status: 'wip',      lane: 'Meetings',  start: 0.32, end: 0.60, customer: 'Nest call' },
   { id: 'TSK-4830', title: 'Fade low-salience memories < 0.3',              agent: 'insight',   progress: 85, priority: 'high', deadline: '12:20', status: 'wip',      lane: 'Memory',    start: 0.00, end: 0.20, customer: 'System' },
   { id: 'TSK-4832', title: 'Generate Q3 research briefing',                 agent: 'research',  progress: 0,  priority: 'low',  deadline: '19:00', status: 'pending',  lane: 'Research',  start: 0.74, end: 0.98, customer: 'Amelia K.' },
   { id: 'TSK-4834', title: 'Follow up: BluePeak intro (Slack)',             agent: null,        progress: 0,  priority: 'low',  deadline: '—',     status: 'pending',  lane: 'Main',      start: 0.46, end: 0.64, customer: '—' },
   { id: 'TSK-4836', title: 'Knowledge base: refund windows article',        agent: 'research',  progress: 50, priority: 'med',  deadline: '17:00', status: 'wip',      lane: 'Research',  start: 0.66, end: 0.94, customer: 'Internal' },
-  { id: 'TSK-4839', title: 'Rotate WhatsApp Business token',                agent: 'main',      progress: 10, priority: 'high', deadline: '20:00', status: 'assigned', lane: 'Main',      start: 0.78, end: 0.98, customer: 'DevOps' },
+  { id: 'TSK-4839', title: 'Rotate WhatsApp Business token',                agent: 'agent-zero',progress: 10, priority: 'high', deadline: '20:00', status: 'assigned', lane: 'Main',      start: 0.78, end: 0.98, customer: 'DevOps' },
   { id: 'TSK-4841', title: 'Tag onboarding-related memories',                agent: 'insight',   progress: 0,  priority: 'low',  deadline: '—',     status: 'pending',  lane: 'Memory',    start: 0.30, end: 0.54, customer: 'Internal' },
   { id: 'TSK-4843', title: 'Check Gmail labels — archive old newsletters',  agent: 'inbox',     progress: 20, priority: 'high', deadline: '16:00', status: 'wip',      lane: 'Inbox',     start: 0.52, end: 0.82, customer: 'Amelia K.' },
-  { id: 'TSK-4802', title: 'Archived: Q1 migration checklist',              agent: 'main',      progress: 100,priority: 'low',  deadline: 'done',  status: 'archived', lane: 'Main',      start: 0.00, end: 0.10, customer: 'Internal' },
+  { id: 'TSK-4802', title: 'Archived: Q1 migration checklist',              agent: 'agent-zero',progress: 100,priority: 'low',  deadline: 'done',  status: 'archived', lane: 'Main',      start: 0.00, end: 0.10, customer: 'Internal' },
 ];
 
 const LANES = ['Main', 'Research', 'Inbox', 'Scheduler', 'Memory', 'Meetings'];
 
 const MEETINGS = [
-  { id: 'M-021', title: 'Weekly ops sync',           host: 'Amelia K.', participants: 6, status: 'live',      duration: '14:32', started: 'now',  mode: 'avatar', modeLabel: 'Pika avatar · $0.28/min', agent: 'main' },
+  { id: 'M-021', title: 'Weekly ops sync',           host: 'Amelia K.', participants: 6, status: 'live',      duration: '14:32', started: 'now',  mode: 'avatar', modeLabel: 'Pika avatar · $0.28/min', agent: 'agent-zero' },
   { id: 'M-022', title: 'Customer discovery · Nest', host: 'Orion',     participants: 3, status: 'scheduled', duration: '—',     started: '15:00', mode: 'voice',  modeLabel: 'Recall.ai voice · $0.01/min', agent: 'research' },
 ];
 
@@ -99,9 +100,9 @@ const INTEGRATIONS = [
 ];
 
 const CHANNELS = [
-  { id: 'tg', key: 'TG', enabled: true,  health: 'ok',   assigned: 'main',      routing: 'Main agent by default', rate: '120/min' },
-  { id: 'wa', key: 'WA', enabled: true,  health: 'warn', assigned: 'main',      routing: 'Main, Scheduler for time queries', rate: '40/min'  },
-  { id: 'sl', key: 'SL', enabled: true,  health: 'ok',   assigned: 'main',      routing: 'Main, Research for #research',   rate: '60/min'  },
+  { id: 'tg', key: 'TG', enabled: true,  health: 'ok',   assigned: 'agent-zero',routing: 'Agent Zero by default', rate: '120/min' },
+  { id: 'wa', key: 'WA', enabled: true,  health: 'warn', assigned: 'agent-zero',routing: 'Agent Zero, Scheduler for time queries', rate: '40/min'  },
+  { id: 'sl', key: 'SL', enabled: true,  health: 'ok',   assigned: 'agent-zero',routing: 'Agent Zero, Research for #research',   rate: '60/min'  },
   { id: 'gm', key: 'GM', enabled: true,  health: 'ok',   assigned: 'inbox',     routing: 'Inbox agent (triage & draft)',   rate: '—'       },
   { id: 'dc', key: 'DC', enabled: false, health: 'muted', assigned: null,        routing: 'Not configured',                 rate: '—'       },
   { id: 'x',  key: 'X',  enabled: false, health: 'muted', assigned: null,        routing: 'Not configured',                 rate: '—'       },
@@ -150,10 +151,10 @@ const SYS_HEALTH = {
 // Agent Zero is the active commander; Tony Legacy is intentionally not in active groups and is
 // reachable only via the dashboard's Escalate flow.
 const AGENT_GROUPS = {
-  Exec:     ['main',      'insight'],            // orchestration + memory
+  Exec:     ['agent-zero','hermes', 'insight'],  // commander + lieutenant + memory
   Labor:    ['research',  'inbox', 'scheduler'], // ticket-doers
   Security: ['sentinel'],                        // alerts & night shift
-  Ops:      ['main', 'handup', 'direct'],        // live-ops surface
+  Ops:      ['agent-zero', 'handup', 'direct'],  // live-ops surface
 };
 
 Object.assign(window, {

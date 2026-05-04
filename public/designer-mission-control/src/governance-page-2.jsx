@@ -291,7 +291,7 @@ function TabBehaviorTest({ agentId }) {
 function GovernancePage() {
   const ready = useGovReady();
   const [tab, setTab] = React.useState(() => localStorage.getItem('gov.tab') || 'profile');
-  const [activeId, setActiveId] = React.useState(() => localStorage.getItem('gov.agent') || 'tony');
+  const [activeId, setActiveId] = React.useState(() => localStorage.getItem('gov.agent') || 'agent-zero');
   const [unlockOpen, setUnlockOpen] = React.useState(false);
   const [unlockReason, setUnlockReason] = React.useState(null);
   const { unlocked, expiresAt } = useUnlock();

@@ -475,7 +475,7 @@ function TaskDrawer({ ticket, onClose }) {
                 <I.AlertTriangle/> Block
               </button>
               <button className="btn sm" onClick={()=>{
-                const next = (window.AGENTS || []).find(a => a.role === 'tony') || (window.AGENTS || []).find(a => a.id === 'agent-zero');
+                const next = (window.AGENTS || []).find(a => a.id === 'agent-zero' || a.id === 'agent_zero') || (window.AGENTS || []).find(a => /commander/i.test(a.role || ''));
                 if (next) patch({ agent: next.id }, `Escalated to ${next.name}`);
               }}>
                 <I.Flag/> Escalate to Agent Zero

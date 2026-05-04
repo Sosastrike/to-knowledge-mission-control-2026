@@ -22,6 +22,16 @@
 //   - mutate Agent Zero commander / governance / credentials
 // ─────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react'
+import {
+  CANONICAL_AGENT_NETWORK_HIERARCHY,
+  CANONICAL_AGENT_TIER_OF,
+  HERMES_LIEUTENANT_CAPABILITIES,
+  getCanonicalAgentNetworkRows,
+  getCanonicalAgentNetworkTierDefs,
+  getHermesHierarchyStatus,
+  isCanonicalAgentNetworkSeedId,
+  isActiveTonyHierarchyId,
+} from '@/lib/agent-network-hierarchy'
 import styles from './agent-network.module.css'
 
 interface AgentRow {
@@ -972,8 +982,7 @@ interface Props {
 
 // Static reference for the 4 tiers (per spec §1)
 const TIER_DEFS: Array<{ id: string; label: string; sub: string }> = [
-  { id: 'commander', label: 'Commander', sub: 'Agent Zero routes work, owns Bridge sessions, and reports to the Owner' },
-  { id: 'lieutenant', label: 'Lieutenant', sub: 'Hermes supports Agent Zero with skills, workflows, and plans' },
+  ...getCanonicalAgentNetworkTierDefs(),
   { id: 'specialist', label: 'Specialists', sub: 'Domain-specific workers' },
   { id: 'worker', label: 'Workers', sub: 'Long-running task agents' },
 ]
@@ -982,10 +991,7 @@ const TIER_DEFS: Array<{ id: string; label: string; sub: string }> = [
 // seed data so the layout has correct tier placement before live RBAC lands).
 // Phase B replaces this with the `agents.tier` column from spec §2.
 const KNOWN_TIER_OF: Record<string, string> = {
-  agent_zero: 'commander',
-  tony_legacy:'archive',
-  main:       'commander',  // Agent Zero commander alias used by /api/agents
-  hermes:     'lieutenant',
+  ...CANONICAL_AGENT_TIER_OF,
   archivist:  'specialist',
   atlas:      'lieutenant',
   builder:    'specialist',
@@ -1001,7 +1007,13 @@ const KNOWN_TIER_OF: Record<string, string> = {
 
 const KNOWN_PROTECTED: Record<string, boolean> = {
   agent_zero: true,
+  'agent-zero': true,
   main: true,
+  hermes: true,
+  tony: true,
+  tony_legacy: true,
+  'tony-legacy': true,
+  tony_v2: true,
   // agent_zero is handled in the External section (it's not in MC's /api/agents)
 }
 
@@ -1012,9 +1024,9 @@ function PhaseBPill({ label = 'Phase B — owner setup required' }: { label?: st
 
 function StatusDot({ status }: { status: string | undefined }) {
   const cls =
-    status === 'active' || status === 'online'
+    status === 'active' || status === 'online' || status === 'connected'
       ? styles.dotOnline
-      : status === 'idle'
+      : status === 'idle' || status === 'pending' || status === 'configured'
       ? styles.dotIdle
       : status === 'degraded'
       ? styles.dotDegraded
@@ -2436,12 +2448,18 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   const sandboxHomes = Array.isArray(install.sandbox_homes) ? install.sandbox_homes : []
   const statusEndpoint = payload.status_endpoint || '/api/bridge/hermes/status'
   const testChatEndpoint = payload.test_chat_endpoint || '/api/bridge/hermes/test-chat'
+  const hermesStatus = getHermesHierarchyStatus({
+    installed: install.installed === true,
+    reachable: payload.reachable === true || runtime.gateway_pid_running === true,
+    authConfigured: payload.auth_configured === true,
+    blocker: payload.blocker || provider.error || install.version_error || null,
+  })
 
   return (
     <div className={styles.externalCard}>
       <div className={styles.externalHead}>
         <strong className={styles.externalTitle}>{agent.name || 'Hermes'}</strong>
-        <span className={styles.externalBadge}>{install.installed ? 'Lieutenant pending' : 'Not installed'}</span>
+        <span className={styles.externalBadge}>Lieutenant {hermesStatus.label}</span>
       </div>
       <p className={styles.externalDescription}>
         Lieutenant / skill and workflow specialist. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval and live health proof.
@@ -2452,6 +2470,14 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
           <dd>{agent.role || 'lieutenant / skill and workflow specialist'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
+          <dt>Relationship</dt>
+          <dd>Hermes supports Agent Zero</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Capabilities</dt>
+          <dd>{HERMES_LIEUTENANT_CAPABILITIES.join(' · ')}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
           <dt>Allowed behavior</dt>
           <dd>{joinPreview(agent.allowed_behavior, 4)}</dd>
         </div>
@@ -2460,8 +2486,8 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
           <dd>{install.version || '(unknown)'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
-          <dt>Binary path</dt>
-          <dd>{install.binary_path || '(not detected)'}</dd>
+          <dt>Binary</dt>
+          <dd>{install.binary_path ? 'detected' : 'not detected'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Sandbox state</dt>
@@ -2469,7 +2495,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Sandbox homes</dt>
-          <dd>{sandboxHomes.length > 0 ? joinPreview(sandboxHomes, 2) : '(none detected)'}</dd>
+          <dd>{sandboxHomes.length > 0 ? `${sandboxHomes.length} detected` : 'none detected'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Production bridge</dt>
@@ -2482,6 +2508,14 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
         <div className={styles.externalDetailRow}>
           <dt>Health</dt>
           <dd>{payload.health || (runtime.gateway_pid_running ? 'healthy' : 'degraded')} · auth {payload.auth_configured ? 'configured' : 'not confirmed'} · execution {payload.execution_enabled ? 'enabled' : 'disabled'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Execution state</dt>
+          <dd>execution_enabled=false until Agent Zero Bridge Session</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Blocker</dt>
+          <dd>{hermesStatus.blocker || 'none'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Status route</dt>
@@ -3340,32 +3374,20 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     other: [],
   }
   const canonicalHierarchyRows: AgentRow[] = [
-    {
-      id: 'agent_zero',
-      name: 'Agent Zero',
-      status: 'active',
-      role: 'Commander / ecosystem lead',
-      template: 'Bridge Session required',
-      channels: ['Mission Control', 'Bridge/MCP', 'Brain Sync'],
-      skills: ['command', 'planning', 'adapter-scoped execution'],
-    },
-    {
-      id: 'hermes',
-      name: 'Hermes',
-      status: hermes.installed ? 'degraded' : 'blocked',
-      role: 'Lieutenant / skill and workflow specialist',
-      template: hermes.installed ? 'read-only onboarding pending' : 'not reachable',
-      channels: ['Mission Control read-only status'],
-      skills: ['skills', 'workflows', 'automation plans'],
-    },
+    ...getCanonicalAgentNetworkRows({
+      installed: hermes.installed || hermesSandbox?.install?.installed === true,
+      reachable: hermesSandbox?.reachable === true || hermesSandbox?.runtime_status?.gateway_pid_running === true,
+      authConfigured: hermesSandbox?.auth_configured === true,
+      blocker: hermesSandbox?.blocker || hermesSandbox?.provider_registry?.error || null,
+    }),
   ]
   const activeHierarchyRows = [
     ...canonicalHierarchyRows,
     ...agents.filter((agent) => {
       const id = String(agent.id || '').toLowerCase()
       const name = String(agent.name || '').toLowerCase()
-      if (['agent_zero', 'hermes', 'tony', 'tony_legacy'].includes(id)) return false
-      if (name === 'tony' || name.includes('tony legacy')) return false
+      if (isCanonicalAgentNetworkSeedId(id) || isActiveTonyHierarchyId(id)) return false
+      if (name === 'tony' || name.includes('tony legacy') || name.includes('tony v2')) return false
       return true
     }),
   ]
@@ -3398,6 +3420,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
 
       <div className={styles.banner}>
         <strong>Bridge Mode preflight is mandatory.</strong> Every agent must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the task. If Bridge Mode says approval, credential, or backend work is required, the agent must stop that action instead of guessing or faking success.
+      </div>
+      <div className={styles.preflightNotice}>
+        Canonical hierarchy: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Agent Zero commander, Hermes lieutenant support, OpenClaw+ runtime, then Bridge/MCP and Brain systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
       {/* Top stats strip */}

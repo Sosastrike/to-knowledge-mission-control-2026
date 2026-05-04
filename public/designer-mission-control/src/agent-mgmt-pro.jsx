@@ -74,7 +74,7 @@
     }, [httpReady, refresh]);
 
     const current = agents.find(a => a.id === sel) || agents[0] || null;
-    const isProtected = (a) => a?.id === 'agent-zero' || a?.role === 'tony' || a?.protected;
+    const isProtected = (a) => a?.id === 'agent-zero' || a?.id === 'agent_zero' || a?.id === 'hermes' || a?.id === 'tony' || a?.id === 'tony_legacy' || a?.role === 'archived' || a?.protected;
 
     const act = async (kind, extra) => {
       if (!current) return;
@@ -319,7 +319,7 @@
     const [role, setRole] = React.useState(agent.role);
     React.useEffect(() => { setName(agent.name); setRole(agent.role); }, [agent.id]);
     const dirty = name !== agent.name || role !== agent.role;
-    const roles = ['tony','specialist','voice','ops','security','research','support','agent-zero'];
+    const roles = ['agent-zero','hermes-lieutenant','specialist','voice','ops','security','research','support','archived'];
     return (
       <div className="card" style={{margin:0}}>
         <div className="card-head">

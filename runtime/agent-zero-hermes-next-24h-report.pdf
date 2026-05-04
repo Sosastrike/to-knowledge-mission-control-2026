@@ -1,0 +1,498 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3024 >>
+stream
+BT
+/F1 10 Tf
+54 750 Td
+(Agent Zero and Hermes Next 24h Report) Tj
+0 -13 Td
+(Date: 2026-05-04) Tj
+0 -13 Td
+(Executive Status) Tj
+0 -13 Td
+(This report covers Phases 130-140: dirty tree classification, cleanup separation,) Tj
+0 -13 Td
+(percentage recalculation, GO/PARTIAL GO/NO-GO decisions, OpenCloud decision, remaining) Tj
+0 -13 Td
+(blockers, and report delivery.) Tj
+0 -13 Td
+(No unrelated cleanup was committed with this integration proof. No secrets were) Tj
+0 -13 Td
+(printed. No `.env` file was modified. No external writes were run. No Zapier write,) Tj
+0 -13 Td
+(HeyGen generation, SMB mount, farmer execution, email send, Drive upload, or OneDrive) Tj
+0 -13 Td
+(upload was performed in this block.) Tj
+0 -13 Td
+(Phase Results) Tj
+0 -13 Td
+(Phase Result) Tj
+0 -13 Td
+(--- ---) Tj
+0 -13 Td
+(130 - Mission Control dirty tree classification Complete. Parked artifacts classified;) Tj
+0 -13 Td
+(no cleanup performed.) Tj
+0 -13 Td
+(131 - ClaudeClaw dirty tree classification Complete. Parked artifacts classified; no) Tj
+0 -13 Td
+(cleanup performed.) Tj
+0 -13 Td
+(132 - Do not mix cleanup Honored. Report work is separate from unrelated cleanup.) Tj
+0 -13 Td
+(133 - Percentage recalculation Complete. Percentages are conservative and based on) Tj
+0 -13 Td
+(proven live/test status.) Tj
+0 -13 Td
+(134 - Agent Zero GO decision PARTIAL GO. Live Agent Zero route proof exists, but) Tj
+0 -13 Td
+(delivery/owner-channel/external adapter proof remains incomplete.) Tj
+0 -13 Td
+(135 - Hermes GO decision NO-GO live. Hermes service/status exists, but) Tj
+0 -13 Td
+(`hermes_called:true` is not proven.) Tj
+0 -13 Td
+(136 - OpenCloud decision Keep. Destroy is not safe.) Tj
+0 -13 Td
+(137 - Remaining blockers list Complete with exact blockers below.) Tj
+0 -13 Td
+(138 - Final Markdown report Complete.) Tj
+0 -13 Td
+(139 - Final PDF report Complete.) Tj
+0 -13 Td
+(140 - Delivery Mission Control report link is the safe delivery path. Telegram) Tj
+0 -13 Td
+(attachment remains blocked.) Tj
+0 -13 Td
+(Dirty Tree Classification) Tj
+0 -13 Td
+(Mission Control) Tj
+0 -13 Td
+(Branch: `to-knowledge-mc`) Tj
+0 -13 Td
+(Current HEAD: `8f598fe`) Tj
+0 -13 Td
+(Tracked dirty files: 0) Tj
+0 -13 Td
+(Untracked parked artifacts: 345) Tj
+0 -13 Td
+(Category Count Action) Tj
+0 -13 Td
+(--- ---: ---) Tj
+0 -13 Td
+(Designer retirement backups 11 Parked. Do not mix with integration proof.) Tj
+0 -13 Td
+(Designer review packages and screenshots 252 Parked. Needs separate review/archive) Tj
+0 -13 Td
+(decision.) Tj
+0 -13 Td
+(Runtime reports and validation artifacts 73 Parked. Needs separate report cleanup) Tj
+0 -13 Td
+(decision.) Tj
+0 -13 Td
+(Runtime database backups 4 Parked. Preserve until cleanup phase decides retention.) Tj
+0 -13 Td
+(Public media artifacts 2 Parked. Needs owner decision before versioning/removal.) Tj
+0 -13 Td
+(Script artifact 1 Parked. Needs separate review.) Tj
+0 -13 Td
+(Source backup/disabled files 2 Parked. Needs separate cleanup phase.) Tj
+0 -13 Td
+(Mission Control has no tracked dirty code changes from this phase.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2775 >>
+stream
+BT
+/F1 10 Tf
+54 750 Td
+(ClaudeClaw / OpenClaw+) Tj
+0 -13 Td
+(Branch: `master`) Tj
+0 -13 Td
+(Current HEAD: `db83363`) Tj
+0 -13 Td
+(Tracked dirty files: 73) Tj
+0 -13 Td
+(Untracked parked artifacts: 426) Tj
+0 -13 Td
+(Category Count Action) Tj
+0 -13 Td
+(--- ---: ---) Tj
+0 -13 Td
+(Tracked runtime report deletions 73 Parked. Do not restore/delete/commit without a) Tj
+0 -13 Td
+(cleanup phase.) Tj
+0 -13 Td
+(Local Codex metadata 1 Parked. Do not commit.) Tj
+0 -13 Td
+(Docs artifact 1 Parked. Needs separate review.) Tj
+0 -13 Td
+(Runtime reports/PDFs 4 Parked. Needs cleanup decision.) Tj
+0 -13 Td
+(Runtime JSONL audit/state files 5 Parked. Preserve until owner-approved cleanup.) Tj
+0 -13 Td
+(Runtime scripts 4 Parked. Needs separate review.) Tj
+0 -13 Td
+(Runtime backups 8 Parked. Preserve until retention decision.) Tj
+0 -13 Td
+(Runtime executive reports 400 Parked/generated. Needs separate archive or ignore plan.) Tj
+0 -13 Td
+(Gauntlet output 2 Generated validation output; do not mix with integration proof.) Tj
+0 -13 Td
+(Debug script 1 Parked. Needs separate review before commit/removal.) Tj
+0 -13 Td
+(ClaudeClaw has pre-existing tracked runtime deletions and generated/untracked) Tj
+0 -13 Td
+(artifacts. They are not part of this Agent Zero/Hermes proof.) Tj
+0 -13 Td
+(Validation Just Completed) Tj
+0 -13 Td
+(Mission Control) Tj
+0 -13 Td
+(- Agent Zero deterministic ecosystem gauntlet: 10,000 scenarios, 0 failures.) Tj
+0 -13 Td
+(- Hermes bridge/contract suite passed.) Tj
+0 -13 Td
+(- Agent Zero and Hermes collaboration suite passed.) Tj
+0 -13 Td
+(- Delivery contract suites passed for report delivery, Google Drive, and OneDrive) Tj
+0 -13 Td
+(behavior.) Tj
+0 -13 Td
+(- Brain/registry and skill visibility contract suites passed.) Tj
+0 -13 Td
+(- No-Tony-active and no-raw-path behavior were covered by the gauntlet and natural) Tj
+0 -13 Td
+(behavior tests.) Tj
+0 -13 Td
+(- Full suite passed: typecheck, production build, and 99 test files with 1,041 tests.) Tj
+0 -13 Td
+(ClaudeClaw / OpenClaw+) Tj
+0 -13 Td
+(- Standalone gauntlet passed: 370/370 scenarios, 0 hard failures.) Tj
+0 -13 Td
+(- 100,000-scenario ecosystem gauntlet passed with 0 forbidden leaks.) Tj
+0 -13 Td
+(- Full suite passed: typecheck, build, 61 test files, 1,213 passed, 4 skipped.) Tj
+0 -13 Td
+(- Design-lock verification passed.) Tj
+0 -13 Td
+(Services) Tj
+0 -13 Td
+(Service Status) Tj
+0 -13 Td
+(--- ---) Tj
+0 -13 Td
+(Mission Control active) Tj
+0 -13 Td
+(ClaudeClaw active) Tj
+0 -13 Td
+(OpenCloud docs farmer timer active) Tj
+0 -13 Td
+(OpenCloud docs farmer service inactive, expected when not running) Tj
+0 -13 Td
+(Hermes gateway active) Tj
+0 -13 Td
+(Agent Zero container running) Tj
+0 -13 Td
+(Percentage Recalculation) Tj
+0 -13 Td
+(Area Previous Current Reason) Tj
+0 -13 Td
+(--- ---: ---: ---) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3234 >>
+stream
+BT
+/F1 10 Tf
+54 750 Td
+(Agent Zero 89% 90% Live route proof already existed; 10,000-scenario gauntlet and full) Tj
+0 -13 Td
+(Mission Control validation now reconfirm behavior. Not higher because final) Tj
+0 -13 Td
+(owner-channel, external delivery, and some adapter writes remain unproven.) Tj
+0 -13 Td
+(Hermes 42% 42% Service/status and contract tests pass, but live `hermes_called:true`) Tj
+0 -13 Td
+(is still not proven.) Tj
+0 -13 Td
+(Mission Control 91% 92% Build, typecheck, full tests, Agent Network/Brain/registry) Tj
+0 -13 Td
+(contract coverage passed. Production restart after the latest source fix is still) Tj
+0 -13 Td
+(pending.) Tj
+0 -13 Td
+(Bridge/MCP 87% 88% Registry and visibility tests pass; execution remains Bridge) Tj
+0 -13 Td
+(Session gated and not broadly live-tested.) Tj
+0 -13 Td
+(Brain 84% 85% Brain/Obsidian/MemPalace/Graphify/Build-Wiki visibility and contract) Tj
+0 -13 Td
+(tests pass. Full live read/write adapter proof remains incomplete.) Tj
+0 -13 Td
+(Skills 90% 91% Shared skill registry and Agent Zero/Hermes visibility contracts pass.) Tj
+0 -13 Td
+(Hermes live usage remains blocked by live adapter.) Tj
+0 -13 Td
+(Connectors 67% 67% Status/blocked behavior is honest, but AgentMail send, Telegram) Tj
+0 -13 Td
+(attachment, Drive/OneDrive upload, Zapier write, and HeyGen generation were not) Tj
+0 -13 Td
+(executed.) Tj
+0 -13 Td
+(Overall 84% 85% Validation confidence improved, but Hermes live access and delivery) Tj
+0 -13 Td
+(adapters keep the ecosystem at PARTIAL GO.) Tj
+0 -13 Td
+(GO / PARTIAL GO / NO-GO) Tj
+0 -13 Td
+(Agent Zero) Tj
+0 -13 Td
+(Decision: PARTIAL GO) Tj
+0 -13 Td
+(Why:) Tj
+0 -13 Td
+(- Agent Zero live status and test-chat proof exists.) Tj
+0 -13 Td
+(- Agent Zero answered as commander in production route tests.) Tj
+0 -13 Td
+(- Agent Zero has registry-based context and passed the 10,000-scenario no-fake-access) Tj
+0 -13 Td
+(gauntlet.) Tj
+0 -13 Td
+(- Mission Control and ClaudeClaw validation suites passed.) Tj
+0 -13 Td
+(Why not GO yet:) Tj
+0 -13 Td
+(- Telegram owner prompt was not rerun in this block.) Tj
+0 -13 Td
+(- Telegram PDF attachment delivery is not configured/proven.) Tj
+0 -13 Td
+(- Drive/OneDrive upload delivery is not configured/proven.) Tj
+0 -13 Td
+(- AgentMail outgoing real send was not run in this block.) Tj
+0 -13 Td
+(- Full live Brain write proof remains Bridge Session dependent.) Tj
+0 -13 Td
+(- Production service restart is still needed after the latest source build to) Tj
+0 -13 Td
+(guarantee the running standalone has the newest Tony-retirement context sanitizer.) Tj
+0 -13 Td
+(Hermes) Tj
+0 -13 Td
+(Decision: NO-GO live) Tj
+0 -13 Td
+(Why:) Tj
+0 -13 Td
+(- Hermes gateway service is active.) Tj
+0 -13 Td
+(- Hermes status route has authenticated 200 proof from prior route smoke.) Tj
+0 -13 Td
+(- Hermes contract and 1,000-scenario behavior/registry gauntlet pass.) Tj
+0 -13 Td
+(Why not PARTIAL GO/GO:) Tj
+0 -13 Td
+(- Mission Control Hermes test-chat still does not have proven `hermes_called:true`.) Tj
+0 -13 Td
+(- Prior production POST returned 405.) Tj
+0 -13 Td
+(- No live Hermes response through Mission Control is proven.) Tj
+0 -13 Td
+(- Agent Zero to Hermes live collaboration cannot be marked proven until Hermes live) Tj
+0 -13 Td
+(chat works.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2981 >>
+stream
+BT
+/F1 10 Tf
+54 750 Td
+(OpenCloud Decision) Tj
+0 -13 Td
+(Decision: Keep) Tj
+0 -13 Td
+(Destroy status: not safe) Tj
+0 -13 Td
+(Reason:) Tj
+0 -13 Td
+(- Build-Wiki/Farmer still depends on OpenCloud-side data/workflow coverage.) Tj
+0 -13 Td
+(- Agent Zero can see status and has scoped Run Now rules, but complete replacement) Tj
+0 -13 Td
+(coverage is not proven.) Tj
+0 -13 Td
+(- Fork 2/SMB remains blocked.) Tj
+0 -13 Td
+(- Decommission requires a dependency map, backup/rollback plan, and owner approval.) Tj
+0 -13 Td
+(Exact Remaining Blockers) Tj
+0 -13 Td
+(1. Mission Control production restart: latest built source needs admin-authorized) Tj
+0 -13 Td
+(service restart before claiming production standalone loaded the newest) Tj
+0 -13 Td
+(Tony-retirement sanitizer.) Tj
+0 -13 Td
+(2. Hermes live chat: `/api/bridge/hermes/test-chat` must return `hermes_called:true`;) Tj
+0 -13 Td
+(prior production result was 405.) Tj
+0 -13 Td
+(3. Hermes safe live adapter: not proven/configured through Mission Control.) Tj
+0 -13 Td
+(4. Authenticated browser UI smoke: in-app browser reached auth wall; route smoke) Tj
+0 -13 Td
+(substituted.) Tj
+0 -13 Td
+(5. Telegram owner prompt: not rerun in this block.) Tj
+0 -13 Td
+(6. Telegram PDF attachment: blocked because no approved document attachment route is) Tj
+0 -13 Td
+(configured/proven.) Tj
+0 -13 Td
+(7. AgentMail outgoing real send: not run because no Bridge Session/domain-send proof) Tj
+0 -13 Td
+(was opened in this block.) Tj
+0 -13 Td
+(8. Google Drive report upload: blocked because the report delivery adapter is not) Tj
+0 -13 Td
+(configured/proven.) Tj
+0 -13 Td
+(9. OneDrive report upload: blocked because the report delivery adapter is not) Tj
+0 -13 Td
+(configured/proven.) Tj
+0 -13 Td
+(10. Brain writes: Obsidian/MemPalace writes remain Bridge Session dependent and were) Tj
+0 -13 Td
+(not live-run in this block.) Tj
+0 -13 Td
+(11. Build-Wiki execution: Run Now remains scoped and approval/session gated; not run) Tj
+0 -13 Td
+(in this block.) Tj
+0 -13 Td
+(12. SMB/Fork 2: blocked because SMB prerequisites are not mounted/proven/approved.) Tj
+0 -13 Td
+(13. OpenCloud decommission: blocked because replacement coverage and) Tj
+0 -13 Td
+(rollback/decommission plan are incomplete.) Tj
+0 -13 Td
+(14. ClaudeClaw parked files: 73 tracked runtime deletions and 426 untracked artifacts) Tj
+0 -13 Td
+(need a separate cleanup phase.) Tj
+0 -13 Td
+(15. Mission Control parked files: 345 untracked artifacts need a separate) Tj
+0 -13 Td
+(cleanup/archive phase.) Tj
+0 -13 Td
+(Security Confirmation) Tj
+0 -13 Td
+(- No secrets printed.) Tj
+0 -13 Td
+(- No API keys, auth files, tokens, passwords, or `.env` values exposed.) Tj
+0 -13 Td
+(- No `.env` changes.) Tj
+0 -13 Td
+(- No auth weakening.) Tj
+0 -13 Td
+(- No Tailscale/auth bypass.) Tj
+0 -13 Td
+(- No raw root shell, Docker socket, or direct secret-reading access granted to Agent) Tj
+0 -13 Td
+(Zero or Hermes.) Tj
+0 -13 Td
+(- No external writes were run in this report block.) Tj
+0 -13 Td
+(Delivery) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 914 >>
+stream
+BT
+/F1 10 Tf
+54 750 Td
+(Safe delivery path: Mission Control report link.) Tj
+0 -13 Td
+(Telegram attachment: blocked because no approved Telegram document attachment route is) Tj
+0 -13 Td
+(configured/proven.) Tj
+0 -13 Td
+(Drive/OneDrive delivery: blocked because upload adapters are not configured/proven and) Tj
+0 -13 Td
+(no Bridge Session was opened for external delivery.) Tj
+0 -13 Td
+(Recommended Next Step) Tj
+0 -13 Td
+(Next step: fix Hermes live-chat adapter and restart Mission Control with admin) Tj
+0 -13 Td
+(authorization.) Tj
+0 -13 Td
+(After that:) Tj
+0 -13 Td
+(1. Rerun Agent Zero status/test-chat production proof.) Tj
+0 -13 Td
+(2. Rerun Hermes status/test-chat production proof.) Tj
+0 -13 Td
+(3. Require `hermes_called:true`.) Tj
+0 -13 Td
+(4. Run Agent Zero to Hermes collaboration through Mission Control.) Tj
+0 -13 Td
+(5. Only then continue delivery adapter and external connector live proof.) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000140 00000 n 
+0000000267 00000 n 
+0000003343 00000 n 
+0000003470 00000 n 
+0000006297 00000 n 
+0000006424 00000 n 
+0000009710 00000 n 
+0000009838 00000 n 
+0000012872 00000 n 
+0000013001 00000 n 
+0000013967 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+14038
+%%EOF

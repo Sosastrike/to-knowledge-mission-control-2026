@@ -145,8 +145,8 @@ export type HermesReadOnlyContext = {
 }
 
 export type HermesReadOnlyMessageResult = {
-  ok: true
-  status: 200
+  ok: boolean
+  status: 200 | 503
   mode: 'hermes_read_only_test_chat'
   hermes_called: boolean
   response_source: 'mission_control_guardrail_contract'
@@ -568,8 +568,8 @@ export async function sendHermesReadOnlyMessage(input: {
   })
 
   return {
-    ok: true,
-    status: 200,
+    ok: false,
+    status: 503,
     mode: 'hermes_read_only_test_chat',
     hermes_called: false,
     response_source: 'mission_control_guardrail_contract',

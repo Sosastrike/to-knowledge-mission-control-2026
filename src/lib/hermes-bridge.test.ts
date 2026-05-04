@@ -424,7 +424,8 @@ describe('Hermes read-only test chat guardrail', () => {
       context: fakeEcosystemContext(),
     })
 
-    expect(result.ok).toBe(true)
+    expect(result.ok).toBe(false)
+    expect(result.status).toBe(503)
     expect(result.hermes_called).toBe(false)
     expect(result.blocker).toBe('hermes_safe_live_chat_adapter_not_configured')
     expect(result.response_text).toMatch(/^No, Sir\./)

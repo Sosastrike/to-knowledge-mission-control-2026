@@ -4,8 +4,10 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   buildAgentZeroReadOnlyContext,
+  buildAgentZeroReadOnlyContractReply,
   buildAgentZeroReadOnlyPrompt,
   getAgentZeroApiKeyState,
+  sanitizeAgentZeroOwnerReply,
   sendAgentZeroReadOnlyMessage,
 } from './agent-zero-bridge'
 
@@ -683,4 +685,65 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(prompt).toContain('"heygen_schema_visible":true')
     expect(prompt).toContain('"execution_enabled":false')
   })
+
+  it('suppresses Agent Zero container workdir paths in owner-facing replies', () => {
+    const reply = sanitizeAgentZeroOwnerReply({
+      text: 'Created **Current Status.md**.\nPath: `/a0/usr/workdir/Current Status.md`',
+      ownerMessage: 'What tools can you see?',
+    })
+
+    expect(reply).not.toContain('/a0/usr/workdir')
+    expect(reply).not.toContain('/home/tony')
+  })
+
+  it('replaces unsafe local artifact answers with registry-based capability replies', () => {
+    const context = buildAgentZeroReadOnlyContext({
+      modelProviderRegistry: [
+        {
+          id: 'openrouter',
+          name: 'OpenRouter',
+          status: 'connected',
+          credential_present: true,
+          credential_names: ['OPENROUTER_API_KEY'],
+          credential_values_exposed: false,
+          model_count: 2,
+          models: ['anthropic/claude-sonnet-4-6', 'openai/gpt-4.1'],
+          best_use_case: 'Router/fallback access to hosted models.',
+          execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+          execution_enabled: false,
+          bridge_session_required: true,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: null,
+        },
+      ],
+      mcpServers: [{ name: 'zapier', status: 'configured', tool_count: 3, reachable: true, schema_available: true }],
+      skillNames: ['engineering-test'],
+      integrationRegistry: [
+        { id: 'firecrawl', name: 'Firecrawl', category: 'crawler', status: 'blocked', credential_present: false, missing_credential: true, credential_names: ['FIRECRAWL_API_KEY'], credential_values_exposed: false, read_only: true, write_enabled: false, requires_bridge_session: true, execution_enabled: false, direct_access: false, proxy_access: true, tool_count: null, source: 'mission_control_firecrawl_status', blocked_reason: 'credential_required', notes: 'Credential required.' },
+      ],
+    })
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'What tools, models, skills, and integrations can you see?',
+      context,
+      upstreamText: 'Created **Mission Control Provider Summary.md**.\nPath: `/a0/usr/workdir/Mission Control Provider Summary.md`',
+      upstreamReturnedLocalArtifact: true,
+    })
+
+    expect(reply).toContain('Mission Control through the live Bridge')
+    expect(reply).toContain('OpenRouter')
+    expect(reply).toContain('Firecrawl')
+    expect(reply).not.toContain('/a0/usr/workdir')
+    expect(reply).not.toMatch(/^Created /)
+  })
+
+  it('answers Tony active checks without contradictory yes wording', () => {
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'Is Tony still active?',
+      context: buildAgentZeroReadOnlyContext(),
+    })
+
+    expect(reply).toBe('No, Sir. Tony is retired and archived; Agent Zero is the active commander.')
+  })
+
 })

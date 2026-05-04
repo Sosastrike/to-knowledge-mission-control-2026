@@ -704,8 +704,9 @@ export type AgentZeroReadOnlyMessageResult = {
   error: string | null
 }
 
-const LOCAL_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
+const LOCAL_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders|\/a0\/(?:usr|tmp|var))[^\s`'"\])}]*/gi
 const INTERNAL_REPORT_PATH_PATTERN = /\bruntime\/(?:executive-reports|reports|task-reports|agent-zero-reports)\/[^\s`'"\])}]*/gi
+const AGENT_ZERO_LOCAL_ARTIFACT_PATTERN = /\bCreated\s+\*\*[\s\S]{0,260}?\bPath:\s*`?(?:\/a0\/|Mission Control)/i
 const RAW_STAGE_PATTERN = /\b(?:Failed stage|Error stage|Stage failed|Traceback|Stack trace)\b/gi
 const ROBOTIC_LABEL_PATTERN = /^\s*(?:Status|Result|Next|Trace|Tool|Tools|Runtime|Model|System|Stage|Output)\s*:\s*/i
 const TASK_ID_PATTERN = /\b(?:task[_\s-]*id|task)\s*[:#-]?\s*(?:task[-_])?[a-z0-9][a-z0-9_-]{5,}\b/gi
@@ -758,6 +759,124 @@ export function sanitizeAgentZeroOwnerReply(input: {
   }
   if (!text) return blocker ? `Blocked: ${blocker}.` : null
   return text
+}
+
+function statusWithBlocker(status: unknown, blocker?: unknown): string {
+  const normalized = String(status || 'unknown').replace(/[_-]+/g, ' ')
+  const blocked = blocker ? String(blocker).replace(/[_-]+/g, ' ') : ''
+  return blocked ? `${normalized} (${blocked})` : normalized
+}
+
+function hasReadApi(context: AgentZeroReadOnlyContext, name: string): boolean {
+  const needle = name.toLowerCase()
+  return context.brain.available_read_apis.some((api) => JSON.stringify(api).toLowerCase().includes(needle))
+}
+
+function hasWriteApi(context: AgentZeroReadOnlyContext, name: string): boolean {
+  const needle = name.toLowerCase()
+  return context.brain.available_write_apis.some((api) => JSON.stringify(api).toLowerCase().includes(needle))
+}
+
+function brainLine(context: AgentZeroReadOnlyContext, label: string, name: 'obsidian' | 'mempalace' | 'graphify' | 'brain sync'): string {
+  const normalizedName = name.replace(' ', '_')
+  const registryItem = context.brain.registry.find((item) => item.name.toLowerCase().includes(normalizedName) || item.id.toLowerCase().includes(normalizedName))
+  const visible = name === 'obsidian'
+    ? context.brain.obsidian_visible
+    : name === 'mempalace'
+      ? context.brain.mempalace_visible
+      : name === 'graphify'
+        ? context.brain.graphify_visible
+        : context.brain.visible
+  const status = registryItem?.status || (name === 'obsidian'
+    ? context.brain.obsidian_status
+    : name === 'mempalace'
+      ? context.brain.mempalace_status
+      : name === 'graphify'
+        ? context.brain.graphify_status
+        : context.brain.system_status)
+  const read = hasReadApi(context, name) ? 'read available' : 'read blocked'
+  const write = hasWriteApi(context, name) ? 'write available' : 'write blocked'
+  const blocker = registryItem?.blocked_reason ? `, blocker: ${registryItem.blocked_reason.replace(/[_-]+/g, ' ')}` : ''
+  return `${label}: ${visible ? 'visible' : 'not visible'}, ${statusWithBlocker(status)}, ${read}, ${write}${blocker}`
+}
+
+function integrationLine(context: AgentZeroReadOnlyContext, id: string, fallbackName: string): string {
+  const item = context.integrations.registry.find((entry) => entry.id === id)
+  if (!item) return `${fallbackName}: not visible`
+  return `${item.name}: ${statusWithBlocker(item.status, item.blocked_reason)}, ${item.read_only ? 'read-only' : 'read status unknown'}, ${item.write_enabled ? 'write-enabled' : 'write blocked'}`
+}
+
+function buildCapabilityRegistryReply(context: AgentZeroReadOnlyContext): string {
+  const modelProviders = context.models.provider_registry
+    .slice(0, 6)
+    .map((provider) => `${provider.name}: ${statusWithBlocker(provider.status, provider.blocked_reason)}`)
+  const mcpServers = context.mcp.servers
+    .slice(0, 5)
+    .map((server) => `${server.name}: ${statusWithBlocker(server.status, server.blocked_reason)}, ${server.tool_count ?? 0} tools`)
+  const blockedIntegrations = context.integrations.registry
+    .filter((item) => item.status === 'blocked' || item.missing_credential || item.blocked_reason)
+    .slice(0, 6)
+    .map((item) => `${item.name}: ${statusWithBlocker(item.status, item.blocked_reason || (item.missing_credential ? 'missing credential' : null))}`)
+  const connectedIntegrations = context.integrations.registry
+    .filter((item) => item.status === 'connected' || item.status === 'configured')
+    .slice(0, 6)
+    .map((item) => `${item.name}: ${item.status}`)
+  return [
+    `I can see Mission Control through the live Bridge: ${context.models.total} models, ${context.mcp.servers.length} MCP servers, ${context.tools.registry.length} tools, ${context.skills.total} OpenClaw+ skills, and ${context.integrations.registry.length} integrations.`,
+    `Models include ${modelProviders.length ? modelProviders.join('; ') : 'no live model providers in the registry'}.`,
+    `MCP includes ${mcpServers.length ? mcpServers.join('; ') : 'no MCP servers visible'}.`,
+    `Connected or configured integrations include ${connectedIntegrations.length ? connectedIntegrations.join('; ') : 'none reported as connected'}.`,
+    `Blocked integrations include ${blockedIntegrations.length ? blockedIntegrations.join('; ') : 'none reported as blocked'}.`,
+    `Execution is ${context.bridge_session.execution_enabled ? 'available through the active Bridge Session only' : 'disabled until an owner-approved Bridge Session is active'}.`,
+  ].join(' ')
+}
+
+export function buildAgentZeroReadOnlyContractReply(input: {
+  ownerMessage: string
+  context: AgentZeroReadOnlyContext
+  upstreamText?: string | null
+  upstreamReturnedLocalArtifact?: boolean
+}): string | null {
+  const upstreamUnsafe = Boolean(input.upstreamReturnedLocalArtifact || (input.upstreamText && AGENT_ZERO_LOCAL_ARTIFACT_PATTERN.test(input.upstreamText)))
+
+  if (/live-query\s+mission\s+control|can\s+you\s+(?:see|query|live-query).*mission\s+control/i.test(input.ownerMessage)) {
+    return 'Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.'
+  }
+  if (/\b(is|are)\s+tony\b.*\b(active|commander)|\btony\b.*\b(active|commander)/i.test(input.ownerMessage)) {
+    return 'No, Sir. Tony is retired and archived; Agent Zero is the active commander.'
+  }
+  if (/\bwho\s+is\s+(?:the\s+)?commander|commander\s+now/i.test(input.ownerMessage)) {
+    return 'Agent Zero is commander now. Hermes is lieutenant when health and read-only onboarding prove it; Tony is retired and archived.'
+  }
+  if (/firecrawl/i.test(input.ownerMessage)) {
+    return `${integrationLine(input.context, 'firecrawl', 'Firecrawl')}. I did not execute a crawl.`
+  }
+  if (/(build[-\s]?wiki|farmer|run\s+now)/i.test(input.ownerMessage)) {
+    return 'Build-Wiki Run Now is prepared but not executed. It requires an owner-approved Bridge Session and remains scoped only to opencloud-docs-farmer.service.'
+  }
+  if (/(obsidian|mempalace|graphify|brain\s*sync|brain system)/i.test(input.ownerMessage)) {
+    return [
+      'Yes, Sir. I can see the Brain systems through Mission Control live context.',
+      brainLine(input.context, 'Obsidian', 'obsidian'),
+      brainLine(input.context, 'MemPalace', 'mempalace'),
+      brainLine(input.context, 'Graphify', 'graphify'),
+      brainLine(input.context, 'Brain Sync', 'brain sync'),
+    ].join(' ')
+  }
+  if (/openclaw\+?|shared\s+skills/i.test(input.ownerMessage)) {
+    const sources = input.context.skills.sources.map((source) => `${source.label}: ${source.status}, ${source.total} skills`).join('; ')
+    return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, Tony does not own it, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} Skill execution requires an owner-approved Bridge Session.`
+  }
+  if (/(tools|models|skills|integrations|mcps?|providers|agents|what\s+can\s+you\s+see|capabilit)/i.test(input.ownerMessage)) {
+    return buildCapabilityRegistryReply(input.context)
+  }
+  if (/(create|make|prepare).*(report|pdf|document)|attach.*(?:report|pdf|document)|report.*attach/i.test(input.ownerMessage)) {
+    return 'I created the report in Mission Control. Use the Mission Control report link; external delivery and Telegram PDF attachment remain blocked unless their approved adapters are configured.'
+  }
+  if (upstreamUnsafe) {
+    return 'I can answer from the Mission Control registry, but I will not expose local Agent Zero workspace files. Execution and file writes remain disabled unless an owner-approved Bridge Session allows them.'
+  }
+  return null
 }
 
 function stateToAccess(value: unknown): EcosystemAccessState {
@@ -2270,6 +2389,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'This test-chat route is conversational only: never create, write, upload, attach, save files, or run tools from this route.',
     isLiveQueryAcceptance ? 'This is the live-query acceptance check. Reply in one sentence only: Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.' : '',
     'Use the mission-control-bridge skill and its live probe helper when asked whether you can live-query Mission Control.',
+    'If asked whether Tony is active, answer exactly: No, Sir. Tony is retired and archived; Agent Zero is the active commander. Never start that answer with yes.',
     'If the owner asks whether you can live-query Mission Control, answer yes only when the live access packet names the endpoint and credential source. Name the endpoint/status, not the key.',
     'Required answer shape for the live-query acceptance check: "Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200."',
     'Do not expose task IDs, local paths, raw filenames, traces, or tool dumps unless the owner explicitly asks for them.',
@@ -2366,12 +2486,17 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       payload = null
     }
     const extracted = extractAgentZeroResponse(payload, text)
+    const upstreamReturnedLocalArtifact = Boolean(extracted.text && AGENT_ZERO_LOCAL_ARTIFACT_PATTERN.test(extracted.text))
     const cleanedText = sanitizeAgentZeroOwnerReply({
       text: extracted.text,
       ownerMessage: input.ownerMessage,
       blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
       systemHasFile: /\b(report|file|pdf|markdown|attachment|document)\b/i.test(input.ownerMessage),
     })
+    const contractText = response.ok
+      ? buildAgentZeroReadOnlyContractReply({ ownerMessage: input.ownerMessage, context: input.context, upstreamText: cleanedText, upstreamReturnedLocalArtifact })
+      : null
+    const ownerText = contractText || cleanedText
     return {
       ok: response.ok,
       status: response.status,
@@ -2380,10 +2505,10 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       execution_enabled: false,
       writes_enabled: false,
       blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
-      response_text: cleanedText,
+      response_text: ownerText,
       context_id: extracted.contextId,
       raw_response_shape: extracted.shape,
-      error: response.ok ? null : (cleanedText || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
+      error: response.ok ? null : (ownerText || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
     }
   } catch (error) {
     return {

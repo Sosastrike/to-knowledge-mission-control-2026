@@ -22,7 +22,9 @@ import {
   verifyAgentZeroOneDriveLink,
 } from './agent-zero-onedrive-delivery'
 import {
+  getAgentZeroMemPalaceStatus,
   linkAgentZeroMemoryToReportTask,
+  queryAgentZeroMemPalaceSummary,
   rememberAgentZeroOwnerPreference,
   rememberAgentZeroTaskResult,
   updateAgentZeroSafeMemorySummary,
@@ -30,10 +32,15 @@ import {
 import {
   appendAgentZeroObsidianReportSummary,
   createAgentZeroObsidianNote,
+  getAgentZeroObsidianStatus,
   linkAgentZeroObsidianNoteToTaskReport,
+  readAgentZeroObsidianNote,
+  searchAgentZeroObsidianNotes,
+  summarizeAgentZeroObsidianNote,
   tagAgentZeroObsidianNote,
   updateAgentZeroObsidianNote,
 } from './agent-zero-obsidian-adapter'
+import { getZapierToolBridge } from './zapier-tool-bridge'
 import {
   readLatestAgentZeroBridgeSession,
   recordAgentZeroBridgeSessionAudit,
@@ -51,6 +58,7 @@ export type AgentZeroExecutionCategory =
   | 'buildwiki_run_now'
   | 'google_drive_delivery'
   | 'onedrive_delivery'
+  | 'agentmail_delivery'
   | 'mcp_tool'
 
 export type AgentZeroExecutionStatus = 'completed' | 'blocked' | 'failed'
@@ -259,6 +267,28 @@ function blockedResult(normalReply: string, blockedReason: string, extra: Record
   }
 }
 
+function agentMailStatus(): {
+  credential_present: boolean
+  send_endpoint_configured: boolean
+  connector_configured: boolean
+  blocked_reason: string
+} {
+  const credentialPresent = Boolean(
+    process.env.AGENTMAIL_API_KEY?.trim() ||
+    process.env.AGENTMAIL_TOKEN?.trim() ||
+    process.env.AGENTMAIL_API_KEY_FILE?.trim(),
+  )
+  const sendEndpointConfigured = Boolean(process.env.AGENTMAIL_SEND_ENDPOINT?.trim())
+  return {
+    credential_present: credentialPresent,
+    send_endpoint_configured: sendEndpointConfigured,
+    connector_configured: false,
+    blocked_reason: credentialPresent && sendEndpointConfigured
+      ? 'agentmail_send_invocation_adapter_not_configured'
+      : 'agentmail_send_connector_not_configured',
+  }
+}
+
 function adapterSummaries(): AgentZeroExecutionAdapterSummary[] {
   return ADAPTERS.map(({ handler: _handler, ...summary }) => summary)
 }
@@ -303,6 +333,44 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
+    action: 'agent_zero.pdf.create',
+    category: 'report_creation',
+    label: 'Create Agent Zero PDF',
+    description: 'Creates a PDF-backed Agent Zero report and exposes Mission Control download links without raw local paths.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['agent_zero.reports.create', 'agent_zero.pdf.create'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const report = await createAgentZeroReport({
+        title: stringInput(request.input, 'title', 'Agent Zero PDF Report'),
+        summary: stringInput(request.input, 'summary', 'Agent Zero created this PDF through the Bridge execution gateway.'),
+        ownerMessage: stringInput(request.input, 'owner_message'),
+        requestedDelivery: request.input?.requested_delivery || request.input?.requestedDelivery,
+        source: 'api',
+        sections: arrayInput(request.input, 'sections') || [
+          { heading: 'PDF output', body: 'The adapter created a Markdown report and PDF artifact for Mission Control delivery.' },
+        ],
+        root: request.reportRoot,
+      })
+      const deliveryBlocked = reportExternalDeliveryBlocked(report)
+      return {
+        ok: !deliveryBlocked,
+        status: deliveryBlocked ? 'blocked' : 'completed',
+        normal_reply: report.report.normal_reply,
+        blocked_reason: deliveryBlocked ? 'requested_external_delivery_blocked' : null,
+        result: {
+          ...publicReportResult(report),
+          pdf_created: true,
+          delivery_status: deliveryBlocked ? 'blocked' : 'available',
+        },
+      }
+    },
+  },
+  {
     action: 'mission_control.report.attach',
     category: 'mission_control_attachment',
     label: 'Expose report through Mission Control',
@@ -337,6 +405,37 @@ const ADAPTERS: AdapterDefinition[] = [
         blocked_reason: null,
         result: publicReportResult(report),
       }
+    },
+  },
+  {
+    action: 'agentmail.send',
+    category: 'agentmail_delivery',
+    label: 'AgentMail send',
+    description: 'Registered AgentMail delivery adapter. It blocks honestly until a working send connector is configured.',
+    status: 'blocked',
+    execution_enabled: true,
+    writes_enabled: true,
+    bridge_session_required: true,
+    allowed_scope_keys: ['agentmail_if_configured', 'agentmail.send', 'agentmail_if_connector_configured'],
+    blocked_reason: 'agentmail_send_connector_not_configured',
+    safety: SAFETY,
+    handler: async (request) => {
+      const status = agentMailStatus()
+      return blockedResult(
+        'AgentMail send is blocked because the AgentMail send connector is not configured.',
+        status.blocked_reason,
+        {
+          provider: 'agentmail',
+          requested_to_present: Boolean(stringInput(request.input, 'to')),
+          requested_subject_present: Boolean(stringInput(request.input, 'subject')),
+          connector_configured: status.connector_configured,
+          credential_present: status.credential_present,
+          send_endpoint_configured: status.send_endpoint_configured,
+          no_email_sent: true,
+          no_fake_done: true,
+          no_tokens_exposed: true,
+        },
+      )
     },
   },
   {
@@ -580,6 +679,94 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
+    action: 'obsidian.status',
+    category: 'obsidian_adapter',
+    label: 'Obsidian status',
+    description: 'Reads Obsidian vault status through the registered adapter without exposing filesystem paths.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.read_adapter', 'obsidian.status'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = getAgentZeroObsidianStatus(request.obsidianRoot)
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'Obsidian status is visible through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('Obsidian is blocked because the vault is missing or unreadable.', result.blockers[0] || 'obsidian_vault_missing_or_unreadable', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.search',
+    category: 'obsidian_adapter',
+    label: 'Search Obsidian notes',
+    description: 'Searches safe Obsidian note previews through the registered adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.read_adapter', 'obsidian.note.search'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = searchAgentZeroObsidianNotes({
+        root: request.obsidianRoot,
+        query: stringInput(request.input, 'query'),
+        limit: Number(request.input?.limit || 5),
+      })
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'I found safe Obsidian note matches through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('Obsidian search is blocked because no safe notes matched or the vault is unavailable.', result.blockers[0] || 'obsidian_note_search_blocked', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.read',
+    category: 'obsidian_adapter',
+    label: 'Read Obsidian note',
+    description: 'Reads one safe Obsidian note preview through the registered adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.read_adapter', 'obsidian.note.read'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = readAgentZeroObsidianNote({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+      })
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'I read the safe Obsidian note preview through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('Obsidian note read is blocked because the safe note was not available.', result.blockers[0] || 'obsidian_note_read_blocked', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'obsidian.note.summarize',
+    category: 'obsidian_adapter',
+    label: 'Summarize Obsidian note',
+    description: 'Summarizes one safe Obsidian note through the registered adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['obsidian.read_adapter', 'obsidian.note.summarize'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = summarizeAgentZeroObsidianNote({
+        root: request.obsidianRoot,
+        path: stringInput(request.input, 'path') || null,
+        title: stringInput(request.input, 'title') || null,
+      })
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'I summarized the safe Obsidian note through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('Obsidian note summary is blocked because the safe note was not available.', result.blockers[0] || 'obsidian_note_summary_blocked', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
     action: 'obsidian.note.create',
     category: 'obsidian_adapter',
     label: 'Create Obsidian note',
@@ -736,6 +923,71 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
+    action: 'mempalace.status',
+    category: 'mempalace_adapter',
+    label: 'MemPalace status',
+    description: 'Reads MemPalace status and safe counts through the registered adapter.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.read_adapter', 'mempalace.status'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = getAgentZeroMemPalaceStatus(request.mempalacePaths)
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'MemPalace status is visible through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('MemPalace is blocked because its index or storage is not visible.', result.blockers[0] || 'mempalace_not_visible', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'mempalace.memory.query',
+    category: 'mempalace_adapter',
+    label: 'Query MemPalace memory summary',
+    description: 'Queries safe MemPalace memory summaries without returning raw private records.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.read_adapter', 'mempalace.memory.query'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = queryAgentZeroMemPalaceSummary({
+        ...request.mempalacePaths,
+        query: stringInput(request.input, 'query'),
+        action: 'query',
+      })
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'I queried MemPalace safe summaries through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('MemPalace query is blocked because no safe summary is available for that request.', result.blockers[0] || 'mempalace_query_blocked', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
+    action: 'mempalace.memory.summary',
+    category: 'mempalace_adapter',
+    label: 'Summarize MemPalace memory',
+    description: 'Summarizes safe MemPalace memory index state without returning raw private records.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mempalace.read_adapter', 'mempalace.memory.summary'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const result = queryAgentZeroMemPalaceSummary({
+        ...request.mempalacePaths,
+        query: stringInput(request.input, 'query', 'Agent Zero ecosystem'),
+        action: 'summary',
+      })
+      return result.ok
+        ? { ok: true, status: 'completed', normal_reply: 'I summarized MemPalace safe memory state through the Agent Zero adapter.', blocked_reason: null, result: result as unknown as Record<string, unknown> }
+        : blockedResult('MemPalace summary is blocked because no safe memory index is available.', result.blockers[0] || 'mempalace_summary_blocked', result as unknown as Record<string, unknown>)
+    },
+  },
+  {
     action: 'mempalace.memory.remember_task_result',
     category: 'mempalace_adapter',
     label: 'Remember task result in MemPalace',
@@ -866,6 +1118,56 @@ const ADAPTERS: AdapterDefinition[] = [
     },
   },
   {
+    action: 'mcp.tools.schema_read',
+    category: 'mcp_tool',
+    label: 'Query Bridge/MCP tool schemas',
+    description: 'Reads Bridge/MCP tool visibility and schema metadata without invoking tools.',
+    status: 'available',
+    execution_enabled: true,
+    writes_enabled: false,
+    bridge_session_required: true,
+    allowed_scope_keys: ['mcp.tools.schema_read', 'bridge.providers.list'],
+    blocked_reason: null,
+    safety: SAFETY,
+    handler: async (request) => {
+      const query = stringInput(request.input, 'query') || stringInput(request.input, 'server') || null
+      const bridge = await getZapierToolBridge(query || undefined)
+      return {
+        ok: true,
+        status: 'completed',
+        normal_reply: bridge.connected
+          ? 'Bridge/MCP tool schemas are visible read-only through Mission Control.'
+          : 'Bridge/MCP tool schema discovery is visible, but the requested MCP server is blocked or unavailable.',
+        blocked_reason: null,
+        result: {
+          provider: 'zapier',
+          query,
+          connected: bridge.connected,
+          mcp_reachable: bridge.mcp_reachable,
+          tools_total: bridge.tools_total,
+          source: bridge.source,
+          blocker: bridge.blocker,
+          next_action: bridge.next_action,
+          execution_enabled: false,
+          writes_enabled: false,
+          no_tool_invocation: true,
+          no_zapier_writes: true,
+          tools: bridge.tools.slice(0, 50).map((tool) => ({
+            tool_name: tool.tool_name,
+            category: tool.category,
+            write_classification: tool.write_classification,
+            approval_required: tool.approval_required,
+            schema_available: Array.isArray(tool.required_fields),
+            required_fields: tool.required_fields,
+            execution_enabled: false,
+            blocker: tool.blocker,
+            source: tool.source,
+          })),
+        },
+      }
+    },
+  },
+  {
     action: 'mcp.tool.execute',
     category: 'mcp_tool',
     label: 'MCP tool execution',
@@ -910,8 +1212,8 @@ function sessionAllows(adapter: AdapterDefinition, session: AgentZeroBridgeSessi
   if (allowed.has('all_registered_execution_adapters')) return true
   if (allowed.has('all_registered_tools') && (adapter.category === 'mcp_tool' || adapter.category === 'buildwiki_run_now')) return true
   if (allowed.has('all_registered_brain_adapters') && (adapter.category === 'obsidian_adapter' || adapter.category === 'mempalace_adapter')) return true
-  if (allowed.has('all_registered_integrations') && (adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'buildwiki_run_now')) return true
-  if (allowed.has('all_registered_delivery_surfaces') && (adapter.category === 'mission_control_attachment' || adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'report_creation')) return true
+  if (allowed.has('all_registered_integrations') && (adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'agentmail_delivery' || adapter.category === 'buildwiki_run_now')) return true
+  if (allowed.has('all_registered_delivery_surfaces') && (adapter.category === 'mission_control_attachment' || adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'agentmail_delivery' || adapter.category === 'report_creation')) return true
   return adapter.allowed_scope_keys.some((key) => allowed.has(key)) || allowed.has(adapter.action)
 }
 

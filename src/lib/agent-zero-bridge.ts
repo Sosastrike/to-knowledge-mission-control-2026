@@ -2106,11 +2106,11 @@ export function buildAgentZeroReadOnlyContext(input: {
         expires_at: null,
         scope: 'Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission.',
         allowed_tools: ['all_registered_tools', 'all_registered_execution_adapters', 'read_only.ecosystem_context', 'review.recommendation'],
-        allowed_integrations: ['all_registered_integrations', 'mission_control', 'bridge'],
+        allowed_integrations: ['all_registered_integrations', 'mission_control', 'bridge', 'agentmail_if_configured'],
         allowed_models: ['openrouter_if_configured', 'openai_if_configured', 'anthropic_if_configured', 'gemini_if_configured', 'groq_if_configured', 'local_models_if_configured'],
         allowed_skills: ['all_registered_skills', 'openclaw_plus_shared_runtime', 'agent_zero_skills', 'hermes_skills', 'mission_control_repo_skills'],
         allowed_brain_access: ['all_registered_brain_adapters', 'brain_sync.status'],
-        allowed_delivery_surfaces: ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured'],
+        allowed_delivery_surfaces: ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'agentmail_if_connector_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured'],
         safety_contract: {
           one_bridge_session_approval_model: true,
           no_approval_spam: true,

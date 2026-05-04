@@ -96,8 +96,10 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(result.session.allowed_tools).toContain('all_registered_execution_adapters')
     expect(result.session.allowed_skills).toContain('all_registered_skills')
     expect(result.session.allowed_delivery_surfaces).toContain('all_registered_delivery_surfaces')
+    expect(result.session.allowed_delivery_surfaces).toContain('agentmail_if_connector_configured')
     expect(result.session.allowed_tools).toContain('buildwiki.run_now')
     expect(result.session.allowed_integrations).toContain('google_drive_if_connector_configured')
+    expect(result.session.allowed_integrations).toContain('agentmail_if_configured')
     expect(result.session.allowed_brain_access).toContain('obsidian.read_adapter')
     expect(result.session.blocked_scopes).toContain('docker_socket')
     expect(result.session.safety_contract).toMatchObject({

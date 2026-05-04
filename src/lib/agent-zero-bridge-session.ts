@@ -150,13 +150,14 @@ const DEFAULT_ALLOWED_INTEGRATIONS = [
   'zapier_schema_read_only',
   'google_drive_if_connector_configured',
   'onedrive_if_connector_configured',
+  'agentmail_if_configured',
   'build_wiki_farmer_scoped',
   'telegram_status_delivery_if_route_configured',
 ]
 const DEFAULT_ALLOWED_MODELS = ['openrouter_if_configured', 'openai_if_configured', 'anthropic_if_configured', 'gemini_if_configured', 'groq_if_configured', 'local_models_if_configured']
 const DEFAULT_ALLOWED_SKILLS = ['all_registered_skills', 'openclaw_plus_shared_runtime', 'agent_zero_skills', 'hermes_skills', 'mission_control_repo_skills']
 const DEFAULT_ALLOWED_BRAIN_ACCESS = ['all_registered_brain_adapters', 'brain_sync.status', 'obsidian.read_adapter', 'obsidian.write_adapter', 'mempalace.read_adapter', 'mempalace.write_adapter', 'graphify.status', 'brain_watchers.status']
-const DEFAULT_ALLOWED_DELIVERY_SURFACES = ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured']
+const DEFAULT_ALLOWED_DELIVERY_SURFACES = ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'agentmail_if_connector_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured']
 const BLOCKED_SCOPES = ['broad_shell', 'docker_socket', 'root_system_access', 'credential_exfiltration', 'auth_bypass', 'smb_mount_without_separate_smb_phase', 'memory_write_without_explicit_owner_scope']
 
 function defaultSafetyContract(): AgentZeroBridgeSessionObject['safety_contract'] {

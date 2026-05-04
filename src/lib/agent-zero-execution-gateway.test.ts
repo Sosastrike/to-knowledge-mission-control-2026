@@ -128,7 +128,13 @@ describe('Agent Zero Bridge execution gateway', () => {
   it('lists registered adapters without enabling unsafe execution surfaces', () => {
     const adapters = listAgentZeroExecutionAdapters()
     expect(adapters.map((adapter) => adapter.action)).toContain('agent_zero.report.create')
+    expect(adapters.map((adapter) => adapter.action)).toContain('agent_zero.pdf.create')
+    expect(adapters.map((adapter) => adapter.action)).toContain('mission_control.report.attach')
+    expect(adapters.map((adapter) => adapter.action)).toContain('agentmail.send')
+    expect(adapters.map((adapter) => adapter.action)).toContain('obsidian.note.read')
     expect(adapters.map((adapter) => adapter.action)).toContain('mempalace.memory.remember_task_result')
+    expect(adapters.map((adapter) => adapter.action)).toContain('mempalace.memory.query')
+    expect(adapters.map((adapter) => adapter.action)).toContain('mcp.tools.schema_read')
     expect(adapters.map((adapter) => adapter.action)).toContain('mcp.tool.execute')
     expect(adapters.every((adapter) => adapter.bridge_session_required)).toBe(true)
     expect(adapters.every((adapter) => adapter.safety.raw_shell_enabled === false)).toBe(true)
@@ -186,6 +192,35 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(auditCount).toBe(2)
   })
 
+  it('creates a PDF through the registered report adapter without exposing local paths', async () => {
+    const db = setupDb()
+    const sessionId = approveSession(db)
+    const reportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'az-gateway-pdf-'))
+    tempRoots.push(reportRoot)
+
+    const result = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'agent_zero.pdf.create',
+      reportRoot,
+      input: {
+        title: 'Gateway PDF',
+        summary: 'Created by the PDF adapter.',
+      },
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.status).toBe('completed')
+    expect(result.result).toMatchObject({ pdf_created: true })
+    const report = result.result?.report as { id: string; pdf_filename: string; pdf_url: string }
+    expect(report.pdf_url).toMatch(/^\/api\/bridge\/agent-zero\/reports\/.+\/pdf$/)
+    const pdfBytes = fs.readFileSync(path.join(reportRoot, report.id, report.pdf_filename))
+    expect(pdfBytes.subarray(0, 5).toString('utf8')).toBe('%PDF-')
+    expect(JSON.stringify(result)).not.toContain(reportRoot)
+    expect(JSON.stringify(result)).not.toContain('/home/tony')
+  })
+
   it('returns blocked, not done, when requested external report delivery is unavailable', async () => {
     const db = setupDb()
     const sessionId = approveSession(db)
@@ -214,7 +249,7 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(JSON.stringify(result)).not.toContain('/home/tony')
   })
 
-  it('routes Drive and MCP requests through registered adapters and never fakes execution', async () => {
+  it('routes Drive, AgentMail, and MCP requests through registered adapters and never fakes execution', async () => {
     const db = setupDb()
     const sessionId = approveSession(db)
 
@@ -229,6 +264,29 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(drive.status).toBe('blocked')
     expect(drive.blocked_reason).toBe('google_drive_upload_connector_not_configured')
     expect(drive.result).toMatchObject({ no_fake_done: true, no_tokens_exposed: true })
+
+    const agentMail = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'agentmail.send',
+      input: { to: 'owner@example.com', subject: 'Bridge Session proof', body: 'No email should be sent.' },
+    })
+    expect(agentMail.ok).toBe(false)
+    expect(agentMail.status).toBe('blocked')
+    expect(['agentmail_send_connector_not_configured', 'agentmail_send_invocation_adapter_not_configured']).toContain(agentMail.blocked_reason)
+    expect(agentMail.result).toMatchObject({ no_email_sent: true, no_fake_done: true, no_tokens_exposed: true })
+
+    const schemaRead = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'mcp.tools.schema_read',
+      input: { query: 'heygen' },
+    })
+    expect(schemaRead.ok).toBe(true)
+    expect(schemaRead.status).toBe('completed')
+    expect(schemaRead.result).toMatchObject({ no_tool_invocation: true, no_zapier_writes: true, execution_enabled: false, writes_enabled: false })
 
     const mcp = await executeAgentZeroBridgeAction({
       db,
@@ -362,6 +420,22 @@ describe('Agent Zero Bridge execution gateway', () => {
 
     const sessionId = approveSession(db)
     const root = makeObsidianVault()
+    const read = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'obsidian.note.read',
+      obsidianRoot: root,
+      input: { path: 'Agent Zero/Existing.md' },
+    })
+    expect(read.ok).toBe(true)
+    expect(read.status).toBe('completed')
+    expect(read.result).toMatchObject({
+      mode: 'agent_zero_obsidian_read_only_adapter',
+      direct_filesystem_exposed: false,
+    })
+    expect(JSON.stringify(read)).not.toContain(root)
+
     const created = await executeAgentZeroBridgeAction({
       db,
       requester,
@@ -400,7 +474,7 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(tagged.result).toMatchObject({ action: 'tag_note' })
 
     const auditCount = (db.prepare(`SELECT COUNT(*) AS count FROM bridge_session_audit_events WHERE action LIKE 'obsidian.note.%'`).get() as { count: number }).count
-    expect(auditCount).toBe(4)
+    expect(auditCount).toBe(6)
   })
 
   it('writes MemPalace memory summaries only through an active scoped Bridge Session adapter', async () => {
@@ -421,6 +495,35 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(blocked.blocked_reason).toBe('active_bridge_session_required')
 
     const sessionId = approveSession(db)
+    const status = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'mempalace.status',
+      mempalacePaths,
+    })
+    expect(status.ok).toBe(true)
+    expect(status.result).toMatchObject({
+      mode: 'agent_zero_mempalace_read_only_adapter',
+      raw_private_dump_enabled: false,
+      direct_filesystem_exposed: false,
+    })
+
+    const query = await executeAgentZeroBridgeAction({
+      db,
+      requester,
+      bridgeSessionId: sessionId,
+      action: 'mempalace.memory.query',
+      mempalacePaths,
+      input: { query: 'capability report' },
+    })
+    expect(query.ok).toBe(true)
+    expect(query.result).toMatchObject({
+      mode: 'agent_zero_mempalace_read_only_adapter',
+      raw_records_returned: false,
+      raw_private_dump_enabled: false,
+    })
+
     const remembered = await executeAgentZeroBridgeAction({
       db,
       requester,
@@ -472,7 +575,7 @@ describe('Agent Zero Bridge execution gateway', () => {
     expect(memoryCount).toBe(2)
 
     const auditCount = (db.prepare(`SELECT COUNT(*) AS count FROM bridge_session_audit_events WHERE action LIKE 'mempalace.memory.%'`).get() as { count: number }).count
-    expect(auditCount).toBe(4)
+    expect(auditCount).toBe(6)
   })
 
   it('rejects unknown and unsafe action names', async () => {

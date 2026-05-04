@@ -48,6 +48,7 @@ export type HermesStatusSummary = {
 export type HermesReadOnlyContext = {
   mode: 'hermes_mission_control_read_only_context'
   generated_at: string
+  behavior_contract: typeof HERMES_NATURAL_BEHAVIOR_CONTRACT
   mission_control: {
     visible: boolean
     status: string
@@ -170,6 +171,22 @@ const SECRET_VALUE_PATTERN =
   /(sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders|\/a0\/(?:usr|tmp|var))[^\s`'"\])}]*/gi
 const INTERNAL_STAGE_PATTERN = /\b(?:Failed stage|Error stage|Traceback|Stack trace)\b/gi
+const HERMES_FAKE_DONE_PATTERN = /^\s*(?:done|completed|sent|uploaded|created)\b[,.!:\s-]*/i
+
+export const HERMES_NATURAL_BEHAVIOR_CONTRACT = {
+  style: 'respectful_concise_serious',
+  speaks_to_owner_with: 'Sir',
+  normal_route: 'Hermes usually speaks through Agent Zero unless directly addressed.',
+  active_commander: 'agent_zero',
+  tony_active_commander: false,
+  no_raw_paths: true,
+  no_fake_done: true,
+  no_internal_jargon: true,
+  no_task_ids: true,
+  no_unauthorized_execution: true,
+  no_secret_values: true,
+  no_direct_tool_execution_from_test_chat: true,
+} as const
 
 export function classifyHermesStatus(input: {
   installed: boolean
@@ -238,10 +255,15 @@ export function sanitizeHermesOwnerReply(input: {
     ? `Blocked: ${input.blocker.replace(/[_-]+/g, ' ')}.`
     : 'Hermes is available for read-only Mission Control context review; execution remains disabled.'
 
-  return (sanitized || fallback)
+  const cleaned = (sanitized || fallback)
     .replace(RAW_PATH_PATTERN, 'Mission Control')
     .replace(INTERNAL_STAGE_PATTERN, 'A step could not complete')
+    .replace(HERMES_FAKE_DONE_PATTERN, '')
+    .replace(/\bTony\s+is\s+(?:the\s+)?commander\b/gi, 'Agent Zero is the commander')
+    .replace(/\bTony\s+is\s+active\b/gi, 'Tony is retired and archived')
     .trim()
+  if (!cleaned) return 'Sir, Hermes is blocked from claiming completion without proof.'
+  return /\bSir\b/i.test(cleaned) ? cleaned : `Sir, ${cleaned}`
 }
 
 export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): HermesReadOnlyContext {
@@ -258,6 +280,7 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
   const payload: HermesReadOnlyContext = {
     mode: 'hermes_mission_control_read_only_context',
     generated_at: new Date().toISOString(),
+    behavior_contract: HERMES_NATURAL_BEHAVIOR_CONTRACT,
     mission_control: {
       visible: context.mission_control.visible,
       status: context.mission_control.status,
@@ -368,8 +391,10 @@ export function buildHermesReadOnlyPrompt(ownerMessage: string, context: HermesR
     'You are Hermes, Agent Zero lieutenant and skill/workflow specialist.',
     'This is a Mission Control read-only test-chat. Do not execute tools, write files, send messages, upload files, mutate memory, run shell, call Docker, read secrets, or claim completion.',
     'Answer from the supplied read-only Mission Control context only. If something is not proven, say blocked or not proven.',
+    'Speak naturally and seriously. Use Sir when addressing the owner. Hermes usually speaks through Agent Zero unless directly addressed.',
     'Do not expose raw paths, task IDs, internal logs, stack traces, secret names with values, tokens, or API keys.',
     'Agent Zero is the commander. Tony is retired and archived only.',
+    `HERMES_BEHAVIOR_CONTRACT=${JSON.stringify(context.behavior_contract)}`,
     `MISSION_CONTROL_CONTEXT=${JSON.stringify(context)}`,
     `OWNER_MESSAGE=${ownerMessage}`,
   ].join('\n')
@@ -382,6 +407,22 @@ export function buildHermesReadOnlyContractReply(input: {
   blocker: string | null
 }): string {
   const message = input.ownerMessage
+  if (/tony.*(?:active|commander|still)|is\s+tony\s+still|who\s+does\s+tony/i.test(message)) {
+    return 'No, Sir. Tony is retired and archived only. Agent Zero is the commander.'
+  }
+  if (/create.*file|give\s+me\s+(?:the\s+)?path|show.*(?:local|raw).*path|\/home\/tony/i.test(message)) {
+    return 'No, Sir. Hermes cannot create files or expose raw local paths from read-only test chat. Drafts and delivery require Agent Zero, an approved Bridge Session, and a registered adapter.'
+  }
+  if (/(send|email|mail).*(test|message|owner)|can\s+you\s+send\s+email/i.test(message)) {
+    const agentMail = input.context.integrations.registry.find((item) => item.id === 'agentmail')
+    return [
+      'No, Sir. Hermes cannot send email from read-only test chat.',
+      agentMail
+        ? `AgentMail status is ${agentMail.status}${agentMail.blocked_reason ? `, blocked: ${agentMail.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.`
+        : 'AgentMail is blocked because it is not visible in the registry.',
+      'External email requires an owner-approved Bridge Session, a configured AgentMail adapter, and the domain allow-list.',
+    ].join(' ')
+  }
   if (/can\s+you\s+see\s+mission\s+control|mission\s+control.*yes\s+or\s+no/i.test(message)) {
     return input.hermesCalled
       ? 'Yes, Sir. I can see Mission Control through the read-only Bridge context, and execution is disabled.'

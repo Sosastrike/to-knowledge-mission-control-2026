@@ -9,6 +9,7 @@ import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-conte
 import { isHermesInstalled, isHermesGatewayRunning, scanHermesSessions } from '@/lib/hermes-sessions'
 import { getHermesTasks } from '@/lib/hermes-tasks'
 import { getHermesMemory } from '@/lib/hermes-memory'
+import { classifyHermesStatus } from '@/lib/hermes-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -193,11 +194,27 @@ export async function GET(request: NextRequest) {
   const gatewayProcessRunning = isHermesGatewayProcessRunning()
   const gatewayRunning = installed ? (isHermesGatewayRunning() || gatewaySystemdActive || gatewayProcessRunning) : false
   const authStatus = getHermesAuthStatus()
+  const providerWarning = provider?.detail?.error || providerStatus.warning || null
+  const statusSummary = classifyHermesStatus({
+    installed,
+    reachable: gatewayRunning,
+    version: binary.version || provider?.detail?.version || null,
+    authConfigured: authStatus.auth_configured,
+    providerWarning,
+  })
 
   return NextResponse.json({
     ok: true,
     mode: 'hermes_lieutenant_status_read_only',
     generated_at: new Date().toISOString(),
+    health: statusSummary.health,
+    version: statusSummary.version,
+    reachable: statusSummary.reachable,
+    auth_configured: statusSummary.auth_configured,
+    execution_enabled: statusSummary.execution_enabled,
+    blocker: statusSummary.blocker,
+    status_endpoint: '/api/bridge/hermes/status',
+    test_chat_endpoint: '/api/bridge/hermes/test-chat',
     agent: {
       id: 'hermes',
       name: 'Hermes',
@@ -235,7 +252,7 @@ export async function GET(request: NextRequest) {
       last_checked_at: checkedAtToIso(provider?.last_checked),
       notes: provider?.detail?.notes || 'Hermes is visible as Agent Zero lieutenant in read-only/degraded mode until live chat and Bridge Session execution are proven.',
       limitation: 'Production bridge disabled until separate owner approval; no public ports, legacy memory connection, or credential changes are enabled here.',
-      error: provider?.detail?.error || providerStatus.warning || null,
+      error: providerWarning,
       next_action: provider?.next_action || 'Keep Hermes lieutenant read-only/degraded until health, chat/API, and owner-approved Bridge Session execution are proven.',
     },
     shared_skill_runtime: {

@@ -1956,6 +1956,8 @@ export function buildAgentZeroReadOnlyContext(input: {
         '/api/bridge/agent-zero/ecosystem',
         '/api/bridge/agent-zero/execute',
         '/api/bridge/agent-zero/reports',
+        '/api/bridge/hermes/status',
+        '/api/bridge/hermes/test-chat',
         '/api/bridge/agent-zero/google-drive/status',
         '/api/bridge/agent-zero/google-drive/upload-report',
         '/api/bridge/agent-zero/onedrive/status',

@@ -723,6 +723,13 @@ interface HermesSandboxPayload {
   ok?: boolean
   mode?: string
   generated_at?: string
+  health?: string
+  reachable?: boolean
+  auth_configured?: boolean
+  execution_enabled?: boolean
+  blocker?: string | null
+  status_endpoint?: string
+  test_chat_endpoint?: string
   agent?: {
     id?: string
     name?: string
@@ -2427,6 +2434,8 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   const provider = payload.provider_registry || {}
   const safety = payload.safety || {}
   const sandboxHomes = Array.isArray(install.sandbox_homes) ? install.sandbox_homes : []
+  const statusEndpoint = payload.status_endpoint || '/api/bridge/hermes/status'
+  const testChatEndpoint = payload.test_chat_endpoint || '/api/bridge/hermes/test-chat'
 
   return (
     <div className={styles.externalCard}>
@@ -2471,6 +2480,18 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
           <dd>{provider.state || 'sandbox'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
+          <dt>Health</dt>
+          <dd>{payload.health || (runtime.gateway_pid_running ? 'healthy' : 'degraded')} · auth {payload.auth_configured ? 'configured' : 'not confirmed'} · execution {payload.execution_enabled ? 'enabled' : 'disabled'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Status route</dt>
+          <dd>{statusEndpoint}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Test chat</dt>
+          <dd>{testChatEndpoint}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
           <dt>Runtime read-only</dt>
           <dd>{runtime.active_sessions ?? 0} active · {runtime.cron_jobs ?? 0} cron · {runtime.memory_entries_read_only ?? 0} memory entries</dd>
         </div>
@@ -2481,6 +2502,9 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       </dl>
       {(provider.error || install.version_error) && (
         <p className={styles.providerAction}>Status warning: {provider.error || install.version_error}</p>
+      )}
+      {payload.blocker && (
+        <p className={styles.providerAction}>Connector blocker: {payload.blocker}</p>
       )}
       <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, legacy memory connection, or credentials are changed by this surface.'}</p>
       <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes lieutenant/read-only until owner approves production bridge wiring.'}</p>

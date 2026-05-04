@@ -2301,6 +2301,27 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     ...fallbackZapierToolRegistry,
   ]
 
+  const ecosystemAgents = providers
+    .filter((provider) => ['agent_zero', 'tony_legacy', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
+    .map((provider) => ({
+      id: String(provider.id || provider.name || ''),
+      status: String(provider.state || 'unknown'),
+      role: String(provider.category || provider.type || 'agent'),
+      execution_enabled: false,
+      direct_access: false,
+      proxy_access: true,
+    }))
+  if (!ecosystemAgents.some((agent) => agent.id === 'hermes')) {
+    ecosystemAgents.push({
+      id: 'hermes',
+      status: 'degraded',
+      role: 'lieutenant / skill and workflow specialist',
+      execution_enabled: false,
+      direct_access: false,
+      proxy_access: true,
+    })
+  }
+
   return buildAgentZeroReadOnlyContext({
     providerIds,
     providerRegistry: providers.map((provider) => ({
@@ -2312,16 +2333,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       direct_access: false,
       proxy_access: true,
     })),
-    agents: providers
-      .filter((provider) => ['agent_zero', 'tony_legacy', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
-      .map((provider) => ({
-        id: String(provider.id || provider.name || ''),
-        status: String(provider.state || 'unknown'),
-        role: String(provider.category || provider.type || 'agent'),
-        execution_enabled: false,
-        direct_access: false,
-        proxy_access: true,
-      })),
+    agents: ecosystemAgents,
     modelCatalog: allModels.map((model) => ({ alias: model.alias, provider: model.provider, name: model.name })),
     modelProviderRegistry: buildModelProviderRegistry({
       providers,

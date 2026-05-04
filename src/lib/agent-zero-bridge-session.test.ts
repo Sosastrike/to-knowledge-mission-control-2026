@@ -91,15 +91,37 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(result.session.status).toBe('pending_approval')
     expect(result.session.execution_enabled).toBe(false)
     expect(result.session.approval_prompt).toBe(AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT)
+    expect(result.session.scope).toContain('tools, skills, models, agents, integrations, Brain adapters')
+    expect(result.session.allowed_tools).toContain('all_registered_tools')
+    expect(result.session.allowed_tools).toContain('all_registered_execution_adapters')
+    expect(result.session.allowed_skills).toContain('all_registered_skills')
+    expect(result.session.allowed_delivery_surfaces).toContain('all_registered_delivery_surfaces')
     expect(result.session.allowed_tools).toContain('buildwiki.run_now')
     expect(result.session.allowed_integrations).toContain('google_drive_if_connector_configured')
     expect(result.session.allowed_brain_access).toContain('obsidian.read_adapter')
+    expect(result.session.blocked_scopes).toContain('docker_socket')
+    expect(result.session.safety_contract).toMatchObject({
+      one_bridge_session_approval_model: true,
+      no_approval_spam: true,
+      every_action_audited: true,
+      no_fake_completion: true,
+      raw_root_shell_enabled: false,
+      docker_socket_enabled: false,
+      direct_secret_reads_enabled: false,
+    })
     expect(result.session.audit_log[0]).toMatchObject({ action: 'bridge_session.approval_requested', outcome: 'approval_requested' })
 
-    const approval = db.prepare('SELECT action, approval_state, reason FROM bridge_approval_requests LIMIT 1').get() as any
+    const approval = db.prepare('SELECT action, approval_state, reason, approval_scope_json FROM bridge_approval_requests LIMIT 1').get() as any
     expect(approval.action).toBe(AGENT_ZERO_BRIDGE_SESSION_ACTION)
     expect(approval.approval_state).toBe('pending')
     expect(approval.reason).toBe(AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT)
+    const scope = JSON.parse(approval.approval_scope_json)
+    expect(scope.one_bridge_session_approval_model).toBe(true)
+    expect(scope.allowed_skills).toContain('all_registered_skills')
+    expect(scope.allowed_delivery_surfaces).toContain('all_registered_delivery_surfaces')
+    expect(scope.raw_root_shell_enabled).toBe(false)
+    expect(scope.docker_socket_enabled).toBe(false)
+    expect(scope.direct_secret_reads_enabled).toBe(false)
   })
 
   it('reuses a pending or active session instead of creating duplicate prompts', () => {
@@ -151,7 +173,8 @@ describe('Agent Zero Bridge Session approval gate', () => {
     expect(audited.ok).toBe(true)
     expect(audited.execution_enabled).toBe(true)
     expect(audited.audit_event).toMatchObject({ action: 'mcp.tools.schema_read', target: 'zapier', outcome: 'allowed' })
-    expect(JSON.stringify(audited)).not.toContain('secret')
+    expect(audited.session.safety_contract.direct_secret_reads_enabled).toBe(false)
+    expect(JSON.stringify(audited)).not.toMatch(/sk-[A-Za-z0-9]|AIzaSy|xox[baprs]-/)
   })
 
   it('expires automatically', () => {

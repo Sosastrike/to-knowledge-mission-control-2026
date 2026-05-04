@@ -11,10 +11,10 @@ export const AGENT_ZERO_BRIDGE_SESSION_RISK_LEVEL = 'medium'
 export const AGENT_ZERO_BRIDGE_SESSION_CATEGORY = 'agent_execution'
 
 export const AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT = [
-  'Approval needed: Open Bridge Session for Agent Zero.',
-  'Scope: Use all registered Mission Control / Bridge tools, models, agents, integrations, Brain adapters, and Build-Wiki actions available in this environment for this mission.',
+  'Approval needed: Open Agent Zero Bridge Session.',
+  'Scope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, and delivery surfaces available in this environment for this mission.',
   'Duration: 12 hours.',
-  'Rule: Agent Zero must not fake completion and must report blocked connectors honestly.',
+  'Rule: Every action is audited. Agent Zero must not fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.',
   'Approve or deny?',
 ].join('\n')
 
@@ -43,7 +43,20 @@ export type AgentZeroBridgeSessionObject = {
   allowed_tools: string[]
   allowed_integrations: string[]
   allowed_models: string[]
+  allowed_skills: string[]
   allowed_brain_access: string[]
+  allowed_delivery_surfaces: string[]
+  blocked_scopes: string[]
+  safety_contract: {
+    one_bridge_session_approval_model: true
+    no_approval_spam: true
+    every_action_audited: true
+    no_fake_completion: true
+    raw_root_shell_enabled: false
+    docker_socket_enabled: false
+    direct_secret_reads_enabled: false
+    raw_arbitrary_filesystem_enabled: false
+  }
   audit_log: AgentZeroBridgeSessionAuditEntry[]
   execution_enabled: boolean
   bridge_session_required: boolean
@@ -116,8 +129,10 @@ export type AgentZeroBridgeSessionRequester = {
   tenantId: number
 }
 
-const DEFAULT_SCOPE = 'Use all registered Mission Control / Bridge tools, models, agents, integrations, Brain adapters, and Build-Wiki actions available in this environment for this mission.'
+const DEFAULT_SCOPE = 'Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission.'
 const DEFAULT_ALLOWED_TOOLS = [
+  'all_registered_tools',
+  'all_registered_execution_adapters',
   'mission_control.status',
   'bridge.providers.list',
   'mcp.tools.schema_read',
@@ -128,6 +143,7 @@ const DEFAULT_ALLOWED_TOOLS = [
   'onedrive.delivery_adapter_if_configured',
 ]
 const DEFAULT_ALLOWED_INTEGRATIONS = [
+  'all_registered_integrations',
   'mission_control',
   'bridge',
   'mcp',
@@ -138,8 +154,23 @@ const DEFAULT_ALLOWED_INTEGRATIONS = [
   'telegram_status_delivery_if_route_configured',
 ]
 const DEFAULT_ALLOWED_MODELS = ['openrouter_if_configured', 'openai_if_configured', 'anthropic_if_configured', 'gemini_if_configured', 'groq_if_configured', 'local_models_if_configured']
-const DEFAULT_ALLOWED_BRAIN_ACCESS = ['brain_sync.status', 'obsidian.read_adapter', 'obsidian.write_adapter', 'mempalace.read_adapter', 'mempalace.write_adapter', 'graphify.status', 'brain_watchers.status']
+const DEFAULT_ALLOWED_SKILLS = ['all_registered_skills', 'openclaw_plus_shared_runtime', 'agent_zero_skills', 'hermes_skills', 'mission_control_repo_skills']
+const DEFAULT_ALLOWED_BRAIN_ACCESS = ['all_registered_brain_adapters', 'brain_sync.status', 'obsidian.read_adapter', 'obsidian.write_adapter', 'mempalace.read_adapter', 'mempalace.write_adapter', 'graphify.status', 'brain_watchers.status']
+const DEFAULT_ALLOWED_DELIVERY_SURFACES = ['all_registered_delivery_surfaces', 'mission_control.report.attach', 'telegram.delivery_if_route_configured', 'google_drive_if_connector_configured', 'onedrive_if_connector_configured']
 const BLOCKED_SCOPES = ['broad_shell', 'docker_socket', 'root_system_access', 'credential_exfiltration', 'auth_bypass', 'smb_mount_without_separate_smb_phase', 'memory_write_without_explicit_owner_scope']
+
+function defaultSafetyContract(): AgentZeroBridgeSessionObject['safety_contract'] {
+  return {
+    one_bridge_session_approval_model: true,
+    no_approval_spam: true,
+    every_action_audited: true,
+    no_fake_completion: true,
+    raw_root_shell_enabled: false,
+    docker_socket_enabled: false,
+    direct_secret_reads_enabled: false,
+    raw_arbitrary_filesystem_enabled: false,
+  }
+}
 
 function isoNow(now = new Date()): string {
   return now.toISOString()
@@ -251,7 +282,11 @@ export function defaultAgentZeroBridgeSessionObject(input: Partial<AgentZeroBrid
     allowed_tools: input.allowed_tools || DEFAULT_ALLOWED_TOOLS,
     allowed_integrations: input.allowed_integrations || DEFAULT_ALLOWED_INTEGRATIONS,
     allowed_models: input.allowed_models || DEFAULT_ALLOWED_MODELS,
+    allowed_skills: input.allowed_skills || DEFAULT_ALLOWED_SKILLS,
     allowed_brain_access: input.allowed_brain_access || DEFAULT_ALLOWED_BRAIN_ACCESS,
+    allowed_delivery_surfaces: input.allowed_delivery_surfaces || DEFAULT_ALLOWED_DELIVERY_SURFACES,
+    blocked_scopes: input.blocked_scopes || BLOCKED_SCOPES,
+    safety_contract: input.safety_contract || defaultSafetyContract(),
     audit_log: input.audit_log || [],
     execution_enabled: Boolean(input.execution_enabled),
     bridge_session_required: true,
@@ -312,16 +347,21 @@ function deriveState(session: SessionRow, approval: ApprovalRow | null, now = ne
 function sessionObjectFromRow(db: Database.Database, session: SessionRow, approval: ApprovalRow | null, now = new Date()): AgentZeroBridgeSessionObject {
   const state = deriveState(session, approval, now)
   const executionEnabled = state === 'active'
+  const scope = jsonObject(session.scope_json)
   return defaultAgentZeroBridgeSessionObject({
     session_id: session.id,
     owner_id: session.owner_id,
     started_at: executionEnabled ? (session.started_at || approval?.resolved_at || session.created_at) : session.started_at,
     expires_at: session.expires_at,
-    scope: String(jsonObject(session.scope_json).scope || DEFAULT_SCOPE),
+    scope: String(scope.scope || DEFAULT_SCOPE),
     allowed_tools: jsonArray(session.allowed_tools_json, DEFAULT_ALLOWED_TOOLS),
     allowed_integrations: jsonArray(session.allowed_integrations_json, DEFAULT_ALLOWED_INTEGRATIONS),
     allowed_models: jsonArray(session.allowed_models_json, DEFAULT_ALLOWED_MODELS),
+    allowed_skills: jsonArray(scope.allowed_skills, DEFAULT_ALLOWED_SKILLS),
     allowed_brain_access: jsonArray(session.allowed_brain_access_json, DEFAULT_ALLOWED_BRAIN_ACCESS),
+    allowed_delivery_surfaces: jsonArray(scope.allowed_delivery_surfaces, DEFAULT_ALLOWED_DELIVERY_SURFACES),
+    blocked_scopes: jsonArray(scope.blocked_scopes, BLOCKED_SCOPES),
+    safety_contract: defaultSafetyContract(),
     audit_log: readAuditLog(db, session.id),
     execution_enabled: executionEnabled,
     status: state,
@@ -473,13 +513,23 @@ export function createOrReuseAgentZeroBridgeSession(input: {
     const scopeJson = stableJson({
       scope,
       duration_hours: durationHours,
+      one_bridge_session_approval_model: true,
       no_approval_spam: true,
-      rule: 'Agent Zero must not fake completion and must report blocked connectors honestly.',
+      every_action_audited: true,
+      no_fake_completion: true,
+      raw_root_shell_enabled: false,
+      docker_socket_enabled: false,
+      direct_secret_reads_enabled: false,
+      raw_arbitrary_filesystem_enabled: false,
+      rule: 'Agent Zero must not fake completion, spam approvals, use raw root shell, use Docker socket, or read secrets directly.',
       allowed_tools: DEFAULT_ALLOWED_TOOLS,
       allowed_integrations: DEFAULT_ALLOWED_INTEGRATIONS,
       allowed_models: DEFAULT_ALLOWED_MODELS,
+      allowed_skills: DEFAULT_ALLOWED_SKILLS,
       allowed_brain_access: DEFAULT_ALLOWED_BRAIN_ACCESS,
+      allowed_delivery_surfaces: DEFAULT_ALLOWED_DELIVERY_SURFACES,
       blocked_scopes: BLOCKED_SCOPES,
+      safety_contract: defaultSafetyContract(),
     })
     const hash = scopeHash(scopeJson, input.requester.workspaceId, input.requester.tenantId)
     const idempotencyKey = `agent_zero_bridge_session:${input.requester.workspaceId}:${input.requester.tenantId}:${hash.slice(0, 24)}`
@@ -541,7 +591,7 @@ export function createOrReuseAgentZeroBridgeSession(input: {
         approvalId,
         ownerId,
         expiresAt,
-        JSON.stringify({ scope }),
+        scopeJson,
         JSON.stringify(DEFAULT_ALLOWED_TOOLS),
         JSON.stringify(DEFAULT_ALLOWED_INTEGRATIONS),
         JSON.stringify(DEFAULT_ALLOWED_MODELS),
@@ -569,7 +619,12 @@ export function createOrReuseAgentZeroBridgeSession(input: {
         stableJson({
           source: 'mission-control-agent-zero-bridge-session',
           approval_prompt: AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT,
+          one_bridge_session_approval_model: true,
           no_approval_spam: true,
+          every_action_audited: true,
+          no_fake_completion: true,
+          blocked_scopes: BLOCKED_SCOPES,
+          safety_contract: defaultSafetyContract(),
           execution_enabled: false,
         }),
         correlationId,
@@ -589,7 +644,14 @@ export function createOrReuseAgentZeroBridgeSession(input: {
         requesterName,
         ownerId,
         AGENT_ZERO_BRIDGE_SESSION_TARGET,
-        stableJson({ approval_prompt: AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT, expires_at: expiresAt }),
+        stableJson({
+          approval_prompt: AGENT_ZERO_BRIDGE_SESSION_OWNER_PROMPT,
+          expires_at: expiresAt,
+          one_bridge_session_approval_model: true,
+          no_approval_spam: true,
+          every_action_audited: true,
+          blocked_scopes: BLOCKED_SCOPES,
+        }),
       )
 
       const session = db.prepare(`SELECT * FROM bridge_sessions WHERE id = ? LIMIT 1`).get(sessionId) as SessionRow

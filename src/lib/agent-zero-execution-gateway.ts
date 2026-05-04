@@ -903,8 +903,15 @@ function sessionAllows(adapter: AdapterDefinition, session: AgentZeroBridgeSessi
     ...(session.allowed_tools || []),
     ...(session.allowed_integrations || []),
     ...(session.allowed_models || []),
+    ...(session.allowed_skills || []),
     ...(session.allowed_brain_access || []),
+    ...(session.allowed_delivery_surfaces || []),
   ])
+  if (allowed.has('all_registered_execution_adapters')) return true
+  if (allowed.has('all_registered_tools') && (adapter.category === 'mcp_tool' || adapter.category === 'buildwiki_run_now')) return true
+  if (allowed.has('all_registered_brain_adapters') && (adapter.category === 'obsidian_adapter' || adapter.category === 'mempalace_adapter')) return true
+  if (allowed.has('all_registered_integrations') && (adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'buildwiki_run_now')) return true
+  if (allowed.has('all_registered_delivery_surfaces') && (adapter.category === 'mission_control_attachment' || adapter.category === 'google_drive_delivery' || adapter.category === 'onedrive_delivery' || adapter.category === 'report_creation')) return true
   return adapter.allowed_scope_keys.some((key) => allowed.has(key)) || allowed.has(adapter.action)
 }
 

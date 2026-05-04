@@ -15,6 +15,21 @@ import {
   summarizeHermesSkillInventory,
   type HermesSkillInventoryItem,
 } from '@/lib/hermes-skills'
+import {
+  buildHermesBridgeMcpVisibility,
+  buildHermesBuildWikiOpenCloudVisibility,
+  buildHermesIntegrationsVisibility,
+  buildHermesModelsVisibility,
+  buildHermesToolVisibility,
+  summarizeHermesIntegrations,
+  summarizeHermesModels,
+  summarizeHermesTools,
+  type HermesBridgeMcpVisibility,
+  type HermesBuildWikiOpenCloudVisibility,
+  type HermesIntegrationsVisibility,
+  type HermesModelsVisibility,
+  type HermesToolVisibility,
+} from '@/lib/hermes-visibility'
 import type { SkillRoleTag } from '@/lib/skill-role-tags'
 
 export type HermesStatusSummary = {
@@ -40,11 +55,11 @@ export type HermesReadOnlyContext = {
     routes: string[]
     execution_enabled: false
   }
-  bridge_mcp: {
-    providers: Array<{ id: string; name: string; state: string; category: string }>
-    mcp_servers: Array<{ name: string; status: string; tool_count: number | null; schema_available: boolean; reachable: boolean }>
-    execution_enabled: false
-  }
+  bridge_mcp: HermesBridgeMcpVisibility
+  models: HermesModelsVisibility
+  tools: HermesToolVisibility
+  integrations: HermesIntegrationsVisibility
+  buildwiki_opencloud: HermesBuildWikiOpenCloudVisibility
   agents: {
     agent_zero: {
       visible: boolean
@@ -235,6 +250,11 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
   const brainSystems = buildHermesBrainSystemsFromContext(context)
   const brainBlockerTable = getHermesBrainBlockerTable(brainSystems)
   const skillInventory = buildHermesSkillInventory(context)
+  const bridgeMcpVisibility = buildHermesBridgeMcpVisibility(context)
+  const modelVisibility = buildHermesModelsVisibility(context)
+  const toolVisibility = buildHermesToolVisibility(context)
+  const integrationVisibility = buildHermesIntegrationsVisibility(context)
+  const buildWikiOpenCloudVisibility = buildHermesBuildWikiOpenCloudVisibility(context)
   const payload: HermesReadOnlyContext = {
     mode: 'hermes_mission_control_read_only_context',
     generated_at: new Date().toISOString(),
@@ -249,22 +269,11 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
       ].filter((route, index, routes) => routes.indexOf(route) === index),
       execution_enabled: false,
     },
-    bridge_mcp: {
-      providers: context.bridge.provider_registry.map((provider) => ({
-        id: provider.id,
-        name: provider.name,
-        state: provider.state,
-        category: provider.category,
-      })).slice(0, 80),
-      mcp_servers: context.mcp.servers.map((server) => ({
-        name: server.name,
-        status: server.status,
-        tool_count: server.tool_count,
-        schema_available: server.schema_available,
-        reachable: server.reachable,
-      })).slice(0, 80),
-      execution_enabled: false,
-    },
+    bridge_mcp: bridgeMcpVisibility,
+    models: modelVisibility,
+    tools: toolVisibility,
+    integrations: integrationVisibility,
+    buildwiki_opencloud: buildWikiOpenCloudVisibility,
     agents: {
       agent_zero: {
         visible: Boolean(agentZero),
@@ -385,6 +394,37 @@ export function buildHermesReadOnlyContractReply(input: {
       'Agent Zero remains the executor or delegator through approved adapters only.',
     ].join(' ')
   }
+  if (/what\s+models|models.*help|model\s+registry|openrouter|openai|claude|anthropic|codex|ollama|nvidia|groq|gemini/i.test(message)) {
+    return [
+      `Hermes can help Agent Zero reason about model choices from the live registry, Sir. ${summarizeHermesModels(input.context.models)}`,
+      'Model execution stays disabled from Hermes read-only test chat and requires an owner-approved Bridge Session route.',
+    ].join(' ')
+  }
+  if (/(firecrawl|google\s*drive|drive|onedrive|one\s*drive).*(right\s+now|use|configured|blocked)|can\s+you\s+use.*(firecrawl|drive|onedrive)/i.test(message)) {
+    const byId = new Map(input.context.integrations.registry.map((item) => [item.id, item]))
+    const firecrawl = byId.get('firecrawl')
+    const googleDrive = byId.get('google_drive')
+    const oneDrive = byId.get('onedrive')
+    return [
+      'Sir, Hermes can only report connector status from the registry here; it cannot execute.',
+      firecrawl ? `Firecrawl: ${firecrawl.status}${firecrawl.blocked_reason ? `, blocked: ${firecrawl.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.` : 'Firecrawl: blocked, not visible in the registry.',
+      googleDrive ? `Google Drive: ${googleDrive.status}; upload connector configured=${googleDrive.upload_connector_configured === true}; delivery status=${googleDrive.delivery_status || 'unknown'}${googleDrive.blocked_reason ? `; blocked: ${googleDrive.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.` : 'Google Drive: blocked, not visible in the registry.',
+      oneDrive ? `OneDrive: ${oneDrive.status}; upload connector configured=${oneDrive.upload_connector_configured === true}; delivery status=${oneDrive.delivery_status || 'unknown'}${oneDrive.blocked_reason ? `; blocked: ${oneDrive.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.` : 'OneDrive: blocked, not visible in the registry.',
+      'Uploads or crawler execution require a configured adapter plus an owner-approved Bridge Session.',
+    ].join(' ')
+  }
+  if (/what\s+integrations|integrations.*see|agentmail|zapier|heygen|telegram|whatsapp|google\s*drive|onedrive|one\s*drive|firecrawl/i.test(message)) {
+    return [
+      `Hermes can see integration status from Mission Control, Sir. ${summarizeHermesIntegrations(input.context.integrations)}`,
+      'This is status and schema visibility only. External writes, uploads, sends, and generation remain disabled unless a Bridge Session explicitly allows a registered adapter.',
+    ].join(' ')
+  }
+  if (/tools?.*mcp|mcp.*tools?|mcp\s+servers?|tool\s+schemas?|bridge\s+providers/i.test(message)) {
+    return [
+      `Hermes can see Bridge/MCP metadata read-only, Sir. ${summarizeHermesTools({ bridgeMcp: input.context.bridge_mcp, tools: input.context.tools })}`,
+      'No MCP tool invocation occurred; execution remains disabled until an owner-approved Bridge Session.',
+    ].join(' ')
+  }
   if (/agent\s*zero|what\s+is\s+his\s+role|commander/i.test(message)) {
     return 'Agent Zero is the commander. Hermes is the lieutenant for skills, workflows, automations, and operational plans; execution remains disabled until a Bridge Session exists.'
   }
@@ -398,6 +438,19 @@ export function buildHermesReadOnlyContractReply(input: {
       `Outputs: ${proposal.outputs.join(', ')}.`,
       `Tags: ${proposal.role_tags.join(', ')}.`,
       'Draft writes require Agent Zero review and an owner-approved Bridge Session.',
+    ].join(' ')
+  }
+  if (/opencloud|build[-\s]?wiki\/farmer|build[-\s]?wiki\s+run\s+now|farmer\s+status|prepare\s+build[-\s]?wiki/i.test(message)) {
+    const buildWiki = input.context.buildwiki_opencloud
+    return [
+      buildWiki.build_wiki_status_visible
+        ? 'Yes, Sir. Hermes can see Build-Wiki/Farmer status through Mission Control read-only context.'
+        : 'No, Sir. Build-Wiki/Farmer status is not visible in the Hermes context.',
+      buildWiki.distinction,
+      `Run Now requires an owner-approved Agent Zero Bridge Session and is scoped only to ${buildWiki.run_now_target_service}.`,
+      `Timer active: ${buildWiki.timer_active === null ? 'unknown' : buildWiki.timer_active}; service active: ${buildWiki.service_active === null ? 'unknown' : buildWiki.service_active}.`,
+      buildWiki.fork2_smb_blocker ? `Fork 2/SMB remains blocked: ${buildWiki.fork2_smb_blocker.replace(/[_-]+/g, ' ')}.` : 'No Fork 2/SMB blocker is visible in this context.',
+      'No farmer execution occurred.',
     ].join(' ')
   }
   if (/brain\s*sync|obsidian|mempalace|graphify|build[-\s]?wiki|farmer/i.test(message)) {
@@ -445,7 +498,7 @@ export function buildHermesReadOnlyContractReply(input: {
   }
   if (/what\s+can\s+you\s+do|ecosystem|do\s+not\s+execute/i.test(message)) {
     return [
-      `Hermes can review Mission Control context, Bridge/MCP visibility, ${input.context.skills.total} OpenClaw+ skills, and Brain system status as a read-only lieutenant.`,
+      `Hermes can review Mission Control context, Bridge/MCP visibility, model status, integration status, ${input.context.skills.total} OpenClaw+ skills, and Brain system status as a read-only lieutenant.`,
       'Hermes can help Agent Zero plan skills, workflows, automations, and operational steps.',
       'Hermes cannot write, send, upload, run tools, mutate memory, or claim completion from this test-chat route.',
       input.blocker ? `Live Hermes chat is blocked: ${input.blocker.replace(/[_-]+/g, ' ')}.` : 'Live Hermes chat is available in read-only mode.',

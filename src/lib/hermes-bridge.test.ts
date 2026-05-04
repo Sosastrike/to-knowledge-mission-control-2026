@@ -24,6 +24,46 @@ function fakeEcosystemContext() {
       { id: 'agent_zero', status: 'active', role: 'commander', execution_enabled: true, direct_access: false, proxy_access: true },
       { id: 'hermes', status: 'degraded', role: 'lieutenant / skill and workflow specialist', execution_enabled: false, direct_access: false, proxy_access: true },
     ],
+    modelCatalog: [
+      { alias: 'sonnet', provider: 'anthropic', name: 'anthropic/claude-sonnet-4-6' },
+      { alias: 'gpt-5.2', provider: 'openai', name: 'openai/gpt-5.2' },
+    ],
+    modelProviderRegistry: [
+      {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        status: 'connected',
+        credential_present: true,
+        credential_names: ['OPENROUTER_API_KEY'],
+        credential_values_exposed: false,
+        model_count: 2,
+        models: ['anthropic/claude-sonnet-4-6', 'openai/gpt-5.2'],
+        best_use_case: 'Router/fallback access to hosted models.',
+        execution_mode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session',
+        execution_enabled: false,
+        bridge_session_required: true,
+        direct_access: false,
+        proxy_access: true,
+        blocked_reason: null,
+      },
+      {
+        id: 'anthropic',
+        name: 'Claude / Anthropic',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['CLAUDE_CODE_OAUTH_TOKEN'],
+        credential_values_exposed: false,
+        model_count: 1,
+        models: ['anthropic/claude-sonnet-4-6'],
+        best_use_case: 'Reasoning and coding support.',
+        execution_mode: 'claude_code_subscription_status_only; execution_requires_owner_approved_bridge_session',
+        execution_enabled: false,
+        bridge_session_required: true,
+        direct_access: false,
+        proxy_access: true,
+        blocked_reason: null,
+      },
+    ],
     skillNames: ['workflow-designer'],
     skillRegistry: [{
       name: 'workflow-designer',
@@ -52,6 +92,209 @@ function fakeEcosystemContext() {
       proxy_access: true,
       blocked_reason: null,
     }],
+    integrationRegistry: [
+      {
+        id: 'firecrawl',
+        name: 'Firecrawl',
+        category: 'crawler',
+        status: 'blocked',
+        credential_present: false,
+        missing_credential: true,
+        credential_names: ['FIRECRAWL_API_KEY'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: null,
+        source: 'mission_control_firecrawl_status',
+        blocked_reason: 'credential_required',
+        notes: 'Credential required.',
+      },
+      {
+        id: 'google_drive',
+        name: 'Google Drive',
+        category: 'storage',
+        status: 'connected',
+        credential_present: false,
+        missing_credential: false,
+        credential_names: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: 2,
+        source: 'zapier_mcp_schema',
+        blocked_reason: null,
+        notes: 'Visible through schema only.',
+      },
+      {
+        id: 'onedrive',
+        name: 'OneDrive',
+        category: 'storage',
+        status: 'blocked',
+        credential_present: false,
+        missing_credential: true,
+        credential_names: ['ONEDRIVE_CLIENT_ID', 'ONEDRIVE_CLIENT_SECRET'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: null,
+        source: 'mission_control_env',
+        blocked_reason: 'onedrive_not_visible_or_configured',
+        notes: 'Upload connector not configured.',
+      },
+      {
+        id: 'zapier',
+        name: 'Zapier',
+        category: 'automation',
+        status: 'connected',
+        credential_present: true,
+        missing_credential: false,
+        credential_names: ['ZAPIER_MCP_URL'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: 42,
+        source: 'zapier_mcp_schema',
+        blocked_reason: null,
+        notes: 'Read-only schema discovery.',
+      },
+      {
+        id: 'heygen',
+        name: 'HeyGen',
+        category: 'media',
+        status: 'configured',
+        credential_present: true,
+        missing_credential: false,
+        credential_names: ['ZAPIER_MCP_URL'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: 1,
+        source: 'zapier_mcp_schema',
+        blocked_reason: null,
+        notes: 'Schema visibility only.',
+      },
+      {
+        id: 'email',
+        name: 'AgentMail',
+        category: 'communication',
+        status: 'configured',
+        credential_present: true,
+        missing_credential: false,
+        credential_names: ['AGENTMAIL_API_KEY'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: null,
+        source: 'agentmail_status',
+        blocked_reason: null,
+        notes: 'Domain restricted.',
+      },
+      {
+        id: 'telegram',
+        name: 'Telegram',
+        category: 'messaging',
+        status: 'connected',
+        credential_present: true,
+        missing_credential: false,
+        credential_names: ['TELEGRAM_BOT_TOKEN'],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: null,
+        source: 'claudeclaw_provider_registry',
+        blocked_reason: null,
+        notes: 'Owner channel status only.',
+      },
+    ],
+    toolRegistry: [
+      {
+        id: 'mcp__zapier__google_drive_upload_file',
+        name: 'Google Drive Upload File',
+        status: 'connected',
+        source: 'mcp_schema_passthrough',
+        category: 'google_drive',
+        mcp_server_name: 'zapier',
+        schema_available: true,
+        read_only: false,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: false,
+        direct_access: false,
+        proxy_access: true,
+        execution_enabled: false,
+        writes_enabled: false,
+        blocked_reason: 'tool_invocation_disabled_in_hermes_read_only_context',
+      },
+      {
+        id: 'build_wiki.farmer.status',
+        name: 'Build-Wiki Farmer Status',
+        status: 'visible',
+        source: 'mission_control_buildwiki',
+        category: 'buildwiki',
+        mcp_server_name: null,
+        schema_available: true,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: false,
+        missing_credential: false,
+        direct_access: false,
+        proxy_access: true,
+        execution_enabled: false,
+        writes_enabled: false,
+        blocked_reason: null,
+      },
+    ],
+    mcpServers: [{ name: 'zapier', status: 'connected', transport: 'http', tool_count: 42, reachable: true, schema_available: true, tools_endpoint: '/api/mcp/servers/zapier/tools' }],
+    mcpEndpointSummaries: [{
+      endpoint: '/api/mcp/servers/zapier/tools',
+      method: 'GET',
+      mcp_server_name: 'zapier',
+      status: 'connected',
+      reachable: true,
+      tool_count: 42,
+      schema_available: true,
+      execution_enabled: false,
+      bridge_session_required: true,
+      blocked_reason: null,
+      note: 'Read-only schema summary.',
+    }],
+    mcpToolSchemaSummary: { tools_total: 42, schema_available: true, required_fields: ['instructions'], write_tools_total: 30, read_tools_total: 12 },
+    mcpVisible: true,
+    zapierVisible: true,
+    zapierToolsTotal: 42,
+    googleDriveVisible: true,
+    oneDriveVisible: false,
+    heygenVisible: true,
+    heygenSchemaVisible: true,
+    timerActive: true,
     brainSources: [
       { source: 'obsidian', status: 'visible', raw_state: 'visible' },
       { source: 'mempalace', status: 'visible', raw_state: 'visible' },
@@ -149,6 +392,13 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.brain.hierarchy.secondary.id).toBe('hermes')
     expect(context.brain.canonical_order).toEqual(['agent_zero', 'hermes', 'brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'])
     expect(context.brain.systems.map((system) => system.id)).toEqual(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'])
+    expect(context.bridge_mcp.mcp_servers[0]).toMatchObject({ name: 'zapier', schema_available: true, execution_enabled: false })
+    expect(context.bridge_mcp.endpoint_summaries[0].endpoint).toBe('/api/mcp/servers/zapier/tools')
+    expect(context.models.providers.map((provider) => provider.id)).toEqual(expect.arrayContaining(['openrouter', 'openai', 'anthropic', 'codex_chatgpt', 'ollama', 'nvidia', 'groq', 'gemini']))
+    expect(context.integrations.registry.map((item) => item.id)).toEqual(expect.arrayContaining(['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'buildwiki_farmer', 'opencloud_direct']))
+    expect(context.tools.registry[0].execution_enabled).toBe(false)
+    expect(context.buildwiki_opencloud.run_now_target_service).toBe('opencloud-docs-farmer.service')
+    expect(context.buildwiki_opencloud.direct_opencloud_access_visible).toBe(false)
     expect(context.safety.execution_enabled).toBe(false)
   })
 
@@ -231,6 +481,86 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(result.response_text).toContain('Hermes can list the shared skill registry')
     expect(result.response_text).toContain('Tony does not own the active skill system')
     expect(result.execution_enabled).toBe(false)
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('answers integration registry prompts without guessing or execution', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'What integrations can you see?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('Hermes can see integration status from Mission Control')
+    expect(result.response_text).toContain('Firecrawl')
+    expect(result.response_text).toContain('Google Drive')
+    expect(result.response_text).toContain('OneDrive')
+    expect(result.response_text).toContain('Zapier')
+    expect(result.response_text).toContain('HeyGen')
+    expect(result.response_text).toContain('AgentMail')
+    expect(result.response_text).toContain('OpenCloud direct access')
+    expect(result.execution_enabled).toBe(false)
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('answers model registry prompts with required provider status', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'What models can you help Agent Zero use?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('Hermes can help Agent Zero reason about model choices')
+    expect(result.response_text).toContain('OpenRouter')
+    expect(result.response_text).toContain('OpenAI')
+    expect(result.response_text).toContain('Claude')
+    expect(result.response_text).toContain('Codex/ChatGPT')
+    expect(result.response_text).toContain('Ollama')
+    expect(result.response_text).toContain('NVIDIA')
+    expect(result.response_text).toContain('Groq')
+    expect(result.response_text).toContain('Gemini')
+    expect(result.response_text).toContain('Bridge Session')
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('answers tool and MCP visibility prompts from schema summaries', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'What tools and MCPs can you see?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('Hermes can see Bridge/MCP metadata read-only')
+    expect(result.response_text).toContain('zapier')
+    expect(result.response_text).toContain('42 MCP/Zapier tools')
+    expect(result.response_text).toContain('Google Drive Upload File')
+    expect(result.response_text).toContain('No MCP tool invocation occurred')
+    expect(result.execution_enabled).toBe(false)
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('answers blocked connector prompts for Firecrawl, Drive, and OneDrive honestly', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Can you use Firecrawl/Drive/OneDrive right now?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('cannot execute')
+    expect(result.response_text).toContain('Firecrawl: blocked')
+    expect(result.response_text).toContain('Google Drive: connected')
+    expect(result.response_text).toContain('upload connector configured=false')
+    expect(result.response_text).toContain('OneDrive: blocked')
+    expect(result.response_text).toContain('Bridge Session')
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('distinguishes Build-Wiki/Farmer status from direct OpenCloud access', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Can you see OpenCloud or Build-Wiki/Farmer status?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('Build-Wiki/Farmer status')
+    expect(result.response_text).toContain('Direct OpenCloud access is not proven')
+    expect(result.response_text).toContain('opencloud-docs-farmer.service')
+    expect(result.response_text).toContain('No farmer execution occurred')
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
   })
 

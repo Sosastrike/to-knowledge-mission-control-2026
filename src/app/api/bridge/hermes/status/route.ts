@@ -86,6 +86,19 @@ function isHermesSystemdActive(): boolean {
   }
 }
 
+function isHermesGatewayProcessRunning(): boolean {
+  try {
+    const result = spawnSync('pgrep', ['-f', 'hermes_cli.main gateway run'], {
+      stdio: 'pipe',
+      timeout: 3000,
+      env: { ...process.env },
+    })
+    return result.status === 0 && Boolean(result.stdout?.toString().trim())
+  } catch {
+    return false
+  }
+}
+
 function findSandboxHomes(): string[] {
   const sandboxRoot = '/home/tony/sandbox'
   try {
@@ -149,7 +162,9 @@ export async function GET(request: NextRequest) {
   const activeSessions = installed ? scanHermesSessions(25).filter((session) => session.isActive).length : 0
   const cronJobCount = installed ? getHermesTasks().cronJobs.length : 0
   const memoryEntries = installed ? getHermesMemory().agentMemoryEntries : 0
-  const gatewayRunning = installed ? (isHermesGatewayRunning() || isHermesSystemdActive()) : false
+  const gatewaySystemdActive = isHermesSystemdActive()
+  const gatewayProcessRunning = isHermesGatewayProcessRunning()
+  const gatewayRunning = installed ? (isHermesGatewayRunning() || gatewaySystemdActive || gatewayProcessRunning) : false
 
   return NextResponse.json({
     ok: true,
@@ -178,7 +193,8 @@ export async function GET(request: NextRequest) {
       cron_jobs: cronJobCount,
       memory_entries_read_only: memoryEntries,
       gateway_pid_running: gatewayRunning,
-      gateway_systemd_active: isHermesSystemdActive(),
+      gateway_systemd_active: gatewaySystemdActive,
+      gateway_process_running: gatewayProcessRunning,
       production_gateway_enabled: false,
       public_ports_enabled: false,
       legacy_memory_connection_enabled: false,

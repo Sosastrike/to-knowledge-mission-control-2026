@@ -1,5 +1,14 @@
 import type { AgentZeroReadOnlyContext } from '@/lib/agent-zero-bridge'
 import { sanitizeAgentZeroOwnerReply } from '@/lib/agent-zero-bridge'
+import {
+  HERMES_BRAIN_CANONICAL_HIERARCHY,
+  buildHermesBrainSystemsFromContext,
+  getHermesBrainBlockerTable,
+  hermesCanTruthfullySeeBrainContext,
+  summarizeHermesBrainSystems,
+  type HermesBrainBlocker,
+  type HermesBrainSystemContext,
+} from '@/lib/hermes-brain-sync'
 
 export type HermesStatusSummary = {
   health: 'healthy' | 'degraded' | 'unreachable'
@@ -65,6 +74,8 @@ export type HermesReadOnlyContext = {
   brain: {
     visible: boolean
     system_status: string
+    hierarchy: typeof HERMES_BRAIN_CANONICAL_HIERARCHY
+    canonical_order: Array<'agent_zero' | 'hermes' | 'brain_sync' | 'obsidian' | 'mempalace' | 'graphify' | 'buildwiki'>
     registry: Array<{
       id: string
       name: string
@@ -73,6 +84,9 @@ export type HermesReadOnlyContext = {
       write_available: boolean
       blocked_reason: string | null
     }>
+    systems: HermesBrainSystemContext[]
+    blocker_table: HermesBrainBlocker[]
+    hermes_can_truthfully_see_brain_context: boolean
     execution_enabled: false
   }
   openclaw_runtime: {
@@ -196,6 +210,8 @@ export function sanitizeHermesOwnerReply(input: {
 export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): HermesReadOnlyContext {
   const agentZero = context.agents.items.find((agent) => agent.id === 'agent_zero')
   const hermes = context.agents.items.find((agent) => agent.id === 'hermes')
+  const brainSystems = buildHermesBrainSystemsFromContext(context)
+  const brainBlockerTable = getHermesBrainBlockerTable(brainSystems)
   const payload: HermesReadOnlyContext = {
     mode: 'hermes_mission_control_read_only_context',
     generated_at: new Date().toISOString(),
@@ -266,6 +282,8 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
     brain: {
       visible: context.brain.visible,
       system_status: context.brain.system_status,
+      hierarchy: HERMES_BRAIN_CANONICAL_HIERARCHY,
+      canonical_order: ['agent_zero', 'hermes', 'brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'],
       registry: context.brain.registry.map((source) => ({
         id: source.id,
         name: source.name,
@@ -274,6 +292,9 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
         write_available: source.write_available,
         blocked_reason: source.blocked_reason,
       })),
+      systems: brainSystems,
+      blocker_table: brainBlockerTable,
+      hermes_can_truthfully_see_brain_context: hermesCanTruthfullySeeBrainContext(brainSystems),
       execution_enabled: false,
     },
     openclaw_runtime: {
@@ -321,6 +342,24 @@ export function buildHermesReadOnlyContractReply(input: {
   }
   if (/agent\s*zero|what\s+is\s+his\s+role|commander/i.test(message)) {
     return 'Agent Zero is the commander. Hermes is the lieutenant for skills, workflows, automations, and operational plans; execution remains disabled until a Bridge Session exists.'
+  }
+  if (/brain\s*sync|obsidian|mempalace|graphify|build[-\s]?wiki|farmer/i.test(message)) {
+    const brainSummary = summarizeHermesBrainSystems(input.context.brain.systems)
+    if (!input.context.brain.hermes_can_truthfully_see_brain_context) {
+      return [
+        'No, Sir. Hermes cannot truthfully claim live Brain access from this route yet.',
+        `Mission Control prepared this read-only Brain context for Hermes: ${brainSummary}.`,
+        input.blocker ? `Live Hermes chat is blocked: ${input.blocker.replace(/[_-]+/g, ' ')}.` : 'No live Hermes chat blocker is reported.',
+        'No execution or writes occurred.',
+      ].join(' ')
+    }
+    return [
+      input.hermesCalled
+        ? 'Yes, Sir. Hermes can see Brain context through Mission Control read-only.'
+        : 'Mission Control can prepare read-only Brain context for Hermes, but Hermes was not called live from this route.',
+      brainSummary,
+      'Writes and execution stay disabled until an owner-approved Agent Zero Bridge Session.',
+    ].join(' ')
   }
   if (/what\s+can\s+you\s+do|ecosystem|do\s+not\s+execute/i.test(message)) {
     return [

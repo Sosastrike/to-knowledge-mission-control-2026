@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { buildAgentZeroReadOnlyContext } from '@/lib/agent-zero-bridge'
 import {
+  HERMES_BRAIN_CANONICAL_HIERARCHY,
+  buildHermesBrainSystemsFromContext,
+  getHermesBrainBlockerTable,
+} from '@/lib/hermes-brain-sync'
+import {
   buildHermesReadOnlyContext,
   classifyHermesStatus,
   redactSecretsDeep,
@@ -139,6 +144,10 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.agents.hermes.role).toBe('lieutenant / skill and workflow specialist')
     expect(context.skills.runtime_layer).toBe('OpenClaw+')
     expect(context.brain.registry[0].name).toBe('Obsidian')
+    expect(context.brain.hierarchy.nucleus.id).toBe('agent_zero')
+    expect(context.brain.hierarchy.secondary.id).toBe('hermes')
+    expect(context.brain.canonical_order).toEqual(['agent_zero', 'hermes', 'brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'])
+    expect(context.brain.systems.map((system) => system.id)).toEqual(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'])
     expect(context.safety.execution_enabled).toBe(false)
   })
 
@@ -188,5 +197,50 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(capability.response_text).toContain('OpenClaw+ skills')
     expect(capability.execution_enabled).toBe(false)
     expect(capability.writes_enabled).toBe(false)
+  })
+
+  it('answers Brain prompts from read-only Brain context without fake live access', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Can you see Brain Sync, Obsidian, MemPalace, Graphify, and Build-Wiki?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.hermes_called).toBe(false)
+    expect(result.response_text).toContain('Mission Control can prepare read-only Brain context for Hermes')
+    expect(result.response_text).toContain('Obsidian')
+    expect(result.response_text).toContain('MemPalace')
+    expect(result.response_text).toContain('Graphify')
+    expect(result.response_text).toContain('Build-Wiki')
+    expect(result.response_text).toContain('Writes and execution stay disabled')
+    expect(result.response_text).not.toMatch(/\/home\/tony|Done|Failed stage|Traceback/i)
+  })
+
+  it('keeps Tony out of Brain hierarchy and records blocked brain adapters honestly', () => {
+    const context = buildAgentZeroReadOnlyContext({
+      providerIds: ['agent_zero', 'hermes'],
+      agents: [
+        { id: 'agent_zero', status: 'active', role: 'commander', execution_enabled: false, direct_access: false, proxy_access: true },
+        { id: 'hermes', status: 'degraded', role: 'lieutenant / skill and workflow specialist', execution_enabled: false, direct_access: false, proxy_access: true },
+      ],
+      skillNames: [],
+      skillRegistry: [],
+      brainSources: [],
+      brainRegistry: [],
+    })
+    const systems = buildHermesBrainSystemsFromContext(context)
+    const blockers = getHermesBrainBlockerTable(systems)
+
+    expect(HERMES_BRAIN_CANONICAL_HIERARCHY.nucleus.id).toBe('agent_zero')
+    expect(HERMES_BRAIN_CANONICAL_HIERARCHY.secondary.id).toBe('hermes')
+    expect(HERMES_BRAIN_CANONICAL_HIERARCHY.retired.active_brain_center).toBe(false)
+    expect(JSON.stringify(HERMES_BRAIN_CANONICAL_HIERARCHY)).not.toMatch(/reports_to.*tony|subordinate/i)
+    expect(systems.some((system) => system.blocked)).toBe(true)
+    expect(blockers.length).toBeGreaterThan(0)
+    for (const system of systems) {
+      expect(typeof system.visible).toBe('boolean')
+      expect(typeof system.read_available).toBe('boolean')
+      expect(typeof system.write_available).toBe('boolean')
+      expect(system.write_enabled).toBe(false)
+    }
   })
 })

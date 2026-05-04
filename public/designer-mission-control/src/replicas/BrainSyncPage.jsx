@@ -1521,6 +1521,35 @@ function AgentZeroCard(){
   );
 }
 
+function HermesBrainCard(){
+  return (
+    <div className="card brain-side-card">
+      <div className="card-head">
+        <div className="card-title" style={{fontSize:11, letterSpacing:'0.1em', display:'flex', alignItems:'center', gap:8}}>
+          <span className="brain-community-dot" style={{background:'#ff4f8a', boxShadow:'0 0 8px #ff4f8aAA'}}/>HERMES · LIEUTENANT
+          <span className="spacer"/>
+          <span className="tag xsmall warn">Read-only</span>
+        </div>
+      </div>
+      <div className="card-body vstack" style={{gap:10}}>
+        <div className="a0c-grid">
+          <div><div className="muted xsmall">Role</div><div className="a0c-val">Secondary brain specialist</div></div>
+          <div><div className="muted xsmall">Reports to</div><div className="a0c-val">Agent Zero</div></div>
+          <div><div className="muted xsmall">Specialty</div><div className="a0c-val">Skills, workflows, automations, specs, debugging support</div></div>
+          <div><div className="muted xsmall">Execution</div><div className="a0c-val">Disabled until Agent Zero Bridge Session</div></div>
+        </div>
+        <div className="a0c-rule">
+          <div className="a0c-rule-label">BRAIN CONTEXT</div>
+          <div className="muted xsmall">
+            Hermes receives read-only Brain Sync context for Obsidian, MemPalace, Graphify, and Build-Wiki/Farmer status.
+            Missing adapters must be reported as blocked; Hermes cannot claim direct brain writes from this surface.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BrainSyncReadinessBanner(){
   return (
     <div className="card" style={{
@@ -1818,6 +1847,7 @@ function BrainSyncPage(){
             </div>
 
             <AgentZeroCard/>
+            <HermesBrainCard/>
 
             <div className="card brain-side-card">
               <div className="card-head"><div className="card-title" style={{fontSize:11, letterSpacing:'0.1em'}}>NODE INFO</div></div>

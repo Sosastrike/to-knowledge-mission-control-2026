@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
+import { HERMES_BRAIN_CANONICAL_HIERARCHY } from '@/lib/hermes-brain-sync'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -200,11 +201,64 @@ export async function GET(request: NextRequest) {
     acc[source.status] = (acc[source.status] || 0) + 1
     return acc
   }, { total: 0 } as Record<string, number>)
+  const sourceByName = new Map(sources.map((source) => [source.source, source]))
+  const brainSystem = (source: string, name: string, role: string) => {
+    const item = sourceByName.get(source)
+    const visible = Boolean(item && item.status !== 'not_connected')
+    return {
+      id: source,
+      name,
+      role,
+      visible,
+      live_query_available: visible,
+      read_enabled: visible,
+      write_available: false,
+      write_enabled: false,
+      blocked: !visible,
+      blocked_reason: visible ? null : item?.missing_connector_warning || `${source} is not connected to the read-only Brain Sync status layer.`,
+      read_blocked_reason: visible ? null : item?.missing_connector_warning || `${source} read status is blocked.`,
+      write_blocked_reason: 'Agent Zero Bridge Session approval is required before protected Brain writes.',
+    }
+  }
+  const brainSystems = [
+    brainSystem('brain_sync', 'Brain Sync', 'brain coordination layer'),
+    brainSystem('obsidian', 'Obsidian', 'knowledge system'),
+    brainSystem('mempalace', 'MemPalace', 'memory system'),
+    brainSystem('graphify', 'Graphify', 'graph system'),
+    {
+      id: 'buildwiki',
+      name: 'Build-Wiki / Farmer',
+      role: 'knowledge sync / farmer system',
+      visible: buildWikiSources.length > 0,
+      live_query_available: buildWikiSources.length > 0,
+      read_enabled: buildWikiSources.length > 0,
+      write_available: false,
+      write_enabled: false,
+      blocked: buildWikiSources.length === 0,
+      blocked_reason: buildWikiSources.length > 0 ? null : 'buildwiki_status_not_visible',
+      read_blocked_reason: buildWikiSources.length > 0 ? null : 'buildwiki_status_not_visible',
+      write_blocked_reason: 'Build-Wiki Run Now requires an owner-approved Agent Zero Bridge Session.',
+    },
+  ]
+  const brainBlockerTable = brainSystems
+    .flatMap((system) => [system.blocked_reason, system.read_blocked_reason, system.write_blocked_reason]
+      .filter((blocker): blocker is string => Boolean(blocker))
+      .map((blocker) => ({ system: system.id, blocker })))
 
   return NextResponse.json({
     ok: true,
     mode: 'brain_sync_readonly_status',
     generated_at: new Date().toISOString(),
+    canonical_hierarchy: HERMES_BRAIN_CANONICAL_HIERARCHY,
+    hermes_context: {
+      role: 'secondary / lieutenant / skill-workflow specialist',
+      receives_read_only_brain_context: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      source: 'Mission Control Brain Sync read-only status',
+    },
+    brain_systems: brainSystems,
+    brain_blocker_table: brainBlockerTable,
     canonical_sources: {
       memory_sync_status: 'ClaudeClaw /api/memory-sync/status',
       shared_brain_context: 'ClaudeClaw /api/brain/context',

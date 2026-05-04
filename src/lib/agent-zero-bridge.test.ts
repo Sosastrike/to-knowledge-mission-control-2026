@@ -760,6 +760,85 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(reply).toContain('integrations')
   })
 
+  it('answers skill inventory prompts from the shared registry', () => {
+    const context = buildAgentZeroReadOnlyContext({
+      skillNames: ['engineering-test'],
+      skillRegistry: [
+        {
+          name: 'engineering-test',
+          source: 'openclaw_plus',
+          source_label: 'OpenClaw+ shared runtime skills',
+          ...sharedSkillFields('engineering-test', 'openclaw_plus'),
+          description: 'Run tests and report results.',
+          dependencies: ['scripts'],
+          missing_dependencies: [],
+          blocked_dependencies: ['scripts:execution_disabled_in_read_only_context'],
+          safe_mode: 'metadata_only',
+          status: 'visible',
+          execution_enabled: false,
+          writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: 'bridge_session_required_for_execution',
+        },
+      ],
+    })
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'What skills can you use?',
+      context,
+    })
+
+    expect(reply).toContain('shared OpenClaw+ skills')
+    expect(reply).toContain('engineering-test')
+    expect(reply).toContain('Agent Zero and Hermes')
+    expect(reply).toContain('Tony does not own')
+    expect(reply).toContain('Bridge Session')
+  })
+
+  it('selects a registry skill for safe report planning without executing it', () => {
+    const context = buildAgentZeroReadOnlyContext({
+      skillRegistry: [
+        {
+          name: 'engineering-test',
+          source: 'openclaw_plus',
+          source_label: 'OpenClaw+ shared runtime skills',
+          ...sharedSkillFields('engineering-test', 'openclaw_plus'),
+          description: 'Run tests and report results.',
+          dependencies: ['scripts'],
+          missing_dependencies: [],
+          blocked_dependencies: ['scripts:execution_disabled_in_read_only_context'],
+          safe_mode: 'metadata_only',
+          status: 'visible',
+          execution_enabled: false,
+          writes_enabled: false,
+          direct_access: false,
+          proxy_access: true,
+          blocked_reason: 'bridge_session_required_for_execution',
+        },
+      ],
+    })
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'Which skill would you use for a safe report task? Do not execute.',
+      context,
+    })
+
+    expect(reply).toContain('engineering-test')
+    expect(reply).toContain('I did not execute it')
+    expect(reply).toContain('Bridge Session')
+  })
+
+  it('keeps execution-capable skills blocked without a Bridge Session', () => {
+    const reply = buildAgentZeroReadOnlyContractReply({
+      ownerMessage: 'Can execution-capable skills run without a Bridge Session?',
+      context: buildAgentZeroReadOnlyContext(),
+    })
+
+    expect(reply).toContain('No, Sir')
+    expect(reply).toContain('execution_enabled=false')
+    expect(reply).toContain('requires_bridge_session=true')
+    expect(reply).toContain('no skill execution occurred')
+  })
+
   it('blocks email sends from read-only chat with a bridge session explanation', () => {
     const reply = buildAgentZeroReadOnlyContractReply({
       ownerMessage: 'Send a test email.',

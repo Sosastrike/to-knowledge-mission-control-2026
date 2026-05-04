@@ -17,6 +17,29 @@ interface SkillSummary {
 }
 
 type SkillRoot = { source: string; path: string }
+type SharedSkillSummary = SkillSummary & {
+  description: string
+  requirements: {
+    required_tools: string[]
+    required_credentials: string[]
+    execution_requirements: string[]
+    blocked_dependencies: string[]
+  }
+  required_tools: string[]
+  required_credentials: string[]
+  execution_requirements: string[]
+  blocked_dependencies: string[]
+  blocked_reason: string | null
+  blocked_reasons: string[]
+  status: 'visible' | 'blocked'
+  available_to: Array<'agent_zero' | 'hermes'>
+  available_to_agents: Array<'agent_zero' | 'hermes'>
+  owner_agent: null
+  tony_owns_skill_system: false
+  requires_bridge_session: true
+  execution_enabled: false
+  writes_enabled: false
+}
 
 const NAMED_SKILLS = [
   'UI/UX Pro Max',
@@ -134,7 +157,84 @@ function normalizeComparableName(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
-function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
+function inferRequirementMetadata(skill: SkillSummary): SharedSkillSummary['requirements'] {
+  const text = `${skill.name}\n${skill.description || ''}`.toLowerCase()
+  const requiredTools = new Set<string>()
+  const requiredCredentials = new Set<string>()
+  const executionRequirements = new Set<string>(['bridge_session_required_for_execution'])
+  const blockedDependencies = new Set<string>()
+
+  if (/\b(report|pdf|markdown|document)\b/.test(text)) requiredTools.add('report.create')
+  if (/\b(email|gmail|mail|smtp|agentmail)\b/.test(text)) {
+    requiredTools.add('agentmail')
+    requiredCredentials.add('AGENTMAIL_API_KEY')
+  }
+  if (/\b(slack)\b/.test(text)) {
+    requiredTools.add('slack')
+    requiredCredentials.add('SLACK_BOT_TOKEN')
+  }
+  if (/\b(calendar)\b/.test(text)) {
+    requiredTools.add('calendar')
+    requiredCredentials.add('GOOGLE_CLIENT_ID')
+  }
+  if (/\b(zapier)\b/.test(text)) {
+    requiredTools.add('zapier')
+    requiredCredentials.add('ZAPIER_MCP_URL')
+  }
+  if (/\b(firecrawl|crawl)\b/.test(text)) {
+    requiredTools.add('firecrawl')
+    requiredCredentials.add('FIRECRAWL_API_KEY')
+  }
+  if (/\b(build[-\s]?wiki|farmer)\b/.test(text)) requiredTools.add('buildwiki.farmer.status')
+  if (/\b(script|deploy|rollback|debug|test|api|database|db|logs|network|backup|performance|security)\b/.test(text)) {
+    requiredTools.add('mission_control.status')
+  }
+
+  for (const tool of requiredTools) blockedDependencies.add(`tool:${tool}:bridge_session_required`)
+  for (const credential of requiredCredentials) blockedDependencies.add(`credential:${credential}:required_when_executing`)
+
+  return {
+    required_tools: Array.from(requiredTools).sort(),
+    required_credentials: Array.from(requiredCredentials).sort(),
+    execution_requirements: Array.from(executionRequirements).sort(),
+    blocked_dependencies: Array.from(blockedDependencies).sort(),
+  }
+}
+
+function normalizeSharedSkill(skill: SkillSummary): SharedSkillSummary {
+  const requirements = inferRequirementMetadata(skill)
+  const status = skill.security_status === 'blocked' ? 'blocked' : 'visible'
+  const blockedReasons = [
+    ...(status === 'blocked' ? ['skill_security_status_blocked'] : []),
+    ...(requirements.blocked_dependencies.length ? ['bridge_session_required_for_execution'] : []),
+  ]
+  return {
+    ...skill,
+    id: skill.id || `${skill.source}:${skill.name}`,
+    description: skill.description || 'Skill metadata is visible; description is not configured.',
+    requirements,
+    required_tools: requirements.required_tools,
+    required_credentials: requirements.required_credentials,
+    execution_requirements: requirements.execution_requirements,
+    blocked_dependencies: requirements.blocked_dependencies,
+    blocked_reason: blockedReasons[0] || null,
+    blocked_reasons: blockedReasons,
+    status,
+    available_to: ['agent_zero', 'hermes'],
+    available_to_agents: ['agent_zero', 'hermes'],
+    owner_agent: null,
+    tony_owns_skill_system: false,
+    requires_bridge_session: true,
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+function normalizeSharedSkills(skills: SkillSummary[]): SharedSkillSummary[] {
+  return skills.map(normalizeSharedSkill)
+}
+
+function buildRegistryExtensions(skills: SharedSkillSummary[], roots: SkillRoot[]) {
   const sharedRuntime = {
     runtime_layer: 'OpenClaw+',
     owner_agent: null,
@@ -159,6 +259,16 @@ function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
     readme: true,
     source: skill.source,
     state: 'installed',
+    status: skill.status,
+    available_to: skill.available_to,
+    available_to_agents: skill.available_to_agents,
+    requirements: skill.requirements,
+    blocked_reason: skill.blocked_reason,
+    requires_bridge_session: skill.requires_bridge_session,
+    execution_enabled: skill.execution_enabled,
+    writes_enabled: skill.writes_enabled,
+    owner_agent: skill.owner_agent,
+    tony_owns_skill_system: skill.tony_owns_skill_system,
   }))
   const agent = skills
     .filter((skill) => /agent|openclaw|workspace/i.test(skill.source))
@@ -168,6 +278,16 @@ function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
       source: skill.source,
       state: 'installed',
       install_path: skill.path,
+      status: skill.status,
+      available_to: skill.available_to,
+      available_to_agents: skill.available_to_agents,
+      requirements: skill.requirements,
+      blocked_reason: skill.blocked_reason,
+      requires_bridge_session: skill.requires_bridge_session,
+      execution_enabled: skill.execution_enabled,
+      writes_enabled: skill.writes_enabled,
+      owner_agent: skill.owner_agent,
+      tony_owns_skill_system: skill.tony_owns_skill_system,
     }))
   const installedNames = new Set(skills.map((skill) => normalizeComparableName(skill.name)))
   const named = NAMED_SKILLS.map((label) => {
@@ -179,6 +299,21 @@ function buildRegistryExtensions(skills: SkillSummary[], roots: SkillRoot[]) {
       label,
       installed,
       state: installed ? 'installed' : 'not_installed',
+      status: installed ? 'visible' : 'blocked',
+      available_to: ['agent_zero', 'hermes'],
+      available_to_agents: ['agent_zero', 'hermes'],
+      requirements: {
+        required_tools: [],
+        required_credentials: [],
+        execution_requirements: ['bridge_session_required_for_execution'],
+        blocked_dependencies: installed ? [] : [`skill:${normalizeComparableName(label)}:not_installed`],
+      },
+      blocked_reason: installed ? null : 'skill_not_installed',
+      requires_bridge_session: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      owner_agent: null,
+      tony_owns_skill_system: false,
       next_action: installed ? null : `request_install:${label}`,
     }
   })
@@ -324,11 +459,15 @@ export async function GET(request: NextRequest) {
       if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
     }
 
+    const normalizedSkills = normalizeSharedSkills(Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)))
     return NextResponse.json({
-      skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
-      groups: Array.from(groupMap.values()),
+      skills: normalizedSkills,
+      groups: Array.from(groupMap.values()).map((group) => ({
+        ...group,
+        skills: normalizeSharedSkills(group.skills.sort((a, b) => a.name.localeCompare(b.name))),
+      })),
       total: deduped.size,
-      ...buildRegistryExtensions(Array.from(deduped.values()), roots),
+      ...buildRegistryExtensions(normalizedSkills, roots),
     })
   }
 
@@ -347,11 +486,15 @@ export async function GET(request: NextRequest) {
     if (!deduped.has(skill.name)) deduped.set(skill.name, skill)
   }
 
+  const normalizedSkills = normalizeSharedSkills(Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)))
   return NextResponse.json({
-    skills: Array.from(deduped.values()).sort((a, b) => a.name.localeCompare(b.name)),
-    groups: bySource,
+    skills: normalizedSkills,
+    groups: bySource.map((group) => ({
+      ...group,
+      skills: normalizeSharedSkills(group.skills.sort((a, b) => a.name.localeCompare(b.name))),
+    })),
     total: deduped.size,
-    ...buildRegistryExtensions(Array.from(deduped.values()), roots),
+    ...buildRegistryExtensions(normalizedSkills, roots),
   })
 }
 

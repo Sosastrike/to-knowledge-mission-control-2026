@@ -139,6 +139,7 @@ export type AgentZeroSkillSafeMode = 'metadata_only' | 'blocked'
 export type AgentZeroSkillRoleTag = SkillRoleTag
 
 export type AgentZeroSkillRegistryItem = {
+  id?: string
   name: string
   source: 'agent_zero' | 'openclaw_plus' | 'hermes' | 'mission_control_repo' | 'home_claude' | 'database'
   source_label: string
@@ -149,6 +150,12 @@ export type AgentZeroSkillRegistryItem = {
   required_tools: string[]
   required_credentials: string[]
   execution_requirements: string[]
+  requirements?: {
+    required_tools: string[]
+    required_credentials: string[]
+    execution_requirements: string[]
+    blocked_dependencies: string[]
+  }
   missing_dependencies: string[]
   blocked_dependencies: string[]
   blocked_reasons: string[]
@@ -163,6 +170,7 @@ export type AgentZeroSkillRegistryItem = {
   status: EcosystemAccessState
   execution_enabled: false
   writes_enabled: false
+  requires_bridge_session?: true
   direct_access: false
   proxy_access: true
   blocked_reason: string | null
@@ -840,6 +848,38 @@ function buildCapabilityRegistryReply(context: AgentZeroReadOnlyContext): string
   ].join(' ')
 }
 
+function buildSkillRegistryReply(context: AgentZeroReadOnlyContext): string {
+  const sources = context.skills.sources
+    .slice(0, 6)
+    .map((source) => `${source.label}: ${source.status}, ${source.total} skills`)
+  const sample = context.skills.registry
+    .slice(0, 8)
+    .map((skill) => `${skill.name}: ${skill.status}${skill.blocked_reason ? `, blocked: ${skill.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}`)
+  return [
+    `Yes, Sir. I can see ${context.skills.total} shared OpenClaw+ skills from the Mission Control registry.`,
+    `Sources: ${sources.length ? sources.join('; ') : 'no skill sources visible'}.`,
+    `Available examples: ${sample.length ? sample.join('; ') : 'no skills listed'}.`,
+    'They are available to Agent Zero and Hermes; Tony does not own the active skill system.',
+    'Execution-capable skills stay blocked until an owner-approved Bridge Session and registered adapter allow them.',
+  ].join(' ')
+}
+
+function buildSkillPlanningReply(context: AgentZeroReadOnlyContext): string {
+  const reportSkill =
+    context.skills.registry.find((skill) => /\b(report|pdf|document|markdown)\b/i.test(`${skill.name} ${skill.description}`)) ||
+    context.skills.registry.find((skill) => /\b(engineering-test|engineering-code-review|pndr|pr-reviewer)\b/i.test(skill.name)) ||
+    context.skills.registry[0]
+  if (!reportSkill) {
+    return 'Sir, I cannot select a report skill because no shared skills are visible in the registry. I did not execute anything.'
+  }
+  return [
+    `Sir, for a safe report task I would select ${reportSkill.name} from the shared skill registry.`,
+    `Status: ${reportSkill.status}${reportSkill.blocked_reason ? `, blocker: ${reportSkill.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.`,
+    `Required tools: ${reportSkill.required_tools.length ? reportSkill.required_tools.join(', ') : 'none listed'}.`,
+    'I did not execute it; report creation or delivery would require the registered report adapter and an owner-approved Bridge Session when a write is needed.',
+  ].join(' ')
+}
+
 export function buildAgentZeroReadOnlyContractReply(input: {
   ownerMessage: string
   context: AgentZeroReadOnlyContext
@@ -866,6 +906,15 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   }
   if (/(build[-\s]?wiki|farmer|run\s+now)/i.test(input.ownerMessage)) {
     return 'Build-Wiki Run Now is prepared but not executed. It requires an owner-approved Bridge Session and remains scoped only to opencloud-docs-farmer.service.'
+  }
+  if (/(execution-capable|execute|run).*(skill|skills).*(without|no).*(bridge\s+session)|skill.*(bridge\s+session)|bridge\s+session.*skill/i.test(input.ownerMessage)) {
+    return 'No, Sir. Execution-capable skills cannot run without an owner-approved Bridge Session. The registry keeps skill execution_enabled=false and requires_bridge_session=true; no skill execution occurred.'
+  }
+  if (/(which|what).*(skill).*(report|pdf|document)|skill.*safe\s+report/i.test(input.ownerMessage)) {
+    return buildSkillPlanningReply(input.context)
+  }
+  if (/(what\s+skills\s+can\s+you\s+use|skills\s+can\s+you\s+use|what\s+skills\s+do\s+you\s+have|list.*skills)/i.test(input.ownerMessage)) {
+    return buildSkillRegistryReply(input.context)
   }
   if (asksBroadCapability) {
     return buildCapabilityRegistryReply(input.context)
@@ -1637,6 +1686,7 @@ export function buildAgentZeroReadOnlyContext(input: {
     .sort((a, b) => a.id.localeCompare(b.id))
   const skillRegistry = (input.skillRegistry || [])
     .map((skill) => ({
+      id: skill.id || `${skill.source}:${skill.name}`,
       name: skill.name,
       source: skill.source,
       source_label: skill.source_label,
@@ -1647,6 +1697,12 @@ export function buildAgentZeroReadOnlyContext(input: {
       required_tools: Array.from(new Set(skill.required_tools || [])).sort(),
       required_credentials: Array.from(new Set(skill.required_credentials || [])).sort(),
       execution_requirements: Array.from(new Set(skill.execution_requirements || [])).sort(),
+      requirements: skill.requirements || {
+        required_tools: Array.from(new Set(skill.required_tools || [])).sort(),
+        required_credentials: Array.from(new Set(skill.required_credentials || [])).sort(),
+        execution_requirements: Array.from(new Set(skill.execution_requirements || [])).sort(),
+        blocked_dependencies: Array.from(new Set(skill.blocked_dependencies || [])).sort(),
+      },
       missing_dependencies: Array.from(new Set(skill.missing_dependencies || [])).sort(),
       blocked_dependencies: Array.from(new Set(skill.blocked_dependencies || [])).sort(),
       blocked_reasons: Array.from(new Set(skill.blocked_reasons || [])).sort(),
@@ -1672,11 +1728,12 @@ export function buildAgentZeroReadOnlyContext(input: {
       status: skill.status,
       execution_enabled: false as const,
       writes_enabled: false as const,
+      requires_bridge_session: true as const,
       direct_access: false as const,
       proxy_access: true as const,
       blocked_reason: skill.blocked_reason || null,
     }))
-    .filter((skill) => skill.name)
+    .filter((skill) => skill.id && skill.name)
     .sort((a, b) => `${a.source}:${a.name}`.localeCompare(`${b.source}:${b.name}`))
   const skillNames = Array.from(new Set([
     ...(input.skillNames || []),

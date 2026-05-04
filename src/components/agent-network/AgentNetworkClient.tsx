@@ -789,6 +789,41 @@ interface HermesSandboxPayload {
   error?: string
 }
 
+interface AgentZeroHermesHandoffPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  route?: string
+  label?: string
+  communication_protocol?: {
+    request_flow?: string
+    response_contract?: string
+    handoff_audit?: string
+    ui_summary?: string
+    conversation_correlation?: {
+      request_id_tracked?: boolean
+      agent_zero_task_id_tracked?: boolean
+      hermes_response_id_tracked?: boolean
+      raw_ids_exposed_to_owner?: boolean
+    }
+  }
+  supported_task_types?: string[]
+  forbidden_tasks?: string[]
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  protected_actions_enabled?: boolean
+  loop_guard?: {
+    max_depth?: number
+    repeated_agent_loops_blocked?: boolean
+  }
+  timeout?: {
+    default_ms?: number
+    blocked_response?: string
+  }
+  next_action?: string
+  error?: string
+}
+
 interface ExecutiveReportPreviewPayload {
   ok?: boolean
   mode?: string
@@ -2546,6 +2581,97 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   )
 }
 
+function AgentZeroHermesHandoffCard({
+  payload,
+  state,
+  error,
+}: {
+  payload: AgentZeroHermesHandoffPayload | null
+  state: 'loading' | 'ok' | 'error'
+  error: string
+}) {
+  if (state === 'loading') {
+    return (
+      <div className={styles.externalCard}>
+        <div className={styles.externalHead}>
+          <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+          <span className={styles.externalBadge}>loading</span>
+        </div>
+        <p className={styles.externalDescription}>Loading collaboration handoff protocol…</p>
+      </div>
+    )
+  }
+
+  if (state === 'error') {
+    return (
+      <div className={styles.externalCard}>
+        <div className={styles.externalHead}>
+          <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+          <span className={styles.externalBadge}>status error</span>
+        </div>
+        <p className={styles.externalDescription}>Could not load the Hermes handoff protocol: {error}</p>
+      </div>
+    )
+  }
+
+  const protocol = payload?.communication_protocol || {}
+  const correlation = protocol.conversation_correlation || {}
+  const supported = payload?.supported_task_types || []
+  const forbidden = payload?.forbidden_tasks || []
+
+  return (
+    <div className={styles.externalCard}>
+      <div className={styles.externalHead}>
+        <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+        <span className={styles.externalBadge}>handoff protocol</span>
+      </div>
+      <p className={styles.externalDescription}>
+        Agent Zero can ask Hermes for skill designs, workflow plans, automation plans, integration maps, failure analysis, and report outlines. Hermes returns recommendations only; execution stays disabled.
+      </p>
+      <dl className={styles.externalDetails}>
+        <div className={styles.externalDetailRow}>
+          <dt>Route</dt>
+          <dd>{payload?.route || '/api/bridge/agent-zero/hermes-handoff'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Flow</dt>
+          <dd>{protocol.request_flow || 'Agent Zero requests; Hermes returns plan/spec/recommendation.'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Supported</dt>
+          <dd>{joinPreview(supported, 6)}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Forbidden</dt>
+          <dd>{joinPreview(forbidden, 6)}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Correlation</dt>
+          <dd>request {correlation.request_id_tracked ? 'tracked' : 'not tracked'} · response {correlation.hermes_response_id_tracked ? 'tracked' : 'not tracked'} · raw IDs {correlation.raw_ids_exposed_to_owner ? 'visible' : 'hidden'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Audit</dt>
+          <dd>{protocol.handoff_audit || 'Every handoff is audited.'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Loop guard</dt>
+          <dd>max depth {payload?.loop_guard?.max_depth ?? 2} · repeated loops {payload?.loop_guard?.repeated_agent_loops_blocked ? 'blocked' : 'unknown'}</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Timeout</dt>
+          <dd>{payload?.timeout?.default_ms ?? 3000}ms · blocked response instead of fake completion</dd>
+        </div>
+        <div className={styles.externalDetailRow}>
+          <dt>Execution</dt>
+          <dd>{payload?.execution_enabled ? 'enabled' : 'disabled'} · writes {payload?.writes_enabled ? 'enabled' : 'disabled'}</dd>
+        </div>
+      </dl>
+      <p className={styles.providerNotes}>{protocol.ui_summary || 'Mission Control shows when Hermes assists a task, and reports may mention Hermes contribution if the handoff route is used.'}</p>
+      <p className={styles.providerAction}>{payload?.next_action || 'Use POST only when Agent Zero needs a Hermes plan or spec.'}</p>
+    </div>
+  )
+}
+
 function ButtonContractCard({ button }: { button: ButtonContractItem }) {
   return (
     <div className={styles.providerCard}>
@@ -2683,6 +2809,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [hermesSandbox, setHermesSandbox] = useState<HermesSandboxPayload | null>(null)
   const [hermesSandboxState, setHermesSandboxState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [hermesSandboxError, setHermesSandboxError] = useState<string>('')
+  const [agentZeroHermesHandoff, setAgentZeroHermesHandoff] = useState<AgentZeroHermesHandoffPayload | null>(null)
+  const [agentZeroHermesHandoffState, setAgentZeroHermesHandoffState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [agentZeroHermesHandoffError, setAgentZeroHermesHandoffError] = useState<string>('')
   const [buildWikiRunNow, setBuildWikiRunNow] = useState<BuildWikiRunNowPayload | null>(null)
   const [buildWikiRunNowState, setBuildWikiRunNowState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [buildWikiFiles, setBuildWikiFiles] = useState<BuildWikiFilesPayload | null>(null)
@@ -2880,6 +3009,32 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setHermesSandboxError((err as Error).message || 'fetch failed')
         setHermesSandboxState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setAgentZeroHermesHandoffState('loading')
+    fetch('/api/bridge/agent-zero/hermes-handoff', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as AgentZeroHermesHandoffPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setAgentZeroHermesHandoff(data)
+        setAgentZeroHermesHandoffState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setAgentZeroHermesHandoffError((err as Error).message || 'fetch failed')
+        setAgentZeroHermesHandoffState('error')
       })
     return () => {
       cancelled = true
@@ -4101,6 +4256,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
               </dl>
             </div>
           )}
+          <AgentZeroHermesHandoffCard
+            payload={agentZeroHermesHandoff}
+            state={agentZeroHermesHandoffState}
+            error={agentZeroHermesHandoffError}
+          />
           <ExternalCard
             title="OpenClaw Gateway"
             badge="HTTP 200"

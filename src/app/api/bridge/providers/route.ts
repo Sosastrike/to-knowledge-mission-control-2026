@@ -57,6 +57,27 @@ function retireTonyProvider(provider: BridgeProvider): BridgeProvider {
   }
 }
 
+function sanitizeHermesProvider(provider: BridgeProvider): BridgeProvider {
+  const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
+  if (id !== 'hermes') return provider
+  const detail = typeof provider.detail === 'object' && provider.detail
+    ? provider.detail as Record<string, unknown>
+    : {}
+  return {
+    ...provider,
+    id: 'hermes',
+    name: provider.name || 'Hermes',
+    category: provider.category || 'agent',
+    state: provider.state || provider.status || 'sandbox',
+    status: provider.status || provider.state || 'sandbox',
+    detail: {
+      ...detail,
+      notes: 'Hermes is Agent Zero lieutenant for skills and workflows. Production bridge execution remains disabled until live health/chat plus owner-approved Bridge Session proof passes.',
+    },
+    next_action: 'Keep Hermes read-only/degraded until health, chat/API, and owner-approved Bridge Session execution are proven under Agent Zero.',
+  }
+}
+
 function isArchivedProvider(provider: BridgeProvider): boolean {
   const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
   return provider.hidden === true || id === 'tony' || id === 'tony_legacy'
@@ -70,6 +91,7 @@ function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZer
   const normalizedProviders = providers
     .filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
     .map(retireTonyProvider)
+    .map(sanitizeHermesProvider)
   return visibleProviders([
     ...normalizedProviders,
     agentZero,

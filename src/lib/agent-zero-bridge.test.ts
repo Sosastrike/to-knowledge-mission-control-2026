@@ -89,6 +89,7 @@ describe('Agent Zero read-only bridge connector', () => {
       providerIds: ['tony', 'agent_zero', 'zapier'],
       providerRegistry: [
         { id: 'agent_zero', name: 'Agent Zero', state: 'connected', category: 'agent', execution_enabled: false, direct_access: false, proxy_access: true },
+        { id: 'tony', name: 'Tony', state: 'active', category: 'agent', execution_enabled: false, direct_access: false, proxy_access: true },
         { id: 'openrouter', name: 'OpenRouter', state: 'visible', category: 'model_provider', execution_enabled: false, direct_access: false, proxy_access: true },
       ],
       agents: [
@@ -539,8 +540,20 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/reports')
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/google-drive/status')
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/onedrive/status')
-    expect(context.bridge.providers).toEqual(['agent_zero', 'tony', 'zapier'])
+    expect(context.bridge.providers).toEqual(['agent_zero', 'tony_legacy', 'zapier'])
     expect(context.bridge.provider_registry.find((provider) => provider.id === 'agent_zero')?.execution_enabled).toBe(false)
+    expect(context.bridge.provider_registry.find((provider) => provider.id === 'tony')).toBeUndefined()
+    expect(context.bridge.provider_registry.find((provider) => provider.id === 'tony_legacy')).toMatchObject({
+      state: 'retired',
+      role: 'archived_legacy_commander',
+      execution_enabled: false,
+      direct_access: false,
+      proxy_access: false,
+      hidden: true,
+      hidden_by_default: true,
+      active_commander: false,
+      owner_facing: false,
+    })
     expect(context.bridge.mcp_servers).toEqual(['zapier'])
     expect(context.mcp.servers[0]).toMatchObject({ name: 'zapier', access: 'connected', tool_count: 42 })
     expect(context.mcp.servers[0]).toMatchObject({
@@ -565,7 +578,17 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.mcp.execution_enabled).toBe(false)
     expect(context.mcp.writes_enabled).toBe(false)
     expect(context.agents.items.find((agent) => agent.id === 'agent_zero')?.execution_enabled).toBe(false)
-    expect(context.agents.items.find((agent) => agent.id === 'tony')?.execution_enabled).toBe(false)
+    expect(context.agents.items.find((agent) => agent.id === 'tony')).toBeUndefined()
+    expect(context.agents.items.find((agent) => agent.id === 'tony_legacy')).toMatchObject({
+      status: 'retired',
+      role: 'archived_legacy_commander',
+      execution_enabled: false,
+      direct_access: false,
+      proxy_access: false,
+      hidden: true,
+      hidden_by_default: true,
+      active_commander: false,
+    })
     expect(context.models.providers).toContain('openai')
     expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.status).toBe('connected')
     expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.credential_present).toBe(true)

@@ -794,6 +794,35 @@ function hasWriteApi(context: AgentZeroReadOnlyContext, name: string): boolean {
   return context.brain.available_write_apis.some((api) => JSON.stringify(api).toLowerCase().includes(needle))
 }
 
+function normalizeAgentSurfaceIdentity(id: unknown, name: unknown): string {
+  return String(id || name || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+}
+
+function retireTonySurfaceRecord<T extends Record<string, unknown>>(record: T): T {
+  const normalized = normalizeAgentSurfaceIdentity(record.id, record.name || record.display_name)
+  if (normalized !== 'tony' && normalized !== 'tony_legacy' && normalized !== 'tony_v2') return record
+  return {
+    ...record,
+    id: normalized === 'tony' ? 'tony_legacy' : normalized,
+    name: record.name || record.display_name || 'Tony Legacy',
+    display_name: record.display_name || record.name || 'Tony Legacy',
+    state: 'retired',
+    status: 'retired',
+    role: 'archived_legacy_commander',
+    category: 'agent',
+    access: 'blocked',
+    execution_enabled: false,
+    direct_access: false,
+    proxy_access: false,
+    hidden: true,
+    hidden_by_default: true,
+    active_commander: false,
+    owns_brain_sync: false,
+    owner_facing: false,
+    notes: record.notes || 'Tony is retired and archived. Agent Zero is the active commander.',
+  } as T
+}
+
 function brainLine(context: AgentZeroReadOnlyContext, label: string, name: 'obsidian' | 'mempalace' | 'graphify' | 'brain sync'): string {
   const normalizedName = name.replace(' ', '_')
   const registryItem = context.brain.registry.find((item) => item.name.toLowerCase().includes(normalizedName) || item.id.toLowerCase().includes(normalizedName))
@@ -1651,17 +1680,37 @@ export function buildAgentZeroReadOnlyContext(input: {
   bridgeSessionAvailable?: boolean
   bridgeSession?: AgentZeroBridgeSessionObject
 } = {}): AgentZeroReadOnlyContext {
-  const providers = Array.from(new Set((input.providerIds || []).filter(Boolean))).sort()
-  const providerRegistry = (input.providerRegistry || []).map((provider) => ({
-    id: String(provider.id || provider.name || ''),
-    name: String(provider.name || provider.id || ''),
-    state: String(provider.state || 'unknown'),
-    category: String(provider.category || 'provider'),
-    access: stateToAccess(provider.state || (provider.id || provider.name ? 'visible' : 'unknown')),
-    execution_enabled: Boolean(provider.execution_enabled),
-    direct_access: Boolean(provider.direct_access),
-    proxy_access: provider.proxy_access !== false,
-  })).filter((provider) => provider.id || provider.name)
+  const providers = Array.from(new Set((input.providerIds || [])
+    .filter(Boolean)
+    .map((provider) => normalizeAgentSurfaceIdentity(provider, provider) === 'tony' ? 'tony_legacy' : String(provider))))
+    .sort()
+  const providerRegistry = (input.providerRegistry || []).map((provider) => {
+    const retired = retireTonySurfaceRecord({
+      id: String(provider.id || provider.name || ''),
+      name: String(provider.name || provider.id || ''),
+      state: String(provider.state || 'unknown'),
+      category: String(provider.category || 'provider'),
+      access: stateToAccess(provider.state || (provider.id || provider.name ? 'visible' : 'unknown')),
+      execution_enabled: Boolean(provider.execution_enabled),
+      direct_access: Boolean(provider.direct_access),
+      proxy_access: provider.proxy_access !== false,
+    }) as Record<string, unknown>
+    return {
+      id: String(retired.id || ''),
+      name: String(retired.name || retired.id || ''),
+      state: String(retired.state || 'unknown'),
+      category: String(retired.category || 'provider'),
+      access: retired.access as EcosystemAccessState,
+      execution_enabled: Boolean(retired.execution_enabled),
+      direct_access: Boolean(retired.direct_access),
+      proxy_access: retired.proxy_access !== false,
+      hidden: Boolean(retired.hidden),
+      hidden_by_default: Boolean(retired.hidden_by_default),
+      role: typeof retired.role === 'string' ? retired.role : undefined,
+      active_commander: retired.active_commander === true,
+      owner_facing: retired.owner_facing !== false,
+    }
+  }).filter((provider) => provider.id || provider.name)
   const modelCatalog = (input.modelCatalog || []).slice(0, 40)
   const modelProviders = Array.from(new Set(modelCatalog.map((model) => model.provider).filter(Boolean))).sort()
   const modelProviderRegistry = (input.modelProviderRegistry || [])
@@ -1778,14 +1827,27 @@ export function buildAgentZeroReadOnlyContext(input: {
       blocked_reason: source.blocked_reason || null,
     }))
     .sort((a, b) => a.source.localeCompare(b.source))
-  const agents = (input.agents || []).map((agent) => ({
-    id: agent.id,
-    status: agent.status || 'unknown',
-    role: agent.role || 'ecosystem agent',
-    execution_enabled: Boolean(agent.execution_enabled),
-    direct_access: Boolean(agent.direct_access),
-    proxy_access: agent.proxy_access !== false,
-  }))
+  const agents = (input.agents || []).map((agent) => {
+    const retired = retireTonySurfaceRecord({
+      id: agent.id,
+      status: agent.status || 'unknown',
+      role: agent.role || 'ecosystem agent',
+      execution_enabled: Boolean(agent.execution_enabled),
+      direct_access: Boolean(agent.direct_access),
+      proxy_access: agent.proxy_access !== false,
+    }) as Record<string, unknown>
+    return {
+      id: String(retired.id || agent.id),
+      status: String(retired.status || 'unknown'),
+      role: String(retired.role || 'ecosystem agent'),
+      execution_enabled: Boolean(retired.execution_enabled),
+      direct_access: Boolean(retired.direct_access),
+      proxy_access: retired.proxy_access !== false,
+      hidden: Boolean(retired.hidden),
+      hidden_by_default: Boolean(retired.hidden_by_default),
+      active_commander: retired.active_commander === true,
+    }
+  })
   const integrations = (input.integrationItems || []).map((integration) => ({
     id: integration.id,
     status: integration.status || 'unknown',

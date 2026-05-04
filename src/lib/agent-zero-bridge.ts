@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { AgentZeroBridgeSessionObject } from './agent-zero-bridge-session'
+import { inferSkillRoleTags, type SkillRoleTag } from '@/lib/skill-role-tags'
 
 export const AGENT_ZERO_DEFAULT_BASE_URL = 'http://100.116.35.95:50080'
 export const AGENT_ZERO_API_KEY_ENV_NAMES = [
@@ -135,6 +136,7 @@ export type AgentZeroModelProviderSummary = {
 }
 
 export type AgentZeroSkillSafeMode = 'metadata_only' | 'blocked'
+export type AgentZeroSkillRoleTag = SkillRoleTag
 
 export type AgentZeroSkillRegistryItem = {
   name: string
@@ -153,7 +155,9 @@ export type AgentZeroSkillRegistryItem = {
   runtime_layer: 'OpenClaw+'
   shared_runtime: true
   owner_agent: null
+  available_to?: Array<'agent_zero' | 'hermes'>
   available_to_agents: Array<'agent_zero' | 'hermes'>
+  role_tags?: AgentZeroSkillRoleTag[]
   tony_owns_skill_system: false
   safe_mode: AgentZeroSkillSafeMode
   status: EcosystemAccessState
@@ -562,6 +566,11 @@ export type AgentZeroReadOnlyContext = {
       required_credentials_visible: boolean
       execution_requirements_visible: boolean
       blocked_reasons_visible: boolean
+      hermes_can_list_all_skills: true
+      role_tags_visible: true
+      skill_draft_location: 'safe_hermes_skill_draft_area'
+      skill_activation_requires: 'agent_zero_bridge_session'
+      skill_review_workflow: string
       execution_enabled: false
       writes_enabled: false
       bridge_session_required_for_execution: true
@@ -1398,7 +1407,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.skillNames.length === 0 && input.skillRegistry.length === 0,
       source: 'openclaw_plus_shared_skill_runtime',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, and blocked reasons are visible; Tony does not own the skill system.',
+      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, role tags, available_to, and blocked reasons are visible; Tony does not own the skill system.',
       counts: { skills: input.skillNames.length || input.skillRegistry.length },
     }),
     liveRegistryItem({
@@ -1644,7 +1653,20 @@ export function buildAgentZeroReadOnlyContext(input: {
       runtime_layer: 'OpenClaw+' as const,
       shared_runtime: true as const,
       owner_agent: null,
-      available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+      available_to: Array.from(new Set([...(skill.available_to || []), ...(skill.available_to_agents || []), 'agent_zero', 'hermes'])).sort() as Array<'agent_zero' | 'hermes'>,
+      available_to_agents: Array.from(new Set([...(skill.available_to || []), ...(skill.available_to_agents || []), 'agent_zero', 'hermes'])).sort() as Array<'agent_zero' | 'hermes'>,
+      role_tags: Array.from(new Set([
+        ...(skill.role_tags || []),
+        ...inferSkillRoleTags({
+          name: skill.name,
+          source: skill.source,
+          description: skill.description,
+          path: skill.path,
+          dependencies: skill.dependencies,
+          requiredTools: skill.required_tools,
+          requiredCredentials: skill.required_credentials,
+        }),
+      ])).sort() as AgentZeroSkillRoleTag[],
       tony_owns_skill_system: false as const,
       safe_mode: skill.safe_mode,
       status: skill.status,
@@ -2023,6 +2045,11 @@ export function buildAgentZeroReadOnlyContext(input: {
         lieutenant: 'hermes',
         available_to_agents: ['agent_zero', 'hermes'],
         tony_owns_skill_system: false,
+        hermes_can_list_all_skills: true,
+        role_tags_visible: true,
+        skill_draft_location: 'safe_hermes_skill_draft_area',
+        skill_activation_requires: 'agent_zero_bridge_session',
+        skill_review_workflow: 'Hermes proposes; Agent Zero reviews; owner-approved Bridge Session writes/activates.',
         paths_visible: skillRegistry.some((skill) => Boolean(skill.path)),
         required_tools_visible: true,
         required_credentials_visible: true,
@@ -2033,8 +2060,8 @@ export function buildAgentZeroReadOnlyContext(input: {
         bridge_session_required_for_execution: true,
       },
       sources: skillSources,
-      registry: skillRegistry.slice(0, 100),
-      blocked_total: skillRegistry.filter((skill) => skill.status === 'blocked').length,
+      registry: skillRegistry,
+      blocked_total: skillRegistry.filter((skill) => skill.status === 'blocked' || skill.blocked_reasons.length > 0 || skill.blocked_dependencies.length > 0 || skill.missing_dependencies.length > 0).length,
       missing_dependencies_total: skillRegistry.filter((skill) => skill.missing_dependencies.length > 0 || skill.blocked_dependencies.length > 0).length,
       execution_enabled: false,
       bridge_session_required: true,

@@ -10,6 +10,7 @@ import { isHermesInstalled, isHermesGatewayRunning, scanHermesSessions } from '@
 import { getHermesTasks } from '@/lib/hermes-tasks'
 import { getHermesMemory } from '@/lib/hermes-memory'
 import { classifyHermesStatus } from '@/lib/hermes-bridge'
+import { buildHermesSkillInventory } from '@/lib/hermes-skills'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -202,6 +203,7 @@ export async function GET(request: NextRequest) {
     authConfigured: authStatus.auth_configured,
     providerWarning,
   })
+  const hermesSkillInventory = buildHermesSkillInventory(ecosystemContext)
 
   return NextResponse.json({
     ok: true,
@@ -263,6 +265,28 @@ export async function GET(request: NextRequest) {
       registry_total: ecosystemContext.skills.total,
       sources: ecosystemContext.skills.sources,
       registry: ecosystemContext.skills.registry,
+      hermes_inventory: {
+        total: hermesSkillInventory.total,
+        blocked_total: hermesSkillInventory.blocked_total,
+        missing_dependencies_total: hermesSkillInventory.missing_dependencies_total,
+        role_tags: hermesSkillInventory.role_tags,
+        role_tag_counts: hermesSkillInventory.role_tag_counts,
+        draft_location: hermesSkillInventory.draft_location,
+        draft_writes_enabled: hermesSkillInventory.draft_writes_enabled,
+        production_skill_writes_enabled: hermesSkillInventory.production_skill_writes_enabled,
+        activation_requires: hermesSkillInventory.activation_requires,
+        review_workflow: hermesSkillInventory.review_workflow,
+      },
+      skill_workflow_specialist_status: {
+        role: 'lieutenant / skill-workflow specialist',
+        can_list_skills: true,
+        can_design_skill_proposals_without_writing_files: true,
+        can_design_workflow_plans_without_execution: true,
+        can_write_drafts: false,
+        can_activate_skills: false,
+        activation_requires: 'agent_zero_bridge_session',
+        agent_zero_reviews_before_activation: true,
+      },
       note: 'Hermes and Agent Zero see the same OpenClaw+ skill registry. Tony is retired and does not own the skill system.',
     },
     safety: {

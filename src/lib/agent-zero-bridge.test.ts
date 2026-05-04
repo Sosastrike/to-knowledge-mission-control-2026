@@ -581,7 +581,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.skills.registry.find((skill) => skill.name === 'a0-development')?.source).toBe('agent_zero')
     expect(context.skills.registry.find((skill) => skill.name === 'engineering-test')?.blocked_dependencies).toContain('scripts:execution_disabled_in_read_only_context')
     expect(context.skills.registry.find((skill) => skill.name === 'legacy-empty-skill')?.status).toBe('blocked')
-    expect(context.skills.blocked_total).toBe(1)
+    expect(context.skills.blocked_total).toBe(2)
     expect(context.skills.missing_dependencies_total).toBe(2)
     expect(context.skills.sources.map((source) => source.source)).toContain('home_claude')
     expect(context.tools.registry.find((tool) => tool.id === 'mcp.zapier.tools.schema')?.execution_enabled).toBe(false)

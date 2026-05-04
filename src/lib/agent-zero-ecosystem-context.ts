@@ -15,6 +15,7 @@ import {
   readLatestRunNow,
 } from '@/lib/build-wiki-run-now'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
+import { inferSkillRoleTags } from '@/lib/skill-role-tags'
 import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
 import { getAgentZeroMemPalaceStatus } from '@/lib/agent-zero-mempalace-adapter'
@@ -460,7 +461,9 @@ function scanSkillRoot(input: {
       runtime_layer: 'OpenClaw+',
       shared_runtime: true,
       owner_agent: null,
+      available_to: ['agent_zero', 'hermes'],
       available_to_agents: ['agent_zero', 'hermes'],
+      role_tags: inferSkillRoleTags({ name, source: input.source, description, path: skillPath, dependencies: dependencyMetadata.dependencies, requiredTools: dependencyMetadata.required_tools, requiredCredentials: dependencyMetadata.required_credentials }),
       tony_owns_skill_system: false,
       safe_mode: safeMode,
       status,
@@ -468,7 +471,7 @@ function scanSkillRoot(input: {
       writes_enabled: false,
       direct_access: false,
       proxy_access: true,
-      blocked_reason: blockedReason,
+      blocked_reason: blockedReason || blockedReasons[0] || null,
     })
   }
 
@@ -515,7 +518,9 @@ function readDatabaseSkills(): AgentZeroSkillRegistryItem[] {
         runtime_layer: 'OpenClaw+' as const,
         shared_runtime: true as const,
         owner_agent: null,
+        available_to: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
         available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
+        role_tags: inferSkillRoleTags({ name: row.name, source: row.source, description: row.description, path: row.path || null }),
         tony_owns_skill_system: false as const,
         safe_mode: 'metadata_only' as const,
         status: accessFromVisibility(row.security_status || 'visible'),
@@ -637,7 +642,7 @@ function readSkillRegistry(): SkillRegistryReadResult {
       return true
     })
     .sort((a, b) => `${a.source}:${a.name}`.localeCompare(`${b.source}:${b.name}`))
-    .slice(0, 150)
+
 
   return {
     items: deduped,

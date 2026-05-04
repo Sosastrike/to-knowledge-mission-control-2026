@@ -9,6 +9,13 @@ import {
   type HermesBrainBlocker,
   type HermesBrainSystemContext,
 } from '@/lib/hermes-brain-sync'
+import {
+  buildHermesSkillInventory,
+  buildHermesSkillProposal,
+  summarizeHermesSkillInventory,
+  type HermesSkillInventoryItem,
+} from '@/lib/hermes-skills'
+import type { SkillRoleTag } from '@/lib/skill-role-tags'
 
 export type HermesStatusSummary = {
   health: 'healthy' | 'degraded' | 'unreachable'
@@ -62,11 +69,26 @@ export type HermesReadOnlyContext = {
       source: string
       path: string | null
       required_tools: string[]
+      description: string
+      role_tags: SkillRoleTag[]
+      available_to: Array<'agent_zero' | 'hermes'>
       required_credentials: string[]
       execution_requirements: string[]
+      missing_dependencies: string[]
+      blocked_reasons: string[]
       status: string
+      blocked: boolean
       blocked_reason: string | null
     }>
+    all_skills: HermesSkillInventoryItem[]
+    role_tags: SkillRoleTag[]
+    role_tag_counts: Record<SkillRoleTag, number>
+    blocked_total: number
+    missing_dependencies_total: number
+    draft_location: string
+    draft_writes_enabled: false
+    production_skill_writes_enabled: false
+    review_workflow: string[]
     available_to: Array<'agent_zero' | 'hermes'>
     tony_owns_skill_system: false
     execution_enabled: false
@@ -212,6 +234,7 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
   const hermes = context.agents.items.find((agent) => agent.id === 'hermes')
   const brainSystems = buildHermesBrainSystemsFromContext(context)
   const brainBlockerTable = getHermesBrainBlockerTable(brainSystems)
+  const skillInventory = buildHermesSkillInventory(context)
   const payload: HermesReadOnlyContext = {
     mode: 'hermes_mission_control_read_only_context',
     generated_at: new Date().toISOString(),
@@ -265,16 +288,31 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
         status: source.status,
         total: source.total,
       })),
-      registry: context.skills.registry.map((skill) => ({
+      registry: skillInventory.skills.map((skill) => ({
         name: skill.name,
         source: skill.source,
         path: skill.path,
+        description: skill.description,
+        role_tags: skill.role_tags,
+        available_to: skill.available_to,
         required_tools: skill.required_tools,
         required_credentials: skill.required_credentials,
         execution_requirements: skill.execution_requirements,
+        missing_dependencies: skill.missing_dependencies,
+        blocked_reasons: skill.blocked_reasons,
         status: skill.status,
+        blocked: skill.blocked,
         blocked_reason: skill.blocked_reason,
-      })).slice(0, 120),
+      })),
+      all_skills: skillInventory.skills,
+      role_tags: skillInventory.role_tags,
+      role_tag_counts: skillInventory.role_tag_counts,
+      blocked_total: skillInventory.blocked_total,
+      missing_dependencies_total: skillInventory.missing_dependencies_total,
+      draft_location: skillInventory.draft_location,
+      draft_writes_enabled: false,
+      production_skill_writes_enabled: false,
+      review_workflow: skillInventory.review_workflow,
       available_to: ['agent_zero', 'hermes'],
       tony_owns_skill_system: false,
       execution_enabled: false,
@@ -340,8 +378,27 @@ export function buildHermesReadOnlyContractReply(input: {
       ? 'Yes, Sir. I can see Mission Control through the read-only Bridge context, and execution is disabled.'
       : 'No, Sir. Hermes cannot answer live through Mission Control yet; Mission Control prepared the read-only context, but the safe Hermes chat adapter is not configured.'
   }
+  if (/workflow\s+plan|workflow\s+design|create.*workflow|operational\s+plan/i.test(message)) {
+    return [
+      'Yes, Sir. Hermes can design workflow plans for Agent Zero without executing anything.',
+      'The workflow would define goal, inputs, required tools, credentials, blockers, Bridge Session scope, audit points, tests, rollback, and final owner-facing report.',
+      'Agent Zero remains the executor or delegator through approved adapters only.',
+    ].join(' ')
+  }
   if (/agent\s*zero|what\s+is\s+his\s+role|commander/i.test(message)) {
     return 'Agent Zero is the commander. Hermes is the lieutenant for skills, workflows, automations, and operational plans; execution remains disabled until a Bridge Session exists.'
+  }
+  if (/design.*skill|skill\s+proposal|create.*skill.*proposal|summariz(?:e|ing).*build[-\s]?wiki/i.test(message)) {
+    const proposal = buildHermesSkillProposal(message.replace(/^.*?(?:for|skill)\s+/i, '').trim() || 'Summarize Build-Wiki Runs')
+    return [
+      'Yes, Sir. Here is a Hermes skill proposal only; I did not write files or activate anything.',
+      `Skill: ${proposal.title}.`,
+      `Purpose: ${proposal.purpose}`,
+      `Inputs: ${proposal.inputs.join(', ')}.`,
+      `Outputs: ${proposal.outputs.join(', ')}.`,
+      `Tags: ${proposal.role_tags.join(', ')}.`,
+      'Draft writes require Agent Zero review and an owner-approved Bridge Session.',
+    ].join(' ')
   }
   if (/brain\s*sync|obsidian|mempalace|graphify|build[-\s]?wiki|farmer/i.test(message)) {
     const brainSummary = summarizeHermesBrainSystems(input.context.brain.systems)
@@ -359,6 +416,31 @@ export function buildHermesReadOnlyContractReply(input: {
         : 'Mission Control can prepare read-only Brain context for Hermes, but Hermes was not called live from this route.',
       brainSummary,
       'Writes and execution stay disabled until an owner-approved Agent Zero Bridge Session.',
+    ].join(' ')
+  }
+  if (/what\s+skills|list.*skills|skill\s+registry|skills.*use|blocked\s+skills/i.test(message)) {
+    const inventorySummary = summarizeHermesSkillInventory({
+      runtime_layer: 'OpenClaw+',
+      total: input.context.skills.total,
+      blocked_total: input.context.skills.blocked_total,
+      missing_dependencies_total: input.context.skills.missing_dependencies_total,
+      role_tags: input.context.skills.role_tags,
+      role_tag_counts: input.context.skills.role_tag_counts,
+      source_count: input.context.skills.sources.length,
+      draft_location: input.context.skills.draft_location,
+      draft_writes_enabled: false,
+      production_skill_writes_enabled: false,
+      activation_requires: 'agent_zero_bridge_session',
+      review_workflow: input.context.skills.review_workflow,
+      skills: input.context.skills.all_skills,
+      tony_owns_skill_system: false,
+    })
+    const examples = input.context.skills.registry.slice(0, 8).map((skill) => `${skill.name} [${skill.role_tags.join('/') || 'workflow'}: ${skill.blocked ? 'blocked' : skill.status}]`)
+    return [
+      `Hermes can list the shared skill registry, Sir. ${inventorySummary}`,
+      `Examples: ${examples.length ? examples.join('; ') : 'no skill examples visible'}.`,
+      'Hermes can propose skills and workflow plans, but Agent Zero reviews them and Bridge Session approval is required before draft writes or activation.',
+      'Tony does not own the active skill system.',
     ].join(' ')
   }
   if (/what\s+can\s+you\s+do|ecosystem|do\s+not\s+execute/i.test(message)) {

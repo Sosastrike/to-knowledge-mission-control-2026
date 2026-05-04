@@ -11,6 +11,7 @@ import {
   redactSecretsDeep,
   sendHermesReadOnlyMessage,
 } from '@/lib/hermes-bridge'
+import { buildHermesSkillInventory, buildHermesSkillProposal } from '@/lib/hermes-skills'
 
 function fakeEcosystemContext() {
   return buildAgentZeroReadOnlyContext({
@@ -213,6 +214,47 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(result.response_text).toContain('Build-Wiki')
     expect(result.response_text).toContain('Writes and execution stay disabled')
     expect(result.response_text).not.toMatch(/\/home\/tony|Done|Failed stage|Traceback/i)
+  })
+
+  it('lets Hermes list shared skills with role tags and blocked requirements', async () => {
+    const context = buildHermesReadOnlyContext(fakeEcosystemContext())
+    const inventory = buildHermesSkillInventory(fakeEcosystemContext())
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'What skills can you use through the ecosystem?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(context.skills.all_skills.length).toBeGreaterThan(0)
+    expect(context.skills.registry[0].available_to).toContain('hermes')
+    expect(context.skills.registry[0].role_tags.length).toBeGreaterThan(0)
+    expect(inventory.tony_owns_skill_system).toBe(false)
+    expect(result.response_text).toContain('Hermes can list the shared skill registry')
+    expect(result.response_text).toContain('Tony does not own the active skill system')
+    expect(result.execution_enabled).toBe(false)
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+  it('creates skill proposals and workflow plans without writing files', async () => {
+    const proposal = buildHermesSkillProposal('Design a skill for summarizing Build-Wiki runs')
+    const skillResult = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Design a skill for summarizing Build-Wiki runs. Do not execute.',
+      context: fakeEcosystemContext(),
+    })
+    const workflowResult = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Create a workflow plan for Agent Zero. Do not execute.',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(proposal.mode).toBe('proposal_only_no_files_written')
+    expect(proposal.file_written).toBe(false)
+    expect(proposal.activation_requires).toBe('agent_zero_bridge_session')
+    expect(proposal.role_tags).toContain('brain')
+    expect(skillResult.response_text).toContain('proposal only')
+    expect(skillResult.response_text).toContain('I did not write files')
+    expect(skillResult.response_text).toContain('Agent Zero review')
+    expect(skillResult.response_text).not.toMatch(/\/home\/tony|Done|Failed stage|Traceback/i)
+    expect(workflowResult.response_text).toContain('Hermes can design workflow plans for Agent Zero')
+    expect(workflowResult.response_text).toContain('without executing anything')
   })
 
   it('keeps Tony out of Brain hierarchy and records blocked brain adapters honestly', () => {

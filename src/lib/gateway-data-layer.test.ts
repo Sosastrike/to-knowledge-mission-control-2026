@@ -40,7 +40,7 @@ const registry: GatewayRegistry = {
     {
       id: 'opencloud',
       label: 'OpenCloud / Build-Wiki',
-      kind: 'opencloud',
+      kind: 'opencloud_worker',
       status: 'connected',
       owner: 'ecosystem',
       visibility: 'owner_visible',

@@ -545,6 +545,7 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
   const integrationCount = asArray(pick(context, 'integrations', 'registry')).length
   const toolCount = asArray(pick(context, 'tools', 'registry')).length
   const mcpCount = asArray(pick(context, 'mcp', 'servers')).length
+  const skillCount = asArray(pick(context, 'skills', 'registry')).length
   const brainRegistry = asRecords(pick(context, 'brain', 'registry'))
   const buildwiki = pickRecord(context, 'opencloud_buildwiki')
   const buildwikiVisible = hasRecordValues(buildwiki)
@@ -557,7 +558,7 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
     makeNode({
       id: 'gateway',
       label: 'Gateway',
-      kind: 'api',
+      kind: 'gateway',
       status: 'connected',
       capabilities: ['route', 'govern', 'observe', 'control'],
       lastSeen: generatedAt,
@@ -609,6 +610,24 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       lastSeen: generatedAt,
     }),
     makeNode({
+      id: 'skills',
+      label: 'Skills',
+      kind: 'skill',
+      status: skillCount > 0 ? 'read_only' : 'degraded',
+      capabilities: ['OpenClaw+ shared skills', 'Hermes skill proposals', 'Bridge Session gated activation'],
+      blockers: skillCount > 0 ? [] : ['skill_registry_empty_or_not_visible'],
+      lastSeen: generatedAt,
+    }),
+    makeNode({
+      id: 'data_sources',
+      label: 'Data Sources',
+      kind: 'data_source',
+      status: brainVisible || integrationCount > 0 ? 'read_only' : 'degraded',
+      capabilities: ['system discovery', 'source discovery', 'schemas', 'tables', 'columns'],
+      blockers: brainVisible || integrationCount > 0 ? [] : ['data_sources_not_visible'],
+      lastSeen: generatedAt,
+    }),
+    makeNode({
       id: 'integrations',
       label: 'Integrations',
       kind: 'api',
@@ -629,7 +648,7 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
     makeNode({
       id: 'brain',
       label: 'Brain',
-      kind: 'brain',
+      kind: 'brain_system',
       status: brainVisible ? 'read_only' : 'degraded',
       capabilities: ['Brain Sync', 'Obsidian', 'MemPalace', 'Graphify', 'Build-Wiki/Farmer'],
       blockers: brainVisible ? [] : ['brain_registry_not_visible'],
@@ -638,7 +657,7 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
     makeNode({
       id: 'opencloud',
       label: 'OpenCloud',
-      kind: 'opencloud',
+      kind: 'opencloud_worker',
       status: buildwikiVisible ? 'read_only' : 'degraded',
       capabilities: ['Build-Wiki dependency', 'knowledge source', 'not deletion target'],
       blockers: buildwikiVisible ? [] : ['opencloud_dependency_status_not_visible'],
@@ -675,10 +694,13 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('gateway', 'llm_gateway', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'integrations', 'tool-call', true, generatedAt, null),
+    makeEdge('gateway', 'skills', 'tool-call', true, generatedAt, null),
+    makeEdge('gateway', 'data_sources', 'sync', false, generatedAt, null),
     makeEdge('gateway', 'events', 'event', false, generatedAt, null),
     makeEdge('gateway', 'brain', 'memory', false, generatedAt, null),
     makeEdge('gateway', 'brain_sync', 'memory', true, generatedAt, null),
     makeEdge('brain', 'brain_sync', 'memory', false, generatedAt, null),
+    makeEdge('data_sources', 'brain', 'sync', false, generatedAt, null),
     makeEdge('brain', 'obsidian', 'memory', true, generatedAt, null),
     makeEdge('brain', 'mempalace', 'memory', true, generatedAt, null),
     makeEdge('brain', 'graphify', 'memory', true, generatedAt, null),
@@ -845,7 +867,7 @@ const GATEWAY_TOOL_INTEGRATION_DEFINITIONS: GatewayToolIntegrationDefinition[] =
     id: 'agentmail',
     label: 'AgentMail',
     aliases: ['agentmail', 'agent mail', 'email'],
-    nodeKind: 'api',
+    nodeKind: 'delivery_channel',
     credentialNames: ['AGENTMAIL_API_KEY'],
     capabilities: ['incoming mail status', 'outgoing mail status', 'domain allow-list rules'],
     missingBlocker: 'agentmail_not_configured_or_not_visible_in_gateway_registry',
@@ -854,7 +876,7 @@ const GATEWAY_TOOL_INTEGRATION_DEFINITIONS: GatewayToolIntegrationDefinition[] =
     id: 'google_drive',
     label: 'Google Drive',
     aliases: ['google drive', 'gdrive', 'drive'],
-    nodeKind: 'api',
+    nodeKind: 'delivery_channel',
     credentialNames: ['GOOGLE_DRIVE_CREDENTIALS', 'GOOGLE_SERVICE_ACCOUNT_JSON'],
     capabilities: ['folder lookup status', 'upload connector status', 'session-gated report delivery'],
     missingBlocker: 'google_drive_not_configured_or_not_visible_in_gateway_registry',
@@ -863,7 +885,7 @@ const GATEWAY_TOOL_INTEGRATION_DEFINITIONS: GatewayToolIntegrationDefinition[] =
     id: 'onedrive',
     label: 'OneDrive',
     aliases: ['onedrive', 'one drive', 'microsoft drive'],
-    nodeKind: 'api',
+    nodeKind: 'delivery_channel',
     credentialNames: ['ONEDRIVE_TOKEN', 'MICROSOFT_GRAPH_TOKEN'],
     capabilities: ['folder lookup status', 'upload connector status', 'session-gated report delivery'],
     missingBlocker: 'onedrive_not_configured_or_not_visible_in_gateway_registry',
@@ -1762,10 +1784,14 @@ function nodeKindForCategory(category: string): GatewayNodeKind {
   if (normalized.includes('model')) return 'model'
   if (normalized.includes('mcp')) return 'mcp_server'
   if (normalized.includes('tool')) return 'tool'
-  if (normalized.includes('agent')) return 'agent'
-  if (normalized.includes('brain') || normalized.includes('memory')) return 'brain'
+  if (normalized.includes('commander')) return 'commander'
+  if (normalized.includes('lieutenant')) return 'lieutenant'
+  if (normalized.includes('agent')) return 'mini_agent'
+  if (normalized.includes('brain') || normalized.includes('memory')) return 'brain_system'
   if (normalized.includes('event')) return 'event'
-  if (normalized.includes('opencloud')) return 'opencloud'
+  if (normalized.includes('opencloud')) return 'opencloud_worker'
+  if (normalized.includes('delivery') || normalized.includes('mail') || normalized.includes('drive')) return 'delivery_channel'
+  if (normalized.includes('data') || normalized.includes('source')) return 'data_source'
   return 'api'
 }
 

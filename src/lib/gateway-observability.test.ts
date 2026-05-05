@@ -20,7 +20,7 @@ const registry = {
     {
       id: 'gateway',
       label: 'Gateway',
-      kind: 'api',
+      kind: 'gateway',
       status: 'connected',
       owner: 'ecosystem',
       visibility: 'owner_visible',

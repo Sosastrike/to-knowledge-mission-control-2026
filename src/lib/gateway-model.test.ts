@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  GATEWAY_NODE_KINDS,
   GATEWAY_STATUS_STATES,
   createGatewayCapability,
   createGatewayFlow,
@@ -18,6 +19,25 @@ describe('canonical Gateway graph model', () => {
       'read_only',
       'write_enabled',
       'execution_enabled',
+    ])
+
+    expect([...GATEWAY_NODE_KINDS]).toEqual([
+      'owner',
+      'gateway',
+      'commander',
+      'lieutenant',
+      'mini_agent',
+      'skill',
+      'tool',
+      'model',
+      'mcp_server',
+      'api',
+      'event',
+      'data_source',
+      'brain_system',
+      'opencloud_worker',
+      'buildwiki_farmer',
+      'delivery_channel',
     ])
 
     expect(normalizeGatewayStatus('active')).toBe('connected')
@@ -68,7 +88,7 @@ describe('canonical Gateway graph model', () => {
     const agentZero = registry.nodes.find((node) => node.id === 'agent_zero')
     const hermes = registry.nodes.find((node) => node.id === 'hermes')
     const bridge = registry.nodes.find((node) => node.id === 'bridge_mcp')
-    const brainNodes = registry.nodes.filter((node) => node.kind === 'brain').map((node) => node.id)
+    const brainNodes = registry.nodes.filter((node) => node.kind === 'brain_system' || node.kind === 'buildwiki_farmer').map((node) => node.id)
 
     expect(registry.version).toBe('gateway_registry_v1')
     expect(registry.generated_at).toBe('2026-05-04T12:00:00.000Z')

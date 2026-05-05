@@ -1,18 +1,22 @@
 import type { GatewayCapability, GatewayNode, GatewayRegistry, GatewayStatus } from './gateway-model'
 
 export const GATEWAY_DATA_LAYER_NODE_TYPES = [
-  'agent',
+  'owner',
+  'gateway',
+  'commander',
+  'lieutenant',
   'mini_agent',
   'skill',
   'tool',
+  'model',
   'mcp_server',
   'api',
-  'model',
+  'event',
   'data_source',
   'brain_system',
   'opencloud_worker',
+  'buildwiki_farmer',
   'delivery_channel',
-  'event',
 ] as const
 
 export type GatewayDataLayerNodeType = (typeof GATEWAY_DATA_LAYER_NODE_TYPES)[number]
@@ -260,7 +264,7 @@ export function getSkills(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode
 }
 
 export function getAgents(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
-  return layer.nodes.filter((node) => node.type === 'agent' || node.type === 'mini_agent')
+  return layer.nodes.filter((node) => node.type === 'owner' || node.type === 'commander' || node.type === 'lieutenant' || node.type === 'mini_agent')
 }
 
 export function getModels(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
@@ -512,14 +516,18 @@ function stringStatusDetail(details: Record<string, string | number | boolean | 
 function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
   switch (node.kind) {
     case 'owner':
+      return 'owner'
     case 'commander':
+      return 'commander'
     case 'lieutenant':
-    case 'agent':
-      return 'agent'
+      return 'lieutenant'
+    case 'mini_agent':
+      return 'mini_agent'
+    case 'gateway':
+      return 'gateway'
     case 'skill':
       return 'skill'
     case 'tool':
-    case 'runtime':
       return 'tool'
     case 'mcp_server':
       return 'mcp_server'
@@ -527,29 +535,35 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'api'
     case 'model':
       return 'model'
-    case 'brain':
+    case 'brain_system':
       return 'brain_system'
-    case 'opencloud':
+    case 'opencloud_worker':
       return 'opencloud_worker'
+    case 'buildwiki_farmer':
+      return 'buildwiki_farmer'
     case 'event':
       return 'event'
-    case 'data':
-    case 'external_source':
-    default:
+    case 'data_source':
       return 'data_source'
+    case 'delivery_channel':
+      return 'delivery_channel'
   }
 }
 
 function nodeTypeFromCapability(capability: GatewayCapability): GatewayDataLayerNodeType {
   const id = capability.id.toLowerCase()
   const label = capability.label.toLowerCase()
-  if (capability.kind === 'agent') return 'agent'
+  if (capability.kind === 'agent') return 'mini_agent'
   if (capability.kind === 'skill') return 'skill'
   if (capability.kind === 'tool') return 'tool'
   if (capability.kind === 'mcp_server') return 'mcp_server'
   if (capability.kind === 'api') return isDeliveryCapability(id, label) ? 'delivery_channel' : 'api'
   if (capability.kind === 'model') return 'model'
-  if (capability.kind === 'brain') return id.includes('buildwiki') || id.includes('opencloud') ? 'opencloud_worker' : 'brain_system'
+  if (capability.kind === 'brain') {
+    if (id.includes('buildwiki') || id.includes('farmer') || label.includes('build-wiki') || label.includes('farmer')) return 'buildwiki_farmer'
+    if (id.includes('opencloud') || label.includes('opencloud')) return 'opencloud_worker'
+    return 'brain_system'
+  }
   if (capability.kind === 'integration') return isDeliveryCapability(id, label) ? 'delivery_channel' : 'api'
   return 'data_source'
 }
@@ -599,11 +613,13 @@ function semanticContextFor(type: GatewayDataLayerNodeType, name: string): strin
   if (type === 'opencloud_worker') {
     return `${name} is a retained OpenCloud or Build-Wiki worker/runtime node under Gateway control, not a deletion target.`
   }
+  if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
   if (type === 'skill') return `${name} is a shared OpenClaw+ skill capability discoverable before activation.`
-  if (type === 'agent') return `${name} is an agent node governed by Gateway policy and hierarchy.`
+  if (type === 'owner' || type === 'commander' || type === 'lieutenant' || type === 'mini_agent') return `${name} is an agent-family node governed by Gateway policy and hierarchy.`
   if (type === 'model') return `${name} is an LLM/model route governed by Gateway routing and fallback policy.`
   if (type === 'mcp_server') return `${name} is an MCP discovery node; schemas are discovered before execution.`
   if (type === 'brain_system') return `${name} is a Brain system node with explicit read/write status.`
+  if (type === 'gateway') return `${name} is the governed Gateway control point for routing, policy, observability, and registry discovery.`
   if (type === 'delivery_channel') return `${name} is a delivery node; external delivery requires policy checks and may require Bridge Session.`
   if (type === 'event') return `${name} is an event source or event stream observed by Gateway.`
   return `${name} is a Gateway data-layer node with discovery-first status and policy metadata.`

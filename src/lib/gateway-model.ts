@@ -17,22 +17,26 @@ export const GATEWAY_STATUS_STATES = [
 
 export type GatewayStatus = (typeof GATEWAY_STATUS_STATES)[number]
 
-export type GatewayNodeKind =
-  | 'owner'
-  | 'commander'
-  | 'lieutenant'
-  | 'agent'
-  | 'model'
-  | 'mcp_server'
-  | 'api'
-  | 'tool'
-  | 'skill'
-  | 'event'
-  | 'brain'
-  | 'data'
-  | 'opencloud'
-  | 'external_source'
-  | 'runtime'
+export const GATEWAY_NODE_KINDS = [
+  'owner',
+  'gateway',
+  'commander',
+  'lieutenant',
+  'mini_agent',
+  'skill',
+  'tool',
+  'model',
+  'mcp_server',
+  'api',
+  'event',
+  'data_source',
+  'brain_system',
+  'opencloud_worker',
+  'buildwiki_farmer',
+  'delivery_channel',
+] as const
+
+export type GatewayNodeKind = (typeof GATEWAY_NODE_KINDS)[number]
 
 export type GatewayEdgeKind =
   | 'command'
@@ -328,7 +332,7 @@ export function createGatewayRegistryFromAgentNetwork(
     createGatewayNode({
       id: hierarchy.runtime.id,
       label: hierarchy.runtime.name,
-      kind: 'runtime',
+      kind: 'skill',
       status: 'connected',
       owner: 'ecosystem',
       visibility: 'owner_visible',
@@ -353,7 +357,7 @@ export function createGatewayRegistryFromAgentNetwork(
       createGatewayNode({
         id: agent.id,
         label: agent.name,
-        kind: 'agent',
+        kind: 'mini_agent',
         status: 'blocked',
         owner: 'archive',
         visibility: 'archived',
@@ -472,8 +476,8 @@ function scoreForGatewayStatus(status: GatewayStatus): number | null {
 
 function kindForSystem(id: string): GatewayNodeKind {
   if (id === 'bridge_mcp') return 'mcp_server'
-  if (id === 'buildwiki') return 'brain'
-  if (id === 'brain_sync' || id === 'obsidian' || id === 'mempalace' || id === 'graphify') return 'brain'
+  if (id === 'buildwiki') return 'buildwiki_farmer'
+  if (id === 'brain_sync' || id === 'obsidian' || id === 'mempalace' || id === 'graphify') return 'brain_system'
   return 'tool'
 }
 

@@ -376,6 +376,8 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('opencloud')).toBe(true)
     expect(nodes.has('obsidian')).toBe(true)
     expect(nodes.has('mempalace')).toBe(true)
+    expect(nodes.has('skills')).toBe(true)
+    expect(nodes.has('data_sources')).toBe(true)
     expect(nodes.has('graphify')).toBe(true)
     expect(nodes.has('buildwiki')).toBe(true)
     expect(capabilities.has('mcp_zapier')).toBe(true)
@@ -599,6 +601,29 @@ describe('Gateway registry API model', () => {
       read_enabled: true,
       execution_enabled: false,
     })
+    const nodeTypes = new Set(nodes.nodes.map((item) => item.type))
+    expect([...nodeTypes]).toEqual(expect.arrayContaining([
+      'owner',
+      'gateway',
+      'commander',
+      'lieutenant',
+      'mini_agent',
+      'skill',
+      'tool',
+      'model',
+      'mcp_server',
+      'api',
+      'event',
+      'data_source',
+      'brain_system',
+      'opencloud_worker',
+      'buildwiki_farmer',
+      'delivery_channel',
+    ]))
+    expect(nodes.nodes.find((item) => item.id === 'gateway')).toMatchObject({ type: 'gateway' })
+    expect(nodes.nodes.find((item) => item.id === 'buildwiki')).toMatchObject({ type: 'buildwiki_farmer' })
+    expect(nodes.nodes.find((item) => item.id === 'opencloud')).toMatchObject({ type: 'opencloud_worker' })
+    expect(nodes.nodes.find((item) => item.id === 'integration_agentmail')).toMatchObject({ type: 'delivery_channel' })
     expect(node?.node.label).toBe('Agent Zero')
     expect(node?.node.name).toBe('Agent Zero')
     expect(node?.node.type).toBe('commander')

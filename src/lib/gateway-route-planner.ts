@@ -354,6 +354,12 @@ function routeTool(registry: GatewayRegistry, prompt: string): RouteTarget {
     ['firecrawl', 'integration_firecrawl'],
     ['zapier', 'integration_zapier'],
     ['heygen', 'integration_heygen'],
+    ['agentmail', 'integration_agentmail'],
+    ['agent mail', 'integration_agentmail'],
+    ['google drive', 'integration_google_drive'],
+    ['onedrive', 'integration_onedrive'],
+    ['one drive', 'integration_onedrive'],
+    ['n8n', 'integration_n8n'],
     ['mcp', 'mcp_servers'],
     ['api', 'bridge_mcp.providers'],
   ])
@@ -362,14 +368,16 @@ function routeTool(registry: GatewayRegistry, prompt: string): RouteTarget {
     null
   return routeCapability({
     primaryTarget: 'agent_zero',
-    fallbackDispatch: wanted === 'mcp_servers' ? 'mcp_tools' : 'bridge_mcp',
-    via: ['owner', 'gateway', 'agent_zero', 'bridge_mcp'],
+    fallbackDispatch: wanted === 'mcp_servers' ? 'mcp_tools' : 'mcp_gateway',
+    via: capability?.source_node
+      ? ['owner', 'gateway', 'agent_zero', 'mcp_gateway', capability.source_node]
+      : ['owner', 'gateway', 'agent_zero', 'mcp_gateway'],
     capability,
     edgeKind: 'mcp-call',
     requiresBridgeSession: true,
     executionMode: 'bridge_session',
     missingBlocker: wanted ? `${wanted}_not_registered` : 'tool_or_mcp_capability_not_registered',
-    rationale: 'Tool calls route through Bridge/MCP and registered adapters.',
+    rationale: 'Tool and MCP calls route through the Gateway MCP/Tool cluster, Bridge/MCP, and registered adapters.',
   })
 }
 
@@ -579,7 +587,7 @@ const REPORT_PATTERNS = [/\b(?:report|pdf|markdown|executive summary|capability 
 const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud)\b/]
 const MEMORY_PATTERNS = [/\b(?:brain|obsidian|mempalace|memory|remember|graphify|knowledge|note|vault)\b/]
 const SKILL_PATTERNS = [/\b(?:skill|workflow|automation|spec|proposal|design a skill|create a skill)\b/]
-const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|firecrawl|crawl|webhook tool)\b/]
+const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|firecrawl|crawl|agentmail|agent mail|n8n|webhook tool)\b/]
 const MODEL_PATTERNS = [/\b(?:model|llm|openrouter|openai|claude|anthropic|codex|chatgpt|ollama|nvidia|gemini|groq)\b/]
 const PLAN_PATTERNS = [/\b(?:plan|strategy|analyze|review|map|decide|recommend)\b/]
 const EVENT_PATTERNS = [/\b(?:incoming|webhook|telegram message|email event|schedule event|event)\b/]

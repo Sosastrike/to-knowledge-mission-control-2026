@@ -164,7 +164,38 @@ const context = {
         requires_bridge_session: true,
         missing_credential: true,
         credential_names: ['FIRECRAWL_API_KEY'],
+        schema_visible: false,
+        reachable: false,
         blocked_reason: 'missing_credential',
+      },
+      {
+        id: 'zapier',
+        name: 'Zapier',
+        status: 'configured',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: false,
+        credential_present: true,
+        credential_names: ['ZAPIER_TOKEN'],
+        schema_visible: true,
+        reachable: true,
+        tool_count: 4,
+        blocked_reason: null,
+      },
+      {
+        id: 'heygen',
+        name: 'HeyGen',
+        status: 'configured',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: false,
+        credential_present: true,
+        credential_names: ['HEYGEN_API_KEY'],
+        schema_visible: true,
+        reachable: true,
+        blocked_reason: null,
       },
       {
         id: 'agentmail',
@@ -174,8 +205,54 @@ const context = {
         write_enabled: false,
         requires_bridge_session: true,
         missing_credential: false,
+        credential_present: true,
         credential_names: ['AGENTMAIL_API_KEY'],
+        incoming_status: 'connected',
+        outgoing_status: 'blocked_pending_bridge_session',
+        domain_rules: 'owner_domain_only',
         blocked_reason: null,
+      },
+      {
+        id: 'google_drive',
+        name: 'Google Drive',
+        status: 'blocked',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: true,
+        credential_names: ['GOOGLE_DRIVE_CREDENTIALS'],
+        upload_connector_configured: false,
+        folder_lookup_available: false,
+        blocked_reason: 'missing_credential',
+      },
+      {
+        id: 'onedrive',
+        name: 'OneDrive',
+        status: 'configured',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: false,
+        credential_present: true,
+        credential_names: ['ONEDRIVE_TOKEN'],
+        upload_connector_configured: true,
+        folder_lookup_available: true,
+        blocked_reason: null,
+      },
+      {
+        id: 'n8n',
+        name: 'n8n',
+        status: 'blocked',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: true,
+        credential_names: ['N8N_API_KEY'],
+        installed: false,
+        running: false,
+        reachable: false,
+        api_key_configured: false,
+        blocked_reason: 'n8n_not_installed',
       },
       {
         id: 'codex_chatgpt',
@@ -277,6 +354,14 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('agent_zero')).toBe(true)
     expect(nodes.has('hermes')).toBe(true)
     expect(nodes.has('bridge_mcp')).toBe(true)
+    expect(nodes.has('mcp_gateway')).toBe(true)
+    expect(nodes.has('integration_zapier')).toBe(true)
+    expect(nodes.has('integration_heygen')).toBe(true)
+    expect(nodes.has('integration_firecrawl')).toBe(true)
+    expect(nodes.has('integration_agentmail')).toBe(true)
+    expect(nodes.has('integration_google_drive')).toBe(true)
+    expect(nodes.has('integration_onedrive')).toBe(true)
+    expect(nodes.has('integration_n8n')).toBe(true)
     expect(nodes.has('llm_gateway')).toBe(true)
     expect(nodes.has('model_openrouter')).toBe(true)
     expect(nodes.has('model_openai')).toBe(true)
@@ -306,6 +391,58 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('opencloud_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
+    const mcpZapier = registry.capabilities.find((capability) => capability.id === 'mcp_zapier')
+    expect(mcpZapier?.status_details).toMatchObject({
+      mcp_list_route: '/api/mcp/list',
+      tools_route: '/api/mcp/servers/zapier/tools',
+      tool_count: 4,
+      reachable: true,
+      schema_available: true,
+      read_only_schema_visible: true,
+      writes_require_bridge_session: true,
+      execution_enabled: false,
+    })
+    const zapier = registry.capabilities.find((capability) => capability.id === 'integration_zapier')
+    expect(zapier?.source_node).toBe('integration_zapier')
+    expect(zapier?.status_details).toMatchObject({
+      read_only_schema_visible: true,
+      write_enabled: false,
+      writes_require_bridge_session: true,
+      credential_configured: true,
+    })
+    const heygen = registry.capabilities.find((capability) => capability.id === 'integration_heygen')
+    expect(heygen?.status_details).toMatchObject({
+      read_only_schema_visible: true,
+      generation_requires_bridge_session: true,
+      execution_enabled: false,
+    })
+    const agentmail = registry.capabilities.find((capability) => capability.id === 'integration_agentmail')
+    expect(agentmail?.status_details).toMatchObject({
+      incoming_status: 'connected',
+      outgoing_status: 'blocked_pending_bridge_session',
+      domain_rules: 'owner_domain_only',
+    })
+    const googleDrive = registry.capabilities.find((capability) => capability.id === 'integration_google_drive')
+    expect(googleDrive?.blockers).toContain('missing_credential')
+    expect(googleDrive?.status_details).toMatchObject({
+      upload_connector_configured: false,
+      folder_lookup_available: false,
+      uploads_require_bridge_session: true,
+    })
+    const oneDrive = registry.capabilities.find((capability) => capability.id === 'integration_onedrive')
+    expect(oneDrive?.status_details).toMatchObject({
+      upload_connector_configured: true,
+      folder_lookup_available: true,
+      uploads_require_bridge_session: true,
+    })
+    const n8n = registry.capabilities.find((capability) => capability.id === 'integration_n8n')
+    expect(n8n?.status_details).toMatchObject({
+      installed: false,
+      running: false,
+      reachable: false,
+      api_key_configured: false,
+    })
+    expect(n8n?.blockers).toContain('n8n_not_installed')
     const skill = registry.capabilities.find((capability) => capability.id === 'skill_openclaw_plus_email_triage')
     expect(skill).toMatchObject({
       kind: 'skill',
@@ -375,6 +512,30 @@ describe('Gateway registry API model', () => {
     expect(status.agent_zero.status).toBe('connected')
     expect(status.hermes.status).toBe('degraded')
     expect(status.bridge_mcp.mcp_servers).toBeGreaterThan(0)
+    expect(status.mcp_gateway).toMatchObject({
+      visible: true,
+      status: 'read_only',
+      mcp_list_route: '/api/mcp/list',
+      mcp_tools_route_template: '/api/mcp/servers/:id/tools',
+      policy: {
+        read_only_schema_visible: true,
+        writes_require_bridge_session: true,
+        generation_requires_bridge_session: true,
+        uploads_require_bridge_session: true,
+        no_external_write_without_session: true,
+      },
+    })
+    expect(status.mcp_gateway.servers.find((server) => server.id === 'zapier')).toMatchObject({
+      reachable: true,
+      schema_available: true,
+      tool_count: 4,
+      tools_route: '/api/mcp/servers/zapier/tools',
+    })
+    expect(status.mcp_gateway.tools_integrations.map((item) => item.id)).toEqual(expect.arrayContaining(['zapier', 'heygen', 'firecrawl', 'agentmail', 'google_drive', 'onedrive', 'n8n']))
+    expect(status.mcp_gateway.tools_integrations.find((item) => item.id === 'firecrawl')).toMatchObject({
+      status: 'blocked',
+      blocker: 'missing_credential',
+    })
     expect(status.llm_gateway.visible).toBe(true)
     expect(status.llm_gateway.status).toBe('read_only')
     expect(status.llm_gateway.providers.map((provider) => provider.id)).toEqual(expect.arrayContaining(['openrouter', 'openai', 'codex_chatgpt', 'claude_anthropic', 'ollama', 'nvidia', 'groq', 'gemini']))

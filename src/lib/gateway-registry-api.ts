@@ -52,6 +52,39 @@ export type GatewayStatusPayload = {
     mcp_tools_visible: boolean
     execution_enabled: false
   }
+  mcp_gateway: {
+    visible: boolean
+    status: GatewayStatus
+    mcp_list_route: string
+    mcp_tools_route_template: string
+    servers: Array<{
+      id: string
+      label: string
+      status: GatewayStatus
+      reachable: boolean
+      schema_available: boolean
+      tool_count: number
+      tools_route: string | null
+      blocker: string | null
+    }>
+    tools_integrations: Array<{
+      id: string
+      label: string
+      status: GatewayStatus
+      read_only_schema_visible: boolean
+      write_enabled: boolean
+      requires_bridge_session: boolean
+      credential_configured: boolean
+      blocker: string | null
+    }>
+    policy: {
+      read_only_schema_visible: true
+      writes_require_bridge_session: true
+      generation_requires_bridge_session: true
+      uploads_require_bridge_session: true
+      no_external_write_without_session: true
+    }
+  }
   llm_gateway: {
     visible: boolean
     status: GatewayStatus
@@ -251,6 +284,7 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
   const providers = registry.capabilities.filter((capability) => capability.id.startsWith('bridge_provider_'))
   const modelProviderCapabilities = registry.capabilities.filter((capability) => capability.kind === 'model' && capability.id.startsWith('model_'))
   const llmGateway = summarizeLlmGateway(modelProviderCapabilities)
+  const mcpGateway = summarizeMcpToolGateway(registry.capabilities)
   const brainSystems = ['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'].map((id) => {
     const summary = summarizeNode(registry, id, id)
     const capabilities = registry.capabilities.filter((capability) => capability.source_node === id || capability.id.includes(id))
@@ -294,6 +328,7 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
       mcp_tools_visible: mcpServers.some((capability) => capability.read_enabled),
       execution_enabled: false,
     },
+    mcp_gateway: mcpGateway,
     llm_gateway: llmGateway,
     brain_systems: brainSystems,
     buildwiki_opencloud: buildWikiOpenCloud,
@@ -445,6 +480,8 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
   const brainVisible = brainRegistry.length > 0 || buildwikiVisible
   const modelProviderNodes = buildModelProviderNodes(context, generatedAt)
   const modelProviderVisible = modelProviderNodes.some((node) => node.status !== 'blocked' && node.status !== 'missing')
+  const gatewayToolIntegrationNodes = buildGatewayToolIntegrationNodes(context, generatedAt)
+  const gatewayToolIntegrationVisible = gatewayToolIntegrationNodes.some((node) => node.status !== 'blocked' && node.status !== 'missing')
   return [
     makeNode({
       id: 'gateway',
@@ -474,6 +511,15 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
     }),
     ...modelProviderNodes,
     makeNode({
+      id: 'mcp_gateway',
+      label: 'MCP / Tool Gateway',
+      kind: 'mcp_server',
+      status: mcpCount > 0 || gatewayToolIntegrationVisible ? 'read_only' : 'degraded',
+      capabilities: ['MCP server list', 'tool schema summaries', 'read-only integration status', 'session-gated writes'],
+      blockers: mcpCount > 0 || gatewayToolIntegrationVisible ? [] : ['mcp_tool_gateway_sources_not_visible'],
+      lastSeen: generatedAt,
+    }),
+    makeNode({
       id: 'mcp_tools',
       label: 'MCP Tools',
       kind: 'mcp_server',
@@ -500,6 +546,7 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       blockers: integrationCount > 0 ? [] : ['integration_registry_empty_or_not_visible'],
       lastSeen: generatedAt,
     }),
+    ...gatewayToolIntegrationNodes,
     makeNode({
       id: 'events',
       label: 'Gateway Events',
@@ -532,11 +579,18 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
 }
 
 function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayEdge[] {
+  const gatewayToolIntegrationNodes = buildGatewayToolIntegrationNodes(context, generatedAt)
   const providerEdges = buildProviderNodes(context, generatedAt).map((node) =>
     makeEdge('bridge_mcp', node.id, 'mcp-call', true, generatedAt, node.blockers[0] || null),
   )
   const mcpEdges = buildMcpServerNodes(context, generatedAt).map((node) =>
     makeEdge('mcp_tools', node.id, 'mcp-call', true, generatedAt, node.blockers[0] || null),
+  )
+  const mcpGatewayServerEdges = buildMcpServerNodes(context, generatedAt).map((node) =>
+    makeEdge('mcp_gateway', node.id, 'mcp-call', true, generatedAt, node.blockers[0] || null),
+  )
+  const mcpGatewayToolEdges = gatewayToolIntegrationNodes.map((node) =>
+    makeEdge('mcp_gateway', node.id, 'tool-call', true, generatedAt, node.blockers[0] || null),
   )
   const modelEdges = buildModelProviderNodes(context, generatedAt).map((node) =>
     makeEdge('llm_gateway', node.id, 'model-call', true, generatedAt, node.blockers[0] || null),
@@ -545,6 +599,7 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('owner', 'gateway', 'command', false, generatedAt, null),
     makeEdge('gateway', 'agent_zero', 'command', false, generatedAt, null),
     makeEdge('gateway', 'bridge_mcp', 'mcp-call', true, generatedAt, null),
+    makeEdge('gateway', 'mcp_gateway', 'mcp-call', true, generatedAt, null),
     makeEdge('gateway', 'models', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'llm_gateway', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
@@ -560,8 +615,11 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('buildwiki', 'opencloud', 'sync', true, generatedAt, null),
     makeEdge('hermes', 'agent_zero', 'delegation', false, generatedAt, null),
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),
+    makeEdge('mcp_gateway', 'mcp_tools', 'mcp-call', true, generatedAt, null),
     ...providerEdges,
     ...mcpEdges,
+    ...mcpGatewayServerEdges,
+    ...mcpGatewayToolEdges,
     ...modelEdges,
   ]
 }
@@ -590,6 +648,7 @@ function buildGatewayCapabilities(context: AgentZeroReadOnlyContext | null, gene
     ...modelCapabilities(context, generatedAt),
     ...toolCapabilities(context, generatedAt),
     ...skillCapabilities(context, generatedAt),
+    ...gatewayToolIntegrationCapabilities(context, generatedAt),
     ...integrationCapabilities(context, generatedAt),
     ...brainCapabilities(context, generatedAt),
   ]
@@ -618,19 +677,256 @@ function mcpCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: 
   return asRecords(pick(context, 'mcp', 'servers')).map((server) => {
     const id = gatewayId(String(server.name || 'mcp_server'))
     const blocker = stringOrNull(server.blocked_reason)
+    const reachable = Boolean(server.reachable ?? statusFromAccess(server.status, server.state) !== 'blocked')
+    const schemaAvailable = Boolean(server.schema_available || server.schema_visible)
+    const toolCount = numericValue(server.tool_count) ?? numericValue(server.tools_count) ?? 0
+    const toolsRoute = stringOrNull(server.tools_endpoint) || `/api/mcp/servers/${id}/tools`
     return createGatewayCapability({
       id: `mcp_${id}`,
       label: cleanLabel(server.name, id),
       kind: 'mcp_server',
-      status: Boolean(server.reachable) && !blocker ? 'read_only' : 'blocked',
+      status: reachable && !blocker ? 'read_only' : 'blocked',
       source_node: `mcp_${id}`,
       requires_session: true,
-      read_enabled: Boolean(server.schema_available || server.reachable),
+      read_enabled: Boolean(schemaAvailable || reachable),
       write_enabled: false,
       execution_enabled: false,
       blockers: blockersList(blocker),
+      status_details: {
+        mcp_list_route: '/api/mcp/list',
+        tools_route: toolsRoute,
+        tool_count: toolCount,
+        reachable,
+        schema_available: schemaAvailable,
+        read_only_schema_visible: Boolean(schemaAvailable || reachable),
+        writes_require_bridge_session: true,
+        execution_enabled: false,
+        transport: stringOrNull(server.transport),
+      },
       last_seen: generatedAt,
     })
+  })
+}
+
+type GatewayToolIntegrationDefinition = {
+  id: string
+  label: string
+  aliases: string[]
+  nodeKind: GatewayNodeKind
+  credentialNames: string[]
+  capabilities: string[]
+  missingBlocker: string
+}
+
+type GatewayToolIntegrationView = {
+  definition: GatewayToolIntegrationDefinition
+  id: string
+  nodeId: string
+  label: string
+  status: GatewayStatus
+  blocker: string | null
+  credentialConfigured: boolean
+  reachable: boolean
+  readOnlySchemaVisible: boolean
+  writeEnabled: boolean
+  uploadConnectorConfigured: boolean
+  folderLookupAvailable: boolean
+  generationRequiresBridgeSession: boolean
+  writesRequireBridgeSession: boolean
+  incomingStatus: string | null
+  outgoingStatus: string | null
+  domainRules: string | null
+  installed: boolean
+  running: boolean
+  apiKeyConfigured: boolean
+  sourceKind: string
+}
+
+const GATEWAY_TOOL_INTEGRATION_DEFINITIONS: GatewayToolIntegrationDefinition[] = [
+  {
+    id: 'zapier',
+    label: 'Zapier',
+    aliases: ['zapier'],
+    nodeKind: 'mcp_server',
+    credentialNames: ['ZAPIER_TOKEN', 'ZAPIER_API_KEY'],
+    capabilities: ['MCP tool schemas', 'Zapier action catalog', 'session-gated writes'],
+    missingBlocker: 'zapier_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'heygen',
+    label: 'HeyGen',
+    aliases: ['heygen', 'hey gen'],
+    nodeKind: 'api',
+    credentialNames: ['HEYGEN_API_KEY'],
+    capabilities: ['schema visibility', 'generation request planning', 'session-gated generation'],
+    missingBlocker: 'heygen_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'firecrawl',
+    label: 'Firecrawl',
+    aliases: ['firecrawl', 'fire crawl'],
+    nodeKind: 'tool',
+    credentialNames: ['FIRECRAWL_API_KEY'],
+    capabilities: ['credential status', 'read-only crawl status', 'adapter visibility'],
+    missingBlocker: 'firecrawl_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'agentmail',
+    label: 'AgentMail',
+    aliases: ['agentmail', 'agent mail', 'email'],
+    nodeKind: 'api',
+    credentialNames: ['AGENTMAIL_API_KEY'],
+    capabilities: ['incoming mail status', 'outgoing mail status', 'domain allow-list rules'],
+    missingBlocker: 'agentmail_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'google_drive',
+    label: 'Google Drive',
+    aliases: ['google drive', 'gdrive', 'drive'],
+    nodeKind: 'api',
+    credentialNames: ['GOOGLE_DRIVE_CREDENTIALS', 'GOOGLE_SERVICE_ACCOUNT_JSON'],
+    capabilities: ['folder lookup status', 'upload connector status', 'session-gated report delivery'],
+    missingBlocker: 'google_drive_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'onedrive',
+    label: 'OneDrive',
+    aliases: ['onedrive', 'one drive', 'microsoft drive'],
+    nodeKind: 'api',
+    credentialNames: ['ONEDRIVE_TOKEN', 'MICROSOFT_GRAPH_TOKEN'],
+    capabilities: ['folder lookup status', 'upload connector status', 'session-gated report delivery'],
+    missingBlocker: 'onedrive_not_configured_or_not_visible_in_gateway_registry',
+  },
+  {
+    id: 'n8n',
+    label: 'n8n',
+    aliases: ['n8n', 'workflow automation'],
+    nodeKind: 'event',
+    credentialNames: ['N8N_API_KEY'],
+    capabilities: ['installed status', 'running status', 'reachability', 'API key configured status'],
+    missingBlocker: 'n8n_not_installed_or_not_visible_in_gateway_registry',
+  },
+]
+
+function buildGatewayToolIntegrationNodes(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayNode[] {
+  return buildGatewayToolIntegrationViews(context).map((view) => makeNode({
+    id: view.nodeId,
+    label: view.label,
+    kind: view.definition.nodeKind,
+    status: view.status,
+    capabilities: view.definition.capabilities,
+    blockers: blockersList(view.blocker),
+    lastSeen: generatedAt,
+  }))
+}
+
+function gatewayToolIntegrationCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
+  return buildGatewayToolIntegrationViews(context).map((view) => createGatewayCapability({
+    id: `integration_${view.id}`,
+    label: view.label,
+    kind: 'integration',
+    status: view.status,
+    source_node: view.nodeId,
+    requires_session: true,
+    read_enabled: view.readOnlySchemaVisible || view.reachable || view.credentialConfigured,
+    available_to: ['agent_zero', 'hermes'],
+    execution_requirements: [
+      'gateway_schema_visibility_read_only',
+      'bridge_session_required_for_writes',
+    ],
+    write_enabled: false,
+    execution_enabled: false,
+    required_credentials: view.definition.credentialNames,
+    blockers: blockersList(view.blocker),
+    status_details: {
+      connected: view.status === 'connected',
+      configured: view.status !== 'blocked' && view.status !== 'missing',
+      credential_configured: view.credentialConfigured,
+      reachable: view.reachable,
+      read_only_schema_visible: view.readOnlySchemaVisible,
+      write_enabled: view.writeEnabled,
+      writes_require_bridge_session: view.writesRequireBridgeSession,
+      generation_requires_bridge_session: view.generationRequiresBridgeSession,
+      uploads_require_bridge_session: view.id === 'google_drive' || view.id === 'onedrive',
+      upload_connector_configured: view.uploadConnectorConfigured,
+      folder_lookup_available: view.folderLookupAvailable,
+      incoming_status: view.incomingStatus,
+      outgoing_status: view.outgoingStatus,
+      domain_rules: view.domainRules,
+      installed: view.installed,
+      running: view.running,
+      api_key_configured: view.apiKeyConfigured,
+      source_kind: view.sourceKind,
+      execution_enabled: false,
+      blocked_reason: view.blocker,
+    },
+    last_seen: generatedAt,
+  }))
+}
+
+function buildGatewayToolIntegrationViews(context: AgentZeroReadOnlyContext | null): GatewayToolIntegrationView[] {
+  const integrations = asRecords(pick(context, 'integrations', 'registry'))
+  const tools = asRecords(pick(context, 'tools', 'registry'))
+  const providers = asRecords(pick(context, 'bridge', 'provider_registry'))
+  const mcpServers = asRecords(pick(context, 'mcp', 'servers'))
+  const n8nRecord = pickRecord(context, 'n8n')
+  const allSources = [...integrations, ...tools, ...providers, ...mcpServers]
+
+  return GATEWAY_TOOL_INTEGRATION_DEFINITIONS.map((definition) => {
+    const explicitSource = definition.id === 'n8n' && hasRecordValues(n8nRecord) ? n8nRecord : undefined
+    const source = explicitSource || findByAliases(allSources, definition.aliases)
+    const missingCredential = Boolean(source?.missing_credential)
+    const sourceStatus = source ? statusFromAccess(source.status, source.state, source.access, source.raw_state, source.active_state) : 'blocked'
+    const blocker = stringOrNull(source?.blocked_reason) ||
+      stringOrNull(source?.blocker) ||
+      (missingCredential ? 'missing_credential' : null) ||
+      (!source ? definition.missingBlocker : null)
+    const reachable = Boolean(source?.reachable ?? source?.connected ?? (source && sourceStatus !== 'blocked' && sourceStatus !== 'missing'))
+    const schemaVisible = Boolean(
+      source?.schema_available ||
+      source?.schema_visible ||
+      source?.tools_visible ||
+      source?.tool_schema_visible ||
+      source?.read_only ||
+      numericValue(source?.tool_count),
+    )
+    const credentialConfigured = Boolean(
+      source?.credential_present ||
+      source?.credential_configured ||
+      source?.auth_configured ||
+      source?.api_key_configured ||
+      (!missingCredential && source && definition.credentialNames.length === 0),
+    )
+    const installed = Boolean(source?.installed ?? (source && definition.id !== 'n8n'))
+    const running = Boolean(source?.running ?? source?.active ?? (definition.id !== 'n8n' && reachable))
+    const writeEnabled = Boolean(source?.write_enabled)
+    const uploadConnectorConfigured = Boolean(source?.upload_connector_configured || source?.upload_adapter_configured || source?.upload_configured)
+    const folderLookupAvailable = Boolean(source?.folder_lookup_available || source?.folder_lookup || source?.folder_lookup_configured)
+    const status: GatewayStatus = blocker ? 'blocked' : sourceStatus
+
+    return {
+      definition,
+      id: definition.id,
+      nodeId: `integration_${definition.id}`,
+      label: definition.label,
+      status,
+      blocker,
+      credentialConfigured,
+      reachable,
+      readOnlySchemaVisible: Boolean(schemaVisible || reachable),
+      writeEnabled,
+      uploadConnectorConfigured,
+      folderLookupAvailable,
+      generationRequiresBridgeSession: definition.id === 'heygen',
+      writesRequireBridgeSession: true,
+      incomingStatus: stringOrNull(source?.incoming_status) || stringOrNull(source?.imap_status),
+      outgoingStatus: stringOrNull(source?.outgoing_status) || stringOrNull(source?.smtp_status) || stringOrNull(source?.rest_send_status),
+      domainRules: stringOrNull(source?.domain_rules) || stringOrNull(source?.allowlist_policy),
+      installed,
+      running,
+      apiKeyConfigured: Boolean(source?.api_key_configured || source?.credential_present || source?.credential_configured),
+      sourceKind: explicitSource ? 'n8n_status' : source ? 'gateway_registry' : 'missing',
+    } satisfies GatewayToolIntegrationView
   })
 }
 
@@ -866,7 +1162,11 @@ function skillCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
 }
 
 function integrationCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
-  return asRecords(pick(context, 'integrations', 'registry')).map((integration) => {
+  const canonicalIntegrationIds = new Set(GATEWAY_TOOL_INTEGRATION_DEFINITIONS.map((definition) => definition.id))
+  return asRecords(pick(context, 'integrations', 'registry')).filter((integration) => {
+    const id = gatewayId(String(integration.id || integration.name || 'integration'))
+    return !canonicalIntegrationIds.has(id)
+  }).map((integration) => {
     const id = gatewayId(String(integration.id || integration.name || 'integration'))
     const blocker = stringOrNull(integration.blocked_reason)
     const missingCredential = Boolean(integration.missing_credential)
@@ -1166,6 +1466,47 @@ function summarizeLlmGateway(capabilities: GatewayCapability[]): GatewayStatusPa
       fallback_enabled: true,
       raw_tracebacks_exposed: false,
       task_classes: 'chat, plan, coding, reasoning, long-context, local fallback, low-latency, multimodal',
+    },
+  }
+}
+
+function summarizeMcpToolGateway(capabilities: GatewayCapability[]): GatewayStatusPayload['mcp_gateway'] {
+  const mcpServers = capabilities.filter((capability) => capability.kind === 'mcp_server')
+  const toolIntegrations = capabilities.filter((capability) =>
+    GATEWAY_TOOL_INTEGRATION_DEFINITIONS.some((definition) => capability.id === `integration_${definition.id}`),
+  )
+  const visibleItems = [...mcpServers, ...toolIntegrations].filter((capability) => capability.status !== 'blocked' && capability.status !== 'missing')
+  return {
+    visible: mcpServers.length > 0 || toolIntegrations.length > 0,
+    status: visibleItems.length > 0 ? 'read_only' : 'degraded',
+    mcp_list_route: '/api/mcp/list',
+    mcp_tools_route_template: '/api/mcp/servers/:id/tools',
+    servers: mcpServers.map((capability) => ({
+      id: capability.id.replace(/^mcp_/, ''),
+      label: capability.label,
+      status: capability.status,
+      reachable: detailBoolean(capability.status_details, 'reachable'),
+      schema_available: detailBoolean(capability.status_details, 'schema_available'),
+      tool_count: numericValue(capability.status_details.tool_count) ?? 0,
+      tools_route: detailString(capability.status_details, 'tools_route'),
+      blocker: capability.blockers[0] || null,
+    })),
+    tools_integrations: toolIntegrations.map((capability) => ({
+      id: capability.id.replace(/^integration_/, ''),
+      label: capability.label,
+      status: capability.status,
+      read_only_schema_visible: detailBoolean(capability.status_details, 'read_only_schema_visible'),
+      write_enabled: detailBoolean(capability.status_details, 'write_enabled'),
+      requires_bridge_session: capability.requires_session,
+      credential_configured: detailBoolean(capability.status_details, 'credential_configured'),
+      blocker: capability.blockers[0] || null,
+    })),
+    policy: {
+      read_only_schema_visible: true,
+      writes_require_bridge_session: true,
+      generation_requires_bridge_session: true,
+      uploads_require_bridge_session: true,
+      no_external_write_without_session: true,
     },
   }
 }

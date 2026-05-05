@@ -75,7 +75,11 @@ const context = {
   integrations: {
     registry: [
       { id: 'firecrawl', name: 'Firecrawl', status: 'blocked', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: true, credential_names: ['FIRECRAWL_API_KEY'], blocked_reason: 'missing_credential' },
-      { id: 'zapier', name: 'Zapier', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_names: ['ZAPIER_TOKEN'], blocked_reason: null },
+      { id: 'zapier', name: 'Zapier', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_present: true, credential_names: ['ZAPIER_TOKEN'], schema_visible: true, blocked_reason: null },
+      { id: 'heygen', name: 'HeyGen', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_present: true, credential_names: ['HEYGEN_API_KEY'], schema_visible: true, blocked_reason: null },
+      { id: 'agentmail', name: 'AgentMail', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_present: true, credential_names: ['AGENTMAIL_API_KEY'], incoming_status: 'connected', outgoing_status: 'blocked_pending_bridge_session', domain_rules: 'owner_domain_only', blocked_reason: null },
+      { id: 'onedrive', name: 'OneDrive', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_present: true, upload_connector_configured: true, folder_lookup_available: true, credential_names: ['ONEDRIVE_TOKEN'], blocked_reason: null },
+      { id: 'n8n', name: 'n8n', status: 'blocked', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: true, credential_names: ['N8N_API_KEY'], installed: false, running: false, reachable: false, api_key_configured: false, blocked_reason: 'n8n_not_installed' },
       { id: 'telegram', name: 'Telegram', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_names: ['TELEGRAM_BOT_TOKEN'], blocked_reason: null },
     ],
   },
@@ -192,12 +196,20 @@ describe('Gateway route planner', () => {
   it('routes MCP and tool calls through Bridge/MCP and blocks unavailable tools honestly', () => {
     const zapier = planGatewayRoute(registry, { ownerRequest: 'Show Zapier MCP tools' })
     const firecrawl = planGatewayRoute(registry, { ownerRequest: 'Use Firecrawl right now' })
+    const agentmail = planGatewayRoute(registry, { ownerRequest: 'Show AgentMail status' })
+    const n8n = planGatewayRoute(registry, { ownerRequest: 'Can n8n run workflows?' })
 
     expect(zapier.classification).toBe('tool')
-    expect(zapier.dispatch_target).toBe('integrations')
+    expect(zapier.dispatch_target).toBe('integration_zapier')
+    expect(zapier.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'mcp_gateway', 'integration_zapier'])
     expect(zapier.requires_bridge_session).toBe(true)
     expect(firecrawl.blocked).toBe(true)
     expect(firecrawl.blocker).toBe('missing_credential')
+    expect(agentmail.dispatch_target).toBe('integration_agentmail')
+    expect(agentmail.selected_capability?.status_details.domain_rules).toBe('owner_domain_only')
+    expect(n8n.dispatch_target).toBe('integration_n8n')
+    expect(n8n.blocked).toBe(true)
+    expect(n8n.blocker).toBe('n8n_not_installed')
   })
 
   it('routes Brain, Build-Wiki sync, report, upload, and event requests to the right Gateway nodes', () => {
@@ -215,8 +227,9 @@ describe('Gateway route planner', () => {
     expect(report.classification).toBe('report')
     expect(report.dispatch_target).toBe('tools')
     expect(upload.classification).toBe('upload')
+    expect(upload.dispatch_target).toBe('integration_onedrive')
     expect(upload.blocked).toBe(true)
-    expect(upload.blocker).toBe('integration_onedrive_not_registered')
+    expect(upload.blocker).toBe('active_bridge_session_required_for_external_write')
     expect(event.classification).toBe('event')
     expect(event.dispatch_target).toBe('events')
   })

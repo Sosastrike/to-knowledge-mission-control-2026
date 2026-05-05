@@ -3,10 +3,32 @@ import type { GatewayRouteClassification } from './gateway-route-planner'
 import type { GatewayStatus } from './gateway-model'
 
 export const GATEWAY_POLICY_BADGES = ['read_only', 'session_required', 'blocked', 'active'] as const
+export const GATEWAY_ROUTE_DECISIONS = ['allowed', 'blocked', 'requires_session', 'missing_credential'] as const
 
 export type GatewayPolicyBadge = (typeof GATEWAY_POLICY_BADGES)[number]
+export type GatewayRouteDecision = (typeof GATEWAY_ROUTE_DECISIONS)[number]
 
 export type GatewayPolicyDecisionStatus = GatewayPolicyBadge
+
+export type GatewayPolicyRule = {
+  id: string
+  label: string
+  enforcement: 'allow' | 'block' | 'requires_session' | 'redact'
+  route_decision_on_violation: GatewayRouteDecision
+}
+
+export const GATEWAY_POLICY_RULES: GatewayPolicyRule[] = [
+  { id: 'read_only_discovery', label: 'Read-only discovery routes can inspect status, catalogs, schemas, tools, skills, and models without execution.', enforcement: 'allow', route_decision_on_violation: 'blocked' },
+  { id: 'bridge_session_required', label: 'Side-effectful writes and execution require an active Bridge Session.', enforcement: 'requires_session', route_decision_on_violation: 'requires_session' },
+  { id: 'external_write_scoped', label: 'External writes are blocked unless the active Bridge Session includes the exact scope.', enforcement: 'requires_session', route_decision_on_violation: 'blocked' },
+  { id: 'protected_action_approval', label: 'Protected actions require owner approval and Bridge Session scope before execution.', enforcement: 'requires_session', route_decision_on_violation: 'requires_session' },
+  { id: 'no_raw_paths', label: 'Owner-facing output must not expose raw local runtime paths.', enforcement: 'redact', route_decision_on_violation: 'blocked' },
+  { id: 'no_secrets', label: 'Owner-facing output must not expose secrets, tokens, API keys, auth files, or .env values.', enforcement: 'redact', route_decision_on_violation: 'blocked' },
+  { id: 'no_fake_done', label: 'Gateway responses must not claim Done when delivery, execution, or connector access is blocked.', enforcement: 'block', route_decision_on_violation: 'blocked' },
+  { id: 'no_docker_socket', label: 'Gateway does not grant agents Docker socket access.', enforcement: 'block', route_decision_on_violation: 'blocked' },
+  { id: 'no_raw_root_shell', label: 'Gateway does not grant agents raw root shell access.', enforcement: 'block', route_decision_on_violation: 'blocked' },
+  { id: 'no_direct_secret_reads', label: 'Gateway does not grant direct secret-reading access.', enforcement: 'block', route_decision_on_violation: 'blocked' },
+]
 
 export type GatewayProtectedScope =
   | 'buildwiki.run_now'
@@ -38,6 +60,7 @@ export type GatewayPolicyDecision = {
   ok: boolean
   mode: 'gateway_policy_decision'
   status: GatewayPolicyDecisionStatus
+  route_decision: GatewayRouteDecision
   badge: GatewayPolicyBadge
   allowed: boolean
   read_only: boolean
@@ -53,12 +76,19 @@ export type GatewayPolicyDecision = {
   redaction_required: true
   route_auth_required: true
   audit_required: boolean
+  docker_socket_allowed: false
+  raw_root_shell_allowed: false
+  direct_secret_reads_allowed: false
   blocked_reason: string | null
   owner_output_policy: {
     no_keys_tokens_auth_files: true
     no_raw_paths: true
     no_task_ids: true
     no_internal_stage_names: true
+    no_fake_done: true
+    no_docker_socket: true
+    no_raw_root_shell: true
+    no_direct_secret_reads: true
   }
 }
 
@@ -66,6 +96,7 @@ export type GatewayPolicyAuditEvent = {
   action: 'gateway.policy.decision'
   route_target: string
   status: GatewayPolicyDecisionStatus
+  route_decision: GatewayRouteDecision
   badge: GatewayPolicyBadge
   allowed: boolean
   blocked_reason: string | null
@@ -82,9 +113,11 @@ const INTERNAL_STAGE_PATTERN = /\b(?:Failed stage|Error stage|Traceback|Stack tr
 
 export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): GatewayPolicyDecision {
   const text = normalize(input.ownerRequest)
+  const forbiddenBlocker = forbiddenSurfaceBlocker(text)
   const routeBlocker = sanitizeBlocker(input.routeBlocker)
   const capabilityBlocker = sanitizeBlocker(input.capabilityBlockers?.[0])
-  const capabilityBlocked = input.capabilityStatus === 'blocked' || input.capabilityStatus === 'missing'
+  const capabilityBlocked = input.capabilityStatus === 'blocked' || input.capabilityStatus === 'missing' || input.capabilityStatus === 'missing_credential'
+  const missingCredential = isMissingCredentialBlocker(routeBlocker) || isMissingCredentialBlocker(capabilityBlocker) || input.capabilityStatus === 'missing_credential'
   const requiredScope = getRequiredScope(input.classification, text, input.capabilityId, input.routeTarget)
   const writeRequested = isWriteIntent(input.classification, text)
   const externalWriteRequested = isExternalWrite(input.classification, text, input.capabilityId, input.routeTarget)
@@ -99,9 +132,12 @@ export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): Gate
   )
   const domainAllowed = !domainRestricted || isAllowedEmail(recipientEmail, input.allowedEmailDomains || [])
 
-  let blockedReason = routeBlocker || (capabilityBlocked ? capabilityBlocker || 'gateway_capability_blocked' : null)
+  let blockedReason = forbiddenBlocker || routeBlocker || (capabilityBlocked ? capabilityBlocker || 'gateway_capability_blocked' : null)
   if (!blockedReason && domainRestricted && !domainAllowed) {
     blockedReason = recipientEmail ? 'agentmail_domain_not_allowed' : 'agentmail_recipient_not_approved'
+  }
+  if (!blockedReason && input.classification === 'protected_action' && !activeBridgeSession) {
+    blockedReason = 'active_bridge_session_required_for_protected_action'
   }
   if (!blockedReason && externalWriteRequested && !activeBridgeSession) {
     blockedReason = 'active_bridge_session_required_for_external_write'
@@ -117,6 +153,7 @@ export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): Gate
   }
 
   const allowed = !blockedReason
+  const routeDecision = routeDecisionFor({ allowed, blockedReason, missingCredential })
   const status: GatewayPolicyDecisionStatus = !allowed
     ? 'blocked'
     : activeBridgeSession && (externalWriteRequested || protectedAction)
@@ -129,6 +166,7 @@ export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): Gate
     ok: allowed,
     mode: 'gateway_policy_decision',
     status,
+    route_decision: routeDecision,
     badge: status,
     allowed,
     read_only: status === 'read_only',
@@ -144,12 +182,19 @@ export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): Gate
     redaction_required: true,
     route_auth_required: true,
     audit_required: !allowed || status === 'active',
+    docker_socket_allowed: false,
+    raw_root_shell_allowed: false,
+    direct_secret_reads_allowed: false,
     blocked_reason: blockedReason,
     owner_output_policy: {
       no_keys_tokens_auth_files: true,
       no_raw_paths: true,
       no_task_ids: true,
       no_internal_stage_names: true,
+      no_fake_done: true,
+      no_docker_socket: true,
+      no_raw_root_shell: true,
+      no_direct_secret_reads: true,
     },
   }
 }
@@ -182,6 +227,7 @@ export function auditGatewayPolicyDecision(
     action: 'gateway.policy.decision',
     route_target: routeTarget,
     status: decision.status,
+    route_decision: decision.route_decision,
     badge: decision.badge,
     allowed: decision.allowed,
     blocked_reason: decision.blocked_reason,
@@ -238,6 +284,24 @@ function isAllowedEmail(email: string | null, allowedDomains: string[]): boolean
     const normalized = entry.toLowerCase().replace(/^@/, '')
     return normalized.includes('@') ? email === normalized : domain === normalized
   })
+}
+
+function routeDecisionFor(input: { allowed: boolean; blockedReason: string | null; missingCredential: boolean }): GatewayRouteDecision {
+  if (input.allowed) return 'allowed'
+  if (input.missingCredential || isMissingCredentialBlocker(input.blockedReason)) return 'missing_credential'
+  if (/active_bridge_session_required/.test(input.blockedReason || '')) return 'requires_session'
+  return 'blocked'
+}
+
+function isMissingCredentialBlocker(value: string | null | undefined): boolean {
+  return /missing_credential|credential_required|missing credential/i.test(String(value || ''))
+}
+
+function forbiddenSurfaceBlocker(text: string): string | null {
+  if (/docker\s+socket|docker\.sock|\/var\/run\/docker\.sock/.test(text)) return 'docker_socket_forbidden_by_gateway_policy'
+  if (/raw\s+root|root\s+shell|sudo\s+(?:su|-i|bash|sh)|run\s+as\s+root|uid=0/.test(text)) return 'raw_root_shell_forbidden_by_gateway_policy'
+  if (/(?:cat|print|show|dump|read|open)\b.*(?:secret|token|api\s*key|auth\s*file|auth\.json|\.env)/.test(text)) return 'direct_secret_read_forbidden_by_gateway_policy'
+  return null
 }
 
 function sanitizeBlocker(value: string | null | undefined): string | null {

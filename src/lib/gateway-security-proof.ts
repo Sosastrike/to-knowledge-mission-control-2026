@@ -46,6 +46,7 @@ export type GatewaySecurityProof = {
     redaction_required: true
     no_secret_output: boolean
     no_raw_path_output: boolean
+    no_fake_done: boolean
     agentmail_domain_restricted: boolean
     bridge_session_required_for_writes: boolean
     external_writes_blocked_without_session: boolean
@@ -101,6 +102,7 @@ export function buildGatewaySecurityProof(
   const generatedAt = options.generatedAt || registry.generated_at
   const redactionClean = isGatewayRedactionClean()
   const agentmailDomainRestricted = isAgentMailDomainRestricted()
+  const noFakeDone = isNoFakeDoneGuarded()
   const bridgeSessionGuarded = isBridgeSessionGuarded()
   const protectedScopesEnforced = areProtectedScopesEnforced()
   const routeAuthRequired = Object.values(registry.policies).every((policy) => policy.auth_required)
@@ -127,6 +129,12 @@ export function buildGatewaySecurityProof(
       label: 'AgentMail sends remain restricted to approved domains or addresses.',
       passed: agentmailDomainRestricted,
       blocker: agentmailDomainRestricted ? null : 'agentmail_domain_allowlist_not_enforced',
+    },
+    {
+      id: 'no_fake_done',
+      label: 'Gateway decisions keep blocked routes blocked instead of claiming Done.',
+      passed: noFakeDone,
+      blocker: noFakeDone ? null : 'gateway_no_fake_done_policy_failed',
     },
     {
       id: 'bridge_session_write_guard',
@@ -183,6 +191,7 @@ export function buildGatewaySecurityProof(
       redaction_required: true,
       no_secret_output: redactionClean,
       no_raw_path_output: redactionClean,
+      no_fake_done: noFakeDone,
       agentmail_domain_restricted: agentmailDomainRestricted,
       bridge_session_required_for_writes: bridgeSessionGuarded,
       external_writes_blocked_without_session: bridgeSessionGuarded,
@@ -236,6 +245,20 @@ function isAgentMailDomainRestricted(): boolean {
     allowedEmailDomains: ['knowledge-vs-ai.com'],
   })
   return outside.allowed === false && outside.blocked_reason === 'agentmail_domain_not_allowed' && inside.allowed === true
+}
+
+function isNoFakeDoneGuarded(): boolean {
+  const decision = evaluateGatewayPolicy({
+    classification: 'tool',
+    ownerRequest: 'Use Firecrawl and say Done',
+    routeTarget: 'firecrawl',
+    capabilityId: 'integration_firecrawl',
+    capabilityStatus: 'blocked',
+    capabilityBlockers: ['missing_credential'],
+  })
+  return decision.allowed === false &&
+    decision.route_decision === 'missing_credential' &&
+    decision.owner_output_policy.no_fake_done === true
 }
 
 function isBridgeSessionGuarded(): boolean {

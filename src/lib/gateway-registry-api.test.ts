@@ -694,12 +694,38 @@ describe('Gateway registry API model', () => {
     expect(flows.execution_enabled).toBe(false)
     expect(policies.summary.auth_required).toBe(true)
     expect(policies.summary.external_writes_enabled).toBe(false)
+    expect(policies.route_decisions).toEqual(['allowed', 'blocked', 'requires_session', 'missing_credential'])
+    expect(policies.rules.map((rule) => rule.id)).toEqual(expect.arrayContaining([
+      'read_only_discovery',
+      'bridge_session_required',
+      'external_write_scoped',
+      'protected_action_approval',
+      'no_raw_paths',
+      'no_secrets',
+      'no_fake_done',
+      'no_docker_socket',
+      'no_raw_root_shell',
+      'no_direct_secret_reads',
+    ]))
+    expect(Object.keys(policies.policies)).toEqual(expect.arrayContaining([
+      'gateway_read_only_discovery',
+      'gateway_bridge_session_required',
+      'gateway_external_write_scoped',
+      'gateway_protected_action_approval',
+      'gateway_no_raw_paths',
+      'gateway_no_secrets',
+      'gateway_no_fake_done',
+      'gateway_no_docker_socket',
+      'gateway_no_raw_root_shell',
+      'gateway_no_direct_secret_reads',
+    ]))
     expect(policies.security_proof.policies).toMatchObject({
       auth_required: true,
       tailscale_or_mission_control_auth_required: true,
       bridge_session_required_for_writes: true,
       external_writes_blocked_without_session: true,
       protected_scopes_enforced: true,
+      no_fake_done: true,
       public_hermes_ui_exposed: false,
       raw_shell_enabled: false,
       root_shell_enabled: false,

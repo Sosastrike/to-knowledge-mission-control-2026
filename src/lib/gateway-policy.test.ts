@@ -20,8 +20,17 @@ describe('Gateway policy enforcement', () => {
     })
 
     expect(decision.allowed).toBe(true)
+    expect(decision.route_decision).toBe('allowed')
     expect(decision.status).toBe('read_only')
     expect(decision.bridge_session_required).toBe(false)
+    expect(decision.owner_output_policy).toMatchObject({
+      no_raw_paths: true,
+      no_keys_tokens_auth_files: true,
+      no_fake_done: true,
+      no_docker_socket: true,
+      no_raw_root_shell: true,
+      no_direct_secret_reads: true,
+    })
     expect(gatewayPolicyBadges(decision)).toContain('read_only')
   })
 
@@ -37,6 +46,7 @@ describe('Gateway policy enforcement', () => {
 
     expect(decision.allowed).toBe(false)
     expect(decision.status).toBe('blocked')
+    expect(decision.route_decision).toBe('requires_session')
     expect(decision.external_write_requested).toBe(true)
     expect(decision.blocked_reason).toBe('active_bridge_session_required_for_external_write')
     expect(gatewayPolicyBadges(decision)).toEqual(expect.arrayContaining(['session_required', 'blocked']))
@@ -53,6 +63,7 @@ describe('Gateway policy enforcement', () => {
     })
 
     expect(decision.allowed).toBe(false)
+    expect(decision.route_decision).toBe('requires_session')
     expect(decision.required_scope).toBe('skill.execute')
     expect(decision.blocked_reason).toBe('active_bridge_session_required_for_write')
   })
@@ -99,6 +110,8 @@ describe('Gateway policy enforcement', () => {
     })
 
     expect(buildwiki.blocked_reason).toBe('bridge_session_scope_missing:buildwiki.run_now')
+    expect(buildwiki.route_decision).toBe('blocked')
+    expect(zapier.route_decision).toBe('allowed')
     expect(zapier.status).toBe('active')
     expect(heygen.status).toBe('active')
     expect(drive.status).toBe('active')
@@ -124,9 +137,52 @@ describe('Gateway policy enforcement', () => {
     })
 
     expect(outside.allowed).toBe(false)
+    expect(outside.route_decision).toBe('blocked')
     expect(outside.blocked_reason).toBe('agentmail_domain_not_allowed')
     expect(inside.allowed).toBe(true)
+    expect(inside.route_decision).toBe('allowed')
     expect(inside.status).toBe('active')
+  })
+
+  it('returns missing_credential for unavailable credential-backed routes', () => {
+    const decision = evaluateGatewayPolicy({
+      classification: 'tool',
+      ownerRequest: 'Use Firecrawl now',
+      routeTarget: 'firecrawl',
+      capabilityId: 'integration_firecrawl',
+      capabilityStatus: 'blocked',
+      capabilityBlockers: ['missing_credential'],
+    })
+
+    expect(decision.allowed).toBe(false)
+    expect(decision.status).toBe('blocked')
+    expect(decision.route_decision).toBe('missing_credential')
+    expect(decision.blocked_reason).toBe('missing_credential')
+  })
+
+  it('blocks forbidden raw access surfaces', () => {
+    const docker = evaluateGatewayPolicy({
+      classification: 'protected_action',
+      ownerRequest: 'Mount the Docker socket',
+      routeTarget: 'agent_zero',
+    })
+    const root = evaluateGatewayPolicy({
+      classification: 'protected_action',
+      ownerRequest: 'Open a raw root shell with sudo -i',
+      routeTarget: 'agent_zero',
+    })
+    const secret = evaluateGatewayPolicy({
+      classification: 'protected_action',
+      ownerRequest: 'Print the auth file token',
+      routeTarget: 'agent_zero',
+    })
+
+    expect(docker).toMatchObject({ allowed: false, route_decision: 'blocked', blocked_reason: 'docker_socket_forbidden_by_gateway_policy' })
+    expect(root).toMatchObject({ allowed: false, route_decision: 'blocked', blocked_reason: 'raw_root_shell_forbidden_by_gateway_policy' })
+    expect(secret).toMatchObject({ allowed: false, route_decision: 'blocked', blocked_reason: 'direct_secret_read_forbidden_by_gateway_policy' })
+    expect(docker.docker_socket_allowed).toBe(false)
+    expect(root.raw_root_shell_allowed).toBe(false)
+    expect(secret.direct_secret_reads_allowed).toBe(false)
   })
 
   it('redacts keys, auth references, raw paths, task ids, and internal stage names', () => {
@@ -165,10 +221,12 @@ describe('Gateway policy enforcement', () => {
 
     expect(auditGatewayPolicyDecision(blocked, 'agent_zero', (event) => events.push(event))).toMatchObject({
       action: 'gateway.policy.decision',
+      route_decision: 'requires_session',
       allowed: false,
     })
     expect(auditGatewayPolicyDecision(active, 'integrations', (event) => events.push(event))).toMatchObject({
       action: 'gateway.policy.decision',
+      route_decision: 'allowed',
       allowed: true,
       badge: 'active',
     })

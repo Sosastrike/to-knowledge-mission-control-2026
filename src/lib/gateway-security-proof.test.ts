@@ -64,6 +64,7 @@ describe('Gateway security proof', () => {
       redaction_required: true,
       no_secret_output: true,
       no_raw_path_output: true,
+      no_fake_done: true,
       agentmail_domain_restricted: true,
       bridge_session_required_for_writes: true,
       external_writes_blocked_without_session: true,
@@ -113,6 +114,7 @@ describe('Gateway security proof', () => {
 
     expect(outsideDomain.blocked_reason).toBe('agentmail_domain_not_allowed')
     expect(noSession.blocked_reason).toBe('active_bridge_session_required_for_external_write')
+    expect(noSession.route_decision).toBe('requires_session')
     expect(unscopedHeyGen.blocked_reason).toBe('bridge_session_scope_missing:heygen.generate')
     expect(unscopedZapier.blocked_reason).toBe('bridge_session_scope_missing:zapier.write')
   })

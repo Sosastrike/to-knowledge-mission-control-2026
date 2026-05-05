@@ -19,7 +19,13 @@ import {
   type GatewayRegistry,
   type GatewayStatus,
 } from './gateway-model'
-import { GATEWAY_POLICY_BADGES, type GatewayPolicyBadge } from './gateway-policy'
+import {
+  GATEWAY_POLICY_BADGES,
+  GATEWAY_POLICY_RULES,
+  GATEWAY_ROUTE_DECISIONS,
+  type GatewayPolicyBadge,
+  type GatewayPolicyRule,
+} from './gateway-policy'
 import { buildGatewaySecurityProof, type GatewaySecurityProof } from './gateway-security-proof'
 
 type GatewayRegistryBuildInput = {
@@ -190,6 +196,8 @@ export type GatewayPoliciesPayload = {
     docker_socket_enabled: false
   }
   badges: GatewayPolicyBadge[]
+  route_decisions: typeof GATEWAY_ROUTE_DECISIONS
+  rules: GatewayPolicyRule[]
   security_proof: GatewaySecurityProof
 }
 
@@ -333,6 +341,76 @@ export function buildGatewayRegistrySnapshot(input: GatewayRegistryBuildInput = 
         secret_safe: true,
         external_allowed: false,
       },
+      gateway_read_only_discovery: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_bridge_session_required: {
+        auth_required: true,
+        bridge_session_required: true,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_external_write_scoped: {
+        auth_required: true,
+        bridge_session_required: true,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_protected_action_approval: {
+        auth_required: true,
+        bridge_session_required: true,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_raw_paths: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_secrets: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_fake_done: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_docker_socket: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_raw_root_shell: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_no_direct_secret_reads: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
     },
   }
 }
@@ -458,6 +536,8 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
       docker_socket_enabled: false,
     },
     badges: [...GATEWAY_POLICY_BADGES],
+    route_decisions: GATEWAY_ROUTE_DECISIONS,
+    rules: GATEWAY_POLICY_RULES,
     security_proof: securityProof,
   }
 }

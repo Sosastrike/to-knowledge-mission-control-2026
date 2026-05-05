@@ -14,6 +14,7 @@ import {
   gatewayPolicyBadges,
   type GatewayPolicyBadge,
   type GatewayPolicyDecision,
+  type GatewayRouteDecision,
 } from './gateway-policy'
 
 export const GATEWAY_ROUTE_CLASSIFICATIONS = [
@@ -54,6 +55,7 @@ export type GatewayRoutePlan = {
   blocked: boolean
   blocker: string | null
   rationale: string
+  route_decision: GatewayRouteDecision
   policy_decision: GatewayPolicyDecision
   policy_badges: GatewayPolicyBadge[]
   flow: GatewayFlow
@@ -173,6 +175,7 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
     blocked,
     blocker,
     rationale: target.rationale,
+    route_decision: policyDecision.route_decision,
     policy_decision: policyDecision,
     policy_badges: gatewayPolicyBadges(policyDecision),
     flow,
@@ -476,7 +479,7 @@ function routeProtectedAction(registry: GatewayRegistry, prompt: string): RouteT
     edgeKind: 'approval',
     requiresBridgeSession: true,
     executionMode: 'bridge_session',
-    blocker: 'protected_action_requires_gateway_policy_and_bridge_session',
+    blocker: null,
     rationale: 'Protected actions require Gateway policy, owner approval, and a Bridge Session before execution.',
   }
 }

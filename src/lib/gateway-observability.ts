@@ -141,7 +141,7 @@ export function replayGatewayRoute(registry: GatewayRegistry, ownerRequest: stri
   const trace = traceFromFlow(plan.flow, {
     durationMs,
     durationSource: 'replay_measurement',
-    policyDecision: plan.policy_decision.status,
+    policyDecision: plan.policy_decision.route_decision,
     executionDecision: plan.blocked
       ? 'blocked'
       : plan.requires_bridge_session

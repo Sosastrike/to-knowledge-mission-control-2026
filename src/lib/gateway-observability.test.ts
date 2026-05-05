@@ -183,6 +183,8 @@ describe('Gateway observability and audit', () => {
     expect(replay.writes_enabled).toBe(false)
     expect(replay.external_write_executed).toBe(false)
     expect(replay.trace.duration_source).toBe('replay_measurement')
+    expect(replay.trace.policy_decision).toBe('missing_credential')
+    expect(replay.plan.route_decision).toBe('missing_credential')
     expect(replay.request).not.toContain('/home/tony')
     expect(JSON.stringify(replay)).not.toMatch(/token=secret|\/home\/tony/)
   })

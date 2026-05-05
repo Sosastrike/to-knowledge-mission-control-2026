@@ -117,6 +117,8 @@ describe('Gateway route planner', () => {
     expect(plan.dispatch_target).toBe('agent_zero')
     expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero'])
     expect(plan.requires_bridge_session).toBe(false)
+    expect(plan.route_decision).toBe('allowed')
+    expect(plan.policy_decision.route_decision).toBe('allowed')
     expect(plan.execution_enabled).toBe(false)
   })
 
@@ -128,6 +130,7 @@ describe('Gateway route planner', () => {
     expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'hermes'])
     expect(plan.flow.route.edge_kind).toBe('delegation')
     expect(plan.blocked).toBe(false)
+    expect(plan.route_decision).toBe('allowed')
   })
 
   it('routes skill execution to Agent Zero and OpenClaw+ with Bridge Session gating', () => {
@@ -139,6 +142,7 @@ describe('Gateway route planner', () => {
     expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'openclaw_plus'])
     expect(plan.requires_bridge_session).toBe(true)
     expect(plan.blocked).toBe(true)
+    expect(plan.route_decision).toBe('requires_session')
     expect(plan.blocker).toBe('active_bridge_session_required_for_write')
   })
 
@@ -204,6 +208,7 @@ describe('Gateway route planner', () => {
     expect(zapier.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'mcp_gateway', 'integration_zapier'])
     expect(zapier.requires_bridge_session).toBe(true)
     expect(firecrawl.blocked).toBe(true)
+    expect(firecrawl.route_decision).toBe('missing_credential')
     expect(firecrawl.blocker).toBe('missing_credential')
     expect(agentmail.dispatch_target).toBe('integration_agentmail')
     expect(agentmail.selected_capability?.status_details.domain_rules).toBe('owner_domain_only')
@@ -229,6 +234,7 @@ describe('Gateway route planner', () => {
     expect(upload.classification).toBe('upload')
     expect(upload.dispatch_target).toBe('integration_onedrive')
     expect(upload.blocked).toBe(true)
+    expect(upload.route_decision).toBe('requires_session')
     expect(upload.blocker).toBe('active_bridge_session_required_for_external_write')
     expect(event.classification).toBe('event')
     expect(event.dispatch_target).toBe('events')
@@ -238,7 +244,8 @@ describe('Gateway route planner', () => {
     const plan = planGatewayRoute(registry, { ownerRequest: 'Restart Mission Control now' })
     expect(plan.classification).toBe('protected_action')
     expect(plan.blocked).toBe(true)
-    expect(plan.blocker).toBe('protected_action_requires_gateway_policy_and_bridge_session')
+    expect(plan.route_decision).toBe('requires_session')
+    expect(plan.blocker).toBe('active_bridge_session_required_for_protected_action')
     expect(plan.flow.policy.bridge_session_required).toBe(true)
     expect(plan.flow.audit.external_write).toBe(false)
     expect(plan.flow.audit.secrets_exposed).toBe(false)

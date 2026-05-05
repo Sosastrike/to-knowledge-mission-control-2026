@@ -1368,9 +1368,9 @@ type GatewayVisualFlow = {
 }
 
 const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
-  { id: 'workflow', label: 'Workflow', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['planned tasks', 'approval requests'], blockers: [], lastTest: 'Gateway event registry' },
+  { id: 'workflow', label: 'Workflow', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['Gateway Flows', 'approval requests'], blockers: [], lastTest: 'Gateway event registry' },
   { id: 'ai_app', label: 'AI App', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['dashboard requests', 'chat surfaces'], blockers: [], lastTest: 'Mission Control UI smoke' },
-  { id: 'agent_input', label: 'Agent', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['agent dispatch', 'handoff'], blockers: [], lastTest: 'Gateway dispatch route' },
+  { id: 'agent_input', label: 'Gateway Dispatch', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['Gateway dispatch', 'Gateway Routes'], blockers: [], lastTest: 'Gateway dispatch route' },
   { id: 'owner', label: 'Owner', lane: 'input', eyebrow: 'command', status: 'connected', statusLabel: 'connected', capabilities: ['authenticated command', 'approval authority'], blockers: [], lastTest: 'Mission Control auth' },
   { id: 'event_input', label: 'Event', lane: 'input', eyebrow: 'event', status: 'connected', statusLabel: 'read-only', capabilities: ['schedules', 'webhooks'], blockers: [], lastTest: '/api/gateway/events' },
   { id: 'email_input', label: 'Email', lane: 'input', eyebrow: 'event', status: 'gated', statusLabel: 'domain gated', capabilities: ['AgentMail incoming', 'domain allowlist'], blockers: ['send requires Bridge Session'], lastTest: 'AgentMail status registry' },
@@ -1442,7 +1442,7 @@ function GatewayMapSection({
     <section className={styles.gatewayMapSection}>
       <header className={styles.externalSectionHeader}>
         <h2 className={styles.tierTitle}>Gateway Map</h2>
-        <span className={styles.tierSub}>Owner, apps, agents, events, models, data stores, MCPs, APIs, reports, and delivery lanes under one governed Gateway</span>
+        <span className={styles.tierSub}>Owner, apps, Gateway Nodes, events, models, data stores, MCPs, APIs, reports, and delivery lanes under one governed Gateway</span>
       </header>
       <div className={styles.gatewayMap}>
         <GatewayLane title="Inputs" subtitle="owner · app · events" nodes={nodes.filter((node) => node.lane === 'input')} selectedNodeId={selectedNode.id} onSelect={setSelectedNodeId} />
@@ -4190,16 +4190,16 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           <span className={styles.phaseChip}>Phase A — Read-Only</span>
         </div>
         <p className={styles.pageSub}>
-          Production-safe Gateway Map for the current agent constellation. Mutations and live event streams are gated to Phase B per <code>gateway-transformation-plan.md</code>.
+          Production-safe Gateway Map for the current Gateway Node constellation. Mutations and live event streams are gated to Phase B per <code>gateway-transformation-plan.md</code>.
         </p>
       </header>
 
       <div className={styles.deprecationNotice}>
-        <strong>Agent Network is now Gateway.</strong> Legacy <code>/agents</code>, <code>/agent-network</code>, and <code>page=agent-network</code> links continue to open this Gateway surface.
+        <strong>Gateway is the active command surface.</strong> Legacy <code>/agents</code>, <code>/agent-network</code>, and <code>page=agent-network</code> links continue to open Gateway.
       </div>
 
       <div className={styles.banner}>
-        <strong>Bridge Mode preflight is mandatory.</strong> Every agent must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the task. If Bridge Mode says approval, credential, or backend work is required, the agent must stop that action instead of guessing or faking success.
+        <strong>Bridge Mode preflight is mandatory.</strong> Every Gateway Node must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the Gateway Flow. If Bridge Mode says approval, credential, or backend work is required, the node must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
         Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Agent Zero commander, Hermes lieutenant support, OpenClaw+ runtime, then Bridge/MCP and Brain systems. Tony legacy is retired and hidden from active hierarchy.
@@ -4209,7 +4209,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       <section className={styles.statsStrip}>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{loadState === 'loading' ? '…' : agents.length}</div>
-          <div className={styles.statLabel}>Agents in registry</div>
+          <div className={styles.statLabel}>Gateway Nodes</div>
         </div>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{hermes.installed ? '✓' : '—'}</div>

@@ -140,13 +140,13 @@ function OverviewTab({ a, snap }) {
 
       {isAgent && (
         <div className="an-ins-section">
-          <h4>Current task</h4>
+          <h4>Gateway Flow</h4>
           <p style={{fontSize:12, color:'var(--fg-1)', margin:'0 0 4px'}}>
             {a.current_task_summary || <em style={{color:'var(--fg-3)'}}>idle</em>}
           </p>
           {a.current_ticket_id && (
             <p style={{fontSize:11, color:'var(--fg-3)', margin:0}}>
-              Ticket: <code style={{color:'var(--fg-1)'}}>{a.current_ticket_id}</code>
+              Flow: <code style={{color:'var(--fg-1)'}}>{a.current_ticket_id}</code>
             </p>
           )}
         </div>
@@ -208,7 +208,7 @@ function PermsTab({ a }) {
         </div>
       </div>
       <div className="an-ins-section">
-        <h4>Handoff targets</h4>
+        <h4>Gateway Routes</h4>
         <div className="an-radio-row">
           {(a.handoff_targets || []).map(p => (
             <span key={p} className="an-radio-chip">{p}</span>
@@ -297,7 +297,7 @@ function TicketsTab({ a, tickets, snap, onAssignTicket }) {
             <div style={{display:'flex', gap:4, marginTop:6, flexWrap:'wrap'}}>
               {(a.handoff_targets || []).filter(h => h !== a.id).map(target => (
                 <button key={target} className="an-btn" style={{padding:'2px 6px', fontSize:10}}
-                        onClick={() => window.AgentRegistry.handoff(t.id, a.id, target, `manual handoff from ${a.display_name}`)}>
+                        onClick={() => window.AgentRegistry.handoff(t.id, a.id, target, `manual Gateway Route from ${a.display_name}`)}>
                   → {target}
                 </button>
               ))}
@@ -306,9 +306,9 @@ function TicketsTab({ a, tickets, snap, onAssignTicket }) {
         ))}
       </div>
       <div className="an-ins-section">
-        <h4>Assign ticket</h4>
+        <h4>Assign Gateway Flow</h4>
         <button className="an-btn" onClick={onAssignTicket}>
-          <I.Plus size={12}/> Assign existing ticket to {a.display_name}
+          <I.Plus size={12}/> Assign existing Gateway Flow to {a.display_name}
         </button>
       </div>
     </div>

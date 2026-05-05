@@ -47,9 +47,9 @@ function AgentNetworkPage() {
 
         <span style={{flex:1}}/>
 
-        <span className="an-pill" title="Number of active agents (kind=agent, status≠retired)">
+        <span className="an-pill" title="Number of active Gateway Nodes (kind=agent, status≠retired)">
           <span className="dot"/>
-          {snap.agents.filter(a => a.kind==='agent' && a.status!=='retired').length} agents online
+          {snap.agents.filter(a => a.kind==='agent' && a.status!=='retired').length} Gateway Nodes online
         </span>
         <span className="an-pill warn" title="Engines reporting status='degraded'">
           <span className="dot"/>

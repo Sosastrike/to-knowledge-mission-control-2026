@@ -8,7 +8,7 @@ function AgentStrip({ onAgent, onGo }) {
       <div className="card-head">
         <div className="card-title">
           <span className="live-dot"/>
-          Agent status
+          Gateway health
           <span className="card-subtitle">{online}/{agents.length} online · live</span>
         </div>
         <div className="hstack">
@@ -56,7 +56,7 @@ function BridgeProvidersCard({ onGo }) {
           className="card-link"
           onClick={() => onGo && onGo('gateway')}
           title="Open Gateway"
-        >Network <I.ArrowRight/></span>
+        >Gateway <I.ArrowRight/></span>
       </div>
       <div className="card-body vstack" style={{gap:8}}>
         <div className="hstack" style={{gap:8, flexWrap:'wrap'}}>

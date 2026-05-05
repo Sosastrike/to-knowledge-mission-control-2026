@@ -160,7 +160,7 @@ function AddAgentWizard({ open, onClose }) {
                           onClick={() => upd({ risk_level: r })}>{r}</span>
                   ))}
                 </div>
-                <div className="hint">High-risk agents require approval for protected actions.</div>
+                <div className="hint">High-risk Gateway Nodes require approval for protected actions.</div>
               </div>
             </div>
           )}
@@ -247,7 +247,7 @@ function AddAgentWizard({ open, onClose }) {
           {step < 6 && <button className="an-btn primary" onClick={next}
             disabled={step===1 && !form.display_name}>Next →</button>}
           {step === 6 && <button className="an-btn primary" onClick={save}>
-            <I.Check size={12}/> Save agent
+            <I.Check size={12}/> Save Gateway Node
           </button>}
         </div>
       </div>
@@ -366,7 +366,7 @@ function EngineConnectModal({ open, agentId, onClose }) {
               </div>
               {form.risk_level === 'high' && (
                 <div className="an-approval-banner" data-sev="high" style={{borderRadius:6, border:'1px solid oklch(0.55 0.16 25 / 0.4)'}}>
-                  ⚠ High-risk engine. Connection will require owner approval before any agent can call it.
+                  ⚠ High-risk engine. Connection will require owner approval before any Gateway Node can call it.
                 </div>
               )}
             </div>
@@ -462,7 +462,7 @@ function ApprovalModal({ approval, onClose }) {
 }
 
 // -----------------------------------------------------------
-// Assign Ticket modal
+// Assign Gateway Flow modal
 // -----------------------------------------------------------
 function AssignTicketModal({ open, agentId, onClose }) {
   const snap = window.AgentRegistry.useRegistry?.() || { tickets: [] };
@@ -478,7 +478,7 @@ function AssignTicketModal({ open, agentId, onClose }) {
       <div className="an-modal" onClick={e=>e.stopPropagation()}>
         <div className="an-modal-header">
           <I.Tasks size={14}/>
-          <h3>Assign ticket to {agent.display_name}</h3>
+          <h3>Assign Gateway Flow to {agent.display_name}</h3>
           <span className="spacer"/>
           <button className="an-btn" onClick={onClose}><I.X size={12}/></button>
         </div>
@@ -493,7 +493,7 @@ function AssignTicketModal({ open, agentId, onClose }) {
               <div style={{flex:1}}>
                 <div style={{fontSize:12, color:'var(--fg-0)'}}>{t.title}</div>
                 <div style={{fontSize:10, color:'var(--fg-3)', marginTop:2}}>
-                  <code>{t.id}</code> · owner: {t.current_owner} · step: {t.step}
+                  <code>{t.id}</code> · Gateway Node: {t.current_owner} · step: {t.step}
                 </div>
               </div>
               <span className="an-sev-badge" data-sev={t.priority==='high'?'crit':'warn'}>{t.priority}</span>
@@ -512,7 +512,7 @@ function AssignTicketModal({ open, agentId, onClose }) {
             window.AgentRegistry.assignTicket(pick, agentId, reason || 'manual reassignment');
             onClose();
           }}>
-            <I.Check size={12}/> Assign
+            <I.Check size={12}/> Assign Gateway Flow
           </button>
         </div>
       </div>
@@ -571,7 +571,7 @@ function ContextMenu({ ctx, onClose, onConnectEngine, onAssignTicket, onApprove 
       </div>
       {isAgent && (
         <div className="an-ctx-item" onClick={() => { onAssignTicket(a.id); close(); }}>
-          <I.Tasks size={12}/> Assign ticket
+          <I.Tasks size={12}/> Assign Gateway Flow
         </div>
       )}
       <div className="an-ctx-item" onClick={() => {

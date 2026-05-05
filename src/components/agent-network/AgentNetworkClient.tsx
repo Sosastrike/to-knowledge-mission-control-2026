@@ -1344,37 +1344,69 @@ function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
   )
 }
 
-const GATEWAY_MAP_CLUSTERS = [
-  {
-    id: 'brain',
-    label: 'Brain cluster',
-    route: 'memory · sync',
-    items: ['Obsidian', 'MemPalace', 'Graphify', 'Brain Sync', 'Build-Wiki/Farmer'],
-  },
-  {
-    id: 'models',
-    label: 'Model cluster',
-    route: 'model-call',
-    items: ['OpenRouter', 'OpenAI', 'Claude/Anthropic', 'Codex/ChatGPT', 'Ollama', 'NVIDIA', 'Gemini', 'Groq'],
-  },
-  {
-    id: 'mcp',
-    label: 'MCP / tools cluster',
-    route: 'mcp-call · tool-call',
-    items: ['MCP servers', 'Zapier', 'Firecrawl', 'AgentMail', 'Tools'],
-  },
-  {
-    id: 'api',
-    label: 'API cluster',
-    route: 'api route',
-    items: ['Google Drive', 'OneDrive', 'AgentMail API', 'External APIs', 'Webhooks'],
-  },
-  {
-    id: 'events',
-    label: 'Events cluster',
-    route: 'event route',
-    items: ['Schedules', 'Incoming email', 'Telegram', 'Webhooks', 'future n8n events'],
-  },
+type GatewayVisualStatus = 'connected' | 'gated' | 'blocked' | 'missing'
+type GatewayVisualLane = 'input' | 'core' | 'data' | 'llm' | 'output'
+
+type GatewayVisualNode = {
+  id: string
+  label: string
+  lane: GatewayVisualLane
+  eyebrow: string
+  status: GatewayVisualStatus
+  statusLabel: string
+  capabilities: string[]
+  blockers: string[]
+  lastTest: string
+}
+
+type GatewayVisualFlow = {
+  id: string
+  label: string
+  from: string
+  to: string
+  status: GatewayVisualStatus
+}
+
+const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
+  { id: 'workflow', label: 'Workflow', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['planned tasks', 'approval requests'], blockers: [], lastTest: 'Gateway event registry' },
+  { id: 'ai_app', label: 'AI App', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['dashboard requests', 'chat surfaces'], blockers: [], lastTest: 'Mission Control UI smoke' },
+  { id: 'agent_input', label: 'Agent', lane: 'input', eyebrow: 'input', status: 'connected', statusLabel: 'connected', capabilities: ['agent dispatch', 'handoff'], blockers: [], lastTest: 'Gateway dispatch route' },
+  { id: 'owner', label: 'Owner', lane: 'input', eyebrow: 'command', status: 'connected', statusLabel: 'connected', capabilities: ['authenticated command', 'approval authority'], blockers: [], lastTest: 'Mission Control auth' },
+  { id: 'event_input', label: 'Event', lane: 'input', eyebrow: 'event', status: 'connected', statusLabel: 'read-only', capabilities: ['schedules', 'webhooks'], blockers: [], lastTest: '/api/gateway/events' },
+  { id: 'email_input', label: 'Email', lane: 'input', eyebrow: 'event', status: 'gated', statusLabel: 'domain gated', capabilities: ['AgentMail incoming', 'domain allowlist'], blockers: ['send requires Bridge Session'], lastTest: 'AgentMail status registry' },
+  { id: 'telegram_input', label: 'Telegram', lane: 'input', eyebrow: 'event', status: 'gated', statusLabel: 'owner channel', capabilities: ['owner messages', 'report delivery if adapter exists'], blockers: ['attachments require delivery adapter proof'], lastTest: 'owner route proof pending' },
+  { id: 'brain_store', label: 'Brain', lane: 'data', eyebrow: 'data store', status: 'connected', statusLabel: 'visible', capabilities: ['Brain Sync', 'brain context'], blockers: [], lastTest: '/api/bridge/brain-sync/status' },
+  { id: 'knowledge_store', label: 'Knowledge Store', lane: 'data', eyebrow: 'data store', status: 'gated', statusLabel: 'read/write split', capabilities: ['Obsidian', 'Build-Wiki/Farmer'], blockers: ['writes require Bridge Session'], lastTest: 'Brain registry proof' },
+  { id: 'database', label: 'Database', lane: 'data', eyebrow: 'state', status: 'connected', statusLabel: 'internal', capabilities: ['audit', 'reports', 'approvals'], blockers: [], lastTest: 'build/typecheck' },
+  { id: 'memory', label: 'Memory', lane: 'data', eyebrow: 'memory', status: 'gated', statusLabel: 'adapter gated', capabilities: ['MemPalace', 'Graphify'], blockers: ['writes require Bridge Session'], lastTest: 'Brain adapter status' },
+  { id: 'gateway', label: 'Gateway', lane: 'core', eyebrow: 'traffic core', status: 'connected', statusLabel: 'control plane', capabilities: ['route', 'govern', 'observe', 'audit', 'registry'], blockers: [], lastTest: '/api/gateway/registry' },
+  { id: 'agent_zero', label: 'Agent Zero', lane: 'core', eyebrow: 'commander', status: 'connected', statusLabel: 'commander', capabilities: ['owner command', 'live-query', 'Bridge Session'], blockers: [], lastTest: '/api/bridge/agent-zero/status' },
+  { id: 'hermes', label: 'Hermes', lane: 'core', eyebrow: 'lieutenant', status: 'gated', statusLabel: 'read-only/degraded', capabilities: ['skill design', 'workflow planning'], blockers: ['live chat must prove hermes_called:true for GO'], lastTest: '/api/bridge/hermes/status' },
+  { id: 'runtime', label: 'OpenClaw+ Runtime', lane: 'core', eyebrow: 'runtime', status: 'connected', statusLabel: 'shared skills', capabilities: ['skills', 'adapters', 'reports', 'voice'], blockers: [], lastTest: 'OpenClaw+ skill registry' },
+  { id: 'policy', label: 'Policy', lane: 'core', eyebrow: 'guardrail', status: 'connected', statusLabel: 'enforced', capabilities: ['auth', 'redaction', 'Bridge Session', 'audit'], blockers: [], lastTest: '/api/gateway/policies' },
+  { id: 'openrouter', label: 'OpenRouter', lane: 'llm', eyebrow: 'model', status: 'gated', statusLabel: 'fallback guarded', capabilities: ['model routing', 'fallback'], blockers: ['provider failures stay redacted'], lastTest: 'model registry' },
+  { id: 'openai', label: 'OpenAI', lane: 'llm', eyebrow: 'model', status: 'connected', statusLabel: 'configured if credential exists', capabilities: ['chat', 'reasoning'], blockers: [], lastTest: 'model registry' },
+  { id: 'claude', label: 'Claude', lane: 'llm', eyebrow: 'model', status: 'gated', statusLabel: 'billing guarded', capabilities: ['reasoning', 'coding'], blockers: ['subscription/API billing distinction required'], lastTest: 'Claude/Anthropic status' },
+  { id: 'codex', label: 'Codex', lane: 'llm', eyebrow: 'model/tool', status: 'connected', statusLabel: 'plugin connected', capabilities: ['coding helper', 'safe no-write smoke'], blockers: [], lastTest: 'Codex plugin proof' },
+  { id: 'ollama', label: 'Ollama', lane: 'llm', eyebrow: 'local model', status: 'gated', statusLabel: 'local fallback', capabilities: ['local inference'], blockers: ['depends on local service health'], lastTest: 'model registry' },
+  { id: 'nvidia', label: 'NVIDIA', lane: 'llm', eyebrow: 'model', status: 'missing', statusLabel: 'not configured', capabilities: ['accelerated models'], blockers: ['credential/provider not visible'], lastTest: 'model registry' },
+  { id: 'apis', label: 'APIs', lane: 'output', eyebrow: 'output', status: 'gated', statusLabel: 'session gated', capabilities: ['external APIs', 'webhooks'], blockers: ['writes require Bridge Session'], lastTest: 'Gateway policy proof' },
+  { id: 'mcp_servers', label: 'MCP Servers', lane: 'output', eyebrow: 'output', status: 'connected', statusLabel: 'schemas visible', capabilities: ['tool schemas', 'server list'], blockers: [], lastTest: '/api/mcp/list' },
+  { id: 'events_output', label: 'Events', lane: 'output', eyebrow: 'output', status: 'connected', statusLabel: 'read-only', capabilities: ['event stream', 'audit events'], blockers: [], lastTest: '/api/gateway/events' },
+  { id: 'data_output', label: 'Data', lane: 'output', eyebrow: 'output', status: 'gated', statusLabel: 'adapter gated', capabilities: ['Brain writes', 'sync outputs'], blockers: ['writes require Bridge Session'], lastTest: 'Gateway policy proof' },
+  { id: 'reports', label: 'Reports', lane: 'output', eyebrow: 'output', status: 'connected', statusLabel: 'Mission Control', capabilities: ['Markdown', 'PDF', 'report link'], blockers: [], lastTest: 'report adapter proof' },
+  { id: 'drive', label: 'Drive', lane: 'output', eyebrow: 'delivery', status: 'blocked', statusLabel: 'blocked/config dependent', capabilities: ['Google Drive upload'], blockers: ['upload connector and Bridge Session required'], lastTest: 'connector proof' },
+  { id: 'onedrive', label: 'OneDrive', lane: 'output', eyebrow: 'delivery', status: 'gated', statusLabel: 'session gated', capabilities: ['OneDrive upload'], blockers: ['Bridge Session required'], lastTest: 'connector proof' },
+  { id: 'agentmail', label: 'AgentMail', lane: 'output', eyebrow: 'delivery', status: 'gated', statusLabel: 'domain gated', capabilities: ['incoming', 'REST/SMTP send if approved'], blockers: ['send restricted to allowed domain/session'], lastTest: 'AgentMail proof' },
+]
+
+const GATEWAY_MAP_FLOWS: GatewayVisualFlow[] = [
+  { id: 'input_gateway', label: 'owner and events into Gateway', from: 'Inputs', to: 'Gateway', status: 'connected' },
+  { id: 'gateway_policy', label: 'policy check', from: 'Gateway', to: 'Policy', status: 'connected' },
+  { id: 'gateway_agents', label: 'command dispatch', from: 'Gateway', to: 'Agent Zero / Hermes', status: 'gated' },
+  { id: 'gateway_data', label: 'knowledge and memory', from: 'Gateway', to: 'Data stores', status: 'gated' },
+  { id: 'gateway_models', label: 'LLM routing', from: 'Gateway', to: 'LLM layer', status: 'gated' },
+  { id: 'gateway_outputs', label: 'approved outputs', from: 'Gateway', to: 'APIs / reports / delivery', status: 'gated' },
 ]
 
 function GatewayMapSection({
@@ -1388,46 +1420,60 @@ function GatewayMapSection({
   gatewayEventsState: 'loading' | 'ok' | 'error'
   gatewayEventsError: string
 }) {
+  const nodes = GATEWAY_MAP_NODES.map((node) => {
+    if (node.id !== 'hermes') return node
+    const label = hermesLabel.toLowerCase()
+    const status: GatewayVisualStatus = label.includes('blocked')
+      ? 'blocked'
+      : label.includes('connected') || label.includes('active')
+        ? 'connected'
+        : 'gated'
+    return {
+      ...node,
+      status,
+      statusLabel: hermesLabel,
+      blockers: status === 'connected' ? [] : node.blockers,
+    }
+  })
+  const [selectedNodeId, setSelectedNodeId] = useState('gateway')
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId) || nodes.find((node) => node.id === 'gateway') || nodes[0]
+
   return (
     <section className={styles.gatewayMapSection}>
       <header className={styles.externalSectionHeader}>
         <h2 className={styles.tierTitle}>Gateway Map</h2>
-        <span className={styles.tierSub}>Owner command routes through Gateway to agents, models, APIs, MCPs, Brain, tools, and events</span>
+        <span className={styles.tierSub}>Owner, apps, agents, events, models, data stores, MCPs, APIs, reports, and delivery lanes under one governed Gateway</span>
       </header>
       <div className={styles.gatewayMap}>
-        <div className={styles.gatewayOwnerNode}>
-          <strong>Owner</strong>
-          <span>Luis / Antonio / Creator</span>
+        <GatewayLane title="Inputs" subtitle="owner · app · events" nodes={nodes.filter((node) => node.lane === 'input')} selectedNodeId={selectedNode.id} onSelect={setSelectedNodeId} />
+        <div className={styles.gatewayCenterStack}>
+          <GatewayLane title="Data Stores" subtitle="knowledge · database · memory" nodes={nodes.filter((node) => node.lane === 'data')} selectedNodeId={selectedNode.id} onSelect={setSelectedNodeId} compact />
+          <section className={styles.gatewayCorePanel} aria-label="Gateway core">
+            <div className={styles.gatewayTrafficLines}>
+              {GATEWAY_MAP_FLOWS.map((flow) => (
+                <div key={flow.id} className={`${styles.gatewayFlowLine} ${gatewayStatusClass(flow.status)}`}>
+                  <span>{flow.from}</span>
+                  <strong>{flow.label}</strong>
+                  <span>{flow.to}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.gatewayCoreNodes}>
+              {nodes.filter((node) => node.lane === 'core').map((node) => (
+                <GatewayMapNodeButton
+                  key={node.id}
+                  node={node}
+                  selected={selectedNode.id === node.id}
+                  onSelect={() => setSelectedNodeId(node.id)}
+                  prominent={node.id === 'gateway'}
+                />
+              ))}
+            </div>
+          </section>
+          <GatewayLane title="LLM Layer" subtitle="model routes · fallbacks" nodes={nodes.filter((node) => node.lane === 'llm')} selectedNodeId={selectedNode.id} onSelect={setSelectedNodeId} compact />
         </div>
-        <div className={styles.gatewayHubNode}>
-          <strong>Gateway</strong>
-          <span>control · data · policy · observability · registry</span>
-        </div>
-        <div className={styles.gatewayCommandNodes}>
-          <article className={styles.gatewayCommandNode}>
-            <span>Commander</span>
-            <strong>Agent Zero</strong>
-            <small>primary command node</small>
-          </article>
-          <article className={styles.gatewayCommandNode}>
-            <span>Lieutenant</span>
-            <strong>Hermes</strong>
-            <small>{hermesLabel}</small>
-          </article>
-        </div>
-        <div className={styles.gatewayClusterGrid}>
-          {GATEWAY_MAP_CLUSTERS.map((cluster) => (
-            <article key={cluster.id} className={styles.gatewayClusterCard}>
-              <header>
-                <strong>{cluster.label}</strong>
-                <span>{cluster.route}</span>
-              </header>
-              <div>
-                {cluster.items.map((item) => <span key={item}>{item}</span>)}
-              </div>
-            </article>
-          ))}
-        </div>
+        <GatewayLane title="Outputs" subtitle="APIs · MCP · data · delivery" nodes={nodes.filter((node) => node.lane === 'output')} selectedNodeId={selectedNode.id} onSelect={setSelectedNodeId} />
+        <GatewayNodeDetail node={selectedNode} />
       </div>
       <GatewayEventLane
         payload={gatewayEvents}
@@ -1436,6 +1482,121 @@ function GatewayMapSection({
       />
     </section>
   )
+}
+
+function GatewayLane({
+  title,
+  subtitle,
+  nodes,
+  selectedNodeId,
+  onSelect,
+  compact = false,
+}: {
+  title: string
+  subtitle: string
+  nodes: GatewayVisualNode[]
+  selectedNodeId: string
+  onSelect: (nodeId: string) => void
+  compact?: boolean
+}) {
+  return (
+    <section className={`${styles.gatewayLane} ${compact ? styles.gatewayLaneCompact : ''}`}>
+      <header>
+        <strong>{title}</strong>
+        <span>{subtitle}</span>
+      </header>
+      <div className={styles.gatewayLaneNodes}>
+        {nodes.map((node) => (
+          <GatewayMapNodeButton
+            key={node.id}
+            node={node}
+            selected={selectedNodeId === node.id}
+            onSelect={() => onSelect(node.id)}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function GatewayMapNodeButton({
+  node,
+  selected,
+  onSelect,
+  prominent = false,
+}: {
+  node: GatewayVisualNode
+  selected: boolean
+  onSelect: () => void
+  prominent?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      className={`${styles.gatewayMapNode} ${gatewayStatusClass(node.status)} ${selected ? styles.gatewayMapNodeSelected : ''} ${prominent ? styles.gatewayMapNodeProminent : ''}`}
+      onClick={onSelect}
+      aria-pressed={selected}
+    >
+      <span className={styles.gatewayNodePulse} aria-hidden="true" />
+      <span className={styles.gatewayNodeEyebrow}>{node.eyebrow}</span>
+      <strong>{node.label}</strong>
+      <small>{node.statusLabel}</small>
+    </button>
+  )
+}
+
+function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
+  return (
+    <aside className={styles.gatewayDetailPanel} aria-label="Gateway node detail">
+      <header>
+        <div>
+          <span>{node.eyebrow}</span>
+          <h3>{node.label}</h3>
+        </div>
+        <strong className={gatewayStatusClass(node.status)}>{node.statusLabel}</strong>
+      </header>
+      <dl>
+        <div>
+          <dt>Status</dt>
+          <dd>{node.status}</dd>
+        </div>
+        <div>
+          <dt>Last Test</dt>
+          <dd>{node.lastTest}</dd>
+        </div>
+      </dl>
+      <div className={styles.gatewayDetailLists}>
+        <section>
+          <strong>Capabilities</strong>
+          <ul>
+            {node.capabilities.map((capability) => <li key={capability}>{capability}</li>)}
+          </ul>
+        </section>
+        <section>
+          <strong>Blockers</strong>
+          {node.blockers.length > 0 ? (
+            <ul>{node.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul>
+          ) : (
+            <p>none</p>
+          )}
+        </section>
+      </div>
+    </aside>
+  )
+}
+
+function gatewayStatusClass(status: GatewayVisualStatus) {
+  switch (status) {
+    case 'connected':
+      return styles.gatewayStatusConnected
+    case 'gated':
+      return styles.gatewayStatusGated
+    case 'blocked':
+      return styles.gatewayStatusBlocked
+    case 'missing':
+    default:
+      return styles.gatewayStatusMissing
+  }
 }
 
 function GatewayEventLane({

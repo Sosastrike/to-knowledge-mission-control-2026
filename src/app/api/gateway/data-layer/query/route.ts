@@ -8,7 +8,9 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  await requireRole(request, 'viewer')
+  const auth = requireRole(request, 'viewer')
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
   const body = await request.json().catch(() => ({}))
   const registry = await loadGatewayRegistry()
   const layer = buildGatewayDataLayer(registry)

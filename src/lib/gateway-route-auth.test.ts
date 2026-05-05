@@ -37,6 +37,9 @@ describe('Gateway route authentication policy', () => {
     const events = await import('@/app/api/gateway/events/route')
     const observability = await import('@/app/api/gateway/observability/route')
     const replay = await import('@/app/api/gateway/replay/route')
+    const dataLayerTool = await import('@/app/api/gateway/data-layer/[tool]/route')
+    const dataLayerQuery = await import('@/app/api/gateway/data-layer/query/route')
+    const dataLayerExecute = await import('@/app/api/gateway/data-layer/execute/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -52,6 +55,18 @@ describe('Gateway route authentication policy', () => {
       replay.POST(new NextRequest('http://localhost/api/gateway/replay', {
         method: 'POST',
         body: JSON.stringify({ owner_request: 'Who is commander?' }),
+      })),
+      dataLayerTool.GET(new NextRequest('http://localhost/api/gateway/data-layer/getSystems'), {
+        params: Promise.resolve({ tool: 'getSystems' }),
+      }),
+      dataLayerQuery.POST(new NextRequest('http://localhost/api/gateway/data-layer/query', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'agent' }),
+      })),
+      dataLayerExecute.GET(new NextRequest('http://localhost/api/gateway/data-layer/execute')),
+      dataLayerExecute.POST(new NextRequest('http://localhost/api/gateway/data-layer/execute', {
+        method: 'POST',
+        body: JSON.stringify({ node_id: 'opencloud', action: 'run' }),
       })),
     ]
 

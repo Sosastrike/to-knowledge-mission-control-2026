@@ -12,7 +12,9 @@ type RouteContext = {
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  await requireRole(request, 'viewer')
+  const auth = requireRole(request, 'viewer')
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
   const { tool } = await context.params
   const registry = await loadGatewayRegistry()
   const layer = buildGatewayDataLayer(registry)

@@ -21,6 +21,11 @@ vi.mock('@/lib/gateway-events', () => ({
   buildGatewayEventsPayload: vi.fn(),
 }))
 
+vi.mock('@/lib/gateway-mini-agent-os', () => ({
+  buildGatewayMiniAgentOperatingSystem: vi.fn(),
+  createGatewayMiniAgentProposal: vi.fn(),
+}))
+
 vi.mock('@/lib/gateway-observability', () => ({
   buildGatewayObservabilityPayload: vi.fn(),
   replayGatewayRoute: vi.fn(),
@@ -40,6 +45,7 @@ describe('Gateway route authentication policy', () => {
     const dataLayerTool = await import('@/app/api/gateway/data-layer/[tool]/route')
     const dataLayerQuery = await import('@/app/api/gateway/data-layer/query/route')
     const dataLayerExecute = await import('@/app/api/gateway/data-layer/execute/route')
+    const miniAgents = await import('@/app/api/gateway/mini-agents/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -67,6 +73,11 @@ describe('Gateway route authentication policy', () => {
       dataLayerExecute.POST(new NextRequest('http://localhost/api/gateway/data-layer/execute', {
         method: 'POST',
         body: JSON.stringify({ node_id: 'opencloud', action: 'run' }),
+      })),
+      miniAgents.GET(new NextRequest('http://localhost/api/gateway/mini-agents')),
+      miniAgents.POST(new NextRequest('http://localhost/api/gateway/mini-agents', {
+        method: 'POST',
+        body: JSON.stringify({ name: 'research scout', purpose: 'Summarize one source', scope: ['read-only summary'] }),
       })),
     ]
 

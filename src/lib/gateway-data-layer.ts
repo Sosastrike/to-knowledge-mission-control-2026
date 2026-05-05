@@ -683,7 +683,8 @@ function semanticContextFor(type: GatewayDataLayerNodeType, name: string): strin
   }
   if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
   if (type === 'skill') return `${name} is a shared OpenClaw+ skill capability discoverable before activation.`
-  if (type === 'owner' || type === 'commander' || type === 'lieutenant' || type === 'mini_agent') return `${name} is an agent-family node governed by Gateway policy and hierarchy.`
+  if (type === 'mini_agent') return `${name} is a mini-agent family node governed by Gateway policy. Mini-agents require a parent supervisor, scope, memory TTL, audit trail, and Agent Zero command authority; they cannot act independently.`
+  if (type === 'owner' || type === 'commander' || type === 'lieutenant') return `${name} is an agent-family node governed by Gateway policy and hierarchy.`
   if (type === 'model') return `${name} is an LLM/model route governed by Gateway routing and fallback policy.`
   if (type === 'mcp_server') return `${name} is an MCP discovery node; schemas are discovered before execution.`
   if (type === 'brain_system') return `${name} is a Brain system node with explicit read/write status.`

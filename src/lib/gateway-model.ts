@@ -13,6 +13,7 @@ export const GATEWAY_STATUS_STATES = [
   'read_only',
   'write_enabled',
   'execution_enabled',
+  'legacy_archived',
 ] as const
 
 export type GatewayStatus = (typeof GATEWAY_STATUS_STATES)[number]
@@ -240,6 +241,7 @@ export function normalizeGatewayStatus(status: string | null | undefined): Gatew
   if (isGatewayStatus(normalized)) return normalized
   if (['active', 'ok', 'healthy', 'available'].includes(normalized)) return 'connected'
   if (['pending', 'unknown', 'warning'].includes(normalized)) return 'degraded'
+  if (['legacy_archived', 'retired_archived'].includes(normalized)) return 'legacy_archived'
   if (['disabled', 'retired', 'archived', 'denied'].includes(normalized)) return 'blocked'
   if (['readonly', 'read_only', 'visible'].includes(normalized)) return 'read_only'
   if (['write', 'writable', 'write_enabled'].includes(normalized)) return 'write_enabled'
@@ -308,6 +310,17 @@ export function createGatewayRegistryFromAgentNetwork(
       lastSeen: generatedAt,
     }),
     createGatewayNode({
+      id: 'gateway',
+      label: 'Gateway',
+      kind: 'gateway',
+      status: 'connected',
+      owner: 'ecosystem',
+      visibility: 'owner_visible',
+      capabilities: ['route', 'govern', 'observe', 'control'],
+      blockers: [],
+      lastSeen: generatedAt,
+    }),
+    createGatewayNode({
       id: hierarchy.commander.id,
       label: hierarchy.commander.name,
       kind: 'commander',
@@ -327,6 +340,17 @@ export function createGatewayRegistryFromAgentNetwork(
       visibility: 'owner_visible',
       capabilities: [...hierarchy.lieutenant.capabilities],
       blockers: compactBlockers([rows.find((row) => row.id === 'hermes')?.blocker || hierarchy.lieutenant.blocker]),
+      lastSeen: generatedAt,
+    }),
+    createGatewayNode({
+      id: 'mini_agents',
+      label: 'Mini-agents',
+      kind: 'mini_agent',
+      status: 'read_only',
+      owner: 'ecosystem',
+      visibility: 'owner_visible',
+      capabilities: ['gateway-routed reporting', 'Agent Zero dispatch', 'Hermes workflow support'],
+      blockers: [],
       lastSeen: generatedAt,
     }),
     createGatewayNode({
@@ -358,17 +382,28 @@ export function createGatewayRegistryFromAgentNetwork(
         id: agent.id,
         label: agent.name,
         kind: 'mini_agent',
-        status: 'blocked',
+        status: normalizeGatewayStatus('status' in agent ? agent.status : 'legacy_archived'),
         owner: 'archive',
         visibility: 'archived',
         capabilities: [],
-        blockers: ['retired_archived'],
+        blockers: ['legacy_archived'],
         lastSeen: generatedAt,
       }),
     ),
   ])
 
-  const edges = hierarchy.edges.map((edge) => {
+  const hierarchyEdges = [
+    { from: 'owner', to: 'gateway', relation: 'commands' },
+    { from: 'gateway', to: 'agent_zero', relation: 'commands' },
+    ...hierarchy.edges,
+    { from: 'gateway', to: 'mini_agents', relation: 'dispatches' },
+    { from: 'agent_zero', to: 'mini_agents', relation: 'delegates_to' },
+    { from: 'hermes', to: 'mini_agents', relation: 'delegates_to' },
+    { from: 'mini_agents', to: 'agent_zero', relation: 'reports_to' },
+    { from: 'mini_agents', to: 'hermes', relation: 'reports_to' },
+  ]
+
+  const edges = hierarchyEdges.map((edge) => {
     const kind = edgeKindFromAgentNetworkRelation(edge.relation)
     const target = nodes.find((node) => node.id === edge.to)
     const blocker = target?.blockers[0] || null
@@ -471,6 +506,7 @@ function scoreForGatewayStatus(status: GatewayStatus): number | null {
   if (status === 'read_only') return 0.75
   if (status === 'degraded') return 0.5
   if (status === 'blocked') return 0.15
+  if (status === 'legacy_archived') return 0.05
   return null
 }
 
@@ -483,6 +519,8 @@ function kindForSystem(id: string): GatewayNodeKind {
 
 function edgeKindFromAgentNetworkRelation(relation: string): GatewayEdgeKind {
   if (relation === 'commands') return 'command'
+  if (relation === 'dispatches' || relation === 'delegates_to') return 'delegation'
+  if (relation === 'reports_to') return 'report'
   if (relation === 'supported_by') return 'delegation'
   if (relation === 'uses_runtime') return 'tool-call'
   if (relation === 'exposes_access_layer') return 'mcp-call'

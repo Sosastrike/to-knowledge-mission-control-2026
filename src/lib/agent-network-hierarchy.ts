@@ -1,4 +1,4 @@
-export const AGENT_NETWORK_STATUS_STATES = ['connected', 'degraded', 'pending', 'blocked'] as const
+export const AGENT_NETWORK_STATUS_STATES = ['connected', 'degraded', 'pending', 'blocked', 'legacy_archived'] as const
 
 export type AgentNetworkStatusState = (typeof AGENT_NETWORK_STATUS_STATES)[number]
 
@@ -121,8 +121,8 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     { id: 'buildwiki', name: 'Build-Wiki / Farmer', role: 'Knowledge sync / farmer system' },
   ],
   retired: [
-    { id: 'tony_legacy', name: 'Tony legacy', role: 'retired / archived', hidden_by_default: true, execution_enabled: false },
-    { id: 'tony_v2', name: 'Tony v2', role: 'parked / archived candidate', hidden_by_default: true, execution_enabled: false },
+    { id: 'tony_legacy', name: 'Tony legacy', role: 'legacy_archived', status: 'legacy_archived' as AgentNetworkStatusState, hidden_by_default: true, execution_enabled: false },
+    { id: 'tony_v2', name: 'Tony v2', role: 'legacy_archived', status: 'legacy_archived' as AgentNetworkStatusState, hidden_by_default: true, execution_enabled: false },
   ],
   edges: [
     { from: 'owner', to: 'agent_zero', relation: 'commands' },

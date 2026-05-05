@@ -30,6 +30,7 @@ export const GATEWAY_DATA_LAYER_STATUS_STATES = [
   'blocked',
   'missing',
   'degraded',
+  'legacy_archived',
 ] as const
 
 export type GatewayDataLayerStatus = (typeof GATEWAY_DATA_LAYER_STATUS_STATES)[number]
@@ -176,6 +177,7 @@ const STATUS_TO_DATA_LAYER_STATUS: Record<GatewayStatus, GatewayDataLayerStatus>
   blocked: 'blocked',
   missing: 'missing',
   degraded: 'degraded',
+  legacy_archived: 'legacy_archived',
 }
 
 const COLUMN_TEMPLATES: Array<Omit<GatewayDataLayerColumn, 'id' | 'table_id'>> = [
@@ -383,7 +385,7 @@ function dataLayerNodeFromGatewayNode(node: GatewayNode): GatewayDataLayerNode {
   const status = STATUS_TO_DATA_LAYER_STATUS[node.health.status]
   const blockedReason = safeText(node.blockers.find(Boolean) ?? null)
   const connected = ['connected', 'read_only', 'write_enabled', 'execution_enabled'].includes(status)
-  const configured = status !== 'missing'
+  const configured = status !== 'missing' && status !== 'legacy_archived'
   const readEnabled = connected || status === 'configured'
   const requiresSession = node.capabilities.some((capability) => /write|execute|send|upload|run/i.test(capability))
 
@@ -581,19 +583,21 @@ function aggregateStatus(nodes: GatewayDataLayerNode[]): GatewayDataLayerStatus 
   if (nodes.some((node) => node.status === 'configured')) return 'configured'
   if (nodes.some((node) => node.status === 'degraded')) return 'degraded'
   if (nodes.some((node) => node.status === 'blocked')) return 'blocked'
+  if (nodes.some((node) => node.status === 'legacy_archived')) return 'legacy_archived'
   return 'missing'
 }
 
 function statusWeight(status: GatewayDataLayerStatus): number {
   const order: Record<GatewayDataLayerStatus, number> = {
     missing: 0,
-    blocked: 1,
-    degraded: 2,
-    configured: 3,
-    read_only: 4,
-    connected: 5,
-    write_enabled: 6,
-    execution_enabled: 7,
+    legacy_archived: 1,
+    blocked: 2,
+    degraded: 3,
+    configured: 4,
+    read_only: 5,
+    connected: 6,
+    write_enabled: 7,
+    execution_enabled: 8,
   }
   return order[status]
 }

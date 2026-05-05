@@ -32,6 +32,8 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     for (const retired of hierarchy.retired) {
       expect(retired.hidden_by_default).toBe(true)
       expect(retired.execution_enabled).toBe(false)
+      expect(retired.role).toBe('legacy_archived')
+      expect(retired.status).toBe('legacy_archived')
     }
   })
 
@@ -53,7 +55,7 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
       'spec generation',
       'debugging support',
     ])
-    expect([...AGENT_NETWORK_STATUS_STATES]).toEqual(['connected', 'degraded', 'pending', 'blocked'])
+    expect([...AGENT_NETWORK_STATUS_STATES]).toEqual(['connected', 'degraded', 'pending', 'blocked', 'legacy_archived'])
 
     const blocked = getHermesHierarchyStatus({ installed: false })
     const pending = getHermesHierarchyStatus({ installed: true })

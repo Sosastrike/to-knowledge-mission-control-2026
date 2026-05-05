@@ -437,7 +437,7 @@ function toGatewayApiNode(registry: GatewayRegistry, node: GatewayNode): Gateway
   const requiresBridgeSession = relatedCapabilities.some((capability) => capability.requires_session) || relatedEdges.some((edge) => edge.requires_session)
   const missingCredential = /missing_credential|credential:.*:missing/i.test(blockedReason || '')
   const lastSuccess = statusConnected ? node.health.last_seen : null
-  const lastError = node.status === 'blocked' || node.status === 'degraded'
+  const lastError = node.status === 'blocked' || node.status === 'degraded' || node.status === 'legacy_archived'
     ? blockedReason || node.health.summary
     : null
 
@@ -446,7 +446,7 @@ function toGatewayApiNode(registry: GatewayRegistry, node: GatewayNode): Gateway
     name: node.label,
     type: node.kind,
     connected: statusConnected,
-    configured: node.status !== 'missing' && !missingCredential,
+    configured: node.status !== 'missing' && node.status !== 'legacy_archived' && !missingCredential,
     read_enabled: (statusConnected || capabilityReadEnabled) && node.status !== 'blocked' && node.status !== 'missing',
     write_enabled: node.status === 'write_enabled' || node.status === 'execution_enabled' || capabilityWriteEnabled,
     execution_enabled: node.status === 'execution_enabled' || capabilityExecutionEnabled,

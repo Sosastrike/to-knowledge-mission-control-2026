@@ -19,6 +19,7 @@ describe('canonical Gateway graph model', () => {
       'read_only',
       'write_enabled',
       'execution_enabled',
+      'legacy_archived',
     ])
 
     expect([...GATEWAY_NODE_KINDS]).toEqual([
@@ -95,8 +96,10 @@ describe('canonical Gateway graph model', () => {
     expect(nodeIds).toEqual(
       expect.arrayContaining([
         'owner',
+        'gateway',
         'agent_zero',
         'hermes',
+        'mini_agents',
         'openclaw_plus',
         'bridge_mcp',
         'brain_sync',
@@ -108,6 +111,7 @@ describe('canonical Gateway graph model', () => {
         'tony_v2',
       ]),
     )
+    expect(registry.nodes.filter((node) => node.id === 'agent_zero')).toHaveLength(1)
     expect(agentZero).toMatchObject({
       kind: 'commander',
       status: 'connected',
@@ -131,8 +135,8 @@ describe('canonical Gateway graph model', () => {
     expect(tonyNodes).toHaveLength(2)
     for (const node of tonyNodes) {
       expect(node.visibility).toBe('archived')
-      expect(node.status).toBe('blocked')
-      expect(node.blockers).toEqual(['retired_archived'])
+      expect(node.status).toBe('legacy_archived')
+      expect(node.blockers).toEqual(['legacy_archived'])
     }
     expect(activeTonyEdges).toEqual([])
   })
@@ -152,10 +156,14 @@ describe('canonical Gateway graph model', () => {
     })
     expect(registry.edges).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ source: 'gateway', target: 'agent_zero', kind: 'command' }),
         expect.objectContaining({ source: 'agent_zero', target: 'hermes', kind: 'delegation' }),
         expect.objectContaining({ source: 'agent_zero', target: 'openclaw_plus', kind: 'tool-call' }),
         expect.objectContaining({ source: 'openclaw_plus', target: 'bridge_mcp', kind: 'mcp-call' }),
         expect.objectContaining({ source: 'agent_zero', target: 'brain_sync', kind: 'memory' }),
+        expect.objectContaining({ source: 'gateway', target: 'mini_agents', kind: 'delegation' }),
+        expect.objectContaining({ source: 'mini_agents', target: 'agent_zero', kind: 'report' }),
+        expect.objectContaining({ source: 'mini_agents', target: 'hermes', kind: 'report' }),
       ]),
     )
   })

@@ -239,7 +239,7 @@
       'resolveApproval',
     ];
     for (const key of locked) {
-      window.AgentRegistry[key] = (...args) => notifyBlockedWrite(`Agent Network ${key}`);
+      window.AgentRegistry[key] = (...args) => notifyBlockedWrite(`Gateway ${key}`);
     }
     window.AgentRegistry.__tkmcReadOnlyLocked = true;
   }

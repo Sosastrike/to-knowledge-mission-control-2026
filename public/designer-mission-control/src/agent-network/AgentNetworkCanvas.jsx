@@ -19,7 +19,7 @@ const TIER_LANES = [
   { id:'lieutenant', label:'Lieutenant', y: 250 },
   { id:'specialist', label:'Specialist', y: 380 },
   { id:'worker',     label:'Worker',     y: 500 },
-  { id:'tool',       label:'Engine · Tool · Integration · Memory', y: 620 },
+  { id:'tool',       label:'Runtime · Tools · Models · Memory', y: 620 },
 ];
 
 const ICONS_FOR_AGENT = {

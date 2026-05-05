@@ -74,7 +74,7 @@ function buttonWithRuntimeContract(button: ButtonContract) {
 const BUTTONS: ButtonContract[] = [
   { route: 'left-rail', label: 'Mission Control', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
   { route: 'left-rail', label: 'Brain Sync', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
-  { route: 'left-rail', label: 'Agent Network', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
+  { route: 'left-rail', label: 'Gateway', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
   { route: 'left-rail', label: 'FireCrawl', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
   { route: 'left-rail', label: 'Zapier', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },
   { route: 'left-rail', label: 'n8n', endpoint: null, method: 'LOCAL', state: 'LIVE', credential_names: [], approval_required: false, audit_required: false, owner: 'Cloud Code', note: 'Shell navigation.' },

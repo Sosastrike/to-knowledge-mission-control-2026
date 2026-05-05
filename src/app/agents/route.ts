@@ -3,21 +3,21 @@ import { NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const AGENT_NETWORK_URL = '/designer-mission-control/Mission%20Control.html?page=agent-network'
+const GATEWAY_URL = '/designer-mission-control/Mission%20Control.html?page=gateway'
 
-function redirectToAgentNetwork(): NextResponse {
+function redirectToGateway(): NextResponse {
   return new NextResponse(null, {
     status: 307,
     headers: {
-      Location: AGENT_NETWORK_URL,
+      Location: GATEWAY_URL,
     },
   })
 }
 
 export async function GET() {
-  return redirectToAgentNetwork()
+  return redirectToGateway()
 }
 
 export async function HEAD() {
-  return redirectToAgentNetwork()
+  return redirectToGateway()
 }

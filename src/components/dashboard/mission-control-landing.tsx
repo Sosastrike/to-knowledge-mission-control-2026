@@ -60,11 +60,11 @@ export function MissionControlLanding() {
                 To-Knowledge Mission Control
               </h1>
               <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-                The old ClaudeClaw static /mc interface is retired. Use this TKMC app for Agent Network, provider visibility, approvals, and the active operations dashboard.
+                The old ClaudeClaw static /mc interface is retired. Use this TKMC app for Gateway, provider visibility, approvals, and the active operations dashboard.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => navigateToPanel('agents')}>Open Agent Network</Button>
+              <Button onClick={() => navigateToPanel('gateway')}>Open Gateway</Button>
               <Button variant="outline" onClick={() => navigateToPanel('settings')}>Settings</Button>
             </div>
           </div>
@@ -73,7 +73,7 @@ export function MissionControlLanding() {
         <div className="grid gap-4 lg:grid-cols-3">
           <article className="rounded-lg border border-border bg-card p-5">
             <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Primary surface</div>
-            <h2 className="mt-2 text-lg font-semibold text-foreground">Agent Network</h2>
+            <h2 className="mt-2 text-lg font-semibold text-foreground">Gateway</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Read-only view for Agent Zero, Hermes, OpenClaw Gateway, and legacy ClaudeClaw specialist agents.
             </p>

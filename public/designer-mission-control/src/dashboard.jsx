@@ -54,8 +54,8 @@ function BridgeProvidersCard({ onGo }) {
         <div className="card-title">Bridge providers <span className="card-subtitle">live read-only</span></div>
         <span
           className="card-link"
-          onClick={() => onGo && onGo('agent-network')}
-          title="Open Agent Network"
+          onClick={() => onGo && onGo('gateway')}
+          title="Open Gateway"
         >Network <I.ArrowRight/></span>
       </div>
       <div className="card-body vstack" style={{gap:8}}>
@@ -74,7 +74,7 @@ function BridgeProvidersCard({ onGo }) {
             : p.state === 'sandbox' || p.state === 'backup' ? 'warn'
             : 'err';
           return (
-            <div key={p.id} className="agent-strip-row" onClick={() => onGo && onGo('agent-network')} title={p.next_action || p.detail?.notes || p.state}>
+            <div key={p.id} className="agent-strip-row" onClick={() => onGo && onGo('gateway')} title={p.next_action || p.detail?.notes || p.state}>
               <StatusDot s={status}/>
               <div style={{flex:1, minWidth:0}}>
                 <div className="agent-strip-name truncate">{p.name}</div>

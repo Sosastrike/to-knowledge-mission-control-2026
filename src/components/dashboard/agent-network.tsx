@@ -270,8 +270,8 @@ export function AgentNetwork({ agents, sessions }: AgentNetworkProps) {
             <circle cx="12" cy="12" r="2" />
             <path d="M6 4h4M4 6v4M12 6v4M6 12h4" />
           </svg>
-          <p>No agent network to display</p>
-          <p className="text-xs mt-1">Agent connections will appear here</p>
+          <p>No Gateway Map to display</p>
+          <p className="text-xs mt-1">Gateway routes will appear here</p>
         </div>
       </div>
     )
@@ -280,9 +280,9 @@ export function AgentNetwork({ agents, sessions }: AgentNetworkProps) {
   return (
     <div className="void-panel">
       <div className="p-4 border-b border-border">
-        <h3 className="font-semibold text-foreground">Agent Network</h3>
+        <h3 className="font-semibold text-foreground">Gateway</h3>
         <p className="text-sm text-muted-foreground">
-          Visual representation of agent relationships
+          Visual representation of Gateway routes
         </p>
       </div>
 

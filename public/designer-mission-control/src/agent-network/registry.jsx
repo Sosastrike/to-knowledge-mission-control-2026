@@ -3,7 +3,7 @@
 //
 // Mock-only. Mirrors the schema the production backend should
 // implement (see docs/agent-network-spec.md). Every UI element
-// in the Agent Network page binds to fields exposed here.
+// in the Gateway page binds to fields exposed here.
 //
 // Public surface:
 //   window.AgentRegistry = {

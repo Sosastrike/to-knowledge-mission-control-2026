@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────
 // src/components/agent-network/AgentNetworkClient.tsx
 //
-// Client wrapper for the Agent Network Phase A page.
+// Client wrapper for the Gateway Phase A page.
 //
 // Responsibilities:
 //   - Fetch live agent list from existing /api/agents (mission-control's
@@ -3620,11 +3620,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     <main className={styles.root} data-theme="mc">
       <header className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
-          <h1 className={styles.pageTitle}>Agent Network</h1>
+          <h1 className={styles.pageTitle}>Gateway</h1>
           <span className={styles.phaseChip}>Phase A — Read-Only</span>
         </div>
         <p className={styles.pageSub}>
-          Production-safe view of the current agent constellation. Mutations and live event streams are gated to Phase B per <code>path-a-section-2-agent-network-refinement.md</code>.
+          Production-safe Gateway Map for the current agent constellation. Mutations and live event streams are gated to Phase B per <code>path-a-section-2-agent-network-refinement.md</code>.
         </p>
       </header>
 
@@ -3632,7 +3632,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <strong>Bridge Mode preflight is mandatory.</strong> Every agent must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the task. If Bridge Mode says approval, credential, or backend work is required, the agent must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
-        Canonical hierarchy: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Agent Zero commander, Hermes lieutenant support, OpenClaw+ runtime, then Bridge/MCP and Brain systems. Tony legacy is retired and hidden from active hierarchy.
+        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Agent Zero commander, Hermes lieutenant support, OpenClaw+ runtime, then Bridge/MCP and Brain systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
       {/* Top stats strip */}
@@ -3657,11 +3657,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
 
       {/* Loading / error banner */}
       {loadState === 'loading' && (
-        <div className={styles.banner}>Loading agents from <code>/api/agents</code>…</div>
+        <div className={styles.banner}>Loading Gateway nodes from <code>/api/agents</code>…</div>
       )}
       {loadState === 'error' && (
         <div className={`${styles.banner} ${styles.bannerError}`}>
-          <strong>Could not load agents:</strong> {errorMsg}. Static reference cards below remain accurate.
+          <strong>Could not load Gateway nodes:</strong> {errorMsg}. Static Gateway nodes below remain accurate.
         </div>
       )}
 

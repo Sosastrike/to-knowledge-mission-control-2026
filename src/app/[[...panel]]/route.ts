@@ -11,7 +11,7 @@ const DESIGNER_BASE = '/designer-mission-control/Mission%20Control.html'
 
 function pageForPanel(panel: string[] | undefined): string {
   const firstPanel = panel?.[0] || 'mission'
-  if (firstPanel === 'agents' || firstPanel === 'agent-network') return 'agent-network'
+  if (firstPanel === 'gateway' || firstPanel === 'agents' || firstPanel === 'agent-network') return 'gateway'
   if (firstPanel === 'reports' || firstPanel === 'executive-reports' || firstPanel === 'scheduled-reports') return 'reports'
   return 'mission'
 }

@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         raw_ids_exposed_to_owner: false,
       },
       handoff_audit: 'Every handoff is recorded in Mission Control audit_log with internal correlation metadata.',
-      ui_summary: 'Agent Network shows this route as the Agent Zero to Hermes handoff surface; reports may mention Hermes contribution when this route is used.',
+      ui_summary: 'Gateway shows this route as the Agent Zero to Hermes dispatch surface; reports may mention Hermes contribution when this route is used.',
     },
     supported_task_types: HERMES_COLLABORATION_TASK_TYPES,
     forbidden_tasks: HERMES_FORBIDDEN_TASKS,

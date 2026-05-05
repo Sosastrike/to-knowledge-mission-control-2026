@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       status: 'active',
       execution_permission: 'owner_approval_required',
       available_models: ['OpenRouter/model registry through Mission Control', 'Claude/OpenAI/Gemini/Groq/local providers when configured', 'Agent Zero internal runtime for chat'],
-      available_tools: ['Mission Control live bridge', 'Bridge/MCP registry', 'report/PDF delivery surface', 'Build-Wiki/Farmer status', 'Agent Network UI'],
+      available_tools: ['Mission Control live bridge', 'Bridge/MCP registry', 'report/PDF delivery surface', 'Build-Wiki/Farmer status', 'Gateway UI'],
       available_skills: ['OpenClaw+ shared skills/runtime layer', 'Agent Zero deployed skills', 'Hermes shared skills', 'Mission Control repo skills'],
       available_integrations: ['Telegram/Mission Control delivery if route configured', 'Google Drive/OneDrive status adapters', 'Zapier/HeyGen schema visibility only until approved execution', 'Obsidian/MemPalace/Brain adapters'],
       available_mcps: ['MCP inventory via /api/mcp/list', 'MCP tool/schema summaries; execution requires active Bridge Session'],

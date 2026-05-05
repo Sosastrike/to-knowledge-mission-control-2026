@@ -92,7 +92,7 @@ function App() {
     else if (p === 'mission')  { setPage('mission'); }
     else if (p === 'brain-sync'){ setPage('brain-sync'); }
     else if (p === 'mirofish')  { setPage('mirofish'); }
-    else if (p === 'agent-network') { setPage('agent-network'); }
+    else if (p === 'gateway' || p === 'agent-network') { setPage('gateway'); }
     else if (p === 'firecrawl') { setPage('firecrawl'); }
     else if (p === 'zapier') { setPage('zapier'); }
     else if (p === 'n8n') { setPage('n8n'); }
@@ -184,7 +184,7 @@ function App() {
           {page === 'mission'    && <Dashboard onGo={goTo} onJoin={(m)=>{setMeeting(m); setMeetingOpen(true);}} editMode={editMode} setEditMode={setEditMode} modules={modules} toggleModule={toggleModule} onAgent={setAgent} onTicket={setTicket} onOpenTasks={openTasks} onOps={(k,arg1,arg2)=>{ setOpsDrawer(k); if (k==='pacman' && arg1) setPacmanTab(arg1); if (k==='telemetry') setTelemetryFocus({ tab:arg1||null, skillId:arg2||null }); }}/>}
           {page === 'brain-sync' && <BrainSyncPage/>}
           {page === 'mirofish'   && <MiroFishPage/>}
-          {page === 'agent-network' && <AgentNetworkPage/>}
+          {(page === 'gateway' || page === 'agent-network') && <AgentNetworkPage/>}
           {page === 'firecrawl' && <FireCrawlPage/>}
           {page === 'zapier' && <ZapierPage/>}
           {page === 'n8n' && <N8NPage/>}

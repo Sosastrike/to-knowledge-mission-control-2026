@@ -39,11 +39,11 @@ function AgentNetworkPage() {
   const pendingMed  = pendingApprovals.filter(a => a.severity === 'medium').length;
 
   return (
-    <div className="an-page" data-bind="page.agent-network">
+    <div className="an-page" data-bind="page.gateway">
       {/* ===== Header ===== */}
       <header className="an-header">
-        <span className="an-title">Agent Network</span>
-        <span className="an-sub">— Brain Sync · Harness · Universal Bridge</span>
+        <span className="an-title">Gateway</span>
+        <span className="an-sub">— Gateway · Brain · Bridge</span>
 
         <span style={{flex:1}}/>
 
@@ -63,8 +63,8 @@ function AgentNetworkPage() {
           {pendingApprovals.length} approvals
         </span>
 
-        <button className="an-btn primary" onClick={() => window.TKMC_LIVE_BRIDGE?.blockedWrite?.('Add agent')}>
-          <I.Plus size={12}/> Add agent
+        <button className="an-btn primary" onClick={() => window.TKMC_LIVE_BRIDGE?.blockedWrite?.('Add Gateway Node')}>
+          <I.Plus size={12}/> Add Gateway Node
         </button>
         <button className="an-btn" onClick={() => {
           window.TKMC_LIVE_BRIDGE?.refresh?.();
@@ -101,7 +101,7 @@ function AgentNetworkPage() {
         }}
       />
 
-      {/* ===== Bottom dock — Brain Sync · Harness · Cost ===== */}
+      {/* ===== Bottom dock — Gateway · Brain · Bridge ===== */}
       <div className="an-dock">
         {/* Brain Sync */}
         <div className="an-dock-pane" data-bind="brain_sync">

@@ -1,11 +1,11 @@
 // ============================================================
-// Agent Network modals — Add Agent, Connect Engine, Approval,
+// Gateway modals — Add Gateway Node, Connect Runtime, Approval,
 // Assign Ticket, Context Menu. All mutations go through
 // window.AgentRegistry. No production calls.
 // ============================================================
 
 // -----------------------------------------------------------
-// Add Agent wizard — 6 steps. Mirrors the spec flow:
+// Add Gateway Node wizard — 6 steps. Mirrors the spec flow:
 // type → tier → role/perms → engines → supervisor → save
 // -----------------------------------------------------------
 function AddAgentWizard({ open, onClose }) {
@@ -52,7 +52,7 @@ function AddAgentWizard({ open, onClose }) {
       <div className="an-modal" onClick={e => e.stopPropagation()}>
         <div className="an-modal-header">
           <I.Plus size={14}/>
-          <h3>Add agent</h3>
+          <h3>Add Gateway Node</h3>
           <span className="an-mock-chip">owner approval required</span>
           <span className="spacer"/>
           <button className="an-btn" onClick={onClose}><I.X size={12}/></button>

@@ -2,7 +2,7 @@
 // Agent Registry — live read-only shell backed by the TKMC adapter.
 //
 // Mock-only. Mirrors the schema the production backend should
-// implement (see docs/agent-network-spec.md). Every UI element
+// implement (see docs/agent-network-spec.md, now the Gateway handoff spec). Every UI element
 // in the Gateway page binds to fields exposed here.
 //
 // Public surface:

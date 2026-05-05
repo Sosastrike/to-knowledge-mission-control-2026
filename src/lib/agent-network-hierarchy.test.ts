@@ -66,7 +66,7 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(CANONICAL_AGENT_NETWORK_HIERARCHY.lieutenant.bridge_session_required).toBe(true)
   })
 
-  it('builds Agent Network rows from canonical hierarchy and filters canonical aliases', () => {
+  it('builds Gateway rows from canonical hierarchy and filters compatibility aliases', () => {
     const rows = getCanonicalAgentNetworkRows({ installed: true, reachable: true, authConfigured: false })
     const ids = rows.map((row) => row.id)
     const hermes = rows.find((row) => row.id === 'hermes')

@@ -58,7 +58,7 @@ describe('canonical Gateway graph model', () => {
     })
   })
 
-  it('adapts the canonical Agent Network data into a GatewayRegistry', () => {
+  it('adapts the canonical Gateway hierarchy data into a GatewayRegistry', () => {
     const registry = createGatewayRegistryFromAgentNetwork({
       generatedAt: '2026-05-04T12:00:00.000Z',
       hermes: { installed: true, reachable: true, authConfigured: false },
@@ -117,7 +117,7 @@ describe('canonical Gateway graph model', () => {
     expect(activeTonyEdges).toEqual([])
   })
 
-  it('maps Agent Network relationships into Gateway edge types', () => {
+  it('maps Gateway hierarchy relationships into Gateway edge types', () => {
     const registry = createGatewayRegistryFromAgentNetwork({ generatedAt: '2026-05-04T12:00:00.000Z' })
 
     expect(registry.edges).toContainEqual({

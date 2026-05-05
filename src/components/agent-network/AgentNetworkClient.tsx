@@ -4190,9 +4190,13 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           <span className={styles.phaseChip}>Phase A — Read-Only</span>
         </div>
         <p className={styles.pageSub}>
-          Production-safe Gateway Map for the current agent constellation. Mutations and live event streams are gated to Phase B per <code>path-a-section-2-agent-network-refinement.md</code>.
+          Production-safe Gateway Map for the current agent constellation. Mutations and live event streams are gated to Phase B per <code>gateway-transformation-plan.md</code>.
         </p>
       </header>
+
+      <div className={styles.deprecationNotice}>
+        <strong>Agent Network is now Gateway.</strong> Legacy <code>/agents</code>, <code>/agent-network</code>, and <code>page=agent-network</code> links continue to open this Gateway surface.
+      </div>
 
       <div className={styles.banner}>
         <strong>Bridge Mode preflight is mandatory.</strong> Every agent must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the task. If Bridge Mode says approval, credential, or backend work is required, the agent must stop that action instead of guessing or faking success.
@@ -4930,7 +4934,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       {/* Footer with Phase B notice */}
       <footer className={styles.footer}>
         <div className={styles.footerNote}>
-          <strong>Phase B</strong> — full mutation surface (8 DB tables · ~18 API routes · SSE for brain_sync &amp; harness · TTL job for approvals · server-enforced HTTP 423 for Agent Zero commander actions · audit-chain double-emit) is gated on per-item owner approval. See <code>.designer-review/path-a-section-2-agent-network-refinement.md</code>.
+          <strong>Phase B</strong> — full Gateway mutation surface (8 DB tables · ~18 API routes · SSE for brain_sync &amp; harness · TTL job for approvals · server-enforced HTTP 423 for Agent Zero commander actions · audit-chain double-emit) is gated on per-item owner approval. See <code>runtime/gateway-transformation-plan.md</code>.
         </div>
         <div className={styles.footerMeta}>
           <span>© 2025 To-Knowledge</span>

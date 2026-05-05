@@ -10,7 +10,7 @@ Bridge Mode is the central tool tunnel for Mission Control.
 
 Bridge Mode is also the mandatory preflight gate in the Mission Control Agent Execution Cycle. Every agent must query Bridge Mode before acting so it can select the correct tools, models, skills, integrations, MCPs, approval gates, fallback routes, and restrictions for the task.
 
-It tells Tony and every connected agent what is available before they act:
+It tells Agent Zero and every connected agent what is available before they act:
 
 - agents
 - models
@@ -26,7 +26,7 @@ It tells Tony and every connected agent what is available before they act:
 - blockers
 - restrictions
 
-Bridge Mode is not just the Agent Network graph. Agent Network shows relationships. Bridge Mode shows operational capability, permission, and execution readiness.
+Bridge Mode is not just the Gateway Map. Gateway Map shows relationships. Bridge Mode shows operational capability, permission, and execution readiness.
 
 ## Mandatory Preflight Requirement
 
@@ -98,11 +98,11 @@ Required columns:
 - blockers
 - next action
 
-### 3. Tony Route Card
+### 3. Agent Zero Commander Route Card
 
-Tony is the operational commander.
+Agent Zero is the operational commander.
 
-Tony card must show:
+Agent Zero card must show:
 
 - primary chat route: `claude_cli_direct`
 - task execution route: `openrouter_http`
@@ -140,7 +140,7 @@ Allowed MVP mode:
 Not allowed until owner approval:
 
 - execute protected actions
-- modify Tony memory
+- modify retired Tony memory archives
 - change governance
 - change credentials
 - change routing
@@ -162,7 +162,7 @@ Sandbox meaning:
 - can be inspected
 - can recommend
 - cannot perform protected production execution
-- cannot write Tony memory
+- cannot write retired Tony memory archives
 - cannot write Brain Sync
 - cannot expose gateway/public ports
 - cannot use production credentials unless owner approves
@@ -221,7 +221,7 @@ Shows all protected categories:
 - credentials
 - memory write
 - governance
-- Tony voice
+- retired Tony voice
 - routing/model changes
 - Zapier writes
 - n8n execution
@@ -310,8 +310,8 @@ Read-only API object:
 
 ```json
 {
-  "agent_id": "tony",
-  "agent_name": "Tony",
+  "agent_id": "agent_zero",
+  "agent_name": "Agent Zero",
   "status": "active",
   "mode": "execute",
   "models": [],
@@ -406,8 +406,8 @@ Read-only MVP must not:
 - write Brain Sync events
 - expose Hermes publicly
 - promote Hermes to production
-- change Tony routes
-- change Tony voice
+- change retired Tony routes
+- change retired Tony voice
 - change governance
 - change credentials
 
@@ -569,8 +569,8 @@ Do not migrate until owner approves.
 - Public dashboards must stay behind approved auth.
 - Agent-to-agent execution requires owner-approved scopes.
 - External users require explicit access policy.
-- Tony voice is Tony-only.
-- Tony memory is protected.
+- Retired Tony voice remains legacy-only.
+- Retired Tony memory archives are protected.
 - Governance changes require owner approval.
 
 ## Initial Implementation Plan
@@ -581,9 +581,9 @@ Phase 1: read-only Bridge Mode MVP.
 2. Add `BridgeModePage`.
 3. Add `GET /api/bridge/mode` aggregate endpoint.
 4. Render agent capability matrix.
-5. Render Tony route card.
-6. Render Agent Zero observe/review card.
-7. Render Hermes sandbox card.
+5. Render Agent Zero commander route card.
+6. Render Hermes lieutenant/specialist card.
+7. Render retired Tony archive status only if explicitly requested.
 8. Render provider/tool/skill/MCP inventory.
 9. Render approval gate table.
 10. Render blockers and next actions.

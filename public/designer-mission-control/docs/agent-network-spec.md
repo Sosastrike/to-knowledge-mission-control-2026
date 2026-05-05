@@ -1,10 +1,10 @@
-# Agent Network — Developer Handoff Spec
+# Gateway — Developer Handoff Spec
 
 > **Version:** 2026-04-28 · **Status:** Prototype only · No production calls
 > **Owner:** Design (Claude) → Engineering (Luis / Mission Control team)
 
-This spec describes everything required to take the Agent Network prototype
-(`src/agent-network/*`) to production. The prototype is fully wired in-browser
+This spec describes everything required to take the Gateway prototype
+(legacy-compatible files under `src/agent-network/*`) to production. The prototype is fully wired in-browser
 through `window.AgentRegistry` (in-memory store). Engineering must implement
 the equivalent server-side records, mutations, and event streams.
 
@@ -229,7 +229,7 @@ docs/
 Wired into:
 - `Mission Control.html` (script + stylesheet tags)
 - `src/replicas/WorkspaceRail.jsx` (rail entry)
-- `src/app.jsx` (page route `agent-network`)
+- `src/app.jsx` (canonical page route `gateway`; legacy `agent-network` remains an alias)
 
 ---
 

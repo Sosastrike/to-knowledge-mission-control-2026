@@ -9,7 +9,7 @@ interface CoreNodeData {
 }
 
 /**
- * Central CORE orchestration node for the agent network graph.
+ * Central CORE orchestration node for the Gateway map.
  * Pulsing concentric cyan rings — the visual identity of Mission Control.
  */
 function AgentCoreNodeInner({ data }: NodeProps & { data: CoreNodeData }) {

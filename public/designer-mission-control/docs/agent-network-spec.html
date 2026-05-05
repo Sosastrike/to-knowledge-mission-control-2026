@@ -1,6 +1,6 @@
 <!doctype html>
 <html><head><meta charset="utf-8"/>
-<title>Agent Network — Spec (printable)</title>
+<title>Gateway — Spec (printable)</title>
 <style>
   @page { size: Letter; margin: 0.6in; }
   body { font: 14px/1.55 -apple-system, "SF Pro Text", system-ui, sans-serif; color: #111; max-width: 7.2in; margin: 0 auto; padding: 24px; }
@@ -19,14 +19,14 @@
   .chip.err { background: #ffd7d7; color: #6b0e0e; }
 </style></head>
 <body>
-<h1>Agent Network — Developer Handoff</h1>
+<h1>Gateway — Developer Handoff</h1>
 <div class="meta">
   Version 2026-04-28 · <span class="chip">Prototype only</span> <span class="chip err">No production calls</span>
   <br/>Source: <code>src/agent-network/*</code> · Spec: <code>docs/agent-network-spec.md</code>
 </div>
 
 <h2>1. What this is</h2>
-<p>Visual + interactive prototype for the Agent Network surface — tier-laned canvas, right-side inspector, bottom dock with Brain Sync, Harness, and Cost panes. All data is in-memory through <code>window.AgentRegistry</code>. Nothing here calls a real backend.</p>
+<p>Visual + interactive prototype for the Gateway surface — tier-laned canvas, right-side inspector, bottom dock with Brain Sync, Harness, and Cost panes. All data is in-memory through <code>window.AgentRegistry</code>. Nothing here calls a real backend.</p>
 
 <h2>2. Files shipped</h2>
 <table>
@@ -46,8 +46,8 @@
   &lt;script type="text/babel" src="src/agent-network/registry.jsx"&gt;&lt;/script&gt;
   &lt;script ...Canvas, Inspector, Modals, Page&gt;
 
-src/replicas/WorkspaceRail.jsx     ← rail entry "Agent Network"
-src/app.jsx                        ← route page === 'agent-network'</pre>
+src/replicas/WorkspaceRail.jsx     ← rail entry "Gateway"
+src/app.jsx                        ← route page === 'gateway' with legacy 'agent-network' alias</pre>
 
 <h2>4. Mock vs Production</h2>
 <table>

@@ -581,5 +581,24 @@ describe('Gateway registry API model', () => {
     expect(flows.execution_enabled).toBe(false)
     expect(policies.summary.auth_required).toBe(true)
     expect(policies.summary.external_writes_enabled).toBe(false)
+    expect(policies.security_proof.policies).toMatchObject({
+      auth_required: true,
+      tailscale_or_mission_control_auth_required: true,
+      bridge_session_required_for_writes: true,
+      external_writes_blocked_without_session: true,
+      protected_scopes_enforced: true,
+      public_hermes_ui_exposed: false,
+      raw_shell_enabled: false,
+      root_shell_enabled: false,
+      docker_socket_enabled: false,
+      direct_secret_reads_enabled: false,
+    })
+    expect(policies.security_proof.forbidden_surfaces.map((surface) => surface.id)).toEqual(expect.arrayContaining([
+      'raw_root_shell',
+      'docker_socket',
+      'direct_secret_reads',
+      'public_hermes_ui',
+    ]))
+    expect(JSON.stringify(policies)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony|auth\.json/)
   })
 })

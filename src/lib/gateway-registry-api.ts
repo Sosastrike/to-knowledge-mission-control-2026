@@ -20,6 +20,7 @@ import {
   type GatewayStatus,
 } from './gateway-model'
 import { GATEWAY_POLICY_BADGES, type GatewayPolicyBadge } from './gateway-policy'
+import { buildGatewaySecurityProof, type GatewaySecurityProof } from './gateway-security-proof'
 
 type GatewayRegistryBuildInput = {
   context?: AgentZeroReadOnlyContext | null
@@ -174,6 +175,7 @@ export type GatewayPoliciesPayload = {
     docker_socket_enabled: false
   }
   badges: GatewayPolicyBadge[]
+  security_proof: GatewaySecurityProof
 }
 
 type GatewayNodeStatusSummary = {
@@ -369,6 +371,7 @@ export function buildGatewayFlowsPayload(registry: GatewayRegistry): GatewayFlow
 }
 
 export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayPoliciesPayload {
+  const securityProof = buildGatewaySecurityProof(registry)
   return {
     ok: true,
     mode: 'gateway_policies_read_only',
@@ -383,6 +386,7 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
       docker_socket_enabled: false,
     },
     badges: [...GATEWAY_POLICY_BADGES],
+    security_proof: securityProof,
   }
 }
 

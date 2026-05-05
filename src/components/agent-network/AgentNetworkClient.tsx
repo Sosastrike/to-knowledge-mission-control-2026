@@ -226,6 +226,80 @@ interface GatewayEventsPayload {
   error?: string
 }
 
+interface GatewayTraceRecord {
+  trace_id: string
+  source: string
+  gateway: string
+  target: string
+  route: string[]
+  status: string
+  result_summary: string
+  blocker: string | null
+  policy_decision: string
+  execution_decision: string
+  duration_ms: number | null
+  duration_source: string
+  external_write: boolean
+  cost_tokens: number | null
+  cost_usd: number | null
+}
+
+interface GatewayAuditRecord {
+  audit_id: string
+  trace_id: string
+  event: string
+  route_target: string
+  status: string
+  allowed: boolean
+  blocked_reason: string | null
+  external_write: boolean
+  execution_enabled: boolean
+  recorded_at: string
+}
+
+interface GatewayObservabilityPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  traces?: GatewayTraceRecord[]
+  audit_log?: GatewayAuditRecord[]
+  metrics?: {
+    route_count?: number
+    recorded_latency_count?: number
+    average_latency_ms?: number | null
+    health?: {
+      total_nodes?: number
+      by_status?: Record<string, number>
+      last_heartbeat?: string | null
+    }
+    blockers?: Array<{ reason: string; count: number }>
+    external_writes?: {
+      tracked?: number
+      allowed_after_session?: number
+      blocked_without_session?: number
+      execution_enabled?: boolean
+    }
+    llm_usage?: Array<{
+      provider: string
+      status: string
+      usage_available: boolean
+      total_tokens: number | null
+      cost_usd: number | null
+    }>
+  }
+  replay_safe_mode?: {
+    enabled?: boolean
+    route?: string
+    plan_only?: boolean
+    execution_enabled?: boolean
+    writes_enabled?: boolean
+  }
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  secrets_exposed?: boolean
+  error?: string
+}
+
 interface ZapierToolRecord {
   tool_name?: string
   description?: string | null
@@ -1419,6 +1493,97 @@ const GATEWAY_EVENT_FALLBACK: GatewayEventRecord[] = [
     blockers: [],
   },
 ]
+
+function GatewayObservabilitySection({
+  payload,
+  state,
+  error,
+}: {
+  payload: GatewayObservabilityPayload | null
+  state: 'loading' | 'ok' | 'error'
+  error: string
+}) {
+  const traces = payload?.traces || []
+  const audit = payload?.audit_log || []
+  const blockers = payload?.metrics?.blockers || []
+  const llmUsage = payload?.metrics?.llm_usage || []
+  return (
+    <section className={styles.gatewayObservabilitySection}>
+      <header className={styles.externalSectionHeader}>
+        <h2 className={styles.tierTitle}>Gateway Observability</h2>
+        <span className={styles.tierSub}>Route traces, policy audit, health, blockers, external writes, and safe replay mode</span>
+      </header>
+      {state === 'loading' && <div className={styles.banner}>Loading Gateway observability from <code>/api/gateway/observability</code>…</div>}
+      {state === 'error' && (
+        <div className={`${styles.banner} ${styles.bannerError}`}>
+          <strong>Could not load Gateway observability:</strong> {error}
+        </div>
+      )}
+      {state === 'ok' && (
+        <>
+          <div className={styles.gatewayObservabilityMetrics}>
+            <MetricPill label="routes" value={payload?.metrics?.route_count ?? 0} />
+            <MetricPill label="latency" value={payload?.metrics?.average_latency_ms == null ? 'not recorded' : `${payload.metrics.average_latency_ms}ms`} />
+            <MetricPill label="nodes" value={payload?.metrics?.health?.total_nodes ?? 0} />
+            <MetricPill label="blocked reasons" value={blockers.length} />
+            <MetricPill label="external writes" value={payload?.metrics?.external_writes?.tracked ?? 0} />
+            <MetricPill label="replay" value={payload?.replay_safe_mode?.plan_only ? 'plan only' : 'disabled'} />
+          </div>
+          <div className={styles.gatewayAuditGrid}>
+            <article className={styles.gatewayAuditPanel}>
+              <h3>Flow Trace</h3>
+              {(traces.length > 0 ? traces : []).slice(0, 5).map((trace) => (
+                <div key={trace.trace_id} className={styles.gatewayTraceRow}>
+                  <StatusDot status={trace.status} />
+                  <div>
+                    <strong>{trace.source} → gateway → {trace.target}</strong>
+                    <span>{trace.route.join(' → ')}</span>
+                    {trace.blocker && <small>blocked: {trace.blocker}</small>}
+                  </div>
+                  <small>{trace.duration_ms == null ? trace.duration_source.replace(/_/g, ' ') : `${trace.duration_ms}ms`}</small>
+                </div>
+              ))}
+            </article>
+            <article className={styles.gatewayAuditPanel}>
+              <h3>Policy Audit</h3>
+              {audit.slice(0, 6).map((record) => (
+                <div key={record.audit_id} className={styles.gatewayTraceRow}>
+                  <StatusDot status={record.status} />
+                  <div>
+                    <strong>{record.event.replace(/_/g, ' ')}</strong>
+                    <span>{record.route_target} · {record.allowed ? 'allowed' : 'blocked'}</span>
+                    {record.blocked_reason && <small>{record.blocked_reason}</small>}
+                  </div>
+                  <small>{record.external_write ? 'external' : 'read-only'}</small>
+                </div>
+              ))}
+            </article>
+            <article className={styles.gatewayAuditPanel}>
+              <h3>Blockers + LLM Usage</h3>
+              {blockers.slice(0, 4).map((blocker) => (
+                <p key={blocker.reason} className={styles.providerNotes}>{blocker.reason}: {blocker.count}</p>
+              ))}
+              {llmUsage.slice(0, 4).map((usage) => (
+                <p key={usage.provider} className={styles.providerNotes}>
+                  {usage.provider}: {usage.usage_available ? `${usage.total_tokens ?? 0} tokens` : 'usage unavailable'} · {usage.cost_usd == null ? 'cost unavailable' : `$${usage.cost_usd.toFixed(4)}`}
+                </p>
+              ))}
+            </article>
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
+function MetricPill({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className={styles.gatewayMetricPill}>
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  )
+}
 
 function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
   const credentialStates = Object.entries(connector.credentials_present_by_name || {})
@@ -3020,6 +3185,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [gatewayEvents, setGatewayEvents] = useState<GatewayEventsPayload | null>(null)
   const [gatewayEventsState, setGatewayEventsState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [gatewayEventsError, setGatewayEventsError] = useState<string>('')
+  const [gatewayObservability, setGatewayObservability] = useState<GatewayObservabilityPayload | null>(null)
+  const [gatewayObservabilityState, setGatewayObservabilityState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [gatewayObservabilityError, setGatewayObservabilityError] = useState<string>('')
   const [statusPreflight, setStatusPreflight] = useState<BridgePreflightPayload | null>(null)
   const [zapierPreflight, setZapierPreflight] = useState<BridgePreflightPayload | null>(null)
   const [preflightState, setPreflightState] = useState<'loading' | 'ok' | 'error'>('loading')
@@ -3197,6 +3365,32 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setGatewayEventsError((err as Error).message || 'fetch failed')
         setGatewayEventsState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setGatewayObservabilityState('loading')
+    fetch('/api/gateway/observability', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as GatewayObservabilityPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setGatewayObservability(data)
+        setGatewayObservabilityState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setGatewayObservabilityError((err as Error).message || 'fetch failed')
+        setGatewayObservabilityState('error')
       })
     return () => {
       cancelled = true
@@ -3885,6 +4079,12 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         gatewayEvents={gatewayEvents}
         gatewayEventsState={gatewayEventsState}
         gatewayEventsError={gatewayEventsError}
+      />
+
+      <GatewayObservabilitySection
+        payload={gatewayObservability}
+        state={gatewayObservabilityState}
+        error={gatewayObservabilityError}
       />
 
       <ProviderRegistrySection

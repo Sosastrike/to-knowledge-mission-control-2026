@@ -20,6 +20,11 @@ vi.mock('@/lib/gateway-events', () => ({
   buildGatewayEventsPayload: vi.fn(),
 }))
 
+vi.mock('@/lib/gateway-observability', () => ({
+  buildGatewayObservabilityPayload: vi.fn(),
+  replayGatewayRoute: vi.fn(),
+}))
+
 describe('Gateway route authentication policy', () => {
   it('rejects unauthenticated Gateway routes before registry loading', async () => {
     const registry = await import('@/app/api/gateway/registry/route')
@@ -28,6 +33,8 @@ describe('Gateway route authentication policy', () => {
     const flows = await import('@/app/api/gateway/flows/route')
     const policies = await import('@/app/api/gateway/policies/route')
     const events = await import('@/app/api/gateway/events/route')
+    const observability = await import('@/app/api/gateway/observability/route')
+    const replay = await import('@/app/api/gateway/replay/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -38,6 +45,11 @@ describe('Gateway route authentication policy', () => {
       flows.GET(new NextRequest('http://localhost/api/gateway/flows')),
       policies.GET(new NextRequest('http://localhost/api/gateway/policies')),
       events.GET(new NextRequest('http://localhost/api/gateway/events')),
+      observability.GET(new NextRequest('http://localhost/api/gateway/observability')),
+      replay.POST(new NextRequest('http://localhost/api/gateway/replay', {
+        method: 'POST',
+        body: JSON.stringify({ owner_request: 'Who is commander?' }),
+      })),
     ]
 
     const responses = await Promise.all(checks)

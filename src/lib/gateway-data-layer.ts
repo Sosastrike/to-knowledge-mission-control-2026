@@ -131,6 +131,15 @@ export interface GatewayDataLayerQueryInput {
   limit?: number
 }
 
+export interface GatewayDataLayerBlockedReason {
+  reason: string
+  count: number
+  node_ids: string[]
+  types: GatewayDataLayerNodeType[]
+  requires_bridge_session: boolean
+  owner_visible_summary: string
+}
+
 export interface GatewayDataLayerQueryResult {
   ok: boolean
   mode: 'read_only_query'
@@ -165,6 +174,9 @@ export const GATEWAY_DATA_LAYER_DISCOVERY_TOOLS = [
   'getSkills',
   'getAgents',
   'getModels',
+  'getIntegrations',
+  'getBrainSystems',
+  'getBlockedReasons',
   'queryData',
   'executeAction',
 ] as const
@@ -273,6 +285,48 @@ export function getModels(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode
   return layer.nodes.filter((node) => node.type === 'model')
 }
 
+export function getIntegrations(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
+  return layer.nodes.filter((node) =>
+    node.type === 'api' ||
+    node.type === 'delivery_channel' ||
+    node.id.includes('integration') ||
+    node.source.includes('integration') ||
+    /integration|agentmail|zapier|heygen|firecrawl|drive|onedrive|n8n|telegram/i.test(`${node.name} ${node.semantic_context}`),
+  )
+}
+
+export function getBrainSystems(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
+  return layer.nodes.filter((node) =>
+    node.type === 'brain_system' ||
+    node.type === 'opencloud_worker' ||
+    node.type === 'buildwiki_farmer' ||
+    /brain|obsidian|mempalace|graphify|build-wiki|farmer|opencloud/i.test(`${node.id} ${node.name} ${node.semantic_context}`),
+  )
+}
+
+export function getBlockedReasons(layer: GatewayDataLayerSnapshot): GatewayDataLayerBlockedReason[] {
+  const grouped = new Map<string, GatewayDataLayerNode[]>()
+  for (const node of layer.nodes) {
+    if (!node.blocked_reason) continue
+    const reason = node.blocked_reason
+    grouped.set(reason, [...(grouped.get(reason) || []), node])
+  }
+
+  return Array.from(grouped.entries())
+    .map(([reason, nodes]) => {
+      const types = uniqueNodeTypes(nodes.map((node) => node.type))
+      return {
+        reason,
+        count: nodes.length,
+        node_ids: nodes.map((node) => node.id).sort(),
+        types,
+        requires_bridge_session: nodes.some((node) => node.requires_bridge_session),
+        owner_visible_summary: `${reason} affects ${nodes.length} Gateway data layer node${nodes.length === 1 ? '' : 's'}.`,
+      } satisfies GatewayDataLayerBlockedReason
+    })
+    .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
+}
+
 export function queryData(layer: GatewayDataLayerSnapshot, input: GatewayDataLayerQueryInput = {}): GatewayDataLayerQueryResult {
   const limit = Math.max(1, Math.min(input.limit ?? 50, 200))
   const rows = layer.nodes.filter((node) => {
@@ -359,6 +413,12 @@ export function dataLayerResponseForTool(
       return getAgents(layer)
     case 'getModels':
       return getModels(layer)
+    case 'getIntegrations':
+      return getIntegrations(layer)
+    case 'getBrainSystems':
+      return getBrainSystems(layer)
+    case 'getBlockedReasons':
+      return getBlockedReasons(layer)
     default:
       return null
   }
@@ -600,6 +660,10 @@ function statusWeight(status: GatewayDataLayerStatus): number {
     execution_enabled: 8,
   }
   return order[status]
+}
+
+function uniqueNodeTypes(values: GatewayDataLayerNodeType[]): GatewayDataLayerNodeType[] {
+  return Array.from(new Set(values)).sort((left, right) => left.localeCompare(right))
 }
 
 function systemIdForNodeType(type: GatewayDataLayerNodeType): string {

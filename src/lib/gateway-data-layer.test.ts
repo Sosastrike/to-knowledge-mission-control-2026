@@ -5,6 +5,9 @@ import {
   buildGatewayDataLayer,
   executeAction,
   getAgents,
+  getBlockedReasons,
+  getBrainSystems,
+  getIntegrations,
   getSkills,
   getSystems,
   getTools,
@@ -152,7 +155,18 @@ describe('Gateway Data Layer', () => {
   it('normalizes every registry entry into owner-safe discovery nodes', () => {
     const layer = buildGatewayDataLayer(registry)
 
-    expect(layer.discovery_tools).toContain('getSystems')
+    expect(layer.discovery_tools).toEqual(expect.arrayContaining([
+      'getSystems',
+      'getSources',
+      'getSchemas',
+      'getTools',
+      'getSkills',
+      'getAgents',
+      'getModels',
+      'getIntegrations',
+      'getBrainSystems',
+      'getBlockedReasons',
+    ]))
     expect(layer.discovery_tools).toContain('executeAction')
     expect(layer.nodes.length).toBeGreaterThanOrEqual(10)
     expect(layer.nodes.every((node) => typeof node.owner_visible_summary === 'string')).toBe(true)
@@ -160,13 +174,35 @@ describe('Gateway Data Layer', () => {
     expect(layer.nodes.every((node) => typeof node.execution_enabled === 'boolean')).toBe(true)
   })
 
-  it('exposes systems, agents, skills, and tools before execution', () => {
+  it('exposes systems, agents, skills, tools, integrations, Brain systems, and blockers before execution', () => {
     const layer = buildGatewayDataLayer(registry)
 
     expect(getSystems(layer).map((system) => system.id)).toContain('system.opencloud_worker')
     expect(getAgents(layer).map((agent) => agent.name)).toContain('Agent Zero')
     expect(getSkills(layer).map((skill) => skill.name)).toContain('Report Skill')
     expect(getTools(layer).map((tool) => tool.name)).toContain('Zapier MCP')
+    expect(getIntegrations(layer).map((integration) => integration.name)).toEqual(expect.arrayContaining([
+      'Firecrawl',
+      'Telegram Delivery',
+    ]))
+    expect(getBrainSystems(layer).map((brain) => brain.name)).toEqual(expect.arrayContaining([
+      'Obsidian',
+      'OpenCloud / Build-Wiki',
+    ]))
+    expect(getBlockedReasons(layer)).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        reason: 'missing_credential',
+        count: 1,
+        node_ids: expect.arrayContaining(['capability_api_firecrawl']),
+        requires_bridge_session: false,
+      }),
+      expect.objectContaining({
+        reason: 'delivery_adapter_not_proven',
+        count: 1,
+        node_ids: expect.arrayContaining(['capability_delivery_telegram']),
+        requires_bridge_session: true,
+      }),
+    ]))
   })
 
   it('keeps OpenCloud as a retained worker/runtime node, not a deletion target', () => {
@@ -198,11 +234,14 @@ describe('Gateway Data Layer', () => {
 
   it('blocks executeAction unless a registered adapter and Bridge Session are available', () => {
     const layer = buildGatewayDataLayer(registry)
+    const before = JSON.stringify(layer)
     const result = executeAction(layer, { node_id: 'tool.report.create', action: 'create_report' })
 
     expect(result.ok).toBe(false)
     expect(result.execution_enabled).toBe(false)
+    expect(result.accepted_for_execution).toBe(false)
     expect(result.requires_bridge_session).toBe(true)
     expect(result.blocked_reason).toContain('bridge_session')
+    expect(JSON.stringify(layer)).toBe(before)
   })
 })

@@ -144,7 +144,7 @@ export type GatewayStatusPayload = {
 export type GatewayNodeDetailPayload = {
   ok: true
   generated_at: string
-  node: GatewayNode
+  node: GatewayApiNode
   inbound_edges: GatewayEdge[]
   outbound_edges: GatewayEdge[]
   capabilities: GatewayCapability[]
@@ -176,6 +176,29 @@ export type GatewayPoliciesPayload = {
   }
   badges: GatewayPolicyBadge[]
   security_proof: GatewaySecurityProof
+}
+
+export type GatewayApiNode = GatewayNode & {
+  name: string
+  type: GatewayNodeKind
+  connected: boolean
+  configured: boolean
+  read_enabled: boolean
+  write_enabled: boolean
+  execution_enabled: boolean
+  requires_bridge_session: boolean
+  blocked_reason: string | null
+  last_success: string | null
+  last_error: string | null
+}
+
+export type GatewayNodesPayload = {
+  ok: true
+  mode: 'gateway_nodes_read_only'
+  generated_at: string
+  nodes: GatewayApiNode[]
+  execution_enabled: false
+  writes_enabled: false
 }
 
 type GatewayNodeStatusSummary = {
@@ -277,6 +300,18 @@ export function buildGatewayRegistrySnapshot(input: GatewayRegistryBuildInput = 
   }
 }
 
+
+export function buildGatewayNodesPayload(registry: GatewayRegistry): GatewayNodesPayload {
+  return {
+    ok: true,
+    mode: 'gateway_nodes_read_only',
+    generated_at: registry.generated_at,
+    nodes: registry.nodes.map((node) => toGatewayApiNode(registry, node)),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
 export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewayStatusPayload {
   const flows = buildGatewayFlows(registry)
   const agentZero = summarizeNode(registry, 'agent_zero', 'Agent Zero')
@@ -350,7 +385,7 @@ export function getGatewayNodeDetail(registry: GatewayRegistry, id: string): Gat
   return {
     ok: true,
     generated_at: registry.generated_at,
-    node,
+    node: toGatewayApiNode(registry, node),
     inbound_edges: registry.edges.filter((edge) => edge.target === node.id),
     outbound_edges: registry.edges.filter((edge) => edge.source === node.id),
     capabilities: registry.capabilities.filter((capability) => capability.source_node === node.id),
@@ -387,6 +422,38 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
     },
     badges: [...GATEWAY_POLICY_BADGES],
     security_proof: securityProof,
+  }
+}
+
+
+function toGatewayApiNode(registry: GatewayRegistry, node: GatewayNode): GatewayApiNode {
+  const relatedCapabilities = registry.capabilities.filter((capability) => capability.source_node === node.id)
+  const relatedEdges = registry.edges.filter((edge) => edge.source === node.id || edge.target === node.id)
+  const blockedReason = node.blockers.find(Boolean) || relatedCapabilities.flatMap((capability) => capability.blockers).find(Boolean) || null
+  const statusConnected = ['connected', 'read_only', 'write_enabled', 'execution_enabled'].includes(node.status)
+  const capabilityReadEnabled = relatedCapabilities.some((capability) => capability.read_enabled)
+  const capabilityWriteEnabled = relatedCapabilities.some((capability) => capability.write_enabled)
+  const capabilityExecutionEnabled = relatedCapabilities.some((capability) => capability.execution_enabled)
+  const requiresBridgeSession = relatedCapabilities.some((capability) => capability.requires_session) || relatedEdges.some((edge) => edge.requires_session)
+  const missingCredential = /missing_credential|credential:.*:missing/i.test(blockedReason || '')
+  const lastSuccess = statusConnected ? node.health.last_seen : null
+  const lastError = node.status === 'blocked' || node.status === 'degraded'
+    ? blockedReason || node.health.summary
+    : null
+
+  return {
+    ...node,
+    name: node.label,
+    type: node.kind,
+    connected: statusConnected,
+    configured: node.status !== 'missing' && !missingCredential,
+    read_enabled: (statusConnected || capabilityReadEnabled) && node.status !== 'blocked' && node.status !== 'missing',
+    write_enabled: node.status === 'write_enabled' || node.status === 'execution_enabled' || capabilityWriteEnabled,
+    execution_enabled: node.status === 'execution_enabled' || capabilityExecutionEnabled,
+    requires_bridge_session: requiresBridgeSession,
+    blocked_reason: blockedReason,
+    last_success: lastSuccess,
+    last_error: lastError,
   }
 }
 

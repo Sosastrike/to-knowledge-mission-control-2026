@@ -3,6 +3,7 @@ import type { AgentZeroReadOnlyContext } from './agent-zero-bridge'
 import {
   buildGatewayFlowsPayload,
   buildGatewayPoliciesPayload,
+  buildGatewayNodesPayload,
   buildGatewayRegistrySnapshot,
   buildGatewayStatusPayload,
   getGatewayNodeDetail,
@@ -505,6 +506,7 @@ describe('Gateway registry API model', () => {
   it('summarizes Gateway health, nodes, flows, and policies without enabling writes', () => {
     const registry = buildGatewayRegistrySnapshot({ context, generatedAt: '2026-05-04T00:00:00.000Z' })
     const status = buildGatewayStatusPayload(registry)
+    const nodes = buildGatewayNodesPayload(registry)
     const node = getGatewayNodeDetail(registry, 'agent-zero')
     const flows = buildGatewayFlowsPayload(registry)
     const policies = buildGatewayPoliciesPayload(registry)
@@ -569,7 +571,44 @@ describe('Gateway registry API model', () => {
       opencloud_deletion_target: false,
     })
     expect(status.execution_enabled).toBe(false)
+    expect(nodes.mode).toBe('gateway_nodes_read_only')
+    expect(nodes.execution_enabled).toBe(false)
+    const requiredNodeFields = [
+      'id',
+      'name',
+      'type',
+      'status',
+      'connected',
+      'configured',
+      'read_enabled',
+      'write_enabled',
+      'execution_enabled',
+      'requires_bridge_session',
+      'blocked_reason',
+      'last_success',
+      'last_error',
+    ]
+    const agentZeroNode = nodes.nodes.find((item) => item.id === 'agent_zero')
+    expect(agentZeroNode).toBeTruthy()
+    for (const field of requiredNodeFields) expect(agentZeroNode).toHaveProperty(field)
+    expect(agentZeroNode).toMatchObject({
+      name: 'Agent Zero',
+      type: 'commander',
+      connected: true,
+      configured: true,
+      read_enabled: true,
+      execution_enabled: false,
+    })
     expect(node?.node.label).toBe('Agent Zero')
+    expect(node?.node.name).toBe('Agent Zero')
+    expect(node?.node.type).toBe('commander')
+    expect(node?.node.connected).toBe(true)
+    expect(node?.node.configured).toBe(true)
+    expect(node?.node.read_enabled).toBe(true)
+    expect(node?.node.write_enabled).toBe(false)
+    expect(node?.node.execution_enabled).toBe(false)
+    expect(node?.node.requires_bridge_session).toBe(true)
+    expect(node?.node.blocked_reason).toBeNull()
     expect(flows.flows.length).toBeGreaterThan(0)
     const collaboration = flows.flows.find((flow) => flow.flow_id === 'flow_agent_zero_hermes_collaboration')
     expect(collaboration?.route.hops).toEqual(['agent_zero', 'hermes', 'agent_zero'])

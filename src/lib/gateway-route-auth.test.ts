@@ -10,6 +10,7 @@ vi.mock('@/lib/gateway-registry-api', () => ({
     throw new Error('loadGatewayRegistry should not run for unauthenticated Gateway routes')
   }),
   buildGatewayStatusPayload: vi.fn(),
+  buildGatewayNodesPayload: vi.fn(),
   buildGatewayFlowsPayload: vi.fn(),
   buildGatewayPoliciesPayload: vi.fn(),
   buildGatewayEventsPayload: vi.fn(),
@@ -29,6 +30,7 @@ describe('Gateway route authentication policy', () => {
   it('rejects unauthenticated Gateway routes before registry loading', async () => {
     const registry = await import('@/app/api/gateway/registry/route')
     const status = await import('@/app/api/gateway/status/route')
+    const nodesList = await import('@/app/api/gateway/nodes/route')
     const nodes = await import('@/app/api/gateway/nodes/[id]/route')
     const flows = await import('@/app/api/gateway/flows/route')
     const policies = await import('@/app/api/gateway/policies/route')
@@ -39,6 +41,7 @@ describe('Gateway route authentication policy', () => {
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
       status.GET(new NextRequest('http://localhost/api/gateway/status')),
+      nodesList.GET(new NextRequest('http://localhost/api/gateway/nodes')),
       nodes.GET(new NextRequest('http://localhost/api/gateway/nodes/agent_zero'), {
         params: Promise.resolve({ id: 'agent_zero' }),
       }),

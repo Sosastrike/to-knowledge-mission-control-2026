@@ -10,14 +10,7 @@ export async function GET(request: NextRequest) {
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const registry = await loadGatewayRegistry()
-  const nodes = buildGatewayNodesPayload(registry).nodes
-  return NextResponse.json({
-    ok: true,
-    mode: 'gateway_registry_read_only',
-    registry,
-    nodes,
-    execution_enabled: false,
-    writes_enabled: false,
-    secrets_exposed: false,
-  }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json(buildGatewayNodesPayload(registry), {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }

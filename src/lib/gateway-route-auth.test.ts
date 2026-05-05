@@ -12,7 +12,12 @@ vi.mock('@/lib/gateway-registry-api', () => ({
   buildGatewayStatusPayload: vi.fn(),
   buildGatewayFlowsPayload: vi.fn(),
   buildGatewayPoliciesPayload: vi.fn(),
+  buildGatewayEventsPayload: vi.fn(),
   getGatewayNodeDetail: vi.fn(),
+}))
+
+vi.mock('@/lib/gateway-events', () => ({
+  buildGatewayEventsPayload: vi.fn(),
 }))
 
 describe('Gateway route authentication policy', () => {
@@ -22,6 +27,7 @@ describe('Gateway route authentication policy', () => {
     const nodes = await import('@/app/api/gateway/nodes/[id]/route')
     const flows = await import('@/app/api/gateway/flows/route')
     const policies = await import('@/app/api/gateway/policies/route')
+    const events = await import('@/app/api/gateway/events/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -31,6 +37,7 @@ describe('Gateway route authentication policy', () => {
       }),
       flows.GET(new NextRequest('http://localhost/api/gateway/flows')),
       policies.GET(new NextRequest('http://localhost/api/gateway/policies')),
+      events.GET(new NextRequest('http://localhost/api/gateway/events')),
     ]
 
     const responses = await Promise.all(checks)

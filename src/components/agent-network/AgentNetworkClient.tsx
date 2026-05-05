@@ -194,6 +194,38 @@ interface ConnectorReadinessPayload {
   error?: string
 }
 
+interface GatewayEventRecord {
+  id: string
+  kind: string
+  label: string
+  source: string
+  target: string
+  status: string
+  occurred_at: string | null
+  route: string
+  summary: string
+  requires_bridge_session: boolean
+  write_event: boolean
+  blockers: string[]
+}
+
+interface GatewayEventsPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  events?: GatewayEventRecord[]
+  summary?: {
+    total?: number
+    connected_or_visible?: number
+    blocked?: number
+    sources?: string[]
+  }
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  secrets_exposed?: boolean
+  error?: string
+}
+
 interface ZapierToolRecord {
   tool_name?: string
   description?: string | null
@@ -1271,7 +1303,17 @@ const GATEWAY_MAP_CLUSTERS = [
   },
 ]
 
-function GatewayMapSection({ hermesLabel }: { hermesLabel: string }) {
+function GatewayMapSection({
+  hermesLabel,
+  gatewayEvents,
+  gatewayEventsState,
+  gatewayEventsError,
+}: {
+  hermesLabel: string
+  gatewayEvents: GatewayEventsPayload | null
+  gatewayEventsState: 'loading' | 'ok' | 'error'
+  gatewayEventsError: string
+}) {
   return (
     <section className={styles.gatewayMapSection}>
       <header className={styles.externalSectionHeader}>
@@ -1313,9 +1355,70 @@ function GatewayMapSection({ hermesLabel }: { hermesLabel: string }) {
           ))}
         </div>
       </div>
+      <GatewayEventLane
+        payload={gatewayEvents}
+        state={gatewayEventsState}
+        error={gatewayEventsError}
+      />
     </section>
   )
 }
+
+function GatewayEventLane({
+  payload,
+  state,
+  error,
+}: {
+  payload: GatewayEventsPayload | null
+  state: 'loading' | 'ok' | 'error'
+  error: string
+}) {
+  const events = payload?.events || []
+  return (
+    <section className={styles.gatewayEventLane} aria-label="Gateway event stream">
+      <header>
+        <div>
+          <h3>Event Stream</h3>
+          <span>{payload?.summary?.total ?? 0} registered sources · writes disabled</span>
+        </div>
+        <strong>{state === 'loading' ? 'loading' : state === 'error' ? 'blocked' : 'read-only'}</strong>
+      </header>
+      {state === 'error' ? (
+        <p className={styles.providerNotes}>Gateway events blocked: {error || 'event route unavailable'}</p>
+      ) : (
+        <div className={styles.gatewayEventList}>
+          {(events.length > 0 ? events : GATEWAY_EVENT_FALLBACK).slice(0, 6).map((event) => (
+            <article key={event.id} className={styles.gatewayEventItem}>
+              <StatusDot status={event.status} />
+              <div>
+                <strong>{event.label}</strong>
+                <span>{event.source.replace(/_/g, ' ')} → {event.target.replace(/_/g, ' ')}</span>
+              </div>
+              <small>{event.requires_bridge_session ? 'session gated' : 'read-only'}</small>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+const GATEWAY_EVENT_FALLBACK: GatewayEventRecord[] = [
+  {
+    id: 'gateway_event_fallback',
+    kind: 'event',
+    label: 'Gateway event registry',
+    source: 'gateway',
+    target: 'owner',
+    status: 'degraded',
+    occurred_at: null,
+    route: '/api/gateway/events',
+    summary: 'Gateway event route is loading.',
+    requires_bridge_session: false,
+    write_event: false,
+    blockers: [],
+  },
+]
 
 function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
   const credentialStates = Object.entries(connector.credentials_present_by_name || {})
@@ -2914,6 +3017,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [connectors, setConnectors] = useState<ConnectorReadinessPayload | null>(null)
   const [connectorState, setConnectorState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [connectorError, setConnectorError] = useState<string>('')
+  const [gatewayEvents, setGatewayEvents] = useState<GatewayEventsPayload | null>(null)
+  const [gatewayEventsState, setGatewayEventsState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [gatewayEventsError, setGatewayEventsError] = useState<string>('')
   const [statusPreflight, setStatusPreflight] = useState<BridgePreflightPayload | null>(null)
   const [zapierPreflight, setZapierPreflight] = useState<BridgePreflightPayload | null>(null)
   const [preflightState, setPreflightState] = useState<'loading' | 'ok' | 'error'>('loading')
@@ -3065,6 +3171,32 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setConnectorError((err as Error).message || 'fetch failed')
         setConnectorState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setGatewayEventsState('loading')
+    fetch('/api/gateway/events', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as GatewayEventsPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setGatewayEvents(data)
+        setGatewayEventsState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setGatewayEventsError((err as Error).message || 'fetch failed')
+        setGatewayEventsState('error')
       })
     return () => {
       cancelled = true
@@ -3749,7 +3881,11 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         reachable: hermesSandbox?.reachable === true || hermesSandbox?.runtime_status?.gateway_pid_running === true,
         authConfigured: hermesSandbox?.auth_configured === true,
         blocker: hermesSandbox?.blocker || hermesSandbox?.provider_registry?.error || null,
-      }).label} />
+      }).label}
+        gatewayEvents={gatewayEvents}
+        gatewayEventsState={gatewayEventsState}
+        gatewayEventsError={gatewayEventsError}
+      />
 
       <ProviderRegistrySection
         providers={providers}

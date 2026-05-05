@@ -1,0 +1,152 @@
+import { describe, expect, it } from 'vitest'
+import type { AgentZeroReadOnlyContext } from './agent-zero-bridge'
+import { buildGatewayRegistrySnapshot } from './gateway-registry-api'
+import { classifyGatewayOwnerRequest, planGatewayRoute } from './gateway-route-planner'
+
+const context = {
+  agents: {
+    items: [
+      { id: 'agent_zero', status: 'active', role: 'commander', execution_enabled: false, direct_access: false, proxy_access: true },
+      { id: 'hermes', status: 'connected', role: 'lieutenant', execution_enabled: false, direct_access: false, proxy_access: true },
+    ],
+  },
+  bridge: {
+    provider_registry: [
+      { id: 'openrouter', name: 'OpenRouter', state: 'configured', category: 'model', access: 'connected', execution_enabled: false },
+      { id: 'zapier', name: 'Zapier', state: 'configured', category: 'mcp', access: 'connected', execution_enabled: false },
+    ],
+  },
+  mcp: {
+    servers: [
+      { name: 'zapier', status: 'connected', reachable: true, schema_available: true, blocked_reason: null },
+    ],
+  },
+  models: {
+    provider_registry: [
+      {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['OPENROUTER_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: null,
+      },
+    ],
+    catalog: [{ alias: 'sonnet', provider: 'openrouter', name: 'openrouter/anthropic/claude-sonnet-4' }],
+  },
+  tools: {
+    registry: [
+      { id: 'report.create', name: 'Create report', status: 'connected', read_only: true, write_enabled: false, requires_bridge_session: false, blocked_reason: null },
+    ],
+  },
+  skills: {
+    registry: [
+      { id: 'reporting', name: 'Reporting', status: 'connected', required_tools: ['report.create'], required_credentials: [], blocked_reasons: [], missing_dependencies: [], blocked_reason: null },
+    ],
+  },
+  integrations: {
+    registry: [
+      { id: 'firecrawl', name: 'Firecrawl', status: 'blocked', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: true, credential_names: ['FIRECRAWL_API_KEY'], blocked_reason: 'missing_credential' },
+      { id: 'zapier', name: 'Zapier', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_names: ['ZAPIER_TOKEN'], blocked_reason: null },
+      { id: 'telegram', name: 'Telegram', status: 'configured', read_only: true, write_enabled: false, requires_bridge_session: true, missing_credential: false, credential_names: ['TELEGRAM_BOT_TOKEN'], blocked_reason: null },
+    ],
+  },
+  brain: {
+    registry: [
+      { id: 'obsidian', name: 'Obsidian', status: 'connected', read_available: true, write_available: false, blocked_reason: null },
+      { id: 'mempalace', name: 'MemPalace', status: 'connected', read_available: true, write_available: true, blocked_reason: null },
+      { id: 'graphify', name: 'Graphify', status: 'connected', read_available: true, write_available: false, blocked_reason: 'write_adapter_disabled' },
+    ],
+  },
+  opencloud_buildwiki: { visible: true, timer_active: true, farmer_execution_enabled: false },
+} as unknown as AgentZeroReadOnlyContext
+
+const registry = buildGatewayRegistrySnapshot({ context, generatedAt: '2026-05-04T00:00:00.000Z' })
+
+describe('Gateway route planner', () => {
+  it('classifies owner requests into Gateway route types', () => {
+    expect(classifyGatewayOwnerRequest('Good morning. Who are you?')).toBe('chat')
+    expect(classifyGatewayOwnerRequest('Make a plan for tomorrow')).toBe('plan')
+    expect(classifyGatewayOwnerRequest('Design a skill for email triage')).toBe('skill')
+    expect(classifyGatewayOwnerRequest('Use Firecrawl to check a page')).toBe('tool')
+    expect(classifyGatewayOwnerRequest('Use OpenRouter for a model-heavy reasoning task')).toBe('model')
+    expect(classifyGatewayOwnerRequest('Remember this in MemPalace')).toBe('memory')
+    expect(classifyGatewayOwnerRequest('Prepare Build-Wiki Run Now')).toBe('sync')
+    expect(classifyGatewayOwnerRequest('Upload the report to Google Drive')).toBe('upload')
+    expect(classifyGatewayOwnerRequest('Create a PDF report')).toBe('report')
+    expect(classifyGatewayOwnerRequest('Restart Mission Control')).toBe('protected_action')
+    expect(classifyGatewayOwnerRequest('Incoming Telegram message from owner')).toBe('event')
+  })
+
+  it('routes default owner commands to Agent Zero', () => {
+    const plan = planGatewayRoute(registry, { ownerRequest: 'Who is commander?' })
+    expect(plan.classification).toBe('chat')
+    expect(plan.primary_target).toBe('agent_zero')
+    expect(plan.dispatch_target).toBe('agent_zero')
+    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero'])
+    expect(plan.requires_bridge_session).toBe(false)
+    expect(plan.execution_enabled).toBe(false)
+  })
+
+  it('routes skill and workflow design to Hermes through Agent Zero', () => {
+    const plan = planGatewayRoute(registry, { ownerRequest: 'Design a workflow skill for email triage' })
+    expect(plan.classification).toBe('skill')
+    expect(plan.primary_target).toBe('agent_zero')
+    expect(plan.dispatch_target).toBe('hermes')
+    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'hermes'])
+    expect(plan.flow.route.edge_kind).toBe('delegation')
+    expect(plan.blocked).toBe(false)
+  })
+
+  it('routes model-heavy requests to model providers through Gateway policy', () => {
+    const plan = planGatewayRoute(registry, { ownerRequest: 'Use OpenRouter for a model-heavy reasoning task' })
+    expect(plan.classification).toBe('model')
+    expect(plan.selected_capability?.id).toBe('model_openrouter')
+    expect(plan.flow.route.edge_kind).toBe('model-call')
+    expect(plan.requires_bridge_session).toBe(true)
+    expect(plan.execution_enabled).toBe(false)
+  })
+
+  it('routes MCP and tool calls through Bridge/MCP and blocks unavailable tools honestly', () => {
+    const zapier = planGatewayRoute(registry, { ownerRequest: 'Show Zapier MCP tools' })
+    const firecrawl = planGatewayRoute(registry, { ownerRequest: 'Use Firecrawl right now' })
+
+    expect(zapier.classification).toBe('tool')
+    expect(zapier.dispatch_target).toBe('integrations')
+    expect(zapier.requires_bridge_session).toBe(true)
+    expect(firecrawl.blocked).toBe(true)
+    expect(firecrawl.blocker).toBe('missing_credential')
+  })
+
+  it('routes Brain, Build-Wiki sync, report, upload, and event requests to the right Gateway nodes', () => {
+    const brain = planGatewayRoute(registry, { ownerRequest: 'Can you read Obsidian?' })
+    const sync = planGatewayRoute(registry, { ownerRequest: 'Prepare Build-Wiki Run Now' })
+    const report = planGatewayRoute(registry, { ownerRequest: 'Create a PDF report' })
+    const upload = planGatewayRoute(registry, { ownerRequest: 'Upload to OneDrive' })
+    const event = planGatewayRoute(registry, { ownerRequest: 'Incoming webhook event from AgentMail' })
+
+    expect(brain.classification).toBe('memory')
+    expect(brain.dispatch_target).toBe('obsidian')
+    expect(sync.classification).toBe('sync')
+    expect(sync.dispatch_target).toBe('buildwiki')
+    expect(sync.requires_bridge_session).toBe(true)
+    expect(report.classification).toBe('report')
+    expect(report.dispatch_target).toBe('tools')
+    expect(upload.classification).toBe('upload')
+    expect(upload.blocked).toBe(true)
+    expect(upload.blocker).toBe('integration_onedrive_not_registered')
+    expect(event.classification).toBe('event')
+    expect(event.dispatch_target).toBe('events')
+  })
+
+  it('blocks protected actions with exact Bridge Session policy reasons', () => {
+    const plan = planGatewayRoute(registry, { ownerRequest: 'Restart Mission Control now' })
+    expect(plan.classification).toBe('protected_action')
+    expect(plan.blocked).toBe(true)
+    expect(plan.blocker).toBe('protected_action_requires_gateway_policy_and_bridge_session')
+    expect(plan.flow.policy.bridge_session_required).toBe(true)
+    expect(plan.flow.audit.external_write).toBe(false)
+    expect(plan.flow.audit.secrets_exposed).toBe(false)
+  })
+})

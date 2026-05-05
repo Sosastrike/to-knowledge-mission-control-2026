@@ -1,0 +1,471 @@
+import {
+  createGatewayFlow,
+  type GatewayCapability,
+  type GatewayEdgeKind,
+  type GatewayExecutionMode,
+  type GatewayFlow,
+  type GatewayPolicy,
+  type GatewayRegistry,
+  type GatewayStatus,
+} from './gateway-model'
+
+export const GATEWAY_ROUTE_CLASSIFICATIONS = [
+  'chat',
+  'plan',
+  'skill',
+  'tool',
+  'model',
+  'memory',
+  'sync',
+  'upload',
+  'report',
+  'protected_action',
+  'event',
+] as const
+
+export type GatewayRouteClassification = (typeof GATEWAY_ROUTE_CLASSIFICATIONS)[number]
+
+export type GatewayRoutePlannerInput = {
+  ownerRequest: string
+  source?: string
+  generatedAt?: string
+}
+
+export type GatewayRoutePlan = {
+  ok: boolean
+  mode: 'gateway_route_plan'
+  generated_at: string
+  classification: GatewayRouteClassification
+  source: string
+  primary_target: string
+  dispatch_target: string
+  route_via: string[]
+  selected_capability: GatewayCapability | null
+  requires_bridge_session: boolean
+  execution_enabled: false
+  writes_enabled: false
+  blocked: boolean
+  blocker: string | null
+  rationale: string
+  flow: GatewayFlow
+}
+
+type RouteTarget = {
+  primaryTarget: string
+  dispatchTarget: string
+  via: string[]
+  capability: GatewayCapability | null
+  edgeKind: GatewayEdgeKind
+  requiresBridgeSession: boolean
+  executionMode: GatewayExecutionMode
+  blocker: string | null
+  rationale: string
+}
+
+const DEFAULT_GENERATED_AT = '1970-01-01T00:00:00.000Z'
+
+const READ_ONLY_POLICY: GatewayPolicy = {
+  auth_required: true,
+  bridge_session_required: false,
+  write_allowed: false,
+  secret_safe: true,
+  external_allowed: false,
+}
+
+const BRIDGE_SESSION_POLICY: GatewayPolicy = {
+  auth_required: true,
+  bridge_session_required: true,
+  write_allowed: false,
+  secret_safe: true,
+  external_allowed: false,
+}
+
+export function classifyGatewayOwnerRequest(ownerRequest: string): GatewayRouteClassification {
+  const text = normalizeText(ownerRequest)
+
+  if (matches(text, EVENT_PATTERNS)) return 'event'
+  if (matches(text, UPLOAD_PATTERNS)) return 'upload'
+  if (matches(text, REPORT_PATTERNS)) return 'report'
+  if (matches(text, SYNC_PATTERNS)) return 'sync'
+  if (matches(text, MEMORY_PATTERNS)) return 'memory'
+  if (matches(text, SKILL_PATTERNS)) return 'skill'
+  if (matches(text, TOOL_PATTERNS)) return 'tool'
+  if (matches(text, MODEL_PATTERNS)) return 'model'
+  if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
+  if (matches(text, PLAN_PATTERNS)) return 'plan'
+  return 'chat'
+}
+
+export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRoutePlannerInput): GatewayRoutePlan {
+  const generatedAt = input.generatedAt || registry.generated_at || DEFAULT_GENERATED_AT
+  const source = normalizeId(input.source || 'owner')
+  const prompt = sanitizeRequest(input.ownerRequest)
+  const classification = classifyGatewayOwnerRequest(prompt)
+  const target = selectRouteTarget(registry, classification, prompt)
+  const blocked = Boolean(target.blocker)
+  const resultStatus: GatewayStatus = blocked ? 'blocked' : (target.requiresBridgeSession ? 'read_only' : 'connected')
+  const policy = target.requiresBridgeSession ? BRIDGE_SESSION_POLICY : READ_ONLY_POLICY
+  const flow = createGatewayFlow({
+    flow_id: normalizeId(`flow_${source}_${classification}_${target.dispatchTarget}`),
+    request: {
+      source,
+      target: target.dispatchTarget,
+      purpose: target.rationale,
+      prompt,
+    },
+    route: {
+      source,
+      target: target.dispatchTarget,
+      edge_kind: target.edgeKind,
+      hops: target.via,
+    },
+    policy,
+    execution_mode: blocked ? 'blocked' : target.executionMode,
+    audit: {
+      audit_id: null,
+      events: ['gateway_route_plan_created'],
+      external_write: false,
+      secrets_exposed: false,
+    },
+    result: {
+      status: resultStatus,
+      summary: blocked
+        ? `Gateway route is blocked: ${target.blocker}.`
+        : `Gateway selected ${target.dispatchTarget} for ${classification}.`,
+      blocker: target.blocker,
+    },
+  })
+
+  return {
+    ok: !blocked,
+    mode: 'gateway_route_plan',
+    generated_at: generatedAt,
+    classification,
+    source,
+    primary_target: target.primaryTarget,
+    dispatch_target: target.dispatchTarget,
+    route_via: target.via,
+    selected_capability: target.capability,
+    requires_bridge_session: target.requiresBridgeSession,
+    execution_enabled: false,
+    writes_enabled: false,
+    blocked,
+    blocker: target.blocker,
+    rationale: target.rationale,
+    flow,
+  }
+}
+
+function selectRouteTarget(
+  registry: GatewayRegistry,
+  classification: GatewayRouteClassification,
+  prompt: string,
+): RouteTarget {
+  switch (classification) {
+    case 'skill':
+      return routeHermesViaAgentZero(registry, prompt)
+    case 'model':
+      return routeModel(registry, prompt)
+    case 'tool':
+      return routeTool(registry, prompt)
+    case 'memory':
+      return routeBrain(registry, prompt)
+    case 'sync':
+      return routeSync(registry, prompt)
+    case 'upload':
+      return routeUpload(registry, prompt)
+    case 'report':
+      return routeReport(registry, prompt)
+    case 'protected_action':
+      return routeProtectedAction(registry, prompt)
+    case 'event':
+      return routeEvent(registry, prompt)
+    case 'plan':
+      return routeAgentZero('plan', 'Agent Zero handles operational planning by default.')
+    case 'chat':
+    default:
+      return routeAgentZero('chat', 'Owner commands route to Agent Zero by default.')
+  }
+}
+
+function routeAgentZero(classification: GatewayRouteClassification, rationale: string): RouteTarget {
+  return {
+    primaryTarget: 'agent_zero',
+    dispatchTarget: 'agent_zero',
+    via: ['owner', 'gateway', 'agent_zero'],
+    capability: null,
+    edgeKind: classification === 'chat' || classification === 'plan' ? 'command' : 'tool-call',
+    requiresBridgeSession: false,
+    executionMode: 'read_only',
+    blocker: null,
+    rationale,
+  }
+}
+
+function routeHermesViaAgentZero(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const hermes = findNodeStatus(registry, 'hermes')
+  const capability = findCapability(registry, 'hermes.lieutenant')
+  const blocker = blockedReason(capability) || (hermes === 'blocked' || hermes === 'missing' ? 'hermes_lieutenant_not_available' : null)
+  return {
+    primaryTarget: 'agent_zero',
+    dispatchTarget: 'hermes',
+    via: ['owner', 'gateway', 'agent_zero', 'hermes'],
+    capability,
+    edgeKind: 'delegation',
+    requiresBridgeSession: false,
+    executionMode: 'read_only',
+    blocker,
+    rationale: prompt.includes('workflow')
+      ? 'Skill and workflow design routes to Hermes through Agent Zero.'
+      : 'Skill design routes to Hermes through Agent Zero.',
+  }
+}
+
+function routeModel(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const wanted = firstProvider(prompt, [
+    ['openrouter', 'model_openrouter'],
+    ['openai', 'model_openai'],
+    ['claude', 'model_claude_anthropic'],
+    ['anthropic', 'model_claude_anthropic'],
+    ['codex', 'model_codex_chatgpt'],
+    ['chatgpt', 'model_codex_chatgpt'],
+    ['ollama', 'model_ollama'],
+    ['nvidia', 'model_nvidia'],
+    ['gemini', 'model_gemini'],
+    ['groq', 'model_groq'],
+  ])
+  const capability = findCapability(registry, wanted || 'model_openrouter') ||
+    registry.capabilities.find((item) => item.kind === 'model' && item.status !== 'blocked') ||
+    null
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: 'models',
+    via: ['owner', 'gateway', 'agent_zero', 'models'],
+    capability,
+    edgeKind: 'model-call',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    missingBlocker: wanted ? `${wanted}_not_registered` : 'model_provider_not_registered',
+    rationale: 'Model-heavy requests route to the selected LLM provider through Gateway policy.',
+  })
+}
+
+function routeTool(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const wanted = firstProvider(prompt, [
+    ['firecrawl', 'integration_firecrawl'],
+    ['zapier', 'integration_zapier'],
+    ['heygen', 'integration_heygen'],
+    ['mcp', 'mcp_servers'],
+    ['api', 'bridge_mcp.providers'],
+  ])
+  const capability = (wanted ? findCapability(registry, wanted) : null) ||
+    registry.capabilities.find((item) => ['tool', 'mcp_server', 'integration'].includes(item.kind) && item.status !== 'blocked') ||
+    null
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: wanted === 'mcp_servers' ? 'mcp_tools' : 'bridge_mcp',
+    via: ['owner', 'gateway', 'agent_zero', 'bridge_mcp'],
+    capability,
+    edgeKind: 'mcp-call',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    missingBlocker: wanted ? `${wanted}_not_registered` : 'tool_or_mcp_capability_not_registered',
+    rationale: 'Tool calls route through Bridge/MCP and registered adapters.',
+  })
+}
+
+function routeBrain(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const wanted = firstProvider(prompt, [
+    ['obsidian', 'brain_obsidian'],
+    ['mempalace', 'brain_mempalace'],
+    ['memory', 'brain_mempalace'],
+    ['graphify', 'brain_graphify'],
+    ['graph', 'brain_graphify'],
+    ['brain sync', 'brain.systems'],
+    ['brain', 'brain.systems'],
+  ])
+  const capability = (wanted ? findCapability(registry, wanted) : null) ||
+    registry.capabilities.find((item) => item.kind === 'brain' && item.status !== 'blocked') ||
+    null
+  const writeRequested = matches(prompt, [/write|save|remember|append|update|create|tag|link/])
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: capability?.source_node || 'brain_sync',
+    via: ['owner', 'gateway', 'agent_zero', 'brain_sync', capability?.source_node || 'brain_sync'],
+    capability,
+    edgeKind: 'memory',
+    requiresBridgeSession: writeRequested || Boolean(capability?.requires_session),
+    executionMode: writeRequested ? 'bridge_session' : 'read_only',
+    missingBlocker: wanted ? `${wanted}_not_registered` : 'brain_capability_not_registered',
+    rationale: 'Knowledge and memory requests route to Brain adapters.',
+  })
+}
+
+function routeSync(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const capability = findCapability(registry, 'brain_buildwiki')
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: 'buildwiki',
+    via: ['owner', 'gateway', 'agent_zero', 'brain_sync', 'buildwiki'],
+    capability,
+    edgeKind: 'sync',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    missingBlocker: 'buildwiki_farmer_capability_not_registered',
+    rationale: prompt.includes('run now')
+      ? 'Build-Wiki Run Now routes to the scoped farmer adapter and requires Bridge Session approval.'
+      : 'Sync requests route to Build-Wiki/Farmer through Brain Sync.',
+  })
+}
+
+function routeUpload(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const wanted = firstProvider(prompt, [
+    ['onedrive', 'integration_onedrive'],
+    ['one drive', 'integration_onedrive'],
+    ['google drive', 'integration_google_drive'],
+    ['drive', 'integration_google_drive'],
+    ['telegram', 'integration_telegram'],
+    ['attach', 'integration_telegram'],
+  ])
+  const capability = wanted ? findCapability(registry, wanted) : null
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: 'integrations',
+    via: ['owner', 'gateway', 'agent_zero', 'integrations'],
+    capability,
+    edgeKind: 'tool-call',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    missingBlocker: wanted ? `${wanted}_not_registered` : 'upload_delivery_capability_not_registered',
+    rationale: 'Upload and attachment requests route through delivery integrations and require approved adapters.',
+  })
+}
+
+function routeReport(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const capability = findCapability(registry, 'tool_report_create') ||
+    registry.capabilities.find((item) => item.kind === 'tool' && /report/i.test(item.label)) ||
+    null
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: 'agent_zero',
+    via: ['owner', 'gateway', 'agent_zero', 'tools'],
+    capability,
+    edgeKind: 'report',
+    requiresBridgeSession: false,
+    executionMode: 'read_only',
+    missingBlocker: 'report_creation_capability_not_registered',
+    rationale: 'Report requests route to Agent Zero and the report adapter.',
+  })
+}
+
+function routeProtectedAction(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const buildWikiRun = /build[-\s]?wiki|farmer|run now|sync/.test(prompt)
+  if (buildWikiRun) return routeSync(registry, prompt)
+  return {
+    primaryTarget: 'agent_zero',
+    dispatchTarget: 'agent_zero',
+    via: ['owner', 'gateway', 'agent_zero'],
+    capability: null,
+    edgeKind: 'approval',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    blocker: 'protected_action_requires_gateway_policy_and_bridge_session',
+    rationale: 'Protected actions require Gateway policy, owner approval, and a Bridge Session before execution.',
+  }
+}
+
+function routeEvent(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const eventNodeExists = registry.nodes.some((node) => node.id === 'events')
+  return {
+    primaryTarget: 'gateway',
+    dispatchTarget: 'events',
+    via: ['owner', 'gateway', 'events'],
+    capability: null,
+    edgeKind: 'event',
+    requiresBridgeSession: false,
+    executionMode: 'read_only',
+    blocker: eventNodeExists ? null : 'gateway_event_node_not_registered',
+    rationale: 'Incoming webhooks, email, Telegram, and schedules are normalized as Gateway events.',
+  }
+}
+
+function routeCapability(input: {
+  primaryTarget: string
+  fallbackDispatch: string
+  via: string[]
+  capability: GatewayCapability | null
+  edgeKind: GatewayEdgeKind
+  requiresBridgeSession: boolean
+  executionMode: GatewayExecutionMode
+  missingBlocker: string
+  rationale: string
+}): RouteTarget {
+  const dispatchTarget = input.capability?.source_node || input.fallbackDispatch
+  const capabilityBlocker = blockedReason(input.capability)
+  return {
+    primaryTarget: input.primaryTarget,
+    dispatchTarget,
+    via: input.via,
+    capability: input.capability,
+    edgeKind: input.edgeKind,
+    requiresBridgeSession: input.requiresBridgeSession,
+    executionMode: input.executionMode,
+    blocker: input.capability ? capabilityBlocker : input.missingBlocker,
+    rationale: input.rationale,
+  }
+}
+
+function blockedReason(capability: GatewayCapability | null): string | null {
+  if (!capability) return null
+  if (capability.status === 'blocked' || capability.status === 'missing') {
+    return capability.blockers[0] || `${capability.id}_${capability.status}`
+  }
+  return capability.blockers[0] || null
+}
+
+function findNodeStatus(registry: GatewayRegistry, id: string): GatewayStatus {
+  return registry.nodes.find((node) => node.id === normalizeId(id))?.status || 'missing'
+}
+
+function findCapability(registry: GatewayRegistry, id: string): GatewayCapability | null {
+  const normalized = normalizeId(id)
+  return registry.capabilities.find((capability) => capability.id === normalized) || null
+}
+
+function firstProvider(prompt: string, pairs: Array<[string, string]>): string | null {
+  const text = normalizeText(prompt)
+  return pairs.find(([needle]) => text.includes(needle))?.[1] || null
+}
+
+function matches(text: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(text))
+}
+
+function normalizeText(value: string): string {
+  return sanitizeRequest(value).toLowerCase()
+}
+
+function sanitizeRequest(value: string): string {
+  return String(value || '')
+    .replace(/(?:sk-[A-Za-z0-9]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi, '[redacted]')
+    .replace(/(?:\/home\/tony|\/a0\/(?:usr|tmp|var)|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi, '[path redacted]')
+    .trim()
+}
+
+function normalizeId(value: string): string {
+  return sanitizeRequest(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'gateway_item'
+}
+
+const PROTECTED_ACTION_PATTERNS = [
+  /\b(?:execute|run|restart|start|stop|delete|destroy|decommission|send|email|write|upload|mount|generate)\b/,
+  /\b(?:bridge session|approval|protected action|owner approval)\b/,
+]
+const UPLOAD_PATTERNS = [/\b(?:upload|attach|send file|drive|onedrive|google drive|telegram attachment)\b/]
+const REPORT_PATTERNS = [/\b(?:report|pdf|markdown|executive summary|capability inventory)\b/]
+const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud)\b/]
+const MEMORY_PATTERNS = [/\b(?:brain|obsidian|mempalace|memory|remember|graphify|knowledge|note|vault)\b/]
+const SKILL_PATTERNS = [/\b(?:skill|workflow|automation|spec|proposal|design a skill|create a skill)\b/]
+const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|firecrawl|crawl|webhook tool)\b/]
+const MODEL_PATTERNS = [/\b(?:model|llm|openrouter|openai|claude|anthropic|codex|chatgpt|ollama|nvidia|gemini|groq)\b/]
+const PLAN_PATTERNS = [/\b(?:plan|strategy|analyze|review|map|decide|recommend)\b/]
+const EVENT_PATTERNS = [/\b(?:incoming|webhook|telegram message|email event|schedule event|event)\b/]

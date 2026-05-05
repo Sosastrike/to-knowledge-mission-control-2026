@@ -356,6 +356,14 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       blockers: integrationCount > 0 ? [] : ['integration_registry_empty_or_not_visible'],
       lastSeen: generatedAt,
     }),
+    makeNode({
+      id: 'events',
+      label: 'Gateway Events',
+      kind: 'event',
+      status: 'read_only',
+      capabilities: ['incoming webhooks', 'incoming email', 'Telegram', 'schedules'],
+      lastSeen: generatedAt,
+    }),
     ...buildProviderNodes(context, generatedAt),
     ...buildMcpServerNodes(context, generatedAt),
   ]
@@ -375,6 +383,7 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('gateway', 'models', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'integrations', 'tool-call', true, generatedAt, null),
+    makeEdge('gateway', 'events', 'event', false, generatedAt, null),
     makeEdge('gateway', 'brain_sync', 'memory', true, generatedAt, null),
     makeEdge('hermes', 'agent_zero', 'delegation', false, generatedAt, null),
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),

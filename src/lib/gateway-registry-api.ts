@@ -301,7 +301,7 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
 }
 
 function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
-  return registry.edges.map((edge) => {
+  const edgeFlows = registry.edges.map((edge) => {
     const target = registry.nodes.find((node) => node.id === edge.target)
     const policy = edge.requires_session
       ? registry.policies.gateway_bridge_session_write || registry.policies.bridge_session_required
@@ -334,6 +334,52 @@ function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
         blocker: edge.blocker,
       },
     })
+  })
+  const hermesCollaborationFlow = buildHermesCollaborationFlow(registry)
+  return hermesCollaborationFlow ? [...edgeFlows, hermesCollaborationFlow] : edgeFlows
+}
+
+function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | null {
+  const agentZero = registry.nodes.find((node) => node.id === 'agent_zero')
+  const hermes = registry.nodes.find((node) => node.id === 'hermes')
+  const agentZeroToHermes = registry.edges.find((edge) => edge.source === 'agent_zero' && edge.target === 'hermes')
+  const hermesToAgentZero = registry.edges.find((edge) => edge.source === 'hermes' && edge.target === 'agent_zero')
+  if (!agentZero || !hermes || !agentZeroToHermes || !hermesToAgentZero) return null
+
+  const blocker = agentZeroToHermes.blocker || hermesToAgentZero.blocker || hermes.blockers[0] || null
+  const status: GatewayStatus = blocker
+    ? (hermes.status === 'blocked' || hermes.status === 'missing' ? 'blocked' : 'degraded')
+    : (hermes.status === 'connected' ? 'connected' : 'read_only')
+  const policy = registry.policies.gateway_read_only || registry.policies.read_only
+
+  return createGatewayFlow({
+    flow_id: 'flow_agent_zero_hermes_collaboration',
+    request: {
+      source: 'agent_zero',
+      target: 'hermes',
+      purpose: 'Agent Zero delegates skill and workflow planning to Hermes, then reviews the plan before any execution.',
+    },
+    route: {
+      source: 'agent_zero',
+      target: 'agent_zero',
+      edge_kind: 'delegation',
+      hops: ['agent_zero', 'hermes', 'agent_zero'],
+    },
+    policy,
+    execution_mode: 'read_only',
+    audit: {
+      audit_id: null,
+      events: ['gateway_collaboration_flow_registered_read_only', 'agent_zero_remains_commander', 'hermes_plan_only_no_execution'],
+      external_write: false,
+      secrets_exposed: false,
+    },
+    result: {
+      status,
+      summary: blocker
+        ? `Hermes collaboration is degraded: ${blocker}.`
+        : 'Agent Zero can dispatch planning requests to Hermes and retain final command authority.',
+      blocker,
+    },
   })
 }
 

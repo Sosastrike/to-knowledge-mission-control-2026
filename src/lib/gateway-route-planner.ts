@@ -8,6 +8,13 @@ import {
   type GatewayRegistry,
   type GatewayStatus,
 } from './gateway-model'
+import {
+  auditGatewayPolicyDecision,
+  evaluateGatewayPolicy,
+  gatewayPolicyBadges,
+  type GatewayPolicyBadge,
+  type GatewayPolicyDecision,
+} from './gateway-policy'
 
 export const GATEWAY_ROUTE_CLASSIFICATIONS = [
   'chat',
@@ -47,6 +54,8 @@ export type GatewayRoutePlan = {
   blocked: boolean
   blocker: string | null
   rationale: string
+  policy_decision: GatewayPolicyDecision
+  policy_badges: GatewayPolicyBadge[]
   flow: GatewayFlow
 }
 
@@ -102,9 +111,20 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
   const prompt = sanitizeRequest(input.ownerRequest)
   const classification = classifyGatewayOwnerRequest(prompt)
   const target = selectRouteTarget(registry, classification, prompt)
-  const blocked = Boolean(target.blocker)
-  const resultStatus: GatewayStatus = blocked ? 'blocked' : (target.requiresBridgeSession ? 'read_only' : 'connected')
-  const policy = target.requiresBridgeSession ? BRIDGE_SESSION_POLICY : READ_ONLY_POLICY
+  const policyDecision = evaluateGatewayPolicy({
+    classification,
+    ownerRequest: prompt,
+    routeTarget: target.dispatchTarget,
+    capabilityId: target.capability?.id || null,
+    capabilityStatus: target.capability?.status || null,
+    capabilityBlockers: target.capability?.blockers || [],
+    routeBlocker: target.blocker,
+    requiresBridgeSession: target.requiresBridgeSession,
+  })
+  const blocked = !policyDecision.allowed
+  const blocker = policyDecision.blocked_reason
+  const resultStatus: GatewayStatus = blocked ? 'blocked' : (policyDecision.bridge_session_required ? 'read_only' : 'connected')
+  const policy = policyDecision.bridge_session_required ? BRIDGE_SESSION_POLICY : READ_ONLY_POLICY
   const flow = createGatewayFlow({
     flow_id: normalizeId(`flow_${source}_${classification}_${target.dispatchTarget}`),
     request: {
@@ -130,11 +150,12 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
     result: {
       status: resultStatus,
       summary: blocked
-        ? `Gateway route is blocked: ${target.blocker}.`
+        ? `Gateway route is blocked: ${blocker}.`
         : `Gateway selected ${target.dispatchTarget} for ${classification}.`,
-      blocker: target.blocker,
+      blocker,
     },
   })
+  auditGatewayPolicyDecision(policyDecision, target.dispatchTarget)
 
   return {
     ok: !blocked,
@@ -146,12 +167,14 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
     dispatch_target: target.dispatchTarget,
     route_via: target.via,
     selected_capability: target.capability,
-    requires_bridge_session: target.requiresBridgeSession,
+    requires_bridge_session: policyDecision.bridge_session_required,
     execution_enabled: false,
     writes_enabled: false,
     blocked,
-    blocker: target.blocker,
+    blocker,
     rationale: target.rationale,
+    policy_decision: policyDecision,
+    policy_badges: gatewayPolicyBadges(policyDecision),
     flow,
   }
 }

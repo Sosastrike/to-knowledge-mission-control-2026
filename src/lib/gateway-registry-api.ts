@@ -18,6 +18,7 @@ import {
   type GatewayRegistry,
   type GatewayStatus,
 } from './gateway-model'
+import { GATEWAY_POLICY_BADGES, type GatewayPolicyBadge } from './gateway-policy'
 
 type GatewayRegistryBuildInput = {
   context?: AgentZeroReadOnlyContext | null
@@ -95,6 +96,7 @@ export type GatewayPoliciesPayload = {
     raw_shell_enabled: false
     docker_socket_enabled: false
   }
+  badges: GatewayPolicyBadge[]
 }
 
 type GatewayNodeStatusSummary = {
@@ -158,6 +160,34 @@ export function buildGatewayRegistrySnapshot(input: GatewayRegistryBuildInput = 
         external_allowed: false,
       },
       gateway_external_action_blocked: {
+        auth_required: true,
+        bridge_session_required: true,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_route_auth_required: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_redaction_required: {
+        auth_required: true,
+        bridge_session_required: false,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_agentmail_domain_restricted: {
+        auth_required: true,
+        bridge_session_required: true,
+        write_allowed: false,
+        secret_safe: true,
+        external_allowed: false,
+      },
+      gateway_protected_scope_required: {
         auth_required: true,
         bridge_session_required: true,
         write_allowed: false,
@@ -266,6 +296,7 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
       raw_shell_enabled: false,
       docker_socket_enabled: false,
     },
+    badges: [...GATEWAY_POLICY_BADGES],
   }
 }
 

@@ -154,6 +154,21 @@ const nodeTypes = {
   core: AgentCoreNode,
 }
 
+const gatewayPolicyBadges = [
+  { label: 'Read-only', className: 'border-void-cyan/30 bg-void-cyan/10 text-void-cyan' },
+  { label: 'Session required', className: 'border-void-amber/30 bg-void-amber/10 text-void-amber' },
+  { label: 'Blocked', className: 'border-void-crimson/30 bg-void-crimson/10 text-void-crimson' },
+  { label: 'Active', className: 'border-void-mint/30 bg-void-mint/10 text-void-mint' },
+]
+
+function PolicyBadge({ label, className }: { label: string; className: string }) {
+  return (
+    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-medium ${className}`}>
+      {label}
+    </span>
+  )
+}
+
 export function AgentNetwork({ agents, sessions }: AgentNetworkProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -280,10 +295,19 @@ export function AgentNetwork({ agents, sessions }: AgentNetworkProps) {
   return (
     <div className="void-panel">
       <div className="p-4 border-b border-border">
-        <h3 className="font-semibold text-foreground">Gateway</h3>
-        <p className="text-sm text-muted-foreground">
-          Visual representation of Gateway routes
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="font-semibold text-foreground">Gateway</h3>
+            <p className="text-sm text-muted-foreground">
+              Visual representation of Gateway routes
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5" aria-label="Gateway policy states">
+            {gatewayPolicyBadges.map((badge) => (
+              <PolicyBadge key={badge.label} label={badge.label} className={badge.className} />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="h-96">

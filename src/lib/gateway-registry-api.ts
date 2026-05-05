@@ -52,6 +52,28 @@ export type GatewayStatusPayload = {
     mcp_tools_visible: boolean
     execution_enabled: false
   }
+  llm_gateway: {
+    visible: boolean
+    status: GatewayStatus
+    providers: Array<{
+      id: string
+      label: string
+      status: GatewayStatus
+      connected: boolean
+      configured: boolean
+      model_count: number
+      fallback_provider: string | null
+      blocker: string | null
+      auth_method: string | null
+      billing_mode: string | null
+    }>
+    routing_policy: {
+      default_provider: string | null
+      fallback_enabled: true
+      raw_tracebacks_exposed: false
+      task_classes: string
+    }
+  }
   brain_systems: Array<GatewayNodeStatusSummary & {
     read_enabled: boolean
     write_enabled: boolean
@@ -227,6 +249,8 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
   const bridge = registry.nodes.find((node) => node.id === 'bridge_mcp')
   const mcpServers = registry.capabilities.filter((capability) => capability.kind === 'mcp_server')
   const providers = registry.capabilities.filter((capability) => capability.id.startsWith('bridge_provider_'))
+  const modelProviderCapabilities = registry.capabilities.filter((capability) => capability.kind === 'model' && capability.id.startsWith('model_'))
+  const llmGateway = summarizeLlmGateway(modelProviderCapabilities)
   const brainSystems = ['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki'].map((id) => {
     const summary = summarizeNode(registry, id, id)
     const capabilities = registry.capabilities.filter((capability) => capability.source_node === id || capability.id.includes(id))
@@ -270,6 +294,7 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
       mcp_tools_visible: mcpServers.some((capability) => capability.read_enabled),
       execution_enabled: false,
     },
+    llm_gateway: llmGateway,
     brain_systems: brainSystems,
     buildwiki_opencloud: buildWikiOpenCloud,
     safety: {
@@ -418,6 +443,8 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
   const buildwiki = pickRecord(context, 'opencloud_buildwiki')
   const buildwikiVisible = hasRecordValues(buildwiki)
   const brainVisible = brainRegistry.length > 0 || buildwikiVisible
+  const modelProviderNodes = buildModelProviderNodes(context, generatedAt)
+  const modelProviderVisible = modelProviderNodes.some((node) => node.status !== 'blocked' && node.status !== 'missing')
   return [
     makeNode({
       id: 'gateway',
@@ -436,6 +463,16 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       blockers: modelCount > 0 ? [] : ['model_registry_empty_or_not_visible'],
       lastSeen: generatedAt,
     }),
+    makeNode({
+      id: 'llm_gateway',
+      label: 'LLM Gateway',
+      kind: 'model',
+      status: modelProviderVisible ? 'read_only' : 'degraded',
+      capabilities: ['model routing', 'provider fallback', 'billing/auth visibility', 'traceback redaction'],
+      blockers: modelProviderVisible ? [] : ['llm_provider_registry_empty_or_blocked'],
+      lastSeen: generatedAt,
+    }),
+    ...modelProviderNodes,
     makeNode({
       id: 'mcp_tools',
       label: 'MCP Tools',
@@ -501,11 +538,15 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
   const mcpEdges = buildMcpServerNodes(context, generatedAt).map((node) =>
     makeEdge('mcp_tools', node.id, 'mcp-call', true, generatedAt, node.blockers[0] || null),
   )
+  const modelEdges = buildModelProviderNodes(context, generatedAt).map((node) =>
+    makeEdge('llm_gateway', node.id, 'model-call', true, generatedAt, node.blockers[0] || null),
+  )
   return [
     makeEdge('owner', 'gateway', 'command', false, generatedAt, null),
     makeEdge('gateway', 'agent_zero', 'command', false, generatedAt, null),
     makeEdge('gateway', 'bridge_mcp', 'mcp-call', true, generatedAt, null),
     makeEdge('gateway', 'models', 'model-call', true, generatedAt, null),
+    makeEdge('gateway', 'llm_gateway', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'integrations', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'events', 'event', false, generatedAt, null),
@@ -521,6 +562,7 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),
     ...providerEdges,
     ...mcpEdges,
+    ...modelEdges,
   ]
 }
 
@@ -592,26 +634,177 @@ function mcpCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: 
   })
 }
 
-function modelCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
-  return asRecords(pick(context, 'models', 'provider_registry')).map((provider) => {
-    const id = gatewayId(String(provider.id || provider.name || 'model_provider'))
-    const blocker = stringOrNull(provider.blocked_reason)
-    return createGatewayCapability({
-      id: `model_${id}`,
-      label: cleanLabel(provider.name, id),
-      kind: 'model',
-      status: statusFromAccess(provider.status, provider.status),
-      source_node: 'models',
-      requires_session: Boolean(provider.bridge_session_required ?? true),
-      read_enabled: true,
-      write_enabled: false,
-      execution_enabled: false,
-      required_credentials: asStringArray(provider.credential_names),
-      blockers: blockersList(blocker),
-      last_seen: generatedAt,
-    })
-  })
+type LlmProviderDefinition = {
+  id: string
+  label: string
+  aliases: string[]
+  credentialNames: string[]
+  authMethod: string
+  billingMode: string
+  taskClasses: string[]
+  fallbackOrder: string[]
+  missingBlocker: string
+  modelAliases?: string[]
 }
+
+type LlmProviderView = {
+  definition: LlmProviderDefinition
+  id: string
+  nodeId: string
+  label: string
+  status: GatewayStatus
+  connected: boolean
+  configured: boolean
+  modelCount: number
+  models: string[]
+  fallbackProvider: string | null
+  blocker: string | null
+  authMethod: string
+  billingMode: string
+  apiBillingInUse: boolean
+  apiKeyConfigured: boolean
+  oauthSubscriptionConfigured: boolean
+  pluginConnected: boolean
+  bestUseCase: string | null
+}
+
+const LLM_PROVIDER_DEFINITIONS: LlmProviderDefinition[] = [
+  {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    aliases: ['openrouter', 'open router'],
+    credentialNames: ['OPENROUTER_API_KEY'],
+    authMethod: 'api_key_or_mission_control_proxy',
+    billingMode: 'OpenRouter/provider billing when execution is approved',
+    taskClasses: ['default routing', 'hosted model fallback', 'model catalog'],
+    fallbackOrder: ['openai', 'claude_anthropic', 'ollama'],
+    missingBlocker: 'openrouter_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['openrouter'],
+  },
+  {
+    id: 'openai',
+    label: 'OpenAI',
+    aliases: ['openai', 'gpt'],
+    credentialNames: ['OPENAI_API_KEY'],
+    authMethod: 'api_key_or_mission_control_proxy',
+    billingMode: 'OpenAI API billing only if explicitly configured for execution',
+    taskClasses: ['general assistant', 'report drafting', 'coding support'],
+    fallbackOrder: ['openrouter', 'codex_chatgpt', 'ollama'],
+    missingBlocker: 'openai_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['openai', 'gpt', 'o3', 'o4', 'codex'],
+  },
+  {
+    id: 'codex_chatgpt',
+    label: 'Codex/ChatGPT',
+    aliases: ['codex', 'chatgpt', 'codex_chatgpt'],
+    credentialNames: [],
+    authMethod: 'codex_chatgpt_oauth_plugin',
+    billingMode: 'ChatGPT subscription when plugin auth is connected; no API billing by default',
+    taskClasses: ['coding helper', 'reasoning helper', 'repo planning'],
+    fallbackOrder: ['openai', 'openrouter', 'ollama'],
+    missingBlocker: 'codex_chatgpt_plugin_not_connected',
+    modelAliases: ['codex', 'openai'],
+  },
+  {
+    id: 'claude_anthropic',
+    label: 'Claude/Anthropic',
+    aliases: ['anthropic', 'claude', 'claude_anthropic'],
+    credentialNames: ['ANTHROPIC_API_KEY', 'CLAUDE_API_KEY'],
+    authMethod: 'claude_code_oauth_preferred_api_key_not_default',
+    billingMode: 'Claude Code subscription if OAuth is configured; Anthropic API billing only when explicitly chosen',
+    taskClasses: ['deep reasoning', 'coding review', 'long analysis', 'planning'],
+    fallbackOrder: ['openrouter', 'openai', 'ollama'],
+    missingBlocker: 'claude_anthropic_not_configured_or_oauth_not_proven',
+    modelAliases: ['anthropic', 'claude'],
+  },
+  {
+    id: 'ollama',
+    label: 'Ollama',
+    aliases: ['ollama', 'local'],
+    credentialNames: [],
+    authMethod: 'local_adapter',
+    billingMode: 'local runtime; no external API billing',
+    taskClasses: ['local fallback', 'private/offline tasks'],
+    fallbackOrder: ['openrouter', 'openai'],
+    missingBlocker: 'ollama_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['ollama', 'local'],
+  },
+  {
+    id: 'nvidia',
+    label: 'NVIDIA',
+    aliases: ['nvidia'],
+    credentialNames: ['NVIDIA_API_KEY'],
+    authMethod: 'api_key_or_gateway_provider',
+    billingMode: 'NVIDIA/provider billing when execution is approved',
+    taskClasses: ['gpu/provider-backed inference'],
+    fallbackOrder: ['openrouter', 'openai'],
+    missingBlocker: 'nvidia_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['nvidia'],
+  },
+  {
+    id: 'groq',
+    label: 'Groq',
+    aliases: ['groq'],
+    credentialNames: ['GROQ_API_KEY'],
+    authMethod: 'api_key_or_gateway_provider',
+    billingMode: 'Groq/provider billing when execution is approved',
+    taskClasses: ['low latency inference', 'fast lightweight routing'],
+    fallbackOrder: ['openrouter', 'openai', 'ollama'],
+    missingBlocker: 'groq_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['groq'],
+  },
+  {
+    id: 'gemini',
+    label: 'Gemini',
+    aliases: ['gemini', 'google', 'google_ai'],
+    credentialNames: ['GOOGLE_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY'],
+    authMethod: 'api_key_or_gateway_provider',
+    billingMode: 'Google/Gemini API billing when execution is approved',
+    taskClasses: ['long context', 'multimodal', 'Google-family reasoning'],
+    fallbackOrder: ['openrouter', 'openai', 'claude_anthropic'],
+    missingBlocker: 'gemini_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['google', 'gemini'],
+  },
+]
+
+function modelCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
+  return buildLlmProviderViews(context).map((view) => createGatewayCapability({
+    id: `model_${view.id}`,
+    label: view.label,
+    kind: 'model',
+    status: view.status,
+    source_node: view.nodeId,
+    requires_session: true,
+    read_enabled: view.configured || view.connected,
+    available_to: ['agent_zero', 'hermes'],
+    execution_requirements: ['bridge_session_required_for_model_execution', 'gateway_model_fallback_enabled'],
+    write_enabled: false,
+    execution_enabled: false,
+    required_credentials: view.definition.credentialNames,
+    blockers: blockersList(view.blocker),
+    status_details: {
+      connected: view.connected,
+      configured: view.configured,
+      model_count: view.modelCount,
+      models: view.models.slice(0, 12).join(', ') || null,
+      fallback_provider: view.fallbackProvider,
+      fallback_available: Boolean(view.fallbackProvider),
+      fallback_order: view.definition.fallbackOrder.join(', '),
+      task_classes: view.definition.taskClasses.join(', '),
+      auth_method: view.authMethod,
+      billing_mode: view.billingMode,
+      api_key_configured: view.apiKeyConfigured,
+      api_billing_in_use: view.apiBillingInUse,
+      oauth_subscription_configured: view.oauthSubscriptionConfigured,
+      plugin_connected: view.pluginConnected,
+      raw_tracebacks_exposed: false,
+      failure_fallback_policy: 'redact_litellm_openrouter_tracebacks_and_use_configured_fallback_or_blocked_status',
+      best_use_case: view.bestUseCase,
+    },
+    last_seen: generatedAt,
+  }))
+}
+
 
 function toolCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
   return asRecords(pick(context, 'tools', 'registry')).map((tool) => {
@@ -832,6 +1025,152 @@ function brainCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
   return [...brainItems, buildWikiCapability, openCloudCapability]
 }
 
+function buildModelProviderNodes(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayNode[] {
+  return buildLlmProviderViews(context).map((view) => makeNode({
+    id: view.nodeId,
+    label: view.label,
+    kind: 'model',
+    status: view.status,
+    capabilities: [
+      `${view.modelCount} visible models`,
+      `auth: ${view.authMethod}`,
+      view.fallbackProvider ? `fallback: ${view.fallbackProvider}` : 'fallback unavailable',
+    ],
+    blockers: view.blocker ? [view.blocker] : [],
+    lastSeen: generatedAt,
+  }))
+}
+
+function buildLlmProviderViews(context: AgentZeroReadOnlyContext | null): LlmProviderView[] {
+  const providers = asRecords(pick(context, 'models', 'provider_registry'))
+  const integrations = asRecords(pick(context, 'integrations', 'registry'))
+  const catalog = asRecords(pick(context, 'models', 'catalog'))
+  const views = LLM_PROVIDER_DEFINITIONS.map((definition) => {
+    const provider = findByAliases(providers, definition.aliases)
+    const integration = findByAliases(integrations, definition.aliases)
+    const source = provider || integration || null
+    const sourceStatus = source ? statusFromAccess(source.status, source.state, source.access, source.raw_state) : 'blocked'
+    const blocked = !source || sourceStatus === 'blocked' || sourceStatus === 'missing'
+    const blocker = sanitizeModelBlocker(stringOrNull(source?.blocked_reason) || (blocked ? definition.missingBlocker : null))
+    const models = modelNamesForProvider(definition, provider, catalog)
+    const modelCount = numericValue(provider?.model_count) ?? models.length
+    const apiKeyConfigured = Boolean(provider?.credential_present || integration?.credential_present)
+    const oauthSubscriptionConfigured = Boolean(
+      source && (
+        String(source.auth_method || source.auth || '').toLowerCase().includes('oauth') ||
+        String(source.billing || source.billing_mode || '').toLowerCase().includes('subscription') ||
+        String(source.status || '').toLowerCase().includes('connected') && ['codex_chatgpt', 'claude_anthropic'].includes(definition.id)
+      ),
+    )
+    const pluginConnected = Boolean(source && ['codex_chatgpt', 'claude_anthropic'].includes(definition.id) && !blocked)
+    const status = blocked ? 'blocked' : sourceStatus
+    const connected = status === 'connected' || Boolean(source?.connected)
+    const configured = !blocked && (connected || ['read_only', 'write_enabled', 'execution_enabled'].includes(status) || Boolean(source?.credential_present))
+    return {
+      definition,
+      id: definition.id,
+      nodeId: `model_${definition.id}`,
+      label: definition.label,
+      status,
+      connected,
+      configured,
+      modelCount,
+      models,
+      fallbackProvider: null,
+      blocker,
+      authMethod: authMethodForProvider(definition, { apiKeyConfigured, oauthSubscriptionConfigured, pluginConnected }),
+      billingMode: billingModeForProvider(definition, { apiKeyConfigured, oauthSubscriptionConfigured, pluginConnected }),
+      apiBillingInUse: Boolean(apiKeyConfigured && !oauthSubscriptionConfigured && definition.credentialNames.length > 0),
+      apiKeyConfigured,
+      oauthSubscriptionConfigured,
+      pluginConnected,
+      bestUseCase: stringOrNull(provider?.best_use_case) || definition.taskClasses.join(', '),
+    } satisfies LlmProviderView
+  })
+
+  return views.map((view) => ({
+    ...view,
+    fallbackProvider: fallbackProviderFor(view, views),
+  }))
+}
+
+function fallbackProviderFor(view: LlmProviderView, views: LlmProviderView[]): string | null {
+  return view.definition.fallbackOrder.find((candidate) => {
+    const target = views.find((item) => item.id === candidate)
+    return target && target.status !== 'blocked' && target.status !== 'missing'
+  }) || null
+}
+
+function modelNamesForProvider(definition: LlmProviderDefinition, provider: UnknownRecord | undefined, catalog: UnknownRecord[]): string[] {
+  const explicitModels = asStringArray(provider?.models)
+  if (explicitModels.length > 0) return explicitModels.slice(0, 40)
+  const aliases = definition.modelAliases || definition.aliases
+  const catalogNames = catalog.filter((model) => {
+    const haystack = `${model.provider || ''} ${model.name || ''} ${model.alias || ''}`.toLowerCase()
+    return aliases.some((alias) => haystack.includes(alias.toLowerCase()))
+  }).map((model) => sanitizeText(String(model.name || model.alias || '')).trim()).filter(Boolean)
+  if (definition.id === 'openrouter' && catalogNames.length === 0) {
+    return catalog.map((model) => sanitizeText(String(model.name || model.alias || '')).trim()).filter(Boolean).slice(0, 40)
+  }
+  return Array.from(new Set(catalogNames)).slice(0, 40)
+}
+
+function authMethodForProvider(
+  definition: LlmProviderDefinition,
+  state: { apiKeyConfigured: boolean; oauthSubscriptionConfigured: boolean; pluginConnected: boolean },
+): string {
+  if (definition.id === 'claude_anthropic') {
+    if (state.oauthSubscriptionConfigured) return 'claude_code_oauth_subscription'
+    if (state.apiKeyConfigured) return 'anthropic_api_key_configured_api_billing_possible'
+  }
+  if (definition.id === 'codex_chatgpt') {
+    return state.pluginConnected ? 'codex_chatgpt_oauth_plugin_connected' : definition.authMethod
+  }
+  return definition.authMethod
+}
+
+function billingModeForProvider(
+  definition: LlmProviderDefinition,
+  state: { apiKeyConfigured: boolean; oauthSubscriptionConfigured: boolean; pluginConnected: boolean },
+): string {
+  if (definition.id === 'claude_anthropic') {
+    if (state.oauthSubscriptionConfigured) return 'claude_code_subscription'
+    if (state.apiKeyConfigured) return 'anthropic_api_key_billing_possible_not_default_for_plugin'
+  }
+  if (definition.id === 'codex_chatgpt') {
+    return state.pluginConnected ? 'chatgpt_subscription_plugin' : definition.billingMode
+  }
+  return definition.billingMode
+}
+
+function summarizeLlmGateway(capabilities: GatewayCapability[]): GatewayStatusPayload['llm_gateway'] {
+  const modelProviders = capabilities.filter((capability) => LLM_PROVIDER_DEFINITIONS.some((definition) => `model_${definition.id}` === capability.id))
+  const visibleProviders = modelProviders.filter((capability) => capability.status !== 'blocked' && capability.status !== 'missing')
+  return {
+    visible: modelProviders.length > 0,
+    status: visibleProviders.length > 0 ? 'read_only' : 'degraded',
+    providers: modelProviders.map((capability) => ({
+      id: capability.id.replace(/^model_/, ''),
+      label: capability.label,
+      status: capability.status,
+      connected: detailBoolean(capability.status_details, 'connected'),
+      configured: detailBoolean(capability.status_details, 'configured'),
+      model_count: numericValue(capability.status_details.model_count) ?? 0,
+      fallback_provider: detailString(capability.status_details, 'fallback_provider'),
+      blocker: capability.blockers[0] || null,
+      auth_method: detailString(capability.status_details, 'auth_method'),
+      billing_mode: detailString(capability.status_details, 'billing_mode'),
+    })),
+    routing_policy: {
+      default_provider: visibleProviders[0]?.id.replace(/^model_/, '') || null,
+      fallback_enabled: true,
+      raw_tracebacks_exposed: false,
+      task_classes: 'chat, plan, coding, reasoning, long-context, local fallback, low-latency, multimodal',
+    },
+  }
+}
+
+
 function buildProviderNodes(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayNode[] {
   return asRecords(pick(context, 'bridge', 'provider_registry')).map((provider) => {
     const id = gatewayId(String(provider.id || provider.name || 'provider'))
@@ -1027,6 +1366,28 @@ function capabilityKindForCategory(category: string): GatewayCapabilityKind {
   if (normalized.includes('brain') || normalized.includes('memory')) return 'brain'
   if (normalized.includes('api')) return 'api'
   return 'integration'
+}
+
+function findByAliases(records: UnknownRecord[], aliases: string[]): UnknownRecord | undefined {
+  return records.find((record) => {
+    const haystack = `${record.id || ''} ${record.name || ''} ${record.provider || ''}`.toLowerCase()
+    return aliases.some((alias) => haystack.includes(alias.toLowerCase()))
+  })
+}
+
+function numericValue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value)
+  return null
+}
+
+function sanitizeModelBlocker(value: string | null): string | null {
+  if (!value) return null
+  const sanitized = sanitizeText(value)
+  if (/traceback|stack trace|litellm|presidio|openrouter.*(?:exception|error)/i.test(sanitized)) {
+    return 'model_provider_error_redacted_fallback_required'
+  }
+  return sanitized
 }
 
 function hasRecordValues(record: UnknownRecord): boolean {

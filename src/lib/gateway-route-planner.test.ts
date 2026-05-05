@@ -31,9 +31,23 @@ const context = {
         credential_names: ['OPENROUTER_API_KEY'],
         bridge_session_required: true,
         blocked_reason: null,
+        models: ['openrouter/anthropic/claude-sonnet-4'],
+      },
+      {
+        id: 'openai',
+        name: 'OpenAI',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['OPENAI_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: null,
+        models: ['openai/gpt-4.1'],
       },
     ],
-    catalog: [{ alias: 'sonnet', provider: 'openrouter', name: 'openrouter/anthropic/claude-sonnet-4' }],
+    catalog: [
+      { alias: 'sonnet', provider: 'openrouter', name: 'openrouter/anthropic/claude-sonnet-4' },
+      { alias: 'gpt-4.1', provider: 'openai', name: 'openai/gpt-4.1' },
+    ],
   },
   tools: {
     registry: [
@@ -128,9 +142,51 @@ describe('Gateway route planner', () => {
     const plan = planGatewayRoute(registry, { ownerRequest: 'Use OpenRouter for a model-heavy reasoning task' })
     expect(plan.classification).toBe('model')
     expect(plan.selected_capability?.id).toBe('model_openrouter')
+    expect(plan.dispatch_target).toBe('model_openrouter')
+    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'llm_gateway', 'model_openrouter'])
     expect(plan.flow.route.edge_kind).toBe('model-call')
     expect(plan.requires_bridge_session).toBe(true)
     expect(plan.execution_enabled).toBe(false)
+  })
+
+  it('falls back to a configured model provider without exposing raw provider tracebacks', () => {
+    const fallbackContext = {
+      ...context,
+      models: {
+        ...context.models,
+        provider_registry: [
+          {
+            id: 'openrouter',
+            name: 'OpenRouter',
+            status: 'blocked',
+            credential_present: true,
+            credential_names: ['OPENROUTER_API_KEY'],
+            bridge_session_required: true,
+            blocked_reason: 'LiteLLM Traceback: OpenRouter upstream exception',
+            models: [],
+          },
+          {
+            id: 'openai',
+            name: 'OpenAI',
+            status: 'configured',
+            credential_present: true,
+            credential_names: ['OPENAI_API_KEY'],
+            bridge_session_required: true,
+            blocked_reason: null,
+            models: ['openai/gpt-4.1'],
+          },
+        ],
+      },
+    } as unknown as AgentZeroReadOnlyContext
+    const fallbackRegistry = buildGatewayRegistrySnapshot({ context: fallbackContext, generatedAt: '2026-05-04T00:00:00.000Z' })
+    const plan = planGatewayRoute(fallbackRegistry, { ownerRequest: 'Use OpenRouter for a model-heavy reasoning task' })
+
+    expect(plan.classification).toBe('model')
+    expect(plan.selected_capability?.id).toBe('model_openai')
+    expect(plan.dispatch_target).toBe('model_openai')
+    expect(plan.rationale).toContain('fallback')
+    expect(plan.rationale).not.toMatch(/Traceback|LiteLLM|upstream exception/)
+    expect(plan.selected_capability?.status_details.raw_tracebacks_exposed).toBe(false)
   })
 
   it('routes MCP and tool calls through Bridge/MCP and blocks unavailable tools honestly', () => {

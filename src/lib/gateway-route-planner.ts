@@ -284,20 +284,69 @@ function routeModel(registry: GatewayRegistry, prompt: string): RouteTarget {
     ['gemini', 'model_gemini'],
     ['groq', 'model_groq'],
   ])
-  const capability = findCapability(registry, wanted || 'model_openrouter') ||
-    registry.capabilities.find((item) => item.kind === 'model' && item.status !== 'blocked') ||
-    null
+  const preferred = wanted || preferredModelForTask(prompt)
+  const selection = selectModelCapability(registry, preferred)
+  const capability = selection.capability
   return routeCapability({
     primaryTarget: 'agent_zero',
-    fallbackDispatch: 'models',
-    via: ['owner', 'gateway', 'agent_zero', 'models'],
+    fallbackDispatch: 'llm_gateway',
+    via: capability?.source_node
+      ? ['owner', 'gateway', 'agent_zero', 'llm_gateway', capability.source_node]
+      : ['owner', 'gateway', 'agent_zero', 'llm_gateway'],
     capability,
     edgeKind: 'model-call',
     requiresBridgeSession: true,
     executionMode: 'bridge_session',
-    missingBlocker: wanted ? `${wanted}_not_registered` : 'model_provider_not_registered',
-    rationale: 'Model-heavy requests route to the selected LLM provider through Gateway policy.',
+    missingBlocker: preferred ? `${preferred}_not_registered` : 'model_provider_not_registered',
+    rationale: selection.rationale,
   })
+}
+
+function preferredModelForTask(prompt: string): string {
+  const text = normalizeText(prompt)
+  if (/codex|repo|code|coding|debug|patch/.test(text)) return 'model_codex_chatgpt'
+  if (/claude|deep reason|long analysis|review|planning/.test(text)) return 'model_claude_anthropic'
+  if (/local|private|offline|no external/.test(text)) return 'model_ollama'
+  if (/fast|latency|low latency|speed/.test(text)) return 'model_groq'
+  if (/gemini|google|long context|multimodal|vision/.test(text)) return 'model_gemini'
+  if (/gpu|nvidia/.test(text)) return 'model_nvidia'
+  if (/openai|gpt/.test(text)) return 'model_openai'
+  return 'model_openrouter'
+}
+
+function selectModelCapability(registry: GatewayRegistry, preferredId: string): { capability: GatewayCapability | null; rationale: string } {
+  const preferred = findCapability(registry, preferredId)
+  const preferredBlocker = blockedReason(preferred)
+  if (preferred && !preferredBlocker) {
+    return {
+      capability: preferred,
+      rationale: `Gateway selected ${preferred.label} from the LLM Gateway route policy.`,
+    }
+  }
+
+  const fallback = fallbackModelCapability(registry, preferred)
+  if (fallback && !blockedReason(fallback)) {
+    const blocker = preferredBlocker || (preferred ? `${preferred.id}_blocked` : `${preferredId}_not_registered`)
+    return {
+      capability: fallback,
+      rationale: `Gateway selected ${fallback.label} as a model fallback because ${preferred?.label || preferredId} is blocked: ${blocker}. Raw provider tracebacks are redacted from owner output.`,
+    }
+  }
+
+  return {
+    capability: preferred || fallback || registry.capabilities.find((item) => item.kind === 'model') || null,
+    rationale: 'Gateway could not find an available model fallback; it returns an exact blocked provider status without raw LiteLLM/OpenRouter tracebacks.',
+  }
+}
+
+function fallbackModelCapability(registry: GatewayRegistry, preferred: GatewayCapability | null): GatewayCapability | null {
+  const fallbackId = detailString(preferred?.status_details || {}, 'fallback_provider')
+  if (fallbackId) {
+    const direct = findCapability(registry, `model_${fallbackId}`) || findCapability(registry, fallbackId)
+    if (direct && !blockedReason(direct)) return direct
+  }
+  const fallbackOrder = ['model_openrouter', 'model_openai', 'model_claude_anthropic', 'model_codex_chatgpt', 'model_ollama']
+  return fallbackOrder.map((id) => findCapability(registry, id)).find((capability) => capability && !blockedReason(capability)) || null
 }
 
 function routeTool(registry: GatewayRegistry, prompt: string): RouteTarget {
@@ -463,6 +512,13 @@ function routeCapability(input: {
     blocker: input.capability ? capabilityBlocker : input.missingBlocker,
     rationale: input.rationale,
   }
+}
+
+function detailString(details: GatewayCapability['status_details'], key: string): string | null {
+  const value = details[key]
+  if (value === null || value === undefined || value === false) return null
+  const text = String(value || '').trim()
+  return text || null
 }
 
 function blockedReason(capability: GatewayCapability | null): string | null {

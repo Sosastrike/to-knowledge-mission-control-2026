@@ -45,9 +45,67 @@ const context = {
         credential_names: ['OPENROUTER_API_KEY'],
         bridge_session_required: true,
         blocked_reason: null,
+        model_count: 2,
+        models: ['openrouter/anthropic/claude-sonnet-4', 'openrouter/openai/gpt-4.1'],
+      },
+      {
+        id: 'openai',
+        name: 'OpenAI',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['OPENAI_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: null,
+        models: ['openai/gpt-4.1'],
+      },
+      {
+        id: 'anthropic',
+        name: 'Anthropic / Claude',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['ANTHROPIC_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: null,
+        models: ['anthropic/claude-sonnet-4'],
+      },
+      {
+        id: 'google',
+        name: 'Gemini / Google',
+        status: 'blocked',
+        credential_present: false,
+        credential_names: ['GOOGLE_API_KEY', 'GEMINI_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: 'missing_credential',
+        models: [],
+      },
+      {
+        id: 'ollama',
+        name: 'Ollama / Local',
+        status: 'connected',
+        credential_present: false,
+        credential_names: [],
+        bridge_session_required: true,
+        blocked_reason: null,
+        models: ['llama3.2'],
+      },
+      {
+        id: 'groq',
+        name: 'Groq',
+        status: 'configured',
+        credential_present: true,
+        credential_names: ['GROQ_API_KEY'],
+        bridge_session_required: true,
+        blocked_reason: null,
+        models: ['groq/llama-3.3'],
       },
     ],
-    catalog: [{ alias: 'sonnet', provider: 'openrouter', name: 'openrouter/anthropic/claude-sonnet-4' }],
+    catalog: [
+      { alias: 'sonnet', provider: 'openrouter', name: 'openrouter/anthropic/claude-sonnet-4' },
+      { alias: 'gpt-4.1', provider: 'openai', name: 'openai/gpt-4.1' },
+      { alias: 'claude', provider: 'anthropic', name: 'anthropic/claude-sonnet-4' },
+      { alias: 'gemini', provider: 'google', name: 'google/gemini-2.5-pro' },
+      { alias: 'llama', provider: 'ollama', name: 'llama3.2' },
+    ],
   },
   tools: {
     registry: [
@@ -117,6 +175,18 @@ const context = {
         requires_bridge_session: true,
         missing_credential: false,
         credential_names: ['AGENTMAIL_API_KEY'],
+        blocked_reason: null,
+      },
+      {
+        id: 'codex_chatgpt',
+        name: 'Codex/ChatGPT plugin',
+        status: 'connected',
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        missing_credential: false,
+        credential_names: [],
+        billing_mode: 'subscription',
         blocked_reason: null,
       },
     ],
@@ -207,6 +277,15 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('agent_zero')).toBe(true)
     expect(nodes.has('hermes')).toBe(true)
     expect(nodes.has('bridge_mcp')).toBe(true)
+    expect(nodes.has('llm_gateway')).toBe(true)
+    expect(nodes.has('model_openrouter')).toBe(true)
+    expect(nodes.has('model_openai')).toBe(true)
+    expect(nodes.has('model_codex_chatgpt')).toBe(true)
+    expect(nodes.has('model_claude_anthropic')).toBe(true)
+    expect(nodes.has('model_ollama')).toBe(true)
+    expect(nodes.has('model_nvidia')).toBe(true)
+    expect(nodes.has('model_groq')).toBe(true)
+    expect(nodes.has('model_gemini')).toBe(true)
     expect(nodes.has('brain')).toBe(true)
     expect(nodes.has('opencloud')).toBe(true)
     expect(nodes.has('obsidian')).toBe(true)
@@ -214,6 +293,14 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('graphify')).toBe(true)
     expect(nodes.has('buildwiki')).toBe(true)
     expect(capabilities.has('mcp_zapier')).toBe(true)
+    expect(capabilities.has('model_openrouter')).toBe(true)
+    expect(capabilities.has('model_openai')).toBe(true)
+    expect(capabilities.has('model_codex_chatgpt')).toBe(true)
+    expect(capabilities.has('model_claude_anthropic')).toBe(true)
+    expect(capabilities.has('model_ollama')).toBe(true)
+    expect(capabilities.has('model_nvidia')).toBe(true)
+    expect(capabilities.has('model_groq')).toBe(true)
+    expect(capabilities.has('model_gemini')).toBe(true)
     expect(capabilities.has('brain_obsidian')).toBe(true)
     expect(capabilities.has('brain_buildwiki')).toBe(true)
     expect(capabilities.has('opencloud_dependency')).toBe(true)
@@ -253,6 +340,28 @@ describe('Gateway registry API model', () => {
       dependency_for: 'buildwiki_farmer',
     })
     expect(openCloud?.blockers).toContain('opencloud_destroy_not_safe_keep_dependency')
+    const openRouter = registry.capabilities.find((capability) => capability.id === 'model_openrouter')
+    expect(openRouter?.status_details).toMatchObject({
+      configured: true,
+      model_count: 2,
+      fallback_provider: 'openai',
+      raw_tracebacks_exposed: false,
+    })
+    const codex = registry.capabilities.find((capability) => capability.id === 'model_codex_chatgpt')
+    expect(codex?.status_details).toMatchObject({
+      plugin_connected: true,
+      api_billing_in_use: false,
+      billing_mode: 'chatgpt_subscription_plugin',
+    })
+    const claude = registry.capabilities.find((capability) => capability.id === 'model_claude_anthropic')
+    expect(claude?.status_details).toMatchObject({
+      api_key_configured: true,
+      api_billing_in_use: true,
+      oauth_subscription_configured: false,
+      billing_mode: 'anthropic_api_key_billing_possible_not_default_for_plugin',
+    })
+    expect(registry.capabilities.find((capability) => capability.id === 'model_gemini')?.blockers).toContain('missing_credential')
+    expect(registry.capabilities.find((capability) => capability.id === 'model_nvidia')?.blockers).toContain('nvidia_not_configured_or_not_visible_in_provider_registry')
     expect(JSON.stringify(registry)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony/)
   })
 
@@ -266,6 +375,19 @@ describe('Gateway registry API model', () => {
     expect(status.agent_zero.status).toBe('connected')
     expect(status.hermes.status).toBe('degraded')
     expect(status.bridge_mcp.mcp_servers).toBeGreaterThan(0)
+    expect(status.llm_gateway.visible).toBe(true)
+    expect(status.llm_gateway.status).toBe('read_only')
+    expect(status.llm_gateway.providers.map((provider) => provider.id)).toEqual(expect.arrayContaining(['openrouter', 'openai', 'codex_chatgpt', 'claude_anthropic', 'ollama', 'nvidia', 'groq', 'gemini']))
+    expect(status.llm_gateway.providers.find((provider) => provider.id === 'openrouter')).toMatchObject({
+      configured: true,
+      model_count: 2,
+      fallback_provider: 'openai',
+    })
+    expect(status.llm_gateway.providers.find((provider) => provider.id === 'claude_anthropic')?.billing_mode).toBe('anthropic_api_key_billing_possible_not_default_for_plugin')
+    expect(status.llm_gateway.routing_policy).toMatchObject({
+      fallback_enabled: true,
+      raw_tracebacks_exposed: false,
+    })
     expect(status.brain_systems.find((item) => item.id === 'mempalace')?.write_enabled).toBe(true)
     expect(status.buildwiki_opencloud).toMatchObject({
       visible: true,

@@ -4,6 +4,7 @@ import {
   type GatewayEdgeKind,
   type GatewayExecutionMode,
   type GatewayFlow,
+  type GatewayHealth,
   type GatewayPolicy,
   type GatewayRegistry,
   type GatewayStatus,
@@ -146,6 +147,7 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
     },
     bridge_session_id: null,
     status: resultStatus,
+    node_health: routeNodeHealth(registry, target.via),
     request: {
       source,
       target: target.dispatchTarget,
@@ -197,6 +199,16 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
     policy_badges: gatewayPolicyBadges(policyDecision),
     flow,
   }
+}
+
+function routeNodeHealth(registry: GatewayRegistry, hops: readonly string[]): Record<string, GatewayHealth> {
+  return Object.fromEntries(
+    hops.map((nodeId) => {
+      const node = registry.nodes.find((item) => item.id === nodeId)
+      const health = registry.health[nodeId] || node?.health || null
+      return health ? [nodeId, { ...health }] : null
+    }).filter((entry): entry is [string, GatewayHealth] => Boolean(entry)),
+  )
 }
 
 function selectRouteTarget(

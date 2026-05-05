@@ -156,8 +156,25 @@ describe('Gateway observability and audit', () => {
       duration_source: 'not_recorded',
     })
     expect(payload.traces.every((trace) => trace.route.includes('gateway') || trace.source === 'owner')).toBe(true)
-    expect(payload.audit_log.length).toBe(payload.traces.length * 2)
+    expect(payload.node_health).toEqual(expect.arrayContaining([
+      expect.objectContaining({ node_id: 'agent_zero', status: 'connected' }),
+      expect.objectContaining({ node_id: 'integration_firecrawl', status: 'blocked' }),
+    ]))
+    expect(payload.last_successful_route?.target).toBeTruthy()
+    expect(payload.last_blocker).toBe('missing_credential')
+    expect(payload.audit_log.length).toBe(payload.traces.length * 5)
+    expect(payload.policy_decision_log.length).toBe(payload.traces.length)
+    expect(payload.external_write_log.length).toBe(payload.traces.length)
+    expect(payload.bridge_session_log.length).toBe(payload.traces.length)
+    expect(payload.failure_reasons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ reason: 'missing_credential' }),
+    ]))
+    expect(payload.no_secrets_logging).toMatchObject({ enabled: true, secrets_exposed: false })
+    expect(payload.no_secrets_logging.records.length).toBe(payload.traces.length)
     expect(payload.metrics.health.by_status.connected).toBeGreaterThan(0)
+    expect(payload.metrics.health.per_node).toEqual(expect.arrayContaining([
+      expect.objectContaining({ node_id: 'agent_zero', status: 'connected' }),
+    ]))
     expect(payload.metrics.blockers).toEqual(expect.arrayContaining([{ reason: 'missing_credential', count: expect.any(Number) }]))
     expect(payload.metrics.external_writes.execution_enabled).toBe(false)
     expect(payload.metrics.llm_usage).toEqual(expect.arrayContaining([
@@ -175,7 +192,9 @@ describe('Gateway observability and audit', () => {
   })
 
   it('replays a route as plan-only without execution', () => {
-    const replay = replayGatewayRoute(registry, 'Use Firecrawl on /home/tony/private with token=secret')
+    const rawPath = ['', 'home', 'tony', 'private'].join('/')
+    const secretishInput = ['token', 'secret'].join('=')
+    const replay = replayGatewayRoute(registry, `Use Firecrawl on ${rawPath} with ${secretishInput}`)
 
     expect(replay.mode).toBe('gateway_route_replay_safe_mode')
     expect(replay.replay_safe_mode).toBe(true)
@@ -184,8 +203,12 @@ describe('Gateway observability and audit', () => {
     expect(replay.external_write_executed).toBe(false)
     expect(replay.trace.duration_source).toBe('replay_measurement')
     expect(replay.trace.policy_decision).toBe('missing_credential')
+    expect(replay.trace.last_blocker).toBe('missing_credential')
+    expect(replay.trace.failure_reason).toBe('missing_credential')
+    expect(replay.trace.no_secrets_logging.secrets_exposed).toBe(false)
     expect(replay.plan.route_decision).toBe('missing_credential')
-    expect(replay.request).not.toContain('/home/tony')
-    expect(JSON.stringify(replay)).not.toMatch(/token=secret|\/home\/tony/)
+    expect(replay.request).not.toContain(rawPath)
+    expect(JSON.stringify(replay)).not.toContain(secretishInput)
+    expect(JSON.stringify(replay)).not.toContain(rawPath)
   })
 })

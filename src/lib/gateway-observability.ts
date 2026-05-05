@@ -1,4 +1,4 @@
-import type { GatewayFlow, GatewayRegistry, GatewayStatus } from './gateway-model'
+import type { GatewayFlow, GatewayHealth, GatewayRegistry, GatewaySelectedRoute, GatewayStatus } from './gateway-model'
 import { buildGatewayFlowsPayload } from './gateway-registry-api'
 import { planGatewayRoute, type GatewayRoutePlan } from './gateway-route-planner'
 
@@ -16,6 +16,11 @@ export type GatewayTraceRecord = {
   duration_ms: number | null
   duration_source: 'recorded' | 'not_recorded' | 'replay_measurement'
   external_write: boolean
+  node_health: Record<string, GatewayHealth>
+  last_successful_route: GatewaySelectedRoute | null
+  last_blocker: string | null
+  failure_reason: string | null
+  no_secrets_logging: GatewayFlow['no_secrets_logging']
   cost_tokens: number | null
   cost_usd: number | null
 }
@@ -23,7 +28,7 @@ export type GatewayTraceRecord = {
 export type GatewayAuditRecord = {
   audit_id: string
   trace_id: string
-  event: 'policy_decision' | 'execution_decision'
+  event: 'policy_decision' | 'execution_decision' | 'external_write_decision' | 'bridge_session_decision' | 'no_secrets_logging'
   route_target: string
   status: GatewayStatus
   allowed: boolean
@@ -38,7 +43,25 @@ export type GatewayObservabilityPayload = {
   mode: 'gateway_observability_read_only'
   generated_at: string
   traces: GatewayTraceRecord[]
+  node_health: Array<{
+    node_id: string
+    status: GatewayStatus
+    summary: string
+    score: number | null
+    last_seen: string | null
+  }>
+  last_successful_route: GatewaySelectedRoute | null
+  last_blocker: string | null
   audit_log: GatewayAuditRecord[]
+  policy_decision_log: GatewayAuditRecord[]
+  external_write_log: GatewayAuditRecord[]
+  bridge_session_log: GatewayAuditRecord[]
+  failure_reasons: Array<{ flow_id: string; reason: string }>
+  no_secrets_logging: {
+    enabled: true
+    secrets_exposed: false
+    records: GatewayAuditRecord[]
+  }
   metrics: {
     route_count: number
     recorded_latency_count: number
@@ -47,6 +70,13 @@ export type GatewayObservabilityPayload = {
       total_nodes: number
       by_status: Record<string, number>
       last_heartbeat: string | null
+      per_node: Array<{
+        node_id: string
+        status: GatewayStatus
+        summary: string
+        score: number | null
+        last_seen: string | null
+      }>
     }
     blockers: Array<{ reason: string; count: number }>
     external_writes: {
@@ -97,7 +127,12 @@ const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/(?:usr|tmp|var)|\/tmp|\/var\/fol
 export function buildGatewayObservabilityPayload(registry: GatewayRegistry): GatewayObservabilityPayload {
   const flows = buildGatewayFlowsPayload(registry).flows
   const traces = flows.map((flow) => traceFromFlow(flow))
-  const auditLog = traces.flatMap((trace) => auditRecordsFromTrace(trace, registry.generated_at))
+  const policyExecutionLog = traces.flatMap((trace) => auditRecordsFromTrace(trace, registry.generated_at))
+  const externalWriteLog = buildExternalWriteLog(traces, registry.generated_at)
+  const bridgeSessionLog = buildBridgeSessionLog(traces, registry.generated_at)
+  const noSecretsLog = buildNoSecretsLog(traces, registry.generated_at)
+  const auditLog = [...policyExecutionLog, ...externalWriteLog, ...bridgeSessionLog, ...noSecretsLog]
+  const nodeHealth = buildNodeHealth(registry)
   const recordedDurations = traces
     .map((trace) => trace.duration_ms)
     .filter((duration): duration is number => typeof duration === 'number' && Number.isFinite(duration))
@@ -110,7 +145,19 @@ export function buildGatewayObservabilityPayload(registry: GatewayRegistry): Gat
     mode: 'gateway_observability_read_only',
     generated_at: registry.generated_at,
     traces,
+    node_health: nodeHealth,
+    last_successful_route: lastSuccessfulRoute(flows),
+    last_blocker: lastBlocker(flows),
     audit_log: auditLog,
+    policy_decision_log: policyExecutionLog.filter((record) => record.event === 'policy_decision'),
+    external_write_log: externalWriteLog,
+    bridge_session_log: bridgeSessionLog,
+    failure_reasons: failureReasons(flows),
+    no_secrets_logging: {
+      enabled: true,
+      secrets_exposed: false,
+      records: noSecretsLog,
+    },
     metrics: {
       route_count: traces.length,
       recorded_latency_count: recordedDurations.length,
@@ -195,6 +242,14 @@ function traceFromFlow(
     duration_ms: options.durationMs ?? null,
     duration_source: options.durationSource || 'not_recorded',
     external_write: Boolean(flow.audit.external_write),
+    node_health: cloneTraceNodeHealth(flow.node_health),
+    last_successful_route: flow.last_successful_route ? { ...flow.last_successful_route, hops: [...flow.last_successful_route.hops] } : null,
+    last_blocker: sanitizeTextOrNull(flow.last_blocker),
+    failure_reason: sanitizeTextOrNull(flow.failure_reason),
+    no_secrets_logging: {
+      ...flow.no_secrets_logging,
+      protected_fields: [...flow.no_secrets_logging.protected_fields],
+    },
     cost_tokens: null,
     cost_usd: null,
   }
@@ -229,6 +284,16 @@ function auditRecordsFromTrace(trace: GatewayTraceRecord, generatedAt: string): 
   ]
 }
 
+function buildNodeHealth(registry: GatewayRegistry): GatewayObservabilityPayload['node_health'] {
+  return registry.nodes.map((node) => ({
+    node_id: gatewayObservabilityId(node.id),
+    status: node.health.status,
+    summary: sanitizeText(node.health.summary),
+    score: node.health.score,
+    last_seen: node.health.last_seen,
+  }))
+}
+
 function buildHealthMetrics(registry: GatewayRegistry): GatewayObservabilityPayload['metrics']['health'] {
   const byStatus = registry.nodes.reduce<Record<string, number>>((acc, node) => {
     acc[node.status] = (acc[node.status] || 0) + 1
@@ -243,7 +308,84 @@ function buildHealthMetrics(registry: GatewayRegistry): GatewayObservabilityPayl
     total_nodes: registry.nodes.length,
     by_status: byStatus,
     last_heartbeat: lastHeartbeat,
+    per_node: buildNodeHealth(registry),
   }
+}
+
+function buildExternalWriteLog(traces: GatewayTraceRecord[], generatedAt: string): GatewayAuditRecord[] {
+  return traces.map((trace) => ({
+    audit_id: gatewayObservabilityId(`audit_${trace.trace_id}_external_write`),
+    trace_id: trace.trace_id,
+    event: 'external_write_decision',
+    route_target: trace.target,
+    status: trace.status,
+    allowed: false,
+    blocked_reason: trace.external_write ? trace.blocker || 'external_write_requires_bridge_session_scope' : null,
+    external_write: trace.external_write,
+    execution_enabled: false,
+    recorded_at: generatedAt,
+  }))
+}
+
+function buildBridgeSessionLog(traces: GatewayTraceRecord[], generatedAt: string): GatewayAuditRecord[] {
+  return traces.map((trace) => {
+    const requiresSession = trace.execution_decision === 'bridge_session_required'
+    return {
+      audit_id: gatewayObservabilityId(`audit_${trace.trace_id}_bridge_session`),
+      trace_id: trace.trace_id,
+      event: 'bridge_session_decision',
+      route_target: trace.target,
+      status: trace.status,
+      allowed: !requiresSession,
+      blocked_reason: requiresSession ? trace.blocker || 'bridge_session_required' : null,
+      external_write: trace.external_write,
+      execution_enabled: false,
+      recorded_at: generatedAt,
+    }
+  })
+}
+
+function buildNoSecretsLog(traces: GatewayTraceRecord[], generatedAt: string): GatewayAuditRecord[] {
+  return traces.map((trace) => ({
+    audit_id: gatewayObservabilityId(`audit_${trace.trace_id}_no_secrets`),
+    trace_id: trace.trace_id,
+    event: 'no_secrets_logging',
+    route_target: trace.target,
+    status: trace.status,
+    allowed: true,
+    blocked_reason: null,
+    external_write: false,
+    execution_enabled: false,
+    recorded_at: generatedAt,
+  }))
+}
+
+function lastSuccessfulRoute(flows: GatewayFlow[]): GatewaySelectedRoute | null {
+  for (const flow of [...flows].reverse()) {
+    if (!flow.last_successful_route) continue
+    return { ...flow.last_successful_route, hops: [...flow.last_successful_route.hops] }
+  }
+  return null
+}
+
+function lastBlocker(flows: GatewayFlow[]): string | null {
+  for (const flow of [...flows].reverse()) {
+    const blocker = sanitizeTextOrNull(flow.last_blocker || flow.failure_reason)
+    if (blocker) return blocker
+  }
+  return null
+}
+
+function failureReasons(flows: GatewayFlow[]): Array<{ flow_id: string; reason: string }> {
+  return flows
+    .map((flow) => ({ flow_id: gatewayObservabilityId(flow.flow_id), reason: sanitizeTextOrNull(flow.failure_reason) }))
+    .filter((item): item is { flow_id: string; reason: string } => Boolean(item.reason))
+}
+
+function cloneTraceNodeHealth(nodeHealth: Record<string, GatewayHealth>): Record<string, GatewayHealth> {
+  return Object.fromEntries(
+    Object.entries(nodeHealth).map(([nodeId, health]) => [gatewayObservabilityId(nodeId), { ...health, summary: sanitizeText(health.summary) }]),
+  )
 }
 
 function buildBlockerMetrics(registry: GatewayRegistry, traces: GatewayTraceRecord[]): Array<{ reason: string; count: number }> {

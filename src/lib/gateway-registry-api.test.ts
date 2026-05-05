@@ -692,7 +692,11 @@ describe('Gateway registry API model', () => {
       selected_route: { hops: ['owner', 'gateway', 'agent_zero'] },
       policy_result: { route_decision: 'allowed', requires_bridge_session: false },
       bridge_session_id: null,
+      failure_reason: null,
+      no_secrets_logging: { enabled: true, secrets_exposed: false },
     })
+    expect(flowMap.get('flow_owner_gateway_agent_zero')?.node_health.agent_zero?.status).toBe('connected')
+    expect(flowMap.get('flow_owner_gateway_agent_zero')?.last_successful_route?.target).toBe('agent_zero')
     expect(flowMap.get('flow_agent_zero_gateway_hermes')).toMatchObject({
       source: 'agent_zero',
       target: 'hermes',
@@ -716,6 +720,8 @@ describe('Gateway registry API model', () => {
       target: 'opencloud',
       requested_action: 'opencloud_worker_route',
       policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
+      bridge_session_log: [expect.objectContaining({ decision: 'required', secrets_exposed: false })],
+      external_write_log: [expect.objectContaining({ external_write: false, secrets_exposed: false })],
     })
     const collaboration = flowMap.get('flow_agent_zero_hermes_collaboration')
     expect(collaboration?.route.hops).toEqual(['agent_zero', 'gateway', 'hermes', 'gateway', 'agent_zero'])

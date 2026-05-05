@@ -598,6 +598,7 @@ function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       policy_result: gatewayFlowPolicyResult(edge.requires_session, blocker),
       bridge_session_id: null,
       status: edge.status,
+      node_health: gatewayFlowNodeHealth(registry, hops),
       request: {
         source: edge.source,
         target: edge.target,
@@ -704,6 +705,7 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       policy_result: gatewayFlowPolicyResult(definition.requires_session, blocker),
       bridge_session_id: null,
       status,
+      node_health: gatewayFlowNodeHealth(registry, definition.hops),
       request: {
         source: definition.source,
         target: definition.target,
@@ -730,6 +732,16 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       },
     })
   })
+}
+
+function gatewayFlowNodeHealth(registry: GatewayRegistry, hops: readonly string[]): Record<string, GatewayHealth> {
+  return Object.fromEntries(
+    hops.map((nodeId) => {
+      const node = registry.nodes.find((item) => item.id === nodeId)
+      const health = registry.health[nodeId] || node?.health || null
+      return health ? [nodeId, { ...health }] : null
+    }).filter((entry): entry is [string, GatewayHealth] => Boolean(entry)),
+  )
 }
 
 function gatewayFlowHops(source: string, target: string): string[] {
@@ -786,6 +798,7 @@ function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | 
     policy_result: gatewayFlowPolicyResult(false, blocker),
     bridge_session_id: null,
     status,
+    node_health: gatewayFlowNodeHealth(registry, hops),
     request: {
       source: 'agent_zero',
       target: 'hermes',

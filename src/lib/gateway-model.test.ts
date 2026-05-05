@@ -216,6 +216,20 @@ describe('canonical Gateway graph model', () => {
     })
     expect(flow.bridge_session_id).toBeNull()
     expect(flow.status).toBe('read_only')
+    expect(flow.node_health).toEqual({})
+    expect(flow.last_successful_route).toBeNull()
+    expect(flow.last_blocker).toBeNull()
+    expect(flow.failure_reason).toBeNull()
+    expect(flow.audit_log.map((entry) => entry.event)).toEqual(expect.arrayContaining([
+      'gateway.policy.decision',
+      'gateway.external_write.decision',
+      'gateway.bridge_session.decision',
+      'gateway.no_secrets.logging',
+    ]))
+    expect(flow.policy_decision_log[0]).toMatchObject({ decision: 'requires_session', secrets_exposed: false })
+    expect(flow.external_write_log[0]).toMatchObject({ decision: 'not_requested', external_write: false })
+    expect(flow.bridge_session_log[0]).toMatchObject({ decision: 'required', allowed: false })
+    expect(flow.no_secrets_logging).toMatchObject({ enabled: true, secrets_exposed: false })
     expect(flow.policy).toEqual(policy)
     expect(flow.execution_mode).toBe('bridge_session')
     expect(flow.audit.external_write).toBe(false)

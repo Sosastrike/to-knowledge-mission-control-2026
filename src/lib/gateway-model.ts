@@ -150,6 +150,27 @@ export type GatewayFlowAudit = {
   secrets_exposed: boolean
 }
 
+export type GatewayFlowLogEntry = {
+  event: string
+  route_target: string | null
+  decision: string | null
+  allowed: boolean | null
+  blocked_reason: string | null
+  external_write: boolean
+  bridge_session_id: string | null
+  secrets_exposed: false
+  recorded_at: string | null
+}
+
+export type GatewayNoSecretsLogging = {
+  enabled: true
+  secrets_exposed: false
+  redaction_applied: boolean
+  protected_fields: string[]
+}
+
+export type GatewayFlowNodeHealth = Record<string, GatewayHealth>
+
 export type GatewayFlowResult = {
   status: GatewayStatus
   summary: string
@@ -165,6 +186,15 @@ export type GatewayFlow = {
   policy_result: GatewayFlowPolicyResult
   bridge_session_id: string | null
   status: GatewayStatus
+  node_health: GatewayFlowNodeHealth
+  last_successful_route: GatewaySelectedRoute | null
+  last_blocker: string | null
+  audit_log: GatewayFlowLogEntry[]
+  policy_decision_log: GatewayFlowLogEntry[]
+  external_write_log: GatewayFlowLogEntry[]
+  bridge_session_log: GatewayFlowLogEntry[]
+  failure_reason: string | null
+  no_secrets_logging: GatewayNoSecretsLogging
   request: {
     source: string
     target: string
@@ -180,10 +210,40 @@ export type GatewayFlow = {
 
 export type GatewayFlowInput = Omit<
   GatewayFlow,
-  'source' | 'target' | 'requested_action' | 'selected_route' | 'policy_result' | 'bridge_session_id' | 'status'
+  | 'source'
+  | 'target'
+  | 'requested_action'
+  | 'selected_route'
+  | 'policy_result'
+  | 'bridge_session_id'
+  | 'status'
+  | 'node_health'
+  | 'last_successful_route'
+  | 'last_blocker'
+  | 'audit_log'
+  | 'policy_decision_log'
+  | 'external_write_log'
+  | 'bridge_session_log'
+  | 'failure_reason'
+  | 'no_secrets_logging'
 > & Partial<Pick<
   GatewayFlow,
-  'source' | 'target' | 'requested_action' | 'selected_route' | 'policy_result' | 'bridge_session_id' | 'status'
+  | 'source'
+  | 'target'
+  | 'requested_action'
+  | 'selected_route'
+  | 'policy_result'
+  | 'bridge_session_id'
+  | 'status'
+  | 'node_health'
+  | 'last_successful_route'
+  | 'last_blocker'
+  | 'audit_log'
+  | 'policy_decision_log'
+  | 'external_write_log'
+  | 'bridge_session_log'
+  | 'failure_reason'
+  | 'no_secrets_logging'
 >>
 
 export type GatewayRegistry = {
@@ -317,27 +377,124 @@ export function createGatewayFlow(input: GatewayFlowInput): GatewayFlow {
     ? { ...input.policy_result }
     : deriveGatewayFlowPolicyResult(input.policy, blockedReason)
 
+  const source = input.source || input.request.source || route.source
+  const target = input.target || input.request.target || route.target
+  const requestedAction = input.requested_action || input.request.purpose
+  const bridgeSessionId = input.bridge_session_id ?? null
+  const status = input.status || input.result.status
+  const audit = {
+    ...input.audit,
+    events: [...input.audit.events],
+  }
+  const defaultAuditLog = gatewayFlowDefaultAuditLog({
+    target,
+    policyResult,
+    bridgeSessionId,
+    externalWrite: audit.external_write,
+    failureReason: blockedReason,
+  })
+
   return {
     ...input,
-    source: input.source || input.request.source || route.source,
-    target: input.target || input.request.target || route.target,
-    requested_action: input.requested_action || input.request.purpose,
+    source,
+    target,
+    requested_action: requestedAction,
     selected_route: selectedRoute,
     policy_result: policyResult,
-    bridge_session_id: input.bridge_session_id ?? null,
-    status: input.status || input.result.status,
+    bridge_session_id: bridgeSessionId,
+    status,
+    node_health: input.node_health ? cloneGatewayFlowNodeHealth(input.node_health) : {},
+    last_successful_route: input.last_successful_route
+      ? { ...input.last_successful_route, hops: [...input.last_successful_route.hops] }
+      : (policyResult.allowed ? { ...selectedRoute, hops: [...selectedRoute.hops] } : null),
+    last_blocker: input.last_blocker ?? blockedReason,
+    audit_log: input.audit_log ? input.audit_log.map(cloneGatewayFlowLogEntry) : defaultAuditLog,
+    policy_decision_log: input.policy_decision_log ? input.policy_decision_log.map(cloneGatewayFlowLogEntry) : defaultAuditLog.filter((entry) => entry.event === 'gateway.policy.decision'),
+    external_write_log: input.external_write_log ? input.external_write_log.map(cloneGatewayFlowLogEntry) : defaultAuditLog.filter((entry) => entry.event === 'gateway.external_write.decision'),
+    bridge_session_log: input.bridge_session_log ? input.bridge_session_log.map(cloneGatewayFlowLogEntry) : defaultAuditLog.filter((entry) => entry.event === 'gateway.bridge_session.decision'),
+    failure_reason: input.failure_reason ?? blockedReason,
+    no_secrets_logging: input.no_secrets_logging
+      ? { ...input.no_secrets_logging, protected_fields: [...input.no_secrets_logging.protected_fields] }
+      : {
+          enabled: true,
+          secrets_exposed: false,
+          redaction_applied: false,
+          protected_fields: ['tokens', 'api_keys', 'auth_files', 'env_values', 'raw_paths'],
+        },
     request: {
       ...input.request,
     },
     route,
-    audit: {
-      ...input.audit,
-      events: [...input.audit.events],
-    },
+    audit,
     result: {
       ...input.result,
     },
   }
+}
+
+function gatewayFlowDefaultAuditLog(input: {
+  target: string
+  policyResult: GatewayFlowPolicyResult
+  bridgeSessionId: string | null
+  externalWrite: boolean
+  failureReason: string | null
+}): GatewayFlowLogEntry[] {
+  return [
+    {
+      event: 'gateway.policy.decision',
+      route_target: input.target,
+      decision: input.policyResult.route_decision,
+      allowed: input.policyResult.allowed,
+      blocked_reason: input.policyResult.blocked_reason,
+      external_write: input.externalWrite,
+      bridge_session_id: input.bridgeSessionId,
+      secrets_exposed: false,
+      recorded_at: null,
+    },
+    {
+      event: 'gateway.external_write.decision',
+      route_target: input.target,
+      decision: input.externalWrite ? 'blocked_without_explicit_session_scope' : 'not_requested',
+      allowed: false,
+      blocked_reason: input.externalWrite ? input.failureReason || 'external_write_requires_bridge_session_scope' : null,
+      external_write: input.externalWrite,
+      bridge_session_id: input.bridgeSessionId,
+      secrets_exposed: false,
+      recorded_at: null,
+    },
+    {
+      event: 'gateway.bridge_session.decision',
+      route_target: input.target,
+      decision: input.bridgeSessionId ? 'active' : (input.policyResult.requires_bridge_session ? 'required' : 'not_required'),
+      allowed: Boolean(input.bridgeSessionId) || !input.policyResult.requires_bridge_session,
+      blocked_reason: input.policyResult.requires_bridge_session && !input.bridgeSessionId ? input.failureReason || 'bridge_session_required' : null,
+      external_write: input.externalWrite,
+      bridge_session_id: input.bridgeSessionId,
+      secrets_exposed: false,
+      recorded_at: null,
+    },
+    {
+      event: 'gateway.no_secrets.logging',
+      route_target: input.target,
+      decision: 'redacted_owner_safe',
+      allowed: true,
+      blocked_reason: null,
+      external_write: false,
+      bridge_session_id: input.bridgeSessionId,
+      secrets_exposed: false,
+      recorded_at: null,
+    },
+  ]
+}
+
+function cloneGatewayFlowNodeHealth(nodeHealth: GatewayFlowNodeHealth): GatewayFlowNodeHealth {
+  return Object.fromEntries(
+    Object.entries(nodeHealth).map(([nodeId, health]) => [nodeId, { ...health }]),
+  )
+}
+
+function cloneGatewayFlowLogEntry(entry: GatewayFlowLogEntry): GatewayFlowLogEntry {
+  return { ...entry }
 }
 
 function deriveGatewayFlowPolicyResult(policy: GatewayPolicy, blockedReason: string | null): GatewayFlowPolicyResult {

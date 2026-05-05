@@ -615,7 +615,7 @@ function systemLabelForNodeType(type: GatewayDataLayerNodeType): string {
 
 function semanticContextFor(type: GatewayDataLayerNodeType, name: string): string {
   if (type === 'opencloud_worker') {
-    return `${name} is a retained OpenCloud or Build-Wiki worker/runtime node under Gateway control, not a deletion target.`
+    return `${name} is a retained OpenCloud or Build-Wiki worker/runtime node under Gateway control, not a deletion target. It can expose skills, tools, Build-Wiki/Farmer support, and future mini-agent creation capabilities through Gateway policy.`
   }
   if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
   if (type === 'skill') return `${name} is a shared OpenClaw+ skill capability discoverable before activation.`

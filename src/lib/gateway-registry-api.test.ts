@@ -342,6 +342,13 @@ const context = {
     },
     smb: { required_for_fork2: true, mounted: false, blocker: 'smb_mount_not_verified' },
     direct_opencloud_access_visible: false,
+    skills_tools_available: [
+      'Build-Wiki status',
+      'Farmer timer status',
+      'Farmer service status',
+      'Run Now adapter metadata',
+      'OpenCloud worker/runtime capability catalog',
+    ],
   },
 } as unknown as AgentZeroReadOnlyContext
 
@@ -378,6 +385,13 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('mempalace')).toBe(true)
     expect(nodes.has('skills')).toBe(true)
     expect(nodes.has('data_sources')).toBe(true)
+    expect(registry.nodes.find((node) => node.id === 'opencloud')?.capabilities).toEqual(expect.arrayContaining([
+      'worker/runtime engine',
+      'skills/tools source',
+      'Build-Wiki/Farmer support layer',
+      'future mini-agent creation layer',
+      'not deletion target',
+    ]))
     expect(nodes.has('graphify')).toBe(true)
     expect(nodes.has('buildwiki')).toBe(true)
     expect(capabilities.has('mcp_zapier')).toBe(true)
@@ -462,7 +476,11 @@ describe('Gateway registry API model', () => {
     expect(buildWiki?.status_details).toMatchObject({
       run_now_action: 'buildwiki.run_now',
       run_now_target_service: 'opencloud-docs-farmer.service',
+      timer_unit: 'opencloud-docs-farmer.timer',
+      service_unit: 'opencloud-docs-farmer.service',
       dispatch_scope: 'opencloud-docs-farmer.service',
+      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenCloud worker/runtime capability catalog, Run Now adapter metadata',
+      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, opencloud.worker_execution, mini_agent_creation_activation',
       bridge_session_required: true,
       owner_approval_required: true,
       farmer_execution_enabled: false,
@@ -470,16 +488,28 @@ describe('Gateway registry API model', () => {
       fork2_state: 'blocked',
       smb_mounted: false,
       smb_blocker: 'smb_mount_not_verified',
+      fork2_blocker: 'smb_mount_not_verified',
     })
     expect(buildWiki?.execution_requirements).toContain('run_now_scope:opencloud-docs-farmer.service')
     expect(buildWiki?.blockers).toEqual(expect.arrayContaining(['active_bridge_session_required_for_buildwiki_run_now', 'smb_mount_not_verified']))
     const openCloud = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
     expect(openCloud?.status_details).toMatchObject({
+      worker_runtime_engine: true,
+      skills_tools_source: true,
+      buildwiki_farmer_support_layer: true,
+      future_mini_agent_creation_layer: true,
       opencloud_deletion_target: false,
+      opencloud_disable_target: false,
+      opencloud_destroy_allowed: false,
+      retained_in_gateway: true,
+      requires_bridge_session: true,
       decommission_safe: false,
       dependency_for: 'buildwiki_farmer',
+      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenCloud worker/runtime capability catalog, Run Now adapter metadata',
+      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, opencloud.worker_execution, mini_agent_creation_activation',
+      blocked_reason: null,
     })
-    expect(openCloud?.blockers).toContain('opencloud_destroy_not_safe_keep_dependency')
+    expect(openCloud?.blockers).toEqual([])
     const openRouter = registry.capabilities.find((capability) => capability.id === 'model_openrouter')
     expect(openRouter?.status_details).toMatchObject({
       configured: true,
@@ -556,8 +586,15 @@ describe('Gateway registry API model', () => {
     expect(status.brain_systems.find((item) => item.id === 'mempalace')?.write_enabled).toBe(true)
     expect(status.buildwiki_opencloud).toMatchObject({
       visible: true,
+      opencloud_status: 'read_only',
+      worker_runtime_engine: true,
+      skills_tools_source: true,
+      buildwiki_farmer_support_layer: true,
+      future_mini_agent_creation_layer: true,
       timer_active: true,
+      timer_unit: 'opencloud-docs-farmer.timer',
       service_active: false,
+      service_unit: 'opencloud-docs-farmer.service',
       last_run_status: 'completed',
       run_now_action: 'buildwiki.run_now',
       run_now_target_service: 'opencloud-docs-farmer.service',
@@ -567,11 +604,23 @@ describe('Gateway registry API model', () => {
       farmer_execution_enabled: false,
       fork1_state: 'available',
       fork2_state: 'blocked',
+      fork2_smb_mounted: false,
+      fork2_blocker: 'smb_mount_not_verified',
       smb_mounted: false,
       smb_blocker: 'smb_mount_not_verified',
       opencloud_dependency_visible: true,
       opencloud_deletion_target: false,
+      opencloud_disable_target: false,
+      opencloud_destroy_allowed: false,
     })
+    expect(status.buildwiki_opencloud.opencloud_roles).toEqual(expect.arrayContaining([
+      'worker/runtime engine',
+      'skills/tools source',
+      'Build-Wiki/Farmer support layer',
+      'future mini-agent creation layer',
+    ]))
+    expect(status.buildwiki_opencloud.skills_tools_available).toContain('Run Now adapter metadata')
+    expect(status.buildwiki_opencloud.bridge_session_required_actions).toContain('opencloud.worker_execution')
     expect(status.execution_enabled).toBe(false)
     expect(nodes.mode).toBe('gateway_nodes_read_only')
     expect(nodes.execution_enabled).toBe(false)

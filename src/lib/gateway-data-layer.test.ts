@@ -45,7 +45,7 @@ const registry: GatewayRegistry = {
       owner: 'ecosystem',
       visibility: 'owner_visible',
       health: createGatewayHealth('read_only', 'OpenCloud is retained as a worker/runtime engine.'),
-      capabilities: ['buildwiki_status', 'farmer_status'],
+      capabilities: ['buildwiki_status', 'farmer_status', 'skills_tools_source', 'mini_agent_creation_layer'],
       blockers: [],
     },
     {
@@ -180,6 +180,8 @@ describe('Gateway Data Layer', () => {
       execution_enabled: false,
     })
     expect(opencloud?.semantic_context).toContain('not a deletion target')
+    expect(opencloud?.semantic_context).toContain('skills')
+    expect(opencloud?.semantic_context).toContain('future mini-agent creation')
   })
 
   it('allows read-only query only when the node is readable', () => {

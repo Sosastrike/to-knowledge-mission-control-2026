@@ -17,6 +17,7 @@ export type GatewayProtectedScope =
   | 'agentmail.send'
   | 'brain.write'
   | 'protected_action.execute'
+  | 'skill.execute'
 
 export type GatewayPolicyEvaluationInput = {
   classification: GatewayRouteClassification
@@ -104,6 +105,9 @@ export function evaluateGatewayPolicy(input: GatewayPolicyEvaluationInput): Gate
   }
   if (!blockedReason && externalWriteRequested && !activeBridgeSession) {
     blockedReason = 'active_bridge_session_required_for_external_write'
+  }
+  if (!blockedReason && writeRequested && bridgeSessionRequired && !activeBridgeSession) {
+    blockedReason = 'active_bridge_session_required_for_write'
   }
   if (!blockedReason && protectedAction && !activeBridgeSession) {
     blockedReason = 'active_bridge_session_required_for_protected_action'
@@ -204,6 +208,9 @@ function getRequiredScope(
   if (/google[_\s-]?drive|drive/.test(haystack) && /upload|attach|write|send/.test(haystack)) return 'google_drive.upload'
   if (/agentmail|email|send mail|reply/.test(haystack) && /send|reply|write/.test(haystack)) return 'agentmail.send'
   if (classification === 'memory' && /write|save|remember|append|update|create|tag|link/.test(haystack)) return 'brain.write'
+  if (classification === 'skill' && /\b(?:execute|run|activate|install|promote|write)\b.*\bskill\b|\bskill\b.*\b(?:execute|run|activate|install|promote|write)\b/.test(haystack)) {
+    return 'skill.execute'
+  }
   if (classification === 'protected_action') return 'protected_action.execute'
   return null
 }

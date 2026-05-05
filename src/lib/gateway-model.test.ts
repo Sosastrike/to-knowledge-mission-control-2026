@@ -36,6 +36,8 @@ describe('canonical Gateway graph model', () => {
       required_credentials: ['openrouter_api_key'],
       required_tools: ['bridge_model_registry'],
       blockers: ['credential_source_not_confirmed'],
+      available_to: ['agent_zero', 'hermes'],
+      execution_requirements: ['bridge_session_required_for_execution'],
       source_node: 'bridge_mcp',
     })
 
@@ -50,6 +52,8 @@ describe('canonical Gateway graph model', () => {
       execution_enabled: false,
       requires_session: false,
       source_node: 'bridge_mcp',
+      available_to: ['agent_zero', 'hermes'],
+      execution_requirements: ['bridge_session_required_for_execution'],
       blockers: ['credential_source_not_confirmed'],
     })
   })

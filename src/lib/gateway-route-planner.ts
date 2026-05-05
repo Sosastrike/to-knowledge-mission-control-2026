@@ -186,7 +186,7 @@ function selectRouteTarget(
 ): RouteTarget {
   switch (classification) {
     case 'skill':
-      return routeHermesViaAgentZero(registry, prompt)
+      return routeSkill(registry, prompt)
     case 'model':
       return routeModel(registry, prompt)
     case 'tool':
@@ -225,6 +225,13 @@ function routeAgentZero(classification: GatewayRouteClassification, rationale: s
   }
 }
 
+function routeSkill(registry: GatewayRegistry, prompt: string): RouteTarget {
+  if (isSkillExecutionIntent(prompt)) {
+    return routeSkillExecution(registry, prompt)
+  }
+  return routeHermesViaAgentZero(registry, prompt)
+}
+
 function routeHermesViaAgentZero(registry: GatewayRegistry, prompt: string): RouteTarget {
   const hermes = findNodeStatus(registry, 'hermes')
   const capability = findCapability(registry, 'hermes.lieutenant')
@@ -242,6 +249,26 @@ function routeHermesViaAgentZero(registry: GatewayRegistry, prompt: string): Rou
       ? 'Skill and workflow design routes to Hermes through Agent Zero.'
       : 'Skill design routes to Hermes through Agent Zero.',
   }
+}
+
+function routeSkillExecution(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const wanted = firstSkillCapability(registry, prompt)
+  const capability = wanted || registry.capabilities.find((item) => item.kind === 'skill') || null
+  return routeCapability({
+    primaryTarget: 'agent_zero',
+    fallbackDispatch: 'openclaw_plus',
+    via: ['owner', 'gateway', 'agent_zero', 'openclaw_plus'],
+    capability,
+    edgeKind: 'tool-call',
+    requiresBridgeSession: true,
+    executionMode: 'bridge_session',
+    missingBlocker: 'skill_execution_capability_not_registered',
+    rationale: 'Skill execution routes to Agent Zero and the OpenClaw+ runtime, and requires an owner-approved Bridge Session.',
+  })
+}
+
+function isSkillExecutionIntent(prompt: string): boolean {
+  return /\b(?:execute|run|activate|install|promote|write)\b.*\bskill\b|\bskill\b.*\b(?:execute|run|activate|install|promote|write)\b/.test(normalizeText(prompt))
 }
 
 function routeModel(registry: GatewayRegistry, prompt: string): RouteTarget {
@@ -458,6 +485,14 @@ function findCapability(registry: GatewayRegistry, id: string): GatewayCapabilit
 function firstProvider(prompt: string, pairs: Array<[string, string]>): string | null {
   const text = normalizeText(prompt)
   return pairs.find(([needle]) => text.includes(needle))?.[1] || null
+}
+
+function firstSkillCapability(registry: GatewayRegistry, prompt: string): GatewayCapability | null {
+  const text = normalizeText(prompt)
+  return registry.capabilities.find((capability) => {
+    if (capability.kind !== 'skill') return false
+    return text.includes(capability.id.replace(/^skill_/, '').replace(/_/g, ' ')) || text.includes(capability.label.toLowerCase())
+  }) || null
 }
 
 function matches(text: string, patterns: RegExp[]): boolean {

@@ -65,6 +65,22 @@ const context = {
   skills: {
     registry: [
       {
+        id: 'openclaw_plus:email-triage',
+        name: 'Email triage',
+        source: 'openclaw_plus',
+        source_label: 'OpenClaw+ shared skills',
+        status: 'visible',
+        required_tools: ['agentmail'],
+        required_credentials: ['AGENTMAIL_API_KEY'],
+        available_to: ['agent_zero'],
+        available_to_agents: ['hermes'],
+        execution_requirements: ['bridge_session_required_for_execution'],
+        blocked_reasons: ['credential:AGENTMAIL_API_KEY:missing'],
+        blocked_dependencies: ['tool:agentmail:execution_disabled_in_read_only_context'],
+        missing_dependencies: ['credential:AGENTMAIL_API_KEY'],
+        blocked_reason: 'credential:AGENTMAIL_API_KEY:missing',
+      },
+      {
         id: 'reporting',
         name: 'Reporting',
         source: 'openclaw_plus',
@@ -159,6 +175,18 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('brain_buildwiki')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
+    const skill = registry.capabilities.find((capability) => capability.id === 'skill_openclaw_plus_email_triage')
+    expect(skill).toMatchObject({
+      kind: 'skill',
+      source_node: 'openclaw_plus',
+      requires_session: true,
+      execution_enabled: false,
+      available_to: ['agent_zero', 'hermes'],
+      required_tools: ['agentmail'],
+      required_credentials: ['AGENTMAIL_API_KEY'],
+    })
+    expect(skill?.execution_requirements).toContain('bridge_session_required_for_execution')
+    expect(skill?.blockers).toEqual(expect.arrayContaining(['credential:AGENTMAIL_API_KEY:missing', 'tool:agentmail:execution_disabled_in_read_only_context']))
     expect(JSON.stringify(registry)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony/)
   })
 

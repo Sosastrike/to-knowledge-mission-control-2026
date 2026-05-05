@@ -107,6 +107,8 @@ export type GatewayCapability = {
   owner: string
   visibility: GatewayVisibility
   read_enabled: boolean
+  available_to: string[]
+  execution_requirements: string[]
   write_enabled: boolean
   execution_enabled: boolean
   requires_session: boolean
@@ -163,6 +165,8 @@ export type GatewayCapabilityInput = Partial<
     | 'visibility'
     | 'read_enabled'
     | 'write_enabled'
+    | 'available_to'
+    | 'execution_requirements'
     | 'execution_enabled'
     | 'requires_session'
     | 'required_tools'
@@ -246,6 +250,8 @@ export function createGatewayCapability(input: GatewayCapabilityInput): GatewayC
     owner: input.owner || 'ecosystem',
     visibility: input.visibility || 'owner_visible',
     read_enabled: input.read_enabled ?? true,
+    available_to: input.available_to ? [...input.available_to] : [],
+    execution_requirements: input.execution_requirements ? [...input.execution_requirements] : [],
     write_enabled: input.write_enabled ?? false,
     execution_enabled: input.execution_enabled ?? false,
     requires_session: input.requires_session ?? false,

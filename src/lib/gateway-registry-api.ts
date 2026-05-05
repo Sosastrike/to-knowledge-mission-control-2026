@@ -112,7 +112,7 @@ type UnknownRecord = Record<string, unknown>
 const DEFAULT_GENERATED_AT = '1970-01-01T00:00:00.000Z'
 
 const SECRETISH_PATTERN =
-  /(sk-[A-Za-z0-9]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi
+  /(sk-[A-Za-z0-9]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*(?:=\s*[^,\s}]+|:\s+[^,\s}]+))/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/(?:usr|tmp|var)|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
 
 export async function loadGatewayRegistry(): Promise<GatewayRegistry> {
@@ -583,9 +583,20 @@ function skillCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
     const id = gatewayId(String(skill.id || skill.name || 'skill'))
     const blockers = blockersList(
       ...asStringArray(skill.blocked_reasons),
+      ...asStringArray(skill.blocked_dependencies),
       ...asStringArray(skill.missing_dependencies),
       stringOrNull(skill.blocked_reason),
     )
+    const availableTo = uniqueStringArray([
+      ...asStringArray(skill.available_to),
+      ...asStringArray(skill.available_to_agents),
+      'agent_zero',
+      'hermes',
+    ])
+    const executionRequirements = uniqueStringArray([
+      ...asStringArray(skill.execution_requirements),
+      'bridge_session_required_for_execution',
+    ])
     return createGatewayCapability({
       id: `skill_${id}`,
       label: cleanLabel(skill.name, id),
@@ -594,6 +605,8 @@ function skillCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
       source_node: 'openclaw_plus',
       requires_session: true,
       read_enabled: true,
+      available_to: availableTo,
+      execution_requirements: executionRequirements,
       write_enabled: false,
       execution_enabled: false,
       required_tools: asStringArray(skill.required_tools),
@@ -860,6 +873,10 @@ function asRecords(value: unknown): UnknownRecord[] {
 
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => sanitizeText(String(item))).filter(Boolean) : []
+}
+
+function uniqueStringArray(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => sanitizeText(value)).filter(Boolean))).sort((a, b) => a.localeCompare(b))
 }
 
 function blockersList(...values: Array<string | null | undefined>): string[] {

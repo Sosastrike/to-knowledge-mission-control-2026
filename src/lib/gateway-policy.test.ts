@@ -42,6 +42,21 @@ describe('Gateway policy enforcement', () => {
     expect(gatewayPolicyBadges(decision)).toEqual(expect.arrayContaining(['session_required', 'blocked']))
   })
 
+  it('requires an active Bridge Session for side-effectful skill execution', () => {
+    const decision = evaluateGatewayPolicy({
+      classification: 'skill',
+      ownerRequest: 'Execute the Reporting skill',
+      routeTarget: 'openclaw_plus',
+      capabilityId: 'skill_reporting',
+      requiresBridgeSession: true,
+      bridgeSessionActive: false,
+    })
+
+    expect(decision.allowed).toBe(false)
+    expect(decision.required_scope).toBe('skill.execute')
+    expect(decision.blocked_reason).toBe('active_bridge_session_required_for_write')
+  })
+
   it('requires scoped policy for Build-Wiki, Zapier writes, HeyGen, Drive, and OneDrive actions', () => {
     const buildwiki = evaluateGatewayPolicy({
       classification: 'sync',

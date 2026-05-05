@@ -42,7 +42,20 @@ const context = {
   },
   skills: {
     registry: [
-      { id: 'reporting', name: 'Reporting', status: 'connected', required_tools: ['report.create'], required_credentials: [], blocked_reasons: [], missing_dependencies: [], blocked_reason: null },
+      {
+        id: 'reporting',
+        name: 'Reporting',
+        status: 'connected',
+        required_tools: ['report.create'],
+        required_credentials: [],
+        blocked_reasons: [],
+        blocked_dependencies: [],
+        missing_dependencies: [],
+        execution_requirements: ['bridge_session_required_for_execution'],
+        available_to: ['agent_zero', 'hermes'],
+        available_to_agents: ['agent_zero', 'hermes'],
+        blocked_reason: null,
+      },
     ],
   },
   integrations: {
@@ -97,6 +110,18 @@ describe('Gateway route planner', () => {
     expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'hermes'])
     expect(plan.flow.route.edge_kind).toBe('delegation')
     expect(plan.blocked).toBe(false)
+  })
+
+  it('routes skill execution to Agent Zero and OpenClaw+ with Bridge Session gating', () => {
+    const plan = planGatewayRoute(registry, { ownerRequest: 'Execute the Reporting skill' })
+
+    expect(plan.classification).toBe('skill')
+    expect(plan.primary_target).toBe('agent_zero')
+    expect(plan.dispatch_target).toBe('openclaw_plus')
+    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'openclaw_plus'])
+    expect(plan.requires_bridge_session).toBe(true)
+    expect(plan.blocked).toBe(true)
+    expect(plan.blocker).toBe('active_bridge_session_required_for_write')
   })
 
   it('routes model-heavy requests to model providers through Gateway policy', () => {

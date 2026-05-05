@@ -1238,6 +1238,85 @@ function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
   )
 }
 
+const GATEWAY_MAP_CLUSTERS = [
+  {
+    id: 'brain',
+    label: 'Brain cluster',
+    route: 'memory · sync',
+    items: ['Obsidian', 'MemPalace', 'Graphify', 'Brain Sync', 'Build-Wiki/Farmer'],
+  },
+  {
+    id: 'models',
+    label: 'Model cluster',
+    route: 'model-call',
+    items: ['OpenRouter', 'OpenAI', 'Claude/Anthropic', 'Codex/ChatGPT', 'Ollama', 'NVIDIA', 'Gemini', 'Groq'],
+  },
+  {
+    id: 'mcp',
+    label: 'MCP / tools cluster',
+    route: 'mcp-call · tool-call',
+    items: ['MCP servers', 'Zapier', 'Firecrawl', 'AgentMail', 'Tools'],
+  },
+  {
+    id: 'api',
+    label: 'API cluster',
+    route: 'api route',
+    items: ['Google Drive', 'OneDrive', 'AgentMail API', 'External APIs', 'Webhooks'],
+  },
+  {
+    id: 'events',
+    label: 'Events cluster',
+    route: 'event route',
+    items: ['Schedules', 'Incoming email', 'Telegram', 'Webhooks', 'future n8n events'],
+  },
+]
+
+function GatewayMapSection({ hermesLabel }: { hermesLabel: string }) {
+  return (
+    <section className={styles.gatewayMapSection}>
+      <header className={styles.externalSectionHeader}>
+        <h2 className={styles.tierTitle}>Gateway Map</h2>
+        <span className={styles.tierSub}>Owner command routes through Gateway to agents, models, APIs, MCPs, Brain, tools, and events</span>
+      </header>
+      <div className={styles.gatewayMap}>
+        <div className={styles.gatewayOwnerNode}>
+          <strong>Owner</strong>
+          <span>Luis / Antonio / Creator</span>
+        </div>
+        <div className={styles.gatewayHubNode}>
+          <strong>Gateway</strong>
+          <span>control · data · policy · observability · registry</span>
+        </div>
+        <div className={styles.gatewayCommandNodes}>
+          <article className={styles.gatewayCommandNode}>
+            <span>Commander</span>
+            <strong>Agent Zero</strong>
+            <small>primary command node</small>
+          </article>
+          <article className={styles.gatewayCommandNode}>
+            <span>Lieutenant</span>
+            <strong>Hermes</strong>
+            <small>{hermesLabel}</small>
+          </article>
+        </div>
+        <div className={styles.gatewayClusterGrid}>
+          {GATEWAY_MAP_CLUSTERS.map((cluster) => (
+            <article key={cluster.id} className={styles.gatewayClusterCard}>
+              <header>
+                <strong>{cluster.label}</strong>
+                <span>{cluster.route}</span>
+              </header>
+              <div>
+                {cluster.items.map((item) => <span key={item}>{item}</span>)}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ConnectorCard({ connector }: { connector: ConnectorReadiness }) {
   const credentialStates = Object.entries(connector.credentials_present_by_name || {})
     .map(([name, present]) => `${name}: ${present ? 'present' : 'missing'}`)
@@ -3664,6 +3743,13 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           <strong>Could not load Gateway nodes:</strong> {errorMsg}. Static Gateway nodes below remain accurate.
         </div>
       )}
+
+      <GatewayMapSection hermesLabel={getHermesHierarchyStatus({
+        installed: hermes.installed || hermesSandbox?.install?.installed === true,
+        reachable: hermesSandbox?.reachable === true || hermesSandbox?.runtime_status?.gateway_pid_running === true,
+        authConfigured: hermesSandbox?.auth_configured === true,
+        blocker: hermesSandbox?.blocker || hermesSandbox?.provider_registry?.error || null,
+      }).label} />
 
       <ProviderRegistrySection
         providers={providers}

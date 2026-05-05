@@ -198,6 +198,198 @@
   gap: 12px;
 }
 
+/* ── Gateway Map v1 ───────────────────────────────────────────── */
+
+.gatewayMapSection {
+  max-width: 1280px;
+  margin: 24px auto 0 auto;
+  background: linear-gradient(160deg, #0b1020 0%, #0a0d1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.gatewayMap {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(190px, 260px) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 18px 22px;
+  align-items: center;
+  min-height: 390px;
+  overflow: hidden;
+}
+
+.gatewayMap::before,
+.gatewayMap::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.gatewayMap::before {
+  left: calc(230px + 22px + 130px);
+  top: 94px;
+  bottom: 84px;
+  border-left: 1px solid rgba(107, 179, 255, 0.22);
+}
+
+.gatewayMap::after {
+  left: calc(230px + 22px + 130px);
+  right: 20px;
+  top: 196px;
+  border-top: 1px solid rgba(107, 179, 255, 0.18);
+}
+
+.gatewayOwnerNode,
+.gatewayHubNode,
+.gatewayCommandNode,
+.gatewayClusterCard {
+  position: relative;
+  z-index: 1;
+  background: var(--auth-bg-2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.gatewayOwnerNode {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  width: min(100%, 210px);
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.gatewayHubNode {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: min(100%, 240px);
+  min-height: 156px;
+  padding: 18px;
+  text-align: center;
+  border-color: rgba(107, 179, 255, 0.34);
+  background: linear-gradient(160deg, rgba(107, 179, 255, 0.14), rgba(255, 255, 255, 0.035));
+}
+
+.gatewayOwnerNode strong,
+.gatewayHubNode strong,
+.gatewayCommandNode strong,
+.gatewayClusterCard strong {
+  color: var(--auth-fg-0);
+  display: block;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.gatewayHubNode strong {
+  font-size: 22px;
+}
+
+.gatewayOwnerNode span,
+.gatewayHubNode span,
+.gatewayCommandNode small,
+.gatewayClusterCard header span {
+  color: var(--auth-fg-2);
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: 5px;
+}
+
+.gatewayCommandNodes {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: grid;
+  gap: 12px;
+}
+
+.gatewayCommandNode {
+  padding: 13px 14px;
+}
+
+.gatewayCommandNode span {
+  color: var(--auth-accent);
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.gatewayClusterGrid {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gatewayClusterCard {
+  padding: 12px;
+}
+
+.gatewayClusterCard header {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.gatewayClusterCard header span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  margin-top: 0;
+  text-align: right;
+}
+
+.gatewayClusterCard div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.gatewayClusterCard div span {
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: var(--auth-fg-2);
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  padding: 4px 7px;
+}
+
+@media (max-width: 900px) {
+  .gatewayMap {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .gatewayMap::before,
+  .gatewayMap::after {
+    display: none;
+  }
+
+  .gatewayOwnerNode,
+  .gatewayHubNode,
+  .gatewayCommandNodes,
+  .gatewayClusterGrid {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+  }
+
+  .gatewayClusterGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── agent card ──────────────────────────────────────────────── */
 
 .agentCard {

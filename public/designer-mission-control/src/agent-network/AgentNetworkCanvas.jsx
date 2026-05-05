@@ -1,17 +1,10 @@
 // ============================================================
-// AgentNetworkCanvas — tier-laned canvas wired directly to the
-// AgentRegistry. Every node = one record. Every edge = a real
-// `engines` link or a recent `harness` event.
+// Gateway Map — central routing hub wired to AgentRegistry data.
 //
-// Bindings:
-//   data-bind="agent.id"        → registry.agents[id]
-//   data-bind="agent.tier"      → controls vertical lane (data-tier)
-//   data-bind="agent.status"    → status dot color
-//   data-bind="agent.health"    → ring opacity
-//   data-bind="agent.engines"   → SVG edges to engine nodes
-//
-// Right-click → context menu (promote/demote/retire/connect/assign)
-// Drag between lanes → setTier(id, lane)
+// The Gateway node sits between Owner and downstream systems.
+// Agent Zero is the primary command node; Hermes is the secondary
+// command node. Brain, model, MCP/tool, API, and event clusters are
+// route groups, not execution claims.
 // ============================================================
 
 const TIER_LANES = [
@@ -22,8 +15,51 @@ const TIER_LANES = [
   { id:'tool',       label:'Runtime · Tools · Models · Memory', y: 620 },
 ];
 
+const GATEWAY_CLUSTERS = [
+  {
+    id: 'brain',
+    label: 'Brain',
+    route: 'memory · sync',
+    x: 0.22,
+    y: 0.68,
+    items: ['Obsidian', 'MemPalace', 'Graphify', 'Brain Sync', 'Build-Wiki / Farmer'],
+  },
+  {
+    id: 'models',
+    label: 'Models',
+    route: 'model-call',
+    x: 0.50,
+    y: 0.78,
+    items: ['OpenRouter', 'OpenAI', 'Claude/Anthropic', 'Codex/ChatGPT', 'Ollama', 'NVIDIA', 'Gemini', 'Groq'],
+  },
+  {
+    id: 'mcp',
+    label: 'MCP / Tools',
+    route: 'mcp-call · tool-call',
+    x: 0.78,
+    y: 0.68,
+    items: ['MCP servers', 'Zapier', 'Firecrawl', 'AgentMail', 'Tools'],
+  },
+  {
+    id: 'apis',
+    label: 'APIs',
+    route: 'api route',
+    x: 0.82,
+    y: 0.35,
+    items: ['Google Drive', 'OneDrive', 'AgentMail API', 'External APIs', 'Webhooks'],
+  },
+  {
+    id: 'events',
+    label: 'Events',
+    route: 'event route',
+    x: 0.18,
+    y: 0.35,
+    items: ['Schedules', 'Incoming email', 'Telegram', 'Webhooks', 'future n8n events'],
+  },
+];
+
 const ICONS_FOR_AGENT = {
-  Crown:       (p) => <I.Shield {...p}/>,         // crown analogue
+  Crown:       (p) => <I.Shield {...p}/>,
   ShieldCheck: (p) => <I.Shield {...p}/>,
   Compass:     (p) => <I.Mission {...p}/>,
   Sparkles:    (p) => <I.Sparkle {...p}/>,
@@ -45,11 +81,9 @@ const ICONS_FOR_AGENT = {
 };
 const iconFor = (name) => ICONS_FOR_AGENT[name] || I.User;
 
-function AgentNetworkCanvas({ snap, selectedId, onSelect, onContextMenu, onDropToTier }) {
+function AgentNetworkCanvas({ snap, selectedId, onSelect, onContextMenu }) {
   const wrapRef = React.useRef(null);
   const [size, setSize] = React.useState({ w: 1200, h: 720 });
-  const [drag, setDrag] = React.useState(null); // { id, x, y }
-  const [activePulse, setActivePulse] = React.useState({}); // id → tick
 
   React.useEffect(() => {
     if (!wrapRef.current) return;
@@ -61,224 +95,168 @@ function AgentNetworkCanvas({ snap, selectedId, onSelect, onContextMenu, onDropT
     return () => ro.disconnect();
   }, []);
 
-  // Light up edges when a recent harness event names them
-  React.useEffect(() => {
-    const recent = (snap.harness || []).slice(0, 4);
-    const m = {};
-    recent.forEach(e => {
-      const [from, to] = (e.route || '').split(' → ');
-      if (from) m[from.trim()] = (m[from.trim()] || 0) + 1;
-      if (to)   m[to.trim()]   = (m[to.trim()]   || 0) + 1;
-    });
-    setActivePulse(m);
-  }, [snap.harness, snap.activity_pulse]);
+  const agentZero = React.useMemo(() => getAgentLike(snap, 'agent_zero'), [snap]);
+  const hermes = React.useMemo(() => getAgentLike(snap, 'hermes'), [snap]);
 
-  // Lay out per-lane: re-position x evenly across visible lane members,
-  // commits to registry-ish coords for SVG edges.
-  const positioned = React.useMemo(() => {
-    const groups = {};
-    snap.agents.forEach(a => {
-      const t = a.tier;
-      groups[t] = groups[t] || [];
-      groups[t].push(a);
-    });
-    const out = [];
-    Object.keys(groups).forEach(tier => {
-      const lane = TIER_LANES.find(l => l.id === tier);
-      const members = groups[tier];
-      members.forEach((a, i) => {
-        const x = ((i + 1) / (members.length + 1)) * size.w;
-        const y = (lane?.y ?? 500);
-        out.push({ ...a, _x: x, _y: y });
-      });
-    });
-    return out;
-  }, [snap.agents, size.w]);
+  const points = React.useMemo(() => {
+    const h = Math.max(size.h, 720);
+    const w = Math.max(size.w, 920);
+    return {
+      owner: { id:'owner', x: w * 0.5, y: 70 },
+      gateway: { id:'gateway', x: w * 0.5, y: 300 },
+      agentZero: { id:'agent_zero', x: w * 0.28, y: 210 },
+      hermes: { id:'hermes', x: w * 0.28, y: 390 },
+      clusters: Object.fromEntries(GATEWAY_CLUSTERS.map((cluster) => [
+        cluster.id,
+        { id: cluster.id, x: w * cluster.x, y: h * cluster.y },
+      ])),
+    };
+  }, [size.w, size.h]);
 
-  const byId = React.useMemo(() => {
-    const m = {}; positioned.forEach(p => m[p.id] = p); return m;
-  }, [positioned]);
-
-  // Build edges: agent → engine for each engines[] entry
-  const edges = React.useMemo(() => {
-    const out = [];
-    positioned.forEach(a => {
-      if (a.kind !== 'agent') return;
-      (a.engines || []).forEach(eid => {
-        const e = byId[eid];
-        if (!e) return;
-        const hot = (activePulse[a.id] && activePulse[eid]) ? true : false;
-        const degraded = e.status === 'degraded';
-        out.push({
-          from: a.id, to: eid,
-          x1: a._x, y1: a._y, x2: e._x, y2: e._y,
-          active: hot, degraded,
-        });
-      });
-    });
-    // supervises edges (commander → reports)
-    positioned.forEach(a => {
-      (a.supervises || []).forEach(sid => {
-        const s = byId[sid];
-        if (!s) return;
-        out.push({
-          from: a.id, to: sid, kind:'supervise',
-          x1: a._x, y1: a._y, x2: s._x, y2: s._y,
-        });
-      });
-    });
-    return out;
-  }, [positioned, byId, activePulse]);
-
-  // Recent handoff (animated packet)
-  const lastHandoff = React.useMemo(() => {
-    const h = (snap.harness || []).find(e => e.kind === 'handoff' || e.kind === 'assign_ticket');
-    if (!h) return null;
-    const [fromName, toName] = (h.route || '').split(' → ');
-    const from = byId[(fromName||'').trim()];
-    const to   = byId[(toName||'').trim()];
-    if (!from || !to) return null;
-    return { from, to, ticket: h.ticket };
-  }, [snap.harness, byId]);
-
-  // ---- drag handling: drop into a tier lane → setTier
-  const onMouseDown = (e, agent) => {
-    if (agent.locked) return;
-    const r = wrapRef.current.getBoundingClientRect();
-    setDrag({ id: agent.id, x: e.clientX - r.left, y: e.clientY - r.top, startTier: agent.tier });
-  };
-  const onMouseMove = (e) => {
-    if (!drag) return;
-    const r = wrapRef.current.getBoundingClientRect();
-    setDrag({ ...drag, x: e.clientX - r.left, y: e.clientY - r.top });
-  };
-  const onMouseUp = (e) => {
-    if (!drag) return;
-    const r = wrapRef.current.getBoundingClientRect();
-    const y = e.clientY - r.top;
-    // determine which lane we landed in
-    let landed = drag.startTier;
-    for (let i = 0; i < TIER_LANES.length; i++) {
-      const l = TIER_LANES[i];
-      const next = TIER_LANES[i+1];
-      const top = i === 0 ? 0 : (l.y + (TIER_LANES[i-1].y)) / 2;
-      const bot = next ? (l.y + next.y) / 2 : size.h;
-      if (y >= top && y < bot) { landed = l.id; break; }
-    }
-    if (landed !== drag.startTier) {
-      onDropToTier?.(drag.id, landed);
-    }
-    setDrag(null);
-  };
+  const routes = React.useMemo(() => [
+    { from: points.owner, to: points.gateway, kind: 'command' },
+    { from: points.gateway, to: points.agentZero, kind: 'command' },
+    { from: points.gateway, to: points.hermes, kind: 'delegation' },
+    { from: points.agentZero, to: points.hermes, kind: 'delegation' },
+    ...GATEWAY_CLUSTERS.map((cluster) => ({
+      from: points.gateway,
+      to: points.clusters[cluster.id],
+      kind: cluster.route,
+    })),
+  ], [points]);
 
   return (
-    <div className="an-canvas-wrap" ref={wrapRef}
-         onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={()=>setDrag(null)}>
-      {/* tier lanes */}
-      {TIER_LANES.map(l => (
-        <div key={l.id}
-             className={`an-lane ${l.id}`}
-             style={{ top: l.y - 70, height: 140 }}
-             data-tier={l.id}>
-          <span className="an-lane-label">{l.label}</span>
-        </div>
-      ))}
-
-      {/* edges + animated packet */}
-      <svg className="an-edges" viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none">
+    <div className="an-canvas-wrap gateway-map-wrap" ref={wrapRef}>
+      <svg className="an-edges gateway-routes" viewBox={`0 0 ${Math.max(size.w, 920)} ${Math.max(size.h, 720)}`} preserveAspectRatio="none">
         <defs>
-          <marker id="an-arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                  markerWidth="5" markerHeight="5" orient="auto">
-            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" opacity="0.45"/>
+          <marker id="gw-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" opacity="0.6"/>
           </marker>
         </defs>
-        {edges.map((e, i) => {
-          const cls = ['an-edge'];
-          if (e.active) cls.push('active');
-          if (e.degraded) cls.push('degraded');
-          if (e.kind === 'supervise') cls.push('handoff');
-          // gentle bezier
-          const mx = (e.x1 + e.x2) / 2;
-          const my = (e.y1 + e.y2) / 2 + 20;
-          const d = `M ${e.x1} ${e.y1} Q ${mx} ${my} ${e.x2} ${e.y2}`;
-          return <path key={i} d={d} className={cls.join(' ')}
-                       data-bind={`edge.${e.from}.${e.to}`}/>;
-        })}
-        {lastHandoff && (
-          <Packet from={lastHandoff.from} to={lastHandoff.to}/>
-        )}
+        {routes.map((route, index) => (
+          <path
+            key={`${route.from.id}-${route.to.id}-${index}`}
+            d={routePath(route.from, route.to)}
+            className={`gateway-route gateway-route-${route.kind.split(/[ ·-]/)[0]}`}
+            data-route={`${route.from.id}.${route.to.id}`}
+          />
+        ))}
       </svg>
 
-      {/* nodes */}
-      {positioned.map(a => {
-        const Icon = iconFor(a.icon);
-        const isSel = selectedId === a.id;
-        const dragging = drag?.id === a.id;
-        const x = dragging ? drag.x : a._x;
-        const y = dragging ? drag.y : a._y;
-        return (
-          <div
-            key={a.id}
-            className={`an-node ${isSel ? 'selected' : ''} ${a.risk_level==='high'?'an-risk-high':''}`}
-            data-bind={`agent.${a.id}`}
-            data-tier={a.tier}
-            data-status={a.status}
-            data-id={a.id}
-            data-planned={a.planned ? 'true':'false'}
-            style={{ left: x, top: y, transition: dragging ? 'none' : undefined }}
-            onClick={() => onSelect(a.id)}
-            onMouseDown={(e) => onMouseDown(e, a)}
-            onContextMenu={(e) => { e.preventDefault(); onContextMenu(e, a); }}
-            title={`${a.display_name} · ${a.tier} · ${a.status}`}
-          >
-            <div className="an-node-disc">
-              {a.tier === 'commander' && <span className="an-crown" title="Commander">★</span>}
-              {(a.protected || a.risk_level === 'high') && <span className="an-lock" title="Protected — owner approval required">🔒</span>}
-              <Icon size={a.tier === 'commander' ? 28 : a.tier === 'lieutenant' ? 22 : 18}/>
-              <span className="an-status-dot" data-status={a.status}
-                    title={`status: ${a.status} · health: ${(a.health_score*100|0)}%`}/>
-            </div>
-            <span className="an-node-label" data-bind={`agent.${a.id}.display_name`}>
-              {a.display_name}
-            </span>
-            <span className="an-node-meta" data-bind={`agent.${a.id}.role`}>
-              {a.kind === 'agent' ? a.role : (a.transport || '').toUpperCase()}
-            </span>
-          </div>
-        );
-      })}
+      <GatewayNode
+        id="owner"
+        label="Owner"
+        meta="Luis / Antonio / Creator"
+        kind="owner"
+        point={points.owner}
+      />
 
-      {/* drag hint */}
-      {drag && (
-        <div style={{
-          position:'absolute', bottom: 12, left: 12, padding:'6px 10px',
-          fontSize:11, color:'var(--fg-2)',
-          background:'rgba(0,0,0,0.6)', border:'1px solid var(--line-2)', borderRadius:6,
-          pointerEvents:'none',
-        }}>
-          Drop into lane to <b>change tier</b> — promote/demote
-        </div>
-      )}
+      <GatewayNode
+        id="gateway"
+        label="Gateway"
+        meta="control · policy · registry · observability"
+        kind="gateway"
+        point={points.gateway}
+      />
+
+      <GatewayNode
+        id="agent_zero"
+        label="Agent Zero"
+        meta="Commander"
+        kind="commander"
+        point={points.agentZero}
+        selected={selectedId === 'agent_zero'}
+        agent={agentZero}
+        onSelect={onSelect}
+        onContextMenu={onContextMenu}
+      />
+
+      <GatewayNode
+        id="hermes"
+        label="Hermes"
+        meta="Lieutenant · skill/workflow"
+        kind="lieutenant"
+        point={points.hermes}
+        selected={selectedId === 'hermes'}
+        agent={hermes}
+        onSelect={onSelect}
+        onContextMenu={onContextMenu}
+      />
+
+      {GATEWAY_CLUSTERS.map((cluster) => (
+        <GatewayCluster
+          key={cluster.id}
+          cluster={cluster}
+          point={points.clusters[cluster.id]}
+        />
+      ))}
     </div>
   );
 }
 
-// Animated packet — a circle that travels from→to along a bezier.
-// Pure CSS animation, but the from/to references real registry IDs.
-function Packet({ from, to }) {
-  const mx = (from._x + to._x) / 2;
-  const my = (from._y + to._y) / 2 + 20;
+function GatewayNode({ id, label, meta, kind, point, selected, agent, onSelect, onContextMenu }) {
+  const Icon = kind === 'gateway'
+    ? I.Plug
+    : kind === 'owner'
+      ? I.User
+      : iconFor(agent?.icon);
+  const status = agent?.status || (kind === 'gateway' || kind === 'owner' ? 'online' : 'idle');
   return (
-    <g>
-      <path id="pkt-path" d={`M ${from._x} ${from._y} Q ${mx} ${my} ${to._x} ${to._y}`}
-            fill="none" stroke="none"/>
-      <circle r="4" className="an-packet">
-        <animateMotion dur="2.4s" repeatCount="indefinite" rotate="auto">
-          <mpath href="#pkt-path"/>
-        </animateMotion>
-      </circle>
-    </g>
+    <button
+      type="button"
+      className={`gateway-node gateway-node-${kind} ${selected ? 'selected' : ''}`}
+      data-id={id}
+      data-status={status}
+      style={{ left: point.x, top: point.y }}
+      onClick={() => agent && onSelect?.(agent.id)}
+      onContextMenu={(e) => {
+        if (!agent) return;
+        e.preventDefault();
+        onContextMenu?.(e, agent);
+      }}
+      title={`${label} · ${meta}`}
+    >
+      <span className="gateway-node-disc">
+        <Icon size={kind === 'gateway' ? 28 : 20}/>
+        <span className="an-status-dot" data-status={status} />
+      </span>
+      <span className="gateway-node-label">{label}</span>
+      <span className="gateway-node-meta">{meta}</span>
+    </button>
   );
+}
+
+function GatewayCluster({ cluster, point }) {
+  return (
+    <section className={`gateway-cluster gateway-cluster-${cluster.id}`} style={{ left: point.x, top: point.y }}>
+      <header className="gateway-cluster-head">
+        <span className="gateway-cluster-title">{cluster.label}</span>
+        <span className="gateway-cluster-route">{cluster.route}</span>
+      </header>
+      <div className="gateway-cluster-items">
+        {cluster.items.map((item) => (
+          <span key={item} className="gateway-cluster-item">{item}</span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function getAgentLike(snap, id) {
+  return (snap.agents || []).find((agent) => agent.id === id) || {
+    id,
+    display_name: id === 'agent_zero' ? 'Agent Zero' : 'Hermes',
+    status: id === 'agent_zero' ? 'online' : 'degraded',
+    icon: id === 'agent_zero' ? 'ShieldCheck' : 'Sparkles',
+  };
+}
+
+function routePath(from, to) {
+  const dx = Math.abs(to.x - from.x);
+  const bend = Math.max(50, Math.min(140, dx * 0.35));
+  const c1x = from.x + (to.x >= from.x ? bend : -bend);
+  const c2x = to.x - (to.x >= from.x ? bend : -bend);
+  return `M ${from.x} ${from.y} C ${c1x} ${from.y} ${c2x} ${to.y} ${to.x} ${to.y}`;
 }
 
 Object.assign(window, { AgentNetworkCanvas, TIER_LANES });

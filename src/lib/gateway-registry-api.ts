@@ -1,5 +1,6 @@
 import type { AgentZeroReadOnlyContext } from './agent-zero-bridge'
 import { buildAgentZeroEcosystemContext } from './agent-zero-ecosystem-context'
+import { BUILDWIKI_ACTION_RUN_NOW, BUILDWIKI_TARGET_SERVICE } from './build-wiki-run-now'
 import {
   createGatewayCapability,
   createGatewayFlow,
@@ -55,6 +56,27 @@ export type GatewayStatusPayload = {
     read_enabled: boolean
     write_enabled: boolean
   }>
+  buildwiki_opencloud: {
+    visible: boolean
+    timer_active: boolean
+    timer_state: string | null
+    service_active: boolean
+    service_state: string | null
+    last_run_status: string | null
+    run_now_action: string
+    run_now_target_service: string
+    dispatch_scope: string
+    bridge_session_required: true
+    owner_approval_required: true
+    farmer_execution_enabled: false
+    fork1_state: string | null
+    fork2_state: string | null
+    smb_mounted: boolean
+    smb_blocker: string | null
+    opencloud_dependency_visible: boolean
+    opencloud_deletion_target: false
+    blockers: string[]
+  }
   safety: {
     auth_required: true
     secrets_exposed: false
@@ -214,6 +236,9 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
       write_enabled: capabilities.some((capability) => capability.write_enabled),
     }
   })
+  const buildWikiCapability = registry.capabilities.find((capability) => capability.id === 'brain_buildwiki')
+  const openCloudCapability = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
+  const buildWikiOpenCloud = summarizeBuildWikiOpenCloud(buildWikiCapability, openCloudCapability)
   const blocked = registry.nodes.filter((node) => node.status === 'blocked').length +
     registry.capabilities.filter((capability) => capability.status === 'blocked').length
   const degraded = registry.nodes.filter((node) => node.status === 'degraded').length +
@@ -246,6 +271,7 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
       execution_enabled: false,
     },
     brain_systems: brainSystems,
+    buildwiki_opencloud: buildWikiOpenCloud,
     safety: {
       auth_required: true,
       secrets_exposed: false,
@@ -388,6 +414,10 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
   const integrationCount = asArray(pick(context, 'integrations', 'registry')).length
   const toolCount = asArray(pick(context, 'tools', 'registry')).length
   const mcpCount = asArray(pick(context, 'mcp', 'servers')).length
+  const brainRegistry = asRecords(pick(context, 'brain', 'registry'))
+  const buildwiki = pickRecord(context, 'opencloud_buildwiki')
+  const buildwikiVisible = hasRecordValues(buildwiki)
+  const brainVisible = brainRegistry.length > 0 || buildwikiVisible
   return [
     makeNode({
       id: 'gateway',
@@ -441,6 +471,24 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       capabilities: ['incoming webhooks', 'incoming email', 'Telegram', 'schedules'],
       lastSeen: generatedAt,
     }),
+    makeNode({
+      id: 'brain',
+      label: 'Brain',
+      kind: 'brain',
+      status: brainVisible ? 'read_only' : 'degraded',
+      capabilities: ['Brain Sync', 'Obsidian', 'MemPalace', 'Graphify', 'Build-Wiki/Farmer'],
+      blockers: brainVisible ? [] : ['brain_registry_not_visible'],
+      lastSeen: generatedAt,
+    }),
+    makeNode({
+      id: 'opencloud',
+      label: 'OpenCloud',
+      kind: 'opencloud',
+      status: buildwikiVisible ? 'read_only' : 'degraded',
+      capabilities: ['Build-Wiki dependency', 'knowledge source', 'not deletion target'],
+      blockers: buildwikiVisible ? [] : ['opencloud_dependency_status_not_visible'],
+      lastSeen: generatedAt,
+    }),
     ...buildProviderNodes(context, generatedAt),
     ...buildMcpServerNodes(context, generatedAt),
   ]
@@ -461,7 +509,14 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'integrations', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'events', 'event', false, generatedAt, null),
+    makeEdge('gateway', 'brain', 'memory', false, generatedAt, null),
     makeEdge('gateway', 'brain_sync', 'memory', true, generatedAt, null),
+    makeEdge('brain', 'brain_sync', 'memory', false, generatedAt, null),
+    makeEdge('brain', 'obsidian', 'memory', true, generatedAt, null),
+    makeEdge('brain', 'mempalace', 'memory', true, generatedAt, null),
+    makeEdge('brain', 'graphify', 'memory', true, generatedAt, null),
+    makeEdge('brain', 'buildwiki', 'sync', true, generatedAt, null),
+    makeEdge('buildwiki', 'opencloud', 'sync', true, generatedAt, null),
     makeEdge('hermes', 'agent_zero', 'delegation', false, generatedAt, null),
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),
     ...providerEdges,
@@ -642,43 +697,139 @@ function integrationCapabilities(context: AgentZeroReadOnlyContext | null, gener
 function brainCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
   const registry = asRecords(pick(context, 'brain', 'registry'))
   const buildwiki = pickRecord(context, 'opencloud_buildwiki')
-  const items = registry.length > 0 ? registry : [
+  const buildwikiVisible = hasRecordValues(buildwiki)
+  const registryIds = new Set(registry.map((brain) => gatewayId(String(brain.id || brain.source || brain.name || 'brain'))))
+  const items = registry.length > 0 ? [...registry] : [
     { id: 'obsidian', name: 'Obsidian', status: 'degraded', read_available: false, write_available: false, blocked_reason: 'brain_registry_not_visible' },
     { id: 'mempalace', name: 'MemPalace', status: 'degraded', read_available: false, write_available: false, blocked_reason: 'brain_registry_not_visible' },
     { id: 'graphify', name: 'Graphify', status: 'degraded', read_available: false, write_available: false, blocked_reason: 'brain_registry_not_visible' },
   ]
-  return [
-    ...items.map((brain) => {
-      const id = gatewayId(String(brain.id || brain.source || brain.name || 'brain'))
-      const blocker = stringOrNull(brain.blocked_reason) || stringOrNull(brain.write_blocked_reason)
-      return createGatewayCapability({
-        id: `brain_${id}`,
-        label: cleanLabel(brain.name || brain.source, id),
-        kind: 'brain',
-        status: statusFromAccess(brain.status, brain.raw_state),
-        source_node: id,
-        requires_session: true,
-        read_enabled: Boolean(brain.read_available || brain.read_content_enabled || brain.status === 'connected'),
-        write_enabled: Boolean(brain.write_available),
-        execution_enabled: false,
-        blockers: blockersList(blocker),
-        last_seen: generatedAt,
-      })
-    }),
-    createGatewayCapability({
-      id: 'brain_buildwiki',
-      label: 'Build-Wiki / Farmer',
+  if (!registryIds.has('brain_sync')) {
+    items.unshift({
+      id: 'brain_sync',
+      name: 'Brain Sync',
+      status: context ? 'connected' : 'degraded',
+      read_available: Boolean(context),
+      write_available: false,
+      blocked_reason: context ? null : 'brain_registry_not_visible',
+    })
+  }
+
+  const brainItems = items.map((brain) => {
+    const id = gatewayId(String(brain.id || brain.source || brain.name || 'brain'))
+    const blocker = stringOrNull(brain.blocked_reason) || stringOrNull(brain.write_blocked_reason)
+    const readEnabled = Boolean(brain.read_available || brain.read_content_enabled || brain.status === 'connected')
+    const writeAvailable = Boolean(brain.write_available)
+    const queryAvailable = Boolean(brain.query_available ?? readEnabled)
+    const visible = Boolean(brain.status_visible ?? brain.visible ?? (readEnabled || writeAvailable || queryAvailable))
+    return createGatewayCapability({
+      id: `brain_${id}`,
+      label: cleanLabel(brain.name || brain.source, id),
       kind: 'brain',
-      status: buildwiki && Object.keys(buildwiki).length > 0 ? 'read_only' : 'degraded',
-      source_node: 'buildwiki',
+      status: statusFromAccess(brain.status, brain.raw_state),
+      source_node: id,
       requires_session: true,
-      read_enabled: true,
-      write_enabled: false,
+      read_enabled: readEnabled,
+      available_to: ['agent_zero', 'hermes'],
+      execution_requirements: ['bridge_session_required_for_brain_writes'],
+      write_enabled: writeAvailable,
       execution_enabled: false,
-      blockers: buildwiki && Object.keys(buildwiki).length > 0 ? [] : ['buildwiki_status_not_visible'],
+      blockers: blockersList(blocker),
+      status_details: {
+        visible,
+        read_available: readEnabled,
+        write_available: writeAvailable,
+        query_available: queryAvailable,
+        write_enabled: false,
+        blocked_reason: blocker,
+      },
       last_seen: generatedAt,
-    }),
-  ]
+    })
+  })
+
+  const timer = pickRecord(buildwiki, 'timer')
+  const service = pickRecord(buildwiki, 'service')
+  const lastRun = pickRecord(buildwiki, 'last_run')
+  const runNow = pickRecord(buildwiki, 'run_now')
+  const forkState = pickRecord(buildwiki, 'fork_state')
+  const fork1 = pickRecord(forkState, 'fork1')
+  const fork2 = pickRecord(forkState, 'fork2')
+  const smb = pickRecord(buildwiki, 'smb')
+  const runNowBlocker = stringOrNull(runNow.blocked_reason)
+  const fork2Blocker = stringOrNull(fork2.blocker)
+  const smbBlocker = stringOrNull(smb.blocker)
+  const buildWikiBlockers = buildwikiVisible
+    ? blockersList(runNowBlocker, fork2Blocker, smbBlocker)
+    : ['buildwiki_status_not_visible']
+
+  const buildWikiCapability = createGatewayCapability({
+    id: 'brain_buildwiki',
+    label: 'Build-Wiki / Farmer',
+    kind: 'brain',
+    status: buildwikiVisible ? 'read_only' : 'degraded',
+    source_node: 'buildwiki',
+    requires_session: true,
+    read_enabled: buildwikiVisible,
+    available_to: ['agent_zero', 'hermes'],
+    execution_requirements: [
+      'bridge_session_required_for_buildwiki_run_now',
+      `run_now_scope:${BUILDWIKI_TARGET_SERVICE}`,
+    ],
+    write_enabled: false,
+    execution_enabled: false,
+    required_tools: ['systemd_user_opencloud_docs_farmer_status'],
+    blockers: buildWikiBlockers,
+    status_details: {
+      visible: buildwikiVisible,
+      timer_active: Boolean(buildwiki.timer_active ?? timer.active),
+      timer_state: stringOrNull(timer.active_state),
+      service_active: Boolean(service.active),
+      service_state: stringOrNull(service.active_state),
+      last_run_status: stringOrNull(lastRun.status),
+      last_run_result: stringOrNull(lastRun.result),
+      run_now_action: stringOrNull(runNow.action) || BUILDWIKI_ACTION_RUN_NOW,
+      run_now_target_service: stringOrNull(runNow.target_service) || BUILDWIKI_TARGET_SERVICE,
+      dispatch_scope: stringOrNull(runNow.dispatch_scope) || BUILDWIKI_TARGET_SERVICE,
+      owner_approval_required: true,
+      bridge_session_required: true,
+      fork1_state: stringOrNull(fork1.status),
+      fork1_scope: stringOrNull(fork1.service_scope) || BUILDWIKI_TARGET_SERVICE,
+      fork2_state: stringOrNull(fork2.status) || 'blocked',
+      fork2_smb_mounted: Boolean(fork2.smb_mounted),
+      smb_mounted: Boolean(smb.mounted),
+      smb_blocker: smbBlocker || fork2Blocker || 'smb_fork2_requires_verified_mount_and_owner_approval',
+      farmer_execution_enabled: false,
+      opencloud_direct_access_visible: Boolean(buildwiki.direct_opencloud_access_visible),
+      opencloud_deletion_target: false,
+    },
+    last_seen: generatedAt,
+  })
+
+  const openCloudCapability = createGatewayCapability({
+    id: 'opencloud_dependency',
+    label: 'OpenCloud dependency',
+    kind: 'api',
+    status: buildwikiVisible ? 'read_only' : 'degraded',
+    source_node: 'opencloud',
+    requires_session: true,
+    read_enabled: buildwikiVisible,
+    available_to: ['agent_zero', 'hermes'],
+    execution_requirements: ['decommission_requires_separate_owner_approval'],
+    write_enabled: false,
+    execution_enabled: false,
+    blockers: buildwikiVisible ? ['opencloud_destroy_not_safe_keep_dependency'] : ['opencloud_dependency_status_not_visible'],
+    status_details: {
+      visible: buildwikiVisible,
+      dependency_for: 'buildwiki_farmer',
+      opencloud_deletion_target: false,
+      decommission_safe: false,
+      direct_opencloud_access_visible: Boolean(buildwiki.direct_opencloud_access_visible),
+      blocked_reason: buildwikiVisible ? 'opencloud_destroy_not_safe_keep_dependency' : 'opencloud_dependency_status_not_visible',
+    },
+    last_seen: generatedAt,
+  })
+
+  return [...brainItems, buildWikiCapability, openCloudCapability]
 }
 
 function buildProviderNodes(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayNode[] {
@@ -789,6 +940,35 @@ function makeEdge(
   }
 }
 
+function summarizeBuildWikiOpenCloud(
+  buildWikiCapability: GatewayCapability | undefined,
+  openCloudCapability: GatewayCapability | undefined,
+): GatewayStatusPayload['buildwiki_opencloud'] {
+  const details = buildWikiCapability?.status_details || {}
+  const blockers = blockersList(...(buildWikiCapability?.blockers || []), ...(openCloudCapability?.blockers || []))
+  return {
+    visible: Boolean(buildWikiCapability),
+    timer_active: detailBoolean(details, 'timer_active'),
+    timer_state: detailString(details, 'timer_state'),
+    service_active: detailBoolean(details, 'service_active'),
+    service_state: detailString(details, 'service_state'),
+    last_run_status: detailString(details, 'last_run_status'),
+    run_now_action: detailString(details, 'run_now_action') || BUILDWIKI_ACTION_RUN_NOW,
+    run_now_target_service: detailString(details, 'run_now_target_service') || BUILDWIKI_TARGET_SERVICE,
+    dispatch_scope: detailString(details, 'dispatch_scope') || BUILDWIKI_TARGET_SERVICE,
+    bridge_session_required: true,
+    owner_approval_required: true,
+    farmer_execution_enabled: false,
+    fork1_state: detailString(details, 'fork1_state'),
+    fork2_state: detailString(details, 'fork2_state') || 'blocked',
+    smb_mounted: detailBoolean(details, 'smb_mounted'),
+    smb_blocker: detailString(details, 'smb_blocker') || 'smb_fork2_requires_verified_mount_and_owner_approval',
+    opencloud_dependency_visible: Boolean(openCloudCapability),
+    opencloud_deletion_target: false,
+    blockers,
+  }
+}
+
 function summarizeNode(registry: GatewayRegistry, id: string, fallbackLabel: string): GatewayNodeStatusSummary {
   const normalizedId = gatewayId(id)
   const node = registry.nodes.find((item) => item.id === normalizedId)
@@ -847,6 +1027,25 @@ function capabilityKindForCategory(category: string): GatewayCapabilityKind {
   if (normalized.includes('brain') || normalized.includes('memory')) return 'brain'
   if (normalized.includes('api')) return 'api'
   return 'integration'
+}
+
+function hasRecordValues(record: UnknownRecord): boolean {
+  return Object.keys(record).length > 0
+}
+
+function detailString(details: GatewayCapability['status_details'], key: string): string | null {
+  const value = details[key]
+  if (value === null || value === undefined || value === false) return null
+  const text = sanitizeText(String(value).trim())
+  return text || null
+}
+
+function detailBoolean(details: GatewayCapability['status_details'], key: string): boolean {
+  const value = details[key]
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  const normalized = String(value || '').toLowerCase()
+  return ['true', '1', 'yes', 'active', 'connected', 'read_only', 'write_enabled'].includes(normalized)
 }
 
 function pick(root: unknown, ...path: string[]): unknown {

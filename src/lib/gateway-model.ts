@@ -99,6 +99,8 @@ export type GatewayPolicy = {
   external_allowed: boolean
 }
 
+export type GatewayCapabilityStatusDetails = Record<string, string | number | boolean | null>
+
 export type GatewayCapability = {
   id: string
   label: string
@@ -115,6 +117,7 @@ export type GatewayCapability = {
   required_tools: string[]
   required_credentials: string[]
   blockers: string[]
+  status_details: GatewayCapabilityStatusDetails
   source_node: string | null
   last_seen: string | null
 }
@@ -174,6 +177,7 @@ export type GatewayCapabilityInput = Partial<
     | 'blockers'
     | 'source_node'
     | 'last_seen'
+    | 'status_details'
   >
 > & {
   id: string
@@ -258,6 +262,7 @@ export function createGatewayCapability(input: GatewayCapabilityInput): GatewayC
     required_tools: input.required_tools ? [...input.required_tools] : [],
     required_credentials: input.required_credentials ? [...input.required_credentials] : [],
     blockers: input.blockers ? compactBlockers(input.blockers) : [],
+    status_details: input.status_details ? { ...input.status_details } : {},
     source_node: input.source_node || null,
     last_seen: input.last_seen || null,
   }

@@ -124,6 +124,14 @@ const context = {
   brain: {
     registry: [
       {
+        id: 'brain_sync',
+        name: 'Brain Sync',
+        status: 'connected',
+        read_available: true,
+        write_available: false,
+        blocked_reason: null,
+      },
+      {
         id: 'obsidian',
         name: 'Obsidian',
         status: 'connected',
@@ -153,6 +161,39 @@ const context = {
     visible: true,
     timer_active: true,
     farmer_execution_enabled: false,
+    timer: {
+      unit: 'opencloud-docs-farmer.timer',
+      active: true,
+      active_state: 'active',
+      next_run_at: '2026-05-04T12:00:00.000Z',
+    },
+    service: {
+      unit: 'opencloud-docs-farmer.service',
+      active: false,
+      active_state: 'inactive',
+      sub_state: 'dead',
+      last_result: 'success',
+    },
+    last_run: {
+      status: 'completed',
+      result: 'success',
+      source: 'read_only_status',
+    },
+    run_now: {
+      action: 'buildwiki.run_now',
+      target_service: 'opencloud-docs-farmer.service',
+      dispatch_scope: 'opencloud-docs-farmer.service',
+      owner_approval_required: true,
+      bridge_session_required: true,
+      execution_enabled: false,
+      blocked_reason: 'active_bridge_session_required_for_buildwiki_run_now',
+    },
+    fork_state: {
+      fork1: { status: 'available', service_scope: 'opencloud-docs-farmer.service' },
+      fork2: { status: 'blocked', smb_mounted: false, blocker: 'smb_mount_not_verified' },
+    },
+    smb: { required_for_fork2: true, mounted: false, blocker: 'smb_mount_not_verified' },
+    direct_opencloud_access_visible: false,
   },
 } as unknown as AgentZeroReadOnlyContext
 
@@ -166,6 +207,8 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('agent_zero')).toBe(true)
     expect(nodes.has('hermes')).toBe(true)
     expect(nodes.has('bridge_mcp')).toBe(true)
+    expect(nodes.has('brain')).toBe(true)
+    expect(nodes.has('opencloud')).toBe(true)
     expect(nodes.has('obsidian')).toBe(true)
     expect(nodes.has('mempalace')).toBe(true)
     expect(nodes.has('graphify')).toBe(true)
@@ -173,6 +216,7 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('mcp_zapier')).toBe(true)
     expect(capabilities.has('brain_obsidian')).toBe(true)
     expect(capabilities.has('brain_buildwiki')).toBe(true)
+    expect(capabilities.has('opencloud_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
     const skill = registry.capabilities.find((capability) => capability.id === 'skill_openclaw_plus_email_triage')
@@ -187,6 +231,28 @@ describe('Gateway registry API model', () => {
     })
     expect(skill?.execution_requirements).toContain('bridge_session_required_for_execution')
     expect(skill?.blockers).toEqual(expect.arrayContaining(['credential:AGENTMAIL_API_KEY:missing', 'tool:agentmail:execution_disabled_in_read_only_context']))
+    const buildWiki = registry.capabilities.find((capability) => capability.id === 'brain_buildwiki')
+    expect(buildWiki?.status_details).toMatchObject({
+      run_now_action: 'buildwiki.run_now',
+      run_now_target_service: 'opencloud-docs-farmer.service',
+      dispatch_scope: 'opencloud-docs-farmer.service',
+      bridge_session_required: true,
+      owner_approval_required: true,
+      farmer_execution_enabled: false,
+      fork1_state: 'available',
+      fork2_state: 'blocked',
+      smb_mounted: false,
+      smb_blocker: 'smb_mount_not_verified',
+    })
+    expect(buildWiki?.execution_requirements).toContain('run_now_scope:opencloud-docs-farmer.service')
+    expect(buildWiki?.blockers).toEqual(expect.arrayContaining(['active_bridge_session_required_for_buildwiki_run_now', 'smb_mount_not_verified']))
+    const openCloud = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
+    expect(openCloud?.status_details).toMatchObject({
+      opencloud_deletion_target: false,
+      decommission_safe: false,
+      dependency_for: 'buildwiki_farmer',
+    })
+    expect(openCloud?.blockers).toContain('opencloud_destroy_not_safe_keep_dependency')
     expect(JSON.stringify(registry)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony/)
   })
 
@@ -201,6 +267,24 @@ describe('Gateway registry API model', () => {
     expect(status.hermes.status).toBe('degraded')
     expect(status.bridge_mcp.mcp_servers).toBeGreaterThan(0)
     expect(status.brain_systems.find((item) => item.id === 'mempalace')?.write_enabled).toBe(true)
+    expect(status.buildwiki_opencloud).toMatchObject({
+      visible: true,
+      timer_active: true,
+      service_active: false,
+      last_run_status: 'completed',
+      run_now_action: 'buildwiki.run_now',
+      run_now_target_service: 'opencloud-docs-farmer.service',
+      dispatch_scope: 'opencloud-docs-farmer.service',
+      bridge_session_required: true,
+      owner_approval_required: true,
+      farmer_execution_enabled: false,
+      fork1_state: 'available',
+      fork2_state: 'blocked',
+      smb_mounted: false,
+      smb_blocker: 'smb_mount_not_verified',
+      opencloud_dependency_visible: true,
+      opencloud_deletion_target: false,
+    })
     expect(status.execution_enabled).toBe(false)
     expect(node?.node.label).toBe('Agent Zero')
     expect(flows.flows.length).toBeGreaterThan(0)

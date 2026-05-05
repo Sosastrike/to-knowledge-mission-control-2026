@@ -684,8 +684,42 @@ describe('Gateway registry API model', () => {
     expect(node?.node.requires_bridge_session).toBe(true)
     expect(node?.node.blocked_reason).toBeNull()
     expect(flows.flows.length).toBeGreaterThan(0)
-    const collaboration = flows.flows.find((flow) => flow.flow_id === 'flow_agent_zero_hermes_collaboration')
-    expect(collaboration?.route.hops).toEqual(['agent_zero', 'hermes', 'agent_zero'])
+    const flowMap = new Map(flows.flows.map((flow) => [flow.flow_id, flow]))
+    expect(flowMap.get('flow_owner_gateway_agent_zero')).toMatchObject({
+      source: 'owner',
+      target: 'agent_zero',
+      requested_action: 'owner_command',
+      selected_route: { hops: ['owner', 'gateway', 'agent_zero'] },
+      policy_result: { route_decision: 'allowed', requires_bridge_session: false },
+      bridge_session_id: null,
+    })
+    expect(flowMap.get('flow_agent_zero_gateway_hermes')).toMatchObject({
+      source: 'agent_zero',
+      target: 'hermes',
+      requested_action: 'skill_workflow_planning',
+      selected_route: { hops: ['agent_zero', 'gateway', 'hermes'] },
+    })
+    expect(flowMap.get('flow_agent_zero_gateway_openclaw_skill')).toMatchObject({
+      source: 'agent_zero',
+      target: 'openclaw_plus',
+      requested_action: 'openclaw_skill_route',
+      policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
+    })
+    expect(flowMap.get('flow_agent_zero_gateway_mcp_tool')).toMatchObject({
+      source: 'agent_zero',
+      target: 'mcp_gateway',
+      requested_action: 'mcp_tool_route',
+      policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
+    })
+    expect(flowMap.get('flow_agent_zero_gateway_opencloud_worker')).toMatchObject({
+      source: 'agent_zero',
+      target: 'opencloud',
+      requested_action: 'opencloud_worker_route',
+      policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
+    })
+    const collaboration = flowMap.get('flow_agent_zero_hermes_collaboration')
+    expect(collaboration?.route.hops).toEqual(['agent_zero', 'gateway', 'hermes', 'gateway', 'agent_zero'])
+    expect(collaboration?.selected_route.hops).toEqual(['agent_zero', 'gateway', 'hermes', 'gateway', 'agent_zero'])
     expect(collaboration?.execution_mode).toBe('read_only')
     expect(collaboration?.audit.events).toContain('gateway_collaboration_flow_registered_read_only')
     expect(collaboration?.audit.events).toContain('agent_zero_remains_commander')

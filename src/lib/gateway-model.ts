@@ -127,34 +127,64 @@ export type GatewayCapability = {
   last_seen: string | null
 }
 
+export type GatewayFlowRouteDecision = 'allowed' | 'blocked' | 'requires_session' | 'missing_credential'
+
+export type GatewaySelectedRoute = {
+  source: string
+  target: string
+  edge_kind: GatewayEdgeKind
+  hops: string[]
+}
+
+export type GatewayFlowPolicyResult = {
+  route_decision: GatewayFlowRouteDecision
+  allowed: boolean
+  requires_bridge_session: boolean
+  blocked_reason: string | null
+}
+
+export type GatewayFlowAudit = {
+  audit_id: string | null
+  events: string[]
+  external_write: boolean
+  secrets_exposed: boolean
+}
+
+export type GatewayFlowResult = {
+  status: GatewayStatus
+  summary: string
+  blocker: string | null
+}
+
 export type GatewayFlow = {
   flow_id: string
+  source: string
+  target: string
+  requested_action: string
+  selected_route: GatewaySelectedRoute
+  policy_result: GatewayFlowPolicyResult
+  bridge_session_id: string | null
+  status: GatewayStatus
   request: {
     source: string
     target: string
     purpose: string
     prompt?: string
   }
-  route: {
-    source: string
-    target: string
-    edge_kind: GatewayEdgeKind
-    hops: string[]
-  }
+  route: GatewaySelectedRoute
   policy: GatewayPolicy
   execution_mode: GatewayExecutionMode
-  audit: {
-    audit_id: string | null
-    events: string[]
-    external_write: boolean
-    secrets_exposed: boolean
-  }
-  result: {
-    status: GatewayStatus
-    summary: string
-    blocker: string | null
-  }
+  audit: GatewayFlowAudit
+  result: GatewayFlowResult
 }
+
+export type GatewayFlowInput = Omit<
+  GatewayFlow,
+  'source' | 'target' | 'requested_action' | 'selected_route' | 'policy_result' | 'bridge_session_id' | 'status'
+> & Partial<Pick<
+  GatewayFlow,
+  'source' | 'target' | 'requested_action' | 'selected_route' | 'policy_result' | 'bridge_session_id' | 'status'
+>>
 
 export type GatewayRegistry = {
   version: 'gateway_registry_v1'
@@ -274,13 +304,32 @@ export function createGatewayCapability(input: GatewayCapabilityInput): GatewayC
   }
 }
 
-export function createGatewayFlow(input: GatewayFlow): GatewayFlow {
+export function createGatewayFlow(input: GatewayFlowInput): GatewayFlow {
+  const route = {
+    ...input.route,
+    hops: [...input.route.hops],
+  }
+  const selectedRoute = input.selected_route
+    ? { ...input.selected_route, hops: [...input.selected_route.hops] }
+    : { ...route, hops: [...route.hops] }
+  const blockedReason = input.policy_result?.blocked_reason || input.result.blocker || null
+  const policyResult = input.policy_result
+    ? { ...input.policy_result }
+    : deriveGatewayFlowPolicyResult(input.policy, blockedReason)
+
   return {
     ...input,
-    route: {
-      ...input.route,
-      hops: [...input.route.hops],
+    source: input.source || input.request.source || route.source,
+    target: input.target || input.request.target || route.target,
+    requested_action: input.requested_action || input.request.purpose,
+    selected_route: selectedRoute,
+    policy_result: policyResult,
+    bridge_session_id: input.bridge_session_id ?? null,
+    status: input.status || input.result.status,
+    request: {
+      ...input.request,
     },
+    route,
     audit: {
       ...input.audit,
       events: [...input.audit.events],
@@ -288,6 +337,16 @@ export function createGatewayFlow(input: GatewayFlow): GatewayFlow {
     result: {
       ...input.result,
     },
+  }
+}
+
+function deriveGatewayFlowPolicyResult(policy: GatewayPolicy, blockedReason: string | null): GatewayFlowPolicyResult {
+  const missingCredential = Boolean(blockedReason && /credential|api_key|token|auth/i.test(blockedReason))
+  return {
+    route_decision: blockedReason ? (missingCredential ? 'missing_credential' : 'blocked') : (policy.bridge_session_required ? 'requires_session' : 'allowed'),
+    allowed: !blockedReason && !policy.bridge_session_required,
+    requires_bridge_session: policy.bridge_session_required,
+    blocked_reason: blockedReason,
   }
 }
 

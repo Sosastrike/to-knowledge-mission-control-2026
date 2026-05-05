@@ -12,6 +12,7 @@ import {
   type GatewayEdge,
   type GatewayExecutionMode,
   type GatewayFlow,
+  type GatewayFlowPolicyResult,
   type GatewayHealth,
   type GatewayNode,
   type GatewayNodeKind,
@@ -581,8 +582,22 @@ function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       ? registry.policies.gateway_bridge_session_write || registry.policies.bridge_session_required
       : registry.policies.gateway_read_only || registry.policies.read_only
     const executionMode: GatewayExecutionMode = edge.requires_session ? 'bridge_session' : 'read_only'
+    const hops = gatewayFlowHops(edge.source, edge.target)
+    const blocker = edge.blocker || null
     return createGatewayFlow({
       flow_id: gatewayId(`flow_${edge.source}_${edge.target}_${edge.kind}`),
+      source: edge.source,
+      target: edge.target,
+      requested_action: edge.kind,
+      selected_route: {
+        source: edge.source,
+        target: edge.target,
+        edge_kind: edge.kind,
+        hops,
+      },
+      policy_result: gatewayFlowPolicyResult(edge.requires_session, blocker),
+      bridge_session_id: null,
+      status: edge.status,
       request: {
         source: edge.source,
         target: edge.target,
@@ -592,7 +607,7 @@ function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
         source: edge.source,
         target: edge.target,
         edge_kind: edge.kind,
-        hops: edge.source === 'owner' ? [edge.source, edge.target] : ['owner', 'gateway', edge.source, edge.target],
+        hops,
       },
       policy,
       execution_mode: executionMode,
@@ -605,12 +620,142 @@ function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       result: {
         status: edge.status,
         summary: target ? `${target.label} route is ${edge.status}.` : `Route target ${edge.target} is not registered.`,
-        blocker: edge.blocker,
+        blocker,
       },
     })
   })
+  const canonicalFlows = buildCanonicalGatewayFlows(registry)
   const hermesCollaborationFlow = buildHermesCollaborationFlow(registry)
-  return hermesCollaborationFlow ? [...edgeFlows, hermesCollaborationFlow] : edgeFlows
+  return dedupeGatewayFlows(hermesCollaborationFlow ? [...canonicalFlows, ...edgeFlows, hermesCollaborationFlow] : [...canonicalFlows, ...edgeFlows])
+}
+
+function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
+  const readOnlyPolicy = registry.policies.gateway_read_only || registry.policies.read_only
+  const bridgeSessionPolicy = registry.policies.gateway_bridge_session_write || registry.policies.bridge_session_required
+  const definitions = [
+    {
+      flow_id: 'flow_owner_gateway_agent_zero',
+      source: 'owner',
+      target: 'agent_zero',
+      requested_action: 'owner_command',
+      edge_kind: 'command' as const,
+      hops: ['owner', 'gateway', 'agent_zero'],
+      requires_session: false,
+      purpose: 'Owner commands route through Gateway to Agent Zero as commander.',
+    },
+    {
+      flow_id: 'flow_agent_zero_gateway_hermes',
+      source: 'agent_zero',
+      target: 'hermes',
+      requested_action: 'skill_workflow_planning',
+      edge_kind: 'delegation' as const,
+      hops: ['agent_zero', 'gateway', 'hermes'],
+      requires_session: false,
+      purpose: 'Agent Zero dispatches planning-only skill and workflow requests to Hermes through Gateway.',
+    },
+    {
+      flow_id: 'flow_agent_zero_gateway_openclaw_skill',
+      source: 'agent_zero',
+      target: 'openclaw_plus',
+      requested_action: 'openclaw_skill_route',
+      edge_kind: 'tool-call' as const,
+      hops: ['agent_zero', 'gateway', 'openclaw_plus'],
+      requires_session: true,
+      purpose: 'Agent Zero routes OpenClaw+ skill usage through Gateway; execution-capable skills require Bridge Session scope.',
+    },
+    {
+      flow_id: 'flow_agent_zero_gateway_mcp_tool',
+      source: 'agent_zero',
+      target: 'mcp_gateway',
+      requested_action: 'mcp_tool_route',
+      edge_kind: 'mcp-call' as const,
+      hops: ['agent_zero', 'gateway', 'mcp_gateway'],
+      requires_session: true,
+      purpose: 'Agent Zero routes MCP tool discovery and tool-call planning through Gateway; execution remains policy-gated.',
+    },
+    {
+      flow_id: 'flow_agent_zero_gateway_opencloud_worker',
+      source: 'agent_zero',
+      target: 'opencloud',
+      requested_action: 'opencloud_worker_route',
+      edge_kind: 'sync' as const,
+      hops: ['agent_zero', 'gateway', 'opencloud'],
+      requires_session: true,
+      purpose: 'Agent Zero routes OpenCloud worker/runtime requests through Gateway; OpenCloud remains a retained worker layer.',
+    },
+  ]
+
+  return definitions.map((definition) => {
+    const target = registry.nodes.find((node) => node.id === definition.target)
+    const blocker = target?.blockers[0] || (target ? null : 'gateway_flow_target_missing')
+    const status = blocker ? 'blocked' : target?.status || 'missing'
+    const policy = definition.requires_session ? bridgeSessionPolicy : readOnlyPolicy
+    return createGatewayFlow({
+      flow_id: definition.flow_id,
+      source: definition.source,
+      target: definition.target,
+      requested_action: definition.requested_action,
+      selected_route: {
+        source: definition.source,
+        target: definition.target,
+        edge_kind: definition.edge_kind,
+        hops: definition.hops,
+      },
+      policy_result: gatewayFlowPolicyResult(definition.requires_session, blocker),
+      bridge_session_id: null,
+      status,
+      request: {
+        source: definition.source,
+        target: definition.target,
+        purpose: definition.purpose,
+      },
+      route: {
+        source: definition.source,
+        target: definition.target,
+        edge_kind: definition.edge_kind,
+        hops: definition.hops,
+      },
+      policy,
+      execution_mode: definition.requires_session ? 'bridge_session' : 'read_only',
+      audit: {
+        audit_id: null,
+        events: ['gateway_canonical_flow_registered_read_only'],
+        external_write: false,
+        secrets_exposed: false,
+      },
+      result: {
+        status,
+        summary: blocker ? `Gateway canonical flow is blocked: ${blocker}.` : definition.purpose,
+        blocker,
+      },
+    })
+  })
+}
+
+function gatewayFlowHops(source: string, target: string): string[] {
+  if (source === 'owner' && target === 'gateway') return ['owner', 'gateway']
+  if (source === 'gateway') return ['owner', 'gateway', target]
+  if (target === 'gateway') return [source, 'gateway']
+  return [source, 'gateway', target]
+}
+
+function gatewayFlowPolicyResult(requiresBridgeSession: boolean, blocker: string | null): GatewayFlowPolicyResult {
+  const missingCredential = Boolean(blocker && /credential|api_key|token|auth/i.test(blocker))
+  return {
+    route_decision: blocker ? (missingCredential ? 'missing_credential' : 'blocked') : (requiresBridgeSession ? 'requires_session' : 'allowed'),
+    allowed: !blocker && !requiresBridgeSession,
+    requires_bridge_session: requiresBridgeSession,
+    blocked_reason: blocker,
+  }
+}
+
+function dedupeGatewayFlows(flows: GatewayFlow[]): GatewayFlow[] {
+  const seen = new Set<string>()
+  return flows.filter((flow) => {
+    if (seen.has(flow.flow_id)) return false
+    seen.add(flow.flow_id)
+    return true
+  })
 }
 
 function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | null {
@@ -626,8 +771,21 @@ function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | 
     : (hermes.status === 'connected' ? 'connected' : 'read_only')
   const policy = registry.policies.gateway_read_only || registry.policies.read_only
 
+  const hops = ['agent_zero', 'gateway', 'hermes', 'gateway', 'agent_zero']
   return createGatewayFlow({
     flow_id: 'flow_agent_zero_hermes_collaboration',
+    source: 'agent_zero',
+    target: 'hermes',
+    requested_action: 'skill_workflow_planning',
+    selected_route: {
+      source: 'agent_zero',
+      target: 'hermes',
+      edge_kind: 'delegation',
+      hops,
+    },
+    policy_result: gatewayFlowPolicyResult(false, blocker),
+    bridge_session_id: null,
+    status,
     request: {
       source: 'agent_zero',
       target: 'hermes',
@@ -635,9 +793,9 @@ function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | 
     },
     route: {
       source: 'agent_zero',
-      target: 'agent_zero',
+      target: 'hermes',
       edge_kind: 'delegation',
-      hops: ['agent_zero', 'hermes', 'agent_zero'],
+      hops,
     },
     policy,
     execution_mode: 'read_only',

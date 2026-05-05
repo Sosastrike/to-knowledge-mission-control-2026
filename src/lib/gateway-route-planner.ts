@@ -129,6 +129,23 @@ export function planGatewayRoute(registry: GatewayRegistry, input: GatewayRouteP
   const policy = policyDecision.bridge_session_required ? BRIDGE_SESSION_POLICY : READ_ONLY_POLICY
   const flow = createGatewayFlow({
     flow_id: normalizeId(`flow_${source}_${classification}_${target.dispatchTarget}`),
+    source,
+    target: target.dispatchTarget,
+    requested_action: classification,
+    selected_route: {
+      source,
+      target: target.dispatchTarget,
+      edge_kind: target.edgeKind,
+      hops: target.via,
+    },
+    policy_result: {
+      route_decision: policyDecision.route_decision,
+      allowed: policyDecision.allowed,
+      requires_bridge_session: policyDecision.bridge_session_required,
+      blocked_reason: blocker,
+    },
+    bridge_session_id: null,
+    status: resultStatus,
     request: {
       source,
       target: target.dispatchTarget,

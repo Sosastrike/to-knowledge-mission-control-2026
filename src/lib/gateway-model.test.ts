@@ -187,7 +187,7 @@ describe('canonical Gateway graph model', () => {
         source: 'owner',
         target: 'agent_zero',
         edge_kind: 'command',
-        hops: ['owner', 'agent_zero'],
+        hops: ['owner', 'gateway', 'agent_zero'],
       },
       policy,
       execution_mode: 'bridge_session',
@@ -204,6 +204,18 @@ describe('canonical Gateway graph model', () => {
       },
     })
 
+    expect(flow.source).toBe('owner')
+    expect(flow.target).toBe('agent_zero')
+    expect(flow.requested_action).toBe('Ask Agent Zero to inspect Gateway registry')
+    expect(flow.selected_route.hops).toEqual(['owner', 'gateway', 'agent_zero'])
+    expect(flow.policy_result).toMatchObject({
+      route_decision: 'requires_session',
+      allowed: false,
+      requires_bridge_session: true,
+      blocked_reason: null,
+    })
+    expect(flow.bridge_session_id).toBeNull()
+    expect(flow.status).toBe('read_only')
     expect(flow.policy).toEqual(policy)
     expect(flow.execution_mode).toBe('bridge_session')
     expect(flow.audit.external_write).toBe(false)

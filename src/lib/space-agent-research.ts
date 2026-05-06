@@ -225,6 +225,23 @@ export type EvidenceItem = {
   no_secrets_exposed: true
 }
 
+export type ResearchPacketSourceSummary = {
+  source_id: string
+  source_type: EvidenceItem['source_type'] | WebSource['type'] | YouTubeSource['type'] | 'browser_action'
+  title: string | null
+  url: string | null
+  status: string
+  blocked_reason: string | null
+}
+
+export type ResearchEvidenceSnippet = {
+  evidence_id: string
+  source_id: string | null
+  snippet: string
+  url: string | null
+  confidence: EvidenceItem['confidence']
+}
+
 export type BrowserActionSummary = {
   action_id: string
   schema: 'browser_action_summary_v1'
@@ -275,11 +292,15 @@ export type ResearchPacket = {
   packet_id: string
   schema: 'research_packet_v1'
   mode: 'space_agent_research_packet'
+  job_id: string
+  original_request: string
+  assigned_supervisor: 'agent_zero'
   status: 'ready' | 'blocked'
   research_stage_owner: 'space_agent'
   returns_to: SpaceAgentResponsibleAgent
   requested_by: SpaceAgentRequester
   responsible_agent: SpaceAgentResponsibleAgent
+  recommended_next_agent: SpaceAgentResponsibleAgent
   research_type: SpaceAgentResearchType
   research_operation: SpaceAgentResearchOperation
   research_needed: boolean
@@ -293,6 +314,7 @@ export type ResearchPacket = {
   web_sources: WebSource[]
   youtube_sources: YouTubeSource[]
   browser_actions: BrowserActionSummary[]
+  source_list: ResearchPacketSourceSummary[]
   allowed_surfaces: string[]
   forbidden_surfaces: string[]
   required_gateway_route: 'owner_gateway_pi_agent_zero_space_agent_research'
@@ -308,7 +330,11 @@ export type ResearchPacket = {
   no_secrets_exposed: true
   no_raw_paths: true
   findings: string[]
+  confidence: EvidenceItem['confidence']
+  evidence_snippets: ResearchEvidenceSnippet[]
   citations: string[]
+  urls: string[]
+  blockers: string[]
   blocked_reason: string | null
   owner_visible_summary: string
 }
@@ -519,16 +545,22 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
   const youtubeSources = normalizeYouTubeSources(input.youtubeSources)
   const browserActions = normalizeBrowserActions(input.browserActions, intent, input.generatedAt)
   const citations = collectCitations(evidence, webSources, youtubeSources)
+  const sourceList = collectResearchSources(evidence, webSources, youtubeSources, browserActions)
+  const blockers = collectResearchBlockers(job, webSources, youtubeSources, browserActions)
 
   return {
     packet_id: normalizeId(`space_agent_${researchType}_${input.generatedAt || DEFAULT_GENERATED_AT}`),
     schema: 'research_packet_v1',
     mode: 'space_agent_research_packet',
+    job_id: job.job_id,
+    original_request: intent.request_summary,
+    assigned_supervisor: job.supervisor,
     status: job.status,
     research_stage_owner: 'space_agent',
     returns_to: job.responsible_agent,
     requested_by: intent.requested_by,
     responsible_agent: job.responsible_agent,
+    recommended_next_agent: job.responsible_agent,
     research_type: researchType,
     research_operation: intent.research_operation,
     research_needed: intent.research_needed,
@@ -542,6 +574,7 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     web_sources: webSources,
     youtube_sources: youtubeSources,
     browser_actions: browserActions,
+    source_list: sourceList,
     allowed_surfaces: ['public web pages', 'owner-approved browser pages', 'public YouTube metadata/transcripts when available', 'Gateway Firecrawl status'],
     forbidden_surfaces: ['private accounts without approved credentials', 'paywalled/private content bypass', 'external writes', 'Zapier writes', 'HeyGen generation', 'SMB mounts', 'raw secret files'],
     required_gateway_route: 'owner_gateway_pi_agent_zero_space_agent_research',
@@ -557,7 +590,11 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     no_secrets_exposed: true,
     no_raw_paths: true,
     findings: evidence.map((item) => item.summary),
+    confidence: deriveResearchConfidence(evidence, blockers),
+    evidence_snippets: collectEvidenceSnippets(evidence),
     citations,
+    urls: citations,
+    blockers,
     blocked_reason: job.blocked_reason,
     owner_visible_summary: !intent.research_needed
       ? `research not needed; Space Agent hands back to ${job.responsible_agent} through Gateway.`
@@ -817,11 +854,81 @@ function normalizeBrowserAction(item: Partial<BrowserActionSummary>, index: numb
 }
 
 function collectCitations(evidence: EvidenceItem[], webSources: WebSource[], youtubeSources: YouTubeSource[]): string[] {
-  return [
+  return dedupeStrings([
     ...evidence.map((item) => item.url).filter((url): url is string => Boolean(url)),
     ...webSources.map((item) => item.url).filter((url): url is string => Boolean(url)),
     ...youtubeSources.map((item) => item.video_url).filter((url): url is string => Boolean(url)),
+  ])
+}
+
+function collectResearchSources(evidence: EvidenceItem[], webSources: WebSource[], youtubeSources: YouTubeSource[], browserActions: BrowserActionSummary[]): ResearchPacketSourceSummary[] {
+  return [
+    ...webSources.map((source): ResearchPacketSourceSummary => ({
+      source_id: source.source_id,
+      source_type: source.type,
+      title: source.title,
+      url: source.url,
+      status: source.status,
+      blocked_reason: source.blocked_reason,
+    })),
+    ...youtubeSources.map((source): ResearchPacketSourceSummary => ({
+      source_id: source.source_id,
+      source_type: source.type,
+      title: source.title,
+      url: source.video_url,
+      status: source.transcript_status || source.metadata_status,
+      blocked_reason: source.blocked_reason,
+    })),
+    ...browserActions.map((action): ResearchPacketSourceSummary => ({
+      source_id: action.action_id,
+      source_type: 'browser_action',
+      title: action.action_type,
+      url: action.url,
+      status: action.status,
+      blocked_reason: action.blocked_reason,
+    })),
+    ...evidence.filter((item) => item.url).map((item): ResearchPacketSourceSummary => ({
+      source_id: item.source_id || item.evidence_id,
+      source_type: item.source_type,
+      title: null,
+      url: item.url,
+      status: 'evidence',
+      blocked_reason: null,
+    })),
   ]
+}
+
+function collectEvidenceSnippets(evidence: EvidenceItem[]): ResearchEvidenceSnippet[] {
+  return evidence.map((item) => ({
+    evidence_id: item.evidence_id,
+    source_id: item.source_id,
+    snippet: item.quote || item.summary,
+    url: item.url,
+    confidence: item.confidence,
+  }))
+}
+
+function deriveResearchConfidence(evidence: EvidenceItem[], blockers: string[]): EvidenceItem['confidence'] {
+  if (blockers.length > 0) return 'low'
+  if (evidence.length === 0) return 'low'
+  if (evidence.every((item) => item.confidence === 'high')) return 'high'
+  if (evidence.some((item) => item.confidence === 'low')) return 'low'
+  return 'medium'
+}
+
+function collectResearchBlockers(job: SpaceAgentJob, webSources: WebSource[], youtubeSources: YouTubeSource[], browserActions: BrowserActionSummary[]): string[] {
+  return dedupeStrings([
+    job.blocked_reason,
+    job.policy.blocked_reason,
+    job.policy.bridge_session_reason,
+    ...webSources.map((source) => source.blocked_reason),
+    ...youtubeSources.map((source) => source.blocked_reason),
+    ...browserActions.map((action) => action.blocked_reason),
+  ].filter((value): value is string => Boolean(value)))
+}
+
+function dedupeStrings(values: string[]): string[] {
+  return Array.from(new Set(values))
 }
 
 function domainFromUrl(value: string | null): string | null {

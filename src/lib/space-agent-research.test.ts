@@ -92,10 +92,14 @@ describe('Space Agent Research Packet', () => {
 
     expect(packet).toMatchObject({
       mode: 'space_agent_research_packet',
+      job_id: packet.space_agent_job.job_id,
+      original_request: 'Inspect this public YouTube video and return sources',
+      assigned_supervisor: 'agent_zero',
       status: 'ready',
       research_stage_owner: 'space_agent',
       returns_to: 'agent_zero',
       responsible_agent: 'agent_zero',
+      recommended_next_agent: 'agent_zero',
       research_type: 'youtube',
       research_operation: 'youtube_video_inspection',
       required_gateway_route: 'owner_gateway_pi_agent_zero_space_agent_research',
@@ -117,6 +121,11 @@ describe('Space Agent Research Packet', () => {
       no_raw_paths: true,
     })
     expect(packet.forbidden_surfaces).toEqual(expect.arrayContaining(['external writes', 'raw secret files']))
+    expect(packet.confidence).toBe('low')
+    expect(packet.source_list).toEqual([])
+    expect(packet.evidence_snippets).toEqual([])
+    expect(packet.blockers).toEqual([])
+    expect(packet.urls).toEqual([])
     expect(packet.owner_visible_summary).toContain('Space Agent')
   })
 
@@ -181,6 +190,61 @@ describe('Space Agent Research Packet', () => {
       execution_enabled: false,
     })
     expect(packet.citations).toEqual(expect.arrayContaining(['https://example.com/post', 'https://www.youtube.com/watch?v=abc123']))
+  })
+
+  it('includes Gateway handoff fields for sources, findings, confidence, snippets, citations, blockers, and next agent', () => {
+    const packet = createSpaceAgentResearchPacket({
+      request: 'Research a public article and return evidence',
+      requestedBy: 'owner',
+      responsibleAgent: 'hermes',
+      generatedAt: '2026-05-06T18:00:00.000Z',
+      evidence: [
+        { evidence_id: 'ev-high', source_id: 'web-source-1', summary: 'The article says Gateway routes research to Space Agent.', quote: 'Gateway routes research to Space Agent.', source_type: 'web', url: 'https://example.com/article', confidence: 'high' },
+        { evidence_id: 'ev-med', source_id: 'yt-source-1', summary: 'The video metadata supports the same route.', source_type: 'youtube', url: 'https://www.youtube.com/watch?v=abc123', confidence: 'medium' },
+      ],
+      webSources: [{ source_id: 'web-source-1', url: 'https://example.com/article', title: 'Gateway article', access: 'public', status: 'checked' }],
+      youtubeSources: [{ source_id: 'yt-source-1', video_url: 'https://www.youtube.com/watch?v=abc123', title: 'Gateway video', transcript_status: 'available' }],
+      browserActions: [{ action: 'inspect', target: 'https://example.com/article', summary: 'Public page inspection summary.' }],
+    })
+
+    expect(packet.job_id).toBe(packet.space_agent_job.job_id)
+    expect(packet.original_request).toBe('Research a public article and return evidence')
+    expect(packet.assigned_supervisor).toBe('agent_zero')
+    expect(packet.recommended_next_agent).toBe('hermes')
+    expect(packet.findings).toEqual([
+      'The article says Gateway routes research to Space Agent.',
+      'The video metadata supports the same route.',
+    ])
+    expect(packet.confidence).toBe('medium')
+    expect(packet.evidence_snippets).toEqual(expect.arrayContaining([
+      expect.objectContaining({ evidence_id: 'ev_high', snippet: 'Gateway routes research to Space Agent.', url: 'https://example.com/article', confidence: 'high' }),
+      expect.objectContaining({ evidence_id: 'ev_med', snippet: 'The video metadata supports the same route.', url: 'https://www.youtube.com/watch?v=abc123', confidence: 'medium' }),
+    ]))
+    expect(packet.source_list).toEqual(expect.arrayContaining([
+      expect.objectContaining({ source_id: 'web_source_1', source_type: 'web_source', title: 'Gateway article', url: 'https://example.com/article', status: 'checked' }),
+      expect.objectContaining({ source_id: 'yt_source_1', source_type: 'youtube_source', title: 'Gateway video', url: 'https://www.youtube.com/watch?v=abc123', status: 'available' }),
+      expect.objectContaining({ source_type: 'browser_action', url: 'https://example.com/article', status: 'planned' }),
+    ]))
+    expect(packet.citations).toEqual(['https://example.com/article', 'https://www.youtube.com/watch?v=abc123'])
+    expect(packet.urls).toEqual(packet.citations)
+    expect(packet.blockers).toEqual([])
+  })
+
+  it('includes explicit blockers and low confidence when research is blocked or limited', () => {
+    const packet = createSpaceAgentResearchPacket({
+      request: 'Bypass the paywall and scrape a private account',
+      generatedAt: '2026-05-06T18:30:00.000Z',
+      webSources: [{ url: 'https://example.com/private', status: 'blocked', blocked_reason: 'private_source_blocked' }],
+      browserActions: [{ action: 'inspect', target: 'https://example.com/private', summary: 'Bypass the paywall and scrape a private account' }],
+    })
+
+    expect(packet.status).toBe('blocked')
+    expect(packet.confidence).toBe('low')
+    expect(packet.blockers).toEqual(expect.arrayContaining(['paywall_bypass_not_allowed', 'private_source_blocked']))
+    expect(packet.source_list).toEqual(expect.arrayContaining([
+      expect.objectContaining({ url: 'https://example.com/private', status: 'blocked', blocked_reason: 'private_source_blocked' }),
+      expect.objectContaining({ source_type: 'browser_action', status: 'blocked', blocked_reason: 'paywall_bypass_not_allowed' }),
+    ]))
   })
 
   it('requires browser actions to attach to WebResearchIntent and log URL, timestamp, and action type', () => {

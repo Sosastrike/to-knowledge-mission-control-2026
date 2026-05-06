@@ -1,3 +1,13 @@
+import {
+  createMiniAgentDefinition,
+  createMiniAgentMemory,
+  expireMiniAgentMemory,
+  type MiniAgentDefinition,
+  type MiniAgentDefinitionResult,
+  type MiniAgentMemory,
+  type MiniAgentMemoryResult,
+} from './gateway-mini-agent-contracts'
+
 export type SpaceAgentResearchType = 'browser' | 'web' | 'youtube' | 'video' | 'firecrawl' | 'page_extraction' | 'general'
 
 export type SpaceAgentResearchOperation =
@@ -379,6 +389,129 @@ export type SpaceAgentResearchHandoff = {
   space_agent_exit: SpaceAgentTaskExit
   audit_log: SpaceAgentHandoffAuditEvent[]
   packet: ResearchPacket
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
+export type SpaceResearchMiniAgentTemplate = {
+  schema: 'space_research_mini_agent_template_v1'
+  created_by: 'hermes'
+  template_id: string
+  name: 'Space Research Mini-Agent'
+  purpose: string
+  parent_supervisor: 'agent_zero'
+  requested_by: 'space_agent'
+  allowed_tools: string[]
+  forbidden_tools: string[]
+  output_contract: 'sub_research_packet'
+  activation_requires: 'agent_zero_approval_and_gateway_policy'
+  bridge_session_required_for_execution: true
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+}
+
+export type SpaceResearchMiniAgentScope = {
+  schema: 'space_research_mini_agent_scope_v1'
+  allowed_urls: string[]
+  allowed_source_ids: string[]
+  max_sources: number
+  memory_ttl_minutes: number
+  browse_outside_scope_allowed: false
+  blocked_reason: string | null
+}
+
+export type PiMiniAgentFanoutRecommendation = {
+  schema: 'pi_mini_agent_fanout_recommendation_v1'
+  reviewer: 'pi'
+  shadow_mode: true
+  recommended: boolean
+  recommended_mini_agent_type: 'research'
+  fanout_count: number
+  source_scope: string[]
+  blocked_reason: string | null
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  owner_visible_summary: string
+}
+
+export type AgentZeroMiniAgentCreationApproval = {
+  schema: 'agent_zero_mini_agent_creation_approval_v1'
+  approver: 'agent_zero'
+  approved_for_creation: boolean
+  activation_enabled: false
+  blocked_reason: string | null
+  rationale: string
+  no_secrets_exposed: true
+}
+
+export type SpaceResearchMiniAgentScopeDecision = {
+  schema: 'space_research_mini_agent_scope_decision_v1'
+  requested_url: string | null
+  allowed: boolean
+  blocked_reason: string | null
+  no_secrets_exposed: true
+  no_raw_paths: true
+}
+
+export type GatewaySubResearchMerge = {
+  schema: 'gateway_sub_research_merge_v1'
+  parent_packet_id: string
+  sub_packet_ids: string[]
+  status: 'merged' | 'blocked' | 'needs_more_research'
+  source_list: ResearchPacketSourceSummary[]
+  findings: string[]
+  citations: string[]
+  blockers: string[]
+  confidence: EvidenceItem['confidence']
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
+export type SpaceResearchMiniAgentAuditEvent = {
+  event: string
+  actor: 'space_agent' | 'hermes' | 'agent_zero' | 'pi' | 'gateway' | 'mini_agent'
+  target: string
+  summary: string
+  recorded_at: string
+  external_write: false
+  secrets_exposed: false
+}
+
+export type SpaceResearchMiniAgentFanoutInput = SpaceAgentResearchPacketInput & {
+  assignedUrls?: string[]
+  assignedSourceIds?: string[]
+  miniAgentName?: string | null
+  memoryTtlMinutes?: number | null
+  subEvidence?: Array<Partial<EvidenceItem> & { summary: string }>
+  outOfScopeUrlToCheck?: string | null
+}
+
+export type SpaceResearchMiniAgentFanout = {
+  fanout_id: string
+  schema: 'space_research_mini_agent_fanout_v1'
+  mode: 'space_agent_requested_web_research_mini_agent'
+  parent_packet: ResearchPacket
+  template: SpaceResearchMiniAgentTemplate
+  agent_zero_approval: AgentZeroMiniAgentCreationApproval
+  pi_recommendation: PiMiniAgentFanoutRecommendation
+  assigned_scope: SpaceResearchMiniAgentScope
+  scope_decision: SpaceResearchMiniAgentScopeDecision
+  mini_agent_definition_result: MiniAgentDefinitionResult
+  mini_agent_definition: MiniAgentDefinition | null
+  mini_agent_memory_result: MiniAgentMemoryResult
+  mini_agent_memory: MiniAgentMemory | null
+  sub_research_packet: ResearchPacket | null
+  gateway_merge: GatewaySubResearchMerge
+  expired_mini_agent: MiniAgentDefinition | null
+  expired_memory: MiniAgentMemory | null
+  audit_log: SpaceResearchMiniAgentAuditEvent[]
+  mini_agent_expires_after_task: true
+  execution_enabled: false
+  writes_enabled: false
   no_secrets_exposed: true
   no_raw_paths: true
   owner_visible_summary: string
@@ -800,7 +933,102 @@ export function createSpaceAgentResearchHandoff(input: SpaceAgentResearchPacketI
       ? `Gateway blocked the Space Agent handoff: ${agentZeroDecision.rationale}.`
       : status === 'needs_more_research'
         ? 'Gateway recorded the Space Agent packet and Agent Zero requested more research before handoff.'
-        : `Gateway handed Space Agent research back to ${packet.responsible_agent}; Agent Zero remains the decision owner.`,
+      : `Gateway handed Space Agent research back to ${packet.responsible_agent}; Agent Zero remains the decision owner.`,
+  }
+}
+
+export function createSpaceResearchMiniAgentFanout(input: SpaceResearchMiniAgentFanoutInput): SpaceResearchMiniAgentFanout {
+  const generatedAt = input.generatedAt || DEFAULT_GENERATED_AT
+  const parentPacket = createSpaceAgentResearchPacket(input)
+  const assignedScope = createSpaceResearchMiniAgentScope(parentPacket, input)
+  const template = createSpaceResearchMiniAgentTemplate(generatedAt)
+  const piRecommendation = createPiMiniAgentFanoutRecommendation(parentPacket, assignedScope)
+  const agentZeroApproval = createAgentZeroMiniAgentCreationApproval(parentPacket, assignedScope, piRecommendation)
+  const miniAgentName = sanitize(input.miniAgentName || 'Space Research Mini-Agent')
+  const miniAgentDefinitionResult = createMiniAgentDefinition({
+    id: normalizeId(`space_research_${parentPacket.packet_id}`),
+    name: miniAgentName,
+    purpose: 'Read assigned public sources and return a sub-ResearchPacket to Space Agent through Gateway.',
+    parent_supervisor: 'agent_zero',
+    scope: assignedScope.allowed_urls.length
+      ? assignedScope.allowed_urls.map((url) => `assigned_url:${url}`)
+      : assignedScope.allowed_source_ids.map((sourceId) => `assigned_source:${sourceId}`),
+    allowed_tools: ['gateway.source_scope.read', 'space_agent.research_packet.compose'],
+    forbidden_tools: ['browse_outside_assigned_scope', 'external_write', 'direct_secret_read', 'raw_root_shell', 'docker_socket'],
+    allowed_skills: ['space_agent.web_research_packet'],
+    forbidden_skills: ['zapier_write', 'heygen_generation', 'smb_mount', 'opencloud_delete'],
+    allowed_models: ['gateway_assigned_model_only'],
+    memory_ttl_minutes: assignedScope.memory_ttl_minutes,
+    output_contract: 'Return sub-ResearchPacket only; do not contact owner directly.',
+    kill_condition: 'Expire immediately after sub-ResearchPacket handoff or when TTL ends.',
+    created_at: generatedAt,
+  })
+  const miniAgentDefinition = miniAgentDefinitionResult.definition
+  const miniAgentMemoryResult = miniAgentDefinition
+    ? createMiniAgentMemory({
+      mini_agent_id: miniAgentDefinition.id,
+      parent_task: parentPacket.job_id,
+      parent_supervisor: 'agent_zero',
+      source: 'gateway_scoped_space_research_context',
+      facts: assignedScope.allowed_urls.map((url) => `Assigned URL: ${url}`),
+      assumptions: ['Mini-agent may only inspect assigned sources.'],
+      unknowns: parentPacket.blockers,
+      blocked_items: assignedScope.blocked_reason ? [assignedScope.blocked_reason] : [],
+      ttl_minutes: assignedScope.memory_ttl_minutes,
+      created_at: generatedAt,
+      provenance: {
+        source_type: 'gateway_context',
+        source_id: parentPacket.packet_id,
+        source_verified_at: generatedAt,
+        created_by: 'space_agent',
+        parent_task: parentPacket.job_id,
+        parent_supervisor: 'agent_zero',
+        confidence: parentPacket.confidence,
+      },
+    })
+    : blockedMiniAgentMemoryResult('mini_agent_definition_missing')
+  const miniAgentMemory = miniAgentMemoryResult.memory
+  const scopeDecision = evaluateSpaceResearchMiniAgentScope(assignedScope, input.outOfScopeUrlToCheck || assignedScope.allowed_urls[0] || null)
+  const subResearchPacket = agentZeroApproval.approved_for_creation && miniAgentDefinition && scopeDecision.allowed
+    ? createSubResearchPacketForMiniAgent(parentPacket, input, assignedScope)
+    : null
+  const gatewayMerge = mergeSpaceAgentSubResearchPackets(parentPacket, subResearchPacket ? [subResearchPacket] : [])
+  const expiredMiniAgent = miniAgentDefinition ? expireSpaceResearchMiniAgent(miniAgentDefinition, generatedAt) : null
+  const expiredMemory = miniAgentMemory ? expireMiniAgentMemory(miniAgentMemory, addMinutes(miniAgentMemory.expires_at, 1)) : null
+  const auditLog = createSpaceResearchMiniAgentAuditLog({
+    generatedAt,
+    parentPacket,
+    miniAgentId: miniAgentDefinition?.id || 'mini_agent_blocked',
+    blockedReason: agentZeroApproval.blocked_reason || assignedScope.blocked_reason || scopeDecision.blocked_reason,
+  })
+
+  return {
+    fanout_id: normalizeId(`space_research_mini_agent_fanout_${parentPacket.packet_id}`),
+    schema: 'space_research_mini_agent_fanout_v1',
+    mode: 'space_agent_requested_web_research_mini_agent',
+    parent_packet: parentPacket,
+    template,
+    agent_zero_approval: agentZeroApproval,
+    pi_recommendation: piRecommendation,
+    assigned_scope: assignedScope,
+    scope_decision: scopeDecision,
+    mini_agent_definition_result: miniAgentDefinitionResult,
+    mini_agent_definition: miniAgentDefinition,
+    mini_agent_memory_result: miniAgentMemoryResult,
+    mini_agent_memory: miniAgentMemory,
+    sub_research_packet: subResearchPacket,
+    gateway_merge: gatewayMerge,
+    expired_mini_agent: expiredMiniAgent,
+    expired_memory: expiredMemory,
+    audit_log: auditLog,
+    mini_agent_expires_after_task: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: agentZeroApproval.approved_for_creation
+      ? 'Space Agent requested a scoped web-research mini-agent; Gateway merged the sub-ResearchPacket and expired the mini-agent after task.'
+      : `Space Agent mini-agent fan-out is blocked: ${agentZeroApproval.blocked_reason || assignedScope.blocked_reason || scopeDecision.blocked_reason}.`,
   }
 }
 
@@ -1127,6 +1355,240 @@ function collectResearchBlockers(job: SpaceAgentJob, webSources: WebSource[], yo
   ].filter((value): value is string => Boolean(value)))
 }
 
+function createSpaceResearchMiniAgentTemplate(generatedAt: string): SpaceResearchMiniAgentTemplate {
+  return {
+    schema: 'space_research_mini_agent_template_v1',
+    created_by: 'hermes',
+    template_id: normalizeId(`space_research_mini_agent_template_${generatedAt}`),
+    name: 'Space Research Mini-Agent',
+    purpose: 'Perform scoped read-only web research for Space Agent and return a sub-ResearchPacket.',
+    parent_supervisor: 'agent_zero',
+    requested_by: 'space_agent',
+    allowed_tools: ['gateway.source_scope.read', 'space_agent.research_packet.compose'],
+    forbidden_tools: ['browse_outside_assigned_scope', 'external_write', 'direct_secret_read', 'raw_root_shell', 'docker_socket'],
+    output_contract: 'sub_research_packet',
+    activation_requires: 'agent_zero_approval_and_gateway_policy',
+    bridge_session_required_for_execution: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+  }
+}
+
+function createSpaceResearchMiniAgentScope(parentPacket: ResearchPacket, input: SpaceResearchMiniAgentFanoutInput): SpaceResearchMiniAgentScope {
+  const urls = dedupeStrings([
+    ...(input.assignedUrls || []).map(sanitize),
+    ...(input.webSources || []).map((source) => source.url ? sanitize(source.url) : null).filter((value): value is string => Boolean(value)),
+    ...parentPacket.citations.filter((url) => /^https?:\/\//i.test(url)),
+    ...extractUrls(input.request),
+  ]).filter(Boolean)
+  const sourceIds = dedupeStrings([
+    ...(input.assignedSourceIds || []).map(sanitize),
+    ...parentPacket.source_list.map((source) => source.source_id),
+  ]).filter(Boolean)
+  const memoryTtl = normalizeMiniAgentMemoryTtl(input.memoryTtlMinutes)
+  const blockedReason = urls.length === 0 && sourceIds.length === 0 ? 'mini_agent_source_scope_required' : null
+
+  return {
+    schema: 'space_research_mini_agent_scope_v1',
+    allowed_urls: urls,
+    allowed_source_ids: sourceIds,
+    max_sources: Math.max(1, urls.length || sourceIds.length),
+    memory_ttl_minutes: memoryTtl,
+    browse_outside_scope_allowed: false,
+    blocked_reason: blockedReason,
+  }
+}
+
+function createPiMiniAgentFanoutRecommendation(parentPacket: ResearchPacket, scope: SpaceResearchMiniAgentScope): PiMiniAgentFanoutRecommendation {
+  const recommended = !parentPacket.blocked_reason && !scope.blocked_reason && parentPacket.research_needed
+  return {
+    schema: 'pi_mini_agent_fanout_recommendation_v1',
+    reviewer: 'pi',
+    shadow_mode: true,
+    recommended,
+    recommended_mini_agent_type: 'research',
+    fanout_count: recommended ? Math.max(1, Math.min(scope.max_sources, 5)) : 0,
+    source_scope: scope.allowed_urls.length ? scope.allowed_urls : scope.allowed_source_ids,
+    blocked_reason: recommended ? null : scope.blocked_reason || parentPacket.blocked_reason || 'research_not_needed',
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    owner_visible_summary: recommended
+      ? 'Pi recommends scoped research mini-agent fan-out in shadow mode.'
+      : 'Pi does not recommend mini-agent fan-out until scope and research need are valid.',
+  }
+}
+
+function createAgentZeroMiniAgentCreationApproval(
+  parentPacket: ResearchPacket,
+  scope: SpaceResearchMiniAgentScope,
+  piRecommendation: PiMiniAgentFanoutRecommendation,
+): AgentZeroMiniAgentCreationApproval {
+  const approved = piRecommendation.recommended && !scope.blocked_reason && parentPacket.status !== 'blocked'
+  const blocker = approved ? null : scope.blocked_reason || piRecommendation.blocked_reason || parentPacket.blocked_reason || 'agent_zero_mini_agent_creation_not_approved'
+  return {
+    schema: 'agent_zero_mini_agent_creation_approval_v1',
+    approver: 'agent_zero',
+    approved_for_creation: approved,
+    activation_enabled: false,
+    blocked_reason: blocker,
+    rationale: approved
+      ? 'Agent Zero approves creation of a scoped read-only Space Research mini-agent definition; runtime activation remains disabled pending Gateway policy and Bridge Session rules.'
+      : `Agent Zero blocks Space Research mini-agent creation: ${blocker}.`,
+    no_secrets_exposed: true,
+  }
+}
+
+export function evaluateSpaceResearchMiniAgentScope(scope: SpaceResearchMiniAgentScope, requestedUrl: string | null): SpaceResearchMiniAgentScopeDecision {
+  const requested = requestedUrl ? sanitize(requestedUrl) : null
+  const allowed = !requested
+    ? !scope.blocked_reason
+    : scope.allowed_urls.some((url) => normalizeUrlForScope(url) === normalizeUrlForScope(requested))
+  return {
+    schema: 'space_research_mini_agent_scope_decision_v1',
+    requested_url: requested,
+    allowed,
+    blocked_reason: allowed ? null : 'mini_agent_browse_outside_assigned_scope_blocked',
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+  }
+}
+
+function createSubResearchPacketForMiniAgent(
+  parentPacket: ResearchPacket,
+  input: SpaceResearchMiniAgentFanoutInput,
+  scope: SpaceResearchMiniAgentScope,
+): ResearchPacket {
+  const scopedWebSources = (input.webSources || [])
+    .filter((source) => !source.url || scope.allowed_urls.some((url) => normalizeUrlForScope(url) === normalizeUrlForScope(source.url || '')))
+  const evidence = input.subEvidence || input.evidence || parentPacket.evidence.map((item) => ({
+    summary: item.summary,
+    quote: item.quote,
+    source_id: item.source_id,
+    source_type: item.source_type,
+    url: item.url,
+    confidence: item.confidence,
+  }))
+  return createSpaceAgentResearchPacket({
+    request: `Mini-agent scoped research for: ${parentPacket.original_request}`,
+    requestedBy: 'gateway',
+    responsibleAgent: parentPacket.responsible_agent,
+    generatedAt: input.generatedAt,
+    firecrawlConfigured: input.firecrawlConfigured,
+    evidence,
+    webSources: scopedWebSources.length > 0 ? scopedWebSources : scope.allowed_urls.map((url, index) => ({
+      source_id: `mini_agent_source_${index + 1}`,
+      url,
+      status: 'checked' as const,
+      access: 'public' as const,
+    })),
+    youtubeSources: input.youtubeSources,
+    browserActions: [],
+  })
+}
+
+export function mergeSpaceAgentSubResearchPackets(parentPacket: ResearchPacket, subPackets: ResearchPacket[]): GatewaySubResearchMerge {
+  const blockers = dedupeStrings([...parentPacket.blockers, ...subPackets.flatMap((packet) => packet.blockers)])
+  const findings = dedupeStrings([...parentPacket.findings, ...subPackets.flatMap((packet) => packet.findings)])
+  const citations = dedupeStrings([...parentPacket.citations, ...subPackets.flatMap((packet) => packet.citations)])
+  const sourceList = [...parentPacket.source_list, ...subPackets.flatMap((packet) => packet.source_list)]
+  const status: GatewaySubResearchMerge['status'] = blockers.length > 0
+    ? 'blocked'
+    : subPackets.length === 0
+      ? 'needs_more_research'
+      : 'merged'
+
+  return {
+    schema: 'gateway_sub_research_merge_v1',
+    parent_packet_id: parentPacket.packet_id,
+    sub_packet_ids: subPackets.map((packet) => packet.packet_id),
+    status,
+    source_list: sourceList,
+    findings,
+    citations,
+    blockers,
+    confidence: deriveResearchConfidence([...parentPacket.evidence, ...subPackets.flatMap((packet) => packet.evidence)], blockers),
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: status === 'merged'
+      ? `Gateway merged ${subPackets.length} sub-ResearchPacket${subPackets.length === 1 ? '' : 's'} into the parent packet.`
+      : status === 'needs_more_research'
+        ? 'Gateway needs sub-ResearchPacket results before merge can complete.'
+        : `Gateway merge is blocked: ${blockers[0]}.`,
+  }
+}
+
+function expireSpaceResearchMiniAgent(definition: MiniAgentDefinition, expiredAt: string): MiniAgentDefinition {
+  return {
+    ...definition,
+    lifecycle: 'expired',
+    audit_trail: [
+      ...definition.audit_trail,
+      {
+        event: 'gateway.mini_agent.expired_after_space_research_task',
+        actor: 'gateway',
+        target: definition.id,
+        summary: 'Space Research mini-agent expired after scoped task handoff.',
+        recorded_at: expiredAt,
+        external_write: false,
+        secrets_exposed: false,
+      },
+    ],
+  }
+}
+
+function blockedMiniAgentMemoryResult(blockedReason: string): MiniAgentMemoryResult {
+  return {
+    ok: false,
+    mode: 'mini_agent_memory_dry_run',
+    memory: null,
+    policy_result: 'blocked',
+    blocked_reason: blockedReason,
+    owner_visible_summary: `Mini-agent memory action is blocked: ${blockedReason}.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+  }
+}
+
+function createSpaceResearchMiniAgentAuditLog(input: {
+  generatedAt: string
+  parentPacket: ResearchPacket
+  miniAgentId: string
+  blockedReason: string | null
+}): SpaceResearchMiniAgentAuditEvent[] {
+  const status = input.blockedReason ? `Blocked: ${input.blockedReason}.` : 'Recorded.'
+  return [
+    miniAgentAuditEvent('space_agent.mini_agent.requested', 'space_agent', 'gateway', `Space Agent requested scoped mini-agent fan-out. ${status}`, input.generatedAt),
+    miniAgentAuditEvent('hermes.space_research_template.created', 'hermes', 'gateway', 'Hermes provided Space Research mini-agent template.', input.generatedAt),
+    miniAgentAuditEvent('pi.mini_agent_fanout.recommended', 'pi', 'gateway', 'Pi reviewed mini-agent fan-out in shadow mode.', input.generatedAt),
+    miniAgentAuditEvent('agent_zero.mini_agent_creation.reviewed', 'agent_zero', input.miniAgentId, 'Agent Zero reviewed mini-agent creation authority.', input.generatedAt),
+    miniAgentAuditEvent('gateway.mini_agent.scope.assigned', 'gateway', input.miniAgentId, 'Gateway assigned limited URL/source scope and memory TTL.', input.generatedAt),
+    miniAgentAuditEvent('mini_agent.sub_research_packet.returned', 'mini_agent', 'gateway', 'Mini-agent returned sub-ResearchPacket without external writes.', input.generatedAt),
+    miniAgentAuditEvent('gateway.sub_research_packet.merged', 'gateway', input.parentPacket.packet_id, 'Gateway merged sub-results into parent ResearchPacket.', input.generatedAt),
+    miniAgentAuditEvent('gateway.mini_agent.expired', 'gateway', input.miniAgentId, 'Gateway expired mini-agent after task.', input.generatedAt),
+  ]
+}
+
+function miniAgentAuditEvent(
+  event: string,
+  actor: SpaceResearchMiniAgentAuditEvent['actor'],
+  target: string,
+  summary: string,
+  recordedAt: string,
+): SpaceResearchMiniAgentAuditEvent {
+  return {
+    event,
+    actor,
+    target: sanitize(target),
+    summary: sanitize(summary),
+    recorded_at: recordedAt,
+    external_write: false,
+    secrets_exposed: false,
+  }
+}
+
 function validateResearchPacketForGateway(packet: ResearchPacket): GatewayResearchPacketValidation {
   const missingFields = requiredResearchPacketFields().filter((field) => isMissingResearchPacketField(packet, field))
   const unsafeOutput = packetContainsUnsafeOutput(packet)
@@ -1382,6 +1844,32 @@ function auditActorTargetForStage(stage: SpaceAgentHandoffStage, packet: Researc
 
 function dedupeStrings(values: string[]): string[] {
   return Array.from(new Set(values))
+}
+
+function normalizeMiniAgentMemoryTtl(value: number | null | undefined): number {
+  const numeric = Number(value || 1440)
+  if (!Number.isFinite(numeric)) return 1440
+  return Math.max(30, Math.min(1440, Math.floor(numeric)))
+}
+
+function normalizeUrlForScope(value: string): string {
+  try {
+    const url = new URL(sanitize(value))
+    url.hash = ''
+    return url.toString().replace(/\/$/, '')
+  } catch {
+    return sanitize(value).replace(/\/$/, '')
+  }
+}
+
+function extractUrls(value: string): string[] {
+  return dedupeStrings((sanitize(value).match(/https?:\/\/[^\s)]+/gi) || []).map((url) => url.replace(/[.,;]+$/, '')))
+}
+
+function addMinutes(iso: string, minutes: number): string {
+  const base = new Date(iso)
+  const time = Number.isFinite(base.getTime()) ? base.getTime() : new Date(DEFAULT_GENERATED_AT).getTime()
+  return new Date(time + minutes * 60_000).toISOString()
 }
 
 function domainFromUrl(value: string | null): string | null {

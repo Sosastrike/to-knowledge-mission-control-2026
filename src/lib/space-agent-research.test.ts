@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchHandoff, createSpaceAgentResearchPacket, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
+import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchHandoff, createSpaceAgentResearchPacket, createSpaceResearchMiniAgentFanout, evaluateSpaceResearchMiniAgentScope, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
 
 describe('Space Agent Research Packet', () => {
   it('classifies browser, web, YouTube, video, page extraction, and Firecrawl research', () => {
@@ -400,6 +400,164 @@ describe('Space Agent Research Packet', () => {
     expect(handoff.responsible_agent_handoff.accepted).toBe(false)
     expect(handoff.space_agent_exit.state).toBe('blocked')
     expect(handoff.audit_log.map((entry) => entry.status)).toEqual(Array(handoff.stages.length).fill('blocked'))
+  })
+
+  it('lets Space Agent request a scoped web-research mini-agent and merges the sub-ResearchPacket', () => {
+    const fanout = createSpaceResearchMiniAgentFanout({
+      request: 'Research this public page with scoped fan-out: https://example.com/research',
+      requestedBy: 'agent_zero',
+      responsibleAgent: 'hermes',
+      generatedAt: '2026-05-06T21:00:00.000Z',
+      assignedUrls: ['https://example.com/research'],
+      memoryTtlMinutes: 45,
+      webSources: [{ source_id: 'source-1', url: 'https://example.com/research', title: 'Research page', status: 'checked', access: 'public' }],
+      subEvidence: [
+        {
+          evidence_id: 'sub-1',
+          source_id: 'source-1',
+          source_type: 'web',
+          summary: 'The scoped source says Space Agent can use a subordinate research mini-agent.',
+          quote: 'subordinate research mini-agent',
+          url: 'https://example.com/research',
+          confidence: 'high',
+        },
+      ],
+    })
+
+    expect(fanout).toMatchObject({
+      schema: 'space_research_mini_agent_fanout_v1',
+      mode: 'space_agent_requested_web_research_mini_agent',
+      mini_agent_expires_after_task: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
+    expect(fanout.template).toMatchObject({
+      schema: 'space_research_mini_agent_template_v1',
+      created_by: 'hermes',
+      parent_supervisor: 'agent_zero',
+      requested_by: 'space_agent',
+      output_contract: 'sub_research_packet',
+      bridge_session_required_for_execution: true,
+      execution_enabled: false,
+    })
+    expect(fanout.agent_zero_approval).toMatchObject({
+      approver: 'agent_zero',
+      approved_for_creation: true,
+      activation_enabled: false,
+    })
+    expect(fanout.pi_recommendation).toMatchObject({
+      reviewer: 'pi',
+      shadow_mode: true,
+      recommended: true,
+      recommended_mini_agent_type: 'research',
+      fanout_count: 1,
+      execution_enabled: false,
+    })
+    expect(fanout.assigned_scope).toMatchObject({
+      allowed_urls: ['https://example.com/research'],
+      memory_ttl_minutes: 45,
+      browse_outside_scope_allowed: false,
+      blocked_reason: null,
+    })
+    expect(fanout.scope_decision).toMatchObject({ requested_url: 'https://example.com/research', allowed: true, blocked_reason: null })
+    expect(fanout.mini_agent_definition).toMatchObject({
+      parent_supervisor: 'agent_zero',
+      command_authority: 'agent_zero',
+      memory_ttl_minutes: 45,
+      lifecycle: 'proposed',
+      execution_enabled: false,
+      external_writes_enabled: false,
+      direct_secret_access_allowed: false,
+      raw_root_shell_allowed: false,
+      docker_socket_allowed: false,
+    })
+    expect(fanout.mini_agent_definition?.forbidden_tools).toEqual(expect.arrayContaining(['browse_outside_assigned_scope', 'direct_secret_read', 'docker_socket']))
+    expect(fanout.mini_agent_memory).toMatchObject({
+      ttl_minutes: 45,
+      state: 'temporary',
+      parent_supervisor: 'agent_zero',
+      contains_secrets: false,
+    })
+    expect(fanout.sub_research_packet).toMatchObject({
+      schema: 'research_packet_v1',
+      research_stage_owner: 'space_agent',
+      recommended_next_agent: 'hermes',
+    })
+    expect(fanout.sub_research_packet?.findings).toEqual(['The scoped source says Space Agent can use a subordinate research mini-agent.'])
+    expect(fanout.gateway_merge).toMatchObject({
+      schema: 'gateway_sub_research_merge_v1',
+      status: 'merged',
+      findings: ['The scoped source says Space Agent can use a subordinate research mini-agent.'],
+      citations: ['https://example.com/research'],
+      confidence: 'high',
+    })
+    expect(fanout.expired_mini_agent?.lifecycle).toBe('expired')
+    expect(fanout.expired_memory?.state).toBe('expired')
+    expect(fanout.audit_log.map((entry) => entry.event)).toEqual([
+      'space_agent.mini_agent.requested',
+      'hermes.space_research_template.created',
+      'pi.mini_agent_fanout.recommended',
+      'agent_zero.mini_agent_creation.reviewed',
+      'gateway.mini_agent.scope.assigned',
+      'mini_agent.sub_research_packet.returned',
+      'gateway.sub_research_packet.merged',
+      'gateway.mini_agent.expired',
+    ])
+    expect(fanout.audit_log.every((entry) => !entry.external_write && !entry.secrets_exposed)).toBe(true)
+  })
+
+  it('blocks mini-agent browsing outside assigned URL scope', () => {
+    const fanout = createSpaceResearchMiniAgentFanout({
+      request: 'Search the web and read only this assigned page: https://example.com/allowed',
+      generatedAt: '2026-05-06T21:15:00.000Z',
+      assignedUrls: ['https://example.com/allowed'],
+      outOfScopeUrlToCheck: 'https://example.org/not-allowed',
+      subEvidence: [{ summary: 'This should not be used because scope check blocks the URL.', url: 'https://example.org/not-allowed' }],
+    })
+
+    expect(fanout.agent_zero_approval.approved_for_creation).toBe(true)
+    expect(fanout.scope_decision).toMatchObject({
+      requested_url: 'https://example.org/not-allowed',
+      allowed: false,
+      blocked_reason: 'mini_agent_browse_outside_assigned_scope_blocked',
+    })
+    expect(evaluateSpaceResearchMiniAgentScope(fanout.assigned_scope, 'https://example.com/allowed').allowed).toBe(true)
+    expect(fanout.sub_research_packet).toBeNull()
+    expect(fanout.gateway_merge.status).toBe('needs_more_research')
+  })
+
+  it('blocks Space Agent mini-agent fan-out when no limited source scope exists', () => {
+    const fanout = createSpaceResearchMiniAgentFanout({
+      request: 'Research this topic later',
+      generatedAt: '2026-05-06T21:30:00.000Z',
+    })
+
+    expect(fanout.assigned_scope.blocked_reason).toBe('mini_agent_source_scope_required')
+    expect(fanout.pi_recommendation).toMatchObject({
+      recommended: false,
+      fanout_count: 0,
+      blocked_reason: 'mini_agent_source_scope_required',
+    })
+    expect(fanout.agent_zero_approval).toMatchObject({
+      approved_for_creation: false,
+      activation_enabled: false,
+      blocked_reason: 'mini_agent_source_scope_required',
+    })
+    expect(fanout.mini_agent_definition_result).toMatchObject({
+      ok: false,
+      policy_result: 'blocked',
+      blocked_reason: 'mini_agent_scope_required',
+    })
+    expect(fanout.mini_agent_memory_result).toMatchObject({
+      ok: false,
+      policy_result: 'blocked',
+      blocked_reason: 'mini_agent_definition_missing',
+    })
+    expect(fanout.sub_research_packet).toBeNull()
+    expect(fanout.expired_mini_agent).toBeNull()
+    expect(fanout.expired_memory).toBeNull()
   })
 
   it('requires browser actions to attach to WebResearchIntent and log URL, timestamp, and action type', () => {

@@ -111,6 +111,107 @@ export type YouTubeSource = {
   blocked_reason: string | null
 }
 
+export type YouTubeResearchSourcePath = 'official' | 'transcript' | 'metadata'
+
+export type YouTubeResearchIntent = {
+  intent_id: string
+  schema: 'youtube_research_intent_v1'
+  request_summary: string
+  requested_by: SpaceAgentRequester
+  responsible_agent: SpaceAgentResponsibleAgent
+  video_url: string | null
+  video_id: string | null
+  official_paths_first: true
+  source_priority: YouTubeResearchSourcePath[]
+  metadata_required: true
+  transcript_or_captions_preferred: true
+  frame_capture_allowed: boolean
+  full_video_download_allowed: false
+  created_at: string
+  no_secrets_exposed: true
+  no_raw_paths: true
+  blocked_reason: string | null
+}
+
+export type YouTubeMetadata = {
+  schema: 'youtube_metadata_v1'
+  title: string | null
+  channel: string | null
+  publish_date: string | null
+  url: string | null
+  description: string | null
+  metadata_status: 'available' | 'missing' | 'unknown'
+}
+
+export type YouTubeTranscriptSegment = {
+  segment_id: string
+  schema: 'youtube_transcript_segment_v1'
+  start_seconds: number | null
+  end_seconds: number | null
+  text: string
+  source: 'official_transcript' | 'captions' | 'metadata' | 'unknown'
+  no_secrets_exposed: true
+}
+
+export type YouTubeChapter = {
+  chapter_id: string
+  schema: 'youtube_chapter_v1'
+  title: string
+  start_seconds: number | null
+  end_seconds: number | null
+  source: 'official_chapters' | 'description' | 'metadata' | 'unknown'
+}
+
+export type YouTubeKeyClaim = {
+  claim_id: string
+  schema: 'youtube_key_claim_v1'
+  claim: string
+  source_segment_ids: string[]
+  confidence: 'low' | 'medium' | 'high'
+  needs_verification: boolean
+}
+
+export type YouTubeFrameCapture = {
+  capture_id: string
+  schema: 'youtube_frame_capture_v1'
+  status: 'allowed' | 'blocked' | 'not_requested'
+  timestamp_seconds: number | null
+  reference: string | null
+  blocked_reason: string | null
+  no_raw_paths: true
+}
+
+export type YouTubeResearchPacket = {
+  packet_id: string
+  schema: 'youtube_research_packet_v1'
+  mode: 'youtube_research_packet'
+  status: 'ready' | 'limited' | 'blocked'
+  research_stage_owner: 'space_agent'
+  returns_to: SpaceAgentResponsibleAgent
+  requested_by: SpaceAgentRequester
+  responsible_agent: SpaceAgentResponsibleAgent
+  youtube_research_intent: YouTubeResearchIntent
+  route: SpaceAgentResearchRoute
+  return_route: SpaceAgentReturnRoute
+  metadata: YouTubeMetadata
+  transcript_status: 'available' | 'missing' | 'blocked' | 'unknown'
+  captions_available: boolean
+  transcript_segments: YouTubeTranscriptSegment[]
+  chapters: YouTubeChapter[]
+  key_claims: YouTubeKeyClaim[]
+  frame_captures: YouTubeFrameCapture[]
+  allowed_paths: YouTubeResearchSourcePath[]
+  official_paths_first: true
+  full_video_download_allowed: false
+  full_video_download_blocked_by_default: true
+  blocked_reason: string | null
+  limitations: string[]
+  citations: string[]
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
 export type EvidenceItem = {
   evidence_id: string
   schema: 'evidence_item_v1'
@@ -226,6 +327,19 @@ export type SpaceAgentResearchPacketInput = {
   browserActions?: Array<Partial<BrowserActionSummary>>
 }
 
+export type YouTubeResearchPacketInput = SpaceAgentResearchPacketInput & {
+  videoUrl?: string
+  title?: string | null
+  channel?: string | null
+  publishDate?: string | null
+  description?: string | null
+  captionsAvailable?: boolean
+  transcriptSegments?: Array<Partial<YouTubeTranscriptSegment> & { text: string }>
+  chapters?: Array<Partial<YouTubeChapter> & { title: string }>
+  frameCaptureAllowed?: boolean
+  frameCaptures?: Array<Partial<YouTubeFrameCapture>>
+}
+
 const DEFAULT_GENERATED_AT = '1970-01-01T00:00:00.000Z'
 const OWNER_CREDENTIAL_BROWSER_PATTERN = /\b(?:use|using|with|owner|my|saved|stored).{0,30}(?:credential|credentials|password|cookie|cookies|session|login|sign in|auth)\b/i
 const PAYWALL_BYPASS_PATTERN = /\b(?:bypass|circumvent|evade|break through|unlock|work around).{0,40}(?:paywall|paid content|subscriber|subscription)|(?:paywall|paid content|subscriber|subscription).{0,40}(?:bypass|circumvent|evade|unlock|work around)\b/i
@@ -321,6 +435,73 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
       : status === 'blocked'
         ? `Space Agent job is blocked: ${blockedReason}.`
         : 'Space Agent job is ready for read-only Research Packet preparation through Gateway.',
+  }
+}
+
+
+export function createYouTubeResearchPacket(input: YouTubeResearchPacketInput): YouTubeResearchPacket {
+  const basePacket = createSpaceAgentResearchPacket({
+    ...input,
+    request: input.request || 'Inspect this YouTube video',
+  })
+  const videoUrl = sanitize(input.videoUrl || firstYouTubeUrl(input.request) || input.youtubeSources?.[0]?.video_url || '') || null
+  const transcriptSegments = normalizeYouTubeTranscriptSegments(input.transcriptSegments, input.generatedAt)
+  const captionsAvailable = Boolean(input.captionsAvailable || transcriptSegments.length > 0)
+  const transcriptStatus: YouTubeResearchPacket['transcript_status'] = transcriptSegments.length > 0
+    ? 'available'
+    : basePacket.blocked_reason
+      ? 'blocked'
+      : 'missing'
+  const metadata = normalizeYouTubeMetadata(input, videoUrl)
+  const chapters = normalizeYouTubeChapters(input.chapters)
+  const frameCaptures = normalizeYouTubeFrameCaptures(input.frameCaptures, Boolean(input.frameCaptureAllowed))
+  const downloadBlocked = getBrowserActionPolicyBlocker(input.request) === 'copyrighted_video_download_blocked_by_default'
+  const transcriptLimited = transcriptStatus === 'missing'
+  const blockedReason = basePacket.blocked_reason || (downloadBlocked ? 'copyrighted_video_download_blocked_by_default' : transcriptLimited ? 'youtube_transcript_unavailable' : null)
+  const status: YouTubeResearchPacket['status'] = basePacket.status === 'blocked' || downloadBlocked
+    ? 'blocked'
+    : transcriptLimited
+      ? 'limited'
+      : 'ready'
+  const limitations = [
+    transcriptLimited ? 'Transcript or captions unavailable; key claims are limited to supplied metadata and cannot be treated as transcript-backed.' : null,
+    frameCaptures.some((capture) => capture.status === 'blocked') ? 'Frame capture requested but blocked because tooling approval is missing.' : null,
+    downloadBlocked ? 'Full video download is blocked by default unless explicitly authorized and legal.' : null,
+  ].filter((item): item is string => Boolean(item))
+
+  return {
+    packet_id: normalizeId(`youtube_research_${metadata.video_id || videoUrl || input.generatedAt || DEFAULT_GENERATED_AT}`),
+    schema: 'youtube_research_packet_v1',
+    mode: 'youtube_research_packet',
+    status,
+    research_stage_owner: 'space_agent',
+    returns_to: basePacket.returns_to,
+    requested_by: basePacket.requested_by,
+    responsible_agent: basePacket.responsible_agent,
+    youtube_research_intent: createYouTubeResearchIntent(input, metadata, videoUrl, blockedReason),
+    route: basePacket.route,
+    return_route: basePacket.return_route,
+    metadata,
+    transcript_status: transcriptStatus,
+    captions_available: captionsAvailable,
+    transcript_segments: transcriptSegments,
+    chapters,
+    key_claims: extractYouTubeKeyClaims(transcriptSegments),
+    frame_captures: frameCaptures,
+    allowed_paths: ['official', 'transcript', 'metadata'],
+    official_paths_first: true,
+    full_video_download_allowed: false,
+    full_video_download_blocked_by_default: true,
+    blocked_reason: blockedReason,
+    limitations,
+    citations: [metadata.url, ...basePacket.citations].filter((value): value is string => Boolean(value)),
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: status === 'blocked'
+      ? `YouTube research is blocked: ${blockedReason}.`
+      : status === 'limited'
+        ? `YouTube research packet is limited: ${blockedReason}.`
+        : 'YouTube research packet is ready with metadata, transcript-backed claims when available, and Gateway return route.',
   }
 }
 
@@ -495,6 +676,107 @@ function normalizeYouTubeSources(value: SpaceAgentResearchPacketInput['youtubeSo
     transcript_status: item.transcript_status || 'not_checked',
     blocked_reason: item.blocked_reason ? sanitize(item.blocked_reason) : null,
   }))
+}
+
+function createYouTubeResearchIntent(input: YouTubeResearchPacketInput, metadata: YouTubeMetadata & { video_id?: string | null }, videoUrl: string | null, blockedReason: string | null): YouTubeResearchIntent {
+  return {
+    intent_id: normalizeId(`youtube_research_intent_${metadata.video_id || videoUrl || input.generatedAt || DEFAULT_GENERATED_AT}`),
+    schema: 'youtube_research_intent_v1',
+    request_summary: sanitize(input.request),
+    requested_by: input.requestedBy || 'gateway',
+    responsible_agent: normalizeResponsibleAgent(input.responsibleAgent, input.requestedBy),
+    video_url: videoUrl,
+    video_id: metadata.video_id || videoIdFromUrl(videoUrl),
+    official_paths_first: true,
+    source_priority: ['official', 'transcript', 'metadata'],
+    metadata_required: true,
+    transcript_or_captions_preferred: true,
+    frame_capture_allowed: Boolean(input.frameCaptureAllowed),
+    full_video_download_allowed: false,
+    created_at: input.generatedAt || DEFAULT_GENERATED_AT,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    blocked_reason: blockedReason,
+  }
+}
+
+function normalizeYouTubeMetadata(input: YouTubeResearchPacketInput, videoUrl: string | null): YouTubeMetadata & { video_id?: string | null } {
+  const source = input.youtubeSources?.[0]
+  const title = input.title ?? source?.title ?? null
+  const channel = input.channel ?? source?.channel ?? null
+  const url = videoUrl || source?.video_url || null
+  const description = input.description ?? null
+  return {
+    schema: 'youtube_metadata_v1',
+    title: title ? sanitize(title) : null,
+    channel: channel ? sanitize(channel) : null,
+    publish_date: input.publishDate ? sanitize(input.publishDate) : null,
+    url: url ? sanitize(url) : null,
+    description: description ? sanitize(description) : null,
+    metadata_status: title || channel || url || description ? 'available' : 'missing',
+    video_id: source?.video_id || videoIdFromUrl(url),
+  }
+}
+
+function normalizeYouTubeTranscriptSegments(value: YouTubeResearchPacketInput['transcriptSegments'], generatedAt: string | undefined): YouTubeTranscriptSegment[] {
+  return (value || []).map((item, index) => ({
+    segment_id: normalizeId(item.segment_id || `youtube_transcript_segment_${index + 1}`),
+    schema: 'youtube_transcript_segment_v1' as const,
+    start_seconds: typeof item.start_seconds === 'number' ? item.start_seconds : null,
+    end_seconds: typeof item.end_seconds === 'number' ? item.end_seconds : null,
+    text: sanitize(item.text),
+    source: item.source || 'official_transcript',
+    no_secrets_exposed: true as const,
+  })).filter((item) => item.text.length > 0)
+}
+
+function normalizeYouTubeChapters(value: YouTubeResearchPacketInput['chapters']): YouTubeChapter[] {
+  return (value || []).map((item, index) => ({
+    chapter_id: normalizeId(item.chapter_id || `youtube_chapter_${index + 1}`),
+    schema: 'youtube_chapter_v1' as const,
+    title: sanitize(item.title),
+    start_seconds: typeof item.start_seconds === 'number' ? item.start_seconds : null,
+    end_seconds: typeof item.end_seconds === 'number' ? item.end_seconds : null,
+    source: item.source || 'official_chapters',
+  })).filter((item) => item.title.length > 0)
+}
+
+function normalizeYouTubeFrameCaptures(value: YouTubeResearchPacketInput['frameCaptures'], frameCaptureAllowed: boolean): YouTubeFrameCapture[] {
+  return (value || []).map((item, index) => {
+    const requestedReference = item.reference ? sanitize(item.reference) : null
+    const blocked = !frameCaptureAllowed
+    return {
+      capture_id: normalizeId(item.capture_id || `youtube_frame_capture_${index + 1}`),
+      schema: 'youtube_frame_capture_v1' as const,
+      status: blocked ? 'blocked' : requestedReference ? 'allowed' : 'not_requested',
+      timestamp_seconds: typeof item.timestamp_seconds === 'number' ? item.timestamp_seconds : null,
+      reference: blocked ? null : requestedReference,
+      blocked_reason: blocked ? 'youtube_frame_capture_tooling_not_approved' : item.blocked_reason ? sanitize(item.blocked_reason) : null,
+      no_raw_paths: true as const,
+    }
+  })
+}
+
+function extractYouTubeKeyClaims(segments: YouTubeTranscriptSegment[]): YouTubeKeyClaim[] {
+  return segments.slice(0, 12).map((segment, index) => ({
+    claim_id: normalizeId(`youtube_key_claim_${index + 1}`),
+    schema: 'youtube_key_claim_v1' as const,
+    claim: summarizeClaim(segment.text),
+    source_segment_ids: [segment.segment_id],
+    confidence: 'medium' as const,
+    needs_verification: true as const,
+  })).filter((claim) => claim.claim.length > 0)
+}
+
+function summarizeClaim(value: string): string {
+  const cleaned = sanitize(value).replace(/\s+/g, ' ')
+  const sentence = cleaned.split(/(?<=[.!?])\s+/)[0] || cleaned
+  return sentence.length > 220 ? `${sentence.slice(0, 217).trim()}...` : sentence
+}
+
+function firstYouTubeUrl(value: string): string | null {
+  const match = sanitize(value).match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[^\s]+|youtu\.be\/[^\s]+)/i)
+  return match ? match[0] : null
 }
 
 function normalizeBrowserActions(value: SpaceAgentResearchPacketInput['browserActions'], intent: WebResearchIntent, generatedAt: string | undefined): BrowserActionSummary[] {

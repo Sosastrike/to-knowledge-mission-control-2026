@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchPacket, createWebResearchIntent } from './space-agent-research'
+import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchPacket, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
 
 describe('Space Agent Research Packet', () => {
   it('classifies browser, web, YouTube, video, page extraction, and Firecrawl research', () => {
@@ -246,6 +246,99 @@ describe('Space Agent Research Packet', () => {
         copyrighted_video_download_allowed: false,
       })
     }
+  })
+
+
+
+  it('creates a YouTubeResearchPacket with metadata, transcript claims, chapters, and Gateway return route', () => {
+    const packet = createYouTubeResearchPacket({
+      request: 'Inspect this YouTube video using official metadata and transcript first: https://www.youtube.com/watch?v=abc123',
+      requestedBy: 'agent_zero',
+      generatedAt: '2026-05-06T16:00:00.000Z',
+      videoUrl: 'https://www.youtube.com/watch?v=abc123',
+      title: 'Gateway Demo',
+      channel: 'Knowledge vs AI',
+      publishDate: '2026-05-01',
+      description: 'A public demo video about Gateway routing.',
+      transcriptSegments: [
+        { segment_id: 'intro', start_seconds: 0, end_seconds: 8, text: 'Gateway routes research to Space Agent and returns evidence to Agent Zero.' },
+        { segment_id: 'policy', start_seconds: 9, end_seconds: 18, text: 'Browser and video work stays read only unless Gateway policy approves more.' },
+      ],
+      chapters: [{ title: 'Gateway overview', start_seconds: 0, end_seconds: 60 }],
+      frameCaptureAllowed: true,
+      frameCaptures: [{ timestamp_seconds: 12, reference: 'gateway-managed-frame-12' }],
+    })
+
+    expect(packet).toMatchObject({
+      schema: 'youtube_research_packet_v1',
+      mode: 'youtube_research_packet',
+      status: 'ready',
+      research_stage_owner: 'space_agent',
+      returns_to: 'agent_zero',
+      official_paths_first: true,
+      allowed_paths: ['official', 'transcript', 'metadata'],
+      full_video_download_allowed: false,
+      full_video_download_blocked_by_default: true,
+      transcript_status: 'available',
+      captions_available: true,
+      metadata: {
+        title: 'Gateway Demo',
+        channel: 'Knowledge vs AI',
+        publish_date: '2026-05-01',
+        url: 'https://www.youtube.com/watch?v=abc123',
+        description: 'A public demo video about Gateway routing.',
+        metadata_status: 'available',
+      },
+    })
+    expect(packet.youtube_research_intent).toMatchObject({
+      schema: 'youtube_research_intent_v1',
+      official_paths_first: true,
+      source_priority: ['official', 'transcript', 'metadata'],
+      full_video_download_allowed: false,
+      video_id: 'abc123',
+    })
+    expect(packet.transcript_segments).toHaveLength(2)
+    expect(packet.chapters[0]).toMatchObject({ schema: 'youtube_chapter_v1', title: 'Gateway overview' })
+    expect(packet.key_claims.map((claim) => claim.claim)).toEqual(expect.arrayContaining(['Gateway routes research to Space Agent and returns evidence to Agent Zero.']))
+    expect(packet.frame_captures[0]).toMatchObject({ status: 'allowed', reference: 'gateway-managed-frame-12', no_raw_paths: true })
+    expect(packet.route.hops).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
+    expect(packet.return_route.hops).toEqual(['space_agent', 'gateway', 'agent_zero'])
+    expect(packet.no_secrets_exposed).toBe(true)
+    expect(packet.no_raw_paths).toBe(true)
+  })
+
+  it('returns limited YouTube packet when transcript is unavailable and blocks full video download by default', () => {
+    const limited = createYouTubeResearchPacket({
+      request: 'Inspect this YouTube video metadata: https://youtu.be/xyz789',
+      generatedAt: '2026-05-06T17:00:00.000Z',
+      videoUrl: 'https://youtu.be/xyz789',
+      title: 'No Transcript Demo',
+      channel: 'Knowledge vs AI',
+    })
+
+    expect(limited.status).toBe('limited')
+    expect(limited.transcript_status).toBe('missing')
+    expect(limited.blocked_reason).toBe('youtube_transcript_unavailable')
+    expect(limited.limitations).toContain('Transcript or captions unavailable; key claims are limited to supplied metadata and cannot be treated as transcript-backed.')
+    expect(limited.key_claims).toEqual([])
+
+    const blocked = createYouTubeResearchPacket({
+      request: 'Download a copyrighted YouTube video from https://youtu.be/xyz789',
+      generatedAt: '2026-05-06T17:30:00.000Z',
+      videoUrl: 'https://youtu.be/xyz789',
+      transcriptSegments: [{ text: 'This transcript exists but download is still not allowed.' }],
+      frameCaptures: [{ timestamp_seconds: 30, reference: 'should-not-leak-local-frame' }],
+    })
+
+    expect(blocked.status).toBe('blocked')
+    expect(blocked.full_video_download_allowed).toBe(false)
+    expect(blocked.blocked_reason).toBe('copyrighted_video_download_blocked_by_default')
+    expect(blocked.frame_captures[0]).toMatchObject({
+      status: 'blocked',
+      reference: null,
+      blocked_reason: 'youtube_frame_capture_tooling_not_approved',
+      no_raw_paths: true,
+    })
   })
 
   it('hands unclear or non-research requests back as research not needed', () => {

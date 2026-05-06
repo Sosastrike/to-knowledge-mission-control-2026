@@ -374,6 +374,58 @@ export type SpaceAgentTaskExit = {
   no_secrets_exposed: true
 }
 
+export type ResponsibleAgentNonWebStep = {
+  schema: 'responsible_agent_non_web_step_v1'
+  agent: SpaceAgentResponsibleAgent
+  packet_id: string
+  action: 'findings_reviewed' | 'workflow_draft_prepared' | 'route_review_prepared' | 'manual_review_prepared'
+  status: 'completed' | 'needs_more_research' | 'blocked'
+  web_research_reopened: false
+  external_write: false
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
+export type AgentZeroResearchFinalAnswer = {
+  schema: 'agent_zero_research_final_answer_v1'
+  response_owner: 'agent_zero'
+  packet_id: string
+  cites_research_packet: true
+  citations: string[]
+  evidence_packet_summary: string
+  answer: string
+  blocked_reason: string | null
+  no_fake_done: true
+  no_secrets_exposed: true
+  no_raw_paths: true
+}
+
+export type SpaceAgentResearchCompletion = {
+  completion_id: string
+  schema: 'space_agent_research_completion_v1'
+  mode: 'gateway_space_agent_research_completion'
+  status: 'answer_ready' | 'needs_more_research' | 'blocked'
+  owner_research_question_received: true
+  gateway_selected_space_agent: true
+  space_agent_researched: boolean
+  space_agent_returned_research_packet: true
+  gateway_validated_evidence: boolean
+  pi_reviewed_routing: boolean
+  hermes_created_workflow_from_findings: boolean
+  agent_zero_decided_next_step: boolean
+  responsible_agent_executed_next_non_web_step: boolean
+  final_answer_cites_research_packet: boolean
+  handoff: SpaceAgentResearchHandoff
+  responsible_agent_next_step: ResponsibleAgentNonWebStep
+  final_answer: AgentZeroResearchFinalAnswer
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
 export type SpaceAgentHandoffAuditEvent = {
   audit_id: string
   schema: 'space_agent_handoff_audit_event_v1'
@@ -1035,6 +1087,44 @@ export function createSpaceAgentResearchHandoff(input: SpaceAgentResearchPacketI
   }
 }
 
+export function createSpaceAgentResearchCompletion(input: SpaceAgentResearchPacketInput): SpaceAgentResearchCompletion {
+  const handoff = createSpaceAgentResearchHandoff(input)
+  const responsibleAgentNextStep = createResponsibleAgentNonWebStep(handoff)
+  const finalAnswer = createAgentZeroResearchFinalAnswer(handoff, responsibleAgentNextStep)
+  const status: SpaceAgentResearchCompletion['status'] = handoff.status === 'blocked'
+    ? 'blocked'
+    : handoff.status === 'needs_more_research'
+      ? 'needs_more_research'
+      : 'answer_ready'
+
+  return {
+    completion_id: normalizeId(`space_agent_research_completion_${handoff.packet_id}`),
+    schema: 'space_agent_research_completion_v1',
+    mode: 'gateway_space_agent_research_completion',
+    status,
+    owner_research_question_received: true,
+    gateway_selected_space_agent: true,
+    space_agent_researched: handoff.research_performed,
+    space_agent_returned_research_packet: handoff.research_packet_returned,
+    gateway_validated_evidence: handoff.gateway_validation.decision === 'accepted',
+    pi_reviewed_routing: handoff.pi_quality_review.reviewer === 'pi',
+    hermes_created_workflow_from_findings: handoff.hermes_workflow_draft.available,
+    agent_zero_decided_next_step: handoff.agent_zero_decision.decision === 'handoff_to_responsible_agent',
+    responsible_agent_executed_next_non_web_step: responsibleAgentNextStep.status === 'completed',
+    final_answer_cites_research_packet: finalAnswer.cites_research_packet,
+    handoff,
+    responsible_agent_next_step: responsibleAgentNextStep,
+    final_answer: finalAnswer,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: status === 'answer_ready'
+      ? 'Gateway completed the Space Agent research handoff; Agent Zero owns the final cited answer.'
+      : status === 'needs_more_research'
+        ? 'Gateway cannot complete the final answer until Space Agent returns stronger evidence.'
+        : `Gateway blocked the final research answer: ${finalAnswer.blocked_reason}.`,
+  }
+}
+
 export function createSpaceResearchMiniAgentFanout(input: SpaceResearchMiniAgentFanoutInput): SpaceResearchMiniAgentFanout {
   const generatedAt = input.generatedAt || DEFAULT_GENERATED_AT
   const parentPacket = createSpaceAgentResearchPacket(input)
@@ -1316,7 +1406,7 @@ export function classifySpaceAgentResearchOperation(request: string): SpaceAgent
   if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse/.test(text)) return 'browser_interaction'
   if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
   if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|product page|pricing page|page details|url/.test(text)) return 'page_read'
-  if (/\bweb\b|online research|live web|public site|public page/.test(text)) return 'web_search'
+  if (/\bweb\b|online research|live web|public site|public page|\bresearch\b/.test(text)) return 'web_search'
   return 'research_not_needed'
 }
 
@@ -2071,6 +2161,63 @@ function createResponsibleAgentResearchHandoff(packet: ResearchPacket, decision:
   }
 }
 
+function createResponsibleAgentNonWebStep(handoff: SpaceAgentResearchHandoff): ResponsibleAgentNonWebStep {
+  const agent = handoff.responsible_agent_handoff.to
+  const status: ResponsibleAgentNonWebStep['status'] = handoff.status === 'blocked'
+    ? 'blocked'
+    : handoff.status === 'needs_more_research'
+      ? 'needs_more_research'
+      : 'completed'
+
+  return {
+    schema: 'responsible_agent_non_web_step_v1',
+    agent,
+    packet_id: handoff.packet_id,
+    action: nonWebStepActionForResponsibleAgent(agent),
+    status,
+    web_research_reopened: false,
+    external_write: false,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: status === 'completed'
+      ? `Responsible agent ${agent} completed the next non-web planning step from the ResearchPacket.`
+      : status === 'needs_more_research'
+        ? 'Responsible-agent non-web step is paused until Space Agent returns more evidence.'
+        : `Responsible-agent non-web step is blocked: ${handoff.agent_zero_decision.rationale}.`,
+  }
+}
+
+function createAgentZeroResearchFinalAnswer(
+  handoff: SpaceAgentResearchHandoff,
+  step: ResponsibleAgentNonWebStep,
+): AgentZeroResearchFinalAnswer {
+  const blockedReason = handoff.status === 'blocked'
+    ? handoff.gateway_validation.blockers[0] || handoff.agent_zero_decision.rationale
+    : handoff.status === 'needs_more_research'
+      ? 'research_packet_needs_more_evidence'
+      : null
+  const citations = handoff.packet.citations
+  const answer = blockedReason
+    ? `Sir, I cannot finish the research answer yet because ${blockedReason}.`
+    : `Sir, based on the Space Agent ResearchPacket, ${summarizeResearchFindingsForFinalAnswer(handoff.packet.findings)} Citations: ${citations.join(', ')}.`
+
+  return {
+    schema: 'agent_zero_research_final_answer_v1',
+    response_owner: 'agent_zero',
+    packet_id: handoff.packet_id,
+    cites_research_packet: true,
+    citations,
+    evidence_packet_summary: handoff.packet.owner_visible_summary,
+    answer: sanitize(answer),
+    blocked_reason: blockedReason,
+    no_fake_done: true,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+  }
+}
+
 function createSpaceAgentTaskExit(packet: ResearchPacket, decision: AgentZeroResearchDecision): SpaceAgentTaskExit {
   const state: SpaceAgentTaskExit['state'] = decision.decision === 'blocked'
     ? 'blocked'
@@ -2156,6 +2303,18 @@ function actionForResponsibleAgent(agent: SpaceAgentResponsibleAgent): Responsib
   if (agent === 'pi') return 'route_review'
   if (agent === 'responsible_specialist_agent') return 'manual_review'
   return 'review_findings'
+}
+
+function nonWebStepActionForResponsibleAgent(agent: SpaceAgentResponsibleAgent): ResponsibleAgentNonWebStep['action'] {
+  if (agent === 'hermes') return 'workflow_draft_prepared'
+  if (agent === 'pi') return 'route_review_prepared'
+  if (agent === 'responsible_specialist_agent') return 'manual_review_prepared'
+  return 'findings_reviewed'
+}
+
+function summarizeResearchFindingsForFinalAnswer(findings: string[]): string {
+  const summary = findings.map(sanitize).filter(Boolean).slice(0, 3).join(' ')
+  return summary || 'the research packet is safe but does not contain enough findings for a final claim.'
 }
 
 function auditActorTargetForStage(stage: SpaceAgentHandoffStage, packet: ResearchPacket): Pick<SpaceAgentHandoffAuditEvent, 'actor' | 'target'> {

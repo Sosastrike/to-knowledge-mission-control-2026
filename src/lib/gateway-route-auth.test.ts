@@ -46,6 +46,11 @@ describe('Gateway route authentication policy', () => {
     const dataLayerQuery = await import('@/app/api/gateway/data-layer/query/route')
     const dataLayerExecute = await import('@/app/api/gateway/data-layer/execute/route')
     const miniAgents = await import('@/app/api/gateway/mini-agents/route')
+    const spaceAgentNode = await import('@/app/api/gateway/nodes/space-agent/route')
+    const spaceAgentStatus = await import('@/app/api/bridge/space-agent/status/route')
+    const spaceAgentTestChat = await import('@/app/api/bridge/space-agent/test-chat/route')
+    const spaceAgentResearch = await import('@/app/api/gateway/space-agent/research/route')
+    const spaceAgentJob = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -79,6 +84,19 @@ describe('Gateway route authentication policy', () => {
         method: 'POST',
         body: JSON.stringify({ name: 'research scout', purpose: 'Summarize one source', scope: ['read-only summary'] }),
       })),
+      spaceAgentNode.GET(new NextRequest('http://localhost/api/gateway/nodes/space-agent')),
+      spaceAgentStatus.GET(new NextRequest('http://localhost/api/bridge/space-agent/status')),
+      spaceAgentTestChat.POST(new NextRequest('http://localhost/api/bridge/space-agent/test-chat', {
+        method: 'POST',
+        body: JSON.stringify({ message: 'Can you see Gateway?' }),
+      })),
+      spaceAgentResearch.POST(new NextRequest('http://localhost/api/gateway/space-agent/research', {
+        method: 'POST',
+        body: JSON.stringify({ request: 'Research a public source.' }),
+      })),
+      spaceAgentJob.GET(new NextRequest('http://localhost/api/gateway/space-agent/jobs/job-1'), {
+        params: Promise.resolve({ id: 'job-1' }),
+      }),
     ]
 
     const responses = await Promise.all(checks)

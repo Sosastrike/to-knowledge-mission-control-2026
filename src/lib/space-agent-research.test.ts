@@ -61,6 +61,8 @@ describe('Space Agent Research Packet', () => {
       tool_execution_enabled: false,
       secrets_allowed: false,
       raw_paths_allowed: false,
+      owner_credentials_for_browser_requires_approval: true,
+      copyrighted_video_download_blocked_by_default: true,
     })
     expect(job).toMatchObject({
       schema: 'space_agent_job_v1',
@@ -154,10 +156,21 @@ describe('Space Agent Research Packet', () => {
       browserActions: [{ action: 'inspect', target: 'https://example.com/post', summary: 'Inspect public page only.' }],
     })
 
+    const browserAction = packet.browser_actions[0]
+
     expect(packet.returns_to).toBe('hermes')
     expect(packet.web_research_intent.schema).toBe('web_research_intent_v1')
     expect(packet.space_agent_job.schema).toBe('space_agent_job_v1')
     expect(packet.policy.schema).toBe('space_agent_policy_v1')
+    expect(browserAction.web_research_intent_id).toBe(packet.web_research_intent.intent_id)
+    expect(browserAction).toMatchObject({
+      url: 'https://example.com/post',
+      timestamp: '2026-05-06T12:00:00.000Z',
+      action_type: 'inspect',
+      returns_evidence: true,
+      hidden_state_returned: false,
+      stays_inside_space_agent: true,
+    })
     expect(packet.evidence[0]).toMatchObject({ schema: 'evidence_item_v1', source_type: 'web', no_secrets_exposed: true })
     expect(packet.web_sources[0]).toMatchObject({ schema: 'web_source_v1', domain: 'example.com', status: 'checked' })
     expect(packet.youtube_sources[0]).toMatchObject({ schema: 'youtube_source_v1', video_id: 'abc123' })
@@ -168,6 +181,71 @@ describe('Space Agent Research Packet', () => {
       execution_enabled: false,
     })
     expect(packet.citations).toEqual(expect.arrayContaining(['https://example.com/post', 'https://www.youtube.com/watch?v=abc123']))
+  })
+
+  it('requires browser actions to attach to WebResearchIntent and log URL, timestamp, and action type', () => {
+    const packet = createSpaceAgentResearchPacket({
+      request: 'Capture screenshot and page state for a public page',
+      generatedAt: '2026-05-06T14:00:00.000Z',
+      browserActions: [{ action: 'screenshot', target: 'https://example.com', summary: 'Capture page text, screenshot reference, and metadata only.' }],
+    })
+
+    expect(packet.web_research_intent.schema).toBe('web_research_intent_v1')
+    expect(packet.browser_actions[0]).toMatchObject({
+      web_research_intent_id: packet.web_research_intent.intent_id,
+      action: 'screenshot',
+      action_type: 'screenshot',
+      url: 'https://example.com',
+      timestamp: '2026-05-06T14:00:00.000Z',
+      allowed_capture: ['page_text', 'screenshot_reference', 'metadata'],
+      returns_evidence: true,
+      hidden_state_returned: false,
+      stays_inside_space_agent: true,
+      blocked_reason: null,
+    })
+  })
+
+  it('blocks browser actions that request owner credentials, paywall bypass, private account scraping, or copyrighted video download', () => {
+    const cases = [
+      {
+        request: 'Use my saved login credentials to inspect the page',
+        blocker: 'owner_credentials_not_approved',
+      },
+      {
+        request: 'Bypass the paywall and capture the article',
+        blocker: 'paywall_bypass_not_allowed',
+      },
+      {
+        request: 'Scrape a private account dashboard',
+        blocker: 'private_account_scrape_not_approved',
+      },
+      {
+        request: 'Download a copyrighted YouTube video',
+        blocker: 'copyrighted_video_download_blocked_by_default',
+      },
+    ]
+
+    for (const item of cases) {
+      const packet = createSpaceAgentResearchPacket({
+        request: item.request,
+        generatedAt: '2026-05-06T15:00:00.000Z',
+        browserActions: [{ action: 'inspect', target: 'https://example.com/private', summary: item.request }],
+      })
+
+      expect(packet.status).toBe('blocked')
+      expect(packet.blocked_reason).toBe(item.blocker)
+      expect(packet.policy.route_decision).toBe('blocked')
+      expect(packet.browser_actions[0]).toMatchObject({
+        status: 'blocked',
+        blocked_reason: item.blocker,
+        exact_blocker: item.blocker,
+        uses_owner_credentials: false,
+        owner_credentials_approved: false,
+        paywall_bypass_allowed: false,
+        private_account_scrape_allowed: false,
+        copyrighted_video_download_allowed: false,
+      })
+    }
   })
 
   it('hands unclear or non-research requests back as research not needed', () => {

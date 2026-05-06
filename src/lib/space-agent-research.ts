@@ -17,6 +17,9 @@ export type SpaceAgentResearchOperation =
 export type SpaceAgentRequester = 'owner' | 'agent_zero' | 'hermes' | 'pi' | 'gateway'
 export type SpaceAgentResponsibleAgent = 'agent_zero' | 'hermes' | 'pi' | 'responsible_specialist_agent'
 export type SpaceAgentRouteDecision = 'allowed' | 'blocked' | 'requires_session' | 'missing_credential'
+export type BrowserActionKind = 'open' | 'navigate' | 'inspect' | 'extract' | 'search' | 'screenshot' | 'page_state' | 'none'
+export type BrowserCaptureKind = 'page_text' | 'screenshot_reference' | 'metadata'
+export type BrowserActionBlocker = 'owner_credentials_not_approved' | 'paywall_bypass_not_allowed' | 'private_account_scrape_not_approved' | 'copyrighted_video_download_blocked_by_default' | null
 
 export type WebResearchIntent = {
   intent_id: string
@@ -53,6 +56,8 @@ export type SpaceAgentPolicy = {
   raw_paths_allowed: false
   no_fake_done: true
   login_boundary_respected: true
+  owner_credentials_for_browser_requires_approval: true
+  copyrighted_video_download_blocked_by_default: true
   paywall_private_content_blocked: true
   route_decision: SpaceAgentRouteDecision
   blocked_reason: string | null
@@ -122,14 +127,28 @@ export type EvidenceItem = {
 export type BrowserActionSummary = {
   action_id: string
   schema: 'browser_action_summary_v1'
-  action: 'open' | 'navigate' | 'inspect' | 'extract' | 'search' | 'screenshot' | 'page_state' | 'none'
+  web_research_intent_id: string
+  action: BrowserActionKind
+  action_type: BrowserActionKind
   target: string | null
+  url: string | null
+  timestamp: string | null
   status: 'planned' | 'blocked' | 'summarized'
   read_only: true
   browser_interaction_enabled: false
   execution_enabled: false
+  uses_owner_credentials: false
+  owner_credentials_approved: false
+  paywall_bypass_allowed: false
+  private_account_scrape_allowed: false
+  copyrighted_video_download_allowed: false
+  allowed_capture: BrowserCaptureKind[]
+  returns_evidence: true
+  hidden_state_returned: false
+  stays_inside_space_agent: true
   summary: string
   blocked_reason: string | null
+  exact_blocker: BrowserActionBlocker
 }
 
 export type SpaceAgentJob = {
@@ -208,6 +227,10 @@ export type SpaceAgentResearchPacketInput = {
 }
 
 const DEFAULT_GENERATED_AT = '1970-01-01T00:00:00.000Z'
+const OWNER_CREDENTIAL_BROWSER_PATTERN = /\b(?:use|using|with|owner|my|saved|stored).{0,30}(?:credential|credentials|password|cookie|cookies|session|login|sign in|auth)\b/i
+const PAYWALL_BYPASS_PATTERN = /\b(?:bypass|circumvent|evade|break through|unlock|work around).{0,40}(?:paywall|paid content|subscriber|subscription)|(?:paywall|paid content|subscriber|subscription).{0,40}(?:bypass|circumvent|evade|unlock|work around)\b/i
+const PRIVATE_ACCOUNT_SCRAPE_PATTERN = /\b(?:scrape|crawl|extract|download|copy|inspect).{0,50}(?:private account|private profile|private page|private inbox|dm|direct message|account dashboard)\b/i
+const COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN = /\b(?:download|rip|save|copy).{0,50}(?:copyrighted|protected|paid|subscriber|subscription|youtube|video|movie|course|webinar)\b/i
 const PRIVATE_OR_LOGIN_PATTERN = /\b(?:login|log in|sign in|private|paywall|paid content|credential|password|cookie|session token)\b/i
 const SECRETISH_PATTERN = /(sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY|AUTH[_-]?FILE)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
@@ -218,6 +241,7 @@ export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): W
   const researchOperation = classifySpaceAgentResearchOperation(request)
   const researchNeeded = researchOperation !== 'research_not_needed'
   const privateBoundary = PRIVATE_OR_LOGIN_PATTERN.test(request)
+  const browserBlocker = getBrowserActionPolicyBlocker(request)
   return {
     intent_id: normalizeId(`web_research_intent_${researchType}_${input.generatedAt || DEFAULT_GENERATED_AT}`),
     schema: 'web_research_intent_v1',
@@ -235,13 +259,14 @@ export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): W
     created_at: input.generatedAt || DEFAULT_GENERATED_AT,
     no_secrets_exposed: true,
     no_raw_paths: true,
-    blocked_reason: privateBoundary ? 'private_or_login_boundary_requires_owner_approved_credentials_and_bridge_session_scope' : null,
+    blocked_reason: browserBlocker || (privateBoundary ? 'private_or_login_boundary_requires_owner_approved_credentials_and_bridge_session_scope' : null),
   }
 }
 
 export function createSpaceAgentPolicy(intent: WebResearchIntent, input: { firecrawlConfigured?: boolean } = {}): SpaceAgentPolicy {
   const firecrawlMissing = intent.requires_firecrawl && !input.firecrawlConfigured
   const blockedReason = intent.blocked_reason || (firecrawlMissing ? 'firecrawl_missing_credential_research_packet_can_still_use_browser_or_web_fallback_if_available' : null)
+  const hardBlocked = Boolean(intent.blocked_reason)
   const bridgeSessionReason = intent.private_or_login_boundary
     ? 'private_or_login_boundary_requires_owner_approved_credentials_and_bridge_session_scope'
     : null
@@ -260,8 +285,10 @@ export function createSpaceAgentPolicy(intent: WebResearchIntent, input: { firec
     raw_paths_allowed: false,
     no_fake_done: true,
     login_boundary_respected: true,
+    owner_credentials_for_browser_requires_approval: true,
+    copyrighted_video_download_blocked_by_default: true,
     paywall_private_content_blocked: true,
-    route_decision: bridgeSessionReason ? 'blocked' : firecrawlMissing ? 'missing_credential' : 'allowed',
+    route_decision: hardBlocked || bridgeSessionReason ? 'blocked' : firecrawlMissing ? 'missing_credential' : 'allowed',
     blocked_reason: blockedReason,
   }
 }
@@ -271,8 +298,8 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
   const policy = createSpaceAgentPolicy(intent, { firecrawlConfigured: input.firecrawlConfigured })
   const route = createSpaceAgentResearchRoute(policy)
   const returnRoute = createSpaceAgentReturnRoute(intent.responsible_agent)
-  const blockedReason = policy.bridge_session_reason || policy.blocked_reason
-  const status = policy.bridge_session_reason ? 'blocked' : 'ready'
+  const blockedReason = policy.blocked_reason || policy.bridge_session_reason
+  const status = policy.route_decision === 'blocked' ? 'blocked' : 'ready'
   return {
     job_id: normalizeId(`space_agent_job_${intent.intent_id}`),
     schema: 'space_agent_job_v1',
@@ -309,7 +336,7 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
   const evidence = normalizeEvidence(input.evidence, input.generatedAt)
   const webSources = normalizeWebSources(input.webSources, input.generatedAt)
   const youtubeSources = normalizeYouTubeSources(input.youtubeSources)
-  const browserActions = normalizeBrowserActions(input.browserActions)
+  const browserActions = normalizeBrowserActions(input.browserActions, intent, input.generatedAt)
   const citations = collectCitations(evidence, webSources, youtubeSources)
 
   return {
@@ -470,19 +497,41 @@ function normalizeYouTubeSources(value: SpaceAgentResearchPacketInput['youtubeSo
   }))
 }
 
-function normalizeBrowserActions(value: SpaceAgentResearchPacketInput['browserActions']): BrowserActionSummary[] {
-  return (value || []).map((item, index) => ({
+function normalizeBrowserActions(value: SpaceAgentResearchPacketInput['browserActions'], intent: WebResearchIntent, generatedAt: string | undefined): BrowserActionSummary[] {
+  return (value || []).map((item, index) => normalizeBrowserAction(item, index, intent, generatedAt))
+}
+
+function normalizeBrowserAction(item: Partial<BrowserActionSummary>, index: number, intent: WebResearchIntent, generatedAt: string | undefined): BrowserActionSummary {
+  const action = item.action || 'inspect'
+  const target = item.target ? sanitize(item.target) : null
+  const policyBlocker = getBrowserActionPolicyBlocker([intent.request_summary, target, item.summary || ''].filter(Boolean).join(' '))
+  const blockedReason = item.blocked_reason ? sanitize(item.blocked_reason) : policyBlocker
+  return {
     action_id: normalizeId(item.action_id || `browser_action_${index + 1}`),
     schema: 'browser_action_summary_v1',
-    action: item.action || 'inspect',
-    target: item.target ? sanitize(item.target) : null,
-    status: item.status || 'planned',
+    web_research_intent_id: intent.intent_id,
+    action,
+    action_type: action,
+    target,
+    url: target && /^https?:\/\//i.test(target) ? target : null,
+    timestamp: item.timestamp || generatedAt || null,
+    status: blockedReason ? 'blocked' : item.status || 'planned',
     read_only: true,
     browser_interaction_enabled: false,
     execution_enabled: false,
-    summary: sanitize(item.summary || 'Read-only browser research action summary.'),
-    blocked_reason: item.blocked_reason ? sanitize(item.blocked_reason) : null,
-  }))
+    uses_owner_credentials: false,
+    owner_credentials_approved: false,
+    paywall_bypass_allowed: false,
+    private_account_scrape_allowed: false,
+    copyrighted_video_download_allowed: false,
+    allowed_capture: ['page_text', 'screenshot_reference', 'metadata'],
+    returns_evidence: true,
+    hidden_state_returned: false,
+    stays_inside_space_agent: true,
+    summary: sanitize(item.summary || 'Read-only browser research action summary; evidence only, no hidden state.'),
+    blocked_reason: blockedReason,
+    exact_blocker: policyBlocker,
+  }
 }
 
 function collectCitations(evidence: EvidenceItem[], webSources: WebSource[], youtubeSources: YouTubeSource[]): string[] {
@@ -513,6 +562,15 @@ function sanitize(value: string): string {
     .replace(SECRETISH_PATTERN, '[redacted-secret]')
     .replace(RAW_PATH_PATTERN, '[redacted-path]')
     .trim()
+}
+
+function getBrowserActionPolicyBlocker(value: string | null | undefined): BrowserActionBlocker {
+  const text = sanitize(value || '')
+  if (OWNER_CREDENTIAL_BROWSER_PATTERN.test(text)) return 'owner_credentials_not_approved'
+  if (PAYWALL_BYPASS_PATTERN.test(text)) return 'paywall_bypass_not_allowed'
+  if (PRIVATE_ACCOUNT_SCRAPE_PATTERN.test(text)) return 'private_account_scrape_not_approved'
+  if (COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN.test(text)) return 'copyrighted_video_download_blocked_by_default'
+  return null
 }
 
 function normalizeId(value: string): string {

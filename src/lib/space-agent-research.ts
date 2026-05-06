@@ -242,6 +242,148 @@ export type ResearchEvidenceSnippet = {
   confidence: EvidenceItem['confidence']
 }
 
+export type SpaceAgentHandoffStage =
+  | 'research_task_received'
+  | 'research_performed'
+  | 'research_packet_returned'
+  | 'gateway_validated_research_packet'
+  | 'pi_reviewed_route_quality'
+  | 'hermes_prepared_workflow_option'
+  | 'agent_zero_decided_next_action'
+  | 'responsible_agent_received_handoff'
+  | 'space_agent_exited_task'
+  | 'gateway_recorded_handoff_audit'
+
+export type GatewayResearchPacketValidation = {
+  schema: 'gateway_research_packet_validation_v1'
+  validator: 'gateway'
+  packet_id: string
+  job_id: string
+  valid: boolean
+  decision: 'accepted' | 'blocked' | 'needs_more_research'
+  missing_fields: string[]
+  blockers: string[]
+  source_count: number
+  evidence_count: number
+  citations_count: number
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
+export type PiResearchQualityReview = {
+  schema: 'pi_research_quality_review_v1'
+  reviewer: 'pi'
+  shadow_mode: true
+  packet_id: string
+  route_quality: 'pass' | 'review' | 'blocked'
+  confidence: EvidenceItem['confidence']
+  findings_count: number
+  source_count: number
+  blockers: string[]
+  recommended_next_agent: SpaceAgentResponsibleAgent
+  recommendation: 'handoff_to_responsible_agent' | 'request_more_research' | 'blocked'
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  owner_visible_summary: string
+}
+
+export type HermesResearchWorkflowDraft = {
+  schema: 'hermes_research_workflow_draft_v1'
+  reviewer: 'hermes'
+  mode: 'workflow_design_only'
+  packet_id: string
+  available: boolean
+  title: string
+  purpose: string
+  inputs: string[]
+  proposed_steps: string[]
+  blocked_reason: string | null
+  requires_agent_zero_review: true
+  activation_requires: 'agent_zero_bridge_session'
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  owner_visible_summary: string
+}
+
+export type AgentZeroResearchDecision = {
+  schema: 'agent_zero_research_decision_v1'
+  decision_maker: 'agent_zero'
+  packet_id: string
+  decision: 'handoff_to_responsible_agent' | 'request_more_research' | 'blocked'
+  next_agent: SpaceAgentResponsibleAgent
+  rationale: string
+  owner_response_owner: 'agent_zero'
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+}
+
+export type ResponsibleAgentResearchHandoff = {
+  schema: 'responsible_agent_research_handoff_v1'
+  from: 'space_agent'
+  through: 'gateway'
+  to: SpaceAgentResponsibleAgent
+  packet_id: string
+  accepted: boolean
+  action: 'review_findings' | 'design_workflow' | 'route_review' | 'manual_review'
+  requires_more_research: boolean
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  owner_visible_summary: string
+}
+
+export type SpaceAgentTaskExit = {
+  schema: 'space_agent_task_exit_v1'
+  agent: 'space_agent'
+  packet_id: string
+  state: 'exited' | 'awaiting_more_research' | 'blocked'
+  reason: string
+  can_resume_with_gateway_request: true
+  no_secrets_exposed: true
+}
+
+export type SpaceAgentHandoffAuditEvent = {
+  audit_id: string
+  schema: 'space_agent_handoff_audit_event_v1'
+  stage: SpaceAgentHandoffStage
+  actor: 'gateway' | 'space_agent' | 'pi' | 'hermes' | 'agent_zero' | SpaceAgentResponsibleAgent
+  target: 'gateway' | 'space_agent' | 'pi' | 'hermes' | 'agent_zero' | SpaceAgentResponsibleAgent
+  status: 'recorded' | 'blocked' | 'needs_more_research'
+  blocked_reason: string | null
+  recorded_at: string
+  no_secrets_exposed: true
+  no_raw_paths: true
+}
+
+export type SpaceAgentResearchHandoff = {
+  handoff_id: string
+  schema: 'space_agent_research_handoff_v1'
+  mode: 'gateway_space_agent_research_handoff'
+  job_id: string
+  packet_id: string
+  original_request: string
+  status: 'handoff_ready' | 'needs_more_research' | 'blocked'
+  stages: SpaceAgentHandoffStage[]
+  research_task_received: true
+  research_performed: boolean
+  research_packet_returned: true
+  gateway_validation: GatewayResearchPacketValidation
+  pi_quality_review: PiResearchQualityReview
+  hermes_workflow_draft: HermesResearchWorkflowDraft
+  agent_zero_decision: AgentZeroResearchDecision
+  responsible_agent_handoff: ResponsibleAgentResearchHandoff
+  space_agent_exit: SpaceAgentTaskExit
+  audit_log: SpaceAgentHandoffAuditEvent[]
+  packet: ResearchPacket
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
 export type BrowserActionSummary = {
   action_id: string
   schema: 'browser_action_summary_v1'
@@ -600,7 +742,65 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
       ? `research not needed; Space Agent hands back to ${job.responsible_agent} through Gateway.`
       : job.blocked_reason
         ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
-        : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
+      : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
+  }
+}
+
+export function createSpaceAgentResearchHandoff(input: SpaceAgentResearchPacketInput): SpaceAgentResearchHandoff {
+  const packet = createSpaceAgentResearchPacket(input)
+  const generatedAt = input.generatedAt || DEFAULT_GENERATED_AT
+  const gatewayValidation = validateResearchPacketForGateway(packet)
+  const piQualityReview = reviewResearchPacketWithPi(packet, gatewayValidation)
+  const hermesWorkflowDraft = draftHermesWorkflowFromResearch(packet, gatewayValidation)
+  const agentZeroDecision = decideResearchNextAction(packet, gatewayValidation, piQualityReview)
+  const responsibleAgentHandoff = createResponsibleAgentResearchHandoff(packet, agentZeroDecision)
+  const spaceAgentExit = createSpaceAgentTaskExit(packet, agentZeroDecision)
+  const status = agentZeroDecision.decision === 'blocked'
+    ? 'blocked'
+    : agentZeroDecision.decision === 'request_more_research'
+      ? 'needs_more_research'
+      : 'handoff_ready'
+  const stages: SpaceAgentHandoffStage[] = [
+    'research_task_received',
+    'research_performed',
+    'research_packet_returned',
+    'gateway_validated_research_packet',
+    'pi_reviewed_route_quality',
+    'hermes_prepared_workflow_option',
+    'agent_zero_decided_next_action',
+    'responsible_agent_received_handoff',
+    'space_agent_exited_task',
+    'gateway_recorded_handoff_audit',
+  ]
+  const auditLog = createSpaceAgentHandoffAuditLog({ packet, stages, status, generatedAt })
+
+  return {
+    handoff_id: normalizeId(`space_agent_handoff_${packet.packet_id}`),
+    schema: 'space_agent_research_handoff_v1',
+    mode: 'gateway_space_agent_research_handoff',
+    job_id: packet.job_id,
+    packet_id: packet.packet_id,
+    original_request: packet.original_request,
+    status,
+    stages,
+    research_task_received: true,
+    research_performed: packet.research_needed,
+    research_packet_returned: true,
+    gateway_validation: gatewayValidation,
+    pi_quality_review: piQualityReview,
+    hermes_workflow_draft: hermesWorkflowDraft,
+    agent_zero_decision: agentZeroDecision,
+    responsible_agent_handoff: responsibleAgentHandoff,
+    space_agent_exit: spaceAgentExit,
+    audit_log: auditLog,
+    packet,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: status === 'blocked'
+      ? `Gateway blocked the Space Agent handoff: ${agentZeroDecision.rationale}.`
+      : status === 'needs_more_research'
+        ? 'Gateway recorded the Space Agent packet and Agent Zero requested more research before handoff.'
+        : `Gateway handed Space Agent research back to ${packet.responsible_agent}; Agent Zero remains the decision owner.`,
   }
 }
 
@@ -925,6 +1125,259 @@ function collectResearchBlockers(job: SpaceAgentJob, webSources: WebSource[], yo
     ...youtubeSources.map((source) => source.blocked_reason),
     ...browserActions.map((action) => action.blocked_reason),
   ].filter((value): value is string => Boolean(value)))
+}
+
+function validateResearchPacketForGateway(packet: ResearchPacket): GatewayResearchPacketValidation {
+  const missingFields = requiredResearchPacketFields().filter((field) => isMissingResearchPacketField(packet, field))
+  const unsafeOutput = packetContainsUnsafeOutput(packet)
+  const hardBlockers = [
+    ...missingFields.map((field) => `missing_${field}`),
+    unsafeOutput ? 'research_packet_contains_unsafe_output' : null,
+  ].filter((value): value is string => Boolean(value))
+  const blockers = dedupeStrings([...packet.blockers, ...hardBlockers])
+  const needsMoreResearch = packet.research_needed && packet.status !== 'blocked' && packet.evidence.length === 0 && packet.source_list.length === 0 && packet.citations.length === 0
+  const hardBlocked = packet.status === 'blocked' || hardBlockers.length > 0
+  const decision: GatewayResearchPacketValidation['decision'] = hardBlocked
+    ? 'blocked'
+    : needsMoreResearch
+      ? 'needs_more_research'
+      : 'accepted'
+
+  return {
+    schema: 'gateway_research_packet_validation_v1',
+    validator: 'gateway',
+    packet_id: packet.packet_id,
+    job_id: packet.job_id,
+    valid: !hardBlocked,
+    decision,
+    missing_fields: missingFields,
+    blockers,
+    source_count: packet.source_list.length,
+    evidence_count: packet.evidence.length,
+    citations_count: packet.citations.length,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: decision === 'blocked'
+      ? `Gateway validation blocked the ResearchPacket: ${blockers[0] || 'unknown_blocker'}.`
+      : decision === 'needs_more_research'
+        ? 'Gateway validation accepted the packet schema but needs more research evidence before handoff.'
+        : 'Gateway validation accepted the ResearchPacket for handoff.',
+  }
+}
+
+function reviewResearchPacketWithPi(packet: ResearchPacket, validation: GatewayResearchPacketValidation): PiResearchQualityReview {
+  const routeQuality: PiResearchQualityReview['route_quality'] = validation.decision === 'blocked'
+    ? 'blocked'
+    : validation.decision === 'needs_more_research' || packet.confidence === 'low'
+      ? 'review'
+      : 'pass'
+  const recommendation: PiResearchQualityReview['recommendation'] = routeQuality === 'blocked'
+    ? 'blocked'
+    : routeQuality === 'review'
+      ? 'request_more_research'
+      : 'handoff_to_responsible_agent'
+
+  return {
+    schema: 'pi_research_quality_review_v1',
+    reviewer: 'pi',
+    shadow_mode: true,
+    packet_id: packet.packet_id,
+    route_quality: routeQuality,
+    confidence: packet.confidence,
+    findings_count: packet.findings.length,
+    source_count: packet.source_list.length,
+    blockers: validation.blockers,
+    recommended_next_agent: packet.recommended_next_agent,
+    recommendation,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    owner_visible_summary: recommendation === 'blocked'
+      ? 'Pi recommends blocking this research handoff until Gateway blockers are resolved.'
+      : recommendation === 'request_more_research'
+        ? 'Pi recommends more research before the responsible agent acts.'
+        : `Pi recommends handing this packet to ${packet.recommended_next_agent}.`,
+  }
+}
+
+function draftHermesWorkflowFromResearch(packet: ResearchPacket, validation: GatewayResearchPacketValidation): HermesResearchWorkflowDraft {
+  const available = validation.decision !== 'blocked' && packet.findings.length > 0
+  const title = packet.research_operation === 'research_not_needed'
+    ? 'Research Not Needed Handoff'
+    : `Turn ${packet.research_operation} findings into an Agent Zero workflow`
+
+  return {
+    schema: 'hermes_research_workflow_draft_v1',
+    reviewer: 'hermes',
+    mode: 'workflow_design_only',
+    packet_id: packet.packet_id,
+    available,
+    title,
+    purpose: available
+      ? 'Convert Space Agent evidence into a safe skill, workflow, or next-agent plan for Agent Zero review.'
+      : 'No workflow draft is available until Space Agent returns usable findings.',
+    inputs: ['ResearchPacket', 'Gateway validation result', 'Pi route-quality review'],
+    proposed_steps: available
+      ? [
+        'Review evidence snippets and citations.',
+        'Separate confirmed findings from blockers and assumptions.',
+        'Draft a workflow or skill proposal for Agent Zero.',
+        'Keep activation blocked until Agent Zero review and Bridge Session approval.',
+      ]
+      : [],
+    blocked_reason: available ? null : validation.decision === 'blocked' ? 'gateway_validation_blocked_packet' : 'research_findings_missing',
+    requires_agent_zero_review: true,
+    activation_requires: 'agent_zero_bridge_session',
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    owner_visible_summary: available
+      ? 'Hermes can turn the Space Agent findings into a workflow proposal only.'
+      : 'Hermes cannot draft a workflow until research findings are available.',
+  }
+}
+
+function decideResearchNextAction(packet: ResearchPacket, validation: GatewayResearchPacketValidation, piReview: PiResearchQualityReview): AgentZeroResearchDecision {
+  const decision: AgentZeroResearchDecision['decision'] = validation.decision === 'blocked' || piReview.recommendation === 'blocked'
+    ? 'blocked'
+    : validation.decision === 'needs_more_research' || piReview.recommendation === 'request_more_research'
+      ? 'request_more_research'
+      : 'handoff_to_responsible_agent'
+  return {
+    schema: 'agent_zero_research_decision_v1',
+    decision_maker: 'agent_zero',
+    packet_id: packet.packet_id,
+    decision,
+    next_agent: packet.recommended_next_agent,
+    rationale: decision === 'blocked'
+      ? validation.blockers[0] || 'gateway_or_pi_blocked_research_handoff'
+      : decision === 'request_more_research'
+        ? 'Research packet is structurally safe but needs stronger evidence before downstream action.'
+        : `Research is ready; Agent Zero hands it to ${packet.recommended_next_agent} through Gateway.`,
+    owner_response_owner: 'agent_zero',
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+  }
+}
+
+function createResponsibleAgentResearchHandoff(packet: ResearchPacket, decision: AgentZeroResearchDecision): ResponsibleAgentResearchHandoff {
+  const accepted = decision.decision === 'handoff_to_responsible_agent'
+  return {
+    schema: 'responsible_agent_research_handoff_v1',
+    from: 'space_agent',
+    through: 'gateway',
+    to: decision.next_agent,
+    packet_id: packet.packet_id,
+    accepted,
+    action: actionForResponsibleAgent(decision.next_agent),
+    requires_more_research: decision.decision === 'request_more_research',
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    owner_visible_summary: accepted
+      ? `Responsible agent ${decision.next_agent} received the ResearchPacket through Gateway.`
+      : decision.decision === 'request_more_research'
+        ? 'Responsible-agent handoff is paused while Space Agent gathers more evidence.'
+        : `Responsible-agent handoff is blocked: ${decision.rationale}.`,
+  }
+}
+
+function createSpaceAgentTaskExit(packet: ResearchPacket, decision: AgentZeroResearchDecision): SpaceAgentTaskExit {
+  const state: SpaceAgentTaskExit['state'] = decision.decision === 'blocked'
+    ? 'blocked'
+    : decision.decision === 'request_more_research'
+      ? 'awaiting_more_research'
+      : 'exited'
+  return {
+    schema: 'space_agent_task_exit_v1',
+    agent: 'space_agent',
+    packet_id: packet.packet_id,
+    state,
+    reason: state === 'exited'
+      ? 'ResearchPacket returned; Space Agent exits until Gateway requests more research.'
+      : state === 'awaiting_more_research'
+        ? 'Gateway requested more evidence before handoff.'
+        : decision.rationale,
+    can_resume_with_gateway_request: true,
+    no_secrets_exposed: true,
+  }
+}
+
+function createSpaceAgentHandoffAuditLog(input: {
+  packet: ResearchPacket
+  stages: SpaceAgentHandoffStage[]
+  status: SpaceAgentResearchHandoff['status']
+  generatedAt: string
+}): SpaceAgentHandoffAuditEvent[] {
+  return input.stages.map((stage, index) => {
+    const actorTarget = auditActorTargetForStage(stage, input.packet)
+    return {
+      audit_id: normalizeId(`space_agent_handoff_audit_${input.packet.packet_id}_${index + 1}_${stage}`),
+      schema: 'space_agent_handoff_audit_event_v1',
+      stage,
+      actor: actorTarget.actor,
+      target: actorTarget.target,
+      status: input.status === 'blocked'
+        ? 'blocked'
+        : input.status === 'needs_more_research'
+          ? 'needs_more_research'
+          : 'recorded',
+      blocked_reason: input.status === 'blocked' ? input.packet.blockers[0] || input.packet.blocked_reason : null,
+      recorded_at: input.generatedAt,
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    }
+  })
+}
+
+function requiredResearchPacketFields(): Array<keyof ResearchPacket> {
+  return [
+    'job_id',
+    'original_request',
+    'assigned_supervisor',
+    'source_list',
+    'findings',
+    'confidence',
+    'evidence_snippets',
+    'citations',
+    'urls',
+    'blockers',
+    'recommended_next_agent',
+  ]
+}
+
+function isMissingResearchPacketField(packet: ResearchPacket, field: keyof ResearchPacket): boolean {
+  const value = packet[field]
+  return value === null || value === undefined || (typeof value === 'string' && value.length === 0)
+}
+
+function packetContainsUnsafeOutput(packet: ResearchPacket): boolean {
+  const serialized = JSON.stringify({
+    original_request: packet.original_request,
+    request_summary: packet.request_summary,
+    findings: packet.findings,
+    evidence_snippets: packet.evidence_snippets,
+    owner_visible_summary: packet.owner_visible_summary,
+  })
+  return /(?:sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|\/home\/tony|\/a0\/|\/tmp|\/var\/folders)/i.test(serialized)
+}
+
+function actionForResponsibleAgent(agent: SpaceAgentResponsibleAgent): ResponsibleAgentResearchHandoff['action'] {
+  if (agent === 'hermes') return 'design_workflow'
+  if (agent === 'pi') return 'route_review'
+  if (agent === 'responsible_specialist_agent') return 'manual_review'
+  return 'review_findings'
+}
+
+function auditActorTargetForStage(stage: SpaceAgentHandoffStage, packet: ResearchPacket): Pick<SpaceAgentHandoffAuditEvent, 'actor' | 'target'> {
+  if (stage === 'research_task_received') return { actor: 'gateway', target: 'space_agent' }
+  if (stage === 'research_performed' || stage === 'research_packet_returned' || stage === 'space_agent_exited_task') return { actor: 'space_agent', target: 'gateway' }
+  if (stage === 'pi_reviewed_route_quality') return { actor: 'pi', target: 'gateway' }
+  if (stage === 'hermes_prepared_workflow_option') return { actor: 'hermes', target: 'gateway' }
+  if (stage === 'agent_zero_decided_next_action') return { actor: 'agent_zero', target: 'gateway' }
+  if (stage === 'responsible_agent_received_handoff') return { actor: 'gateway', target: packet.responsible_agent }
+  return { actor: 'gateway', target: 'gateway' }
 }
 
 function dedupeStrings(values: string[]): string[] {

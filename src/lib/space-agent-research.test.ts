@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchPacket, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
+import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchHandoff, createSpaceAgentResearchPacket, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
 
 describe('Space Agent Research Packet', () => {
   it('classifies browser, web, YouTube, video, page extraction, and Firecrawl research', () => {
@@ -245,6 +245,161 @@ describe('Space Agent Research Packet', () => {
       expect.objectContaining({ url: 'https://example.com/private', status: 'blocked', blocked_reason: 'private_source_blocked' }),
       expect.objectContaining({ source_type: 'browser_action', status: 'blocked', blocked_reason: 'paywall_bypass_not_allowed' }),
     ]))
+  })
+
+  it('creates the Gateway handoff lifecycle from Space Agent research to Agent Zero and Hermes', () => {
+    const handoff = createSpaceAgentResearchHandoff({
+      request: 'Research a public article so Hermes can design a workflow',
+      requestedBy: 'agent_zero',
+      responsibleAgent: 'hermes',
+      generatedAt: '2026-05-06T19:00:00.000Z',
+      evidence: [
+        {
+          evidence_id: 'workflow-source',
+          source_id: 'public-article',
+          summary: 'The article describes a repeatable research workflow.',
+          quote: 'A repeatable research workflow',
+          source_type: 'web',
+          url: 'https://example.com/workflow',
+          confidence: 'high',
+        },
+      ],
+      webSources: [{ source_id: 'public-article', url: 'https://example.com/workflow', title: 'Workflow article', status: 'checked', access: 'public' }],
+    })
+
+    expect(handoff).toMatchObject({
+      schema: 'space_agent_research_handoff_v1',
+      mode: 'gateway_space_agent_research_handoff',
+      status: 'handoff_ready',
+      job_id: handoff.packet.job_id,
+      packet_id: handoff.packet.packet_id,
+      original_request: 'Research a public article so Hermes can design a workflow',
+      research_task_received: true,
+      research_performed: true,
+      research_packet_returned: true,
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
+    expect(handoff.stages).toEqual([
+      'research_task_received',
+      'research_performed',
+      'research_packet_returned',
+      'gateway_validated_research_packet',
+      'pi_reviewed_route_quality',
+      'hermes_prepared_workflow_option',
+      'agent_zero_decided_next_action',
+      'responsible_agent_received_handoff',
+      'space_agent_exited_task',
+      'gateway_recorded_handoff_audit',
+    ])
+    expect(handoff.gateway_validation).toMatchObject({
+      schema: 'gateway_research_packet_validation_v1',
+      validator: 'gateway',
+      valid: true,
+      decision: 'accepted',
+      source_count: 2,
+      evidence_count: 1,
+      citations_count: 1,
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
+    expect(handoff.pi_quality_review).toMatchObject({
+      schema: 'pi_research_quality_review_v1',
+      reviewer: 'pi',
+      shadow_mode: true,
+      route_quality: 'pass',
+      recommendation: 'handoff_to_responsible_agent',
+      recommended_next_agent: 'hermes',
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(handoff.hermes_workflow_draft).toMatchObject({
+      schema: 'hermes_research_workflow_draft_v1',
+      reviewer: 'hermes',
+      mode: 'workflow_design_only',
+      available: true,
+      activation_requires: 'agent_zero_bridge_session',
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(handoff.agent_zero_decision).toMatchObject({
+      schema: 'agent_zero_research_decision_v1',
+      decision_maker: 'agent_zero',
+      decision: 'handoff_to_responsible_agent',
+      next_agent: 'hermes',
+      owner_response_owner: 'agent_zero',
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(handoff.responsible_agent_handoff).toMatchObject({
+      schema: 'responsible_agent_research_handoff_v1',
+      from: 'space_agent',
+      through: 'gateway',
+      to: 'hermes',
+      accepted: true,
+      action: 'design_workflow',
+      requires_more_research: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(handoff.space_agent_exit).toMatchObject({
+      schema: 'space_agent_task_exit_v1',
+      agent: 'space_agent',
+      state: 'exited',
+      can_resume_with_gateway_request: true,
+    })
+    expect(handoff.audit_log).toHaveLength(handoff.stages.length)
+    expect(handoff.audit_log.map((entry) => entry.stage)).toEqual(handoff.stages)
+    expect(handoff.audit_log.every((entry) => entry.no_secrets_exposed && entry.no_raw_paths)).toBe(true)
+  })
+
+  it('keeps Space Agent active when Gateway needs more evidence before handoff', () => {
+    const handoff = createSpaceAgentResearchHandoff({
+      request: 'Search the web for public evidence',
+      requestedBy: 'owner',
+      generatedAt: '2026-05-06T19:30:00.000Z',
+    })
+
+    expect(handoff.status).toBe('needs_more_research')
+    expect(handoff.gateway_validation).toMatchObject({
+      valid: true,
+      decision: 'needs_more_research',
+      source_count: 0,
+      evidence_count: 0,
+    })
+    expect(handoff.pi_quality_review).toMatchObject({
+      route_quality: 'review',
+      recommendation: 'request_more_research',
+    })
+    expect(handoff.agent_zero_decision).toMatchObject({
+      decision: 'request_more_research',
+      next_agent: 'agent_zero',
+    })
+    expect(handoff.responsible_agent_handoff).toMatchObject({
+      accepted: false,
+      requires_more_research: true,
+    })
+    expect(handoff.space_agent_exit.state).toBe('awaiting_more_research')
+  })
+
+  it('blocks unsafe handoff requests and records the Gateway audit trail', () => {
+    const handoff = createSpaceAgentResearchHandoff({
+      request: 'Bypass the paywall and scrape a private account',
+      generatedAt: '2026-05-06T20:00:00.000Z',
+      browserActions: [{ action: 'inspect', target: 'https://example.com/private', summary: 'Bypass the paywall and scrape a private account' }],
+    })
+
+    expect(handoff.status).toBe('blocked')
+    expect(handoff.gateway_validation).toMatchObject({
+      valid: false,
+      decision: 'blocked',
+    })
+    expect(handoff.gateway_validation.blockers).toEqual(expect.arrayContaining(['paywall_bypass_not_allowed']))
+    expect(handoff.pi_quality_review.recommendation).toBe('blocked')
+    expect(handoff.agent_zero_decision.decision).toBe('blocked')
+    expect(handoff.responsible_agent_handoff.accepted).toBe(false)
+    expect(handoff.space_agent_exit.state).toBe('blocked')
+    expect(handoff.audit_log.map((entry) => entry.status)).toEqual(Array(handoff.stages.length).fill('blocked'))
   })
 
   it('requires browser actions to attach to WebResearchIntent and log URL, timestamp, and action type', () => {

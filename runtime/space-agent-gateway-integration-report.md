@@ -10,6 +10,24 @@ Space Agent does not replace Agent Zero, Hermes, Pi, OpenCloud, OpenClaw+, Bridg
 
 Current status: PARTIAL GO for Gateway integration. The design, registry, docs, route policies, safety boundaries, mini-agent templates, and dry-run gauntlets are implemented and tested. Live external research execution remains blocked until the Space Agent live adapter and any required Firecrawl/browser credentials are configured through Gateway policy.
 
+## Final Status Snapshot
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Space Agent repo audit | Passed for design use | Upstream `Sosastrike/To-Knowledge-space-agent` was refreshed in an isolated audit clone at HEAD `9c26f9f`; package/runtime/license/script findings remain consistent with the baseline audit. |
+| Install/sandbox status | Sandbox only | Local sandbox startup was previously verified on loopback only. Production install and persistent service activation remain blocked. |
+| Gateway node status | Implemented, read-only | `space_agent` is represented as a Gateway specialist node and cannot become commander or bypass Gateway. |
+| Firecrawl status | Routed/planned, live execution blocked | Gateway can classify Firecrawl search/scrape/crawl/map/extract requests and include Firecrawl status, but Space Agent native Firecrawl runtime access is not proven. |
+| Browser status | Routed/planned, live interaction blocked | Browser/page inspection requests route to Space Agent as read-only Research Packet planning. Live browser actions remain blocked pending safe adapter proof and policy scope. |
+| YouTube status | Routed/planned, transcript connector not proven | YouTube/video inspection packets are modeled with metadata/transcript status, but no dedicated live transcript extraction adapter is proven. |
+| Agent Zero routing status | Implemented | Gateway route decisions require Agent Zero commander approval before Space Agent research is selected. |
+| Hermes workflow status | Implemented for design handoff | Hermes can receive Research Packet handoff context and draft workflow/skill plans; no execution is enabled. |
+| Pi dispatcher status | Implemented in shadow mode | Pi recommends Space Agent for research routes and handback when research is not needed. |
+| Mini-agent support | Implemented as scoped design/runtime contract | Space research mini-agent templates, URL scope checks, merge flow, and expiration are covered by tests. |
+| Memory TTL support | Implemented | SpaceResearchMemory uses default 24-hour TTL, short-task 30-minute TTL, project extension review, secret blocking, and Brain promotion review gates. |
+| Research Packet support | Implemented | Canonical `research_packet`, `space_agent_job`, and `gateway_route_decision` envelopes are included and tested. |
+| Current decision | PARTIAL GO | Safe for Gateway registry, routing contracts, docs, dry-run packet planning, and gauntlets. Not GO for live external browser/Firecrawl/YouTube execution. |
+
 ## Role Model
 
 - Owner: final authority.
@@ -161,10 +179,12 @@ Mission Control:
 - `git diff --check`: passed.
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed.
-- `pnpm test`: passed, 127 files / 1,175 tests.
+- `pnpm test`: passed, 127 files / 1,178 tests.
 - Focused Space Agent gauntlet: passed, 1 file / 2 tests.
 - Focused canonical Research Packet envelope test: passed as part of `space-agent-research.test.ts`.
 - Focused canonical Space Agent Job envelope test: passed as part of `space-agent-research.test.ts`.
+- Focused canonical Gateway route decision envelope test: passed as part of `space-agent-research.test.ts`.
+- Focused Space Agent contract/gauntlet run: passed, 2 files / 31 tests.
 - Focused route/auth smoke: passed, 4 files / 10 tests.
 
 ClaudeClaw/OpenClaw+:
@@ -201,10 +221,32 @@ No live browser action, Firecrawl call, YouTube download, email send, Drive uplo
 - `f1815eb` test(gateway): enforce space agent forbidden actions
 - `1b97a0d` docs(gateway): document space agent adapters and handoff
 - `d98f26d` test(gateway): add space agent full gauntlet
+- `be86491` docs(gateway): add space agent integration final report
+- `7a69a5d` feat(gateway): add canonical space agent research packet
+- `262cc9c` feat(gateway): add canonical space agent job contract
+- `2abb70e` feat(gateway): add space agent route decision contract
 
 ## Rollback
 
-Rollback the final Space Agent gauntlet commit with:
+Rollback the latest Space Agent route decision contract commit with:
+
+```bash
+git revert 2abb70e
+```
+
+Rollback the canonical Space Agent job contract commit with:
+
+```bash
+git revert 262cc9c
+```
+
+Rollback the canonical Research Packet commit with:
+
+```bash
+git revert 7a69a5d
+```
+
+Rollback the Space Agent gauntlet commit with:
 
 ```bash
 git revert d98f26d

@@ -55,6 +55,18 @@ describe('Pi shadow dispatcher', () => {
     expect(hard.recommended_model).toBe('model_openrouter_sonnet')
   })
 
+  it('recommends Space Agent for browser, web, YouTube, and Firecrawl research stages', () => {
+    const recommendation = recommendPiGatewayRoute(registry, { ownerRequest: 'Inspect this YouTube video and extract sources' })
+
+    expect(recommendation.recommended_agent).toBe('space_agent')
+    expect(recommendation.selected_route.target).toBe('space_agent')
+    expect(recommendation.selected_route.via).toEqual(['owner', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
+    expect(recommendation.recommended_mini_agent_type).toBe('research')
+    expect(recommendation.execution_enabled).toBe(false)
+    expect(recommendation.writes_enabled).toBe(false)
+    expect(recommendation.rationale).toContain('Space Agent')
+  })
+
   it('recommends Hermes for skill design and mini-agents for small scoped tasks', () => {
     const skill = recommendPiGatewayRoute(registry, { ownerRequest: 'Design a workflow skill for email triage' })
     const mini = recommendPiGatewayRoute(registry, { ownerRequest: 'Summarize a small scoped research task with a mini-agent' })

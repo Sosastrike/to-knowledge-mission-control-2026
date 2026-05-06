@@ -22,6 +22,7 @@ export const GATEWAY_ROUTE_CLASSIFICATIONS = [
   'chat',
   'plan',
   'skill',
+  'research',
   'tool',
   'model',
   'memory',
@@ -101,9 +102,10 @@ export function classifyGatewayOwnerRequest(ownerRequest: string): GatewayRouteC
   if (matches(text, SYNC_PATTERNS)) return 'sync'
   if (matches(text, MEMORY_PATTERNS)) return 'memory'
   if (matches(text, SKILL_PATTERNS)) return 'skill'
+  if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
+  if (matches(text, RESEARCH_PATTERNS)) return 'research'
   if (matches(text, TOOL_PATTERNS)) return 'tool'
   if (matches(text, MODEL_PATTERNS)) return 'model'
-  if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
   if (matches(text, PLAN_PATTERNS)) return 'plan'
   return 'chat'
 }
@@ -219,6 +221,8 @@ function selectRouteTarget(
   switch (classification) {
     case 'skill':
       return routeSkill(registry, prompt)
+    case 'research':
+      return routeResearch(registry, prompt)
     case 'model':
       return routeModel(registry, prompt)
     case 'tool':
@@ -281,6 +285,32 @@ function routeHermesViaAgentZero(registry: GatewayRegistry, prompt: string): Rou
       ? 'Skill and workflow design routes to Hermes through Agent Zero.'
       : 'Skill design routes to Hermes through Agent Zero.',
   }
+}
+
+function routeResearch(registry: GatewayRegistry, prompt: string): RouteTarget {
+  const spaceAgent = findNodeStatus(registry, 'space_agent')
+  const capability = findCapability(registry, 'space_agent_research_packet')
+  const boundaryBlocker = researchBoundaryBlocker(prompt)
+  const blocker = boundaryBlocker || blockedReason(capability) || (spaceAgent === 'blocked' || spaceAgent === 'missing' ? 'space_agent_research_specialist_not_available' : null)
+  return {
+    primaryTarget: 'agent_zero',
+    dispatchTarget: 'space_agent',
+    via: ['owner', 'gateway', 'agent_zero', 'space_agent'],
+    capability,
+    edgeKind: 'delegation',
+    requiresBridgeSession: Boolean(boundaryBlocker),
+    executionMode: 'read_only',
+    blocker,
+    rationale: 'Browser, web, article, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research routes to Space Agent for a structured Research Packet; responsibility returns to Agent Zero after research.',
+  }
+}
+
+function researchBoundaryBlocker(prompt: string): string | null {
+  const text = normalizeText(prompt)
+  if (/\b(?:login|log in|sign in|private|paywall|paid content|credential|password|cookie|session token)\b/.test(text)) {
+    return 'space_agent_private_or_login_boundaries_require_owner_approved_credentials_and_bridge_session_scope'
+  }
+  return null
 }
 
 function routeSkillExecution(registry: GatewayRegistry, prompt: string): RouteTarget {
@@ -619,7 +649,8 @@ const REPORT_PATTERNS = [/\b(?:report|pdf|markdown|executive summary|capability 
 const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud)\b/]
 const MEMORY_PATTERNS = [/\b(?:brain|obsidian|mempalace|memory|remember|graphify|knowledge|note|vault)\b/]
 const SKILL_PATTERNS = [/\b(?:skill|workflow|automation|spec|proposal|design a skill|create a skill)\b/]
-const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|firecrawl|crawl|agentmail|agent mail|n8n|webhook tool)\b/]
+const RESEARCH_PATTERNS = [/\b(?:live web|web research|webpage|web page|website|browser|browse|article|youtube|you tube|video inspection|inspect video|firecrawl|fire crawl|crawl|scrape|search the web|web search|online research|extract page|page extraction|page interaction)\b/]
+const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|agentmail|agent mail|n8n|webhook tool)\b/]
 const MODEL_PATTERNS = [/\b(?:model|llm|openrouter|openai|claude|anthropic|codex|chatgpt|ollama|nvidia|gemini|groq)\b/]
 const PLAN_PATTERNS = [/\b(?:plan|strategy|analyze|review|map|decide|recommend)\b/]
 const EVENT_PATTERNS = [/\b(?:incoming|webhook|telegram message|email event|schedule event|event)\b/]

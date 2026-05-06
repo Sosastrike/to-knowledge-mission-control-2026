@@ -27,6 +27,7 @@ describe('canonical Gateway graph model', () => {
       'gateway',
       'commander',
       'lieutenant',
+      'specialist_agent',
       'mini_agent',
       'skill',
       'tool',
@@ -88,6 +89,7 @@ describe('canonical Gateway graph model', () => {
     const nodeIds = registry.nodes.map((node) => node.id)
     const agentZero = registry.nodes.find((node) => node.id === 'agent_zero')
     const hermes = registry.nodes.find((node) => node.id === 'hermes')
+    const spaceAgent = registry.nodes.find((node) => node.id === 'space_agent')
     const bridge = registry.nodes.find((node) => node.id === 'bridge_mcp')
     const brainNodes = registry.nodes.filter((node) => node.kind === 'brain_system' || node.kind === 'buildwiki_farmer').map((node) => node.id)
 
@@ -99,6 +101,7 @@ describe('canonical Gateway graph model', () => {
         'gateway',
         'agent_zero',
         'hermes',
+        'space_agent',
         'mini_agents',
         'openclaw_plus',
         'bridge_mcp',
@@ -122,6 +125,11 @@ describe('canonical Gateway graph model', () => {
       kind: 'lieutenant',
       status: 'degraded',
       blockers: ['hermes_auth_not_configured'],
+    })
+    expect(spaceAgent).toMatchObject({
+      kind: 'specialist_agent',
+      status: 'read_only',
+      visibility: 'owner_visible',
     })
     expect(bridge).toMatchObject({ kind: 'mcp_server', status: 'connected' })
     expect(brainNodes).toEqual(expect.arrayContaining(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki']))
@@ -158,6 +166,8 @@ describe('canonical Gateway graph model', () => {
       expect.arrayContaining([
         expect.objectContaining({ source: 'gateway', target: 'agent_zero', kind: 'command' }),
         expect.objectContaining({ source: 'agent_zero', target: 'hermes', kind: 'delegation' }),
+        expect.objectContaining({ source: 'agent_zero', target: 'space_agent', kind: 'delegation' }),
+        expect.objectContaining({ source: 'space_agent', target: 'agent_zero', kind: 'report' }),
         expect.objectContaining({ source: 'agent_zero', target: 'openclaw_plus', kind: 'tool-call' }),
         expect.objectContaining({ source: 'openclaw_plus', target: 'bridge_mcp', kind: 'mcp-call' }),
         expect.objectContaining({ source: 'agent_zero', target: 'brain_sync', kind: 'memory' }),

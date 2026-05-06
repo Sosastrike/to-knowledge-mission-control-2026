@@ -211,6 +211,7 @@ function docTypeFromNode(node: GatewayNode): GatewayDocType {
   switch (node.kind) {
     case 'commander':
     case 'lieutenant':
+    case 'specialist_agent':
       return 'agent'
     case 'mini_agent':
       return node.visibility === 'archived' ? 'agent' : 'mini_agent'
@@ -268,6 +269,7 @@ function purposeForNode(node: GatewayNode): string {
   if (node.id === 'agent_zero') return 'Commander and default owner-command route.'
   if (node.id === 'hermes') return 'Lieutenant for skill and workflow design.'
   if (node.id === 'pi') return 'Dispatcher candidate in shadow mode.'
+  if (node.id === 'space_agent') return 'Browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research specialist that returns Research Packets through Gateway.'
   if (node.id === 'opencloud') return 'Retained worker/runtime engine and future mini-agent creation layer.'
   return `${node.label} Gateway node.`
 }
@@ -276,12 +278,14 @@ function defaultLimitationsForNode(node: GatewayNode): string[] {
   const limitations = ['No secrets exposed', 'No raw local paths', 'No fake Done']
   if (node.kind !== 'owner' && node.kind !== 'gateway') limitations.push('Actions route through Gateway policy')
   if (node.kind === 'opencloud_worker') limitations.push('No deletion route; no Gateway bypass')
+  if (node.id === 'space_agent') limitations.push('Research-only by default; no external writes, no commander authority, and no Gateway bypass')
   return limitations
 }
 
 function rollbackForNode(node: GatewayNode): string {
   if (node.id === 'opencloud' || node.kind === 'buildwiki_farmer') return 'Retain service/data; disable only future Gateway route changes if needed.'
   if (node.id === 'agent_zero') return 'Revert Gateway routing commit; do not create a second Agent Zero.'
+  if (node.id === 'space_agent') return 'Disable Space Agent Gateway research routes; retain the external Space Agent checkout and do not delete existing agents.'
   return 'Revert the related Gateway registry/docs change.'
 }
 

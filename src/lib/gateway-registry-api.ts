@@ -655,6 +655,16 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       purpose: 'Agent Zero dispatches planning-only skill and workflow requests to Hermes through Gateway.',
     },
     {
+      flow_id: 'flow_agent_zero_gateway_space_agent_research',
+      source: 'agent_zero',
+      target: 'space_agent',
+      requested_action: 'research_packet',
+      edge_kind: 'delegation' as const,
+      hops: ['agent_zero', 'gateway', 'space_agent'],
+      requires_session: false,
+      purpose: 'Agent Zero routes browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research stages to Space Agent; Space Agent returns a Research Packet.',
+    },
+    {
       flow_id: 'flow_agent_zero_gateway_openclaw_skill',
       source: 'agent_zero',
       target: 'openclaw_plus',

@@ -41,6 +41,17 @@ const registry: GatewayRegistry = {
       blockers: ['hermes_called_not_proven'],
     },
     {
+      id: 'space_agent',
+      label: 'Space Agent',
+      kind: 'specialist_agent',
+      status: 'read_only',
+      owner: 'ecosystem',
+      visibility: 'owner_visible',
+      health: createGatewayHealth('read_only', 'Space Agent is a Gateway research specialist for browser, web, YouTube, and Firecrawl research packets.'),
+      capabilities: ['browser research', 'web research', 'YouTube research', 'Firecrawl research coordination'],
+      blockers: [],
+    },
+    {
       id: 'opencloud',
       label: 'OpenCloud / Build-Wiki',
       kind: 'opencloud_worker',
@@ -178,7 +189,7 @@ describe('Gateway Data Layer', () => {
     const layer = buildGatewayDataLayer(registry)
 
     expect(getSystems(layer).map((system) => system.id)).toContain('system.opencloud_worker')
-    expect(getAgents(layer).map((agent) => agent.name)).toContain('Agent Zero')
+    expect(getAgents(layer).map((agent) => agent.name)).toEqual(expect.arrayContaining(['Agent Zero', 'Space Agent']))
     expect(getSkills(layer).map((skill) => skill.name)).toContain('Report Skill')
     expect(getTools(layer).map((tool) => tool.name)).toContain('Zapier MCP')
     expect(getIntegrations(layer).map((integration) => integration.name)).toEqual(expect.arrayContaining([
@@ -203,6 +214,21 @@ describe('Gateway Data Layer', () => {
         requires_bridge_session: true,
       }),
     ]))
+  })
+
+  it('keeps Space Agent as a retained research specialist under Gateway supervision', () => {
+    const layer = buildGatewayDataLayer(registry)
+    const spaceAgent = layer.nodes.find((node) => node.id === 'space_agent')
+
+    expect(spaceAgent).toMatchObject({
+      type: 'specialist_agent',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+    })
+    expect(spaceAgent?.semantic_context).toContain('retained specialist agent')
+    expect(spaceAgent?.semantic_context).toContain('cannot self-promote')
+    expect(spaceAgent?.semantic_context).toContain('cannot bypass Gateway')
   })
 
   it('keeps OpenCloud as a retained worker/runtime node, not a deletion target', () => {

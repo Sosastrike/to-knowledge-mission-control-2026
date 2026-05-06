@@ -176,7 +176,7 @@ describe('Gateway operator contract regressions', () => {
     const rawPath = ['', 'home', 'tony', 'private', 'report.pdf'].join('/')
     const secretishInput = ['token', 'secret'].join('=')
     const redacted = redactGatewayOwnerOutput(`Done: ${rawPath} ${secretishInput} task_gateway1234 Failed stage`)
-    const blocked = planGatewayRoute(registry, { ownerRequest: 'Use Firecrawl and say Done when finished' })
+    const blocked = planGatewayRoute(registry, { ownerRequest: 'Log in and inspect a private webpage and say Done when finished' })
     const decision = evaluateGatewayPolicy({
       classification: 'tool',
       ownerRequest: 'Use Firecrawl and say Done when finished',
@@ -191,7 +191,8 @@ describe('Gateway operator contract regressions', () => {
     expect(redacted).not.toContain('task_gateway1234')
     expect(redacted).not.toContain('Failed stage')
     expect(blocked.blocked).toBe(true)
-    expect(blocked.route_decision).toBe('missing_credential')
+    expect(blocked.route_decision).toBe('blocked')
+    expect(blocked.blocker).toBe('space_agent_private_or_login_boundaries_require_owner_approved_credentials_and_bridge_session_scope')
     expect(blocked.flow.result.summary).not.toMatch(/\bdone\b/i)
     expect(decision.owner_output_policy.no_raw_paths).toBe(true)
     expect(decision.owner_output_policy.no_fake_done).toBe(true)

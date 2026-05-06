@@ -44,6 +44,7 @@ describe('GatewayDocs documentation system', () => {
     expect(index.docs.some((doc) => doc.registry_id === 'agent_zero' && doc.purpose.includes('Commander'))).toBe(true)
     expect(index.docs.some((doc) => doc.registry_id === 'hermes' && doc.owner_or_supervisor)).toBe(true)
     expect(index.docs.some((doc) => doc.registry_id === 'opencloud' && doc.purpose.includes('worker'))).toBe(true)
+    expect(index.docs.some((doc) => doc.registry_id === 'space_agent' && doc.purpose.includes('research specialist'))).toBe(true)
     expect(index.docs.every((doc) => typeof doc.read_enabled === 'boolean' && typeof doc.write_enabled === 'boolean' && typeof doc.execution_enabled === 'boolean')).toBe(true)
     expect(index.docs.every((doc) => Object.prototype.hasOwnProperty.call(doc, 'blocked_reason'))).toBe(true)
     expect(index.docs.every((doc) => Object.prototype.hasOwnProperty.call(doc, 'last_verified_at'))).toBe(true)

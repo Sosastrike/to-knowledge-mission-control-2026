@@ -361,6 +361,7 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('gateway')).toBe(true)
     expect(nodes.has('agent_zero')).toBe(true)
     expect(nodes.has('hermes')).toBe(true)
+    expect(nodes.has('space_agent')).toBe(true)
     expect(nodes.has('bridge_mcp')).toBe(true)
     expect(nodes.has('mcp_gateway')).toBe(true)
     expect(nodes.has('integration_zapier')).toBe(true)
@@ -407,7 +408,22 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('brain_buildwiki')).toBe(true)
     expect(capabilities.has('opencloud_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
+    expect(capabilities.has('space_agent_research_packet')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
+    const spaceAgent = registry.capabilities.find((capability) => capability.id === 'space_agent_research_packet')
+    expect(spaceAgent).toMatchObject({
+      kind: 'agent',
+      source_node: 'space_agent',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      available_to: ['agent_zero', 'hermes', 'pi'],
+    })
+    expect(spaceAgent?.status_details).toMatchObject({
+      commander_replacement: false,
+      returns_to: 'agent_zero',
+      execution_enabled: false,
+    })
     const mcpZapier = registry.capabilities.find((capability) => capability.id === 'mcp_zapier')
     expect(mcpZapier?.status_details).toMatchObject({
       mcp_list_route: '/api/mcp/list',
@@ -656,6 +672,7 @@ describe('Gateway registry API model', () => {
       'gateway',
       'commander',
       'lieutenant',
+      'specialist_agent',
       'mini_agent',
       'skill',
       'tool',
@@ -702,6 +719,14 @@ describe('Gateway registry API model', () => {
       target: 'hermes',
       requested_action: 'skill_workflow_planning',
       selected_route: { hops: ['agent_zero', 'gateway', 'hermes'] },
+    })
+    expect(flowMap.get('flow_agent_zero_gateway_space_agent_research')).toMatchObject({
+      source: 'agent_zero',
+      target: 'space_agent',
+      requested_action: 'research_packet',
+      selected_route: { hops: ['agent_zero', 'gateway', 'space_agent'] },
+      policy_result: { route_decision: 'allowed', requires_bridge_session: false },
+      execution_mode: 'read_only',
     })
     expect(flowMap.get('flow_agent_zero_gateway_openclaw_skill')).toMatchObject({
       source: 'agent_zero',

@@ -5,6 +5,7 @@ export const GATEWAY_DATA_LAYER_NODE_TYPES = [
   'gateway',
   'commander',
   'lieutenant',
+  'specialist_agent',
   'mini_agent',
   'skill',
   'tool',
@@ -278,7 +279,7 @@ export function getSkills(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode
 }
 
 export function getAgents(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
-  return layer.nodes.filter((node) => node.type === 'owner' || node.type === 'commander' || node.type === 'lieutenant' || node.type === 'mini_agent')
+  return layer.nodes.filter((node) => node.type === 'owner' || node.type === 'commander' || node.type === 'lieutenant' || node.type === 'specialist_agent' || node.type === 'mini_agent')
 }
 
 export function getModels(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
@@ -583,6 +584,8 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'commander'
     case 'lieutenant':
       return 'lieutenant'
+    case 'specialist_agent':
+      return 'specialist_agent'
     case 'mini_agent':
       return 'mini_agent'
     case 'gateway':
@@ -684,6 +687,7 @@ function semanticContextFor(type: GatewayDataLayerNodeType, name: string): strin
   if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
   if (type === 'skill') return `${name} is a shared OpenClaw+ skill capability discoverable before activation.`
   if (type === 'mini_agent') return `${name} is a mini-agent family node governed by Gateway policy. Mini-agents require a parent supervisor, scope, memory TTL, audit trail, and Agent Zero command authority; they cannot act independently.`
+  if (type === 'specialist_agent') return `${name} is a retained specialist agent governed by Gateway policy. It must report through Agent Zero, cannot self-promote, and cannot bypass Gateway.`
   if (type === 'owner' || type === 'commander' || type === 'lieutenant') return `${name} is an agent-family node governed by Gateway policy and hierarchy.`
   if (type === 'model') return `${name} is an LLM/model route governed by Gateway routing and fallback policy.`
   if (type === 'mcp_server') return `${name} is an MCP discovery node; schemas are discovered before execution.`

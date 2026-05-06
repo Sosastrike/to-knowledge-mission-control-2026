@@ -101,6 +101,8 @@ describe('Gateway route planner', () => {
     expect(classifyGatewayOwnerRequest('Make a plan for tomorrow')).toBe('plan')
     expect(classifyGatewayOwnerRequest('Design a skill for email triage')).toBe('skill')
     expect(classifyGatewayOwnerRequest('Use Firecrawl to check a page')).toBe('research')
+    expect(classifyGatewayOwnerRequest('Run Firecrawl map on this site')).toBe('research')
+    expect(classifyGatewayOwnerRequest('Capture screenshot and page state')).toBe('research')
     expect(classifyGatewayOwnerRequest('Use OpenRouter for a model-heavy reasoning task')).toBe('model')
     expect(classifyGatewayOwnerRequest('Remember this in MemPalace')).toBe('memory')
     expect(classifyGatewayOwnerRequest('Prepare Build-Wiki Run Now')).toBe('sync')
@@ -206,22 +208,34 @@ describe('Gateway route planner', () => {
     expect(plan.selected_capability?.status_details.raw_tracebacks_exposed).toBe(false)
   })
 
-  it('routes browser, web, YouTube, and Firecrawl research to Space Agent through Agent Zero', () => {
-    const article = planGatewayRoute(registry, { ownerRequest: 'Search the web and inspect this article' })
-    const youtube = planGatewayRoute(registry, { ownerRequest: 'Inspect this YouTube video and extract sources' })
-    const firecrawl = planGatewayRoute(registry, { ownerRequest: 'Use Firecrawl to crawl a public page' })
+  it('routes all web, Firecrawl, browser, YouTube, screenshot, and inaccessible-site research modes to Space Agent through Agent Zero', () => {
+    const prompts = [
+      'Search the web and inspect this article',
+      'Read this website page and summarize it',
+      'Use Firecrawl to scrape a public page',
+      'Use Firecrawl to crawl a public site',
+      'Run Firecrawl map on this site',
+      'Use Firecrawl extract for structured page data',
+      'Perform browser interaction on a public page',
+      'Inspect this YouTube video and extract sources',
+      'Capture screenshot and page state for this page',
+      'Agents normally cannot access this site/video, route the research stage',
+    ]
 
-    expect(article.classification).toBe('research')
-    expect(article.primary_target).toBe('agent_zero')
-    expect(article.dispatch_target).toBe('space_agent')
-    expect(article.route_via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
-    expect(article.selected_capability?.id).toBe('space_agent_research_packet')
-    expect(article.execution_enabled).toBe(false)
-    expect(article.writes_enabled).toBe(false)
-    expect(article.route_decision).toBe('allowed')
-    expect(article.rationale).toContain('Research Packet')
-    expect(youtube.dispatch_target).toBe('space_agent')
-    expect(firecrawl.dispatch_target).toBe('space_agent')
+    for (const ownerRequest of prompts) {
+      const plan = planGatewayRoute(registry, { ownerRequest })
+      expect(plan.classification).toBe('research')
+      expect(plan.primary_target).toBe('agent_zero')
+      expect(plan.dispatch_target).toBe('space_agent')
+      expect(plan.route_via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
+      expect(plan.selected_capability?.id).toBe('space_agent_research_packet')
+      expect(plan.execution_enabled).toBe(false)
+      expect(plan.writes_enabled).toBe(false)
+      expect(plan.route_decision).toBe('allowed')
+      expect(plan.rationale).toContain('Research Packet')
+    }
+
+    const firecrawl = planGatewayRoute(registry, { ownerRequest: 'Use Firecrawl to crawl a public page' })
     expect(firecrawl.selected_capability?.status_details.commander_replacement).toBe(false)
   })
 

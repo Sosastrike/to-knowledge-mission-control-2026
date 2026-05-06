@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifySpaceAgentResearch, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchPacket, createWebResearchIntent } from './space-agent-research'
+import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchPacket, createWebResearchIntent } from './space-agent-research'
 
 describe('Space Agent Research Packet', () => {
   it('classifies browser, web, YouTube, video, page extraction, and Firecrawl research', () => {
@@ -10,6 +10,19 @@ describe('Space Agent Research Packet', () => {
     expect(classifySpaceAgentResearch('Summarize this video')).toBe('video')
     expect(classifySpaceAgentResearch('Extract this webpage')).toBe('page_extraction')
     expect(classifySpaceAgentResearch('Use Firecrawl to scrape the page')).toBe('firecrawl')
+  })
+
+  it('classifies Space Agent research operations for phases 031-040', () => {
+    expect(classifySpaceAgentResearchOperation('Search the web for public sources')).toBe('web_search')
+    expect(classifySpaceAgentResearchOperation('Read this website page')).toBe('page_read')
+    expect(classifySpaceAgentResearchOperation('Use Firecrawl to scrape a page')).toBe('firecrawl_scrape')
+    expect(classifySpaceAgentResearchOperation('Use Firecrawl to crawl a site')).toBe('firecrawl_crawl')
+    expect(classifySpaceAgentResearchOperation('Use Firecrawl map on a site')).toBe('firecrawl_map')
+    expect(classifySpaceAgentResearchOperation('Use Firecrawl extract for structured data')).toBe('firecrawl_extract')
+    expect(classifySpaceAgentResearchOperation('Perform browser interaction on a public page')).toBe('browser_interaction')
+    expect(classifySpaceAgentResearchOperation('Inspect this YouTube video')).toBe('youtube_video_inspection')
+    expect(classifySpaceAgentResearchOperation('Capture screenshot and page state')).toBe('screenshot_page_state')
+    expect(classifySpaceAgentResearchOperation('Agents normally cannot access this site/video')).toBe('inaccessible_site_or_video')
   })
 
   it('creates WebResearchIntent, SpaceAgentJob, and SpaceAgentPolicy schemas for Gateway routing', () => {
@@ -28,7 +41,8 @@ describe('Space Agent Research Packet', () => {
 
     expect(intent).toMatchObject({
       schema: 'web_research_intent_v1',
-      research_type: 'web',
+      research_type: 'page_extraction',
+      research_operation: 'page_read',
       requested_by: 'owner',
       responsible_agent: 'agent_zero',
       requires_live_web: true,
@@ -80,6 +94,7 @@ describe('Space Agent Research Packet', () => {
       returns_to: 'agent_zero',
       responsible_agent: 'agent_zero',
       research_type: 'youtube',
+      research_operation: 'youtube_video_inspection',
       required_gateway_route: 'owner_gateway_pi_agent_zero_space_agent_research',
       route: {
         route_id: 'owner_gateway_pi_agent_zero_space_agent_research',

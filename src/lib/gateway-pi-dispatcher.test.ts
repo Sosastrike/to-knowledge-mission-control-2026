@@ -55,16 +55,30 @@ describe('Pi shadow dispatcher', () => {
     expect(hard.recommended_model).toBe('model_openrouter_sonnet')
   })
 
-  it('recommends Space Agent for browser, web, YouTube, and Firecrawl research stages', () => {
-    const recommendation = recommendPiGatewayRoute(registry, { ownerRequest: 'Inspect this YouTube video and extract sources' })
+  it('recommends Space Agent for web, Firecrawl, browser, YouTube, screenshot, and inaccessible-site research stages', () => {
+    const prompts = [
+      'Search the web for current sources',
+      'Read this website page',
+      'Use Firecrawl to scrape a page',
+      'Use Firecrawl to crawl a site',
+      'Use Firecrawl map on a site',
+      'Use Firecrawl extract for structured data',
+      'Perform browser interaction on a public page',
+      'Inspect this YouTube video and extract sources',
+      'Capture screenshot and page state',
+      'Agents normally cannot access this site/video',
+    ]
 
-    expect(recommendation.recommended_agent).toBe('space_agent')
-    expect(recommendation.selected_route.target).toBe('space_agent')
-    expect(recommendation.selected_route.via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
-    expect(recommendation.recommended_mini_agent_type).toBe('research')
-    expect(recommendation.execution_enabled).toBe(false)
-    expect(recommendation.writes_enabled).toBe(false)
-    expect(recommendation.rationale).toContain('Space Agent')
+    for (const ownerRequest of prompts) {
+      const recommendation = recommendPiGatewayRoute(registry, { ownerRequest })
+      expect(recommendation.recommended_agent).toBe('space_agent')
+      expect(recommendation.selected_route.target).toBe('space_agent')
+      expect(recommendation.selected_route.via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
+      expect(recommendation.recommended_mini_agent_type).toBe('research')
+      expect(recommendation.execution_enabled).toBe(false)
+      expect(recommendation.writes_enabled).toBe(false)
+      expect(recommendation.rationale).toContain('Space Agent')
+    }
   })
 
   it('recommends Hermes for skill design and mini-agents for small scoped tasks', () => {

@@ -662,7 +662,7 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       edge_kind: 'delegation' as const,
       hops: ['agent_zero', 'gateway', 'space_agent'],
       requires_session: false,
-      purpose: 'Agent Zero routes browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research stages to Space Agent; Space Agent returns a Research Packet.',
+      purpose: 'Agent Zero routes web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research stages to Space Agent; Space Agent returns a Research Packet.',
     },
     {
       flow_id: 'flow_owner_gateway_pi_agent_zero_space_agent_research',

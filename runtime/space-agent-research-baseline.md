@@ -256,3 +256,19 @@ Space Agent cannot replace Agent Zero, cannot become commander, cannot bypass Ga
 - Phase 030: Added return route: Space Agent -> Gateway -> responsible agent, with Agent Zero as default owner-facing response owner.
 
 No browser execution, Firecrawl execution, external write, SMB action, Zapier action, HeyGen generation, farmer action, or production Space Agent activation was performed in these phases.
+
+
+## Phases 031-040 research routing
+
+- Phase 031: Web search requests route to Space Agent through Gateway, Pi recommendation, and Agent Zero approval.
+- Phase 032: Website/page reading requests route to Space Agent.
+- Phase 033: Firecrawl scrape requests route to Space Agent as research packet work, not direct execution.
+- Phase 034: Firecrawl crawl requests route to Space Agent as research packet work, not direct execution.
+- Phase 035: Firecrawl map requests route to Space Agent as research packet work, not direct execution.
+- Phase 036: Firecrawl extract requests route to Space Agent as research packet work, not direct execution.
+- Phase 037: Browser interaction requests route to Space Agent but remain execution-disabled until a safe adapter and policy scope exist.
+- Phase 038: YouTube/video inspection requests route to Space Agent.
+- Phase 039: Screenshot/page-state requests route to Space Agent as read-only research intent.
+- Phase 040: Requests that agents normally cannot access a site/video route to Space Agent for research handling, while login/private boundaries remain blocked behind owner-approved scope.
+
+No live browser action, Firecrawl scrape/crawl/map/extract execution, screenshot capture, YouTube connector call, external write, SMB action, Zapier action, HeyGen generation, farmer action, or production Space Agent activation was performed in these phases.

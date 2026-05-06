@@ -66,6 +66,10 @@ const KNOWN_WORDS = new Set([
   'research',
   'scrape',
   'search',
+  'screenshot',
+  'page',
+  'state',
+  'map',
   'space',
   'video',
   'web',
@@ -191,7 +195,7 @@ function recommendAgent(
   miniAgentType: PiDispatcherRecommendation['recommended_mini_agent_type'],
 ): PiDispatcherRecommendation['recommended_agent'] {
   const text = ownerRequest.toLowerCase()
-  if (classification === 'research' || /browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|search the web|web search|extract page/.test(text)) return 'space_agent'
+  if (classification === 'research' || /browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|map|search the web|web search|extract page|screenshot|screen shot|page state|agents? (?:normally )?(?:cannot|can't) access|cannot access (?:this |the )?(?:site|video)/.test(text)) return 'space_agent'
   if (classification === 'skill' || /workflow|skill design|design a skill|mini-agent spec/.test(text)) return 'hermes'
   if (miniAgentType && /small|scoped|summarize|draft|check|research/.test(text)) return 'mini_agent'
   return 'agent_zero'
@@ -199,7 +203,7 @@ function recommendAgent(
 
 function recommendMiniAgentType(ownerRequest: string): PiDispatcherRecommendation['recommended_mini_agent_type'] {
   const text = ownerRequest.toLowerCase()
-  if (/research|investigate|summarize|browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape/.test(text)) return 'research'
+  if (/research|investigate|summarize|search the web|web search|search web|read website|read page|browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|map|screenshot|screen shot|page state|agents? (?:normally )?(?:cannot|can't) access|cannot access (?:this |the )?(?:site|video)/.test(text)) return 'research'
   if (/report|brief|write[-\s]?up|summary/.test(text)) return 'report'
   if (/qa|test|verify|checklist/.test(text)) return 'qa'
   if (/workflow|automation/.test(text)) return 'workflow'
@@ -240,7 +244,7 @@ function rationaleFor(input: {
 }): string {
   if (input.blockedReason) return `Gateway policy blocks the route because ${input.blockedReason}.`
   if (input.recommendedAgent === 'hermes') return 'Workflow and skill design should route to Hermes through Agent Zero.'
-  if (input.recommendedAgent === 'space_agent') return 'Browser, web, YouTube, video, page extraction, crawl, scrape, search, and Firecrawl research should route through Pi recommendation and Agent Zero approval to Space Agent.'
+  if (input.recommendedAgent === 'space_agent') return 'Web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research should route through Pi recommendation and Agent Zero approval to Space Agent.'
   if (input.recommendedAgent === 'mini_agent') return `A scoped ${input.miniAgentType || 'mini-agent'} can handle the small task under Agent Zero supervision.`
   if (input.classification === 'model' && input.model) return `Pi recommends model route ${input.model} while keeping execution disabled in shadow mode.`
   return 'Owner commands route to Agent Zero by default.'

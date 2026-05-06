@@ -17,6 +17,7 @@ import {
   type GatewayPolicyDecision,
   type GatewayRouteDecision,
 } from './gateway-policy'
+import { classifySpaceAgentResearchOperation } from './space-agent-research'
 
 export const GATEWAY_ROUTE_CLASSIFICATIONS = [
   'chat',
@@ -102,8 +103,8 @@ export function classifyGatewayOwnerRequest(ownerRequest: string): GatewayRouteC
   if (matches(text, SYNC_PATTERNS)) return 'sync'
   if (matches(text, MEMORY_PATTERNS)) return 'memory'
   if (matches(text, SKILL_PATTERNS)) return 'skill'
-  if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
   if (matches(text, RESEARCH_PATTERNS)) return 'research'
+  if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
   if (matches(text, TOOL_PATTERNS)) return 'tool'
   if (matches(text, MODEL_PATTERNS)) return 'model'
   if (matches(text, PLAN_PATTERNS)) return 'plan'
@@ -290,6 +291,7 @@ function routeHermesViaAgentZero(registry: GatewayRegistry, prompt: string): Rou
 function routeResearch(registry: GatewayRegistry, prompt: string): RouteTarget {
   const spaceAgent = findNodeStatus(registry, 'space_agent')
   const capability = findCapability(registry, 'space_agent_research_packet')
+  const operation = classifySpaceAgentResearchOperation(prompt)
   const boundaryBlocker = researchBoundaryBlocker(prompt)
   const blocker = boundaryBlocker || blockedReason(capability) || (spaceAgent === 'blocked' || spaceAgent === 'missing' ? 'space_agent_research_specialist_not_available' : null)
   return {
@@ -301,7 +303,7 @@ function routeResearch(registry: GatewayRegistry, prompt: string): RouteTarget {
     requiresBridgeSession: Boolean(boundaryBlocker),
     executionMode: 'read_only',
     blocker,
-    rationale: 'Browser, web, article, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research routes through Pi recommendation and Agent Zero approval to Space Agent for a structured Research Packet; responsibility returns through Gateway to the responsible agent.',
+    rationale: `Space Agent handles ${operation} requests: web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research route through Pi recommendation and Agent Zero approval to Space Agent for a structured Research Packet; responsibility returns through Gateway to the responsible agent.`,
   }
 }
 
@@ -649,7 +651,7 @@ const REPORT_PATTERNS = [/\b(?:report|pdf|markdown|executive summary|capability 
 const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud)\b/]
 const MEMORY_PATTERNS = [/\b(?:brain|obsidian|mempalace|memory|remember|graphify|knowledge|note|vault)\b/]
 const SKILL_PATTERNS = [/\b(?:skill|workflow|automation|spec|proposal|design a skill|create a skill)\b/]
-const RESEARCH_PATTERNS = [/\b(?:live web|web research|webpage|web page|website|browser|browse|article|youtube|you tube|video inspection|inspect video|firecrawl|fire crawl|crawl|scrape|search the web|web search|online research|extract page|page extraction|page interaction)\b/]
+const RESEARCH_PATTERNS = [/\b(?:live web|web research|webpage|web page|website|browser|browse|article|youtube|you tube|video inspection|inspect video|firecrawl|fire crawl|crawl|scrape|search the web|web search|search web|online search|online research|read page|read website|page reading|website reading|extract page|page extraction|page interaction|browser interaction|screenshot|screen shot|page state|page-state|site map|sitemap|normally cannot access|cannot access this site|cannot access this video|agents cannot access)\b/]
 const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|agentmail|agent mail|n8n|webhook tool)\b/]
 const MODEL_PATTERNS = [/\b(?:model|llm|openrouter|openai|claude|anthropic|codex|chatgpt|ollama|nvidia|gemini|groq)\b/]
 const PLAN_PATTERNS = [/\b(?:plan|strategy|analyze|review|map|decide|recommend)\b/]

@@ -1,5 +1,18 @@
 export type SpaceAgentResearchType = 'browser' | 'web' | 'youtube' | 'video' | 'firecrawl' | 'page_extraction' | 'general'
 
+export type SpaceAgentResearchOperation =
+  | 'web_search'
+  | 'page_read'
+  | 'firecrawl_scrape'
+  | 'firecrawl_crawl'
+  | 'firecrawl_map'
+  | 'firecrawl_extract'
+  | 'browser_interaction'
+  | 'youtube_video_inspection'
+  | 'screenshot_page_state'
+  | 'inaccessible_site_or_video'
+  | 'general_research'
+
 export type SpaceAgentRequester = 'owner' | 'agent_zero' | 'hermes' | 'pi' | 'gateway'
 export type SpaceAgentResponsibleAgent = 'agent_zero' | 'hermes' | 'pi' | 'responsible_specialist_agent'
 export type SpaceAgentRouteDecision = 'allowed' | 'blocked' | 'requires_session' | 'missing_credential'
@@ -9,6 +22,7 @@ export type WebResearchIntent = {
   schema: 'web_research_intent_v1'
   request_summary: string
   research_type: SpaceAgentResearchType
+  research_operation: SpaceAgentResearchOperation
   requested_by: SpaceAgentRequester
   responsible_agent: SpaceAgentResponsibleAgent
   requires_live_web: boolean
@@ -106,7 +120,7 @@ export type EvidenceItem = {
 export type BrowserActionSummary = {
   action_id: string
   schema: 'browser_action_summary_v1'
-  action: 'open' | 'navigate' | 'inspect' | 'extract' | 'search' | 'none'
+  action: 'open' | 'navigate' | 'inspect' | 'extract' | 'search' | 'screenshot' | 'page_state' | 'none'
   target: string | null
   status: 'planned' | 'blocked' | 'summarized'
   read_only: true
@@ -145,6 +159,7 @@ export type ResearchPacket = {
   requested_by: SpaceAgentRequester
   responsible_agent: SpaceAgentResponsibleAgent
   research_type: SpaceAgentResearchType
+  research_operation: SpaceAgentResearchOperation
   request_summary: string
   web_research_intent: WebResearchIntent
   space_agent_job: SpaceAgentJob
@@ -197,18 +212,20 @@ const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])
 export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): WebResearchIntent {
   const request = sanitize(input.request)
   const researchType = classifySpaceAgentResearch(request)
+  const researchOperation = classifySpaceAgentResearchOperation(request)
   const privateBoundary = PRIVATE_OR_LOGIN_PATTERN.test(request)
   return {
     intent_id: normalizeId(`web_research_intent_${researchType}_${input.generatedAt || DEFAULT_GENERATED_AT}`),
     schema: 'web_research_intent_v1',
     request_summary: request,
     research_type: researchType,
+    research_operation: researchOperation,
     requested_by: input.requestedBy || 'gateway',
     responsible_agent: normalizeResponsibleAgent(input.responsibleAgent, input.requestedBy),
-    requires_live_web: researchType !== 'general',
-    requires_browser: researchType === 'browser' || researchType === 'page_extraction',
-    requires_youtube: researchType === 'youtube' || researchType === 'video' || /youtube|you tube|video/i.test(request),
-    requires_firecrawl: researchType === 'firecrawl' || /fire\s*crawl|firecrawl|crawl|scrape/i.test(request),
+    requires_live_web: researchType !== 'general' || researchOperation !== 'general_research',
+    requires_browser: researchType === 'browser' || researchType === 'page_extraction' || ['browser_interaction', 'screenshot_page_state', 'inaccessible_site_or_video'].includes(researchOperation),
+    requires_youtube: researchType === 'youtube' || researchType === 'video' || researchOperation === 'youtube_video_inspection' || /youtube|you tube|video/i.test(request),
+    requires_firecrawl: researchType === 'firecrawl' || researchOperation.startsWith('firecrawl_') || /fire\s*crawl|firecrawl|crawl|scrape/i.test(request),
     private_or_login_boundary: privateBoundary,
     created_at: input.generatedAt || DEFAULT_GENERATED_AT,
     no_secrets_exposed: true,
@@ -298,6 +315,7 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     requested_by: intent.requested_by,
     responsible_agent: job.responsible_agent,
     research_type: researchType,
+    research_operation: intent.research_operation,
     request_summary: intent.request_summary,
     web_research_intent: intent,
     space_agent_job: job,
@@ -327,12 +345,18 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     blocked_reason: job.blocked_reason,
     owner_visible_summary: job.blocked_reason
       ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
-      : `Space Agent can prepare a ${researchType} research packet and return responsibility to ${job.responsible_agent}.`,
+      : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
   }
 }
 
 export function classifySpaceAgentResearch(request: string): SpaceAgentResearchType {
   const text = sanitize(request).toLowerCase()
+  const operation = classifySpaceAgentResearchOperation(text)
+  if (operation.startsWith('firecrawl_')) return 'firecrawl'
+  if (operation === 'youtube_video_inspection') return /youtube|you tube/.test(text) ? 'youtube' : 'video'
+  if (operation === 'screenshot_page_state' || operation === 'browser_interaction' || operation === 'inaccessible_site_or_video') return 'browser'
+  if (operation === 'page_read') return 'page_extraction'
+  if (operation === 'web_search') return 'web'
   if (/fire\s*crawl|firecrawl|crawl|scrape/.test(text)) return 'firecrawl'
   if (/youtube|you tube/.test(text)) return 'youtube'
   if (/video/.test(text)) return 'video'
@@ -340,6 +364,23 @@ export function classifySpaceAgentResearch(request: string): SpaceAgentResearchT
   if (/browser|browse/.test(text)) return 'browser'
   if (/web|article|search|online/.test(text)) return 'web'
   return 'general'
+}
+
+export function classifySpaceAgentResearchOperation(request: string): SpaceAgentResearchOperation {
+  const text = sanitize(request).toLowerCase()
+  const firecrawl = /fire\s*crawl|firecrawl/.test(text)
+  if (/agents? (?:normally )?(?:cannot|can't) access|(?:cannot|can't) access (?:this |the )?(?:site|website|webpage|page|video)|not accessible to agents?|site\/video/.test(text)) return 'inaccessible_site_or_video'
+  if (/screenshot|screen shot|page[-\s]?state|visual state|capture (?:the )?page|page capture/.test(text)) return 'screenshot_page_state'
+  if (firecrawl && /\bmap(?:ping)?\b|site map|sitemap/.test(text)) return 'firecrawl_map'
+  if (firecrawl && /\bextract(?:ion)?\b|structured data|extract data/.test(text)) return 'firecrawl_extract'
+  if (firecrawl && /\bcrawl(?:ing)?\b/.test(text)) return 'firecrawl_crawl'
+  if (firecrawl && /\bscrape|scraping|scraper\b/.test(text)) return 'firecrawl_scrape'
+  if (/youtube|you tube|video inspection|inspect (?:this |the )?video|video source|video transcript|video metadata|\bvideo\b/.test(text)) return 'youtube_video_inspection'
+  if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse/.test(text)) return 'browser_interaction'
+  if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
+  if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|url/.test(text)) return 'page_read'
+  if (/\bweb\b|online research|live web|public site|public page/.test(text)) return 'web_search'
+  return 'general_research'
 }
 
 function createSpaceAgentResearchRoute(policy: SpaceAgentPolicy): SpaceAgentResearchRoute {

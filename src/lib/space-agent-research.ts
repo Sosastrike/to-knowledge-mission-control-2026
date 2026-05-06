@@ -29,7 +29,25 @@ export type SpaceAgentResponsibleAgent = 'agent_zero' | 'hermes' | 'pi' | 'respo
 export type SpaceAgentRouteDecision = 'allowed' | 'blocked' | 'requires_session' | 'missing_credential'
 export type BrowserActionKind = 'open' | 'navigate' | 'inspect' | 'extract' | 'search' | 'screenshot' | 'page_state' | 'none'
 export type BrowserCaptureKind = 'page_text' | 'screenshot_reference' | 'metadata'
-export type BrowserActionBlocker = 'owner_credentials_not_approved' | 'paywall_bypass_not_allowed' | 'private_account_scrape_not_approved' | 'copyrighted_video_download_blocked_by_default' | null
+export type BrowserActionBlocker =
+  | 'owner_credentials_not_approved'
+  | 'paywall_bypass_not_allowed'
+  | 'private_account_scrape_not_approved'
+  | 'copyrighted_video_download_blocked_by_default'
+  | 'login_required_blocked'
+  | 'captcha_challenge_blocked'
+  | 'rate_limit_blocked'
+  | null
+
+export type BrowserActionRetryPolicy = {
+  schema: 'browser_action_retry_policy_v1'
+  retry_planning_enabled: boolean
+  max_attempts: number
+  backoff_strategy: 'none' | 'exponential_backoff_with_jitter'
+  next_retry_requires_gateway_policy: boolean
+  next_retry_requires_bridge_session: boolean
+  blocked_reason: string | null
+}
 
 export type WebResearchIntent = {
   intent_id: string
@@ -613,6 +631,7 @@ export type BrowserActionSummary = {
   summary: string
   blocked_reason: string | null
   exact_blocker: BrowserActionBlocker
+  retry_policy: BrowserActionRetryPolicy
 }
 
 export type SpaceAgentJob = {
@@ -717,6 +736,9 @@ const OWNER_CREDENTIAL_BROWSER_PATTERN = /\b(?:use|using|with|owner|my|saved|sto
 const PAYWALL_BYPASS_PATTERN = /\b(?:bypass|circumvent|evade|break through|unlock|work around).{0,40}(?:paywall|paid content|subscriber|subscription)|(?:paywall|paid content|subscriber|subscription).{0,40}(?:bypass|circumvent|evade|unlock|work around)\b/i
 const PRIVATE_ACCOUNT_SCRAPE_PATTERN = /\b(?:scrape|crawl|extract|download|copy|inspect).{0,50}(?:private account|private profile|private page|private inbox|dm|direct message|account dashboard)\b/i
 const COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN = /\b(?:download|rip|save|copy).{0,50}(?:copyrighted|protected|paid|subscriber|subscription|youtube|video|movie|course|webinar)\b/i
+const LOGIN_REQUIRED_PATTERN = /\b(?:login required|requires login|sign in required|must log in|authentication required|auth required)\b/i
+const CAPTCHA_CHALLENGE_PATTERN = /\b(?:captcha|recaptcha|hcaptcha|bot challenge|human verification|prove you are human)\b/i
+const RATE_LIMIT_PATTERN = /\b(?:rate[-\s]?limit|too many requests|http 429|\b429\b|throttle|throttled|quota exceeded|temporarily blocked)\b/i
 const PRIVATE_OR_LOGIN_PATTERN = /\b(?:login|log in|sign in|private|paywall|paid content|credential|password|cookie|session token)\b/i
 const SECRETISH_PATTERN = /(sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY|AUTH[_-]?FILE)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
@@ -1489,6 +1511,7 @@ function normalizeBrowserAction(item: Partial<BrowserActionSummary>, index: numb
   const target = item.target ? sanitize(item.target) : null
   const policyBlocker = getBrowserActionPolicyBlocker([intent.request_summary, target, item.summary || ''].filter(Boolean).join(' '))
   const blockedReason = item.blocked_reason ? sanitize(item.blocked_reason) : policyBlocker
+  const retryPolicy = createBrowserActionRetryPolicy(policyBlocker, blockedReason)
   return {
     action_id: normalizeId(item.action_id || `browser_action_${index + 1}`),
     schema: 'browser_action_summary_v1',
@@ -1514,6 +1537,20 @@ function normalizeBrowserAction(item: Partial<BrowserActionSummary>, index: numb
     summary: sanitize(item.summary || 'Read-only browser research action summary; evidence only, no hidden state.'),
     blocked_reason: blockedReason,
     exact_blocker: policyBlocker,
+    retry_policy: retryPolicy,
+  }
+}
+
+function createBrowserActionRetryPolicy(policyBlocker: BrowserActionBlocker, blockedReason: string | null): BrowserActionRetryPolicy {
+  const rateLimited = policyBlocker === 'rate_limit_blocked' || blockedReason === 'rate_limit_blocked'
+  return {
+    schema: 'browser_action_retry_policy_v1',
+    retry_planning_enabled: rateLimited,
+    max_attempts: rateLimited ? 3 : 0,
+    backoff_strategy: rateLimited ? 'exponential_backoff_with_jitter' : 'none',
+    next_retry_requires_gateway_policy: rateLimited,
+    next_retry_requires_bridge_session: rateLimited,
+    blocked_reason: rateLimited ? 'rate_limit_retry_requires_gateway_backoff_and_bridge_session_scope' : null,
   }
 }
 
@@ -2218,6 +2255,9 @@ function getBrowserActionPolicyBlocker(value: string | null | undefined): Browse
   if (PAYWALL_BYPASS_PATTERN.test(text)) return 'paywall_bypass_not_allowed'
   if (PRIVATE_ACCOUNT_SCRAPE_PATTERN.test(text)) return 'private_account_scrape_not_approved'
   if (COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN.test(text)) return 'copyrighted_video_download_blocked_by_default'
+  if (LOGIN_REQUIRED_PATTERN.test(text)) return 'login_required_blocked'
+  if (CAPTCHA_CHALLENGE_PATTERN.test(text)) return 'captcha_challenge_blocked'
+  if (RATE_LIMIT_PATTERN.test(text)) return 'rate_limit_blocked'
   return null
 }
 

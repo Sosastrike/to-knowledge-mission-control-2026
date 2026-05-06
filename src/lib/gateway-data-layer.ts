@@ -17,6 +17,7 @@ export const GATEWAY_DATA_LAYER_NODE_TYPES = [
   'brain_system',
   'opencloud_worker',
   'buildwiki_farmer',
+  'workforce_layer',
   'delivery_channel',
 ] as const
 
@@ -606,6 +607,8 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'opencloud_worker'
     case 'buildwiki_farmer':
       return 'buildwiki_farmer'
+    case 'workforce_layer':
+      return 'workforce_layer'
     case 'event':
       return 'event'
     case 'data_source':
@@ -685,6 +688,7 @@ function semanticContextFor(type: GatewayDataLayerNodeType, name: string): strin
     return `${name} is a retained OpenCloud or Build-Wiki worker/runtime node under Gateway control, not a deletion target. It can expose skills, tools, Build-Wiki/Farmer support, and future mini-agent creation capabilities through Gateway policy.`
   }
   if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
+  if (type === 'workforce_layer') return `${name} is a workforce operations layer for co-worker agents, task queues, heartbeats, budgets, work products, and approval records. Mutations require Gateway policy and Bridge Session scope.`
   if (type === 'skill') return `${name} is a shared OpenClaw+ skill capability discoverable before activation.`
   if (type === 'mini_agent') return `${name} is a mini-agent family node governed by Gateway policy. Mini-agents require a parent supervisor, scope, memory TTL, audit trail, and Agent Zero command authority; they cannot act independently.`
   if (type === 'specialist_agent') return `${name} is a retained specialist agent governed by Gateway policy. It must report through Agent Zero, cannot self-promote, and cannot bypass Gateway.`

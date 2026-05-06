@@ -63,6 +63,17 @@ const registry: GatewayRegistry = {
       blockers: [],
     },
     {
+      id: 'paperclip',
+      label: 'Paperclip',
+      kind: 'workforce_layer',
+      status: 'blocked',
+      owner: 'ecosystem',
+      visibility: 'owner_visible',
+      health: createGatewayHealth('blocked', 'Paperclip production activation is blocked by dependency audit.'),
+      capabilities: ['co-worker orchestration', 'task queues', 'heartbeats', 'budgets', 'work products'],
+      blockers: ['production_install_blocked_by_dependency_audit'],
+    },
+    {
       id: 'gateway_events',
       label: 'Gateway Events',
       kind: 'event',
@@ -189,6 +200,7 @@ describe('Gateway Data Layer', () => {
     const layer = buildGatewayDataLayer(registry)
 
     expect(getSystems(layer).map((system) => system.id)).toContain('system.opencloud_worker')
+    expect(getSystems(layer).map((system) => system.id)).toContain('system.workforce_layer')
     expect(getAgents(layer).map((agent) => agent.name)).toEqual(expect.arrayContaining(['Agent Zero', 'Space Agent']))
     expect(getSkills(layer).map((skill) => skill.name)).toContain('Report Skill')
     expect(getTools(layer).map((tool) => tool.name)).toContain('Zapier MCP')
@@ -213,7 +225,32 @@ describe('Gateway Data Layer', () => {
         node_ids: expect.arrayContaining(['capability_delivery_telegram']),
         requires_bridge_session: true,
       }),
+      expect.objectContaining({
+        reason: 'production_install_blocked_by_dependency_audit',
+        count: 1,
+        node_ids: expect.arrayContaining(['paperclip']),
+        requires_bridge_session: false,
+      }),
     ]))
+  })
+
+  it('keeps Paperclip visible as a blocked workforce layer before production activation', () => {
+    const layer = buildGatewayDataLayer(registry)
+    const paperclip = layer.nodes.find((node) => node.id === 'paperclip')
+
+    expect(paperclip).toMatchObject({
+      name: 'Paperclip',
+      type: 'workforce_layer',
+      status: 'blocked',
+      connected: false,
+      configured: true,
+      read_enabled: false,
+      write_enabled: false,
+      execution_enabled: false,
+      requires_bridge_session: false,
+      blocked_reason: 'production_install_blocked_by_dependency_audit',
+    })
+    expect(paperclip?.semantic_context).toContain('workforce operations layer')
   })
 
   it('keeps Space Agent as a retained research specialist under Gateway supervision', () => {

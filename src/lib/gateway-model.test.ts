@@ -41,6 +41,7 @@ describe('canonical Gateway graph model', () => {
       'brain_system',
       'opencloud_worker',
       'buildwiki_farmer',
+      'workforce_layer',
       'delivery_channel',
     ])
 
@@ -57,6 +58,7 @@ describe('canonical Gateway graph model', () => {
     const hermes = getGatewayRoleMatrixEntry('hermes')
     const pi = getGatewayRoleMatrixEntry('pi')
     const spaceAgent = getGatewayRoleMatrixEntry('space_agent')
+    const paperclip = getGatewayRoleMatrixEntry('paperclip')
     const openCloud = getGatewayRoleMatrixEntry('opencloud')
     const openClaw = getGatewayRoleMatrixEntry('openclaw_plus')
     const tony = getGatewayRoleMatrixEntry('tony_legacy')
@@ -68,13 +70,14 @@ describe('canonical Gateway graph model', () => {
       'hermes',
       'pi',
       'space_agent',
+      'paperclip',
       'mini_agents',
       'openclaw_plus',
       'opencloud',
       'tony_legacy',
     ]))
     expect(agentZero).toMatchObject({ role: 'commander', commander: true, active: true })
-    expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'hermes', 'pi', 'mini_agents']))
+    expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'paperclip', 'hermes', 'pi', 'mini_agents']))
     expect(hermes).toMatchObject({ role: 'lieutenant_skill_workflow_builder', can_design: true, commander: false })
     expect(hermes?.policy_tags).toContain('can_design_space_agent_skills')
     expect(pi).toMatchObject({ role: 'gateway_dispatcher_candidate_route_optimizer_tool_use_advisor', can_recommend: true, commander: false })
@@ -91,6 +94,20 @@ describe('canonical Gateway graph model', () => {
       'space_agent_not_commander',
       'research_packet_only_by_default',
       'no_external_writes_without_bridge_session',
+    ]))
+    expect(paperclip).toMatchObject({
+      role: 'workforce_company_task_orchestration_layer',
+      commander: false,
+      active: false,
+      archived: false,
+      execution_mode: 'sandbox_audit_only_until_dependency_audit_clean_or_owner_waiver',
+    })
+    expect(paperclip?.reports_to).toEqual(expect.arrayContaining(['gateway', 'agent_zero']))
+    expect(paperclip?.policy_tags).toEqual(expect.arrayContaining([
+      'paperclip_not_commander',
+      'no_public_exposure',
+      'bridge_session_required_for_workforce_mutations',
+      'production_install_blocked_by_dependency_audit',
     ]))
     expect(openCloud).toMatchObject({ role: 'worker_runtime_engine_skill_tool_agent_creation_layer', commander: false, active: true })
     expect(openCloud?.policy_tags).toContain('opencloud_retained')
@@ -139,6 +156,7 @@ describe('canonical Gateway graph model', () => {
     const agentZero = registry.nodes.find((node) => node.id === 'agent_zero')
     const hermes = registry.nodes.find((node) => node.id === 'hermes')
     const spaceAgent = registry.nodes.find((node) => node.id === 'space_agent')
+    const paperclip = registry.nodes.find((node) => node.id === 'paperclip')
     const bridge = registry.nodes.find((node) => node.id === 'bridge_mcp')
     const brainNodes = registry.nodes.filter((node) => node.kind === 'brain_system' || node.kind === 'buildwiki_farmer').map((node) => node.id)
 
@@ -151,6 +169,7 @@ describe('canonical Gateway graph model', () => {
         'agent_zero',
         'hermes',
         'space_agent',
+        'paperclip',
         'mini_agents',
         'openclaw_plus',
         'bridge_mcp',
@@ -220,6 +239,46 @@ describe('canonical Gateway graph model', () => {
       blockers_summary: 'firecrawl_missing_credential',
       secrets_exposed: false,
     })
+    expect(paperclip).toMatchObject({
+      kind: 'workforce_layer',
+      role: 'workforce_company_task_orchestration_layer',
+      parent: 'gateway',
+      supervisors: ['agent_zero', 'gateway'],
+      execution_state: 'proposal_only_until_bridge_session',
+      external_writes: 'requires_bridge_session',
+      status: 'blocked',
+      visibility: 'owner_visible',
+      blockers: [
+        'production_install_blocked_by_dependency_audit',
+        'paperclip_service_not_configured',
+        'bridge_session_required_for_workforce_mutations',
+      ],
+      capabilities: expect.arrayContaining([
+        'co-worker agent orchestration',
+        'daily task assignment',
+        'simultaneous job supervision',
+        'recurring heartbeats',
+        'budget and cost tracking',
+        'issues, tasks, and work products',
+        'governance and approval records',
+      ]),
+    })
+    expect(paperclip?.status_details).toMatchObject({
+      repo_audit_status: 'sandbox_audit_complete',
+      sandbox_install: 'passed_with_ignore_scripts',
+      token_scan: 'passed',
+      dependency_audit: 'blocked',
+      dependency_audit_total: 30,
+      dependency_audit_high: 11,
+      dependency_audit_moderate: 17,
+      dependency_audit_low: 2,
+      production_install_status: 'blocked_until_dependency_audit_clean_or_owner_waiver',
+      service_status: 'not_configured',
+      public_exposure: false,
+      external_writes_enabled: false,
+      bridge_session_required_for_mutations: true,
+      secrets_exposed: false,
+    })
     expect(bridge).toMatchObject({ kind: 'mcp_server', status: 'connected' })
     expect(brainNodes).toEqual(expect.arrayContaining(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki']))
   })
@@ -274,6 +333,58 @@ describe('canonical Gateway graph model', () => {
     })
   })
 
+  it('marks Paperclip as a sandboxed workforce layer, not command authority', () => {
+    const registry = createGatewayRegistryFromAgentNetwork()
+    const capability = registry.capabilities.find((item) => item.id === 'paperclip_workforce_operations')
+
+    expect(capability).toMatchObject({
+      source_node: 'paperclip',
+      status: 'blocked',
+      execution_enabled: false,
+      available_to: ['agent_zero', 'hermes', 'pi'],
+      blockers: [
+        'production_install_blocked_by_dependency_audit',
+        'paperclip_service_not_configured',
+      ],
+      status_details: {
+        role: 'workforce_company_task_orchestration_layer',
+        repo_audit_status: 'sandbox_audit_complete',
+        sandbox_install: 'passed_with_ignore_scripts',
+        token_scan: 'passed',
+        dependency_audit: 'blocked',
+        dependency_audit_total: 30,
+        dependency_audit_high: 11,
+        dependency_audit_moderate: 17,
+        dependency_audit_low: 2,
+        production_install_status: 'blocked_until_dependency_audit_clean_or_owner_waiver',
+        public_exposure: false,
+        external_writes_enabled: false,
+        bridge_session_required_for_mutations: true,
+        paperclip_is_commander: false,
+        secrets_exposed: false,
+      },
+    })
+    expect(capability?.execution_requirements).toEqual(expect.arrayContaining([
+      'gateway_route_required',
+      'agent_zero_command_authority_required',
+      'bridge_session_required_for_workforce_mutations',
+      'no_public_exposure',
+      'production_install_blocked_until_dependency_audit_clean_or_owner_waiver',
+    ]))
+    expect(registry.policies.paperclip_no_public_exposure).toMatchObject({
+      auth_required: true,
+      write_allowed: false,
+      secret_safe: true,
+      external_allowed: false,
+    })
+    expect(registry.policies.paperclip_workforce_mutations_bridge_session_required).toMatchObject({
+      auth_required: true,
+      bridge_session_required: true,
+      secret_safe: true,
+      external_allowed: false,
+    })
+  })
+
   it('keeps Tony archived and out of active Gateway routes', () => {
     const registry = createGatewayRegistryFromAgentNetwork()
     const tonyNodes = registry.nodes.filter((node) => node.id.startsWith('tony'))
@@ -307,6 +418,9 @@ describe('canonical Gateway graph model', () => {
         expect.objectContaining({ source: 'agent_zero', target: 'hermes', kind: 'delegation' }),
         expect.objectContaining({ source: 'agent_zero', target: 'space_agent', kind: 'delegation' }),
         expect.objectContaining({ source: 'space_agent', target: 'agent_zero', kind: 'report' }),
+        expect.objectContaining({ source: 'gateway', target: 'paperclip', kind: 'delegation', status: 'blocked' }),
+        expect.objectContaining({ source: 'agent_zero', target: 'paperclip', kind: 'delegation', status: 'blocked' }),
+        expect.objectContaining({ source: 'paperclip', target: 'agent_zero', kind: 'report' }),
         expect.objectContaining({ source: 'agent_zero', target: 'openclaw_plus', kind: 'tool-call' }),
         expect.objectContaining({ source: 'openclaw_plus', target: 'bridge_mcp', kind: 'mcp-call' }),
         expect.objectContaining({ source: 'agent_zero', target: 'brain_sync', kind: 'memory' }),

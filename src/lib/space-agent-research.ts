@@ -720,6 +720,7 @@ const COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN = /\b(?:download|rip|save|copy).{0,50}(
 const PRIVATE_OR_LOGIN_PATTERN = /\b(?:login|log in|sign in|private|paywall|paid content|credential|password|cookie|session token)\b/i
 const SECRETISH_PATTERN = /(sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY|AUTH[_-]?FILE)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
+const BLOCKED_RESEARCH_URL_PATTERN = /\bhttps?:\/\/(?:localhost|(?:[^/\s]+\.)?localhost|[^/\s]+\.local|0(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|127(?:\.\d{1,3}){3}|169\.254(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?::\d+)?[^\s`'"\])}]*/gi
 const RAW_COOKIE_SESSION_PATTERN = /\b(?:cookie|cookies|session[_\s-]?token|sessionid|csrf|xsrf|jwt|refresh[_\s-]?token|access[_\s-]?token)\b\s*[:=]\s*[^,\s}]+/i
 const SPACE_RESEARCH_DEFAULT_TTL_MINUTES = 1440
 const SPACE_RESEARCH_SHORT_TTL_MINUTES = 30
@@ -1292,7 +1293,7 @@ export function classifySpaceAgentResearchOperation(request: string): SpaceAgent
   if (/youtube|you tube|video inspection|inspect (?:this |the )?video|video source|video transcript|video metadata|\bvideo\b/.test(text)) return 'youtube_video_inspection'
   if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse/.test(text)) return 'browser_interaction'
   if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
-  if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|url/.test(text)) return 'page_read'
+  if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|product page|pricing page|page details|url/.test(text)) return 'page_read'
   if (/\bweb\b|online research|live web|public site|public page/.test(text)) return 'web_search'
   return 'research_not_needed'
 }
@@ -1345,18 +1346,22 @@ function normalizeEvidence(value: SpaceAgentResearchPacketInput['evidence'], gen
 }
 
 function normalizeWebSources(value: SpaceAgentResearchPacketInput['webSources'], generatedAt: string | undefined): WebSource[] {
-  return (value || []).map((item, index) => ({
-    source_id: normalizeId(item.source_id || `web_source_${index + 1}`),
-    schema: 'web_source_v1',
-    type: 'web_source',
-    url: item.url ? sanitize(item.url) : null,
-    title: item.title ? sanitize(item.title) : null,
-    domain: item.domain ? sanitize(item.domain) : domainFromUrl(item.url || null),
-    access: item.access || 'unknown',
-    status: item.status || 'candidate',
-    last_checked: item.last_checked || generatedAt || null,
-    blocked_reason: item.blocked_reason ? sanitize(item.blocked_reason) : null,
-  }))
+  return (value || []).map((item, index) => {
+    const urlSafety = classifyResearchUrl(item.url || null)
+    const blockedReason = item.blocked_reason ? sanitize(item.blocked_reason) : urlSafety.blocked_reason
+    return {
+      source_id: normalizeId(item.source_id || `web_source_${index + 1}`),
+      schema: 'web_source_v1',
+      type: 'web_source',
+      url: urlSafety.url,
+      title: item.title ? sanitize(item.title) : null,
+      domain: item.domain ? sanitize(item.domain) : domainFromUrl(urlSafety.url),
+      access: blockedReason ? 'blocked' : item.access || 'unknown',
+      status: blockedReason ? 'blocked' : item.status || 'candidate',
+      last_checked: item.last_checked || generatedAt || null,
+      blocked_reason: blockedReason,
+    }
+  })
 }
 
 function normalizeYouTubeSources(value: SpaceAgentResearchPacketInput['youtubeSources']): YouTubeSource[] {
@@ -2150,6 +2155,27 @@ function extractUrls(value: string): string[] {
   return dedupeStrings((sanitize(value).match(/https?:\/\/[^\s)]+/gi) || []).map((url) => url.replace(/[.,;]+$/, '')))
 }
 
+function classifyResearchUrl(value: string | null): { url: string | null; blocked_reason: string | null } {
+  if (!value) return { url: null, blocked_reason: null }
+  try {
+    const url = new URL(sanitizeUrlCandidate(value))
+    if (!['http:', 'https:'].includes(url.protocol)) return { url: null, blocked_reason: 'unsupported_url_scheme' }
+    if (isBlockedResearchHostname(url.hostname)) return { url: null, blocked_reason: 'blocked_url_not_allowed' }
+    url.hash = ''
+    return { url: url.toString().replace(/\/$/, ''), blocked_reason: null }
+  } catch {
+    return { url: null, blocked_reason: 'invalid_url' }
+  }
+}
+
+function isBlockedResearchHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase()
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true
+  if (/^(?:0|10|127|169\.254|192\.168)\./.test(host)) return true
+  const private172 = host.match(/^172\.(\d{1,2})\./)
+  return Boolean(private172 && Number(private172[1]) >= 16 && Number(private172[1]) <= 31)
+}
+
 function addMinutes(iso: string, minutes: number): string {
   const base = new Date(iso)
   const time = Number.isFinite(base.getTime()) ? base.getTime() : new Date(DEFAULT_GENERATED_AT).getTime()
@@ -2172,6 +2198,14 @@ function videoIdFromUrl(value: string | null): string | null {
 }
 
 function sanitize(value: string): string {
+  return String(value || '')
+    .replace(SECRETISH_PATTERN, '[redacted-secret]')
+    .replace(RAW_PATH_PATTERN, '[redacted-path]')
+    .replace(BLOCKED_RESEARCH_URL_PATTERN, '[blocked-url]')
+    .trim()
+}
+
+function sanitizeUrlCandidate(value: string): string {
   return String(value || '')
     .replace(SECRETISH_PATTERN, '[redacted-secret]')
     .replace(RAW_PATH_PATTERN, '[redacted-path]')

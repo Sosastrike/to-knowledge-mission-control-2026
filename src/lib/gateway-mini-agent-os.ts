@@ -78,7 +78,7 @@ export type GatewayMiniAgentOperatingSystem = {
     agent_zero: 'commander'
     hermes: 'lieutenant_skill_workflow_builder'
     pi: 'dispatcher_candidate_route_optimizer_tool_use_advisor'
-    space_agent: 'web_browser_youtube_firecrawl_research_specialist'
+    space_agent: 'browser_web_youtube_research'
     mini_agents: 'temporary_or_reusable_subordinate_workers'
     openclaw_plus: 'runtime_skills_adapters_reports_layer'
     opencloud: 'worker_runtime_skill_tool_agent_creation_layer'
@@ -195,7 +195,7 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       agent_zero: 'commander',
       hermes: 'lieutenant_skill_workflow_builder',
       pi: 'dispatcher_candidate_route_optimizer_tool_use_advisor',
-      space_agent: 'web_browser_youtube_firecrawl_research_specialist',
+      space_agent: 'browser_web_youtube_research',
       mini_agents: 'temporary_or_reusable_subordinate_workers',
       openclaw_plus: 'runtime_skills_adapters_reports_layer',
       opencloud: 'worker_runtime_skill_tool_agent_creation_layer',
@@ -383,7 +383,7 @@ function buildMiniAgentRoles(registry: GatewayRegistry): GatewayMiniAgentRole[] 
     {
       id: 'space_agent',
       label: 'Space Agent',
-      role: getGatewayRoleMatrixEntry('space_agent')?.role || 'web_browser_youtube_firecrawl_research_specialist',
+      role: getGatewayRoleMatrixEntry('space_agent')?.role || 'browser_web_youtube_research',
       authority: 'browser, web, YouTube, Firecrawl, crawl, scrape, search, and extraction research specialist; returns Research Packets through Agent Zero.',
       can_create_proposals: false,
       can_supervise: false,

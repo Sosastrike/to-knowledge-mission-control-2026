@@ -80,7 +80,7 @@ describe('canonical Gateway graph model', () => {
     expect(pi).toMatchObject({ role: 'gateway_dispatcher_candidate_route_optimizer_tool_use_advisor', can_recommend: true, commander: false })
     expect(pi?.policy_tags).toContain('can_recommend_space_agent_for_web_research')
     expect(spaceAgent).toMatchObject({
-      role: 'web_browser_youtube_firecrawl_research_specialist',
+      role: 'browser_web_youtube_research',
       commander: false,
       active: true,
       archived: false,
@@ -177,9 +177,22 @@ describe('canonical Gateway graph model', () => {
     })
     expect(spaceAgent).toMatchObject({
       kind: 'specialist_agent',
+      role: 'browser_web_youtube_research',
+      parent: 'gateway',
+      supervisors: ['agent_zero', 'hermes', 'pi'],
+      execution_state: 'read_only_by_default',
+      web_access: 'gated_by_policy',
+      browser_interaction: 'gated_by_policy',
+      youtube_inspection: 'gated_by_policy',
+      external_writes: 'disabled',
       status: 'read_only',
       visibility: 'owner_visible',
       capabilities: expect.arrayContaining([
+        'browser_web_youtube_research',
+        'web access gated by policy',
+        'browser interaction gated by policy',
+        'YouTube inspection gated by policy',
+        'external writes disabled',
         'Gateway-routed structured Research Packets',
         'subordinate research stage, not commander',
       ]),
@@ -198,7 +211,13 @@ describe('canonical Gateway graph model', () => {
       execution_enabled: false,
       available_to: ['agent_zero', 'hermes', 'pi'],
       status_details: {
-        role: 'web_browser_youtube_firecrawl_research_specialist',
+        role: 'browser_web_youtube_research',
+        specialty: 'web_browser_youtube_firecrawl_research_specialist',
+        execution_state: 'read_only_by_default',
+        web_access: 'gated_by_policy',
+        browser_interaction: 'gated_by_policy',
+        youtube_inspection: 'gated_by_policy',
+        external_writes: 'disabled',
         returns_to: 'agent_zero',
         subordinate_to_gateway: true,
         agent_zero_commander: true,

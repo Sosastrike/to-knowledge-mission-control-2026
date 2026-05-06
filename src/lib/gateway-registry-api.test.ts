@@ -420,6 +420,12 @@ describe('Gateway registry API model', () => {
       available_to: ['agent_zero', 'hermes', 'pi'],
     })
     expect(spaceAgent?.status_details).toMatchObject({
+      role: 'browser_web_youtube_research',
+      execution_state: 'read_only_by_default',
+      web_access: 'gated_by_policy',
+      browser_interaction: 'gated_by_policy',
+      youtube_inspection: 'gated_by_policy',
+      external_writes: 'disabled',
       commander_replacement: false,
       returns_to: 'agent_zero',
       execution_enabled: false,
@@ -690,6 +696,20 @@ describe('Gateway registry API model', () => {
     expect(nodes.nodes.find((item) => item.id === 'buildwiki')).toMatchObject({ type: 'buildwiki_farmer' })
     expect(nodes.nodes.find((item) => item.id === 'opencloud')).toMatchObject({ type: 'opencloud_worker' })
     expect(nodes.nodes.find((item) => item.id === 'integration_agentmail')).toMatchObject({ type: 'delivery_channel' })
+    expect(nodes.nodes.find((item) => item.id === 'space_agent')).toMatchObject({
+      type: 'specialist_agent',
+      role: 'browser_web_youtube_research',
+      parent: 'gateway',
+      supervisors: ['agent_zero', 'hermes', 'pi'],
+      execution_state: 'read_only_by_default',
+      web_access: 'gated_by_policy',
+      browser_interaction: 'gated_by_policy',
+      youtube_inspection: 'gated_by_policy',
+      external_writes: 'disabled',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+    })
     expect(node?.node.label).toBe('Agent Zero')
     expect(node?.node.name).toBe('Agent Zero')
     expect(node?.node.type).toBe('commander')

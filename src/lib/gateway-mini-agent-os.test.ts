@@ -26,7 +26,7 @@ describe('Gateway mini-agent operating system', () => {
     expect(os.hierarchy.agent_zero).toBe('commander')
     expect(os.hierarchy.hermes).toBe('lieutenant_skill_workflow_builder')
     expect(os.hierarchy.pi).toBe('dispatcher_candidate_route_optimizer_tool_use_advisor')
-    expect(os.hierarchy.space_agent).toBe('web_browser_youtube_firecrawl_research_specialist')
+    expect(os.hierarchy.space_agent).toBe('browser_web_youtube_research')
     expect(agentZero).toMatchObject({ kind: 'commander', owner: 'owner', visibility: 'owner_visible' })
     expect(hermes).toMatchObject({ kind: 'lieutenant', visibility: 'owner_visible' })
     expect(pi).toMatchObject({ kind: 'mini_agent', status: 'read_only', visibility: 'owner_visible' })
@@ -40,7 +40,7 @@ describe('Gateway mini-agent operating system', () => {
     expect(os.roles).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'space_agent',
-        role: 'web_browser_youtube_firecrawl_research_specialist',
+        role: 'browser_web_youtube_research',
         can_create_proposals: false,
         can_supervise: false,
         can_execute: false,

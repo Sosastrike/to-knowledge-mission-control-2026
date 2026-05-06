@@ -67,6 +67,18 @@ export type GatewayCapabilityKind =
 
 export type GatewayExecutionMode = 'read_only' | 'bridge_session' | 'execution_enabled' | 'blocked'
 
+export type GatewayNodeExecutionState =
+  | 'read_only_by_default'
+  | 'read_only_shadow_recommendation'
+  | 'proposal_only_until_bridge_session'
+  | 'bridge_session_required'
+  | 'execution_enabled'
+  | 'disabled'
+
+export type GatewayPolicyGate = 'gated_by_policy' | 'enabled' | 'disabled'
+
+export type GatewayExternalWriteState = 'disabled' | 'requires_bridge_session' | 'enabled'
+
 export type GatewayHealth = {
   status: GatewayStatus
   summary: string
@@ -78,6 +90,14 @@ export type GatewayNode = {
   id: string
   label: string
   kind: GatewayNodeKind
+  role?: string
+  parent?: string
+  supervisors?: string[]
+  execution_state?: GatewayNodeExecutionState
+  web_access?: GatewayPolicyGate
+  browser_interaction?: GatewayPolicyGate
+  youtube_inspection?: GatewayPolicyGate
+  external_writes?: GatewayExternalWriteState
   status: GatewayStatus
   owner: string
   visibility: GatewayVisibility
@@ -574,14 +594,27 @@ export function createGatewayRegistryFromAgentNetwork(
       id: 'space_agent',
       label: 'Space Agent',
       kind: 'specialist_agent',
+      role: 'browser_web_youtube_research',
+      parent: 'gateway',
+      supervisors: ['agent_zero', 'hermes', 'pi'],
+      executionState: 'read_only_by_default',
+      webAccess: 'gated_by_policy',
+      browserInteraction: 'gated_by_policy',
+      youtubeInspection: 'gated_by_policy',
+      externalWrites: 'disabled',
       status: 'read_only',
       owner: 'ecosystem',
       visibility: 'owner_visible',
       capabilities: [
+        'browser_web_youtube_research',
         'browser research',
         'webpage and article inspection planning',
         'YouTube and video research packets',
         'Firecrawl research coordination',
+        'web access gated by policy',
+        'browser interaction gated by policy',
+        'YouTube inspection gated by policy',
+        'external writes disabled',
         'Gateway-routed structured Research Packets',
         'subordinate research stage, not commander',
       ],
@@ -735,7 +768,13 @@ export function createGatewayRegistryFromAgentNetwork(
       ],
       status_details: {
         summary: 'Space Agent prepares browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research packets under Gateway supervision.',
-        role: 'web_browser_youtube_firecrawl_research_specialist',
+        role: 'browser_web_youtube_research',
+        specialty: 'web_browser_youtube_firecrawl_research_specialist',
+        execution_state: 'read_only_by_default',
+        web_access: 'gated_by_policy',
+        browser_interaction: 'gated_by_policy',
+        youtube_inspection: 'gated_by_policy',
+        external_writes: 'disabled',
         returns_to: 'agent_zero',
         subordinate_to_gateway: true,
         agent_zero_commander: true,
@@ -788,6 +827,14 @@ function createGatewayNode(input: {
   id: string
   label: string
   kind: GatewayNodeKind
+  role?: string
+  parent?: string
+  supervisors?: readonly string[]
+  executionState?: GatewayNodeExecutionState
+  webAccess?: GatewayPolicyGate
+  browserInteraction?: GatewayPolicyGate
+  youtubeInspection?: GatewayPolicyGate
+  externalWrites?: GatewayExternalWriteState
   status: GatewayStatus
   owner: string
   visibility: GatewayVisibility
@@ -801,6 +848,14 @@ function createGatewayNode(input: {
     id: normalizeGatewayId(input.id),
     label: input.label,
     kind: input.kind,
+    ...(input.role ? { role: input.role } : {}),
+    ...(input.parent ? { parent: normalizeGatewayId(input.parent) } : {}),
+    ...(input.supervisors ? { supervisors: input.supervisors.map(normalizeGatewayId) } : {}),
+    ...(input.executionState ? { execution_state: input.executionState } : {}),
+    ...(input.webAccess ? { web_access: input.webAccess } : {}),
+    ...(input.browserInteraction ? { browser_interaction: input.browserInteraction } : {}),
+    ...(input.youtubeInspection ? { youtube_inspection: input.youtubeInspection } : {}),
+    ...(input.externalWrites ? { external_writes: input.externalWrites } : {}),
     status,
     owner: input.owner,
     visibility: input.visibility,
@@ -971,7 +1026,7 @@ export const GATEWAY_ROLE_MATRIX: readonly GatewayRoleMatrixEntry[] = [
   {
     id: 'space_agent',
     label: 'Space Agent',
-    role: 'web_browser_youtube_firecrawl_research_specialist',
+    role: 'browser_web_youtube_research',
     authority: 'Subordinate research specialist that returns structured Research Packets through Gateway; Agent Zero remains commander.',
     reports_to: ['gateway', 'agent_zero'],
     supervises: [],
@@ -981,7 +1036,17 @@ export const GATEWAY_ROLE_MATRIX: readonly GatewayRoleMatrixEntry[] = [
     commander: false,
     active: true,
     archived: false,
-    policy_tags: ['space_agent_not_commander', 'gateway_route_required', 'research_packet_only_by_default', 'no_external_writes_without_bridge_session'],
+    policy_tags: [
+      'space_agent_not_commander',
+      'gateway_route_required',
+      'research_packet_only_by_default',
+      'read_only_by_default',
+      'web_access_gated_by_policy',
+      'browser_interaction_gated_by_policy',
+      'youtube_inspection_gated_by_policy',
+      'external_writes_disabled',
+      'no_external_writes_without_bridge_session',
+    ],
     owner_visible_summary: 'Space Agent handles browser, web, YouTube, video, Firecrawl, crawl, scrape, search, and extraction research stages only.',
   },
   {

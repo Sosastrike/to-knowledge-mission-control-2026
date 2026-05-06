@@ -213,6 +213,11 @@ describe('canonical Gateway graph model', () => {
       firecrawl_extract: 'blocked_missing_credential',
       firecrawl_interact_browser: 'blocked_missing_credential',
       firecrawl_blocked_reason: 'firecrawl_missing_credential',
+      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+      latest_research_jobs: 'none_recorded_yet',
+      handoff_target: 'agent_zero_by_default',
+      blockers_summary: 'firecrawl_missing_credential',
       secrets_exposed: false,
     })
     expect(bridge).toMatchObject({ kind: 'mcp_server', status: 'connected' })
@@ -244,6 +249,11 @@ describe('canonical Gateway graph model', () => {
         firecrawl_extract: 'blocked_missing_credential',
         firecrawl_interact_browser: 'blocked_missing_credential',
         firecrawl_blocked_reason: 'firecrawl_missing_credential',
+        browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+        youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+        latest_research_jobs: 'none_recorded_yet',
+        handoff_target: 'agent_zero_by_default',
+        blockers_summary: 'firecrawl_missing_credential',
         returns_to: 'agent_zero',
         subordinate_to_gateway: true,
         agent_zero_commander: true,

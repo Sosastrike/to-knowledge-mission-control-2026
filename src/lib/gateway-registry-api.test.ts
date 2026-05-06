@@ -443,6 +443,11 @@ describe('Gateway registry API model', () => {
       firecrawl_extract: 'blocked_missing_credential',
       firecrawl_interact_browser: 'blocked_missing_credential',
       firecrawl_blocked_reason: 'firecrawl_missing_credential',
+      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+      latest_research_jobs: 'none_recorded_yet',
+      handoff_target: 'agent_zero_by_default',
+      blockers_summary: 'firecrawl_missing_credential',
     })
     const firecrawlSearch = registry.capabilities.find((capability) => capability.id === 'space_agent_firecrawl_search')
     expect(firecrawlSearch).toMatchObject({
@@ -475,6 +480,11 @@ describe('Gateway registry API model', () => {
       firecrawl_status: 'blocked',
       firecrawl_credential_configured: false,
       firecrawl_blocked_reason: 'firecrawl_missing_credential',
+      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+      latest_research_jobs: 'none_recorded_yet',
+      handoff_target: 'agent_zero_by_default',
+      blockers_summary: 'firecrawl_missing_credential',
       secrets_exposed: false,
     })
     const mcpZapier = registry.capabilities.find((capability) => capability.id === 'mcp_zapier')
@@ -609,6 +619,7 @@ describe('Gateway registry API model', () => {
     const status = buildGatewayStatusPayload(registry)
     const nodes = buildGatewayNodesPayload(registry)
     const node = getGatewayNodeDetail(registry, 'agent-zero')
+    const spaceAgentNodeDetail = getGatewayNodeDetail(registry, 'space-agent')
     const flows = buildGatewayFlowsPayload(registry)
     const policies = buildGatewayPoliciesPayload(registry)
 
@@ -757,6 +768,30 @@ describe('Gateway registry API model', () => {
       write_enabled: false,
       execution_enabled: false,
     })
+    expect(spaceAgentNodeDetail?.node).toMatchObject({
+      id: 'space_agent',
+      type: 'specialist_agent',
+      status: 'read_only',
+      blocked_reason: 'firecrawl_missing_credential',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+    })
+    expect(spaceAgentNodeDetail?.node.status_details).toMatchObject({
+      firecrawl_status: 'blocked',
+      firecrawl_credential_configured: false,
+      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+      latest_research_jobs: 'none_recorded_yet',
+      handoff_target: 'agent_zero_by_default',
+      blockers_summary: 'firecrawl_missing_credential',
+      secrets_exposed: false,
+    })
+    expect(spaceAgentNodeDetail?.capabilities.map((capability) => capability.id)).toEqual(expect.arrayContaining([
+      'space_agent_research_packet',
+      'space_agent_firecrawl_search',
+      'space_agent_firecrawl_interact_browser',
+    ]))
     expect(node?.node.label).toBe('Agent Zero')
     expect(node?.node.name).toBe('Agent Zero')
     expect(node?.node.type).toBe('commander')

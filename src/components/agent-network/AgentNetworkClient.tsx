@@ -226,6 +226,32 @@ interface GatewayEventsPayload {
   error?: string
 }
 
+interface GatewayApiNodeRecord {
+  id?: string
+  label?: string
+  status?: string
+  blocked_reason?: string | null
+  requires_bridge_session?: boolean
+  browser_interaction?: string
+  youtube_inspection?: string
+  status_details?: Record<string, string | number | boolean | null | undefined>
+}
+
+interface GatewayNodeDetailPayload {
+  ok?: boolean
+  generated_at?: string
+  node?: GatewayApiNodeRecord
+  capabilities?: Array<{
+    id?: string
+    label?: string
+    status?: string
+    requires_session?: boolean
+    blockers?: string[]
+    status_details?: Record<string, string | number | boolean | null | undefined>
+  }>
+  error?: string
+}
+
 interface GatewayTraceRecord {
   trace_id: string
   source: string
@@ -1344,8 +1370,13 @@ function CapabilityAgentCard({ agent }: { agent: BridgeCapabilityAgent }) {
   )
 }
 
-type GatewayVisualStatus = 'connected' | 'gated' | 'blocked' | 'missing'
+type GatewayVisualStatus = 'connected' | 'read_only' | 'gated' | 'blocked' | 'missing'
 type GatewayVisualLane = 'input' | 'core' | 'data' | 'llm' | 'output'
+
+type GatewayVisualDetail = {
+  label: string
+  value: string
+}
 
 type GatewayVisualNode = {
   id: string
@@ -1357,6 +1388,9 @@ type GatewayVisualNode = {
   capabilities: string[]
   blockers: string[]
   lastTest: string
+  details?: GatewayVisualDetail[]
+  latestJobs?: string[]
+  handoffTarget?: string
 }
 
 type GatewayVisualFlow = {
@@ -1382,6 +1416,24 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
   { id: 'gateway', label: 'Gateway', lane: 'core', eyebrow: 'traffic core', status: 'connected', statusLabel: 'control plane', capabilities: ['route', 'govern', 'observe', 'audit', 'registry'], blockers: [], lastTest: '/api/gateway/registry' },
   { id: 'agent_zero', label: 'Agent Zero', lane: 'core', eyebrow: 'commander', status: 'connected', statusLabel: 'commander', capabilities: ['owner command', 'live-query', 'Bridge Session'], blockers: [], lastTest: '/api/bridge/agent-zero/status' },
   { id: 'hermes', label: 'Hermes', lane: 'core', eyebrow: 'lieutenant', status: 'gated', statusLabel: 'read-only/degraded', capabilities: ['skill design', 'workflow planning'], blockers: ['live chat must prove hermes_called:true for GO'], lastTest: '/api/bridge/hermes/status' },
+  {
+    id: 'space_agent',
+    label: 'Space Agent',
+    lane: 'core',
+    eyebrow: 'research specialist',
+    status: 'read_only',
+    statusLabel: 'read-only research',
+    capabilities: ['web/browser research', 'YouTube inspection', 'Firecrawl research packets', 'Research Packet handoff'],
+    blockers: [],
+    lastTest: '/api/gateway/nodes/space_agent',
+    details: [
+      { label: 'Firecrawl', value: 'pending Gateway detail' },
+      { label: 'Browser', value: 'read-only policy gated' },
+      { label: 'YouTube', value: 'metadata/transcript support when available' },
+    ],
+    latestJobs: ['none recorded yet'],
+    handoffTarget: 'Agent Zero by default',
+  },
   { id: 'runtime', label: 'OpenClaw+ Runtime', lane: 'core', eyebrow: 'runtime', status: 'connected', statusLabel: 'shared skills', capabilities: ['skills', 'adapters', 'reports', 'voice'], blockers: [], lastTest: 'OpenClaw+ skill registry' },
   { id: 'policy', label: 'Policy', lane: 'core', eyebrow: 'guardrail', status: 'connected', statusLabel: 'enforced', capabilities: ['auth', 'redaction', 'Bridge Session', 'audit'], blockers: [], lastTest: '/api/gateway/policies' },
   { id: 'openrouter', label: 'OpenRouter', lane: 'llm', eyebrow: 'model', status: 'gated', statusLabel: 'fallback guarded', capabilities: ['model routing', 'fallback'], blockers: ['provider failures stay redacted'], lastTest: 'model registry' },
@@ -1411,16 +1463,25 @@ const GATEWAY_MAP_FLOWS: GatewayVisualFlow[] = [
 
 function GatewayMapSection({
   hermesLabel,
+  spaceAgentDetail,
+  spaceAgentDetailState,
+  spaceAgentDetailError,
   gatewayEvents,
   gatewayEventsState,
   gatewayEventsError,
 }: {
   hermesLabel: string
+  spaceAgentDetail: GatewayNodeDetailPayload | null
+  spaceAgentDetailState: 'loading' | 'ok' | 'error'
+  spaceAgentDetailError: string
   gatewayEvents: GatewayEventsPayload | null
   gatewayEventsState: 'loading' | 'ok' | 'error'
   gatewayEventsError: string
 }) {
   const nodes = GATEWAY_MAP_NODES.map((node) => {
+    if (node.id === 'space_agent') {
+      return buildSpaceAgentGatewayVisualNode(node, spaceAgentDetail, spaceAgentDetailState, spaceAgentDetailError)
+    }
     if (node.id !== 'hermes') return node
     const label = hermesLabel.toLowerCase()
     const status: GatewayVisualStatus = label.includes('blocked')
@@ -1482,6 +1543,77 @@ function GatewayMapSection({
       />
     </section>
   )
+}
+
+function buildSpaceAgentGatewayVisualNode(
+  node: GatewayVisualNode,
+  payload: GatewayNodeDetailPayload | null,
+  state: 'loading' | 'ok' | 'error',
+  error: string,
+): GatewayVisualNode {
+  const apiNode = payload?.node
+  const details = apiNode?.status_details || {}
+  const firecrawlStatus = stringifyDetail(details.firecrawl_status, 'pending')
+  const firecrawlCredentialConfigured = details.firecrawl_credential_configured === true
+  const firecrawlBlockedReason =
+    stringifyDetail(details.firecrawl_blocked_reason, '') ||
+    stringifyDetail(apiNode?.blocked_reason, '') ||
+    payload?.capabilities?.flatMap((capability) => capability.blockers || []).find(Boolean) ||
+    ''
+  const browserStatus =
+    stringifyDetail(details.browser_status, '') ||
+    stringifyDetail(apiNode?.browser_interaction, '') ||
+    stringifyDetail(details.firecrawl_interact_browser, 'gated_by_gateway_policy')
+  const youtubeSupport =
+    stringifyDetail(details.youtube_support, '') ||
+    stringifyDetail(apiNode?.youtube_inspection, 'metadata_transcript_when_available')
+  const latestResearchJobs = stringifyDetail(details.latest_research_jobs, 'none_recorded_yet')
+  const handoffTarget = stringifyDetail(details.handoff_target, 'agent_zero_by_default')
+
+  const firecrawlCredentialMissing =
+    state === 'ok' &&
+    (firecrawlCredentialConfigured === false || /missing_credential|firecrawl_missing_credential/i.test(firecrawlBlockedReason))
+  const browserRequiresSession = /gated|bridge_session|required/i.test(browserStatus) || Boolean(apiNode?.requires_bridge_session)
+  const status: GatewayVisualStatus = state === 'error'
+    ? 'gated'
+    : firecrawlCredentialMissing
+      ? 'blocked'
+      : browserRequiresSession
+        ? 'gated'
+        : 'read_only'
+  const statusLabel = status === 'blocked'
+    ? 'Firecrawl credential missing'
+    : status === 'gated'
+      ? 'Bridge Session gated'
+      : 'read-only research'
+  const blockers = [
+    ...node.blockers,
+    ...(state === 'error' ? [`Space Agent detail route unavailable: ${error}`] : []),
+    ...(firecrawlBlockedReason ? [firecrawlBlockedReason] : []),
+  ].filter(Boolean)
+
+  return {
+    ...node,
+    status,
+    statusLabel,
+    blockers: Array.from(new Set(blockers)),
+    lastTest: state === 'loading' ? 'loading /api/gateway/nodes/space_agent' : node.lastTest,
+    details: [
+      { label: 'Firecrawl', value: firecrawlStatus },
+      { label: 'Browser', value: browserStatus },
+      { label: 'YouTube', value: youtubeSupport },
+      { label: 'Latest research jobs', value: latestResearchJobs },
+      { label: 'Handoff target', value: handoffTarget },
+    ],
+    latestJobs: latestResearchJobs.split(',').map((job) => job.trim()).filter(Boolean),
+    handoffTarget,
+  }
+}
+
+function stringifyDetail(value: unknown, fallback: string) {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return fallback
 }
 
 function GatewayLane({
@@ -1564,6 +1696,12 @@ function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
           <dt>Last Test</dt>
           <dd>{node.lastTest}</dd>
         </div>
+        {(node.details || []).map((detail) => (
+          <div key={detail.label}>
+            <dt>{detail.label}</dt>
+            <dd>{detail.value}</dd>
+          </div>
+        ))}
       </dl>
       <div className={styles.gatewayDetailLists}>
         <section>
@@ -1580,6 +1718,18 @@ function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
             <p>none</p>
           )}
         </section>
+        {node.latestJobs && node.latestJobs.length > 0 && (
+          <section>
+            <strong>Latest Research Jobs</strong>
+            <ul>{node.latestJobs.map((job) => <li key={job}>{job}</li>)}</ul>
+          </section>
+        )}
+        {node.handoffTarget && (
+          <section>
+            <strong>Handoff Target</strong>
+            <p>{node.handoffTarget}</p>
+          </section>
+        )}
       </div>
     </aside>
   )
@@ -1589,6 +1739,8 @@ function gatewayStatusClass(status: GatewayVisualStatus) {
   switch (status) {
     case 'connected':
       return styles.gatewayStatusConnected
+    case 'read_only':
+      return styles.gatewayStatusReadOnly
     case 'gated':
       return styles.gatewayStatusGated
     case 'blocked':
@@ -3346,6 +3498,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [gatewayEvents, setGatewayEvents] = useState<GatewayEventsPayload | null>(null)
   const [gatewayEventsState, setGatewayEventsState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [gatewayEventsError, setGatewayEventsError] = useState<string>('')
+  const [spaceAgentDetail, setSpaceAgentDetail] = useState<GatewayNodeDetailPayload | null>(null)
+  const [spaceAgentDetailState, setSpaceAgentDetailState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [spaceAgentDetailError, setSpaceAgentDetailError] = useState<string>('')
   const [gatewayObservability, setGatewayObservability] = useState<GatewayObservabilityPayload | null>(null)
   const [gatewayObservabilityState, setGatewayObservabilityState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [gatewayObservabilityError, setGatewayObservabilityError] = useState<string>('')
@@ -3526,6 +3681,32 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setGatewayEventsError((err as Error).message || 'fetch failed')
         setGatewayEventsState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setSpaceAgentDetailState('loading')
+    fetch('/api/gateway/nodes/space_agent', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || `HTTP ${r.status}`)
+        }
+        return data as GatewayNodeDetailPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setSpaceAgentDetail(data)
+        setSpaceAgentDetailState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setSpaceAgentDetailError((err as Error).message || 'fetch failed')
+        setSpaceAgentDetailState('error')
       })
     return () => {
       cancelled = true
@@ -4241,6 +4422,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         authConfigured: hermesSandbox?.auth_configured === true,
         blocker: hermesSandbox?.blocker || hermesSandbox?.provider_registry?.error || null,
       }).label}
+        spaceAgentDetail={spaceAgentDetail}
+        spaceAgentDetailState={spaceAgentDetailState}
+        spaceAgentDetailError={spaceAgentDetailError}
         gatewayEvents={gatewayEvents}
         gatewayEventsState={gatewayEventsState}
         gatewayEventsError={gatewayEventsError}

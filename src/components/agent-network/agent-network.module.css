@@ -440,6 +440,12 @@
   --gateway-status-border: rgba(53, 208, 140, 0.34);
 }
 
+.gatewayStatusReadOnly {
+  --gateway-status: #56b7ff;
+  --gateway-status-bg: rgba(86, 183, 255, 0.1);
+  --gateway-status-border: rgba(86, 183, 255, 0.34);
+}
+
 .gatewayStatusGated {
   --gateway-status: #f2c94c;
   --gateway-status-bg: rgba(242, 201, 76, 0.1);

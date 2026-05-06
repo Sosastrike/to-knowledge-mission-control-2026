@@ -1450,6 +1450,11 @@ function spaceAgentFirecrawlStatusDetails(firecrawl: GatewayToolIntegrationView 
     firecrawl_source_visible: Boolean(firecrawl),
     firecrawl_read_only_schema_visible: Boolean(firecrawl?.readOnlySchemaVisible),
     firecrawl_backend_reachable: Boolean(firecrawl?.reachable),
+    browser_status: blocker ? 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured' : 'read_only_gated_by_gateway_policy',
+    youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
+    latest_research_jobs: 'none_recorded_yet',
+    handoff_target: 'agent_zero_by_default',
+    blockers_summary: blocker || 'none',
     secrets_exposed: false,
   }
 }

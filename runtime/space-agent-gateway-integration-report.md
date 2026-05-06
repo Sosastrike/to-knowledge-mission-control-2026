@@ -1,145 +1,179 @@
 # Space Agent Gateway Integration Report
 
-Generated: 2026-05-05
+Generated: 2026-05-06
 
-## Executive summary
+## Executive Summary
 
-Space Agent has been integrated into Gateway as a retained specialist agent for browser, web, article, YouTube, video, Firecrawl, crawl, scrape, search, extraction, and page-interaction research stages.
+Space Agent is integrated into Mission Control Gateway as a retained specialist agent for browser, web, article, YouTube, video, Firecrawl, crawl, scrape, search, extraction, screenshot/page-state, and page-interaction research stages.
 
-Space Agent does not replace Agent Zero, Hermes, Pi, OpenCloud, OpenClaw+, Bridge/MCP, Brain, or existing agents. Gateway routes research requests to Space Agent through Agent Zero. Space Agent returns a structured Research Packet, then responsibility returns to Agent Zero, Hermes, Pi, or the responsible specialist.
+Space Agent does not replace Agent Zero, Hermes, Pi, OpenCloud, OpenClaw+, Bridge/MCP, Brain, or existing agents. Gateway routes research work to Space Agent, Space Agent returns a structured Research Packet, and responsibility returns to Agent Zero, Hermes, Pi, or another responsible specialist.
 
-## Source reviewed
+Current status: PARTIAL GO for Gateway integration. The design, registry, docs, route policies, safety boundaries, mini-agent templates, and dry-run gauntlets are implemented and tested. Live external research execution remains blocked until the Space Agent live adapter and any required Firecrawl/browser credentials are configured through Gateway policy.
 
-- Repository: https://github.com/Sosastrike/To-Knowledge-space-agent.git
-- Reviewed commit: 9c26f9f
-- Runtime character: browser-first AI agent runtime with a web-browsing module and browser harness surfaces.
-- Important boundary: Space Agent also contains mutation-capable surfaces, so Gateway does not expose those surfaces by default.
+## Role Model
 
-## Implemented in Gateway
+- Owner: final authority.
+- Gateway: route, policy, documentation, memory, and audit hub.
+- Agent Zero: commander and final operational decision maker.
+- Hermes: lieutenant and skill/workflow builder.
+- Pi: dispatcher candidate and route optimizer in shadow mode.
+- Space Agent: browser/web/YouTube/Firecrawl research specialist.
+- OpenClaw+: runtime, skills, adapters, reports, and governance layer.
+- OpenCloud: retained worker/runtime engine and future mini-agent creation support layer.
+- Bridge/MCP: tools, models, and integrations access layer.
+- Brain: Obsidian, MemPalace, Graphify, Brain Sync, and Build-Wiki.
+
+## Implemented Gateway Work
 
 - Added `space_agent` as a `specialist_agent` Gateway node.
-- Added Space Agent hierarchy routes:
-  - Gateway dispatches to Space Agent.
-  - Agent Zero delegates research stages to Space Agent.
-  - Hermes and Pi can route research planning through Space Agent.
-  - Space Agent reports back through Agent Zero/Hermes and cannot self-promote.
-- Added `space_agent_research_packet` capability.
-- Added Gateway route classification `research`.
-- Routed browser, web, article, YouTube, video, Firecrawl, crawl, scrape, search, extraction, and page-interaction requests to Space Agent.
-- Added Pi shadow-dispatcher recommendation support for Space Agent research stages.
-- Added Gateway Data Layer support for `specialist_agent` nodes.
-- Added Gateway Docs support for Space Agent documentation coverage.
-- Added canonical Gateway flow: `flow_agent_zero_gateway_space_agent_research`.
-- Added read-only Research Packet contract in `space-agent-research`.
+- Added Space Agent to the Gateway role matrix as subordinate to Gateway and Agent Zero.
+- Added Space Agent research packet contracts for web, browser, YouTube, Firecrawl, evidence, sources, handoff, and memory.
+- Added route classification for research tasks that should go to Space Agent.
+- Added Pi shadow-dispatcher recommendations for web/browser/YouTube/Firecrawl tasks.
+- Added Agent Zero approval path for Space Agent research routes.
+- Added Hermes workflow/skill handoff support from Research Packets.
+- Added Space Agent mini-agent templates for web research, YouTube summary, crawl mapping, competitive research, and source verification.
+- Added Space Agent docs for Firecrawl, YouTube, browser policy, handoff, mini-agents, blocked scenarios, owner examples, developer examples, and rollback.
+- Added full dry-run gauntlet coverage for routing, web research, YouTube, browser-blocked scenarios, handoff, and mini-agents.
 
-## Research Packet contract
+## Safety Boundaries
+
+Space Agent cannot:
+
+- send emails
+- upload to Drive
+- run Build-Wiki
+- run Zapier writes
+- generate HeyGen videos
+- mount SMB
+- read secrets
+- use Docker socket
+- become commander
+- bypass Gateway
+
+Space Agent is read-only by default. External writes, protected actions, private/login-boundary browser work, and delivery actions remain blocked unless Gateway policy and an approved Bridge Session explicitly allow the correct adapter. Space Agent still does not own final owner-facing decisions.
+
+## Research Packet Contract
 
 Space Agent Research Packets include:
 
 - packet id
-- research type
-- request summary with redaction
-- allowed surfaces
-- forbidden surfaces
-- required Gateway route
-- Bridge Session requirement
-- Firecrawl status
-- YouTube/video status
-- findings and citations placeholders
-- blocked reason when applicable
-- owner-visible summary
+- job id
+- original request
+- assigned supervisor
+- route and return route
+- source list
+- findings
+- confidence
+- evidence snippets
+- citations or URLs
+- blockers
+- recommended next agent
+- owner-safe summary
 
-Default mode is research-only:
+Owner-facing output must not expose secrets, raw local paths, task ids, auth files, cookies, provider traces, or fake completion claims.
 
-- browser interaction disabled until a safe live adapter is approved
-- external writes disabled
-- tool execution disabled
-- no direct secret access
-- no raw local paths
-- no commander authority
+## Route Smoke And Auth
 
-## Routing behavior
+Route smoke passed through focused Vitest coverage:
 
-Research requests follow this route:
+- Gateway registry API model: passed.
+- Gateway route aliases: passed.
+- Space Agent Gateway and Bridge routes: passed.
+- Unauthenticated Gateway and Space Agent protected routes: returned 401/403 before registry loading.
+- Authenticated mocked owner/operator route tests: returned read-only Space Agent status and node detail without secrets.
+- Space Agent test-chat: safely returns blocked until a live adapter is configured.
+- Space Agent research route: creates read-only packets and blocks protected browser work.
 
-Owner -> Gateway -> Agent Zero -> Space Agent -> Agent Zero
+Focused route smoke result: 4 files / 10 tests passed.
 
-Pi can recommend Space Agent in shadow mode, but Pi does not execute. Hermes can request Space Agent research context for workflow or skill design, but Hermes remains lieutenant and plan-only unless Bridge Session scope allows more.
+## Gauntlet Results
 
-## Firecrawl behavior
+Space Agent full gauntlet result: passed.
 
-Firecrawl-style requests now enter the Space Agent research stage first. If Firecrawl credentials are missing, Gateway marks Firecrawl blocked and Space Agent can still prepare a Research Packet with an honest blocker and fallback research plan. No fake Firecrawl access is claimed.
+- Routing scenarios: 1,000.
+- Web research scenarios: 1,000.
+- YouTube scenarios: 500.
+- Browser-blocked scenarios: 500.
+- Handoff scenarios: 500.
+- Mini-agent scenarios: 500.
+- Total scenarios: 4,000.
 
-## Bridge Session boundaries
+Failure counts:
 
-Bridge Session or owner-approved scope is required for:
+- secret failures: 0
+- fake-access failures: 0
+- unauthorized-execution failures: 0
+- Gateway bypass failures: 0
+- commander takeover failures: 0
 
-- private account or login-boundary research
-- paywalled/private content handling
-- browser actions beyond read-only research packet planning
-- external writes
-- downloads/uploads/delivery actions
-- any protected tool execution
+## Validation
 
-## OpenCloud/OpenClaw+/Brain status
+Mission Control:
 
-OpenCloud stays in the ecosystem as a worker/runtime engine. OpenClaw+ stays the runtime, skills, adapters, and reports layer. Brain systems stay under Gateway. Space Agent only adds a research-specialist route and does not alter OpenCloud/Build-Wiki/Farmer behavior.
+- `git diff --check`: passed.
+- `pnpm run typecheck`: passed.
+- `pnpm run build`: passed.
+- `pnpm test`: passed, 127 files / 1,175 tests.
+- Focused Space Agent gauntlet: passed, 1 file / 2 tests.
+- Focused route/auth smoke: passed, 4 files / 10 tests.
 
-## Tony status
+ClaudeClaw/OpenClaw+:
 
-Tony remains retired/archive only. Space Agent does not create a second commander and does not change Agent Zero commander authority.
+- Not touched in this phase.
+- Typecheck/build/tests/design-lock were not run for ClaudeClaw because this phase changed only Mission Control Space Agent Gateway files and report docs.
+- Existing ClaudeClaw dirty tree was not modified.
 
-## Tests added or updated
+## What Remains Planning-Only Or Blocked
 
-- Gateway graph model includes `specialist_agent` and Space Agent routes.
-- Gateway route planner routes research prompts to Space Agent.
-- Gateway route planner blocks private/login boundary research.
-- Pi shadow dispatcher recommends Space Agent for web/browser/YouTube/Firecrawl research.
-- Gateway Data Layer exposes specialist agents through discovery.
-- Gateway Docs covers Space Agent.
-- Gateway registry API exposes Space Agent node, capability, and flow.
-- Research Packet tests cover classification, read-only defaults, Firecrawl blockers, Bridge Session boundary, and redaction.
-
-Validation result:
-
-- Focused Space Agent/Gateway suite: 7 test files passed, 38 tests passed.
-- Mission Control typecheck: passed.
-- Mission Control production build: passed.
-- Mission Control full test suite: 117 test files passed, 1121 tests passed.
-
-
-## Service status checked
-
-- Mission Control service: active.
-- ClaudeClaw service: active.
-- Hermes gateway service: active.
-- OpenCloud docs farmer timer: active.
-- Agent Zero container: running.
-
-## What stayed planning-only
-
-- Live Space Agent browser adapter activation.
+- Live Space Agent adapter activation.
 - Direct Space Agent UI exposure.
 - Firecrawl execution.
 - YouTube/video external extraction beyond packet planning.
 - Browser interaction beyond read-only packet planning.
 - Any write-capable Space Agent route.
+- Any private/login/paywall research without owner-approved credentials and Bridge Session scope.
 
-## Blockers
+## No-Secrets Confirmation
 
-- Space Agent live adapter is not activated yet.
-- Firecrawl execution depends on Gateway credential status and Bridge Session scope.
-- Private/login/paywall research requires owner-approved credentials and Bridge Session scope.
-- External writes remain blocked unless Gateway policy and Bridge Session explicitly allow them.
+No API keys, tokens, auth files, credentials, cookies, session values, or `.env` values were printed or committed. Staged secret scans returned no matches for this phase.
 
-## No-secrets confirmation
+## No External Actions Confirmation
 
-No API keys, tokens, auth files, credentials, or environment-file values were printed or committed. The integration uses booleans, blockers, and owner-safe summaries.
+No live browser action, Firecrawl call, YouTube download, email send, Drive upload, Build-Wiki execution, Zapier write, HeyGen generation, SMB mount, service change, credential read, or external write was performed.
+
+## Commits In This Space Agent Track
+
+- `96f7f08` test(gateway): cover space agent web scenarios
+- `6fd5a13` test(gateway): cover space agent youtube scenarios
+- `9254018` test(gateway): cover space agent browser scenarios
+- `d6f9791` test(gateway): cover space agent research handoff flow
+- `232f9d4` feat(gateway): add space agent specialist mini-agent templates
+- `f1815eb` test(gateway): enforce space agent forbidden actions
+- `1b97a0d` docs(gateway): document space agent adapters and handoff
+- `d98f26d` test(gateway): add space agent full gauntlet
 
 ## Rollback
 
-After commit, rollback is:
+Rollback the final Space Agent gauntlet commit with:
 
 ```bash
-git revert <space-agent-gateway-commit>
+git revert d98f26d
 ```
+
+Rollback this report update after commit with:
+
+```bash
+git revert <space-agent-final-report-commit>
+```
+
+Use targeted reverts only. Do not delete OpenCloud, Build-Wiki, OpenClaw+, Bridge/MCP, Brain systems, Agent Zero, Hermes, Pi, Space Agent docs, or historical records.
+
+## Final Decision
+
+Space Agent Gateway integration is PARTIAL GO:
+
+- GO for Gateway registry, docs, route policy, safety boundaries, mini-agent design, dry-run scenarios, and tests.
+- NO-GO for live external research execution until a safe live adapter is configured and authenticated live tests prove it.
+
+Exact next step: configure and prove the safe read-only Space Agent live adapter through Mission Control Gateway, keeping execution disabled by default.

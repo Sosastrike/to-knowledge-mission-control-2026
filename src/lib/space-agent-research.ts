@@ -464,16 +464,27 @@ export type SpaceAgentResearchHandoff = {
   owner_visible_summary: string
 }
 
+export type SpaceResearchMiniAgentKind =
+  | 'web_research'
+  | 'youtube_summary'
+  | 'crawl_mapper'
+  | 'competitive_research'
+  | 'source_verifier'
+
 export type SpaceResearchMiniAgentTemplate = {
   schema: 'space_research_mini_agent_template_v1'
   created_by: 'hermes'
   template_id: string
-  name: 'Space Research Mini-Agent'
+  template_kind: SpaceResearchMiniAgentKind
+  name: string
   purpose: string
   parent_supervisor: 'agent_zero'
   requested_by: 'space_agent'
   allowed_tools: string[]
   forbidden_tools: string[]
+  allowed_skills: string[]
+  allowed_source_types: Array<'web' | 'youtube' | 'firecrawl' | 'browser'>
+  output_focus: string[]
   output_contract: 'sub_research_packet'
   activation_requires: 'agent_zero_approval_and_gateway_policy'
   bridge_session_required_for_execution: true
@@ -498,6 +509,7 @@ export type PiMiniAgentFanoutRecommendation = {
   shadow_mode: true
   recommended: boolean
   recommended_mini_agent_type: 'research'
+  recommended_template_kind: SpaceResearchMiniAgentKind
   fanout_count: number
   source_scope: string[]
   blocked_reason: string | null
@@ -552,6 +564,7 @@ export type SpaceResearchMiniAgentAuditEvent = {
 }
 
 export type SpaceResearchMiniAgentFanoutInput = SpaceAgentResearchPacketInput & {
+  miniAgentKind?: SpaceResearchMiniAgentKind | null
   assignedUrls?: string[]
   assignedSourceIds?: string[]
   miniAgentName?: string | null
@@ -1128,29 +1141,32 @@ export function createSpaceAgentResearchCompletion(input: SpaceAgentResearchPack
 export function createSpaceResearchMiniAgentFanout(input: SpaceResearchMiniAgentFanoutInput): SpaceResearchMiniAgentFanout {
   const generatedAt = input.generatedAt || DEFAULT_GENERATED_AT
   const parentPacket = createSpaceAgentResearchPacket(input)
+  const templateKind = normalizeSpaceResearchMiniAgentKind(input.miniAgentKind)
   const assignedScope = createSpaceResearchMiniAgentScope(parentPacket, input)
-  const template = createSpaceResearchMiniAgentTemplate(generatedAt)
-  const piRecommendation = createPiMiniAgentFanoutRecommendation(parentPacket, assignedScope)
+  const template = createSpaceResearchMiniAgentTemplate(generatedAt, templateKind)
+  const piRecommendation = createPiMiniAgentFanoutRecommendation(parentPacket, assignedScope, template.template_kind)
   const agentZeroApproval = createAgentZeroMiniAgentCreationApproval(parentPacket, assignedScope, piRecommendation)
-  const miniAgentName = sanitize(input.miniAgentName || 'Space Research Mini-Agent')
-  const miniAgentDefinitionResult = createMiniAgentDefinition({
-    id: normalizeId(`space_research_${parentPacket.packet_id}`),
-    name: miniAgentName,
-    purpose: 'Read assigned public sources and return a sub-ResearchPacket to Space Agent through Gateway.',
-    parent_supervisor: 'agent_zero',
-    scope: assignedScope.allowed_urls.length
-      ? assignedScope.allowed_urls.map((url) => `assigned_url:${url}`)
-      : assignedScope.allowed_source_ids.map((sourceId) => `assigned_source:${sourceId}`),
-    allowed_tools: ['gateway.source_scope.read', 'space_agent.research_packet.compose'],
-    forbidden_tools: ['browse_outside_assigned_scope', 'external_write', 'direct_secret_read', 'raw_root_shell', 'docker_socket'],
-    allowed_skills: ['space_agent.web_research_packet'],
-    forbidden_skills: ['zapier_write', 'heygen_generation', 'smb_mount', 'opencloud_delete'],
-    allowed_models: ['gateway_assigned_model_only'],
-    memory_ttl_minutes: assignedScope.memory_ttl_minutes,
-    output_contract: 'Return sub-ResearchPacket only; do not contact owner directly.',
-    kill_condition: 'Expire immediately after sub-ResearchPacket handoff or when TTL ends.',
-    created_at: generatedAt,
-  })
+  const miniAgentName = sanitize(input.miniAgentName || template.name)
+  const miniAgentDefinitionResult = assignedScope.blocked_reason === 'mini_agent_secret_input_blocked'
+    ? blockedMiniAgentDefinitionResult('mini_agent_secret_input_blocked')
+    : createMiniAgentDefinition({
+      id: normalizeId(`space_research_${template.template_kind}_${parentPacket.packet_id}`),
+      name: miniAgentName,
+      purpose: template.purpose,
+      parent_supervisor: 'agent_zero',
+      scope: assignedScope.allowed_urls.length
+        ? assignedScope.allowed_urls.map((url) => `assigned_url:${url}`)
+        : assignedScope.allowed_source_ids.map((sourceId) => `assigned_source:${sourceId}`),
+      allowed_tools: template.allowed_tools,
+      forbidden_tools: template.forbidden_tools,
+      allowed_skills: template.allowed_skills,
+      forbidden_skills: ['zapier_write', 'heygen_generation', 'smb_mount', 'opencloud_delete'],
+      allowed_models: ['gateway_assigned_model_only'],
+      memory_ttl_minutes: assignedScope.memory_ttl_minutes,
+      output_contract: 'Return sub-ResearchPacket only; do not contact owner directly.',
+      kill_condition: 'Expire immediately after sub-ResearchPacket handoff or when TTL ends.',
+      created_at: generatedAt,
+    })
   const miniAgentDefinition = miniAgentDefinitionResult.definition
   const miniAgentMemoryResult = miniAgentDefinition
     ? createMiniAgentMemory({
@@ -1406,7 +1422,7 @@ export function classifySpaceAgentResearchOperation(request: string): SpaceAgent
   if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse/.test(text)) return 'browser_interaction'
   if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
   if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|product page|pricing page|page details|url/.test(text)) return 'page_read'
-  if (/\bweb\b|online research|live web|public site|public page|\bresearch\b/.test(text)) return 'web_search'
+  if (/\bweb\b|online research|live web|public site|public page|\bresearch\b|\bcrawl\b|crawl scope|competitor|competitive|compare assigned|verify assigned|source verifier|citation confidence/.test(text)) return 'web_search'
   return 'research_not_needed'
 }
 
@@ -1440,6 +1456,11 @@ function normalizeResponsibleAgent(value: SpaceAgentResponsibleAgent | null | un
   if (value && ['agent_zero', 'hermes', 'pi', 'responsible_specialist_agent'].includes(value)) return value
   if (requestedBy === 'agent_zero' || requestedBy === 'hermes' || requestedBy === 'pi') return requestedBy
   return 'agent_zero'
+}
+
+function normalizeSpaceResearchMiniAgentKind(value: SpaceResearchMiniAgentKind | null | undefined): SpaceResearchMiniAgentKind {
+  if (value && ['web_research', 'youtube_summary', 'crawl_mapper', 'competitive_research', 'source_verifier'].includes(value)) return value
+  return 'web_research'
 }
 
 function normalizeEvidence(value: SpaceAgentResearchPacketInput['evidence'], generatedAt: string | undefined): EvidenceItem[] {
@@ -1718,17 +1739,33 @@ function collectResearchBlockers(job: SpaceAgentJob, webSources: WebSource[], yo
   ].filter((value): value is string => Boolean(value)))
 }
 
-function createSpaceResearchMiniAgentTemplate(generatedAt: string): SpaceResearchMiniAgentTemplate {
+export function createSpaceResearchMiniAgentTemplateCatalog(generatedAt: string = DEFAULT_GENERATED_AT): SpaceResearchMiniAgentTemplate[] {
+  return [
+    createSpaceResearchMiniAgentTemplate(generatedAt, 'web_research'),
+    createSpaceResearchMiniAgentTemplate(generatedAt, 'youtube_summary'),
+    createSpaceResearchMiniAgentTemplate(generatedAt, 'crawl_mapper'),
+    createSpaceResearchMiniAgentTemplate(generatedAt, 'competitive_research'),
+    createSpaceResearchMiniAgentTemplate(generatedAt, 'source_verifier'),
+  ]
+}
+
+function createSpaceResearchMiniAgentTemplate(generatedAt: string, kind: SpaceResearchMiniAgentKind): SpaceResearchMiniAgentTemplate {
+  const spec = spaceResearchMiniAgentTemplateSpec(kind)
+  const baseForbiddenTools = ['browse_outside_assigned_scope', 'external_write', 'direct_secret_read', 'raw_root_shell', 'docker_socket']
   return {
     schema: 'space_research_mini_agent_template_v1',
     created_by: 'hermes',
-    template_id: normalizeId(`space_research_mini_agent_template_${generatedAt}`),
-    name: 'Space Research Mini-Agent',
-    purpose: 'Perform scoped read-only web research for Space Agent and return a sub-ResearchPacket.',
+    template_id: normalizeId(`space_research_mini_agent_template_${kind}_${generatedAt}`),
+    template_kind: kind,
+    name: spec.name,
+    purpose: spec.purpose,
     parent_supervisor: 'agent_zero',
     requested_by: 'space_agent',
-    allowed_tools: ['gateway.source_scope.read', 'space_agent.research_packet.compose'],
-    forbidden_tools: ['browse_outside_assigned_scope', 'external_write', 'direct_secret_read', 'raw_root_shell', 'docker_socket'],
+    allowed_tools: spec.allowed_tools,
+    forbidden_tools: dedupeStrings([...baseForbiddenTools, ...spec.forbidden_tools]),
+    allowed_skills: spec.allowed_skills,
+    allowed_source_types: spec.allowed_source_types,
+    output_focus: spec.output_focus,
     output_contract: 'sub_research_packet',
     activation_requires: 'agent_zero_approval_and_gateway_policy',
     bridge_session_required_for_execution: true,
@@ -1738,7 +1775,64 @@ function createSpaceResearchMiniAgentTemplate(generatedAt: string): SpaceResearc
   }
 }
 
+function spaceResearchMiniAgentTemplateSpec(kind: SpaceResearchMiniAgentKind): Pick<SpaceResearchMiniAgentTemplate, 'name' | 'purpose' | 'allowed_tools' | 'forbidden_tools' | 'allowed_skills' | 'allowed_source_types' | 'output_focus'> {
+  if (kind === 'youtube_summary') {
+    return {
+      name: 'YouTube Summary Mini-Agent',
+      purpose: 'Summarize assigned public YouTube metadata, transcript excerpts, chapters, and claims into a sub-ResearchPacket.',
+      allowed_tools: ['gateway.source_scope.read', 'space_agent.youtube.metadata.read', 'space_agent.research_packet.compose'],
+      forbidden_tools: ['full_video_download', 'copyrighted_video_download', 'private_video_access'],
+      allowed_skills: ['space_agent.youtube_summary_packet'],
+      allowed_source_types: ['youtube'],
+      output_focus: ['title_channel_date', 'transcript_claims', 'chapters', 'citations'],
+    }
+  }
+  if (kind === 'crawl_mapper') {
+    return {
+      name: 'Crawl Mapper Mini-Agent',
+      purpose: 'Map assigned public crawl scope into source candidates and return crawl-map evidence without executing broad crawling.',
+      allowed_tools: ['gateway.source_scope.read', 'space_agent.crawl_map.plan', 'space_agent.research_packet.compose'],
+      forbidden_tools: ['broad_crawl', 'external_write', 'smb_mount'],
+      allowed_skills: ['space_agent.crawl_mapper_packet'],
+      allowed_source_types: ['web', 'firecrawl'],
+      output_focus: ['source_map', 'candidate_pages', 'crawl_blockers', 'citations'],
+    }
+  }
+  if (kind === 'competitive_research') {
+    return {
+      name: 'Competitive Research Mini-Agent',
+      purpose: 'Compare assigned public competitor sources and return evidence-backed findings for Agent Zero and Hermes review.',
+      allowed_tools: ['gateway.source_scope.read', 'space_agent.public_page.compare', 'space_agent.research_packet.compose'],
+      forbidden_tools: ['private_account_scrape', 'credentialed_competitor_access', 'paywall_bypass'],
+      allowed_skills: ['space_agent.competitive_research_packet'],
+      allowed_source_types: ['web', 'browser', 'firecrawl'],
+      output_focus: ['competitor_claims', 'pricing_or_feature_evidence', 'differentiators', 'citations'],
+    }
+  }
+  if (kind === 'source_verifier') {
+    return {
+      name: 'Source Verifier Mini-Agent',
+      purpose: 'Verify assigned sources, citations, access state, and confidence before Gateway merges findings.',
+      allowed_tools: ['gateway.source_scope.read', 'space_agent.source.verify', 'space_agent.research_packet.compose'],
+      forbidden_tools: ['source_mutation', 'external_write', 'direct_secret_read'],
+      allowed_skills: ['space_agent.source_verifier_packet'],
+      allowed_source_types: ['web', 'youtube', 'firecrawl', 'browser'],
+      output_focus: ['source_status', 'evidence_confidence', 'blocked_sources', 'citation_integrity'],
+    }
+  }
+  return {
+    name: 'Web Research Mini-Agent',
+    purpose: 'Read assigned public web sources and return a sub-ResearchPacket to Space Agent through Gateway.',
+    allowed_tools: ['gateway.source_scope.read', 'space_agent.web.read', 'space_agent.research_packet.compose'],
+    forbidden_tools: ['paywall_bypass', 'private_account_scrape', 'external_write'],
+    allowed_skills: ['space_agent.web_research_packet'],
+    allowed_source_types: ['web', 'browser'],
+    output_focus: ['page_findings', 'evidence_snippets', 'source_status', 'citations'],
+  }
+}
+
 function createSpaceResearchMiniAgentScope(parentPacket: ResearchPacket, input: SpaceResearchMiniAgentFanoutInput): SpaceResearchMiniAgentScope {
+  const safetyBlocker = getSpaceResearchMiniAgentInputBlocker(input)
   const urls = dedupeStrings([
     ...(input.assignedUrls || []).map(sanitize),
     ...(input.webSources || []).map((source) => source.url ? sanitize(source.url) : null).filter((value): value is string => Boolean(value)),
@@ -1750,7 +1844,7 @@ function createSpaceResearchMiniAgentScope(parentPacket: ResearchPacket, input: 
     ...parentPacket.source_list.map((source) => source.source_id),
   ]).filter(Boolean)
   const memoryTtl = normalizeMiniAgentMemoryTtl(input.memoryTtlMinutes)
-  const blockedReason = urls.length === 0 && sourceIds.length === 0 ? 'mini_agent_source_scope_required' : null
+  const blockedReason = safetyBlocker || (urls.length === 0 && sourceIds.length === 0 ? 'mini_agent_source_scope_required' : null)
 
   return {
     schema: 'space_research_mini_agent_scope_v1',
@@ -1763,7 +1857,7 @@ function createSpaceResearchMiniAgentScope(parentPacket: ResearchPacket, input: 
   }
 }
 
-function createPiMiniAgentFanoutRecommendation(parentPacket: ResearchPacket, scope: SpaceResearchMiniAgentScope): PiMiniAgentFanoutRecommendation {
+function createPiMiniAgentFanoutRecommendation(parentPacket: ResearchPacket, scope: SpaceResearchMiniAgentScope, kind: SpaceResearchMiniAgentKind): PiMiniAgentFanoutRecommendation {
   const recommended = !parentPacket.blocked_reason && !scope.blocked_reason && parentPacket.research_needed
   return {
     schema: 'pi_mini_agent_fanout_recommendation_v1',
@@ -1771,6 +1865,7 @@ function createPiMiniAgentFanoutRecommendation(parentPacket: ResearchPacket, sco
     shadow_mode: true,
     recommended,
     recommended_mini_agent_type: 'research',
+    recommended_template_kind: kind,
     fanout_count: recommended ? Math.max(1, Math.min(scope.max_sources, 5)) : 0,
     source_scope: scope.allowed_urls.length ? scope.allowed_urls : scope.allowed_source_ids,
     blocked_reason: recommended ? null : scope.blocked_reason || parentPacket.blocked_reason || 'research_not_needed',
@@ -1915,6 +2010,20 @@ function blockedMiniAgentMemoryResult(blockedReason: string): MiniAgentMemoryRes
   }
 }
 
+function blockedMiniAgentDefinitionResult(blockedReason: string): MiniAgentDefinitionResult {
+  return {
+    ok: false,
+    mode: 'mini_agent_definition_dry_run',
+    definition: null,
+    policy_result: 'blocked',
+    blocked_reason: blockedReason,
+    owner_visible_summary: `Mini-agent definition action is blocked: ${blockedReason}.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+  }
+}
+
 function createSpaceResearchMiniAgentAuditLog(input: {
   generatedAt: string
   parentPacket: ResearchPacket
@@ -1970,6 +2079,21 @@ function getSpaceResearchMemoryBlocker(value: string): string | null {
   if (RAW_COOKIE_SESSION_PATTERN.test(value)) return 'space_research_memory_raw_cookie_or_session_token_forbidden'
   SECRETISH_PATTERN.lastIndex = 0
   if (SECRETISH_PATTERN.test(value)) return 'space_research_memory_secret_storage_forbidden'
+  return null
+}
+
+function getSpaceResearchMiniAgentInputBlocker(input: SpaceResearchMiniAgentFanoutInput): string | null {
+  const rawText = [
+    input.request,
+    input.miniAgentName || '',
+    ...(input.assignedUrls || []),
+    ...(input.assignedSourceIds || []),
+    ...(input.webSources || []).flatMap((source) => [source.url || '', source.title || '', source.blocked_reason || '']),
+    ...(input.youtubeSources || []).flatMap((source) => [source.video_url || '', source.title || '', source.blocked_reason || '']),
+    ...(input.subEvidence || []).flatMap((item) => [item.summary || '', item.quote || '', item.url || '']),
+  ].join(' ')
+  SECRETISH_PATTERN.lastIndex = 0
+  if (SECRETISH_PATTERN.test(rawText) || RAW_COOKIE_SESSION_PATTERN.test(rawText)) return 'mini_agent_secret_input_blocked'
   return null
 }
 

@@ -51,6 +51,11 @@ describe('Gateway route authentication policy', () => {
     const spaceAgentTestChat = await import('@/app/api/bridge/space-agent/test-chat/route')
     const spaceAgentResearch = await import('@/app/api/gateway/space-agent/research/route')
     const spaceAgentJob = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
+    const paperclipStatus = await import('@/app/api/bridge/paperclip/status/route')
+    const paperclipCompanies = await import('@/app/api/bridge/paperclip/companies/route')
+    const paperclipAgents = await import('@/app/api/bridge/paperclip/agents/route')
+    const paperclipIssues = await import('@/app/api/bridge/paperclip/issues/route')
+    const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -97,6 +102,14 @@ describe('Gateway route authentication policy', () => {
       spaceAgentJob.GET(new NextRequest('http://localhost/api/gateway/space-agent/jobs/job-1'), {
         params: Promise.resolve({ id: 'job-1' }),
       }),
+      paperclipStatus.GET(new NextRequest('http://localhost/api/bridge/paperclip/status')),
+      paperclipCompanies.GET(new NextRequest('http://localhost/api/bridge/paperclip/companies')),
+      paperclipAgents.GET(new NextRequest('http://localhost/api/bridge/paperclip/agents')),
+      paperclipIssues.GET(new NextRequest('http://localhost/api/bridge/paperclip/issues')),
+      paperclipTestChat.POST(new NextRequest('http://localhost/api/bridge/paperclip/test-chat', {
+        method: 'POST',
+        body: JSON.stringify({ message: 'Can you see Paperclip?' }),
+      })),
     ]
 
     const responses = await Promise.all(checks)

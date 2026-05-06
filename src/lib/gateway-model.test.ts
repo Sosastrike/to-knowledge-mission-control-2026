@@ -257,6 +257,7 @@ describe('canonical Gateway graph model', () => {
       secrets_exposed: false,
     })
     expect(paperclip).toMatchObject({
+      label: 'Paperclip Workforce Control Plane',
       kind: 'workforce_layer',
       role: 'workforce_company_task_orchestration_layer',
       parent: 'gateway',
@@ -291,6 +292,13 @@ describe('canonical Gateway graph model', () => {
       dependency_audit_low: 2,
       production_install_status: 'blocked_until_dependency_audit_clean_or_owner_waiver',
       service_status: 'not_configured',
+      local_tailnet_ui_link: 'loopback:3100',
+      company_count_source: '/api/bridge/paperclip/companies',
+      active_agents_source: '/api/bridge/paperclip/agents',
+      active_issues_source: '/api/bridge/paperclip/issues',
+      budget_status_source: '/api/bridge/paperclip/status',
+      heartbeat_status_source: '/api/bridge/paperclip/status',
+      bridge_status_endpoint: '/api/bridge/paperclip/status',
       public_exposure: false,
       external_writes_enabled: false,
       bridge_session_required_for_mutations: true,

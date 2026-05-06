@@ -252,6 +252,47 @@ interface GatewayNodeDetailPayload {
   error?: string
 }
 
+interface PaperclipStatusPayload {
+  ok?: boolean
+  mode?: string
+  generated_at?: string
+  health?: string
+  reachable?: boolean
+  configured?: boolean
+  endpoint?: string
+  ui_link?: string | null
+  role?: string
+  authority?: string
+  blocker?: string | null
+  status_endpoint?: string
+  companies_endpoint?: string
+  agents_endpoint?: string
+  issues_endpoint?: string
+  test_task_endpoint?: string
+  service?: {
+    local_only?: boolean
+    public_exposure?: boolean
+    persistent_service_enabled?: boolean
+    sandbox_expected?: boolean
+  }
+  workforce_summary?: {
+    company_count?: number | null
+    active_agents?: number | null
+    active_issues?: number | null
+    budget_status?: string
+    heartbeat_status?: string
+  }
+  bridge_session?: {
+    required_for_mutations?: boolean
+    external_writes_enabled?: boolean
+  }
+  execution_enabled?: boolean
+  writes_enabled?: boolean
+  no_secrets_exposed?: boolean
+  raw_paths_exposed?: boolean
+  error?: string
+}
+
 interface GatewayTraceRecord {
   trace_id: string
   source: string
@@ -1434,6 +1475,25 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
     latestJobs: ['none recorded yet'],
     handoffTarget: 'Agent Zero by default',
   },
+  {
+    id: 'paperclip',
+    label: 'Paperclip Workforce Control Plane',
+    lane: 'core',
+    eyebrow: 'workforce',
+    status: 'missing',
+    statusLabel: 'not configured',
+    capabilities: ['company/task orchestration', 'co-worker agent records', 'daily task assignment', 'heartbeats', 'budget and cost visibility'],
+    blockers: ['production service not configured', 'workforce mutations require Bridge Session'],
+    lastTest: '/api/bridge/paperclip/status',
+    details: [
+      { label: 'UI link', value: 'loopback:3100 when sandbox is running' },
+      { label: 'Company count', value: 'not loaded' },
+      { label: 'Active agents', value: 'not loaded' },
+      { label: 'Active issues/tasks', value: 'not loaded' },
+      { label: 'Budget status', value: 'not loaded' },
+      { label: 'Heartbeat status', value: 'not loaded' },
+    ],
+  },
   { id: 'runtime', label: 'OpenClaw+ Runtime', lane: 'core', eyebrow: 'runtime', status: 'connected', statusLabel: 'shared skills', capabilities: ['skills', 'adapters', 'reports', 'voice'], blockers: [], lastTest: 'OpenClaw+ skill registry' },
   { id: 'policy', label: 'Policy', lane: 'core', eyebrow: 'guardrail', status: 'connected', statusLabel: 'enforced', capabilities: ['auth', 'redaction', 'Bridge Session', 'audit'], blockers: [], lastTest: '/api/gateway/policies' },
   { id: 'openrouter', label: 'OpenRouter', lane: 'llm', eyebrow: 'model', status: 'gated', statusLabel: 'fallback guarded', capabilities: ['model routing', 'fallback'], blockers: ['provider failures stay redacted'], lastTest: 'model registry' },
@@ -1466,6 +1526,9 @@ function GatewayMapSection({
   spaceAgentDetail,
   spaceAgentDetailState,
   spaceAgentDetailError,
+  paperclipStatus,
+  paperclipStatusState,
+  paperclipStatusError,
   gatewayEvents,
   gatewayEventsState,
   gatewayEventsError,
@@ -1474,6 +1537,9 @@ function GatewayMapSection({
   spaceAgentDetail: GatewayNodeDetailPayload | null
   spaceAgentDetailState: 'loading' | 'ok' | 'error'
   spaceAgentDetailError: string
+  paperclipStatus: PaperclipStatusPayload | null
+  paperclipStatusState: 'loading' | 'ok' | 'error'
+  paperclipStatusError: string
   gatewayEvents: GatewayEventsPayload | null
   gatewayEventsState: 'loading' | 'ok' | 'error'
   gatewayEventsError: string
@@ -1481,6 +1547,9 @@ function GatewayMapSection({
   const nodes = GATEWAY_MAP_NODES.map((node) => {
     if (node.id === 'space_agent') {
       return buildSpaceAgentGatewayVisualNode(node, spaceAgentDetail, spaceAgentDetailState, spaceAgentDetailError)
+    }
+    if (node.id === 'paperclip') {
+      return buildPaperclipGatewayVisualNode(node, paperclipStatus, paperclipStatusState, paperclipStatusError)
     }
     if (node.id !== 'hermes') return node
     const label = hermesLabel.toLowerCase()
@@ -1607,6 +1676,55 @@ function buildSpaceAgentGatewayVisualNode(
     ],
     latestJobs: latestResearchJobs.split(',').map((job) => job.trim()).filter(Boolean),
     handoffTarget,
+  }
+}
+
+function buildPaperclipGatewayVisualNode(
+  node: GatewayVisualNode,
+  payload: PaperclipStatusPayload | null,
+  state: 'loading' | 'ok' | 'error',
+  error: string,
+): GatewayVisualNode {
+  const summary = payload?.workforce_summary || {}
+  const blocker = stringifyDetail(payload?.blocker, '')
+  const reachable = payload?.reachable === true
+  const configured = payload?.configured === true
+  const status: GatewayVisualStatus = state === 'error'
+    ? 'blocked'
+    : state === 'loading'
+      ? 'gated'
+      : reachable && configured
+        ? 'connected'
+        : blocker
+          ? 'blocked'
+          : 'missing'
+  const statusLabel = status === 'connected'
+    ? 'connected'
+    : status === 'blocked'
+      ? 'blocked'
+      : 'not configured'
+  const blockers = [
+    ...node.blockers,
+    ...(state === 'error' ? [`Paperclip status route unavailable: ${error}`] : []),
+    ...(blocker ? [blocker] : []),
+  ].filter(Boolean)
+
+  return {
+    ...node,
+    status,
+    statusLabel,
+    blockers: Array.from(new Set(blockers)),
+    lastTest: state === 'loading' ? 'loading /api/bridge/paperclip/status' : (payload?.status_endpoint || node.lastTest),
+    details: [
+      { label: 'UI link', value: stringifyDetail(payload?.ui_link || payload?.endpoint, 'not configured') },
+      { label: 'Company count', value: stringifyDetail(summary.company_count, 'not available') },
+      { label: 'Active agents', value: stringifyDetail(summary.active_agents, 'not available') },
+      { label: 'Active issues/tasks', value: stringifyDetail(summary.active_issues, 'not available') },
+      { label: 'Budget status', value: stringifyDetail(summary.budget_status, 'not reported') },
+      { label: 'Heartbeat status', value: stringifyDetail(summary.heartbeat_status, 'not reported') },
+      { label: 'Bridge Session', value: payload?.bridge_session?.required_for_mutations ? 'required for workforce mutations' : 'required before execution' },
+      { label: 'Public exposure', value: payload?.service?.public_exposure ? 'not allowed' : 'blocked' },
+    ],
   }
 }
 
@@ -3501,6 +3619,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   const [spaceAgentDetail, setSpaceAgentDetail] = useState<GatewayNodeDetailPayload | null>(null)
   const [spaceAgentDetailState, setSpaceAgentDetailState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [spaceAgentDetailError, setSpaceAgentDetailError] = useState<string>('')
+  const [paperclipStatus, setPaperclipStatus] = useState<PaperclipStatusPayload | null>(null)
+  const [paperclipStatusState, setPaperclipStatusState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [paperclipStatusError, setPaperclipStatusError] = useState<string>('')
   const [gatewayObservability, setGatewayObservability] = useState<GatewayObservabilityPayload | null>(null)
   const [gatewayObservabilityState, setGatewayObservabilityState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [gatewayObservabilityError, setGatewayObservabilityError] = useState<string>('')
@@ -3707,6 +3828,32 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         if (cancelled) return
         setSpaceAgentDetailError((err as Error).message || 'fetch failed')
         setSpaceAgentDetailState('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setPaperclipStatusState('loading')
+    fetch('/api/bridge/paperclip/status', { cache: 'no-store', credentials: 'same-origin' })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          throw new Error(data?.error || data?.blocker || `HTTP ${r.status}`)
+        }
+        return data as PaperclipStatusPayload
+      })
+      .then((data) => {
+        if (cancelled) return
+        setPaperclipStatus(data)
+        setPaperclipStatusState('ok')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setPaperclipStatusError((err as Error).message || 'fetch failed')
+        setPaperclipStatusState('error')
       })
     return () => {
       cancelled = true
@@ -4425,6 +4572,9 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         spaceAgentDetail={spaceAgentDetail}
         spaceAgentDetailState={spaceAgentDetailState}
         spaceAgentDetailError={spaceAgentDetailError}
+        paperclipStatus={paperclipStatus}
+        paperclipStatusState={paperclipStatusState}
+        paperclipStatusError={paperclipStatusError}
         gatewayEvents={gatewayEvents}
         gatewayEventsState={gatewayEventsState}
         gatewayEventsError={gatewayEventsError}

@@ -8,6 +8,14 @@ export type PaperclipSafeStatusPayload = {
   reachable: boolean
   configured: boolean
   endpoint: string
+  ui_link: string | null
+  workforce_summary: {
+    company_count: number | null
+    active_agents: number | null
+    active_issues: number | null
+    budget_status: string
+    heartbeat_status: string
+  }
   role: 'workforce_company_task_orchestration_layer'
   authority: 'subordinate_to_gateway_and_agent_zero'
   status_endpoint: '/api/bridge/paperclip/status'
@@ -138,6 +146,7 @@ export function resolvePaperclipEndpoint(rawValue?: string | null) {
       return {
         baseUrl: DEFAULT_PAPERCLIP_BASE_URL,
         ownerVisible: 'loopback:3100',
+        uiLink: null,
         blocker: 'paperclip_endpoint_not_local_or_tailnet',
       }
     }
@@ -145,12 +154,14 @@ export function resolvePaperclipEndpoint(rawValue?: string | null) {
     return {
       baseUrl: url.origin,
       ownerVisible,
+      uiLink: url.origin,
       blocker: null,
     }
   } catch {
     return {
       baseUrl: DEFAULT_PAPERCLIP_BASE_URL,
       ownerVisible: 'loopback:3100',
+      uiLink: null,
       blocker: 'paperclip_endpoint_invalid',
     }
   }
@@ -162,7 +173,7 @@ export async function buildPaperclipStatusPayload(input: {
   baseUrl?: string | null
 }): Promise<PaperclipSafeStatusPayload> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
-  const baseStatus = basePayload(input.generatedAt, endpoint.ownerVisible)
+  const baseStatus = basePayload(input.generatedAt, endpoint.ownerVisible, endpoint.uiLink)
   if (endpoint.blocker) {
     return {
       ...baseStatus,
@@ -187,13 +198,15 @@ export async function buildPaperclipStatusPayload(input: {
   }
 
   const summary = summarizeHealthPayload(health.payload)
+  const workforce = await summarizeWorkforceState({ baseUrl: endpoint.baseUrl, fetchImpl: input.fetchImpl })
   return {
     ...baseStatus,
-    health: 'connected',
+    health: workforce.blocker ? 'degraded' : 'connected',
     reachable: true,
     configured: true,
     upstream: summary,
-    blocker: null,
+    workforce_summary: workforce.summary,
+    blocker: workforce.blocker,
   }
 }
 
@@ -319,7 +332,7 @@ async function fetchPaperclipJson(path: string, input: { baseUrl: string; fetchI
   }
 }
 
-function basePayload(generatedAt: string, endpoint: string): PaperclipSafeStatusPayload {
+function basePayload(generatedAt: string, endpoint: string, uiLink: string | null): PaperclipSafeStatusPayload {
   return {
     ok: true,
     mode: 'paperclip_status_read_only',
@@ -328,6 +341,14 @@ function basePayload(generatedAt: string, endpoint: string): PaperclipSafeStatus
     reachable: false,
     configured: false,
     endpoint,
+    ui_link: uiLink,
+    workforce_summary: {
+      company_count: null,
+      active_agents: null,
+      active_issues: null,
+      budget_status: 'not reachable',
+      heartbeat_status: 'not reachable',
+    },
     role: 'workforce_company_task_orchestration_layer',
     authority: 'subordinate_to_gateway_and_agent_zero',
     status_endpoint: '/api/bridge/paperclip/status',
@@ -370,6 +391,85 @@ function summarizeHealthPayload(payload: unknown): PaperclipSafeStatusPayload['u
     deployment_exposure: stringValue(data.deploymentExposure) || stringValue(data.deployment_exposure),
     auth_ready: booleanValue(data.authReady ?? data.auth_ready),
   }
+}
+
+async function summarizeWorkforceState(input: { baseUrl: string; fetchImpl?: FetchLike }): Promise<{
+  summary: PaperclipSafeStatusPayload['workforce_summary']
+  blocker: string | null
+}> {
+  const emptySummary = {
+    company_count: 0,
+    active_agents: 0,
+    active_issues: 0,
+    budget_status: 'not reported',
+    heartbeat_status: 'not reported',
+  }
+  const companiesResult = await fetchPaperclipJson('/api/companies', input)
+  if (!companiesResult.ok) {
+    return {
+      summary: { ...emptySummary, company_count: null, active_agents: null, active_issues: null, budget_status: 'not reachable', heartbeat_status: 'not reachable' },
+      blocker: companiesResult.blocker,
+    }
+  }
+
+  const companies = arrayFromPayload(companiesResult.payload).map(sanitizeCompany).filter(Boolean) as PaperclipCompanySummary[]
+  const preferred = companies.find((company) => company.name.toLowerCase() === 'to knowledge gateway') || companies[0]
+  if (!preferred) {
+    return {
+      summary: { ...emptySummary, company_count: companies.length },
+      blocker: 'paperclip_company_not_found',
+    }
+  }
+
+  const [agentsResult, issuesResult] = await Promise.all([
+    fetchPaperclipJson(`/api/companies/${encodeURIComponent(preferred.id)}/agents`, input),
+    fetchPaperclipJson(`/api/companies/${encodeURIComponent(preferred.id)}/issues`, input),
+  ])
+  const agents = agentsResult.ok ? arrayFromPayload(agentsResult.payload).map(sanitizeAgent).filter(Boolean) as PaperclipAgentSummary[] : []
+  const issues = issuesResult.ok ? arrayFromPayload(issuesResult.payload).map(sanitizeIssue).filter(Boolean) as PaperclipIssueSummary[] : []
+  const blockers = [agentsResult.ok ? null : agentsResult.blocker, issuesResult.ok ? null : issuesResult.blocker].filter(Boolean) as string[]
+
+  return {
+    summary: {
+      company_count: companies.length,
+      active_agents: agents.filter(isActivePaperclipAgent).length,
+      active_issues: issues.filter(isActivePaperclipIssue).length,
+      budget_status: summarizeBudget(companies),
+      heartbeat_status: summarizeHeartbeat(agents),
+    },
+    blocker: blockers[0] || null,
+  }
+}
+
+function summarizeBudget(companies: PaperclipCompanySummary[]) {
+  const withBudget = companies.find((company) => company.budget_monthly_cents !== null || company.spent_monthly_cents !== null)
+  if (!withBudget) return 'not reported'
+  const spent = withBudget.spent_monthly_cents ?? 0
+  const budget = withBudget.budget_monthly_cents
+  if (budget === null) return `${spent} cents spent monthly; budget not reported`
+  return `${spent} of ${budget} cents monthly`
+}
+
+function summarizeHeartbeat(agents: PaperclipAgentSummary[]) {
+  const heartbeatAgents = agents.filter((agent) => Boolean(agent.last_heartbeat_at))
+  if (agents.length === 0) return 'no agents reported'
+  if (heartbeatAgents.length === 0) return 'not reported'
+  const latest = heartbeatAgents
+    .map((agent) => agent.last_heartbeat_at)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1)
+  return `${heartbeatAgents.length} of ${agents.length} agents have heartbeat; latest ${latest}`
+}
+
+function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
+  const status = (agent.status || '').toLowerCase()
+  return !/(terminated|archived|inactive|disabled|deleted)/.test(status)
+}
+
+function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
+  const status = (issue.status || '').toLowerCase()
+  return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
 }
 
 function inventoryOk<T>(mode: PaperclipInventoryPayload<T>['mode'], generatedAt: string, items: T[], companySelector?: string | null): PaperclipInventoryPayload<T> {

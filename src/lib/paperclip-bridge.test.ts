@@ -40,6 +40,14 @@ describe('Paperclip bridge payloads', () => {
       health: 'degraded',
       reachable: false,
       configured: false,
+      ui_link: 'http://127.0.0.1:3100',
+      workforce_summary: {
+        company_count: null,
+        active_agents: null,
+        active_issues: null,
+        budget_status: 'not reachable',
+        heartbeat_status: 'not reachable',
+      },
       blocker: 'paperclip_sandbox_service_not_running',
       execution_enabled: false,
       writes_enabled: false,
@@ -107,7 +115,19 @@ describe('Paperclip bridge payloads', () => {
     const agents = await listPaperclipAgents({ generatedAt: GENERATED_AT, fetchImpl })
     const issues = await listPaperclipIssues({ generatedAt: GENERATED_AT, fetchImpl })
 
-    expect(status).toMatchObject({ health: 'connected', reachable: true, configured: true })
+    expect(status).toMatchObject({
+      health: 'connected',
+      reachable: true,
+      configured: true,
+      ui_link: 'http://127.0.0.1:3100',
+      workforce_summary: {
+        company_count: 1,
+        active_agents: 1,
+        active_issues: 1,
+        budget_status: 'not reported',
+        heartbeat_status: 'not reported',
+      },
+    })
     expect(companies.items[0]).toMatchObject({ id: 'company-1', name: 'To Knowledge Gateway', issue_prefix: 'TKG' })
     expect(agents.items[0]).toMatchObject({
       id: 'agent-1',

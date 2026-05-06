@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   GATEWAY_NODE_KINDS,
+  GATEWAY_ROLE_MATRIX,
   GATEWAY_STATUS_STATES,
   createGatewayCapability,
   createGatewayFlow,
   createGatewayRegistryFromAgentNetwork,
+  getGatewayRoleMatrixEntry,
   normalizeGatewayStatus,
   type GatewayPolicy,
 } from './gateway-model'
@@ -47,6 +49,53 @@ describe('canonical Gateway graph model', () => {
     expect(normalizeGatewayStatus('retired')).toBe('blocked')
     expect(normalizeGatewayStatus('readonly')).toBe('read_only')
     expect(normalizeGatewayStatus('not-found')).toBe('missing')
+  })
+
+  it('defines the Space Agent Gateway role matrix and not-commander policy', () => {
+    const roleIds = GATEWAY_ROLE_MATRIX.map((entry) => entry.id)
+    const agentZero = getGatewayRoleMatrixEntry('agent_zero')
+    const hermes = getGatewayRoleMatrixEntry('hermes')
+    const pi = getGatewayRoleMatrixEntry('pi')
+    const spaceAgent = getGatewayRoleMatrixEntry('space_agent')
+    const openCloud = getGatewayRoleMatrixEntry('opencloud')
+    const openClaw = getGatewayRoleMatrixEntry('openclaw_plus')
+    const tony = getGatewayRoleMatrixEntry('tony_legacy')
+
+    expect(roleIds).toEqual(expect.arrayContaining([
+      'owner',
+      'gateway',
+      'agent_zero',
+      'hermes',
+      'pi',
+      'space_agent',
+      'mini_agents',
+      'openclaw_plus',
+      'opencloud',
+      'tony_legacy',
+    ]))
+    expect(agentZero).toMatchObject({ role: 'commander', commander: true, active: true })
+    expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'hermes', 'pi', 'mini_agents']))
+    expect(hermes).toMatchObject({ role: 'lieutenant_skill_workflow_builder', can_design: true, commander: false })
+    expect(hermes?.policy_tags).toContain('can_design_space_agent_skills')
+    expect(pi).toMatchObject({ role: 'gateway_dispatcher_candidate_route_optimizer_tool_use_advisor', can_recommend: true, commander: false })
+    expect(pi?.policy_tags).toContain('can_recommend_space_agent_for_web_research')
+    expect(spaceAgent).toMatchObject({
+      role: 'web_browser_youtube_firecrawl_research_specialist',
+      commander: false,
+      active: true,
+      archived: false,
+      execution_mode: 'read_only_research_packet_by_default',
+    })
+    expect(spaceAgent?.reports_to).toEqual(expect.arrayContaining(['gateway', 'agent_zero']))
+    expect(spaceAgent?.policy_tags).toEqual(expect.arrayContaining([
+      'space_agent_not_commander',
+      'research_packet_only_by_default',
+      'no_external_writes_without_bridge_session',
+    ]))
+    expect(openCloud).toMatchObject({ role: 'worker_runtime_engine_skill_tool_agent_creation_layer', commander: false, active: true })
+    expect(openCloud?.policy_tags).toContain('opencloud_retained')
+    expect(openClaw).toMatchObject({ role: 'worker_runtime_skills_adapters_reports_layer', commander: false, active: true })
+    expect(tony).toMatchObject({ role: 'retired_archive_only', commander: false, active: false, archived: true })
   })
 
   it('normalizes tools, models, skills, and integrations into GatewayCapability', () => {
@@ -130,9 +179,44 @@ describe('canonical Gateway graph model', () => {
       kind: 'specialist_agent',
       status: 'read_only',
       visibility: 'owner_visible',
+      capabilities: expect.arrayContaining([
+        'Gateway-routed structured Research Packets',
+        'subordinate research stage, not commander',
+      ]),
     })
     expect(bridge).toMatchObject({ kind: 'mcp_server', status: 'connected' })
     expect(brainNodes).toEqual(expect.arrayContaining(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki']))
+  })
+
+  it('marks Space Agent capability as supervised research, not command authority', () => {
+    const registry = createGatewayRegistryFromAgentNetwork()
+    const capability = registry.capabilities.find((item) => item.id === 'space_agent_research_packet')
+
+    expect(capability).toMatchObject({
+      source_node: 'space_agent',
+      status: 'read_only',
+      execution_enabled: false,
+      available_to: ['agent_zero', 'hermes', 'pi'],
+      status_details: {
+        role: 'web_browser_youtube_firecrawl_research_specialist',
+        returns_to: 'agent_zero',
+        subordinate_to_gateway: true,
+        agent_zero_commander: true,
+        hermes_skill_builder: true,
+        pi_can_recommend: true,
+        mini_agents_are_subordinate_workers: true,
+        opencloud_openclaw_worker_runtime: true,
+        tony_retired_archive_only: true,
+        space_agent_is_commander: false,
+        policy: 'space_agent_not_commander',
+      },
+    })
+    expect(registry.policies.space_agent_not_commander).toMatchObject({
+      auth_required: true,
+      write_allowed: false,
+      secret_safe: true,
+      external_allowed: false,
+    })
   })
 
   it('keeps Tony archived and out of active Gateway routes', () => {

@@ -1,5 +1,6 @@
 import {
   createGatewayFlow,
+  getGatewayRoleMatrixEntry,
   type GatewayFlow,
   type GatewayFlowRouteDecision,
   type GatewayRegistry,
@@ -77,6 +78,7 @@ export type GatewayMiniAgentOperatingSystem = {
     agent_zero: 'commander'
     hermes: 'lieutenant_skill_workflow_builder'
     pi: 'dispatcher_candidate_route_optimizer_tool_use_advisor'
+    space_agent: 'web_browser_youtube_firecrawl_research_specialist'
     mini_agents: 'temporary_or_reusable_subordinate_workers'
     openclaw_plus: 'runtime_skills_adapters_reports_layer'
     opencloud: 'worker_runtime_skill_tool_agent_creation_layer'
@@ -103,10 +105,12 @@ export type GatewayMiniAgentOperatingSystem = {
     agent_zero_present: boolean
     hermes_present: boolean
     pi_present: boolean
+    space_agent_present: boolean
     mini_agents_present: boolean
     opencloud_present: boolean
     opencloud_retained: true
     tony_active_authority: false
+    space_agent_commander_authority: false
   }
   execution_enabled: false
   writes_enabled: false
@@ -191,6 +195,7 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       agent_zero: 'commander',
       hermes: 'lieutenant_skill_workflow_builder',
       pi: 'dispatcher_candidate_route_optimizer_tool_use_advisor',
+      space_agent: 'web_browser_youtube_firecrawl_research_specialist',
       mini_agents: 'temporary_or_reusable_subordinate_workers',
       openclaw_plus: 'runtime_skills_adapters_reports_layer',
       opencloud: 'worker_runtime_skill_tool_agent_creation_layer',
@@ -217,10 +222,12 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       agent_zero_present: nodeIds.has('agent_zero'),
       hermes_present: nodeIds.has('hermes'),
       pi_present: nodeIds.has('pi'),
+      space_agent_present: nodeIds.has('space_agent'),
       mini_agents_present: nodeIds.has('mini_agents'),
       opencloud_present: nodeIds.has('opencloud'),
       opencloud_retained: true,
       tony_active_authority: false,
+      space_agent_commander_authority: false,
     },
     execution_enabled: false,
     writes_enabled: false,
@@ -372,6 +379,16 @@ function buildMiniAgentRoles(registry: GatewayRegistry): GatewayMiniAgentRole[] 
       can_supervise: true,
       can_execute: false,
       notes: nodeIds.has('pi') ? 'Present in Gateway registry.' : 'Pending registry node.',
+    },
+    {
+      id: 'space_agent',
+      label: 'Space Agent',
+      role: getGatewayRoleMatrixEntry('space_agent')?.role || 'web_browser_youtube_firecrawl_research_specialist',
+      authority: 'browser, web, YouTube, Firecrawl, crawl, scrape, search, and extraction research specialist; returns Research Packets through Agent Zero.',
+      can_create_proposals: false,
+      can_supervise: false,
+      can_execute: false,
+      notes: nodeIds.has('space_agent') ? 'Present in Gateway registry; not commander.' : 'Pending registry node.',
     },
   ]
 }

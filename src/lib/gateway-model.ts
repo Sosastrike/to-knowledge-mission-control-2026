@@ -582,6 +582,8 @@ export function createGatewayRegistryFromAgentNetwork(
         'webpage and article inspection planning',
         'YouTube and video research packets',
         'Firecrawl research coordination',
+        'Gateway-routed structured Research Packets',
+        'subordinate research stage, not commander',
       ],
       blockers: [],
       lastSeen: generatedAt,
@@ -733,9 +735,19 @@ export function createGatewayRegistryFromAgentNetwork(
       ],
       status_details: {
         summary: 'Space Agent prepares browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research packets under Gateway supervision.',
+        role: 'web_browser_youtube_firecrawl_research_specialist',
         returns_to: 'agent_zero',
+        subordinate_to_gateway: true,
+        agent_zero_commander: true,
+        hermes_skill_builder: true,
+        pi_can_recommend: true,
+        mini_agents_are_subordinate_workers: true,
+        opencloud_openclaw_worker_runtime: true,
+        tony_retired_archive_only: true,
+        space_agent_is_commander: false,
         commander_replacement: false,
         execution_enabled: false,
+        policy: 'space_agent_not_commander',
       },
     }),
     createGatewayCapability({
@@ -766,6 +778,7 @@ export function createGatewayRegistryFromAgentNetwork(
       active_read_only: ACTIVE_POLICY,
       bridge_session_required: BRIDGE_SESSION_POLICY,
       read_only: READ_ONLY_POLICY,
+      space_agent_not_commander: READ_ONLY_POLICY,
     },
     health,
   }
@@ -854,4 +867,190 @@ function dedupeGatewayCapabilities(capabilities: GatewayCapability[]): GatewayCa
     seen.add(capability.id)
     return true
   })
+}
+
+
+export type GatewayRoleMatrixEntry = {
+  id: string
+  label: string
+  role: string
+  authority: string
+  reports_to: readonly string[]
+  supervises: readonly string[]
+  execution_mode: string
+  can_recommend: boolean
+  can_design: boolean
+  commander: boolean
+  active: boolean
+  archived: boolean
+  policy_tags: readonly string[]
+  owner_visible_summary: string
+}
+
+export const GATEWAY_ROLE_MATRIX: readonly GatewayRoleMatrixEntry[] = [
+  {
+    id: 'owner',
+    label: 'Owner',
+    role: 'final_authority',
+    authority: 'Final authority over Gateway policy, approvals, and production changes.',
+    reports_to: [],
+    supervises: ['gateway', 'agent_zero'],
+    execution_mode: 'owner_authority',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['owner_final_authority'],
+    owner_visible_summary: 'Owner remains final authority over Agent Zero, Gateway, approvals, and protected actions.',
+  },
+  {
+    id: 'gateway',
+    label: 'Gateway',
+    role: 'routing_policy_documentation_memory_audit_hub',
+    authority: 'Routes, governs, documents, audits, and memory-gates traffic across agents, tools, Brain systems, OpenCloud, and integrations.',
+    reports_to: ['owner'],
+    supervises: ['agent_zero', 'hermes', 'pi', 'space_agent', 'mini_agents', 'openclaw_plus', 'opencloud'],
+    execution_mode: 'control_plane_read_only_until_bridge_session',
+    can_recommend: true,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['gateway_route_required', 'audit_required', 'bridge_session_required_for_external_writes'],
+    owner_visible_summary: 'Gateway is the routing, policy, documentation, memory, and audit hub.',
+  },
+  {
+    id: 'agent_zero',
+    label: 'Agent Zero',
+    role: 'commander',
+    authority: 'Primary commander and final operational decision-maker under Owner.',
+    reports_to: ['owner', 'gateway'],
+    supervises: ['hermes', 'pi', 'space_agent', 'mini_agents', 'openclaw_plus', 'opencloud'],
+    execution_mode: 'gateway_bridge_session_registered_adapters_only',
+    can_recommend: true,
+    can_design: true,
+    commander: true,
+    active: true,
+    archived: false,
+    policy_tags: ['agent_zero_commander', 'no_raw_shell', 'no_direct_secret_reads'],
+    owner_visible_summary: 'Agent Zero is commander and supervises Space Agent research through Gateway.',
+  },
+  {
+    id: 'hermes',
+    label: 'Hermes',
+    role: 'lieutenant_skill_workflow_builder',
+    authority: 'Designs skills, workflows, automations, and Space Agent research workflows for Agent Zero review.',
+    reports_to: ['agent_zero', 'gateway'],
+    supervises: ['mini_agents'],
+    execution_mode: 'proposal_only_until_bridge_session',
+    can_recommend: true,
+    can_design: true,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['hermes_lieutenant', 'can_design_space_agent_skills', 'agent_zero_review_required'],
+    owner_visible_summary: 'Hermes is lieutenant and can build workflow or skill designs for Space Agent research routes.',
+  },
+  {
+    id: 'pi',
+    label: 'Pi',
+    role: 'gateway_dispatcher_candidate_route_optimizer_tool_use_advisor',
+    authority: 'Shadow-mode dispatcher candidate that recommends routes, models, tools, agents, and mini-agent use.',
+    reports_to: ['agent_zero', 'gateway'],
+    supervises: [],
+    execution_mode: 'read_only_shadow_recommendation',
+    can_recommend: true,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['pi_shadow_mode', 'can_recommend_space_agent_for_web_research', 'not_commander'],
+    owner_visible_summary: 'Pi can recommend Space Agent for live web, browser, YouTube, and Firecrawl research stages.',
+  },
+  {
+    id: 'space_agent',
+    label: 'Space Agent',
+    role: 'web_browser_youtube_firecrawl_research_specialist',
+    authority: 'Subordinate research specialist that returns structured Research Packets through Gateway; Agent Zero remains commander.',
+    reports_to: ['gateway', 'agent_zero'],
+    supervises: [],
+    execution_mode: 'read_only_research_packet_by_default',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['space_agent_not_commander', 'gateway_route_required', 'research_packet_only_by_default', 'no_external_writes_without_bridge_session'],
+    owner_visible_summary: 'Space Agent handles browser, web, YouTube, video, Firecrawl, crawl, scrape, search, and extraction research stages only.',
+  },
+  {
+    id: 'mini_agents',
+    label: 'Mini-agents',
+    role: 'temporary_or_reusable_subordinate_workers',
+    authority: 'Scoped subordinate workers created through Gateway routes with parent supervisors, TTL, output contracts, and audit.',
+    reports_to: ['agent_zero', 'hermes', 'pi', 'gateway'],
+    supervises: [],
+    execution_mode: 'proposal_only_until_bridge_session',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['parent_supervisor_required', 'memory_ttl_required', 'no_self_promotion'],
+    owner_visible_summary: 'Mini-agents are subordinate workers and cannot act independently or talk to Owner outside approved routes.',
+  },
+  {
+    id: 'openclaw_plus',
+    label: 'OpenClaw+ / ClaudeClaw',
+    role: 'worker_runtime_skills_adapters_reports_layer',
+    authority: 'Shared runtime, skills, adapters, reports, and governance layer under Gateway.',
+    reports_to: ['gateway', 'agent_zero'],
+    supervises: [],
+    execution_mode: 'worker_runtime_gated_by_gateway_and_bridge_session',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['runtime_worker_system', 'bridge_session_required_for_side_effects'],
+    owner_visible_summary: 'OpenClaw+ remains a worker/runtime system and skills layer.',
+  },
+  {
+    id: 'opencloud',
+    label: 'OpenCloud',
+    role: 'worker_runtime_engine_skill_tool_agent_creation_layer',
+    authority: 'Worker/runtime engine and Build-Wiki/Farmer support layer retained under Gateway control.',
+    reports_to: ['gateway', 'agent_zero'],
+    supervises: [],
+    execution_mode: 'worker_runtime_gated_by_gateway_and_bridge_session',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: true,
+    archived: false,
+    policy_tags: ['opencloud_retained', 'not_deletion_target', 'bridge_session_required_for_farmer_execution'],
+    owner_visible_summary: 'OpenCloud stays as a worker/runtime engine and is not approved for deletion or disablement.',
+  },
+  {
+    id: 'tony_legacy',
+    label: 'Tony Legacy',
+    role: 'retired_archive_only',
+    authority: 'Historical archive only; no active commander, owner-facing, approval, or routing authority.',
+    reports_to: [],
+    supervises: [],
+    execution_mode: 'archive_only',
+    can_recommend: false,
+    can_design: false,
+    commander: false,
+    active: false,
+    archived: true,
+    policy_tags: ['tony_retired_archive_only', 'no_active_authority'],
+    owner_visible_summary: 'Tony remains historical archive only and must not appear as active authority.',
+  },
+]
+
+export function getGatewayRoleMatrixEntry(id: string): GatewayRoleMatrixEntry | null {
+  const normalized = normalizeGatewayId(id)
+  return GATEWAY_ROLE_MATRIX.find((entry) => normalizeGatewayId(entry.id) === normalized) || null
 }

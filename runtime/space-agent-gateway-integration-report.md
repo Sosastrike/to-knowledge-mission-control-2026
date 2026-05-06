@@ -36,6 +36,20 @@ Current status: PARTIAL GO for Gateway integration. The design, registry, docs, 
 - Added Space Agent docs for Firecrawl, YouTube, browser policy, handoff, mini-agents, blocked scenarios, owner examples, developer examples, and rollback.
 - Added full dry-run gauntlet coverage for routing, web research, YouTube, browser-blocked scenarios, handoff, and mini-agents.
 
+## Space Agent Job Contract
+
+Every Space Agent job now includes a canonical `space_agent_job` envelope with:
+
+- `job_id`
+- `parent_gateway_flow`
+- `supervisor`
+- `task_type`
+- scoped `allowed_domains`, `allowed_urls`, `forbidden_domains`, and `requires_login: false`
+- allowed research tools: Firecrawl search/scrape/crawl/map/extract, read-only browser, and YouTube transcript
+- forbidden tools: email send, Drive upload, Zapier write, HeyGen generation, SMB mount, raw shell, and Docker socket
+- memory policy with `ttl: 24h` and `promote_to_brain: false`
+- `output: research_packet`
+
 ## Safety Boundaries
 
 Space Agent cannot:
@@ -131,6 +145,7 @@ Mission Control:
 - `pnpm test`: passed, 127 files / 1,175 tests.
 - Focused Space Agent gauntlet: passed, 1 file / 2 tests.
 - Focused canonical Research Packet envelope test: passed as part of `space-agent-research.test.ts`.
+- Focused canonical Space Agent Job envelope test: passed as part of `space-agent-research.test.ts`.
 - Focused route/auth smoke: passed, 4 files / 10 tests.
 
 ClaudeClaw/OpenClaw+:

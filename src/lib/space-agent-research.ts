@@ -736,6 +736,44 @@ export type BrowserActionSummary = {
   retry_policy: BrowserActionRetryPolicy
 }
 
+export type CanonicalSpaceAgentTaskType = 'web_search' | 'scrape' | 'crawl' | 'extract' | 'browser_interact' | 'youtube_inspect'
+export type CanonicalSpaceAgentToolAllowed =
+  | 'firecrawl_search'
+  | 'firecrawl_scrape'
+  | 'firecrawl_crawl'
+  | 'firecrawl_map'
+  | 'firecrawl_extract'
+  | 'browser_readonly'
+  | 'youtube_transcript'
+export type CanonicalSpaceAgentToolForbidden =
+  | 'email_send'
+  | 'drive_upload'
+  | 'zapier_write'
+  | 'heygen_generation'
+  | 'smb_mount'
+  | 'raw_shell'
+  | 'docker_socket'
+
+export type CanonicalSpaceAgentJob = {
+  job_id: string
+  parent_gateway_flow: string
+  supervisor: 'agent_zero' | 'hermes' | 'pi'
+  task_type: CanonicalSpaceAgentTaskType
+  scope: {
+    allowed_domains: string[]
+    allowed_urls: string[]
+    forbidden_domains: string[]
+    requires_login: false
+  }
+  tools_allowed: CanonicalSpaceAgentToolAllowed[]
+  tools_forbidden: CanonicalSpaceAgentToolForbidden[]
+  memory: {
+    ttl: '24h'
+    promote_to_brain: false
+  }
+  output: 'research_packet'
+}
+
 export type SpaceAgentJob = {
   job_id: string
   schema: 'space_agent_job_v1'
@@ -752,6 +790,7 @@ export type SpaceAgentJob = {
   blocked_reason: string | null
   execution_enabled: false
   writes_enabled: false
+  space_agent_job: CanonicalSpaceAgentJob
   owner_visible_summary: string
 }
 
@@ -1003,8 +1042,9 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
   const returnRoute = createSpaceAgentReturnRoute(intent.responsible_agent)
   const blockedReason = policy.blocked_reason || policy.bridge_session_reason
   const status = policy.route_decision === 'blocked' ? 'blocked' : 'ready'
+  const jobId = normalizeId(`space_agent_job_${intent.intent_id}`)
   return {
-    job_id: normalizeId(`space_agent_job_${intent.intent_id}`),
+    job_id: jobId,
     schema: 'space_agent_job_v1',
     status,
     intent,
@@ -1019,6 +1059,11 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
     blocked_reason: blockedReason,
     execution_enabled: false,
     writes_enabled: false,
+    space_agent_job: createCanonicalSpaceAgentJob({
+      jobId,
+      intent,
+      input,
+    }),
     owner_visible_summary: !intent.research_needed
       ? 'research not needed; Space Agent should hand back through Gateway.'
       : status === 'blocked'
@@ -1597,6 +1642,76 @@ function normalizeResponsibleAgent(value: SpaceAgentResponsibleAgent | null | un
   if (value && ['agent_zero', 'hermes', 'pi', 'responsible_specialist_agent'].includes(value)) return value
   if (requestedBy === 'agent_zero' || requestedBy === 'hermes' || requestedBy === 'pi') return requestedBy
   return 'agent_zero'
+}
+
+function createCanonicalSpaceAgentJob(input: {
+  jobId: string
+  intent: WebResearchIntent
+  input: SpaceAgentResearchPacketInput
+}): CanonicalSpaceAgentJob {
+  const scopedUrls = canonicalSpaceAgentJobUrls(input.input)
+  const allowedDomains = dedupeStrings(scopedUrls.map((url) => domainFromUrl(url)).filter((value): value is string => Boolean(value)))
+  return {
+    job_id: input.jobId,
+    parent_gateway_flow: 'flow_agent_zero_gateway_space_agent_research',
+    supervisor: canonicalSpaceAgentSupervisor(input.intent),
+    task_type: canonicalSpaceAgentTaskType(input.intent.research_operation),
+    scope: {
+      allowed_domains: allowedDomains,
+      allowed_urls: scopedUrls,
+      forbidden_domains: [],
+      requires_login: false,
+    },
+    tools_allowed: canonicalSpaceAgentToolsAllowed(input.intent.research_operation),
+    tools_forbidden: [
+      'email_send',
+      'drive_upload',
+      'zapier_write',
+      'heygen_generation',
+      'smb_mount',
+      'raw_shell',
+      'docker_socket',
+    ],
+    memory: {
+      ttl: '24h',
+      promote_to_brain: false,
+    },
+    output: 'research_packet',
+  }
+}
+
+function canonicalSpaceAgentSupervisor(intent: WebResearchIntent): CanonicalSpaceAgentJob['supervisor'] {
+  if (intent.requested_by === 'hermes' || intent.requested_by === 'pi') return intent.requested_by
+  return 'agent_zero'
+}
+
+function canonicalSpaceAgentTaskType(operation: SpaceAgentResearchOperation): CanonicalSpaceAgentTaskType {
+  if (operation === 'firecrawl_scrape' || operation === 'page_read') return 'scrape'
+  if (operation === 'firecrawl_crawl' || operation === 'firecrawl_map') return 'crawl'
+  if (operation === 'firecrawl_extract') return 'extract'
+  if (operation === 'browser_interaction' || operation === 'screenshot_page_state' || operation === 'inaccessible_site_or_video') return 'browser_interact'
+  if (operation === 'youtube_video_inspection') return 'youtube_inspect'
+  return 'web_search'
+}
+
+function canonicalSpaceAgentToolsAllowed(operation: SpaceAgentResearchOperation): CanonicalSpaceAgentToolAllowed[] {
+  const common: CanonicalSpaceAgentToolAllowed[] = ['firecrawl_search', 'browser_readonly', 'youtube_transcript']
+  if (operation === 'firecrawl_scrape' || operation === 'page_read') return dedupeStrings([...common, 'firecrawl_scrape']) as CanonicalSpaceAgentToolAllowed[]
+  if (operation === 'firecrawl_crawl') return dedupeStrings([...common, 'firecrawl_crawl']) as CanonicalSpaceAgentToolAllowed[]
+  if (operation === 'firecrawl_map') return dedupeStrings([...common, 'firecrawl_map']) as CanonicalSpaceAgentToolAllowed[]
+  if (operation === 'firecrawl_extract') return dedupeStrings([...common, 'firecrawl_extract']) as CanonicalSpaceAgentToolAllowed[]
+  if (operation === 'browser_interaction' || operation === 'screenshot_page_state' || operation === 'inaccessible_site_or_video') return dedupeStrings([...common, 'browser_readonly']) as CanonicalSpaceAgentToolAllowed[]
+  if (operation === 'youtube_video_inspection') return dedupeStrings([...common, 'youtube_transcript']) as CanonicalSpaceAgentToolAllowed[]
+  return common
+}
+
+function canonicalSpaceAgentJobUrls(input: SpaceAgentResearchPacketInput): string[] {
+  return dedupeStrings([
+    ...extractUrls(input.request).map((url) => classifyResearchUrl(url).url),
+    ...(input.webSources || []).map((source) => classifyResearchUrl(source.url || null).url),
+    ...(input.youtubeSources || []).map((source) => source.video_url ? sanitize(source.video_url) : null),
+    ...(input.evidence || []).map((item) => item.url ? classifyResearchUrl(item.url).url : null),
+  ].filter((value): value is string => Boolean(value)))
 }
 
 function createCanonicalResearchPacket(input: {

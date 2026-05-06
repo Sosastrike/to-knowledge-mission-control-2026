@@ -80,7 +80,61 @@ describe('Space Agent Research Packet', () => {
         route_id: 'space_agent_gateway_responsible_agent_return',
         hops: ['space_agent', 'gateway', 'agent_zero'],
       },
+      space_agent_job: {
+        job_id: job.job_id,
+        parent_gateway_flow: 'flow_agent_zero_gateway_space_agent_research',
+        supervisor: 'agent_zero',
+        task_type: 'scrape',
+        scope: {
+          allowed_domains: [],
+          allowed_urls: [],
+          forbidden_domains: [],
+          requires_login: false,
+        },
+        tools_allowed: ['firecrawl_search', 'browser_readonly', 'youtube_transcript', 'firecrawl_scrape'],
+        tools_forbidden: ['email_send', 'drive_upload', 'zapier_write', 'heygen_generation', 'smb_mount', 'raw_shell', 'docker_socket'],
+        memory: {
+          ttl: '24h',
+          promote_to_brain: false,
+        },
+        output: 'research_packet',
+      },
     })
+  })
+
+  it('creates the canonical space_agent_job envelope with scoped tools and memory', () => {
+    const job = createSpaceAgentJob({
+      request: 'Use Firecrawl to crawl https://example.com/docs and return a research packet.',
+      requestedBy: 'hermes',
+      responsibleAgent: 'agent_zero',
+      generatedAt: '2026-05-06T22:30:00.000Z',
+      firecrawlConfigured: true,
+      webSources: [
+        { url: 'https://example.com/docs', title: 'Docs', access: 'public' },
+        { url: 'https://research.example.org/page', title: 'Research page', access: 'public' },
+      ],
+    })
+
+    expect(job.space_agent_job).toEqual({
+      job_id: job.job_id,
+      parent_gateway_flow: 'flow_agent_zero_gateway_space_agent_research',
+      supervisor: 'hermes',
+      task_type: 'crawl',
+      scope: {
+        allowed_domains: ['example.com', 'research.example.org'],
+        allowed_urls: ['https://example.com/docs', 'https://research.example.org/page'],
+        forbidden_domains: [],
+        requires_login: false,
+      },
+      tools_allowed: ['firecrawl_search', 'browser_readonly', 'youtube_transcript', 'firecrawl_crawl'],
+      tools_forbidden: ['email_send', 'drive_upload', 'zapier_write', 'heygen_generation', 'smb_mount', 'raw_shell', 'docker_socket'],
+      memory: {
+        ttl: '24h',
+        promote_to_brain: false,
+      },
+      output: 'research_packet',
+    })
+    expect(JSON.stringify(job.space_agent_job)).not.toMatch(/API_KEY|Bearer\s+|auth\.json|\/home\//i)
   })
 
   it('creates a research-only packet that returns responsibility to Agent Zero', () => {

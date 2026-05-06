@@ -755,6 +755,63 @@ export type SpaceAgentJob = {
   owner_visible_summary: string
 }
 
+export type CanonicalResearchPacketSourceType = 'website' | 'youtube' | 'browser' | 'firecrawl' | 'unknown'
+export type CanonicalResearchPacketMethod =
+  | 'firecrawl_search'
+  | 'firecrawl_scrape'
+  | 'firecrawl_crawl'
+  | 'firecrawl_map'
+  | 'firecrawl_extract'
+  | 'browser'
+  | 'youtube_transcript'
+  | 'web'
+export type CanonicalResearchPacketSourceStatus = 'success' | 'blocked' | 'partial' | 'failed'
+
+export type CanonicalResearchPacketSource = {
+  url: string | null
+  title: string | null
+  type: CanonicalResearchPacketSourceType
+  retrieved_at: string | null
+  method: CanonicalResearchPacketMethod
+  status: CanonicalResearchPacketSourceStatus
+}
+
+export type CanonicalResearchPacketBlocker = {
+  blocker_type: string
+  reason: string
+  fix_path: string
+}
+
+export type CanonicalResearchPacket = {
+  packet_id: string
+  requested_by: SpaceAgentRequester
+  assigned_by: 'gateway' | 'agent_zero'
+  route: {
+    gateway_flow_id: string
+    dispatcher: 'pi' | 'gateway'
+    commander: 'agent_zero'
+    research_agent: 'space_agent'
+    return_to: SpaceAgentResponsibleAgent
+  }
+  request: {
+    raw_owner_request: string
+    normalized_intent: SpaceAgentResearchOperation
+    source_type: CanonicalResearchPacketSourceType
+  }
+  sources: CanonicalResearchPacketSource[]
+  findings: {
+    summary: string
+    key_points: string[]
+    evidence: ResearchEvidenceSnippet[]
+    contradictions: string[]
+    confidence: EvidenceItem['confidence']
+  }
+  blockers: CanonicalResearchPacketBlocker[]
+  recommended_next_agent: SpaceAgentResponsibleAgent
+  handoff_summary: string
+  no_external_write: true
+}
+
 export type ResearchPacket = {
   packet_id: string
   schema: 'research_packet_v1'
@@ -803,6 +860,7 @@ export type ResearchPacket = {
   urls: string[]
   blockers: string[]
   blocked_reason: string | null
+  research_packet: CanonicalResearchPacket
   owner_visible_summary: string
 }
 
@@ -1052,6 +1110,13 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
   const citations = collectCitations(evidence, webSources, youtubeSources)
   const sourceList = collectResearchSources(evidence, webSources, youtubeSources, browserActions)
   const blockers = collectResearchBlockers(job, webSources, youtubeSources, browserActions)
+  const confidence = deriveResearchConfidence(evidence, blockers)
+  const evidenceSnippets = collectEvidenceSnippets(evidence)
+  const ownerVisibleSummary = !intent.research_needed
+    ? `research not needed; Space Agent hands back to ${job.responsible_agent} through Gateway.`
+    : job.blocked_reason
+      ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
+    : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`
 
   return {
     packet_id: normalizeId(`space_agent_${researchType}_${input.generatedAt || DEFAULT_GENERATED_AT}`),
@@ -1095,17 +1160,26 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     no_secrets_exposed: true,
     no_raw_paths: true,
     findings: evidence.map((item) => item.summary),
-    confidence: deriveResearchConfidence(evidence, blockers),
-    evidence_snippets: collectEvidenceSnippets(evidence),
+    confidence,
+    evidence_snippets: evidenceSnippets,
     citations,
     urls: citations,
     blockers,
     blocked_reason: job.blocked_reason,
-    owner_visible_summary: !intent.research_needed
-      ? `research not needed; Space Agent hands back to ${job.responsible_agent} through Gateway.`
-      : job.blocked_reason
-        ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
-      : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
+    research_packet: createCanonicalResearchPacket({
+      job,
+      intent,
+      evidence,
+      webSources,
+      youtubeSources,
+      browserActions,
+      evidenceSnippets,
+      blockers,
+      confidence,
+      ownerVisibleSummary,
+      generatedAt: input.generatedAt,
+    }),
+    owner_visible_summary: ownerVisibleSummary,
   }
 }
 
@@ -1523,6 +1597,129 @@ function normalizeResponsibleAgent(value: SpaceAgentResponsibleAgent | null | un
   if (value && ['agent_zero', 'hermes', 'pi', 'responsible_specialist_agent'].includes(value)) return value
   if (requestedBy === 'agent_zero' || requestedBy === 'hermes' || requestedBy === 'pi') return requestedBy
   return 'agent_zero'
+}
+
+function createCanonicalResearchPacket(input: {
+  job: SpaceAgentJob
+  intent: WebResearchIntent
+  evidence: EvidenceItem[]
+  webSources: WebSource[]
+  youtubeSources: YouTubeSource[]
+  browserActions: BrowserActionSummary[]
+  evidenceSnippets: ResearchEvidenceSnippet[]
+  blockers: string[]
+  confidence: EvidenceItem['confidence']
+  ownerVisibleSummary: string
+  generatedAt?: string
+}): CanonicalResearchPacket {
+  const keyPoints = input.evidence.map((item) => item.summary)
+  const blockerObjects = input.blockers.map((blocker) => ({
+    blocker_type: normalizeId(blocker),
+    reason: blocker,
+    fix_path: canonicalResearchBlockerFixPath(blocker),
+  }))
+  return {
+    packet_id: normalizeId(`canonical_${input.job.job_id}`),
+    requested_by: input.intent.requested_by,
+    assigned_by: 'agent_zero',
+    route: {
+      gateway_flow_id: 'flow_agent_zero_gateway_space_agent_research',
+      dispatcher: input.job.route.pi_recommendation === 'space_agent' ? 'pi' : 'gateway',
+      commander: 'agent_zero',
+      research_agent: 'space_agent',
+      return_to: input.job.responsible_agent,
+    },
+    request: {
+      raw_owner_request: input.intent.request_summary,
+      normalized_intent: input.intent.research_operation,
+      source_type: canonicalResearchSourceTypeForIntent(input.intent),
+    },
+    sources: [
+      ...input.webSources.map((source) => canonicalSourceFromWebSource(source, input.intent, input.generatedAt)),
+      ...input.youtubeSources.map((source) => canonicalSourceFromYouTubeSource(source, input.generatedAt)),
+      ...input.browserActions.map((action) => canonicalSourceFromBrowserAction(action)),
+    ],
+    findings: {
+      summary: keyPoints.length ? keyPoints.join(' ') : input.ownerVisibleSummary,
+      key_points: keyPoints,
+      evidence: input.evidenceSnippets,
+      contradictions: [],
+      confidence: input.confidence,
+    },
+    blockers: blockerObjects,
+    recommended_next_agent: input.job.responsible_agent,
+    handoff_summary: input.ownerVisibleSummary,
+    no_external_write: true,
+  }
+}
+
+function canonicalSourceFromWebSource(source: WebSource, intent: WebResearchIntent, generatedAt?: string): CanonicalResearchPacketSource {
+  return {
+    url: source.url,
+    title: source.title,
+    type: canonicalResearchSourceTypeForIntent(intent),
+    retrieved_at: source.last_checked || generatedAt || null,
+    method: canonicalResearchMethodForOperation(intent.research_operation),
+    status: canonicalStatusFromSource(source.status),
+  }
+}
+
+function canonicalSourceFromYouTubeSource(source: YouTubeSource, generatedAt?: string): CanonicalResearchPacketSource {
+  return {
+    url: source.video_url,
+    title: source.title,
+    type: 'youtube',
+    retrieved_at: generatedAt || null,
+    method: 'youtube_transcript',
+    status: source.transcript_status === 'blocked'
+      ? 'blocked'
+      : source.transcript_status === 'available'
+        ? 'success'
+        : 'partial',
+  }
+}
+
+function canonicalSourceFromBrowserAction(action: BrowserActionSummary): CanonicalResearchPacketSource {
+  return {
+    url: action.url,
+    title: action.summary || action.action_type,
+    type: 'browser',
+    retrieved_at: action.timestamp,
+    method: 'browser',
+    status: action.status === 'blocked' ? 'blocked' : action.status === 'summarized' ? 'success' : 'partial',
+  }
+}
+
+function canonicalResearchSourceTypeForIntent(intent: WebResearchIntent): CanonicalResearchPacketSourceType {
+  if (intent.research_operation.startsWith('firecrawl_')) return 'firecrawl'
+  if (intent.requires_youtube) return 'youtube'
+  if (intent.requires_browser) return 'browser'
+  if (intent.research_type === 'web' || intent.research_type === 'page_extraction') return 'website'
+  return 'unknown'
+}
+
+function canonicalResearchMethodForOperation(operation: SpaceAgentResearchOperation): CanonicalResearchPacketMethod {
+  if (operation === 'web_search') return 'firecrawl_search'
+  if (operation === 'firecrawl_scrape') return 'firecrawl_scrape'
+  if (operation === 'firecrawl_crawl') return 'firecrawl_crawl'
+  if (operation === 'firecrawl_map') return 'firecrawl_map'
+  if (operation === 'firecrawl_extract') return 'firecrawl_extract'
+  if (operation === 'browser_interaction' || operation === 'screenshot_page_state' || operation === 'inaccessible_site_or_video') return 'browser'
+  if (operation === 'youtube_video_inspection') return 'youtube_transcript'
+  return 'web'
+}
+
+function canonicalStatusFromSource(status: WebSource['status']): CanonicalResearchPacketSourceStatus {
+  if (status === 'checked') return 'success'
+  if (status === 'blocked') return 'blocked'
+  return 'partial'
+}
+
+function canonicalResearchBlockerFixPath(blocker: string): string {
+  if (/firecrawl|credential/i.test(blocker)) return 'Configure the Gateway credential source and keep values hidden.'
+  if (/bridge|session|private|login|paywall|owner_credentials/i.test(blocker)) return 'Open an owner-approved Bridge Session with exact research scope.'
+  if (/url|source/i.test(blocker)) return 'Provide a public or owner-approved source URL.'
+  return 'Route back through Gateway with the exact blocker and do not claim completion.'
 }
 
 function normalizeSpaceResearchMiniAgentKind(value: SpaceResearchMiniAgentKind | null | undefined): SpaceResearchMiniAgentKind {

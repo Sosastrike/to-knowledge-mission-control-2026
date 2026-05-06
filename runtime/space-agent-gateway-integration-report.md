@@ -71,6 +71,20 @@ Space Agent Research Packets include:
 - recommended next agent
 - owner-safe summary
 
+The canonical owner-safe envelope is exposed as `research_packet` on every packet and contains:
+
+- `packet_id`
+- `requested_by`
+- `assigned_by`
+- route metadata with Gateway flow id, dispatcher, commander, research agent, and return target
+- request metadata with raw owner request, normalized intent, and source type
+- source entries with URL, title, type, retrieved timestamp, method, and status
+- findings with summary, key points, evidence, contradictions, and confidence
+- structured blockers with type, reason, and fix path
+- recommended next agent
+- handoff summary
+- `no_external_write: true`
+
 Owner-facing output must not expose secrets, raw local paths, task ids, auth files, cookies, provider traces, or fake completion claims.
 
 ## Route Smoke And Auth
@@ -116,6 +130,7 @@ Mission Control:
 - `pnpm run build`: passed.
 - `pnpm test`: passed, 127 files / 1,175 tests.
 - Focused Space Agent gauntlet: passed, 1 file / 2 tests.
+- Focused canonical Research Packet envelope test: passed as part of `space-agent-research.test.ts`.
 - Focused route/auth smoke: passed, 4 files / 10 tests.
 
 ClaudeClaw/OpenClaw+:

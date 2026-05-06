@@ -230,6 +230,75 @@ describe('Space Agent Research Packet', () => {
     expect(packet.blockers).toEqual([])
   })
 
+  it('includes the canonical owner-safe research_packet envelope', () => {
+    const packet = createSpaceAgentResearchPacket({
+      request: 'Use Firecrawl to scrape a public article and send the research to Hermes',
+      requestedBy: 'owner',
+      responsibleAgent: 'hermes',
+      generatedAt: '2026-05-06T22:00:00.000Z',
+      firecrawlConfigured: true,
+      evidence: [{
+        evidence_id: 'canonical-ev-1',
+        source_id: 'canonical-web-1',
+        summary: 'Gateway routes public research to Space Agent and returns findings to Hermes.',
+        quote: 'research to Space Agent',
+        source_type: 'web',
+        url: 'https://example.com/canonical',
+        confidence: 'high',
+      }],
+      webSources: [{
+        source_id: 'canonical-web-1',
+        url: 'https://example.com/canonical',
+        title: 'Canonical Gateway Research',
+        access: 'public',
+        status: 'checked',
+      }],
+    })
+
+    expect(packet.research_packet).toMatchObject({
+      packet_id: `canonical_${packet.job_id}`,
+      requested_by: 'owner',
+      assigned_by: 'agent_zero',
+      route: {
+        gateway_flow_id: 'flow_agent_zero_gateway_space_agent_research',
+        dispatcher: 'pi',
+        commander: 'agent_zero',
+        research_agent: 'space_agent',
+        return_to: 'hermes',
+      },
+      request: {
+        raw_owner_request: 'Use Firecrawl to scrape a public article and send the research to Hermes',
+        normalized_intent: 'firecrawl_scrape',
+        source_type: 'firecrawl',
+      },
+      sources: [{
+        url: 'https://example.com/canonical',
+        title: 'Canonical Gateway Research',
+        type: 'firecrawl',
+        retrieved_at: '2026-05-06T22:00:00.000Z',
+        method: 'firecrawl_scrape',
+        status: 'success',
+      }],
+      findings: {
+        summary: 'Gateway routes public research to Space Agent and returns findings to Hermes.',
+        key_points: ['Gateway routes public research to Space Agent and returns findings to Hermes.'],
+        evidence: [expect.objectContaining({
+          evidence_id: 'canonical_ev_1',
+          snippet: 'research to Space Agent',
+          url: 'https://example.com/canonical',
+          confidence: 'high',
+        })],
+        contradictions: [],
+        confidence: 'high',
+      },
+      blockers: [],
+      recommended_next_agent: 'hermes',
+      no_external_write: true,
+    })
+    expect(packet.research_packet.handoff_summary).toContain('Space Agent')
+    expect(JSON.stringify(packet.research_packet)).not.toMatch(/API_KEY|Bearer\s+|auth\.json|\/home\//i)
+  })
+
   it('includes explicit blockers and low confidence when research is blocked or limited', () => {
     const packet = createSpaceAgentResearchPacket({
       request: 'Bypass the paywall and scrape a private account',

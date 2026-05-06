@@ -91,6 +91,43 @@ export type SpaceAgentPolicy = {
   blocked_reason: string | null
 }
 
+export type SpaceAgentForbiddenAction =
+  | 'send_email'
+  | 'upload_drive'
+  | 'run_buildwiki'
+  | 'zapier_write'
+  | 'heygen_generate'
+  | 'mount_smb'
+  | 'read_secret'
+  | 'use_docker_socket'
+  | 'become_commander'
+  | 'bypass_gateway'
+
+export type SpaceAgentBoundaryDecision = {
+  schema: 'space_agent_boundary_decision_v1'
+  agent: 'space_agent'
+  action: SpaceAgentForbiddenAction
+  allowed: false
+  route_decision: 'blocked'
+  blocked_reason: string
+  handoff_required: boolean
+  handoff_target: 'gateway' | 'agent_zero' | null
+  requires_gateway: true
+  requires_bridge_session: boolean
+  execution_enabled: false
+  writes_enabled: false
+  external_write: boolean
+  direct_secret_access_allowed: false
+  docker_socket_allowed: false
+  raw_root_shell_allowed: false
+  commander_authority_allowed: false
+  gateway_bypass_allowed: false
+  no_fake_done: true
+  no_secrets_exposed: true
+  no_raw_paths: true
+  owner_visible_summary: string
+}
+
 export type SpaceAgentResearchRoute = {
   route_id: 'owner_gateway_pi_agent_zero_space_agent_research'
   source: 'owner'
@@ -868,6 +905,36 @@ export function createSpaceAgentPolicy(intent: WebResearchIntent, input: { firec
     paywall_private_content_blocked: true,
     route_decision: hardBlocked || bridgeSessionReason ? 'blocked' : firecrawlMissing ? 'missing_credential' : 'allowed',
     blocked_reason: blockedReason,
+  }
+}
+
+export function createSpaceAgentBoundaryDecision(action: SpaceAgentForbiddenAction): SpaceAgentBoundaryDecision {
+  const externalWrite = ['send_email', 'upload_drive', 'zapier_write', 'heygen_generate'].includes(action)
+  const protectedAction = ['run_buildwiki', 'mount_smb', 'read_secret', 'use_docker_socket', 'become_commander', 'bypass_gateway'].includes(action)
+  const blockedReason = spaceAgentForbiddenActionReason(action)
+  return {
+    schema: 'space_agent_boundary_decision_v1',
+    agent: 'space_agent',
+    action,
+    allowed: false,
+    route_decision: 'blocked',
+    blocked_reason: blockedReason,
+    handoff_required: action !== 'become_commander' && action !== 'bypass_gateway',
+    handoff_target: action === 'become_commander' || action === 'bypass_gateway' ? null : 'gateway',
+    requires_gateway: true,
+    requires_bridge_session: externalWrite || protectedAction,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_write: externalWrite,
+    direct_secret_access_allowed: false,
+    docker_socket_allowed: false,
+    raw_root_shell_allowed: false,
+    commander_authority_allowed: false,
+    gateway_bypass_allowed: false,
+    no_fake_done: true,
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    owner_visible_summary: `Space Agent cannot perform ${action}; ${blockedReason}.`,
   }
 }
 
@@ -2022,6 +2089,19 @@ function blockedMiniAgentDefinitionResult(blockedReason: string): MiniAgentDefin
     writes_enabled: false,
     secrets_exposed: false,
   }
+}
+
+function spaceAgentForbiddenActionReason(action: SpaceAgentForbiddenAction): string {
+  if (action === 'send_email') return 'space_agent_email_send_forbidden_handoff_to_gateway_delivery_adapter_required'
+  if (action === 'upload_drive') return 'space_agent_drive_upload_forbidden_handoff_to_gateway_delivery_adapter_required'
+  if (action === 'run_buildwiki') return 'space_agent_buildwiki_execution_forbidden_agent_zero_bridge_session_required'
+  if (action === 'zapier_write') return 'space_agent_zapier_write_forbidden_bridge_session_scope_required'
+  if (action === 'heygen_generate') return 'space_agent_heygen_generation_forbidden_bridge_session_scope_required'
+  if (action === 'mount_smb') return 'space_agent_smb_mount_forbidden'
+  if (action === 'read_secret') return 'space_agent_direct_secret_read_forbidden'
+  if (action === 'use_docker_socket') return 'space_agent_docker_socket_forbidden'
+  if (action === 'become_commander') return 'space_agent_cannot_become_commander_agent_zero_remains_commander'
+  return 'space_agent_gateway_bypass_forbidden'
 }
 
 function createSpaceResearchMiniAgentAuditLog(input: {

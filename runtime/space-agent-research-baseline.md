@@ -240,3 +240,19 @@ Space Agent cannot replace Agent Zero, cannot become commander, cannot bypass Ga
 - Firecrawl-native Space Agent integration is not proven.
 - Dedicated YouTube transcript connector is not proven.
 - Live browser actions remain Bridge Session scoped and blocked until a safe adapter exists.
+
+
+## Phases 021-030 schemas and routes
+
+- Phase 021: Added WebResearchIntent schema for classifying browser, web, YouTube, video, Firecrawl, crawl, scrape, search, and extraction requests.
+- Phase 022: Added SpaceAgentJob schema with dispatcher, supervisor, responsible agent, route, return route, policy, and blocked state.
+- Phase 023: Added ResearchPacket schema as the canonical Space Agent packet returned through Gateway.
+- Phase 024: Added EvidenceItem schema for source-linked summaries, quotes, confidence, and no-secrets evidence records.
+- Phase 025: Added WebSource schema for public/owner-approved/blocked web sources.
+- Phase 026: Added YouTubeSource schema for video metadata and transcript status.
+- Phase 027: Added BrowserActionSummary schema for read-only planned/summarized browser actions.
+- Phase 028: Added SpaceAgentPolicy schema for Gateway route, Pi recommendation, Agent Zero approval, Bridge Session, no-secrets, no-paths, and no-execution controls.
+- Phase 029: Added explicit route: Owner -> Gateway -> Pi recommendation -> Agent Zero approval -> Space Agent research.
+- Phase 030: Added return route: Space Agent -> Gateway -> responsible agent, with Agent Zero as default owner-facing response owner.
+
+No browser execution, Firecrawl execution, external write, SMB action, Zapier action, HeyGen generation, farmer action, or production Space Agent activation was performed in these phases.

@@ -60,7 +60,7 @@ describe('Pi shadow dispatcher', () => {
 
     expect(recommendation.recommended_agent).toBe('space_agent')
     expect(recommendation.selected_route.target).toBe('space_agent')
-    expect(recommendation.selected_route.via).toEqual(['owner', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
+    expect(recommendation.selected_route.via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
     expect(recommendation.recommended_mini_agent_type).toBe('research')
     expect(recommendation.execution_enabled).toBe(false)
     expect(recommendation.writes_enabled).toBe(false)

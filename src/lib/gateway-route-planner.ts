@@ -295,13 +295,13 @@ function routeResearch(registry: GatewayRegistry, prompt: string): RouteTarget {
   return {
     primaryTarget: 'agent_zero',
     dispatchTarget: 'space_agent',
-    via: ['owner', 'gateway', 'agent_zero', 'space_agent'],
+    via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'],
     capability,
     edgeKind: 'delegation',
     requiresBridgeSession: Boolean(boundaryBlocker),
     executionMode: 'read_only',
     blocker,
-    rationale: 'Browser, web, article, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research routes to Space Agent for a structured Research Packet; responsibility returns to Agent Zero after research.',
+    rationale: 'Browser, web, article, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research routes through Pi recommendation and Agent Zero approval to Space Agent for a structured Research Packet; responsibility returns through Gateway to the responsible agent.',
   }
 }
 

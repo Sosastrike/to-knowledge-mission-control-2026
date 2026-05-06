@@ -107,7 +107,7 @@ export function recommendPiGatewayRoute(
   const via = recommendedAgent === 'mini_agent'
     ? ['owner', 'gateway', 'agent_zero', 'gateway', 'mini_agents']
     : recommendedAgent === 'space_agent'
-      ? ['owner', 'gateway', 'agent_zero', 'gateway', 'space_agent']
+      ? ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent']
       : plan.route_via
 
   return {
@@ -240,7 +240,7 @@ function rationaleFor(input: {
 }): string {
   if (input.blockedReason) return `Gateway policy blocks the route because ${input.blockedReason}.`
   if (input.recommendedAgent === 'hermes') return 'Workflow and skill design should route to Hermes through Agent Zero.'
-  if (input.recommendedAgent === 'space_agent') return 'Browser, web, YouTube, video, page extraction, crawl, scrape, search, and Firecrawl research should route to Space Agent through Agent Zero.'
+  if (input.recommendedAgent === 'space_agent') return 'Browser, web, YouTube, video, page extraction, crawl, scrape, search, and Firecrawl research should route through Pi recommendation and Agent Zero approval to Space Agent.'
   if (input.recommendedAgent === 'mini_agent') return `A scoped ${input.miniAgentType || 'mini-agent'} can handle the small task under Agent Zero supervision.`
   if (input.classification === 'model' && input.model) return `Pi recommends model route ${input.model} while keeping execution disabled in shadow mode.`
   return 'Owner commands route to Agent Zero by default.'

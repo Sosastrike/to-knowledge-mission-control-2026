@@ -728,6 +728,22 @@ describe('Gateway registry API model', () => {
       policy_result: { route_decision: 'allowed', requires_bridge_session: false },
       execution_mode: 'read_only',
     })
+    expect(flowMap.get('flow_owner_gateway_pi_agent_zero_space_agent_research')).toMatchObject({
+      source: 'owner',
+      target: 'space_agent',
+      requested_action: 'web_research_intent',
+      selected_route: { hops: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'] },
+      policy_result: { route_decision: 'allowed', requires_bridge_session: false },
+      execution_mode: 'read_only',
+    })
+    expect(flowMap.get('flow_space_agent_gateway_responsible_agent_return')).toMatchObject({
+      source: 'space_agent',
+      target: 'agent_zero',
+      requested_action: 'research_packet_return',
+      selected_route: { hops: ['space_agent', 'gateway', 'agent_zero'] },
+      policy_result: { route_decision: 'allowed', requires_bridge_session: false },
+      execution_mode: 'read_only',
+    })
     expect(flowMap.get('flow_agent_zero_gateway_openclaw_skill')).toMatchObject({
       source: 'agent_zero',
       target: 'openclaw_plus',

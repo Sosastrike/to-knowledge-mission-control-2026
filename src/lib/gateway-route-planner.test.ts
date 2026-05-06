@@ -214,7 +214,7 @@ describe('Gateway route planner', () => {
     expect(article.classification).toBe('research')
     expect(article.primary_target).toBe('agent_zero')
     expect(article.dispatch_target).toBe('space_agent')
-    expect(article.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'space_agent'])
+    expect(article.route_via).toEqual(['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'])
     expect(article.selected_capability?.id).toBe('space_agent_research_packet')
     expect(article.execution_enabled).toBe(false)
     expect(article.writes_enabled).toBe(false)

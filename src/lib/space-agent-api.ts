@@ -24,11 +24,15 @@ export type SpaceAgentStatusPayload = {
   }
   browser: {
     status: string
+    configured: boolean
+    runtime_adapter_configured: boolean
     bridge_session_required: boolean
     execution_enabled: false
   }
   youtube: {
     support: string
+    transcript_path_configured: boolean
+    runtime_adapter_configured: boolean
     execution_enabled: false
   }
   latest_research_jobs: string[]
@@ -124,6 +128,9 @@ export function buildSpaceAgentStatusPayload(registry: GatewayRegistry, generate
     .map((item) => item.trim())
     .filter(Boolean)
   const credentialConfigured = details.firecrawl_credential_configured === true
+  const browserRuntimeAdapterConfigured = details.browser_runtime_adapter_configured === true
+  const youtubeRuntimeAdapterConfigured = details.youtube_runtime_adapter_configured === true
+  const youtubeTranscriptPathConfigured = /transcript|captions/i.test(youtubeSupport)
 
   return {
     ok: true,
@@ -143,11 +150,15 @@ export function buildSpaceAgentStatusPayload(registry: GatewayRegistry, generate
     },
     browser: {
       status: browserStatus,
-      bridge_session_required: /bridge_session|gated|required/i.test(browserStatus),
+      configured: browserRuntimeAdapterConfigured,
+      runtime_adapter_configured: browserRuntimeAdapterConfigured,
+      bridge_session_required: /bridge_session|gated|required|blocked_until/i.test(browserStatus),
       execution_enabled: false,
     },
     youtube: {
       support: youtubeSupport,
+      transcript_path_configured: youtubeTranscriptPathConfigured,
+      runtime_adapter_configured: youtubeRuntimeAdapterConfigured,
       execution_enabled: false,
     },
     latest_research_jobs: latestJobs,

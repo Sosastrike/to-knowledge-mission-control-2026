@@ -99,6 +99,18 @@ describe('Space Agent Research Packet', () => {
         },
         output: 'research_packet',
       },
+      gateway_route_decision: {
+        owner_request: 'Inspect a public article and collect evidence',
+        classified_as: 'page_read',
+        requires_space_agent: true,
+        reason: 'browser_or_page_interaction_requires_space_agent_research_specialist',
+        pi_recommendation: 'space_agent',
+        agent_zero_decision: 'approve_space_agent_research',
+        hermes_needed: false,
+        bridge_session_required: false,
+        selected_worker: 'space_agent',
+        blocked_reason: null,
+      },
     })
   })
 
@@ -137,6 +149,48 @@ describe('Space Agent Research Packet', () => {
     expect(JSON.stringify(job.space_agent_job)).not.toMatch(/API_KEY|Bearer\s+|auth\.json|\/home\//i)
   })
 
+  it('creates the Gateway route decision envelope for Space Agent selection and handback', () => {
+    const researchJob = createSpaceAgentJob({
+      request: 'Use Firecrawl to scrape https://example.com/research and let Hermes design a workflow.',
+      requestedBy: 'agent_zero',
+      responsibleAgent: 'hermes',
+      generatedAt: '2026-05-06T22:45:00.000Z',
+      firecrawlConfigured: true,
+    })
+    const chatJob = createSpaceAgentJob({
+      request: 'Good morning. Who are you?',
+      requestedBy: 'owner',
+      generatedAt: '2026-05-06T22:46:00.000Z',
+      firecrawlConfigured: true,
+    })
+
+    expect(researchJob.gateway_route_decision).toEqual({
+      owner_request: 'Use Firecrawl to scrape https://example.com/research and let Hermes design a workflow.',
+      classified_as: 'firecrawl_scrape',
+      requires_space_agent: true,
+      reason: 'firecrawl_research_requires_space_agent_research_specialist',
+      pi_recommendation: 'space_agent',
+      agent_zero_decision: 'approve_space_agent_research',
+      hermes_needed: true,
+      bridge_session_required: false,
+      selected_worker: 'space_agent',
+      blocked_reason: null,
+    })
+    expect(chatJob.gateway_route_decision).toEqual({
+      owner_request: 'Good morning. Who are you?',
+      classified_as: 'research_not_needed',
+      requires_space_agent: false,
+      reason: 'request_does_not_require_live_web_browser_youtube_or_firecrawl_research',
+      pi_recommendation: 'handoff_without_research',
+      agent_zero_decision: 'handoff_without_research',
+      hermes_needed: false,
+      bridge_session_required: false,
+      selected_worker: null,
+      blocked_reason: null,
+    })
+    expect(JSON.stringify(researchJob.gateway_route_decision)).not.toMatch(/API_KEY|Bearer\s+|auth\.json|\/home\//i)
+  })
+
   it('creates a research-only packet that returns responsibility to Agent Zero', () => {
     const packet = createSpaceAgentResearchPacket({
       request: 'Inspect this public YouTube video and return sources',
@@ -173,6 +227,11 @@ describe('Space Agent Research Packet', () => {
       youtube_status: 'research_packet_only',
       no_secrets_exposed: true,
       no_raw_paths: true,
+      gateway_route_decision: {
+        requires_space_agent: true,
+        selected_worker: 'space_agent',
+        agent_zero_decision: 'approve_space_agent_research',
+      },
     })
     expect(packet.forbidden_surfaces).toEqual(expect.arrayContaining(['external writes', 'raw secret files']))
     expect(packet.confidence).toBe('low')

@@ -50,6 +50,23 @@ Every Space Agent job now includes a canonical `space_agent_job` envelope with:
 - memory policy with `ttl: 24h` and `promote_to_brain: false`
 - `output: research_packet`
 
+## Gateway Route Decision Contract
+
+Every Space Agent job and Research Packet now includes a canonical `gateway_route_decision` envelope with:
+
+- `owner_request`
+- `classified_as`
+- `requires_space_agent`
+- `reason`
+- `pi_recommendation`
+- `agent_zero_decision`
+- `hermes_needed`
+- `bridge_session_required`
+- `selected_worker`
+- `blocked_reason`
+
+The decision envelope keeps routing explicit before research starts. It shows when Pi recommends Space Agent, when Agent Zero approves or blocks the research route, whether Hermes is needed for workflow or skill design, whether a Bridge Session is required, and why a request is handed back when Space Agent is not needed.
+
 ## Safety Boundaries
 
 Space Agent cannot:
@@ -108,6 +125,8 @@ Route smoke passed through focused Vitest coverage:
 - Gateway registry API model: passed.
 - Gateway route aliases: passed.
 - Space Agent Gateway and Bridge routes: passed.
+- Canonical Space Agent Job envelope: passed.
+- Canonical Gateway route decision envelope: passed.
 - Unauthenticated Gateway and Space Agent protected routes: returned 401/403 before registry loading.
 - Authenticated mocked owner/operator route tests: returned read-only Space Agent status and node detail without secrets.
 - Space Agent test-chat: safely returns blocked until a live adapter is configured.

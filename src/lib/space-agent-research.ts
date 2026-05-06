@@ -774,6 +774,19 @@ export type CanonicalSpaceAgentJob = {
   output: 'research_packet'
 }
 
+export type GatewayRouteDecision = {
+  owner_request: string
+  classified_as: SpaceAgentResearchOperation
+  requires_space_agent: boolean
+  reason: string
+  pi_recommendation: 'space_agent' | 'handoff_without_research' | 'blocked'
+  agent_zero_decision: 'approve_space_agent_research' | 'handoff_without_research' | 'blocked'
+  hermes_needed: boolean
+  bridge_session_required: boolean
+  selected_worker: 'space_agent' | null
+  blocked_reason: string | null
+}
+
 export type SpaceAgentJob = {
   job_id: string
   schema: 'space_agent_job_v1'
@@ -791,6 +804,7 @@ export type SpaceAgentJob = {
   execution_enabled: false
   writes_enabled: false
   space_agent_job: CanonicalSpaceAgentJob
+  gateway_route_decision: GatewayRouteDecision
   owner_visible_summary: string
 }
 
@@ -900,6 +914,7 @@ export type ResearchPacket = {
   blockers: string[]
   blocked_reason: string | null
   research_packet: CanonicalResearchPacket
+  gateway_route_decision: GatewayRouteDecision
   owner_visible_summary: string
 }
 
@@ -1064,6 +1079,11 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
       intent,
       input,
     }),
+    gateway_route_decision: createGatewayRouteDecision({
+      intent,
+      policy,
+      blockedReason,
+    }),
     owner_visible_summary: !intent.research_needed
       ? 'research not needed; Space Agent should hand back through Gateway.'
       : status === 'blocked'
@@ -1224,6 +1244,7 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
       ownerVisibleSummary,
       generatedAt: input.generatedAt,
     }),
+    gateway_route_decision: job.gateway_route_decision,
     owner_visible_summary: ownerVisibleSummary,
   }
 }
@@ -1712,6 +1733,45 @@ function canonicalSpaceAgentJobUrls(input: SpaceAgentResearchPacketInput): strin
     ...(input.youtubeSources || []).map((source) => source.video_url ? sanitize(source.video_url) : null),
     ...(input.evidence || []).map((item) => item.url ? classifyResearchUrl(item.url).url : null),
   ].filter((value): value is string => Boolean(value)))
+}
+
+function createGatewayRouteDecision(input: {
+  intent: WebResearchIntent
+  policy: SpaceAgentPolicy
+  blockedReason: string | null
+}): GatewayRouteDecision {
+  const requiresSpaceAgent = input.intent.research_needed
+  const blocked = input.policy.route_decision === 'blocked'
+  return {
+    owner_request: input.intent.request_summary,
+    classified_as: input.intent.research_operation,
+    requires_space_agent: requiresSpaceAgent,
+    reason: gatewayRouteDecisionReason(input.intent, input.policy, input.blockedReason),
+    pi_recommendation: !requiresSpaceAgent
+      ? 'handoff_without_research'
+      : blocked
+        ? 'blocked'
+        : 'space_agent',
+    agent_zero_decision: !requiresSpaceAgent
+      ? 'handoff_without_research'
+      : blocked
+        ? 'blocked'
+        : 'approve_space_agent_research',
+    hermes_needed: input.intent.responsible_agent === 'hermes',
+    bridge_session_required: input.policy.bridge_session_required,
+    selected_worker: requiresSpaceAgent ? 'space_agent' : null,
+    blocked_reason: input.blockedReason,
+  }
+}
+
+function gatewayRouteDecisionReason(intent: WebResearchIntent, policy: SpaceAgentPolicy, blockedReason: string | null): string {
+  if (!intent.research_needed) return 'request_does_not_require_live_web_browser_youtube_or_firecrawl_research'
+  if (blockedReason) return blockedReason
+  if (policy.route_decision === 'requires_session') return policy.bridge_session_reason || 'bridge_session_required_for_space_agent_research_scope'
+  if (intent.requires_youtube) return 'youtube_or_video_inspection_requires_space_agent_research_specialist'
+  if (intent.requires_firecrawl) return 'firecrawl_research_requires_space_agent_research_specialist'
+  if (intent.requires_browser) return 'browser_or_page_interaction_requires_space_agent_research_specialist'
+  return 'live_web_research_requires_space_agent_research_specialist'
 }
 
 function createCanonicalResearchPacket(input: {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchHandoff, createSpaceAgentResearchPacket, createSpaceResearchMiniAgentFanout, evaluateSpaceResearchMiniAgentScope, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
+import { classifySpaceAgentResearch, classifySpaceAgentResearchOperation, createSpaceAgentJob, createSpaceAgentPolicy, createSpaceAgentResearchHandoff, createSpaceResearchMemory, createSpaceAgentResearchPacket, createSpaceResearchMiniAgentFanout, evaluateSpaceResearchMiniAgentScope, expireSpaceResearchMemory, requestSpaceResearchMemoryBrainPromotion, reviewSpaceResearchMemoryBrainPromotion, createWebResearchIntent, createYouTubeResearchPacket } from './space-agent-research'
 
 describe('Space Agent Research Packet', () => {
   it('classifies browser, web, YouTube, video, page extraction, and Firecrawl research', () => {
@@ -558,6 +558,169 @@ describe('Space Agent Research Packet', () => {
     expect(fanout.sub_research_packet).toBeNull()
     expect(fanout.expired_mini_agent).toBeNull()
     expect(fanout.expired_memory).toBeNull()
+  })
+
+  it('creates SpaceResearchMemory with default 24-hour TTL and separated facts and assumptions', () => {
+    const result = createSpaceResearchMemory({
+      source_url: 'https://example.com/research',
+      source_id: 'source-1',
+      evidence_summary: 'The source describes Gateway-routed Space Agent research.',
+      facts: ['Space Agent returns ResearchPacket evidence.'],
+      assumptions: ['The page remains publicly reachable.'],
+      created_at: '2026-05-06T22:00:00.000Z',
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      mode: 'space_research_memory_dry_run',
+      policy_result: 'allowed',
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+    })
+    expect(result.memory).toMatchObject({
+      schema: 'space_research_memory_v1',
+      state: 'temporary',
+      source_url: 'https://example.com/research',
+      evidence_summary: 'The source describes Gateway-routed Space Agent research.',
+      facts: ['Space Agent returns ResearchPacket evidence.'],
+      assumptions: ['The page remains publicly reachable.'],
+      ttl_minutes: 1440,
+      ttl_mode: 'default_task',
+      expires_at: '2026-05-07T22:00:00.000Z',
+      contains_secrets: false,
+      raw_cookies_session_tokens_stored: false,
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
+    expect(result.memory?.promotion_to_brain).toMatchObject({
+      requested: false,
+      reviewed: false,
+      approved: false,
+      promoted_to: null,
+      blocked_reason: 'brain_promotion_requires_agent_zero_or_owner_review',
+    })
+  })
+
+  it('uses short 30-minute TTL for short research tasks and expires automatically', () => {
+    const result = createSpaceResearchMemory({
+      source_url: 'https://example.com/short',
+      evidence_summary: 'Short-lived page check result.',
+      ttl_mode: 'short_task',
+      created_at: '2026-05-06T22:30:00.000Z',
+    })
+
+    expect(result.memory).toMatchObject({
+      ttl_minutes: 30,
+      ttl_mode: 'short_task',
+      expires_at: '2026-05-06T23:00:00.000Z',
+    })
+
+    const expired = expireSpaceResearchMemory(result.memory!, '2026-05-06T23:01:00.000Z')
+    expect(expired.state).toBe('expired')
+    expect(expired.audit_trail.map((event) => event.event)).toEqual(expect.arrayContaining(['space_research.memory.expired']))
+  })
+
+  it('requires owner approval for project research TTL extension', () => {
+    const pending = createSpaceResearchMemory({
+      source_url: 'https://example.com/project',
+      evidence_summary: 'Project research source summary.',
+      ttl_mode: 'project_research',
+      ttl_minutes: 10080,
+      created_at: '2026-05-06T23:00:00.000Z',
+    })
+    const approved = createSpaceResearchMemory({
+      source_url: 'https://example.com/project',
+      evidence_summary: 'Project research source summary.',
+      ttl_mode: 'project_research',
+      ttl_minutes: 10080,
+      project_extension_owner_approved: true,
+      created_at: '2026-05-06T23:00:00.000Z',
+    })
+
+    expect(pending).toMatchObject({
+      ok: true,
+      policy_result: 'requires_review',
+      blocked_reason: 'project_research_ttl_extension_requires_owner_approval',
+    })
+    expect(pending.memory).toMatchObject({
+      ttl_minutes: 1440,
+      project_extension_requested: true,
+      project_extension_owner_approved: false,
+      blockers: ['project_research_ttl_extension_requires_owner_approval'],
+    })
+    expect(approved).toMatchObject({ ok: true, policy_result: 'allowed', blocked_reason: null })
+    expect(approved.memory).toMatchObject({
+      ttl_minutes: 10080,
+      project_extension_requested: true,
+      project_extension_owner_approved: true,
+      expires_at: '2026-05-13T23:00:00.000Z',
+    })
+  })
+
+  it('blocks secrets, raw cookies, and session tokens from SpaceResearchMemory', () => {
+    const secret = createSpaceResearchMemory({
+      source_url: 'https://example.com',
+      evidence_summary: 'Do not store SECRET=value-not-real',
+    })
+    const cookie = createSpaceResearchMemory({
+      source_url: 'https://example.com',
+      evidence_summary: 'Raw cookie=sessionid123 should not be stored.',
+    })
+    const session = createSpaceResearchMemory({
+      source_url: 'https://example.com',
+      evidence_summary: 'Raw session_token=abcdef123456 should not be stored.',
+    })
+
+    expect(secret).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'space_research_memory_secret_storage_forbidden' })
+    expect(cookie).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'space_research_memory_raw_cookie_or_session_token_forbidden' })
+    expect(session).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'space_research_memory_raw_cookie_or_session_token_forbidden' })
+  })
+
+  it('promotes useful SpaceResearchMemory to Brain only after Agent Zero or owner review', () => {
+    const created = createSpaceResearchMemory({
+      source_url: 'https://example.com/brain',
+      evidence_summary: 'Research useful enough for Brain review.',
+      facts: ['Gateway promotion requires review.'],
+      created_at: '2026-05-07T00:00:00.000Z',
+    })
+    const requested = requestSpaceResearchMemoryBrainPromotion(created.memory!, 'hermes')
+    const approved = reviewSpaceResearchMemoryBrainPromotion(requested.memory!, {
+      approved: true,
+      reviewer: 'agent_zero',
+      reason: 'Useful verified research summary.',
+      reviewed_at: '2026-05-07T00:10:00.000Z',
+    })
+
+    expect(requested).toMatchObject({
+      ok: true,
+      policy_result: 'requires_review',
+      blocked_reason: null,
+    })
+    expect(requested.memory).toMatchObject({
+      state: 'pending_brain_review',
+      promotion_to_brain: {
+        requested: true,
+        reviewed: false,
+        approved: false,
+        promoted_to: null,
+        blocked_reason: 'brain_promotion_pending_agent_zero_or_owner_review',
+      },
+    })
+    expect(approved).toMatchObject({ ok: true, policy_result: 'allowed', blocked_reason: null })
+    expect(approved.memory).toMatchObject({
+      state: 'promoted_to_brain',
+      promotion_to_brain: {
+        requested: true,
+        reviewed: true,
+        approved: true,
+        reviewer: 'agent_zero',
+        promoted_to: 'brain_review_queue',
+        blocked_reason: null,
+      },
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
   })
 
   it('requires browser actions to attach to WebResearchIntent and log URL, timestamp, and action type', () => {

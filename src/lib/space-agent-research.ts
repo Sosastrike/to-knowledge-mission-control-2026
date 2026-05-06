@@ -517,6 +517,77 @@ export type SpaceResearchMiniAgentFanout = {
   owner_visible_summary: string
 }
 
+export type SpaceResearchMemoryState = 'temporary' | 'pending_brain_review' | 'promoted_to_brain' | 'rejected' | 'expired' | 'blocked'
+export type SpaceResearchMemoryTtlMode = 'short_task' | 'default_task' | 'project_research'
+
+export type SpaceResearchMemoryAuditEvent = {
+  event: string
+  actor: 'space_agent' | 'gateway' | 'agent_zero' | 'hermes' | 'owner'
+  target: string
+  summary: string
+  recorded_at: string
+  external_write: false
+  secrets_exposed: false
+}
+
+export type SpaceResearchMemory = {
+  memory_id: string
+  schema: 'space_research_memory_v1'
+  state: SpaceResearchMemoryState
+  source_url: string | null
+  source_id: string | null
+  evidence_summary: string
+  facts: string[]
+  assumptions: string[]
+  blockers: string[]
+  created_at: string
+  expires_at: string
+  ttl_minutes: number
+  ttl_mode: SpaceResearchMemoryTtlMode
+  project_extension_requested: boolean
+  project_extension_owner_approved: boolean
+  contains_secrets: false
+  raw_cookies_session_tokens_stored: false
+  promotion_to_brain: {
+    requested: boolean
+    reviewed: boolean
+    approved: boolean
+    reviewer: 'agent_zero' | 'owner' | null
+    promoted_to: 'brain_review_queue' | null
+    blocked_reason: string | null
+  }
+  audit_trail: SpaceResearchMemoryAuditEvent[]
+  no_secrets_exposed: true
+  no_raw_paths: true
+  blocked_reason: string | null
+  owner_visible_summary: string
+}
+
+export type SpaceResearchMemoryInput = {
+  source_url?: string | null
+  source_id?: string | null
+  evidence_summary: string
+  facts?: string[]
+  assumptions?: string[]
+  blockers?: string[]
+  ttl_mode?: SpaceResearchMemoryTtlMode | null
+  ttl_minutes?: number | null
+  project_extension_owner_approved?: boolean | null
+  created_at?: string | null
+}
+
+export type SpaceResearchMemoryResult = {
+  ok: boolean
+  mode: 'space_research_memory_dry_run'
+  memory: SpaceResearchMemory | null
+  policy_result: 'allowed' | 'blocked' | 'requires_review'
+  blocked_reason: string | null
+  execution_enabled: false
+  writes_enabled: false
+  secrets_exposed: false
+  owner_visible_summary: string
+}
+
 export type BrowserActionSummary = {
   action_id: string
   schema: 'browser_action_summary_v1'
@@ -649,6 +720,10 @@ const COPYRIGHTED_VIDEO_DOWNLOAD_PATTERN = /\b(?:download|rip|save|copy).{0,50}(
 const PRIVATE_OR_LOGIN_PATTERN = /\b(?:login|log in|sign in|private|paywall|paid content|credential|password|cookie|session token)\b/i
 const SECRETISH_PATTERN = /(sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY|AUTH[_-]?FILE)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi
+const RAW_COOKIE_SESSION_PATTERN = /\b(?:cookie|cookies|session[_\s-]?token|sessionid|csrf|xsrf|jwt|refresh[_\s-]?token|access[_\s-]?token)\b\s*[:=]\s*[^,\s}]+/i
+const SPACE_RESEARCH_DEFAULT_TTL_MINUTES = 1440
+const SPACE_RESEARCH_SHORT_TTL_MINUTES = 30
+const SPACE_RESEARCH_PROJECT_TTL_MINUTES = 10080
 
 export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): WebResearchIntent {
   const request = sanitize(input.request)
@@ -1029,6 +1104,162 @@ export function createSpaceResearchMiniAgentFanout(input: SpaceResearchMiniAgent
     owner_visible_summary: agentZeroApproval.approved_for_creation
       ? 'Space Agent requested a scoped web-research mini-agent; Gateway merged the sub-ResearchPacket and expired the mini-agent after task.'
       : `Space Agent mini-agent fan-out is blocked: ${agentZeroApproval.blocked_reason || assignedScope.blocked_reason || scopeDecision.blocked_reason}.`,
+  }
+}
+
+export function createSpaceResearchMemory(input: SpaceResearchMemoryInput): SpaceResearchMemoryResult {
+  const createdAt = input.created_at || DEFAULT_GENERATED_AT
+  const rawMemoryText = [
+    input.source_url || '',
+    input.source_id || '',
+    input.evidence_summary || '',
+    ...(input.facts || []),
+    ...(input.assumptions || []),
+    ...(input.blockers || []),
+  ].join(' ')
+  const forbiddenMemory = getSpaceResearchMemoryBlocker(rawMemoryText)
+  if (forbiddenMemory) return blockedSpaceResearchMemory(forbiddenMemory)
+
+  const ttl = resolveSpaceResearchMemoryTtl(input)
+  const sourceUrl = input.source_url ? sanitize(input.source_url) : null
+  const evidenceSummary = sanitize(input.evidence_summary)
+  if (!evidenceSummary) return blockedSpaceResearchMemory('space_research_memory_evidence_summary_required')
+
+  const projectExtensionRequested = input.ttl_mode === 'project_research' || Number(input.ttl_minutes || 0) > SPACE_RESEARCH_DEFAULT_TTL_MINUTES
+  const projectExtensionApproved = Boolean(input.project_extension_owner_approved)
+  const projectExtensionBlocker = projectExtensionRequested && !projectExtensionApproved ? 'project_research_ttl_extension_requires_owner_approval' : null
+
+  const memory: SpaceResearchMemory = {
+    memory_id: normalizeId(`space_research_memory_${sourceUrl || input.source_id || createdAt}`),
+    schema: 'space_research_memory_v1',
+    state: 'temporary',
+    source_url: sourceUrl,
+    source_id: input.source_id ? normalizeId(input.source_id) : null,
+    evidence_summary: evidenceSummary,
+    facts: (input.facts || []).map(sanitize).filter(Boolean),
+    assumptions: (input.assumptions || []).map(sanitize).filter(Boolean),
+    blockers: dedupeStrings([...(input.blockers || []).map(sanitize), projectExtensionBlocker].filter((value): value is string => Boolean(value))),
+    created_at: createdAt,
+    expires_at: addMinutes(createdAt, ttl),
+    ttl_minutes: ttl,
+    ttl_mode: input.ttl_mode || (ttl === SPACE_RESEARCH_SHORT_TTL_MINUTES ? 'short_task' : projectExtensionRequested ? 'project_research' : 'default_task'),
+    project_extension_requested: projectExtensionRequested,
+    project_extension_owner_approved: projectExtensionApproved,
+    contains_secrets: false,
+    raw_cookies_session_tokens_stored: false,
+    promotion_to_brain: {
+      requested: false,
+      reviewed: false,
+      approved: false,
+      reviewer: null,
+      promoted_to: null,
+      blocked_reason: 'brain_promotion_requires_agent_zero_or_owner_review',
+    },
+    audit_trail: [
+      spaceResearchMemoryAuditEvent('space_research.memory.created', 'space_agent', 'gateway', 'Temporary Space Research memory created with evidence summary and separated facts/assumptions.', createdAt),
+    ],
+    no_secrets_exposed: true,
+    no_raw_paths: true,
+    blocked_reason: projectExtensionBlocker,
+    owner_visible_summary: projectExtensionBlocker
+      ? 'Space Research memory was created with default-safe handling, but project TTL extension is pending owner approval.'
+      : 'Space Research memory was created as temporary task-scoped memory.',
+  }
+
+  return {
+    ok: true,
+    mode: 'space_research_memory_dry_run',
+    memory,
+    policy_result: projectExtensionBlocker ? 'requires_review' : 'allowed',
+    blocked_reason: projectExtensionBlocker,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+    owner_visible_summary: memory.owner_visible_summary,
+  }
+}
+
+export function requestSpaceResearchMemoryBrainPromotion(
+  memory: SpaceResearchMemory,
+  requester: 'space_agent' | 'hermes' | 'agent_zero' = 'space_agent',
+): SpaceResearchMemoryResult {
+  if (memory.state !== 'temporary') return blockedSpaceResearchMemory('brain_promotion_requires_temporary_space_research_memory')
+  const updated: SpaceResearchMemory = {
+    ...memory,
+    state: 'pending_brain_review',
+    promotion_to_brain: {
+      ...memory.promotion_to_brain,
+      requested: true,
+      blocked_reason: 'brain_promotion_pending_agent_zero_or_owner_review',
+    },
+    audit_trail: [
+      ...memory.audit_trail,
+      spaceResearchMemoryAuditEvent('space_research.memory.brain_promotion_requested', requester, memory.memory_id, 'Brain promotion requested; no Brain write occurred.', memory.created_at),
+    ],
+  }
+  return {
+    ok: true,
+    mode: 'space_research_memory_dry_run',
+    memory: updated,
+    policy_result: 'requires_review',
+    blocked_reason: null,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+    owner_visible_summary: 'Space Research memory promotion is pending review; no Brain write occurred.',
+  }
+}
+
+export function reviewSpaceResearchMemoryBrainPromotion(
+  memory: SpaceResearchMemory,
+  input: { approved: boolean; reviewer: 'agent_zero' | 'owner'; reason: string; reviewed_at?: string | null },
+): SpaceResearchMemoryResult {
+  if (memory.state !== 'pending_brain_review') return blockedSpaceResearchMemory('brain_promotion_review_requires_pending_review_state')
+  const reviewedAt = input.reviewed_at || memory.created_at
+  const updated: SpaceResearchMemory = {
+    ...memory,
+    state: input.approved ? 'promoted_to_brain' : 'rejected',
+    promotion_to_brain: {
+      requested: true,
+      reviewed: true,
+      approved: input.approved,
+      reviewer: input.reviewer,
+      promoted_to: input.approved ? 'brain_review_queue' : null,
+      blocked_reason: input.approved ? null : 'brain_promotion_rejected',
+    },
+    audit_trail: [
+      ...memory.audit_trail,
+      spaceResearchMemoryAuditEvent(input.approved ? 'space_research.memory.promoted_to_brain_review_queue' : 'space_research.memory.brain_promotion_rejected', input.reviewer, memory.memory_id, sanitize(input.reason) || 'Brain promotion review completed.', reviewedAt),
+    ],
+    owner_visible_summary: input.approved
+      ? 'Space Research memory was approved for Brain review queue with provenance.'
+      : 'Space Research memory promotion was rejected; no Brain write occurred.',
+  }
+  return {
+    ok: true,
+    mode: 'space_research_memory_dry_run',
+    memory: updated,
+    policy_result: input.approved ? 'allowed' : 'blocked',
+    blocked_reason: input.approved ? null : 'brain_promotion_rejected',
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+    owner_visible_summary: updated.owner_visible_summary,
+  }
+}
+
+export function expireSpaceResearchMemory(memory: SpaceResearchMemory, now: string): SpaceResearchMemory {
+  if (new Date(now).getTime() < new Date(memory.expires_at).getTime()) {
+    return { ...memory, audit_trail: [...memory.audit_trail] }
+  }
+  return {
+    ...memory,
+    state: 'expired',
+    audit_trail: [
+      ...memory.audit_trail,
+      spaceResearchMemoryAuditEvent('space_research.memory.expired', 'gateway', memory.memory_id, 'Temporary Space Research memory expired automatically by TTL.', now),
+    ],
+    owner_visible_summary: 'Space Research memory expired automatically by TTL.',
   }
 }
 
@@ -1578,6 +1809,59 @@ function miniAgentAuditEvent(
   summary: string,
   recordedAt: string,
 ): SpaceResearchMiniAgentAuditEvent {
+  return {
+    event,
+    actor,
+    target: sanitize(target),
+    summary: sanitize(summary),
+    recorded_at: recordedAt,
+    external_write: false,
+    secrets_exposed: false,
+  }
+}
+
+function resolveSpaceResearchMemoryTtl(input: SpaceResearchMemoryInput): number {
+  if (input.ttl_mode === 'short_task') return SPACE_RESEARCH_SHORT_TTL_MINUTES
+  const requested = Number(input.ttl_minutes || 0)
+  if (input.ttl_mode === 'project_research' || requested > SPACE_RESEARCH_DEFAULT_TTL_MINUTES) {
+    return input.project_extension_owner_approved
+      ? Math.max(SPACE_RESEARCH_DEFAULT_TTL_MINUTES, Math.min(SPACE_RESEARCH_PROJECT_TTL_MINUTES, Math.floor(requested || SPACE_RESEARCH_PROJECT_TTL_MINUTES)))
+      : SPACE_RESEARCH_DEFAULT_TTL_MINUTES
+  }
+  if (Number.isFinite(requested) && requested > 0) {
+    return Math.max(SPACE_RESEARCH_SHORT_TTL_MINUTES, Math.min(SPACE_RESEARCH_DEFAULT_TTL_MINUTES, Math.floor(requested)))
+  }
+  return SPACE_RESEARCH_DEFAULT_TTL_MINUTES
+}
+
+function getSpaceResearchMemoryBlocker(value: string): string | null {
+  if (RAW_COOKIE_SESSION_PATTERN.test(value)) return 'space_research_memory_raw_cookie_or_session_token_forbidden'
+  SECRETISH_PATTERN.lastIndex = 0
+  if (SECRETISH_PATTERN.test(value)) return 'space_research_memory_secret_storage_forbidden'
+  return null
+}
+
+function blockedSpaceResearchMemory(blockedReason: string): SpaceResearchMemoryResult {
+  return {
+    ok: false,
+    mode: 'space_research_memory_dry_run',
+    memory: null,
+    policy_result: 'blocked',
+    blocked_reason: blockedReason,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+    owner_visible_summary: `Space Research memory action is blocked: ${blockedReason}.`,
+  }
+}
+
+function spaceResearchMemoryAuditEvent(
+  event: string,
+  actor: SpaceResearchMemoryAuditEvent['actor'],
+  target: string,
+  summary: string,
+  recordedAt: string,
+): SpaceResearchMemoryAuditEvent {
   return {
     event,
     actor,

@@ -71,6 +71,9 @@ const KNOWN_WORDS = new Set([
   'state',
   'map',
   'space',
+  'smb',
+  'fork',
+  'fork2',
   'video',
   'web',
   'webpage',
@@ -195,8 +198,11 @@ function recommendAgent(
   miniAgentType: PiDispatcherRecommendation['recommended_mini_agent_type'],
 ): PiDispatcherRecommendation['recommended_agent'] {
   const text = ownerRequest.toLowerCase()
-  if (classification === 'research' || /browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|map|search the web|web search|extract page|screenshot|screen shot|page state|agents? (?:normally )?(?:cannot|can't) access|cannot access (?:this |the )?(?:site|video)/.test(text)) return 'space_agent'
+  if (classification === 'research') return 'space_agent'
   if (classification === 'skill' || /workflow|skill design|design a skill|mini-agent spec/.test(text)) return 'hermes'
+  if (miniAgentType && /small|scoped|summarize|draft|check|research/.test(text)) return 'mini_agent'
+  if (['chat', 'model', 'tool', 'memory', 'sync', 'upload', 'report', 'protected_action', 'event'].includes(classification)) return 'agent_zero'
+  if (/browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|map|search the web|web search|extract page|screenshot|screen shot|page state|agents? (?:normally )?(?:cannot|can't) access|cannot access (?:this |the )?(?:site|video)/.test(text)) return 'space_agent'
   if (miniAgentType && /small|scoped|summarize|draft|check|research/.test(text)) return 'mini_agent'
   return 'agent_zero'
 }

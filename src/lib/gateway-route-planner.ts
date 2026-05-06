@@ -103,6 +103,7 @@ export function classifyGatewayOwnerRequest(ownerRequest: string): GatewayRouteC
   if (matches(text, SYNC_PATTERNS)) return 'sync'
   if (matches(text, MEMORY_PATTERNS)) return 'memory'
   if (matches(text, SKILL_PATTERNS)) return 'skill'
+  if (matches(text, PROTECTED_EXTERNAL_WRITE_PATTERNS)) return 'protected_action'
   if (matches(text, RESEARCH_PATTERNS)) return 'research'
   if (matches(text, PROTECTED_ACTION_PATTERNS)) return 'protected_action'
   if (matches(text, TOOL_PATTERNS)) return 'tool'
@@ -648,9 +649,15 @@ const PROTECTED_ACTION_PATTERNS = [
 ]
 const UPLOAD_PATTERNS = [/\b(?:upload|attach|send file|drive|onedrive|google drive|telegram attachment)\b/]
 const REPORT_PATTERNS = [/\b(?:report|pdf|markdown|executive summary|capability inventory)\b/]
-const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud)\b/]
+const SYNC_PATTERNS = [/\b(?:build[-\s]?wiki|farmer|sync|run now|opencloud|smb|fork 2|fork2)\b/]
 const MEMORY_PATTERNS = [/\b(?:brain|obsidian|mempalace|memory|remember|graphify|knowledge|note|vault)\b/]
 const SKILL_PATTERNS = [/\b(?:skill|workflow|automation|spec|proposal|design a skill|create a skill)\b/]
+const PROTECTED_EXTERNAL_WRITE_PATTERNS = [
+  /\b(?:zapier|heygen)\b.*\b(?:write|send|create|update|delete|execute|run|generate|publish|post)\b/,
+  /\b(?:write|send|create|update|delete|execute|run|generate|publish|post)\b.*\b(?:zapier|heygen)\b/,
+  /\b(?:agentmail|agent mail|email|mail)\b.*\b(?:send|reply|forward|deliver)\b/,
+  /\b(?:send|reply|forward|deliver)\b.*\b(?:agentmail|agent mail|email|mail)\b/,
+]
 const RESEARCH_PATTERNS = [/\b(?:live web|web research|webpage|web page|website|browser|browse|article|youtube|you tube|video inspection|inspect video|firecrawl|fire crawl|crawl|scrape|search the web|web search|search web|online search|online research|read page|read website|page reading|website reading|extract page|page extraction|page interaction|browser interaction|screenshot|screen shot|page state|page-state|site map|sitemap|normally cannot access|cannot access this site|cannot access this video|agents cannot access)\b/]
 const TOOL_PATTERNS = [/\b(?:tool|mcp|api|zapier|heygen|agentmail|agent mail|n8n|webhook tool)\b/]
 const MODEL_PATTERNS = [/\b(?:model|llm|openrouter|openai|claude|anthropic|codex|chatgpt|ollama|nvidia|gemini|groq)\b/]

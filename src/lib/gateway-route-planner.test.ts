@@ -109,6 +109,9 @@ describe('Gateway route planner', () => {
     expect(classifyGatewayOwnerRequest('Upload the report to Google Drive')).toBe('upload')
     expect(classifyGatewayOwnerRequest('Create a PDF report')).toBe('report')
     expect(classifyGatewayOwnerRequest('Restart Mission Control')).toBe('protected_action')
+    expect(classifyGatewayOwnerRequest('Generate a HeyGen video')).toBe('protected_action')
+    expect(classifyGatewayOwnerRequest('Write a Zapier record')).toBe('protected_action')
+    expect(classifyGatewayOwnerRequest('Check SMB/Fork 2 prerequisites')).toBe('sync')
     expect(classifyGatewayOwnerRequest('Incoming Telegram message from owner')).toBe('event')
   })
 
@@ -249,6 +252,29 @@ describe('Gateway route planner', () => {
     expect(plan.blocker).toBe('space_agent_private_or_login_boundaries_require_owner_approved_credentials_and_bridge_session_scope')
     expect(plan.execution_enabled).toBe(false)
     expect(plan.writes_enabled).toBe(false)
+  })
+
+  it('does not route normal chat, coding-only, delivery, protected writes, memory writes, Build-Wiki, or SMB/Fork 2 to Space Agent', () => {
+    const cases = [
+      ['Good morning. Who are you?', 'chat'],
+      ['Patch a TypeScript bug in the repo', 'chat'],
+      ['Upload the report to OneDrive', 'upload'],
+      ['Send an email through AgentMail', 'protected_action'],
+      ['Execute Build-Wiki Run Now', 'sync'],
+      ['Write a Zapier record', 'protected_action'],
+      ['Generate a HeyGen video', 'protected_action'],
+      ['Remember this in MemPalace', 'memory'],
+      ['Check SMB/Fork 2 prerequisites', 'sync'],
+    ] as const
+
+    for (const [ownerRequest, classification] of cases) {
+      const plan = planGatewayRoute(registry, { ownerRequest })
+      expect(plan.classification).toBe(classification)
+      expect(plan.dispatch_target).not.toBe('space_agent')
+      expect(plan.selected_capability?.source_node).not.toBe('space_agent')
+      expect(plan.execution_enabled).toBe(false)
+      expect(plan.writes_enabled).toBe(false)
+    }
   })
 
   it('routes MCP and tool calls through Bridge/MCP and blocks unavailable tools honestly', () => {

@@ -12,6 +12,7 @@ export type SpaceAgentResearchOperation =
   | 'screenshot_page_state'
   | 'inaccessible_site_or_video'
   | 'general_research'
+  | 'research_not_needed'
 
 export type SpaceAgentRequester = 'owner' | 'agent_zero' | 'hermes' | 'pi' | 'gateway'
 export type SpaceAgentResponsibleAgent = 'agent_zero' | 'hermes' | 'pi' | 'responsible_specialist_agent'
@@ -23,6 +24,7 @@ export type WebResearchIntent = {
   request_summary: string
   research_type: SpaceAgentResearchType
   research_operation: SpaceAgentResearchOperation
+  research_needed: boolean
   requested_by: SpaceAgentRequester
   responsible_agent: SpaceAgentResponsibleAgent
   requires_live_web: boolean
@@ -160,6 +162,7 @@ export type ResearchPacket = {
   responsible_agent: SpaceAgentResponsibleAgent
   research_type: SpaceAgentResearchType
   research_operation: SpaceAgentResearchOperation
+  research_needed: boolean
   request_summary: string
   web_research_intent: WebResearchIntent
   space_agent_job: SpaceAgentJob
@@ -213,6 +216,7 @@ export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): W
   const request = sanitize(input.request)
   const researchType = classifySpaceAgentResearch(request)
   const researchOperation = classifySpaceAgentResearchOperation(request)
+  const researchNeeded = researchOperation !== 'research_not_needed'
   const privateBoundary = PRIVATE_OR_LOGIN_PATTERN.test(request)
   return {
     intent_id: normalizeId(`web_research_intent_${researchType}_${input.generatedAt || DEFAULT_GENERATED_AT}`),
@@ -220,9 +224,10 @@ export function createWebResearchIntent(input: SpaceAgentResearchPacketInput): W
     request_summary: request,
     research_type: researchType,
     research_operation: researchOperation,
+    research_needed: researchNeeded,
     requested_by: input.requestedBy || 'gateway',
     responsible_agent: normalizeResponsibleAgent(input.responsibleAgent, input.requestedBy),
-    requires_live_web: researchType !== 'general' || researchOperation !== 'general_research',
+    requires_live_web: researchNeeded,
     requires_browser: researchType === 'browser' || researchType === 'page_extraction' || ['browser_interaction', 'screenshot_page_state', 'inaccessible_site_or_video'].includes(researchOperation),
     requires_youtube: researchType === 'youtube' || researchType === 'video' || researchOperation === 'youtube_video_inspection' || /youtube|you tube|video/i.test(request),
     requires_firecrawl: researchType === 'firecrawl' || researchOperation.startsWith('firecrawl_') || /fire\s*crawl|firecrawl|crawl|scrape/i.test(request),
@@ -284,9 +289,11 @@ export function createSpaceAgentJob(input: SpaceAgentResearchPacketInput): Space
     blocked_reason: blockedReason,
     execution_enabled: false,
     writes_enabled: false,
-    owner_visible_summary: status === 'blocked'
-      ? `Space Agent job is blocked: ${blockedReason}.`
-      : 'Space Agent job is ready for read-only Research Packet preparation through Gateway.',
+    owner_visible_summary: !intent.research_needed
+      ? 'research not needed; Space Agent should hand back through Gateway.'
+      : status === 'blocked'
+        ? `Space Agent job is blocked: ${blockedReason}.`
+        : 'Space Agent job is ready for read-only Research Packet preparation through Gateway.',
   }
 }
 
@@ -316,6 +323,7 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     responsible_agent: job.responsible_agent,
     research_type: researchType,
     research_operation: intent.research_operation,
+    research_needed: intent.research_needed,
     request_summary: intent.request_summary,
     web_research_intent: intent,
     space_agent_job: job,
@@ -343,9 +351,11 @@ export function createSpaceAgentResearchPacket(input: SpaceAgentResearchPacketIn
     findings: evidence.map((item) => item.summary),
     citations,
     blocked_reason: job.blocked_reason,
-    owner_visible_summary: job.blocked_reason
-      ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
-      : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
+    owner_visible_summary: !intent.research_needed
+      ? `research not needed; Space Agent hands back to ${job.responsible_agent} through Gateway.`
+      : job.blocked_reason
+        ? `Space Agent prepared a research packet with blocker: ${job.blocked_reason}.`
+        : `Space Agent can prepare a ${intent.research_operation} research packet and return responsibility to ${job.responsible_agent}.`,
   }
 }
 
@@ -380,7 +390,7 @@ export function classifySpaceAgentResearchOperation(request: string): SpaceAgent
   if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
   if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|url/.test(text)) return 'page_read'
   if (/\bweb\b|online research|live web|public site|public page/.test(text)) return 'web_search'
-  return 'general_research'
+  return 'research_not_needed'
 }
 
 function createSpaceAgentResearchRoute(policy: SpaceAgentPolicy): SpaceAgentResearchRoute {

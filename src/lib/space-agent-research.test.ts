@@ -23,6 +23,7 @@ describe('Space Agent Research Packet', () => {
     expect(classifySpaceAgentResearchOperation('Inspect this YouTube video')).toBe('youtube_video_inspection')
     expect(classifySpaceAgentResearchOperation('Capture screenshot and page state')).toBe('screenshot_page_state')
     expect(classifySpaceAgentResearchOperation('Agents normally cannot access this site/video')).toBe('inaccessible_site_or_video')
+    expect(classifySpaceAgentResearchOperation('Good morning. Who are you?')).toBe('research_not_needed')
   })
 
   it('creates WebResearchIntent, SpaceAgentJob, and SpaceAgentPolicy schemas for Gateway routing', () => {
@@ -167,6 +168,21 @@ describe('Space Agent Research Packet', () => {
       execution_enabled: false,
     })
     expect(packet.citations).toEqual(expect.arrayContaining(['https://example.com/post', 'https://www.youtube.com/watch?v=abc123']))
+  })
+
+  it('hands unclear or non-research requests back as research not needed', () => {
+    const packet = createSpaceAgentResearchPacket({
+      request: 'Good morning. Who are you?',
+      requestedBy: 'owner',
+    })
+
+    expect(packet.research_operation).toBe('research_not_needed')
+    expect(packet.research_needed).toBe(false)
+    expect(packet.web_research_intent.requires_live_web).toBe(false)
+    expect(packet.owner_visible_summary).toContain('research not needed')
+    expect(packet.return_route.hops).toEqual(['space_agent', 'gateway', 'agent_zero'])
+    expect(packet.tool_execution_enabled).toBe(false)
+    expect(packet.external_writes_enabled).toBe(false)
   })
 
   it('redacts secret-shaped values and raw local paths', () => {

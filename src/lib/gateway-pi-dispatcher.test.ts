@@ -81,6 +81,28 @@ describe('Pi shadow dispatcher', () => {
     }
   })
 
+  it('does not recommend Space Agent for non-research or protected-write work', () => {
+    const prompts = [
+      'Good morning. Who are you?',
+      'Patch a TypeScript bug in the repo',
+      'Upload the report to OneDrive',
+      'Send an email through AgentMail',
+      'Execute Build-Wiki Run Now',
+      'Write a Zapier record',
+      'Generate a HeyGen video',
+      'Remember this in MemPalace',
+      'Check SMB/Fork 2 prerequisites',
+    ]
+
+    for (const ownerRequest of prompts) {
+      const recommendation = recommendPiGatewayRoute(registry, { ownerRequest })
+      expect(recommendation.recommended_agent).not.toBe('space_agent')
+      expect(recommendation.selected_route.target).not.toBe('space_agent')
+      expect(recommendation.execution_enabled).toBe(false)
+      expect(recommendation.writes_enabled).toBe(false)
+    }
+  })
+
   it('recommends Hermes for skill design and mini-agents for small scoped tasks', () => {
     const skill = recommendPiGatewayRoute(registry, { ownerRequest: 'Design a workflow skill for email triage' })
     const mini = recommendPiGatewayRoute(registry, { ownerRequest: 'Summarize a small scoped research task with a mini-agent' })

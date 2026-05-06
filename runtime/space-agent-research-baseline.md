@@ -272,3 +272,19 @@ No browser execution, Firecrawl execution, external write, SMB action, Zapier ac
 - Phase 040: Requests that agents normally cannot access a site/video route to Space Agent for research handling, while login/private boundaries remain blocked behind owner-approved scope.
 
 No live browser action, Firecrawl scrape/crawl/map/extract execution, screenshot capture, YouTube connector call, external write, SMB action, Zapier action, HeyGen generation, farmer action, or production Space Agent activation was performed in these phases.
+
+
+## Phases 041-050 research routing exclusions
+
+- Phase 041: Normal chat stays with Agent Zero/Gateway chat routing, not Space Agent.
+- Phase 042: Coding-only tasks stay with Agent Zero/Codex/model routing unless live web research is explicitly needed.
+- Phase 043: Drive and OneDrive uploads stay with delivery/upload adapters, not Space Agent.
+- Phase 044: AgentMail sending stays protected by Gateway/Bridge Session policy, not Space Agent.
+- Phase 045: Build-Wiki execution stays scoped to Build-Wiki/Farmer policy, not Space Agent.
+- Phase 046: Zapier writes stay protected actions, not Space Agent.
+- Phase 047: HeyGen generation stays protected action, not Space Agent even when the request mentions video.
+- Phase 048: Brain memory writes stay with Brain adapters, not Space Agent.
+- Phase 049: SMB/Fork 2 stays in Build-Wiki/OpenCloud prerequisite routing and remains blocked unless separately approved.
+- Phase 050: Unclear Space Agent requests return `research not needed` and hand back through Gateway.
+
+No live execution, connector write, email send, upload, Build-Wiki run, SMB mount, Zapier action, HeyGen generation, or Space Agent production activation was performed in these phases.

@@ -409,6 +409,12 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('opencloud_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(capabilities.has('space_agent_research_packet')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_search')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_scrape')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_crawl')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_map')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_extract')).toBe(true)
+    expect(capabilities.has('space_agent_firecrawl_interact_browser')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
     const spaceAgent = registry.capabilities.find((capability) => capability.id === 'space_agent_research_packet')
     expect(spaceAgent).toMatchObject({
@@ -429,6 +435,47 @@ describe('Gateway registry API model', () => {
       commander_replacement: false,
       returns_to: 'agent_zero',
       execution_enabled: false,
+      firecrawl_credential_configured: false,
+      firecrawl_search: 'blocked_missing_credential',
+      firecrawl_scrape: 'blocked_missing_credential',
+      firecrawl_crawl: 'blocked_missing_credential',
+      firecrawl_map: 'blocked_missing_credential',
+      firecrawl_extract: 'blocked_missing_credential',
+      firecrawl_interact_browser: 'blocked_missing_credential',
+      firecrawl_blocked_reason: 'firecrawl_missing_credential',
+    })
+    const firecrawlSearch = registry.capabilities.find((capability) => capability.id === 'space_agent_firecrawl_search')
+    expect(firecrawlSearch).toMatchObject({
+      source_node: 'space_agent',
+      status: 'blocked',
+      read_enabled: false,
+      write_enabled: false,
+      execution_enabled: false,
+      requires_session: false,
+      blockers: ['firecrawl_missing_credential'],
+      required_credentials: ['FIRECRAWL_API_KEY'],
+      status_details: {
+        operation: 'firecrawl_search',
+        firecrawl_credential_configured: false,
+        blocked_reason: 'firecrawl_missing_credential',
+        secrets_exposed: false,
+      },
+    })
+    const firecrawlInteract = registry.capabilities.find((capability) => capability.id === 'space_agent_firecrawl_interact_browser')
+    expect(firecrawlInteract).toMatchObject({
+      requires_session: true,
+      blockers: ['firecrawl_missing_credential'],
+      status_details: {
+        operation: 'firecrawl_interact_browser',
+        requires_bridge_session: true,
+      },
+    })
+    const spaceAgentNode = registry.nodes.find((node) => node.id === 'space_agent')
+    expect(spaceAgentNode?.status_details).toMatchObject({
+      firecrawl_status: 'blocked',
+      firecrawl_credential_configured: false,
+      firecrawl_blocked_reason: 'firecrawl_missing_credential',
+      secrets_exposed: false,
     })
     const mcpZapier = registry.capabilities.find((capability) => capability.id === 'mcp_zapier')
     expect(mcpZapier?.status_details).toMatchObject({

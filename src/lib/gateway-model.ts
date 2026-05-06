@@ -104,6 +104,7 @@ export type GatewayNode = {
   health: GatewayHealth
   capabilities: string[]
   blockers: string[]
+  status_details?: GatewayCapabilityStatusDetails
 }
 
 export type GatewayEdge = {
@@ -611,6 +612,12 @@ export function createGatewayRegistryFromAgentNetwork(
         'webpage and article inspection planning',
         'YouTube and video research packets',
         'Firecrawl research coordination',
+        'Firecrawl search capability',
+        'Firecrawl scrape capability',
+        'Firecrawl crawl capability',
+        'Firecrawl map capability',
+        'Firecrawl extract capability',
+        'Firecrawl interact/browser capability gated by configuration',
         'web access gated by policy',
         'browser interaction gated by policy',
         'YouTube inspection gated by policy',
@@ -619,6 +626,18 @@ export function createGatewayRegistryFromAgentNetwork(
         'subordinate research stage, not commander',
       ],
       blockers: [],
+      statusDetails: {
+        firecrawl_status: 'blocked_until_gateway_registry_confirms_credential',
+        firecrawl_credential_configured: false,
+        firecrawl_search: 'blocked_missing_credential',
+        firecrawl_scrape: 'blocked_missing_credential',
+        firecrawl_crawl: 'blocked_missing_credential',
+        firecrawl_map: 'blocked_missing_credential',
+        firecrawl_extract: 'blocked_missing_credential',
+        firecrawl_interact_browser: 'blocked_missing_credential',
+        firecrawl_blocked_reason: 'firecrawl_missing_credential',
+        secrets_exposed: false,
+      },
       lastSeen: generatedAt,
     }),
     createGatewayNode({
@@ -763,6 +782,8 @@ export function createGatewayRegistryFromAgentNetwork(
         'gateway_route_required',
         'research_only_by_default',
         'no_external_writes',
+        'firecrawl_credential_required_for_firecrawl_operations',
+        'firecrawl_operations_block_when_credential_missing',
         'bridge_session_required_for_browser_actions_beyond_read_only_research',
         'respect_login_paywall_private_content_boundaries',
       ],
@@ -775,6 +796,14 @@ export function createGatewayRegistryFromAgentNetwork(
         browser_interaction: 'gated_by_policy',
         youtube_inspection: 'gated_by_policy',
         external_writes: 'disabled',
+        firecrawl_credential_configured: false,
+        firecrawl_search: 'blocked_missing_credential',
+        firecrawl_scrape: 'blocked_missing_credential',
+        firecrawl_crawl: 'blocked_missing_credential',
+        firecrawl_map: 'blocked_missing_credential',
+        firecrawl_extract: 'blocked_missing_credential',
+        firecrawl_interact_browser: 'blocked_missing_credential',
+        firecrawl_blocked_reason: 'firecrawl_missing_credential',
         returns_to: 'agent_zero',
         subordinate_to_gateway: true,
         agent_zero_commander: true,
@@ -835,6 +864,7 @@ function createGatewayNode(input: {
   browserInteraction?: GatewayPolicyGate
   youtubeInspection?: GatewayPolicyGate
   externalWrites?: GatewayExternalWriteState
+  statusDetails?: GatewayCapabilityStatusDetails
   status: GatewayStatus
   owner: string
   visibility: GatewayVisibility
@@ -862,6 +892,7 @@ function createGatewayNode(input: {
     health: createGatewayHealth(status, blockers[0] || `${input.label} ${status}`, input.lastSeen),
     capabilities: [...input.capabilities],
     blockers,
+    ...(input.statusDetails ? { status_details: { ...input.statusDetails } } : {}),
   }
 }
 

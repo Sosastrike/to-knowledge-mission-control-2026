@@ -276,7 +276,7 @@ export function buildGatewayRegistrySnapshot(input: GatewayRegistryBuildInput = 
   const base = createGatewayRegistryFromAgentNetwork({ generatedAt, hermes })
 
   const extraNodes = buildGatewayNodes(context, generatedAt)
-  const nodes = dedupeById([...base.nodes, ...extraNodes])
+  const nodes = enrichSpaceAgentFirecrawlNode(dedupeById([...base.nodes, ...extraNodes]), context)
   const edges = dedupeEdges([...base.edges, ...buildGatewayEdges(context, generatedAt)])
   const capabilities = dedupeById([
     ...base.capabilities,
@@ -1065,6 +1065,7 @@ function buildGatewayCapabilities(context: AgentZeroReadOnlyContext | null, gene
     ...toolCapabilities(context, generatedAt),
     ...skillCapabilities(context, generatedAt),
     ...gatewayToolIntegrationCapabilities(context, generatedAt),
+    ...spaceAgentFirecrawlCapabilities(context, generatedAt),
     ...integrationCapabilities(context, generatedAt),
     ...brainCapabilities(context, generatedAt),
   ]
@@ -1183,7 +1184,17 @@ const GATEWAY_TOOL_INTEGRATION_DEFINITIONS: GatewayToolIntegrationDefinition[] =
     aliases: ['firecrawl', 'fire crawl'],
     nodeKind: 'tool',
     credentialNames: ['FIRECRAWL_API_KEY'],
-    capabilities: ['credential status', 'read-only crawl status', 'adapter visibility'],
+    capabilities: [
+      'credential status',
+      'read-only crawl status',
+      'adapter visibility',
+      'Firecrawl search capability',
+      'Firecrawl scrape capability',
+      'Firecrawl crawl capability',
+      'Firecrawl map capability',
+      'Firecrawl extract capability',
+      'Firecrawl interact/browser capability gated by configuration',
+    ],
     missingBlocker: 'firecrawl_not_configured_or_not_visible_in_gateway_registry',
   },
   {
@@ -1344,6 +1355,126 @@ function buildGatewayToolIntegrationViews(context: AgentZeroReadOnlyContext | nu
       sourceKind: explicitSource ? 'n8n_status' : source ? 'gateway_registry' : 'missing',
     } satisfies GatewayToolIntegrationView
   })
+}
+
+
+const SPACE_AGENT_FIRECRAWL_OPERATIONS = [
+  { id: 'search', label: 'Firecrawl search', operation: 'firecrawl_search', bridgeSession: false },
+  { id: 'scrape', label: 'Firecrawl scrape', operation: 'firecrawl_scrape', bridgeSession: false },
+  { id: 'crawl', label: 'Firecrawl crawl', operation: 'firecrawl_crawl', bridgeSession: false },
+  { id: 'map', label: 'Firecrawl map', operation: 'firecrawl_map', bridgeSession: false },
+  { id: 'extract', label: 'Firecrawl extract', operation: 'firecrawl_extract', bridgeSession: false },
+  { id: 'interact_browser', label: 'Firecrawl interact/browser', operation: 'firecrawl_interact_browser', bridgeSession: true },
+] as const
+
+type SpaceAgentFirecrawlOperation = (typeof SPACE_AGENT_FIRECRAWL_OPERATIONS)[number]
+
+function enrichSpaceAgentFirecrawlNode(nodes: GatewayNode[], context: AgentZeroReadOnlyContext | null): GatewayNode[] {
+  const firecrawl = getFirecrawlToolIntegrationView(context)
+  const details = spaceAgentFirecrawlStatusDetails(firecrawl)
+  const capabilityLabels = SPACE_AGENT_FIRECRAWL_OPERATIONS.map((operation) => `${operation.label} capability`)
+
+  return nodes.map((node) => {
+    if (node.id !== 'space_agent') return node
+    return {
+      ...node,
+      capabilities: dedupeStrings([...node.capabilities, ...capabilityLabels]),
+      status_details: {
+        ...(node.status_details || {}),
+        ...details,
+      },
+    }
+  })
+}
+
+function spaceAgentFirecrawlCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
+  const firecrawl = getFirecrawlToolIntegrationView(context)
+  const blocker = spaceAgentFirecrawlBlocker(firecrawl)
+  const credentialConfigured = Boolean(firecrawl?.credentialConfigured)
+  const backendReachable = Boolean(firecrawl?.reachable || firecrawl?.readOnlySchemaVisible)
+  const status: GatewayStatus = blocker ? 'blocked' : 'read_only'
+
+  return SPACE_AGENT_FIRECRAWL_OPERATIONS.map((operation) => createGatewayCapability({
+    id: `space_agent.firecrawl.${operation.id}`,
+    label: operation.label,
+    kind: 'tool',
+    status,
+    source_node: 'space_agent',
+    read_enabled: !blocker,
+    write_enabled: false,
+    execution_enabled: false,
+    requires_session: operation.bridgeSession,
+    available_to: ['agent_zero', 'hermes', 'pi'],
+    required_credentials: ['FIRECRAWL_API_KEY'],
+    required_tools: ['firecrawl'],
+    execution_requirements: spaceAgentFirecrawlRequirements(operation),
+    blockers: blockersList(blocker),
+    status_details: {
+      operation: operation.operation,
+      firecrawl_credential_configured: credentialConfigured,
+      firecrawl_backend_reachable: backendReachable,
+      read_only_research: true,
+      write_enabled: false,
+      execution_enabled: false,
+      requires_bridge_session: operation.bridgeSession,
+      external_writes_enabled: false,
+      blocked_reason: blocker,
+      source_kind: firecrawl?.sourceKind || 'missing',
+      secrets_exposed: false,
+    },
+    last_seen: generatedAt,
+  }))
+}
+
+function getFirecrawlToolIntegrationView(context: AgentZeroReadOnlyContext | null): GatewayToolIntegrationView | null {
+  return buildGatewayToolIntegrationViews(context).find((view) => view.id === 'firecrawl') || null
+}
+
+function spaceAgentFirecrawlStatusDetails(firecrawl: GatewayToolIntegrationView | null): Record<string, string | boolean | null> {
+  const blocker = spaceAgentFirecrawlBlocker(firecrawl)
+  const credentialConfigured = Boolean(firecrawl?.credentialConfigured)
+  const operationState = blocker
+    ? (blocker.includes('credential') ? 'blocked_missing_credential' : 'blocked_gateway_dependency')
+    : 'available_read_only_research'
+
+  return {
+    firecrawl_status: blocker ? 'blocked' : 'available_read_only_research',
+    firecrawl_credential_configured: credentialConfigured,
+    firecrawl_search: operationState,
+    firecrawl_scrape: operationState,
+    firecrawl_crawl: operationState,
+    firecrawl_map: operationState,
+    firecrawl_extract: operationState,
+    firecrawl_interact_browser: blocker ? operationState : 'gated_by_gateway_policy',
+    firecrawl_blocked_reason: blocker,
+    firecrawl_source_visible: Boolean(firecrawl),
+    firecrawl_read_only_schema_visible: Boolean(firecrawl?.readOnlySchemaVisible),
+    firecrawl_backend_reachable: Boolean(firecrawl?.reachable),
+    secrets_exposed: false,
+  }
+}
+
+function spaceAgentFirecrawlBlocker(firecrawl: GatewayToolIntegrationView | null): string | null {
+  if (!firecrawl) return 'firecrawl_not_visible_in_gateway_registry'
+  if (!firecrawl.credentialConfigured) return 'firecrawl_missing_credential'
+  if (firecrawl.blocker) return firecrawl.blocker === 'missing_credential' ? 'firecrawl_missing_credential' : firecrawl.blocker
+  if (!firecrawl.reachable && !firecrawl.readOnlySchemaVisible) return 'firecrawl_backend_adapter_missing'
+  return null
+}
+
+function spaceAgentFirecrawlRequirements(operation: SpaceAgentFirecrawlOperation): string[] {
+  return [
+    'gateway_route_required',
+    'space_agent_research_packet_required',
+    'firecrawl_credential_required',
+    'firecrawl_operations_block_when_credential_missing',
+    'no_external_writes',
+    ...(operation.bridgeSession ? ['bridge_session_required_for_browser_interaction'] : ['read_only_discovery_first']),
+  ]
+}
+
+function dedupeStrings(values: string[]): string[] {
+  return Array.from(new Set(values))
 }
 
 type LlmProviderDefinition = {

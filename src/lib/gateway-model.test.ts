@@ -189,6 +189,12 @@ describe('canonical Gateway graph model', () => {
       visibility: 'owner_visible',
       capabilities: expect.arrayContaining([
         'browser_web_youtube_research',
+        'Firecrawl search capability',
+        'Firecrawl scrape capability',
+        'Firecrawl crawl capability',
+        'Firecrawl map capability',
+        'Firecrawl extract capability',
+        'Firecrawl interact/browser capability gated by configuration',
         'web access gated by policy',
         'browser interaction gated by policy',
         'YouTube inspection gated by policy',
@@ -196,6 +202,18 @@ describe('canonical Gateway graph model', () => {
         'Gateway-routed structured Research Packets',
         'subordinate research stage, not commander',
       ]),
+    })
+    expect(spaceAgent?.status_details).toMatchObject({
+      firecrawl_status: 'blocked_until_gateway_registry_confirms_credential',
+      firecrawl_credential_configured: false,
+      firecrawl_search: 'blocked_missing_credential',
+      firecrawl_scrape: 'blocked_missing_credential',
+      firecrawl_crawl: 'blocked_missing_credential',
+      firecrawl_map: 'blocked_missing_credential',
+      firecrawl_extract: 'blocked_missing_credential',
+      firecrawl_interact_browser: 'blocked_missing_credential',
+      firecrawl_blocked_reason: 'firecrawl_missing_credential',
+      secrets_exposed: false,
     })
     expect(bridge).toMatchObject({ kind: 'mcp_server', status: 'connected' })
     expect(brainNodes).toEqual(expect.arrayContaining(['brain_sync', 'obsidian', 'mempalace', 'graphify', 'buildwiki']))
@@ -218,6 +236,14 @@ describe('canonical Gateway graph model', () => {
         browser_interaction: 'gated_by_policy',
         youtube_inspection: 'gated_by_policy',
         external_writes: 'disabled',
+        firecrawl_credential_configured: false,
+        firecrawl_search: 'blocked_missing_credential',
+        firecrawl_scrape: 'blocked_missing_credential',
+        firecrawl_crawl: 'blocked_missing_credential',
+        firecrawl_map: 'blocked_missing_credential',
+        firecrawl_extract: 'blocked_missing_credential',
+        firecrawl_interact_browser: 'blocked_missing_credential',
+        firecrawl_blocked_reason: 'firecrawl_missing_credential',
         returns_to: 'agent_zero',
         subordinate_to_gateway: true,
         agent_zero_commander: true,

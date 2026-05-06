@@ -52,6 +52,7 @@ export const CANONICAL_AGENT_TIER_OF: Record<string, string> = {
   claudeclaw: 'runtime',
   bridge_mcp: 'system',
   brain_systems: 'system',
+  opencloud: 'system',
   tony: 'archive',
   tony_legacy: 'archive',
   'tony-legacy': 'archive',
@@ -69,6 +70,7 @@ export const CANONICAL_AGENT_NETWORK_SEED_IDS = new Set([
   'claudeclaw',
   'bridge_mcp',
   'brain_systems',
+  'opencloud',
   'tony',
   'tony_legacy',
   'tony-legacy',
@@ -119,6 +121,7 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     { id: 'mempalace', name: 'MemPalace', role: 'Memory system' },
     { id: 'graphify', name: 'Graphify', role: 'Graph system' },
     { id: 'buildwiki', name: 'Build-Wiki / Farmer', role: 'Knowledge sync / farmer system' },
+    { id: 'opencloud', name: 'OpenCloud', role: 'worker/runtime engine | skills/tools source | Build-Wiki/Farmer support layer | future mini-agent creation layer | not deletion target' },
   ],
   retired: [
     { id: 'tony_legacy', name: 'Tony legacy', role: 'legacy_archived', status: 'legacy_archived' as AgentNetworkStatusState, hidden_by_default: true, execution_enabled: false },
@@ -130,6 +133,8 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     { from: 'agent_zero', to: 'openclaw_plus', relation: 'uses_runtime' },
     { from: 'openclaw_plus', to: 'bridge_mcp', relation: 'exposes_access_layer' },
     { from: 'agent_zero', to: 'brain_sync', relation: 'operates_brain_systems' },
+    { from: 'agent_zero', to: 'opencloud', relation: 'uses_runtime' },
+    { from: 'opencloud', to: 'buildwiki', relation: 'syncs' },
   ],
   labels: {
     approval_queue: 'Approval Queue - Agent Zero Bridge Session',

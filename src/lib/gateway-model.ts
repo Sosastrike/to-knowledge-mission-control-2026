@@ -599,7 +599,7 @@ export function createGatewayRegistryFromAgentNetwork(
         status: system.id === 'bridge_mcp' ? 'connected' : 'read_only',
         owner: 'ecosystem',
         visibility: 'owner_visible',
-        capabilities: [system.role],
+        capabilities: system.id === 'opencloud' ? system.role.split('|').map((item) => item.trim()).filter(Boolean) : [system.role],
         blockers: [],
         lastSeen: generatedAt,
       }),
@@ -674,6 +674,16 @@ export function createGatewayRegistryFromAgentNetwork(
       available_to: ['agent_zero', 'hermes'],
       execution_requirements: ['agent_zero_command_authority_required', 'bridge_session_required_for_activation'],
       blockers: ['dispatcher_candidate_not_authoritative'],
+    }),
+    createGatewayCapability({
+      id: 'opencloud.worker_runtime',
+      label: 'OpenCloud worker/runtime engine',
+      kind: 'tool',
+      status: 'read_only',
+      source_node: 'opencloud',
+      available_to: ['agent_zero', 'hermes', 'pi'],
+      execution_requirements: ['gateway_route_required', 'bridge_session_required_for_execution', 'opencloud_deletion_forbidden'],
+      blockers: ['execution_requires_gateway_bridge_session_scope'],
     }),
     createGatewayCapability({
       id: 'mini_agents.gateway_supervision',
@@ -763,6 +773,7 @@ function scoreForGatewayStatus(status: GatewayStatus): number | null {
 
 function kindForSystem(id: string): GatewayNodeKind {
   if (id === 'bridge_mcp') return 'mcp_server'
+  if (id === 'opencloud') return 'opencloud_worker'
   if (id === 'buildwiki') return 'buildwiki_farmer'
   if (id === 'brain_sync' || id === 'obsidian' || id === 'mempalace' || id === 'graphify') return 'brain_system'
   return 'tool'

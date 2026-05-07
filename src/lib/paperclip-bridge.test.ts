@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   buildPaperclipBoardApprovalPlan,
   buildPaperclipCredentialModePlan,
+  buildPaperclipGatewayPluginPlan,
   buildPaperclipGatewayRecordMapping,
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
@@ -11,6 +12,7 @@ import {
   buildPaperclipWorkspaceMapPlan,
   PAPERCLIP_BOARD_APPROVAL_ACTIONS,
   PAPERCLIP_CREDENTIAL_SUBJECTS,
+  PAPERCLIP_GATEWAY_PLUGIN_IDS,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   PAPERCLIP_WORKSPACE_IDS,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
@@ -975,6 +977,80 @@ describe('Paperclip bridge payloads', () => {
     })
     expectOwnerSafe({ unknown, missingBlocker })
   })
+
+  it('defines Gateway adapter plugins for Agent Zero, Hermes, Pi, SpaceAgent, OpenCloud, and OpenClaw+', () => {
+    const plan = buildPaperclipGatewayPluginPlan({
+      generatedAt: GENERATED_AT,
+      lifecycle: [
+        { plugin: 'agent_zero_adapter', action: 'load' },
+        { plugin: 'hermes_adapter', action: 'load' },
+        { plugin: 'pi_adapter', action: 'load' },
+        { plugin: 'space_agent_adapter', action: 'load' },
+        { plugin: 'opencloud_worker_adapter', action: 'load' },
+        { plugin: 'openclaw_skills_adapter', action: 'load' },
+        { plugin: 'mission_control_ui_contribution', action: 'load', safeUiContribution: true },
+        { plugin: 'agent_zero_adapter', action: 'unload', loaded: true },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      mode: 'paperclip_gateway_plugin_spec_dry_run',
+      plugin_system_inspection: {
+        loader: 'explicit_import_init_loader',
+        registries: ['integrations', 'categories', 'nav_items', 'panels', 'tool_providers'],
+        dynamic_env_loading_enabled: false,
+        production_auto_load_enabled: false,
+      },
+      plugin_ids: [...PAPERCLIP_GATEWAY_PLUGIN_IDS],
+      mission_control_ui_contribution: {
+        safe_to_define: true,
+        enabled: false,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.plugins.map((plugin) => plugin.id)).toEqual([...PAPERCLIP_GATEWAY_PLUGIN_IDS])
+    expect(plan.plugins).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'gateway_core', kind: 'gateway_spec', target_node: 'gateway' }),
+      expect.objectContaining({ id: 'agent_zero_adapter', kind: 'agent_adapter', target_node: 'agent_zero', supervisor: 'gateway' }),
+      expect.objectContaining({ id: 'hermes_adapter', kind: 'agent_adapter', target_node: 'hermes', supervisor: 'agent_zero' }),
+      expect.objectContaining({ id: 'pi_adapter', kind: 'agent_adapter', target_node: 'pi_dispatcher_candidate' }),
+      expect.objectContaining({ id: 'space_agent_adapter', kind: 'agent_adapter', target_node: 'space_agent' }),
+      expect.objectContaining({ id: 'opencloud_worker_adapter', kind: 'worker_adapter', target_node: 'opencloud_worker' }),
+      expect.objectContaining({ id: 'openclaw_skills_adapter', kind: 'skills_adapter', target_node: 'openclaw_plus' }),
+      expect.objectContaining({ id: 'mission_control_ui_contribution', kind: 'ui_contribution', registers: ['nav_item', 'panel'], ui_contribution_safe: true, ui_contribution_enabled: false }),
+    ]))
+    expect(plan.plugins.every((plugin) => plugin.load_mode === 'explicit_import_only' && plugin.production_auto_load_enabled === false && plugin.execution_enabled === false && plugin.writes_enabled === false)).toBe(true)
+    expect(plan.lifecycle_decisions.map((decision) => decision.status)).toEqual(['loaded', 'loaded', 'loaded', 'loaded', 'loaded', 'loaded', 'loaded', 'unloaded'])
+    expect(plan.lifecycle_decisions.every((decision) => decision.policy_result === 'requires_session' && decision.audit_event.no_secrets_exposed && !decision.audit_event.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+  it('blocks unsafe Gateway plugin load/unload requests', () => {
+    const plan = buildPaperclipGatewayPluginPlan({
+      generatedAt: GENERATED_AT,
+      lifecycle: [
+        { plugin: 'mission_control_ui_contribution', action: 'load', safeUiContribution: false },
+        { plugin: 'unknown_plugin', action: 'load' },
+        { plugin: 'hermes_adapter', action: 'unload', loaded: false },
+      ],
+    })
+
+    expect(plan).toMatchObject({ ok: false, execution_enabled: false, writes_enabled: false })
+    expect(plan.blocked.map((decision) => decision.blocked_reason)).toEqual([
+      'paperclip_gateway_ui_contribution_requires_safe_smoke',
+      'paperclip_gateway_plugin_unknown',
+      'paperclip_gateway_plugin_not_loaded',
+    ])
+    expect(plan.lifecycle_decisions.every((decision) => decision.status === 'blocked' && decision.loaded_after === decision.loaded_before)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+
 
 
   it('maps Mission Control, ClaudeClaw/OpenClaw+, SpaceAgent, Pi, and Paperclip workspaces with safe refs', () => {

@@ -1033,6 +1033,108 @@ export type PaperclipWorkspaceMapPlan = {
 
 
 
+export const PAPERCLIP_GATEWAY_PLUGIN_IDS = [
+  'gateway_core',
+  'agent_zero_adapter',
+  'hermes_adapter',
+  'pi_adapter',
+  'space_agent_adapter',
+  'opencloud_worker_adapter',
+  'openclaw_skills_adapter',
+  'mission_control_ui_contribution',
+] as const
+
+export type PaperclipGatewayPluginId = (typeof PAPERCLIP_GATEWAY_PLUGIN_IDS)[number]
+export type PaperclipGatewayPluginKind = 'gateway_spec' | 'agent_adapter' | 'worker_adapter' | 'skills_adapter' | 'ui_contribution'
+export type PaperclipGatewayPluginLifecycleAction = 'load' | 'unload'
+export type PaperclipGatewayPluginLifecycleStatus = 'loaded' | 'unloaded' | 'blocked'
+
+export type PaperclipGatewayPluginSpec = {
+  id: PaperclipGatewayPluginId
+  name: string
+  kind: PaperclipGatewayPluginKind
+  target_node: string
+  supervisor: 'gateway' | 'agent_zero'
+  plugin_system: 'mission_control_explicit_plugin_loader'
+  registers: Array<'integration' | 'category' | 'nav_item' | 'panel' | 'tool_provider' | 'gateway_node' | 'adapter'>
+  capabilities: string[]
+  load_mode: 'explicit_import_only'
+  production_auto_load_enabled: false
+  unload_supported: true
+  ui_contribution_safe: boolean
+  ui_contribution_enabled: boolean
+  bridge_session_required_for_writes: true
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipGatewayPluginLifecycleInput = {
+  plugin?: string | null
+  action?: string | null
+  loaded?: boolean | null
+  safeUiContribution?: boolean | null
+}
+
+export type PaperclipGatewayPluginLifecycleDecision = {
+  plugin: PaperclipGatewayPluginId | 'unknown'
+  action: PaperclipGatewayPluginLifecycleAction
+  status: PaperclipGatewayPluginLifecycleStatus
+  loaded_before: boolean
+  loaded_after: boolean
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  audit_event: {
+    event: string
+    actor: 'gateway'
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipGatewayPluginPlanInput = {
+  generatedAt: string
+  lifecycle?: PaperclipGatewayPluginLifecycleInput[] | null
+}
+
+export type PaperclipGatewayPluginPlan = {
+  ok: boolean
+  mode: 'paperclip_gateway_plugin_spec_dry_run'
+  generated_at: string
+  plugin_system_inspection: {
+    loader: 'explicit_import_init_loader'
+    registries: ['integrations', 'categories', 'nav_items', 'panels', 'tool_providers']
+    dynamic_env_loading_enabled: false
+    production_auto_load_enabled: false
+  }
+  plugins: PaperclipGatewayPluginSpec[]
+  plugin_ids: PaperclipGatewayPluginId[]
+  lifecycle_decisions: PaperclipGatewayPluginLifecycleDecision[]
+  blocked: PaperclipGatewayPluginLifecycleDecision[]
+  mission_control_ui_contribution: {
+    safe_to_define: true
+    enabled: false
+    reason: string
+  }
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+
+
 
 
 export const PAPERCLIP_BOARD_APPROVAL_ACTIONS = [
@@ -2449,6 +2551,212 @@ export function buildPaperclipWorkspaceMapPlan(input: PaperclipWorkspaceMapPlanI
 
 
 
+const PAPERCLIP_GATEWAY_PLUGIN_SPECS: Record<PaperclipGatewayPluginId, PaperclipGatewayPluginSpec> = {
+  gateway_core: {
+    id: 'gateway_core',
+    name: 'Gateway Core Plugin Spec',
+    kind: 'gateway_spec',
+    target_node: 'gateway',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['category', 'gateway_node', 'adapter'],
+    capabilities: ['route_registry', 'policy_decision', 'audit_log', 'plugin_lifecycle'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  agent_zero_adapter: {
+    id: 'agent_zero_adapter',
+    name: 'Agent Zero Adapter Plugin',
+    kind: 'agent_adapter',
+    target_node: 'agent_zero',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter', 'tool_provider'],
+    capabilities: ['commander_route', 'status_probe', 'test_chat_proxy', 'report_route'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  hermes_adapter: {
+    id: 'hermes_adapter',
+    name: 'Hermes Adapter Plugin',
+    kind: 'agent_adapter',
+    target_node: 'hermes',
+    supervisor: 'agent_zero',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter', 'tool_provider'],
+    capabilities: ['lieutenant_route', 'skill_design', 'workflow_design', 'test_chat_proxy'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  pi_adapter: {
+    id: 'pi_adapter',
+    name: 'Pi Dispatcher Adapter Plugin',
+    kind: 'agent_adapter',
+    target_node: 'pi_dispatcher_candidate',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter'],
+    capabilities: ['shadow_dispatch_recommendation', 'route_optimization', 'model_route_advice'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  space_agent_adapter: {
+    id: 'space_agent_adapter',
+    name: 'SpaceAgent Adapter Plugin',
+    kind: 'agent_adapter',
+    target_node: 'space_agent',
+    supervisor: 'agent_zero',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter', 'tool_provider'],
+    capabilities: ['web_research', 'youtube_research', 'firecrawl_research', 'research_packet'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  opencloud_worker_adapter: {
+    id: 'opencloud_worker_adapter',
+    name: 'OpenCloud Worker Adapter Plugin',
+    kind: 'worker_adapter',
+    target_node: 'opencloud_worker',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter'],
+    capabilities: ['worker_runtime_status', 'buildwiki_support', 'future_agent_creation_layer'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  openclaw_skills_adapter: {
+    id: 'openclaw_skills_adapter',
+    name: 'OpenClaw+ Skills Adapter Plugin',
+    kind: 'skills_adapter',
+    target_node: 'openclaw_plus',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['gateway_node', 'adapter', 'tool_provider'],
+    capabilities: ['skill_registry', 'adapter_status', 'report_runtime', 'governance_layer'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: false,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+  mission_control_ui_contribution: {
+    id: 'mission_control_ui_contribution',
+    name: 'Mission Control Gateway UI Contribution',
+    kind: 'ui_contribution',
+    target_node: 'mission_control_gateway_ui',
+    supervisor: 'gateway',
+    plugin_system: 'mission_control_explicit_plugin_loader',
+    registers: ['nav_item', 'panel'],
+    capabilities: ['gateway_panel_contribution', 'node_detail_panel', 'plugin_status_badges'],
+    load_mode: 'explicit_import_only',
+    production_auto_load_enabled: false,
+    unload_supported: true,
+    ui_contribution_safe: true,
+    ui_contribution_enabled: false,
+    bridge_session_required_for_writes: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  },
+}
+
+export function buildPaperclipGatewayPluginPlan(input: PaperclipGatewayPluginPlanInput): PaperclipGatewayPluginPlan {
+  const plugins = PAPERCLIP_GATEWAY_PLUGIN_IDS.map((id) => PAPERCLIP_GATEWAY_PLUGIN_SPECS[id])
+  const lifecycleDecisions = (input.lifecycle || []).map((entry) => buildPaperclipGatewayPluginLifecycleDecision(entry))
+  const blocked = lifecycleDecisions.filter((decision) => decision.blocked_reason !== null)
+
+  return {
+    ok: blocked.length === 0,
+    mode: 'paperclip_gateway_plugin_spec_dry_run',
+    generated_at: input.generatedAt,
+    plugin_system_inspection: {
+      loader: 'explicit_import_init_loader',
+      registries: ['integrations', 'categories', 'nav_items', 'panels', 'tool_providers'],
+      dynamic_env_loading_enabled: false,
+      production_auto_load_enabled: false,
+    },
+    plugins,
+    plugin_ids: [...PAPERCLIP_GATEWAY_PLUGIN_IDS],
+    lifecycle_decisions: lifecycleDecisions,
+    blocked,
+    mission_control_ui_contribution: {
+      safe_to_define: true,
+      enabled: false,
+      reason: 'UI contribution is specified but remains disabled until explicitly imported, smoke-tested, and approved for production load.',
+    },
+    owner_visible_summary: 'Gateway plugin specs are defined for adapters and UI contribution. The current Mission Control plugin system uses explicit import/init loading; production auto-load remains disabled and all lifecycle actions are dry-run only.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+
+
 
 type PaperclipBoardApprovalActionProfile = {
   action: PaperclipBoardApprovalAction
@@ -3016,6 +3324,67 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
 }
+
+function buildPaperclipGatewayPluginLifecycleDecision(input: PaperclipGatewayPluginLifecycleInput): PaperclipGatewayPluginLifecycleDecision {
+  const plugin = normalizePaperclipGatewayPluginId(input.plugin)
+  const action = normalizePaperclipGatewayPluginLifecycleAction(input.action)
+  const spec = plugin ? PAPERCLIP_GATEWAY_PLUGIN_SPECS[plugin] : null
+  const loadedBefore = input.loaded === true
+  const safeUi = input.safeUiContribution === true
+  const blockedReason = !spec
+    ? 'paperclip_gateway_plugin_unknown'
+    : action === 'unload' && !loadedBefore
+      ? 'paperclip_gateway_plugin_not_loaded'
+      : spec.kind === 'ui_contribution' && action === 'load' && !safeUi
+        ? 'paperclip_gateway_ui_contribution_requires_safe_smoke'
+        : null
+  const loadedAfter = blockedReason
+    ? loadedBefore
+    : action === 'load'
+      ? true
+      : false
+  return {
+    plugin: plugin || 'unknown',
+    action,
+    status: blockedReason ? 'blocked' : action === 'load' ? 'loaded' : 'unloaded',
+    loaded_before: loadedBefore,
+    loaded_after: loadedAfter,
+    policy_result: blockedReason ? 'blocked' : 'requires_session',
+    blocked_reason: blockedReason,
+    audit_event: {
+      event: action === 'load' ? 'paperclip.gateway_plugin.load' : 'paperclip.gateway_plugin.unload',
+      actor: 'gateway',
+      target: plugin || 'unknown_plugin',
+      status: blockedReason ? 'blocked' : 'recorded',
+      external_write: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    },
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+function normalizePaperclipGatewayPluginId(value: unknown): PaperclipGatewayPluginId | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'gateway' || text === 'gateway_core') return 'gateway_core'
+  if (text === 'agent_zero' || text === 'agent_zero_adapter') return 'agent_zero_adapter'
+  if (text === 'hermes' || text === 'hermes_adapter') return 'hermes_adapter'
+  if (text === 'pi' || text === 'pi_adapter' || text === 'pi_dispatcher') return 'pi_adapter'
+  if (text === 'space_agent' || text === 'spaceagent' || text === 'space_agent_adapter') return 'space_agent_adapter'
+  if (text === 'opencloud' || text === 'opencloud_worker' || text === 'opencloud_worker_adapter') return 'opencloud_worker_adapter'
+  if (text === 'openclaw' || text === 'openclaw_plus' || text === 'openclaw_skills_adapter') return 'openclaw_skills_adapter'
+  if (text === 'mission_control_ui' || text === 'mission_control_ui_contribution' || text === 'gateway_ui') return 'mission_control_ui_contribution'
+  return null
+}
+
+function normalizePaperclipGatewayPluginLifecycleAction(value: unknown): PaperclipGatewayPluginLifecycleAction {
+  const text = normalizePaperclipSlug(value || 'load')
+  return text === 'unload' || text === 'disable' ? 'unload' : 'load'
+}
+
 
 function buildPaperclipWorkspaceTaskDecision(input: PaperclipWorkspaceTaskInput): PaperclipWorkspaceTaskDecision {
   const workspace = normalizePaperclipWorkspaceId(input.workspace)

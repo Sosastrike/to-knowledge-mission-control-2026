@@ -1,0 +1,150 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 3285 >>
+stream
+BT
+/F1 9 Tf
+50 760 Td
+(SpaceAgent Firecrawl Production Proof Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(SpaceAgent Firecrawl Production Proof Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Generated: 2026-05-07T21:54:13.799Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Executive Result) Tj
+0 -12 Td
+(Firecrawl production proof is truthful-blocked, not live. Mission Control exposes) Tj
+0 -12 Td
+(protected read-only Firecrawl status and Gateway can classify Firecrawl requests for) Tj
+0 -12 Td
+(SpaceAgent, but the Firecrawl live adapter is not production-ready because Mission) Tj
+0 -12 Td
+(Control has no Firecrawl credential loaded and the Firecrawl SDK is not loaded.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Completion) Tj
+0 -12 Td
+(- Proof phase completion: 100% for truthful validation.) Tj
+0 -12 Td
+(- Firecrawl integration completion: 35%.) Tj
+0 -12 Td
+(- Release decision: NO-GO for live Firecrawl adapter; PASS for blocked-state honesty.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Production Route Evidence) Tj
+0 -12 Td
+(- Authenticated GET /api/firecrawl/status: 200.) Tj
+0 -12 Td
+(- Unauthenticated GET /api/firecrawl/status: 401.) Tj
+0 -12 Td
+(- Authenticated GET /api/firecrawl/jobs: 200 with no jobs table yet.) Tj
+0 -12 Td
+(- Gateway SpaceAgent browser status card: blocked, red.) Tj
+0 -12 Td
+(- Blocker shown in Gateway: firecrawlcredentialrequired.) Tj
+0 -12 Td
+(- SpaceAgent research packet for Firecrawl scrape: returns a Research Packet plan with) Tj
+0 -12 Td
+(firecrawlstatus=blockedmissingcredential, routedecision=missingcredential,) Tj
+0 -12 Td
+(executionenabled=false, writesenabled=false.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current Truth) Tj
+0 -12 Td
+(- Mission Control process has Firecrawl key: false.) Tj
+0 -12 Td
+(- Mission Control env has Firecrawl key by name: false.) Tj
+0 -12 Td
+(- OpenClaw+/ClaudeClaw show Firecrawl credential presence by name: true.) Tj
+0 -12 Td
+(- Mission Control Firecrawl SDK loaded: false.) Tj
+0 -12 Td
+(- Backend mismatch visible: true.) Tj
+0 -12 Td
+(- Approved fix required: true.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What Passed) Tj
+0 -12 Td
+(- Protected route auth works.) Tj
+0 -12 Td
+(- No secret value was printed.) Tj
+0 -12 Td
+(- No Firecrawl job was executed.) Tj
+0 -12 Td
+(- No external write occurred.) Tj
+0 -12 Td
+(- SpaceAgent/Gateway did not fake live access.) Tj
+0 -12 Td
+(- UI state is correct: Firecrawl remains red/blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What Failed Or Remains Blocked) Tj
+0 -12 Td
+(- Firecrawl credential is not available inside the Mission Control runtime.) Tj
+0 -12 Td
+(- Firecrawl SDK/job runner is not wired in Mission Control.) Tj
+0 -12 Td
+(- No Firecrawl live search/scrape/crawl/map/extract call was proven.) Tj
+0 -12 Td
+(- No persistence table exists for Firecrawl jobs.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Requirements From Owner/Admin) Tj
+0 -12 Td
+(- Approve a secure credential sync path into Mission Control runtime without printing) Tj
+0 -12 Td
+(or pasting the secret.) Tj
+0 -12 Td
+(- Approve installation/wiring of the Firecrawl SDK and read-only runner.) Tj
+0 -12 Td
+(- Approve job persistence schema before enabling any queued crawl workflow.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Safety Confirmation) Tj
+0 -12 Td
+(No secrets exposed. No .env modification. No external writes. No Zapier/HeyGen. No) Tj
+0 -12 Td
+(SMB/Fork 2. No farmer execution. No fake Done.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3648
+%%EOF

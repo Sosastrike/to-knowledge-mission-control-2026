@@ -1,0 +1,150 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 3295 >>
+stream
+BT
+/F1 9 Tf
+50 760 Td
+(SpaceAgent YouTube Production Proof Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(SpaceAgent YouTube Production Proof Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Generated: 2026-05-07T21:54:13.799Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Executive Result) Tj
+0 -12 Td
+(YouTube production proof is partial. Mission Control has a protected read-only Video) Tj
+0 -12 Td
+(Intelligence status route and the backend CLI components are visible as ready for a) Tj
+0 -12 Td
+(protected runner, but SpaceAgent still does not have a proven dedicated live) Tj
+0 -12 Td
+(transcript connector. The Gateway UI correctly shows YouTube Research as) Tj
+0 -12 Td
+(limited/pending rather than connected.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Completion) Tj
+0 -12 Td
+(- Proof phase completion: 100% for truthful validation.) Tj
+0 -12 Td
+(- YouTube research integration completion: 60%.) Tj
+0 -12 Td
+(- Release decision: PARTIAL GO for read-only status and Research Packet model; NO-GO) Tj
+0 -12 Td
+(for live transcript connector.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Production Route Evidence) Tj
+0 -12 Td
+(- Authenticated GET /api/viral-crawl/video/status: 200.) Tj
+0 -12 Td
+(- Unauthenticated GET /api/viral-crawl/video/status: 401.) Tj
+0 -12 Td
+(- Status mode: viralcrawlvideostatusreadonly.) Tj
+0 -12 Td
+(- Backend state: BACKENDREADYCLI.) Tj
+0 -12 Td
+(- Wrapper present: true.) Tj
+0 -12 Td
+(- Vendor skill present: true.) Tj
+0 -12 Td
+(- Skill registry present: true.) Tj
+0 -12 Td
+(- Skill enabled: true.) Tj
+0 -12 Td
+(- Execution enabled: false.) Tj
+0 -12 Td
+(- Endpoint contract says no file creation, no video downloads, no vault modification,) Tj
+0 -12 Td
+(and no secret printing.) Tj
+0 -12 Td
+(- Gateway SpaceAgent card: limitedpending, yellow.) Tj
+0 -12 Td
+(- Gateway blocker: youtubetranscriptconnectornotproven.) Tj
+0 -12 Td
+(- SpaceAgent research packet for YouTube metadata/transcript intent: ready as a packet) Tj
+0 -12 Td
+(model, routedecision=allowed, executionenabled=false, writesenabled=false.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What Passed) Tj
+0 -12 Td
+(- Protected route auth works.) Tj
+0 -12 Td
+(- Read-only video status is available.) Tj
+0 -12 Td
+(- SpaceAgent can classify YouTube/video research intent.) Tj
+0 -12 Td
+(- Research Packet model exists and can represent YouTube metadata/transcript work.) Tj
+0 -12 Td
+(- Full video download is disabled by default.) Tj
+0 -12 Td
+(- No execution runner was invoked.) Tj
+0 -12 Td
+(- No secrets or raw owner-facing paths were included in this report.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What Failed Or Remains Blocked) Tj
+0 -12 Td
+(- Dedicated live transcript connector is not proven.) Tj
+0 -12 Td
+(- No authenticated owner-approved browser/video session was used.) Tj
+0 -12 Td
+(- No real YouTube transcript retrieval smoke was completed.) Tj
+0 -12 Td
+(- Protected run endpoint remains intentionally disabled until queue, approval, and) Tj
+0 -12 Td
+(audit are wired.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Requirements From Owner/Admin) Tj
+0 -12 Td
+(- Approve a safe transcript connector path for public YouTube metadata/captions.) Tj
+0 -12 Td
+(- Approve whether the existing Video Intelligence CLI should be wrapped behind a) Tj
+0 -12 Td
+(Bridge Session runner.) Tj
+0 -12 Td
+(- Confirm whether any account-authenticated video access is ever allowed; default) Tj
+0 -12 Td
+(remains blocked.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3658
+%%EOF

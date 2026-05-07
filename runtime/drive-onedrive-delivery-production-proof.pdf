@@ -1,0 +1,183 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2136 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Google Drive and OneDrive Delivery Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:24:25.081Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Google Drive and OneDrive delivery are **PARTIAL GO / BLOCKED**. Gateway can see the delivery) Tj
+T*
+(surfaces, but uploads are not configured and both upload test routes correctly block without) Tj
+T*
+(uploading anything.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Surface | Status Route | Gateway Node | Upload Test | Result |) Tj
+T*
+(| --- | --- | --- | --- | --- |) Tj
+T*
+(| Google Drive | 200, connected=true, configured=false | 200, read_only | 423 | blocked:) Tj
+T*
+(google_drive_upload_connector_not_configured |) Tj
+T*
+(| OneDrive | 200, connected=false, configured=false | 200, blocked | 423 | blocked:) Tj
+T*
+(onedrive_upload_connector_not_configured |) Tj
+T*
+(| Unauthenticated Google Drive status | 401 | n/a | n/a | protected |) Tj
+T*
+() Tj
+T*
+(Upload Safety) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Google uploaded file | false |) Tj
+T*
+(| OneDrive uploaded file | false |) Tj
+T*
+(| Accepted for execution | false |) Tj
+T*
+(| Execution enabled | false |) Tj
+T*
+(| Bridge Session required | yes |) Tj
+T*
+(| External write occurred | no |) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| google_drive_upload_connector_not_configured | Google Drive upload cannot be marked live. |) Tj
+T*
+(Configure approved upload connector and run scoped Bridge Session upload test. |) Tj
+T*
+(| onedrive_upload_connector_not_configured | OneDrive upload cannot be marked live. |) Tj
+T*
+(Configure approved OneDrive connector and run scoped Bridge Session upload test. |) Tj
+T*
+(| onedrive_not_visible_or_configured | OneDrive Gateway node remains blocked. | Complete) Tj
+T*
+(OneDrive connector setup and folder lookup proof. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No file was uploaded.) Tj
+T*
+(- No external write occurred.) Tj
+T*
+(- No credentials were printed.) Tj
+T*
+(- No .env changes were made.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 854 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(- Protected route blocked unauthenticated access.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Google Drive status visibility | 60% | visible but upload blocked |) Tj
+T*
+(| Google Drive upload | 0% | connector missing |) Tj
+T*
+(| OneDrive status visibility | 35% | node present but blocked |) Tj
+T*
+(| OneDrive upload | 0% | connector missing |) Tj
+T*
+(| Delivery policy blocking | 90% | uploads correctly blocked |) Tj
+T*
+(| Drive/OneDrive overall | 32% | BLOCKED/PARTIAL |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Drive/OneDrive delivery: **PARTIAL GO for visibility, NO-GO for upload delivery**.) Tj
+T*
+() Tj
+T*
+(The routes are safe and honest. Real delivery requires configured connectors and a scoped) Tj
+T*
+(Bridge Session.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002267 00000 n 
+0000002393 00000 n 
+0000003298 00000 n 
+0000003424 00000 n 
+0000003487 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+3536
+%%EOF

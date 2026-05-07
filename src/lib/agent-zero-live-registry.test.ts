@@ -16,7 +16,7 @@ const integration = (
 ): AgentZeroIntegrationCapability => ({
   id,
   name,
-  category: id === 'firecrawl' ? 'crawler' : id === 'heygen' ? 'media' : id === 'zapier' ? 'automation' : id === 'telegram' || id === 'whatsapp' ? 'messaging' : 'storage',
+  category: id === 'firecrawl' ? 'crawler' : id === 'heygen' ? 'media' : id === 'zapier' || id === 'paperclip' ? 'automation' : id === 'telegram' || id === 'whatsapp' ? 'messaging' : 'storage',
   status,
   credential_present: !missingCredential && status !== 'blocked',
   missing_credential: missingCredential,
@@ -129,6 +129,7 @@ describe('Agent Zero live ecosystem registry', () => {
         integration('onedrive', 'OneDrive', 'blocked', true),
         integration('telegram', 'Telegram', 'connected'),
         integration('whatsapp', 'WhatsApp', 'blocked', true),
+        integration('paperclip', 'Paperclip Workforce Control Plane', 'blocked'),
       ],
       toolRegistry: [tool],
       mcpServers: [{
@@ -177,6 +178,13 @@ describe('Agent Zero live ecosystem registry', () => {
       for (const state of item.states) expect(AGENT_ZERO_LIVE_REGISTRY_STATES).toContain(state)
     }
     expect(registry.items.find((item) => item.id === 'google_drive')?.states).toContain('missing credential')
+    expect(registry.items.find((item) => item.id === 'paperclip')).toMatchObject({
+      name: 'Paperclip Workforce Control Plane',
+      category: 'integration',
+      requires_bridge_session: true,
+      endpoint: '/api/bridge/paperclip/status',
+      blocked: true,
+    })
     expect(registry.items.find((item) => item.id === 'mempalace')?.states).toContain('write-enabled')
     expect(JSON.stringify(registry)).not.toMatch(/sk-[A-Za-z0-9]|AIzaSy|xox[baprs]-/)
   })

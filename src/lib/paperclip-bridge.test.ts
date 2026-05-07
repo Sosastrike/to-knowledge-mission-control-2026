@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  buildPaperclipGatewayTaskPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
   listPaperclipAgents,
@@ -100,7 +101,7 @@ describe('Paperclip bridge payloads', () => {
             {
               id: 'issue-1',
               identifier: 'TKG-1',
-              title: 'Prepare workforce summary /home/tony/private',
+              title: 'Prepare workforce summary /Users/example/private',
               status: 'todo',
               assigneeAgentId: 'agent-1',
             },
@@ -144,12 +145,116 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe({ status, companies, agents, issues })
   })
 
+  it('routes Agent Zero Paperclip task requests through Gateway without writing issues', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const hermes = await buildPaperclipGatewayTaskPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      requester: 'agent_zero',
+      assignee: 'hermes',
+      title: 'Ask Hermes for an email triage workflow',
+      requestedAction: 'Assign Hermes a planning task only.',
+    })
+
+    expect(hermes).toMatchObject({
+      mode: 'paperclip_gateway_task_handoff',
+      requester: 'agent_zero',
+      assignee: 'hermes',
+      selected_route: ['agent_zero', 'gateway', 'paperclip'],
+      agent_zero_can_see_paperclip_status: true,
+      policy_result: 'requires_session',
+      policy: {
+        allowed: false,
+        gateway_required: true,
+        direct_paperclip_access_allowed: false,
+        bridge_session_required: true,
+        external_write_executed: false,
+        blocked_reason: 'active_bridge_session_required_for_paperclip_task_create',
+      },
+      assignment: {
+        target: 'hermes',
+        target_role: 'lieutenant_skill_workflow_builder',
+        agent_zero_reviews_completion: true,
+        paperclip_tracks_status: true,
+      },
+      task_issue: {
+        paperclip_issue_recorded: false,
+        issue_id: null,
+        status: 'not_created',
+      },
+      status_tracking: {
+        status: 'blocked',
+        status_source: 'gateway_policy',
+        completion_reviewed_by_agent_zero: false,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(hermes.gateway_handoff_log.map((entry) => entry.event)).toEqual([
+      'agent_zero_requested_paperclip_task',
+      'gateway_policy_checked_paperclip_task',
+      'paperclip_issue_record_blocked_until_session_and_adapter',
+      'agent_zero_completion_review_required',
+    ])
+    expect(hermes.gateway_handoff_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(hermes)
+  })
+
+  it('supports safe assignment targets for SpaceAgent, Pi review, and mini-agent requests', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const spaceAgent = await buildPaperclipGatewayTaskPayload({ generatedAt: GENERATED_AT, fetchImpl, requester: 'agent_zero', assignee: 'space-agent', title: 'Research public website' })
+    const pi = await buildPaperclipGatewayTaskPayload({ generatedAt: GENERATED_AT, fetchImpl, requester: 'agent_zero', assignee: 'pi', title: 'Review route selection' })
+    const miniAgent = await buildPaperclipGatewayTaskPayload({ generatedAt: GENERATED_AT, fetchImpl, requester: 'agent_zero', assignee: 'co-worker', title: 'Create scoped co-worker proposal' })
+
+    expect(spaceAgent.assignment).toMatchObject({ target: 'space_agent', target_role: 'browser_web_youtube_firecrawl_research_specialist' })
+    expect(pi.assignment).toMatchObject({ target: 'pi_review', target_role: 'dispatcher_candidate_route_optimizer_review' })
+    expect(miniAgent.assignment).toMatchObject({ target: 'mini_agent', target_role: 'scoped_subordinate_worker_or_co_worker_proposal' })
+    expect([spaceAgent, pi, miniAgent].every((payload) => payload.task_issue.paperclip_issue_recorded === false && payload.writes_enabled === false)).toBe(true)
+  })
+
+  it('blocks non-Agent Zero Paperclip task creation and sanitizes owner-visible text', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ status: 'ok' }))
+    const payload = await buildPaperclipGatewayTaskPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      requester: 'hermes',
+      assignee: 'hermes',
+      title: 'Use API_KEY=sample-redacted-input from /Users/example/private',
+    })
+
+    expect(payload).toMatchObject({
+      requester: 'blocked',
+      policy_result: 'requires_session',
+      policy: { blocked_reason: 'paperclip_tasks_must_be_requested_by_agent_zero_through_gateway' },
+      task_issue: { title: 'Use [redacted-secret] from [redacted-path]' },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expectOwnerSafe(payload)
+  })
+
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ status: 'ok' }))
     const payload = await buildPaperclipTestTaskPayload({
       generatedAt: GENERATED_AT,
       fetchImpl,
-      message: 'Create a task with API_KEY=sample-redacted-input and /home/tony/private',
+      message: 'Create a task with API_KEY=sample-redacted-input and /Users/example/private',
     })
 
     expect(payload).toMatchObject({

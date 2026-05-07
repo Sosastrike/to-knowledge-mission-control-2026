@@ -124,6 +124,68 @@ export type PaperclipTestTaskPayload = {
   next_action: string
 }
 
+export type PaperclipTaskAssignee = 'hermes' | 'space_agent' | 'pi_review' | 'mini_agent'
+export type PaperclipTaskPolicyResult = 'requires_session' | 'blocked' | 'missing_credential'
+
+export type PaperclipGatewayTaskPayload = {
+  ok: false
+  mode: 'paperclip_gateway_task_handoff'
+  generated_at: string
+  handoff_id: string
+  requester: 'agent_zero' | 'blocked'
+  assignee: PaperclipTaskAssignee | 'blocked'
+  requested_action: string
+  selected_route: ['agent_zero', 'gateway', 'paperclip']
+  allowed_assignments: PaperclipTaskAssignee[]
+  agent_zero_can_see_paperclip_status: true
+  paperclip_status_endpoint: '/api/bridge/paperclip/status'
+  paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks'
+  policy_result: PaperclipTaskPolicyResult
+  policy: {
+    allowed: false
+    direct_paperclip_access_allowed: false
+    gateway_required: true
+    bridge_session_required: true
+    write_adapter_configured: false
+    external_write_executed: false
+    blocked_reason: string
+  }
+  assignment: {
+    target: PaperclipTaskAssignee | 'blocked'
+    target_role: string
+    agent_zero_reviews_completion: true
+    paperclip_tracks_status: true
+  }
+  task_issue: {
+    paperclip_issue_recorded: false
+    issue_id: null
+    title: string
+    status: 'not_created'
+    blocked_reason: string
+  }
+  status_tracking: {
+    status: 'blocked'
+    status_source: 'gateway_policy'
+    completion_reviewed_by_agent_zero: false
+    next_status_check: '/api/bridge/paperclip/issues'
+  }
+  gateway_handoff_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
   | { ok: false; status: number; blocker: string }
@@ -276,6 +338,100 @@ export async function buildPaperclipTestTaskPayload(input: {
     no_secrets_exposed: true,
     raw_paths_exposed: false,
     next_action: 'Add a no-write Paperclip task adapter after sandbox API/auth review. Until then, this endpoint must stay safely blocked.',
+  }
+}
+
+export async function buildPaperclipGatewayTaskPayload(input: {
+  requester?: string | null
+  assignee?: string | null
+  title?: string | null
+  requestedAction?: string | null
+  generatedAt: string
+  bridgeSessionActive?: boolean
+  fetchImpl?: FetchLike
+  baseUrl?: string | null
+}): Promise<PaperclipGatewayTaskPayload> {
+  const requester = normalizePaperclipRequester(input.requester)
+  const assignee = normalizePaperclipAssignee(input.assignee)
+  const title = sanitizeOwnerText(input.title || input.requestedAction || 'Gateway Paperclip workforce task').slice(0, 180) || 'Gateway Paperclip workforce task'
+  const requestedAction = sanitizeOwnerText(input.requestedAction || title).slice(0, 1000)
+  const status = await buildPaperclipStatusPayload({
+    generatedAt: input.generatedAt,
+    fetchImpl: input.fetchImpl,
+    baseUrl: input.baseUrl,
+  })
+
+  const requesterBlocked = requester !== 'agent_zero'
+  const assigneeBlocked = !assignee
+  const statusBlocked = status.blocker || (!status.reachable ? 'paperclip_status_not_reachable' : null)
+  const bridgeBlocked = input.bridgeSessionActive ? 'paperclip_write_adapter_not_configured' : 'active_bridge_session_required_for_paperclip_task_create'
+  const blockedReason = requesterBlocked
+    ? 'paperclip_tasks_must_be_requested_by_agent_zero_through_gateway'
+    : assigneeBlocked
+      ? 'paperclip_task_assignee_not_supported'
+      : statusBlocked || bridgeBlocked
+  const policyResult: PaperclipTaskPolicyResult = /credential|auth|token|api/i.test(blockedReason)
+    ? 'missing_credential'
+    : input.bridgeSessionActive && blockedReason === 'paperclip_write_adapter_not_configured'
+      ? 'blocked'
+      : 'requires_session'
+  const safeAssignee = assignee || 'blocked'
+  const auditStatus = policyResult === 'blocked' || policyResult === 'missing_credential' ? 'blocked' : 'recorded'
+
+  return {
+    ok: false,
+    mode: 'paperclip_gateway_task_handoff',
+    generated_at: input.generatedAt,
+    handoff_id: buildPaperclipHandoffId(input.generatedAt),
+    requester: requester === 'agent_zero' ? 'agent_zero' : 'blocked',
+    assignee: safeAssignee,
+    requested_action: requestedAction,
+    selected_route: ['agent_zero', 'gateway', 'paperclip'],
+    allowed_assignments: ['hermes', 'space_agent', 'pi_review', 'mini_agent'],
+    agent_zero_can_see_paperclip_status: true,
+    paperclip_status_endpoint: '/api/bridge/paperclip/status',
+    paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks',
+    policy_result: policyResult,
+    policy: {
+      allowed: false,
+      direct_paperclip_access_allowed: false,
+      gateway_required: true,
+      bridge_session_required: true,
+      write_adapter_configured: false,
+      external_write_executed: false,
+      blocked_reason: blockedReason,
+    },
+    assignment: {
+      target: safeAssignee,
+      target_role: paperclipAssigneeRole(safeAssignee),
+      agent_zero_reviews_completion: true,
+      paperclip_tracks_status: true,
+    },
+    task_issue: {
+      paperclip_issue_recorded: false,
+      issue_id: null,
+      title,
+      status: 'not_created',
+      blocked_reason: blockedReason,
+    },
+    status_tracking: {
+      status: 'blocked',
+      status_source: 'gateway_policy',
+      completion_reviewed_by_agent_zero: false,
+      next_status_check: '/api/bridge/paperclip/issues',
+    },
+    gateway_handoff_log: [
+      handoffAuditEvent('agent_zero_requested_paperclip_task', 'agent_zero', 'gateway', 'recorded'),
+      handoffAuditEvent('gateway_policy_checked_paperclip_task', 'gateway', 'paperclip', auditStatus),
+      handoffAuditEvent('paperclip_issue_record_blocked_until_session_and_adapter', 'paperclip', safeAssignee, 'blocked'),
+      handoffAuditEvent('agent_zero_completion_review_required', 'gateway', 'agent_zero', 'recorded'),
+    ],
+    response_text: `Sir, Paperclip task routing is visible through Gateway, but I did not create a Paperclip issue. Blocker: ${blockedReason.replace(/[_-]+/g, ' ')}.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
   }
 }
 
@@ -470,6 +626,45 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function normalizePaperclipRequester(value: unknown): 'agent_zero' | 'blocked' {
+  const text = sanitizeIdentifier(value).toLowerCase().replace(/[-\s]+/g, '_')
+  return text === 'agent_zero' || text === 'agentzero' ? 'agent_zero' : 'blocked'
+}
+
+function normalizePaperclipAssignee(value: unknown): PaperclipTaskAssignee | null {
+  const text = sanitizeIdentifier(value).toLowerCase().replace(/[-\s]+/g, '_')
+  if (text === 'hermes') return 'hermes'
+  if (text === 'space_agent' || text === 'spaceagent') return 'space_agent'
+  if (text === 'pi' || text === 'pi_review' || text === 'pi_dispatcher') return 'pi_review'
+  if (text === 'mini_agent' || text === 'miniagent' || text === 'co_worker' || text === 'coworker') return 'mini_agent'
+  return null
+}
+
+function paperclipAssigneeRole(assignee: PaperclipTaskAssignee | 'blocked'): string {
+  if (assignee === 'hermes') return 'lieutenant_skill_workflow_builder'
+  if (assignee === 'space_agent') return 'browser_web_youtube_firecrawl_research_specialist'
+  if (assignee === 'pi_review') return 'dispatcher_candidate_route_optimizer_review'
+  if (assignee === 'mini_agent') return 'scoped_subordinate_worker_or_co_worker_proposal'
+  return 'blocked_unknown_assignee'
+}
+
+function buildPaperclipHandoffId(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
+  return `paperclip_handoff_${stamp}`
+}
+
+function handoffAuditEvent(event: string, actor: string, target: string, status: 'recorded' | 'blocked') {
+  return {
+    event,
+    actor,
+    target,
+    status,
+    external_write: false as const,
+    no_secrets_exposed: true as const,
+    raw_paths_exposed: false as const,
+  }
 }
 
 function inventoryOk<T>(mode: PaperclipInventoryPayload<T>['mode'], generatedAt: string, items: T[], companySelector?: string | null): PaperclipInventoryPayload<T> {

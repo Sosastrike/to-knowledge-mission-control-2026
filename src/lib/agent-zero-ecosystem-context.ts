@@ -15,6 +15,7 @@ import {
   readLatestRunNow,
 } from '@/lib/build-wiki-run-now'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
+import { buildPaperclipStatusPayload } from '@/lib/paperclip-bridge'
 import { inferSkillRoleTags } from '@/lib/skill-role-tags'
 import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
@@ -1320,7 +1321,7 @@ function endpointSummary(input: {
 }
 
 export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnlyContext> {
-  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, obsidianAdapterStatus, mempalaceAdapterStatus, timerActive, githubToken] = await Promise.all([
+  const [providersResult, zapierResult, mcpZapierResult, brainResult, brainContextResult, brainWriteContractResult, obsidianAdapterStatus, mempalaceAdapterStatus, timerActive, paperclipStatus, githubToken] = await Promise.all([
     fetchClaudeClawJson<{ providers?: ProviderStatus[] }>('/api/bridge/providers', {}, 12000).catch(() => ({
       ok: false,
       status: 503,
@@ -1415,6 +1416,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       blockers: ['mempalace_adapter_status_failed'],
     })),
     readBuildWikiTimerActive(),
+    buildPaperclipStatusPayload({ generatedAt: new Date().toISOString() }).catch(() => null),
     getGitHubToken().catch(() => null),
   ])
 
@@ -1584,6 +1586,21 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       source: 'systemd_user_timer_status',
       blockedReason: typeof timerActive === 'boolean' ? null : 'opencloud_docs_farmer_timer_status_unknown',
       notes: 'Agent Zero can see farmer/timer status only. Farmer execution requires owner approval and scoped dispatcher.',
+    }),
+    capability({
+      id: 'paperclip',
+      name: 'Paperclip Workforce Control Plane',
+      category: 'automation',
+      connected: paperclipStatus?.health === 'connected',
+      configured: Boolean(paperclipStatus?.configured),
+      credentialPresent: Boolean(paperclipStatus?.configured),
+      missingCredential: false,
+      credentialNames: [],
+      requiresBridgeSession: true,
+      toolCount: paperclipStatus?.workforce_summary.active_agents ?? null,
+      source: 'mission_control_paperclip_bridge',
+      blockedReason: paperclipStatus?.blocker || (paperclipStatus?.reachable ? 'paperclip_write_adapter_not_configured' : 'paperclip_service_not_configured'),
+      notes: 'Paperclip status is visible to Agent Zero through Gateway. Agent Zero may request workforce tasks, Hermes/SpaceAgent/Pi/mini-agent assignments, and co-worker proposals only through the protected Paperclip Gateway route; Paperclip issue creation and status mutation require Bridge Session and a configured write adapter.',
     }),
     capability({
       id: 'github',

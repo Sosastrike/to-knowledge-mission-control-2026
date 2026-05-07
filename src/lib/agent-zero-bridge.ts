@@ -930,6 +930,9 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   if (/firecrawl/i.test(input.ownerMessage)) {
     return `${integrationLine(input.context, 'firecrawl', 'Firecrawl')}. I did not execute a crawl.`
   }
+  if (/paperclip|workforce|co-?worker|daily task|heartbeat|budget/i.test(input.ownerMessage)) {
+    return `${integrationLine(input.context, 'paperclip', 'Paperclip Workforce Control Plane')}. Agent Zero can route Paperclip task requests only through Gateway. Assignments to Hermes, SpaceAgent, Pi review, or mini-agents and Paperclip issue creation require Bridge Session scope plus a configured Paperclip write adapter; I did not create or assign a task.`
+  }
   if (/\b(email|agentmail|send\s+(?:a\s+)?test\s+email)\b/i.test(input.ownerMessage)) {
     return 'Email send is blocked from read-only chat. It requires an owner-approved Bridge Session and the registered AgentMail adapter; I did not send an email.'
   }
@@ -1224,6 +1227,7 @@ const REQUIRED_AGENT_ZERO_LIVE_REGISTRY_ITEMS = [
   'onedrive',
   'telegram',
   'whatsapp',
+  'paperclip',
   'obsidian',
   'mempalace',
   'graphify',
@@ -1571,6 +1575,12 @@ function buildAgentZeroLiveRegistry(input: {
       id: 'whatsapp',
       name: 'WhatsApp',
       endpoint: '/api/bridge/agent-zero/ecosystem',
+    }),
+    integrationLiveRegistryItem(integrationById.get('paperclip'), {
+      id: 'paperclip',
+      name: 'Paperclip Workforce Control Plane',
+      endpoint: '/api/bridge/paperclip/status',
+      blockedReason: 'paperclip_service_not_configured',
     }),
     brainLiveRegistryItem(brainById.get('obsidian'), {
       id: 'obsidian',

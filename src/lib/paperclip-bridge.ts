@@ -596,6 +596,85 @@ export type PaperclipGatewayTaskPayload = {
   raw_paths_exposed: false
 }
 
+export const PAPERCLIP_GATEWAY_RECORD_MAPPINGS = [
+  "gateway_mission_to_issue",
+  "owner_command_to_issue",
+  "mini_agent_task_to_issue",
+  "space_agent_research_packet_to_work_product",
+  "hermes_skill_proposal_to_issue_work_product",
+  "pi_recommendation_to_issue_comment",
+  "agent_zero_decision_to_issue_approval",
+  "bridge_session_to_governance_event",
+  "completed_task_to_final_report",
+  "blocked_task_to_exact_blocker",
+] as const
+
+export type PaperclipGatewayRecordMappingKind = (typeof PAPERCLIP_GATEWAY_RECORD_MAPPINGS)[number]
+
+export type PaperclipGatewayRecordTarget =
+  | "paperclip_issue"
+  | "paperclip_work_product"
+  | "paperclip_issue_comment"
+  | "paperclip_issue_approval"
+  | "paperclip_governance_event"
+  | "paperclip_final_report"
+  | "paperclip_blocker"
+
+export type PaperclipGatewayRecordSource =
+  | "gateway"
+  | "owner"
+  | "mini_agent"
+  | "space_agent"
+  | "hermes"
+  | "pi"
+  | "agent_zero"
+  | "bridge_session"
+  | "paperclip"
+
+export type PaperclipGatewayRecordMappingInput = {
+  kind?: string | null
+  title?: string | null
+  sourceId?: string | null
+  blocker?: string | null
+  generatedAt: string
+}
+
+export type PaperclipGatewayRecordMapping = {
+  ok: boolean
+  mode: "paperclip_gateway_record_mapping_dry_run"
+  generated_at: string
+  mapping_id: string
+  kind: PaperclipGatewayRecordMappingKind | "unknown"
+  source: PaperclipGatewayRecordSource
+  targets: PaperclipGatewayRecordTarget[]
+  title: string
+  source_id: string | null
+  paperclip_write_recorded: false
+  paperclip_ids: []
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string
+  mapped_blocker: string | null
+  paperclip_storage_blocker: string
+  requires_bridge_session: true
+  write_adapter_configured: false
+  external_write: false
+  owner_visible_summary: string
+  audit_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: "recorded" | "blocked"
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
   | { ok: false; status: number; blocker: string }
@@ -1402,6 +1481,165 @@ export async function buildPaperclipPiDispatcherRecommendationPayload(input: {
   }
 }
 
+type PaperclipGatewayRecordMappingProfile = {
+  source: PaperclipGatewayRecordSource
+  targets: PaperclipGatewayRecordTarget[]
+  defaultTitle: string
+  summary: string
+  event: string
+}
+
+const PAPERCLIP_GATEWAY_RECORD_MAPPING_PROFILES: Record<PaperclipGatewayRecordMappingKind, PaperclipGatewayRecordMappingProfile> = {
+  gateway_mission_to_issue: {
+    source: "gateway",
+    targets: ["paperclip_issue"],
+    defaultTitle: "Gateway mission tracking issue",
+    summary: "Gateway mission to a Paperclip issue",
+    event: "gateway_mission_mapped_to_paperclip_issue",
+  },
+  owner_command_to_issue: {
+    source: "owner",
+    targets: ["paperclip_issue"],
+    defaultTitle: "Owner command tracking issue",
+    summary: "owner command to a Paperclip issue",
+    event: "owner_command_mapped_to_paperclip_issue",
+  },
+  mini_agent_task_to_issue: {
+    source: "mini_agent",
+    targets: ["paperclip_issue"],
+    defaultTitle: "Mini-agent task tracking issue",
+    summary: "mini-agent task to a Paperclip issue",
+    event: "mini_agent_task_mapped_to_paperclip_issue",
+  },
+  space_agent_research_packet_to_work_product: {
+    source: "space_agent",
+    targets: ["paperclip_work_product"],
+    defaultTitle: "SpaceAgent Research Packet work product",
+    summary: "SpaceAgent Research Packet to a Paperclip work product",
+    event: "space_agent_research_packet_mapped_to_work_product",
+  },
+  hermes_skill_proposal_to_issue_work_product: {
+    source: "hermes",
+    targets: ["paperclip_issue", "paperclip_work_product"],
+    defaultTitle: "Hermes skill proposal tracking record",
+    summary: "Hermes skill proposal to a Paperclip issue and work product",
+    event: "hermes_skill_proposal_mapped_to_issue_and_work_product",
+  },
+  pi_recommendation_to_issue_comment: {
+    source: "pi",
+    targets: ["paperclip_issue_comment"],
+    defaultTitle: "Pi dispatcher recommendation comment",
+    summary: "Pi recommendation to a Paperclip issue comment",
+    event: "pi_recommendation_mapped_to_issue_comment",
+  },
+  agent_zero_decision_to_issue_approval: {
+    source: "agent_zero",
+    targets: ["paperclip_issue_approval"],
+    defaultTitle: "Agent Zero decision approval",
+    summary: "Agent Zero decision to a Paperclip issue approval",
+    event: "agent_zero_decision_mapped_to_issue_approval",
+  },
+  bridge_session_to_governance_event: {
+    source: "bridge_session",
+    targets: ["paperclip_governance_event"],
+    defaultTitle: "Bridge Session governance event",
+    summary: "Bridge Session to a Paperclip governance event",
+    event: "bridge_session_mapped_to_governance_event",
+  },
+  completed_task_to_final_report: {
+    source: "paperclip",
+    targets: ["paperclip_final_report"],
+    defaultTitle: "Completed task final report",
+    summary: "completed task to a final report",
+    event: "completed_task_mapped_to_final_report",
+  },
+  blocked_task_to_exact_blocker: {
+    source: "gateway",
+    targets: ["paperclip_blocker"],
+    defaultTitle: "Blocked task exact blocker",
+    summary: "blocked task to an exact blocker",
+    event: "blocked_task_mapped_to_exact_blocker",
+  },
+}
+
+export function buildPaperclipGatewayRecordMapping(input: PaperclipGatewayRecordMappingInput): PaperclipGatewayRecordMapping {
+  const kind = normalizePaperclipGatewayRecordMappingKind(input.kind)
+  const storageBlocker = "active_bridge_session_and_paperclip_write_adapter_required_for_record_mapping_storage"
+  const fallbackTitle = kind ? PAPERCLIP_GATEWAY_RECORD_MAPPING_PROFILES[kind].defaultTitle : "Unknown Gateway Paperclip mapping"
+  const title = sanitizeOwnerText(input.title || fallbackTitle).slice(0, 180) || fallbackTitle
+  const sourceId = sanitizeIdentifier(sanitizeOwnerText(input.sourceId || "")) || null
+
+  if (!kind) {
+    return {
+      ok: false,
+      mode: "paperclip_gateway_record_mapping_dry_run",
+      generated_at: input.generatedAt,
+      mapping_id: buildPaperclipGatewayRecordMappingId(input.generatedAt, "unknown"),
+      kind: "unknown",
+      source: "gateway",
+      targets: [],
+      title,
+      source_id: sourceId,
+      paperclip_write_recorded: false,
+      paperclip_ids: [],
+      policy_result: "blocked",
+      blocked_reason: "paperclip_gateway_record_mapping_kind_unknown",
+      mapped_blocker: null,
+      paperclip_storage_blocker: storageBlocker,
+      requires_bridge_session: true,
+      write_adapter_configured: false,
+      external_write: false,
+      owner_visible_summary: "Paperclip mapping is blocked because the Gateway record mapping kind is unknown.",
+      audit_log: [handoffAuditEvent("paperclip_gateway_record_mapping_kind_blocked", "gateway", "paperclip", "blocked")],
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    }
+  }
+
+  const profile = PAPERCLIP_GATEWAY_RECORD_MAPPING_PROFILES[kind]
+  const mappedBlocker = kind === "blocked_task_to_exact_blocker"
+    ? sanitizeIdentifier(sanitizeOwnerText(input.blocker || "")) || "paperclip_task_blocked_exact_reason_required"
+    : null
+  const missingExactBlocker = kind === "blocked_task_to_exact_blocker" && mappedBlocker === "paperclip_task_blocked_exact_reason_required"
+  const blockedReason = mappedBlocker || storageBlocker
+
+  return {
+    ok: !missingExactBlocker,
+    mode: "paperclip_gateway_record_mapping_dry_run",
+    generated_at: input.generatedAt,
+    mapping_id: buildPaperclipGatewayRecordMappingId(input.generatedAt, kind),
+    kind,
+    source: profile.source,
+    targets: [...profile.targets],
+    title,
+    source_id: sourceId,
+    paperclip_write_recorded: false,
+    paperclip_ids: [],
+    policy_result: missingExactBlocker ? "blocked" : "requires_session",
+    blocked_reason: blockedReason,
+    mapped_blocker: mappedBlocker,
+    paperclip_storage_blocker: storageBlocker,
+    requires_bridge_session: true,
+    write_adapter_configured: false,
+    external_write: false,
+    owner_visible_summary: mappedBlocker
+      ? `Paperclip would record the blocked task reason as ${mappedBlocker}; storage remains gated by Bridge Session and adapter support.`
+      : `Paperclip would map ${profile.summary}; storage remains gated by Bridge Session and adapter support.`,
+    audit_log: [
+      handoffAuditEvent(profile.event, profile.source, profile.targets[0] || "paperclip", missingExactBlocker ? "blocked" : "recorded"),
+      handoffAuditEvent("paperclip_record_write_blocked_until_session_and_adapter", "gateway", "paperclip", "blocked"),
+    ],
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -1877,6 +2115,28 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
+}
+
+function buildPaperclipGatewayRecordMappingId(generatedAt: string, kind: PaperclipGatewayRecordMappingKind | "unknown") {
+  const stamp = generatedAt.replace(/\D/g, "").slice(0, 14) || "pending"
+  return `paperclip_gateway_record_${kind}_${stamp}`
+}
+
+function normalizePaperclipGatewayRecordMappingKind(value: unknown): PaperclipGatewayRecordMappingKind | null {
+  const text = sanitizeOwnerText(String(value || "")).toLowerCase().replace(/[-\s]+/g, "_").replace(/[^a-z0-9_]+/g, "")
+  if (!text) return null
+  if (PAPERCLIP_GATEWAY_RECORD_MAPPINGS.includes(text as PaperclipGatewayRecordMappingKind)) return text as PaperclipGatewayRecordMappingKind
+  if (text === "gateway_mission_issue") return "gateway_mission_to_issue"
+  if (text === "owner_command_issue") return "owner_command_to_issue"
+  if (text === "mini_agent_task_issue") return "mini_agent_task_to_issue"
+  if (text === "space_agent_research_packet_work_product" || text === "research_packet_work_product") return "space_agent_research_packet_to_work_product"
+  if (text === "hermes_skill_proposal_issue_work_product" || text === "hermes_proposal_issue_work_product") return "hermes_skill_proposal_to_issue_work_product"
+  if (text === "pi_recommendation_issue_comment") return "pi_recommendation_to_issue_comment"
+  if (text === "agent_zero_decision_issue_approval") return "agent_zero_decision_to_issue_approval"
+  if (text === "bridge_session_governance_event") return "bridge_session_to_governance_event"
+  if (text === "completed_task_final_report") return "completed_task_to_final_report"
+  if (text === "blocked_task_exact_blocker") return "blocked_task_to_exact_blocker"
+  return null
 }
 
 function buildPaperclipRecommendationId(generatedAt: string) {

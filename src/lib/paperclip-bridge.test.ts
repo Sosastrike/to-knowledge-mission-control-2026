@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  buildPaperclipGatewayRecordMapping,
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
+  PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
   createPaperclipCoWorkerAgentDefinition,
   transitionPaperclipCoWorkerLifecycle,
   validatePaperclipCoWorkerGatewayPolicy,
@@ -868,6 +870,102 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe(recommendation)
   })
 
+
+
+  it("maps Gateway missions, commands, agent work, governance, reports, and blockers into Paperclip record targets without writes", () => {
+    const expectedTargets = {
+      gateway_mission_to_issue: ["paperclip_issue"],
+      owner_command_to_issue: ["paperclip_issue"],
+      mini_agent_task_to_issue: ["paperclip_issue"],
+      space_agent_research_packet_to_work_product: ["paperclip_work_product"],
+      hermes_skill_proposal_to_issue_work_product: ["paperclip_issue", "paperclip_work_product"],
+      pi_recommendation_to_issue_comment: ["paperclip_issue_comment"],
+      agent_zero_decision_to_issue_approval: ["paperclip_issue_approval"],
+      bridge_session_to_governance_event: ["paperclip_governance_event"],
+      completed_task_to_final_report: ["paperclip_final_report"],
+      blocked_task_to_exact_blocker: ["paperclip_blocker"],
+    } as const
+
+    for (const kind of PAPERCLIP_GATEWAY_RECORD_MAPPINGS) {
+      const record = buildPaperclipGatewayRecordMapping({
+        kind,
+        title: `Paperclip mapping for ${kind}`,
+        sourceId: "gateway-flow-1",
+        blocker: kind === "blocked_task_to_exact_blocker" ? "drive_upload_connector_missing" : null,
+        generatedAt: GENERATED_AT,
+      })
+
+      expect(record).toMatchObject({
+        ok: true,
+        mode: "paperclip_gateway_record_mapping_dry_run",
+        kind,
+        targets: expectedTargets[kind],
+        source_id: "gateway-flow-1",
+        paperclip_write_recorded: false,
+        paperclip_ids: [],
+        policy_result: "requires_session",
+        paperclip_storage_blocker: "active_bridge_session_and_paperclip_write_adapter_required_for_record_mapping_storage",
+        requires_bridge_session: true,
+        write_adapter_configured: false,
+        external_write: false,
+        execution_enabled: false,
+        writes_enabled: false,
+        protected_actions_enabled: false,
+        no_secrets_exposed: true,
+        raw_paths_exposed: false,
+      })
+      if (kind === "blocked_task_to_exact_blocker") {
+        expect(record).toMatchObject({
+          blocked_reason: "drive_upload_connector_missing",
+          mapped_blocker: "drive_upload_connector_missing",
+        })
+      } else {
+        expect(record).toMatchObject({
+          blocked_reason: "active_bridge_session_and_paperclip_write_adapter_required_for_record_mapping_storage",
+          mapped_blocker: null,
+        })
+      }
+      expect(record.audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+      expectOwnerSafe(record)
+    }
+  })
+
+  it("blocks unknown Paperclip mapping kinds and blocked-task mappings without an exact blocker", () => {
+    const unknown = buildPaperclipGatewayRecordMapping({
+      kind: "owner-command-to-mystery",
+      title: "Mystery mapping",
+      generatedAt: GENERATED_AT,
+    })
+    const missingBlocker = buildPaperclipGatewayRecordMapping({
+      kind: "blocked_task_to_exact_blocker",
+      title: "Blocked task record",
+      generatedAt: GENERATED_AT,
+    })
+
+    expect(unknown).toMatchObject({
+      ok: false,
+      mode: "paperclip_gateway_record_mapping_dry_run",
+      kind: "unknown",
+      targets: [],
+      policy_result: "blocked",
+      blocked_reason: "paperclip_gateway_record_mapping_kind_unknown",
+      paperclip_write_recorded: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(missingBlocker).toMatchObject({
+      ok: false,
+      kind: "blocked_task_to_exact_blocker",
+      targets: ["paperclip_blocker"],
+      policy_result: "blocked",
+      blocked_reason: "paperclip_task_blocked_exact_reason_required",
+      mapped_blocker: "paperclip_task_blocked_exact_reason_required",
+      paperclip_write_recorded: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expectOwnerSafe({ unknown, missingBlocker })
+  })
 
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ status: 'ok' }))

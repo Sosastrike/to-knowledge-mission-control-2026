@@ -854,6 +854,14 @@ describe('Gateway registry API model', () => {
       policy_result: { route_decision: 'blocked', requires_bridge_session: true },
       execution_mode: 'bridge_session',
     })
+    expect(flowMap.get('flow_pi_gateway_agent_zero_paperclip_dispatch_recommendation')).toMatchObject({
+      source: 'pi',
+      target: 'paperclip',
+      requested_action: 'paperclip_dispatch_recommendation',
+      selected_route: { hops: ['pi', 'gateway', 'agent_zero', 'paperclip'] },
+      policy_result: { route_decision: 'blocked', requires_bridge_session: true },
+      execution_mode: 'bridge_session',
+    })
     expect(flowMap.get('flow_agent_zero_gateway_openclaw_skill')).toMatchObject({
       source: 'agent_zero',
       target: 'openclaw_plus',

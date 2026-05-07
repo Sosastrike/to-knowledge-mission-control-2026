@@ -24,6 +24,7 @@ export type PaperclipSafeStatusPayload = {
   issues_endpoint: '/api/bridge/paperclip/issues'
   test_task_endpoint: '/api/bridge/paperclip/test-chat'
   proposals_endpoint: '/api/bridge/paperclip/proposals'
+  dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations'
   service: {
     local_only: boolean
     public_exposure: false
@@ -175,6 +176,70 @@ export type PaperclipHermesProposalPayload = {
     agent_zero_review_required: true
     owner_approval_required_if_protected_action: true
     hermes_final_authority: false
+  }
+  gateway_audit_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipPiDispatcherRecommendationPayload = {
+  ok: false
+  mode: 'paperclip_pi_dispatcher_recommendation'
+  generated_at: string
+  recommendation_id: string
+  requester: 'pi'
+  selected_route: ['pi', 'gateway', 'agent_zero', 'paperclip']
+  task_queue_visible: true
+  paperclip_status_endpoint: '/api/bridge/paperclip/status'
+  paperclip_task_queue_endpoint: '/api/bridge/paperclip/issues'
+  paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks'
+  paperclip_dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations'
+  queue_summary: {
+    paperclip_reachable: boolean
+    active_issue_count: number
+    blocker: string | null
+  }
+  owner_request: string
+  recommendation: {
+    recommended_agent: PaperclipTaskAssignee
+    recommended_agent_reason: string
+    budget_route: string
+    model_provider_route: string
+    create_mini_agent: boolean
+    mini_agent_reason: string | null
+    policy_result: PaperclipTaskPolicyResult
+    blocked_reason: string
+  }
+  advisory_contract: {
+    shadow_mode: true
+    output_is_advisory_until_proven: true
+    pi_can_execute: false
+    gateway_policy_required: true
+    agent_zero_final_decision_required: true
+  }
+  storage: {
+    paperclip_recommendation_recorded: false
+    work_product_recorded: false
+    issue_id: null
+    work_product_id: null
+    blocked_reason: string
+  }
+  final_decision: {
+    agent_zero_makes_final_decision: true
+    owner_approval_required_if_protected_action: true
+    gateway_logs_final_route_decision: true
   }
   gateway_audit_log: Array<{
     event: string
@@ -626,6 +691,88 @@ export async function buildPaperclipHermesProposalPayload(input: {
   }
 }
 
+export async function buildPaperclipPiDispatcherRecommendationPayload(input: {
+  ownerRequest?: string | null
+  generatedAt: string
+  fetchImpl?: FetchLike
+  baseUrl?: string | null
+}): Promise<PaperclipPiDispatcherRecommendationPayload> {
+  const ownerRequest = sanitizeOwnerText(input.ownerRequest || 'Recommend a safe Paperclip task route.').slice(0, 1000)
+  const [status, queue] = await Promise.all([
+    buildPaperclipStatusPayload({ generatedAt: input.generatedAt, fetchImpl: input.fetchImpl, baseUrl: input.baseUrl }),
+    listPaperclipIssues({ generatedAt: input.generatedAt, fetchImpl: input.fetchImpl, baseUrl: input.baseUrl }),
+  ])
+  const recommendedAgent = recommendPaperclipAssigneeForOwnerRequest(ownerRequest)
+  const storageBlockedReason = status.blocker || queue.blocker || (!status.reachable ? 'paperclip_status_not_reachable' : 'active_bridge_session_and_paperclip_write_adapter_required_for_dispatcher_recommendation_storage')
+  const policyResult: PaperclipTaskPolicyResult = /credential|auth|token|api/i.test(storageBlockedReason)
+    ? 'missing_credential'
+    : status.blocker || queue.blocker || !status.reachable
+      ? 'blocked'
+      : 'requires_session'
+  const createMiniAgent = shouldRecommendPaperclipMiniAgent(ownerRequest, recommendedAgent)
+
+  return {
+    ok: false,
+    mode: 'paperclip_pi_dispatcher_recommendation',
+    generated_at: input.generatedAt,
+    recommendation_id: buildPaperclipRecommendationId(input.generatedAt),
+    requester: 'pi',
+    selected_route: ['pi', 'gateway', 'agent_zero', 'paperclip'],
+    task_queue_visible: true,
+    paperclip_status_endpoint: '/api/bridge/paperclip/status',
+    paperclip_task_queue_endpoint: '/api/bridge/paperclip/issues',
+    paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks',
+    paperclip_dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations',
+    queue_summary: {
+      paperclip_reachable: status.reachable && queue.paperclip_reachable,
+      active_issue_count: queue.count,
+      blocker: queue.blocker || status.blocker,
+    },
+    owner_request: ownerRequest,
+    recommendation: {
+      recommended_agent: recommendedAgent,
+      recommended_agent_reason: paperclipAssigneeRole(recommendedAgent),
+      budget_route: recommendPaperclipBudgetRoute(ownerRequest),
+      model_provider_route: recommendPaperclipModelRoute(ownerRequest),
+      create_mini_agent: createMiniAgent,
+      mini_agent_reason: createMiniAgent ? 'Task is scoped or repeatable enough for a supervised mini-agent proposal.' : null,
+      policy_result: policyResult,
+      blocked_reason: storageBlockedReason,
+    },
+    advisory_contract: {
+      shadow_mode: true,
+      output_is_advisory_until_proven: true,
+      pi_can_execute: false,
+      gateway_policy_required: true,
+      agent_zero_final_decision_required: true,
+    },
+    storage: {
+      paperclip_recommendation_recorded: false,
+      work_product_recorded: false,
+      issue_id: null,
+      work_product_id: null,
+      blocked_reason: storageBlockedReason,
+    },
+    final_decision: {
+      agent_zero_makes_final_decision: true,
+      owner_approval_required_if_protected_action: true,
+      gateway_logs_final_route_decision: true,
+    },
+    gateway_audit_log: [
+      handoffAuditEvent('pi_read_paperclip_task_queue', 'pi', 'paperclip', queue.ok ? 'recorded' : 'blocked'),
+      handoffAuditEvent('pi_recommended_paperclip_task_route', 'pi', 'gateway', 'recorded'),
+      handoffAuditEvent('paperclip_dispatcher_recommendation_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+      handoffAuditEvent('agent_zero_final_route_decision_required', 'gateway', 'agent_zero', 'recorded'),
+    ],
+    response_text: `Sir, Pi can recommend a Paperclip route in shadow mode, but it cannot execute or store the recommendation yet. Blocker: ${storageBlockedReason.replace(/[_-]+/g, ' ')}. Agent Zero makes the final decision.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -704,6 +851,7 @@ function basePayload(generatedAt: string, endpoint: string, uiLink: string | nul
     issues_endpoint: '/api/bridge/paperclip/issues',
     test_task_endpoint: '/api/bridge/paperclip/test-chat',
     proposals_endpoint: '/api/bridge/paperclip/proposals',
+    dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations',
     service: {
       local_only: true,
       public_exposure: false,
@@ -818,6 +966,38 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function recommendPaperclipAssigneeForOwnerRequest(ownerRequest: string): PaperclipTaskAssignee {
+  const text = ownerRequest.toLowerCase()
+  if (/web|browser|youtube|firecrawl|crawl|scrape|research|source|page|article|video/.test(text)) return 'space_agent'
+  if (/budget|cost|model|provider|route|dispatch|triage|review/.test(text)) return 'pi_review'
+  if (/mini[-\s]?agent|small|scoped|repeat|recurring|checklist|qa/.test(text)) return 'mini_agent'
+  if (/skill|workflow|template|routine|automation/.test(text)) return 'hermes'
+  return 'pi_review'
+}
+
+function recommendPaperclipBudgetRoute(ownerRequest: string): string {
+  const text = ownerRequest.toLowerCase()
+  if (/expensive|large|complex|strong|opus|sonnet|deep/.test(text)) return 'budget_review_required_before_strong_model_or_parallel_workforce_route'
+  if (/small|quick|low[-\s]?cost|cheap|simple/.test(text)) return 'low_cost_route_preferred_until_agent_zero_approves_escalation'
+  return 'paperclip_budget_tracking_advisory_only_no_spending_authority'
+}
+
+function recommendPaperclipModelRoute(ownerRequest: string): string {
+  const text = ownerRequest.toLowerCase()
+  if (/complex|architecture|security|deep|hard|multi[-\s]?step/.test(text)) return 'strong_model_route_recommended_after_gateway_policy_check'
+  if (/small|classify|simple|quick|draft/.test(text)) return 'low_cost_model_route_recommended_after_gateway_policy_check'
+  return 'gateway_model_registry_route_recommended_agent_zero_decides'
+}
+
+function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
+  return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
+}
+
+function buildPaperclipRecommendationId(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
+  return `paperclip_pi_recommendation_${stamp}`
 }
 
 function normalizePaperclipProposalKind(value: unknown): PaperclipHermesProposalKind {

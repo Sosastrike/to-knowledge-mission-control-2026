@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
+  buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
   listPaperclipAgents,
@@ -310,6 +311,76 @@ describe('Paperclip bridge payloads', () => {
     expect(proposal.gateway_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
     expectOwnerSafe(proposal)
   })
+
+  it('lets Pi see Paperclip task queue and recommend advisory routes without execution', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({
+        issues: [
+          { id: 'issue-1', title: 'Design workflow template', status: 'todo' },
+          { id: 'issue-2', title: 'Review model budget route', status: 'in_progress' },
+        ],
+      })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const recommendation = await buildPaperclipPiDispatcherRecommendationPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      ownerRequest: 'Recommend budget and model provider route for a small scoped mini-agent task.',
+    })
+
+    expect(recommendation).toMatchObject({
+      mode: 'paperclip_pi_dispatcher_recommendation',
+      requester: 'pi',
+      selected_route: ['pi', 'gateway', 'agent_zero', 'paperclip'],
+      task_queue_visible: true,
+      paperclip_task_queue_endpoint: '/api/bridge/paperclip/issues',
+      paperclip_dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations',
+      queue_summary: {
+        paperclip_reachable: true,
+        active_issue_count: 2,
+        blocker: null,
+      },
+      recommendation: {
+        recommended_agent: 'pi_review',
+        budget_route: 'low_cost_route_preferred_until_agent_zero_approves_escalation',
+        model_provider_route: 'low_cost_model_route_recommended_after_gateway_policy_check',
+        create_mini_agent: true,
+        policy_result: 'requires_session',
+        blocked_reason: 'active_bridge_session_and_paperclip_write_adapter_required_for_dispatcher_recommendation_storage',
+      },
+      advisory_contract: {
+        shadow_mode: true,
+        output_is_advisory_until_proven: true,
+        pi_can_execute: false,
+        gateway_policy_required: true,
+        agent_zero_final_decision_required: true,
+      },
+      storage: {
+        paperclip_recommendation_recorded: false,
+        work_product_recorded: false,
+      },
+      final_decision: {
+        agent_zero_makes_final_decision: true,
+        gateway_logs_final_route_decision: true,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(recommendation.gateway_audit_log.map((entry) => entry.event)).toEqual([
+      'pi_read_paperclip_task_queue',
+      'pi_recommended_paperclip_task_route',
+      'paperclip_dispatcher_recommendation_storage_blocked_until_session_and_adapter',
+      'agent_zero_final_route_decision_required',
+    ])
+    expect(recommendation.gateway_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(recommendation)
+  })
+
 
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ status: 'ok' }))

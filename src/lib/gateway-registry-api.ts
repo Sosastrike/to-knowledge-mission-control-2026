@@ -675,6 +675,16 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       purpose: 'Hermes can read the Paperclip skills/task registry and draft workflow templates, mini-agent specs, routines, and skill proposal documents. Paperclip issue/work-product storage is blocked until Agent Zero/Gateway approval, Bridge Session scope, and a configured Paperclip write adapter exist.',
     },
     {
+      flow_id: 'flow_pi_gateway_agent_zero_paperclip_dispatch_recommendation',
+      source: 'pi',
+      target: 'paperclip',
+      requested_action: 'paperclip_dispatch_recommendation',
+      edge_kind: 'delegation' as const,
+      hops: ['pi', 'gateway', 'agent_zero', 'paperclip'],
+      requires_session: true,
+      purpose: 'Pi can see the Paperclip task queue and recommend agent assignment, budget route, model/provider route, and mini-agent creation. Pi output is advisory until proven; Paperclip recommendation storage is blocked until Agent Zero final decision, Gateway policy, Bridge Session scope, and a configured Paperclip write adapter exist.',
+    },
+    {
       flow_id: 'flow_agent_zero_gateway_paperclip_task_issue',
       source: 'agent_zero',
       target: 'paperclip',

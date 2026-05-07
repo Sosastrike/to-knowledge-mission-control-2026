@@ -101,6 +101,7 @@ export type GatewayMiniAgentOperatingSystem = {
     direct_secret_access_allowed: false
     independent_owner_facing_authority_allowed: false
   }
+  improvement_loop: GatewayMiniAgentImprovementLoop
   registry: {
     agent_zero_present: boolean
     hermes_present: boolean
@@ -115,6 +116,21 @@ export type GatewayMiniAgentOperatingSystem = {
   execution_enabled: false
   writes_enabled: false
   secrets_exposed: false
+}
+
+export type GatewayMiniAgentImprovementLoop = {
+  hermes_daily_skill_proposals: true
+  pi_daily_route_improvements: true
+  agent_zero_review_required: true
+  gateway_logs_accepted_rejected_proposals: true
+  mini_agents_report_missing_tools: true
+  mini_agents_report_failed_instructions: true
+  hermes_converts_failures_to_skill_proposals: true
+  pi_converts_repeated_routes_to_dispatcher_rules: true
+  agent_zero_approves_only_safe_improvements: true
+  no_improvement_deploys_without_tests: true
+  execution_enabled: false
+  writes_enabled: false
 }
 
 export type GatewayMiniAgentProposal = {
@@ -165,6 +181,50 @@ export type GatewayMiniAgentProposal = {
   }
   blocked_reason: string | null
   owner_visible_summary: string
+}
+
+export const GATEWAY_IMPROVEMENT_PROPOSAL_SOURCES = [
+  'hermes_daily_skill_proposal',
+  'pi_daily_route_improvement',
+  'mini_agent_missing_tool',
+  'mini_agent_failed_instruction',
+] as const
+
+export type GatewayImprovementProposalSource = (typeof GATEWAY_IMPROVEMENT_PROPOSAL_SOURCES)[number]
+
+export type GatewayImprovementProposalInput = {
+  source?: string | null
+  title?: string | null
+  evidence?: string | string[] | null
+  repeated_route_count?: number | null
+  tests_passed?: boolean | null
+  agent_zero_reviewed?: boolean | null
+  owner_approved?: boolean | null
+  generated_at?: string | null
+}
+
+export type GatewayImprovementProposal = {
+  ok: boolean
+  mode: 'gateway_improvement_proposal_dry_run'
+  generated_at: string
+  source: GatewayImprovementProposalSource | null
+  proposer: 'hermes' | 'pi' | 'mini_agent' | 'gateway'
+  title: string
+  evidence: string[]
+  cadence: 'daily' | 'event_triggered'
+  agent_zero_review: 'required' | 'reviewed'
+  gateway_decision_log: Array<{ event: string; decision: 'accepted' | 'rejected' | 'blocked'; reason: string | null }>
+  hermes_skill_proposal: { required: boolean; production_write: false }
+  pi_dispatcher_rule: { required: boolean; production_write: false }
+  mini_agent_report: { missing_tool: boolean; failed_instruction: boolean }
+  deployment: { allowed: false; blocked_reason: string }
+  tests_required: true
+  tests_passed: boolean
+  execution_enabled: false
+  writes_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+  blocked_reason: string | null
 }
 
 const DEFAULT_MEMORY_TTL_HOURS = 24
@@ -218,6 +278,7 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       direct_secret_access_allowed: false,
       independent_owner_facing_authority_allowed: false,
     },
+    improvement_loop: miniAgentImprovementLoop(),
     registry: {
       agent_zero_present: nodeIds.has('agent_zero'),
       hermes_present: nodeIds.has('hermes'),
@@ -337,6 +398,59 @@ export function createGatewayMiniAgentProposal(
     safety: miniAgentSafety(),
     blocked_reason: blockedReason,
     owner_visible_summary: `${name} is a supervised mini-agent proposal under ${parentSupervisor}; no activation or external write occurred.`,
+  }
+}
+
+export function createGatewayImprovementProposal(
+  registry: GatewayRegistry,
+  input: GatewayImprovementProposalInput = {},
+): GatewayImprovementProposal {
+  const source = normalizeImprovementSource(input.source)
+  const generatedAt = safeText(input.generated_at || registry.generated_at) || registry.generated_at
+  const title = safeLabel(input.title || 'Gateway improvement proposal')
+  const evidence = normalizeScope(input.evidence).slice(0, 10)
+  const testsPassed = Boolean(input.tests_passed)
+  const reviewed = Boolean(input.agent_zero_reviewed)
+  const missingTool = source === 'mini_agent_missing_tool'
+  const failedInstruction = source === 'mini_agent_failed_instruction'
+  const repeatedRouteCount = Math.max(0, Math.floor(Number(input.repeated_route_count || 0)))
+  const hermesSkillRequired = source === 'hermes_daily_skill_proposal' || missingTool || failedInstruction
+  const piRuleRequired = source === 'pi_daily_route_improvement' || repeatedRouteCount >= 3
+  const blocker = !source
+    ? 'gateway_improvement_source_unknown'
+    : !title
+      ? 'gateway_improvement_title_required'
+      : !evidence.length
+        ? 'gateway_improvement_evidence_required'
+        : !reviewed
+          ? 'gateway_improvement_agent_zero_review_required'
+          : !testsPassed
+            ? 'gateway_improvement_tests_required_before_deployment'
+            : 'gateway_improvement_deployment_requires_bridge_session_and_change_review'
+  const decision = blocker === 'gateway_improvement_deployment_requires_bridge_session_and_change_review' ? 'accepted' : 'blocked'
+
+  return {
+    ok: decision === 'accepted',
+    mode: 'gateway_improvement_proposal_dry_run',
+    generated_at: generatedAt,
+    source,
+    proposer: source?.startsWith('hermes') ? 'hermes' : source?.startsWith('pi') ? 'pi' : source?.startsWith('mini_agent') ? 'mini_agent' : 'gateway',
+    title,
+    evidence,
+    cadence: source === 'hermes_daily_skill_proposal' || source === 'pi_daily_route_improvement' ? 'daily' : 'event_triggered',
+    agent_zero_review: reviewed ? 'reviewed' : 'required',
+    gateway_decision_log: [{ event: 'gateway.improvement.proposal.review', decision, reason: blocker }],
+    hermes_skill_proposal: { required: hermesSkillRequired, production_write: false },
+    pi_dispatcher_rule: { required: piRuleRequired, production_write: false },
+    mini_agent_report: { missing_tool: missingTool, failed_instruction: failedInstruction },
+    deployment: { allowed: false, blocked_reason: blocker },
+    tests_required: true,
+    tests_passed: testsPassed,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+    blocked_reason: blocker,
   }
 }
 
@@ -491,6 +605,28 @@ function blockedMiniAgentProposal(input: {
     blocked_reason: input.blocker,
     owner_visible_summary: `Mini-agent proposal for ${input.name} is blocked: ${input.blocker}.`,
   }
+}
+
+function miniAgentImprovementLoop(): GatewayMiniAgentImprovementLoop {
+  return {
+    hermes_daily_skill_proposals: true,
+    pi_daily_route_improvements: true,
+    agent_zero_review_required: true,
+    gateway_logs_accepted_rejected_proposals: true,
+    mini_agents_report_missing_tools: true,
+    mini_agents_report_failed_instructions: true,
+    hermes_converts_failures_to_skill_proposals: true,
+    pi_converts_repeated_routes_to_dispatcher_rules: true,
+    agent_zero_approves_only_safe_improvements: true,
+    no_improvement_deploys_without_tests: true,
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+function normalizeImprovementSource(value: string | null | undefined): GatewayImprovementProposalSource | null {
+  const normalized = normalizeId(value || '')
+  return (GATEWAY_IMPROVEMENT_PROPOSAL_SOURCES as readonly string[]).includes(normalized) ? normalized as GatewayImprovementProposalSource : null
 }
 
 function miniAgentPolicy(): GatewayMiniAgentPolicy {

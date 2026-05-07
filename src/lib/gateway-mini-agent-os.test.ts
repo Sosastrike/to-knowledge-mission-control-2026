@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildGatewayMiniAgentOperatingSystem,
+  createGatewayImprovementProposal,
   createGatewayMiniAgentProposal,
   routeMiniAgentRequest,
 } from './gateway-mini-agent-os'
@@ -124,6 +125,96 @@ describe('Gateway mini-agent operating system', () => {
     expect(route.hops).toEqual(['owner', 'gateway', 'agent_zero', 'gateway', 'pi', 'gateway', 'mini_agent_tool_route_advisor'])
     expect(route.execution_enabled).toBe(false)
     expect(route.blocked_reason).toBe('mini_agent_activation_requires_bridge_session_and_registered_runtime_adapter')
+  })
+
+  it('records safe daily improvement loops without deploying changes', () => {
+    const os = buildGatewayMiniAgentOperatingSystem(registry)
+    const hermes = createGatewayImprovementProposal(registry, {
+      source: 'hermes_daily_skill_proposal',
+      title: 'Build-Wiki summary skill proposal',
+      evidence: ['recurring report request', 'manual summary step repeated'],
+      agent_zero_reviewed: true,
+      tests_passed: true,
+    })
+    const pi = createGatewayImprovementProposal(registry, {
+      source: 'pi_daily_route_improvement',
+      title: 'Route small research tasks to mini-agent proposal',
+      evidence: ['same route repeated four times'],
+      repeated_route_count: 4,
+      agent_zero_reviewed: true,
+      tests_passed: true,
+    })
+
+    expect(os.improvement_loop).toMatchObject({
+      hermes_daily_skill_proposals: true,
+      pi_daily_route_improvements: true,
+      agent_zero_review_required: true,
+      gateway_logs_accepted_rejected_proposals: true,
+      no_improvement_deploys_without_tests: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(hermes).toMatchObject({
+      ok: true,
+      mode: 'gateway_improvement_proposal_dry_run',
+      source: 'hermes_daily_skill_proposal',
+      proposer: 'hermes',
+      cadence: 'daily',
+      agent_zero_review: 'reviewed',
+      hermes_skill_proposal: { required: true, production_write: false },
+      pi_dispatcher_rule: { required: false, production_write: false },
+      deployment: { allowed: false, blocked_reason: 'gateway_improvement_deployment_requires_bridge_session_and_change_review' },
+      tests_required: true,
+      tests_passed: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(pi).toMatchObject({
+      ok: true,
+      source: 'pi_daily_route_improvement',
+      proposer: 'pi',
+      pi_dispatcher_rule: { required: true, production_write: false },
+      deployment: { allowed: false },
+    })
+  })
+
+  it('blocks improvement deployment until Agent Zero review and tests exist', () => {
+    const missingReview = createGatewayImprovementProposal(registry, {
+      source: 'mini_agent_missing_tool',
+      title: 'Missing source verifier tool',
+      evidence: ['mini-agent reported missing read-only verifier'],
+      tests_passed: true,
+    })
+    const missingTests = createGatewayImprovementProposal(registry, {
+      source: 'mini_agent_failed_instruction',
+      title: 'Instruction failed on ambiguous source list',
+      evidence: ['mini-agent reported failed instruction'],
+      agent_zero_reviewed: true,
+      tests_passed: false,
+    })
+
+    expect(missingReview).toMatchObject({
+      ok: false,
+      source: 'mini_agent_missing_tool',
+      proposer: 'mini_agent',
+      agent_zero_review: 'required',
+      hermes_skill_proposal: { required: true, production_write: false },
+      mini_agent_report: { missing_tool: true, failed_instruction: false },
+      blocked_reason: 'gateway_improvement_agent_zero_review_required',
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(missingTests).toMatchObject({
+      ok: false,
+      source: 'mini_agent_failed_instruction',
+      proposer: 'mini_agent',
+      hermes_skill_proposal: { required: true, production_write: false },
+      mini_agent_report: { missing_tool: false, failed_instruction: true },
+      blocked_reason: 'gateway_improvement_tests_required_before_deployment',
+      tests_required: true,
+      tests_passed: false,
+    })
+    expect(JSON.stringify({ missingReview, missingTests })).not.toMatch(/sk-live|Bearer\s+abc123|sample-token-placeholder/i)
   })
 
   it('keeps owner-facing proposal output free of raw paths, secrets, and fake completion', () => {

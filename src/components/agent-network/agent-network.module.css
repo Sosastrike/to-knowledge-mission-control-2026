@@ -536,6 +536,136 @@
   padding: 0;
 }
 
+
+.gatewayMetricGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0;
+}
+
+.gatewayMetricCard,
+.gatewayInfoBadge {
+  --gateway-tone: var(--auth-fg-2);
+  --gateway-tone-bg: rgba(255, 255, 255, 0.035);
+  --gateway-tone-border: rgba(255, 255, 255, 0.08);
+  background: var(--gateway-tone-bg);
+  border: 1px solid var(--gateway-tone-border);
+  color: var(--auth-fg-1);
+}
+
+.gatewayMetricCard {
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.gatewayMetricCard span,
+.gatewayInfoBadge strong,
+.gatewayActionRow span,
+.gatewayInlineNote {
+  color: var(--auth-fg-2);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.gatewayMetricCard strong {
+  color: var(--gateway-tone);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.gatewayBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px 0;
+}
+
+.gatewayInfoBadge {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 30px;
+  overflow-wrap: anywhere;
+  padding: 6px 10px;
+}
+
+.gatewayInfoBadge strong {
+  color: var(--gateway-tone);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gatewayActionRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px 0;
+}
+
+.gatewayActionButton {
+  appearance: none;
+  background: rgba(107, 179, 255, 0.12);
+  border: 1px solid rgba(107, 179, 255, 0.34);
+  border-radius: 8px;
+  color: var(--auth-accent);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 8px 11px;
+  text-decoration: none;
+}
+
+.gatewayActionButton:disabled {
+  background: rgba(152, 162, 179, 0.08);
+  border-color: rgba(152, 162, 179, 0.22);
+  color: var(--auth-fg-3);
+  cursor: not-allowed;
+}
+
+.gatewayInlineLink {
+  color: var(--auth-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gatewayInlineLink:hover,
+.gatewayInlineLink:focus-visible {
+  text-decoration: underline;
+}
+
+.gatewayToneGood {
+  --gateway-tone: var(--auth-ok);
+  --gateway-tone-bg: rgba(61, 220, 132, 0.08);
+  --gateway-tone-border: rgba(61, 220, 132, 0.24);
+}
+
+.gatewayToneWarn {
+  --gateway-tone: var(--auth-warn);
+  --gateway-tone-bg: rgba(255, 204, 58, 0.08);
+  --gateway-tone-border: rgba(255, 204, 58, 0.24);
+}
+
+.gatewayToneBlocked {
+  --gateway-tone: var(--auth-error);
+  --gateway-tone-bg: rgba(255, 79, 138, 0.08);
+  --gateway-tone-border: rgba(255, 79, 138, 0.24);
+}
+
+.gatewayToneNeutral {
+  --gateway-tone: var(--auth-fg-1);
+}
+
 @keyframes gatewayHealthPulse {
   0%, 100% { opacity: 0.58; transform: scale(0.92); }
   50% { opacity: 1; transform: scale(1.08); }

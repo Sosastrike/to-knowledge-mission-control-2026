@@ -1419,6 +1419,34 @@ type GatewayVisualDetail = {
   value: string
 }
 
+type GatewayVisualMetricTone = 'neutral' | 'good' | 'warn' | 'blocked'
+
+type GatewayVisualMetric = {
+  label: string
+  value: string
+  tone?: GatewayVisualMetricTone
+}
+
+type GatewayVisualBadge = {
+  label: string
+  value: string
+  tone?: GatewayVisualMetricTone
+}
+
+type GatewayVisualLink = {
+  label: string
+  href: string
+  note?: string
+}
+
+type GatewayVisualAction = {
+  label: string
+  href: string | null
+  disabled: boolean
+  reason: string | null
+  authRequired: true
+}
+
 type GatewayVisualNode = {
   id: string
   label: string
@@ -1430,6 +1458,11 @@ type GatewayVisualNode = {
   blockers: string[]
   lastTest: string
   details?: GatewayVisualDetail[]
+  metrics?: GatewayVisualMetric[]
+  badges?: GatewayVisualBadge[]
+  links?: GatewayVisualLink[]
+  blockedTasks?: string[]
+  action?: GatewayVisualAction
   latestJobs?: string[]
   handoffTarget?: string
 }
@@ -1679,7 +1712,8 @@ function buildSpaceAgentGatewayVisualNode(
   }
 }
 
-function buildPaperclipGatewayVisualNode(
+
+export function buildPaperclipGatewayVisualNode(
   node: GatewayVisualNode,
   payload: PaperclipStatusPayload | null,
   state: 'loading' | 'ok' | 'error',
@@ -1703,10 +1737,18 @@ function buildPaperclipGatewayVisualNode(
     : status === 'blocked'
       ? 'blocked'
       : 'not configured'
+  const activeTasks = stringifyDetail(summary.active_issues, 'not available')
+  const activeAgents = stringifyDetail(summary.active_agents, 'not available')
+  const budgetStatus = stringifyDetail(summary.budget_status, 'not reported')
+  const heartbeatStatus = stringifyDetail(summary.heartbeat_status, 'not reported')
+  const uiLink = sanitizePaperclipUiLink(payload?.ui_link || null)
+  const launchEnabled = state === 'ok' && reachable && Boolean(uiLink)
+  const blockedTasks = buildPaperclipBlockedTasks(payload, blocker, state, error)
   const blockers = [
     ...node.blockers,
     ...(state === 'error' ? [`Paperclip status route unavailable: ${error}`] : []),
     ...(blocker ? [blocker] : []),
+    ...blockedTasks,
   ].filter(Boolean)
 
   return {
@@ -1715,17 +1757,85 @@ function buildPaperclipGatewayVisualNode(
     statusLabel,
     blockers: Array.from(new Set(blockers)),
     lastTest: state === 'loading' ? 'loading /api/bridge/paperclip/status' : (payload?.status_endpoint || node.lastTest),
+    metrics: [
+      { label: 'Active tasks', value: activeTasks, tone: activeTasks === 'not available' ? 'blocked' : 'neutral' },
+      { label: 'Active agents', value: activeAgents, tone: activeAgents === 'not available' ? 'blocked' : 'neutral' },
+    ],
+    badges: [
+      { label: 'Budget', value: budgetStatus, tone: paperclipBadgeTone(budgetStatus) },
+      { label: 'Heartbeat', value: heartbeatStatus, tone: paperclipBadgeTone(heartbeatStatus) },
+    ],
+    links: [
+      { label: 'Latest work products', href: payload?.issues_endpoint || '/api/bridge/paperclip/issues', note: 'read-only issues/tasks registry' },
+      { label: 'Agents', href: payload?.agents_endpoint || '/api/bridge/paperclip/agents', note: 'read-only workforce roster' },
+      { label: 'Companies', href: payload?.companies_endpoint || '/api/bridge/paperclip/companies', note: 'read-only company registry' },
+    ],
+    blockedTasks,
+    action: {
+      label: 'Open Paperclip',
+      href: launchEnabled ? uiLink : null,
+      disabled: !launchEnabled,
+      reason: launchEnabled ? null : (blocker || 'Paperclip UI is not reachable yet; launch stays disabled.'),
+      authRequired: true,
+    },
     details: [
-      { label: 'UI link', value: stringifyDetail(payload?.ui_link || payload?.endpoint, 'not configured') },
+      { label: 'Status card', value: statusLabel },
+      { label: 'UI link', value: stringifyDetail(uiLink, 'not configured') },
       { label: 'Company count', value: stringifyDetail(summary.company_count, 'not available') },
-      { label: 'Active agents', value: stringifyDetail(summary.active_agents, 'not available') },
-      { label: 'Active issues/tasks', value: stringifyDetail(summary.active_issues, 'not available') },
-      { label: 'Budget status', value: stringifyDetail(summary.budget_status, 'not reported') },
-      { label: 'Heartbeat status', value: stringifyDetail(summary.heartbeat_status, 'not reported') },
+      { label: 'Active agents', value: activeAgents },
+      { label: 'Active issues/tasks', value: activeTasks },
+      { label: 'Budget status', value: budgetStatus },
+      { label: 'Heartbeat queue', value: heartbeatStatus },
       { label: 'Bridge Session', value: payload?.bridge_session?.required_for_mutations ? 'required for workforce mutations' : 'required before execution' },
       { label: 'Public exposure', value: payload?.service?.public_exposure ? 'not allowed' : 'blocked' },
+      { label: 'Auth protection', value: 'same-origin Gateway page and bridge routes' },
     ],
   }
+}
+
+
+function sanitizePaperclipUiLink(value: string | null): string | null {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    const host = url.hostname.toLowerCase()
+    const allowedHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('100.')
+    const allowedProtocol = url.protocol === 'http:' || url.protocol === 'https:'
+    if (!allowedHost || !allowedProtocol) return null
+    if (/[?&](token|api[_-]?key|secret|password)=/i.test(url.search)) return null
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+function paperclipBadgeTone(value: string): GatewayVisualMetricTone {
+  const text = value.toLowerCase()
+  if (/not reachable|not reported|not available|missing|blocked|error|failed/.test(text)) return 'blocked'
+  if (/warning|alert|75|hard stop|over budget|queue/.test(text)) return 'warn'
+  if (/ok|healthy|within|active|running|connected/.test(text)) return 'good'
+  return 'neutral'
+}
+
+function buildPaperclipBlockedTasks(
+  payload: PaperclipStatusPayload | null,
+  blocker: string,
+  state: 'loading' | 'ok' | 'error',
+  error: string,
+): string[] {
+  const blocked = new Set<string>()
+  if (state === 'loading') blocked.add('Paperclip UI launch waits for authenticated status load')
+  if (state === 'error') blocked.add(`Paperclip status route unavailable: ${error}`)
+  if (blocker) blocked.add(blocker)
+  if (!payload?.reachable) blocked.add('Paperclip UI and workforce API are not reachable')
+  if (!payload?.configured) blocked.add('Paperclip company dashboard is not configured')
+  if (payload?.bridge_session?.required_for_mutations !== false) {
+    blocked.add('Paperclip task creation requires Bridge Session')
+    blocked.add('Paperclip work product storage requires Bridge Session')
+    blocked.add('Paperclip workforce mutations require Bridge Session')
+  }
+  if (payload?.writes_enabled === false) blocked.add('Paperclip external writes are disabled')
+  return Array.from(blocked)
 }
 
 function stringifyDetail(value: unknown, fallback: string) {
@@ -1795,6 +1905,7 @@ function GatewayMapNodeButton({
   )
 }
 
+
 function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
   return (
     <aside className={styles.gatewayDetailPanel} aria-label="Gateway node detail">
@@ -1805,6 +1916,40 @@ function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
         </div>
         <strong className={gatewayStatusClass(node.status)}>{node.statusLabel}</strong>
       </header>
+      {node.metrics && node.metrics.length > 0 && (
+        <div className={styles.gatewayMetricGrid} aria-label={`${node.label} metrics`}>
+          {node.metrics.map((metric) => (
+            <div key={metric.label} className={`${styles.gatewayMetricCard} ${metricToneClass(metric.tone)}`}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+      {node.badges && node.badges.length > 0 && (
+        <div className={styles.gatewayBadgeRow} aria-label={`${node.label} badges`}>
+          {node.badges.map((badge) => (
+            <span key={badge.label} className={`${styles.gatewayInfoBadge} ${metricToneClass(badge.tone)}`}>
+              <strong>{badge.label}</strong>
+              {badge.value}
+            </span>
+          ))}
+        </div>
+      )}
+      {node.action && (
+        <div className={styles.gatewayActionRow}>
+          {node.action.disabled || !node.action.href ? (
+            <button type="button" className={styles.gatewayActionButton} disabled title={node.action.reason || undefined}>
+              {node.action.label}
+            </button>
+          ) : (
+            <a className={styles.gatewayActionButton} href={node.action.href} target="_blank" rel="noreferrer">
+              {node.action.label}
+            </a>
+          )}
+          <span>{node.action.reason || 'Protected behind authenticated Gateway access.'}</span>
+        </div>
+      )}
       <dl>
         <div>
           <dt>Status</dt>
@@ -1836,6 +1981,25 @@ function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
             <p>none</p>
           )}
         </section>
+        {node.links && node.links.length > 0 && (
+          <section>
+            <strong>Links</strong>
+            <ul>
+              {node.links.map((link) => (
+                <li key={link.label}>
+                  <a className={styles.gatewayInlineLink} href={link.href}>{link.label}</a>
+                  {link.note ? <span className={styles.gatewayInlineNote}> {link.note}</span> : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {node.blockedTasks && node.blockedTasks.length > 0 && (
+          <section>
+            <strong>Blocked Tasks</strong>
+            <ul>{node.blockedTasks.map((task) => <li key={task}>{task}</li>)}</ul>
+          </section>
+        )}
         {node.latestJobs && node.latestJobs.length > 0 && (
           <section>
             <strong>Latest Research Jobs</strong>
@@ -1851,6 +2015,20 @@ function GatewayNodeDetail({ node }: { node: GatewayVisualNode }) {
       </div>
     </aside>
   )
+}
+
+
+function metricToneClass(tone: GatewayVisualMetricTone = 'neutral') {
+  switch (tone) {
+    case 'good':
+      return styles.gatewayToneGood
+    case 'warn':
+      return styles.gatewayToneWarn
+    case 'blocked':
+      return styles.gatewayToneBlocked
+    default:
+      return styles.gatewayToneNeutral
+  }
 }
 
 function gatewayStatusClass(status: GatewayVisualStatus) {

@@ -60,6 +60,7 @@ describe('Gateway route authentication policy', () => {
     const paperclipDispatcherRecommendations = await import('@/app/api/bridge/paperclip/dispatcher-recommendations/route')
     const paperclipResearchTasks = await import('@/app/api/bridge/paperclip/research-tasks/route')
     const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
+    const paperclipWorkforceFlow = await import('@/app/api/bridge/paperclip/workforce-flow/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -133,6 +134,11 @@ describe('Gateway route authentication policy', () => {
       paperclipTestChat.POST(new NextRequest('http://localhost/api/bridge/paperclip/test-chat', {
         method: 'POST',
         body: JSON.stringify({ message: 'Can you see Paperclip?' }),
+      })),
+      paperclipWorkforceFlow.GET(new NextRequest('http://localhost/api/bridge/paperclip/workforce-flow')),
+      paperclipWorkforceFlow.POST(new NextRequest('http://localhost/api/bridge/paperclip/workforce-flow', {
+        method: 'POST',
+        body: JSON.stringify({ owner_request: 'Route a workforce task.', assignee: 'hermes' }),
       })),
     ]
 

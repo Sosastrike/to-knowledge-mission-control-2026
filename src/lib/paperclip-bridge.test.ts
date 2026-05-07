@@ -656,6 +656,32 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe(payload)
   })
 
+  it('redacts secret-like values and local paths from Paperclip workforce flow text', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const payload = await buildPaperclipGatewayWorkforceFlowPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      ownerRequest: 'Create a task with API_KEY=sample-redacted-input from /Users/example/private.',
+      assignee: 'hermes',
+      workerResult: 'Worker reviewed /Users/example/private and ignored API_KEY=sample-redacted-input.',
+    })
+
+    expect(payload.owner_request).toBe('Create a task with [redacted-secret] from [redacted-path]')
+    expect(payload.worker_execution.result_summary).toBe('Worker reviewed [redacted-path] and ignored [redacted-secret]')
+    expect(JSON.stringify(payload)).not.toMatch(/sample-redacted-input|\/Users\/example\/private/)
+    expect(payload.execution_enabled).toBe(false)
+    expect(payload.writes_enabled).toBe(false)
+    expectOwnerSafe(payload)
+  })
+
   it('keeps the Paperclip workforce flow blocked when no worker result exists', async () => {
     const fetchImpl = vi.fn(async (input: string | URL | Request) => {
       const url = String(input)

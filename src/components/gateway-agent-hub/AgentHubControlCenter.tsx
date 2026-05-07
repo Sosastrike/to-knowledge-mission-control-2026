@@ -31,7 +31,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </section>
 
         <section className='rounded-lg border border-amber-300/25 bg-amber-300/8 p-4 text-sm leading-6 text-amber-100'>
-          <strong>Production truth:</strong> Agent Zero remains partial GO, Hermes is gated until hermes_called:true, Pi-mono and SpaceAgent are pending, Paperclip is pending until UI proof, Fork 2/SMB is blocked, and Build-Wiki Run Now is scoped only to opencloud-docs-farmer.service.
+          <strong>Production truth:</strong> Agent Zero remains partial GO, Hermes is gated until hermes_called:true, Pi-mono is pending, SpaceAgent has Playwright MCP local-only browser evidence, Paperclip is pending until UI proof, Fork 2/SMB is blocked, and Build-Wiki Run Now is scoped only to opencloud-docs-farmer.service.
         </section>
 
         <section className='grid gap-4 lg:grid-cols-[1.6fr_1fr]'>
@@ -202,6 +202,11 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
         <a href={agent.interface.mission_control_surface} className='rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-sky-200 hover:border-sky-300/40'>Open surface</a>
         <a href={agent.routes.detail} className='rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-sky-300/40'>API detail</a>
       </div>
+      {agent.id === 'spaceagent' && (
+        <div className='mt-4 rounded-lg border border-sky-300/20 bg-sky-300/8 p-3 text-xs leading-5 text-sky-100'>
+          Playwright MCP: local-only browser automation is connected through SpaceAgent. Read-only evidence packets are available; click/type/form/authenticated actions require Bridge Session scope.
+        </div>
+      )}
       {agent.blocked_reason && <p className='mt-4 rounded-lg border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Blocker: {agent.blocked_reason}</p>}
     </article>
   )

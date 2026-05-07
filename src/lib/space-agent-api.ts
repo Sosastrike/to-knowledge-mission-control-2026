@@ -5,6 +5,7 @@ import {
   type SpaceAgentResearchPacket,
   type SpaceAgentResponsibleAgent,
 } from './space-agent-research'
+import type { PlaywrightMcpStatus } from './playwright-mcp'
 
 export type SpaceAgentStatusPayload = {
   ok: true
@@ -29,6 +30,7 @@ export type SpaceAgentStatusPayload = {
     bridge_session_required: boolean
     execution_enabled: false
   }
+  playwright_mcp?: PlaywrightMcpStatus
   youtube: {
     support: string
     transcript_path_configured: boolean
@@ -46,6 +48,28 @@ export type SpaceAgentStatusPayload = {
   protected_actions_enabled: false
   no_secrets_exposed: true
   raw_paths_exposed: false
+}
+
+export function attachPlaywrightMcpStatus(payload: SpaceAgentStatusPayload, playwrightMcp: PlaywrightMcpStatus): SpaceAgentStatusPayload {
+  return {
+    ...payload,
+    health: playwrightMcp.ok && payload.firecrawl.blocked_reason ? 'degraded' : playwrightMcp.ok ? 'read_only' : payload.health,
+    configured: payload.configured || playwrightMcp.ok,
+    browser: {
+      ...payload.browser,
+      status: playwrightMcp.ok
+        ? 'playwright_mcp_local_only_read_only_evidence_available_bridge_session_required_for_interactive_actions'
+        : payload.browser.status,
+      configured: payload.browser.configured || playwrightMcp.ok,
+      runtime_adapter_configured: payload.browser.runtime_adapter_configured || playwrightMcp.ok,
+      bridge_session_required: true,
+      execution_enabled: false,
+    },
+    playwright_mcp: playwrightMcp,
+    blockers: playwrightMcp.ok
+      ? Array.from(new Set(payload.blockers.filter((blocker) => blocker !== 'spaceagent_runtime_not_proven_live')))
+      : Array.from(new Set([...payload.blockers, playwrightMcp.blocker || 'playwright_mcp_service_unreachable'])),
+  }
 }
 
 export type SpaceAgentTestChatPayload = {

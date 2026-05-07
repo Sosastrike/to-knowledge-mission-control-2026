@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
-import { buildSpaceAgentStatusPayload, attachPlaywrightMcpStatus } from '@/lib/space-agent-api'
 import { getPlaywrightMcpStatus } from '@/lib/playwright-mcp'
 
 export const runtime = 'nodejs'
@@ -11,10 +9,12 @@ export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  const generatedAt = new Date().toISOString()
-  const registry = await loadGatewayRegistry()
-  const playwrightMcp = await getPlaywrightMcpStatus()
-  return NextResponse.json(attachPlaywrightMcpStatus(buildSpaceAgentStatusPayload(registry, generatedAt), playwrightMcp), {
+  const status = await getPlaywrightMcpStatus()
+  return NextResponse.json({
+    ...status,
+    generated_at: new Date().toISOString(),
+  }, {
+    status: status.ok ? 200 : 503,
     headers: { 'Cache-Control': 'no-store' },
   })
 }

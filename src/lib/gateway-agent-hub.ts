@@ -93,7 +93,7 @@ export type AgentHubStatusPayload = {
     agent_zero: 'partial_go_commander_track'
     hermes: 'gated_until_hermes_called_true'
     pi_mono: 'candidate_pending_until_installed_and_live'
-    spaceagent: 'pending_until_installed_and_live'
+    spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'pending_until_localhost_or_tailnet_ui_proven'
     opencloud_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
@@ -293,16 +293,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'SpaceAgent',
     role: 'Browser / Firecrawl / YouTube Research Specialist',
     layer: 'web_research_specialist',
-    productionTruth: 'pending until installed and live; research routes stay read-only',
-    status: 'pending',
-    liveInterfaceProven: false,
+    productionTruth: 'Playwright MCP browser automation is live as a local-only SpaceAgent research tool; interactive/authenticated actions remain Bridge Session gated',
+    status: 'read_only',
+    liveInterfaceProven: true,
     calledTrueProven: false,
-    interfaceSummary: 'Gateway research node visible; runtime adapter proof pending',
+    interfaceSummary: 'Gateway research node visible; Playwright MCP is connected at localhost only and returns read-only Browser Evidence Packets',
     localUiUrl: null,
     tailnetUrl: null,
-    uiMode: 'not_installed',
+    uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['spaceagent_runtime_not_proven_live'],
+    extraBlockers: ['firecrawl_missing_credential', 'interactive_browser_actions_require_bridge_session'],
   },
   {
     id: 'pi-mono',
@@ -370,7 +370,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       agent_zero: 'partial_go_commander_track',
       hermes: 'gated_until_hermes_called_true',
       pi_mono: 'candidate_pending_until_installed_and_live',
-      spaceagent: 'pending_until_installed_and_live',
+      spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'pending_until_localhost_or_tailnet_ui_proven',
       opencloud_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',

@@ -5,6 +5,8 @@ import { clearSpaceAgentJobStoreForTests } from './space-agent-api'
 
 const requireRoleMock = vi.hoisted(() => vi.fn())
 const loadGatewayRegistryMock = vi.hoisted(() => vi.fn())
+const getPlaywrightMcpStatusMock = vi.hoisted(() => vi.fn())
+const createPlaywrightBrowserEvidencePacketMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
   requireRole: requireRoleMock,
@@ -15,6 +17,15 @@ vi.mock('@/lib/gateway-registry-api', async () => {
   return {
     ...actual,
     loadGatewayRegistry: loadGatewayRegistryMock,
+  }
+})
+
+vi.mock('@/lib/playwright-mcp', async () => {
+  const actual = await vi.importActual<typeof import('./playwright-mcp')>('@/lib/playwright-mcp')
+  return {
+    ...actual,
+    getPlaywrightMcpStatus: getPlaywrightMcpStatusMock,
+    createPlaywrightBrowserEvidencePacket: createPlaywrightBrowserEvidencePacketMock,
   }
 })
 
@@ -36,10 +47,57 @@ describe('Space Agent Gateway and Bridge routes', () => {
   beforeEach(() => {
     requireRoleMock.mockReset()
     loadGatewayRegistryMock.mockReset()
+    getPlaywrightMcpStatusMock.mockReset()
+    createPlaywrightBrowserEvidencePacketMock.mockReset()
     clearSpaceAgentJobStoreForTests()
     loadGatewayRegistryMock.mockResolvedValue(createGatewayRegistryFromAgentNetwork({
       generatedAt: '2026-05-06T00:00:00.000Z',
     }))
+    getPlaywrightMcpStatusMock.mockResolvedValue({
+      ok: true,
+      mode: 'playwright_mcp_status',
+      status: 'connected',
+      service_name: 'playwright-mcp.service',
+      endpoint: 'localhost:8931/mcp',
+      transport: 'streamable_http',
+      bind_host: '127.0.0.1',
+      local_only: true,
+      public_exposure: false,
+      browser_mode: 'headless_firefox_isolated',
+      execution_enabled: false,
+      writes_enabled: false,
+      bridge_session_required_for_interactive_actions: true,
+      authenticated_browsing_requires_owner_approval: true,
+      tool_count: 23,
+      tools: ['browser_navigate', 'browser_snapshot', 'browser_take_screenshot', 'browser_console_messages', 'browser_network_requests'],
+      required_tools_present: true,
+      blocker: null,
+      last_error: null,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    createPlaywrightBrowserEvidencePacketMock.mockResolvedValue({
+      ok: true,
+      mode: 'space_agent_playwright_mcp_browser_evidence_packet',
+      packet_id: 'playwright_mcp_example',
+      requested_url: 'https://example.com/',
+      status: 'completed',
+      evidence: {
+        snapshot_available: true,
+        snapshot_contains_requested_page: true,
+        console_available: true,
+        network_available: true,
+        screenshot_available: true,
+        snapshot_excerpt: 'Example Domain',
+      },
+      blocker: null,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      bridge_session_required: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
   })
 
   it('rejects unauthenticated Space Agent routes before loading Gateway state', async () => {
@@ -49,6 +107,8 @@ describe('Space Agent Gateway and Bridge routes', () => {
     const testChat = await import('@/app/api/bridge/space-agent/test-chat/route')
     const research = await import('@/app/api/gateway/space-agent/research/route')
     const job = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
+    const playwrightStatus = await import('@/app/api/bridge/space-agent/playwright-mcp/status/route')
+    const playwrightEvidence = await import('@/app/api/gateway/space-agent/playwright-mcp/evidence/route')
 
     const responses = await Promise.all([
       nodeAlias.GET(request('http://localhost/api/gateway/nodes/space-agent')),
@@ -61,6 +121,11 @@ describe('Space Agent Gateway and Bridge routes', () => {
         method: 'POST',
         body: JSON.stringify({ request: 'Research a public page.' }),
       })),
+      playwrightStatus.GET(request('http://localhost/api/bridge/space-agent/playwright-mcp/status')),
+      playwrightEvidence.POST(request('http://localhost/api/gateway/space-agent/playwright-mcp/evidence', {
+        method: 'POST',
+        body: JSON.stringify({ url: 'https://example.com' }),
+      })),
       job.GET(request('http://localhost/api/gateway/space-agent/jobs/missing'), {
         params: Promise.resolve({ id: 'missing' }),
       }),
@@ -71,6 +136,45 @@ describe('Space Agent Gateway and Bridge routes', () => {
       expect(await response.json()).toMatchObject({ error: 'Authentication required' })
     }
     expect(loadGatewayRegistryMock).not.toHaveBeenCalled()
+  })
+
+  it('returns Playwright MCP status and read-only browser evidence packets through protected Gateway routes', async () => {
+    requireRoleMock.mockReturnValue({ user: { role: 'operator' } })
+    const playwrightStatus = await import('@/app/api/bridge/space-agent/playwright-mcp/status/route')
+    const playwrightEvidence = await import('@/app/api/gateway/space-agent/playwright-mcp/evidence/route')
+
+    const statusResponse = await playwrightStatus.GET(request('http://localhost/api/bridge/space-agent/playwright-mcp/status'))
+    const evidenceResponse = await playwrightEvidence.POST(request('http://localhost/api/gateway/space-agent/playwright-mcp/evidence', {
+      method: 'POST',
+      body: JSON.stringify({ url: 'https://example.com' }),
+    }))
+    const statusPayload = await json(statusResponse)
+    const evidencePayload = await json(evidenceResponse)
+
+    expect(statusResponse.status).toBe(200)
+    expect(statusPayload).toMatchObject({
+      status: 'connected',
+      endpoint: 'localhost:8931/mcp',
+      local_only: true,
+      public_exposure: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      required_tools_present: true,
+    })
+    expect(evidenceResponse.status).toBe(200)
+    expect(evidencePayload).toMatchObject({
+      mode: 'space_agent_playwright_mcp_browser_evidence_packet',
+      status: 'completed',
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      bridge_session_required: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(createPlaywrightBrowserEvidencePacketMock).toHaveBeenCalledWith(expect.objectContaining({ url: 'https://example.com' }))
+    expectOwnerSafe(statusPayload)
+    expectOwnerSafe(evidencePayload)
   })
 
   it('returns authenticated read-only Space Agent status and node detail without secrets', async () => {
@@ -93,16 +197,22 @@ describe('Space Agent Gateway and Bridge routes', () => {
     expect(statusResponse.status).toBe(200)
     expect(statusPayload).toMatchObject({
       mode: 'space_agent_status_read_only',
-      health: 'blocked',
+      health: 'degraded',
       firecrawl: {
         credential_configured: false,
         blocked_reason: 'firecrawl_missing_credential',
       },
       browser: {
-        configured: false,
-        runtime_adapter_configured: false,
+        configured: true,
+        runtime_adapter_configured: true,
         bridge_session_required: true,
         execution_enabled: false,
+      },
+      playwright_mcp: {
+        status: 'connected',
+        local_only: true,
+        public_exposure: false,
+        required_tools_present: true,
       },
       youtube: {
         transcript_path_configured: true,

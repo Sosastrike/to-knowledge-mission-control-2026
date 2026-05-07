@@ -443,11 +443,11 @@ describe('Gateway registry API model', () => {
       firecrawl_extract: 'blocked_missing_credential',
       firecrawl_interact_browser: 'blocked_missing_credential',
       firecrawl_blocked_reason: 'firecrawl_missing_credential',
-      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      browser_status: 'playwright_mcp_local_only_read_only_evidence_available_bridge_session_required_for_interactive_actions',
       youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
       latest_research_jobs: 'none_recorded_yet',
       handoff_target: 'agent_zero_by_default',
-      blockers_summary: 'firecrawl_missing_credential',
+      blockers_summary: 'firecrawl_missing_credential; interactive_browser_actions_require_bridge_session',
     })
     const firecrawlSearch = registry.capabilities.find((capability) => capability.id === 'space_agent_firecrawl_search')
     expect(firecrawlSearch).toMatchObject({
@@ -480,11 +480,11 @@ describe('Gateway registry API model', () => {
       firecrawl_status: 'blocked',
       firecrawl_credential_configured: false,
       firecrawl_blocked_reason: 'firecrawl_missing_credential',
-      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      browser_status: 'playwright_mcp_local_only_read_only_evidence_available_bridge_session_required_for_interactive_actions',
       youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
       latest_research_jobs: 'none_recorded_yet',
       handoff_target: 'agent_zero_by_default',
-      blockers_summary: 'firecrawl_missing_credential',
+      blockers_summary: 'firecrawl_missing_credential; interactive_browser_actions_require_bridge_session',
       secrets_exposed: false,
     })
     const mcpZapier = registry.capabilities.find((capability) => capability.id === 'mcp_zapier')
@@ -780,11 +780,11 @@ describe('Gateway registry API model', () => {
     expect(spaceAgentNodeDetail?.node.status_details).toMatchObject({
       firecrawl_status: 'blocked',
       firecrawl_credential_configured: false,
-      browser_status: 'blocked_until_firecrawl_ready_or_manual_browser_adapter_configured',
+      browser_status: 'playwright_mcp_local_only_read_only_evidence_available_bridge_session_required_for_interactive_actions',
       youtube_support: 'metadata_description_transcript_chapters_key_claims_when_available',
       latest_research_jobs: 'none_recorded_yet',
       handoff_target: 'agent_zero_by_default',
-      blockers_summary: 'firecrawl_missing_credential',
+      blockers_summary: 'firecrawl_missing_credential; interactive_browser_actions_require_bridge_session',
       secrets_exposed: false,
     })
     expect(spaceAgentNodeDetail?.capabilities.map((capability) => capability.id)).toEqual(expect.arrayContaining([

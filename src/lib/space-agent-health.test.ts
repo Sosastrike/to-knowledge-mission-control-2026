@@ -23,8 +23,8 @@ describe('Space Agent Gateway health', () => {
       blocked_reason: 'firecrawl_missing_credential',
     })
     expect(status.browser).toMatchObject({
-      configured: false,
-      runtime_adapter_configured: false,
+      configured: true,
+      runtime_adapter_configured: true,
       bridge_session_required: true,
       execution_enabled: false,
     })
@@ -38,6 +38,7 @@ describe('Space Agent Gateway health', () => {
     expect(status.no_secrets_exposed).toBe(true)
     expect(status.raw_paths_exposed).toBe(false)
     expect(serialized).not.toMatch(/API_KEY|Bearer\s+|auth\.json|\/home\//i)
+    expect(serialized).toMatch(/playwright_mcp_local_only_read_only_evidence_available/)
   })
 
   it('keeps Space Agent visible to Agent Zero, Hermes, and Pi through Gateway only', () => {

@@ -1,3 +1,5 @@
+import { networkInterfaces } from 'node:os'
+
 import {
   createSpaceAgentResearchCompletion,
   type SpaceAgentResearchCompletion,
@@ -34,6 +36,7 @@ export type PaperclipSafeStatusPayload = {
   research_tasks_endpoint: '/api/bridge/paperclip/research-tasks'
   service: {
     local_only: boolean
+    tailnet_only: boolean
     public_exposure: false
     persistent_service_enabled: false
     sandbox_expected: boolean
@@ -1400,7 +1403,14 @@ type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<
 const DEFAULT_PAPERCLIP_BASE_URL = 'http://127.0.0.1:3100'
 const PAPERCLIP_TIMEOUT_MS = 2500
 
-export function resolvePaperclipEndpoint(rawValue?: string | null) {
+type PaperclipEndpointResolution = {
+  baseUrl: string
+  ownerVisible: string
+  uiLink: string | null
+  blocker: string | null
+}
+
+export function resolvePaperclipEndpoint(rawValue?: string | null): PaperclipEndpointResolution {
   const raw = (rawValue || process.env.PAPERCLIP_API_URL || process.env.PAPERCLIP_BASE_URL || DEFAULT_PAPERCLIP_BASE_URL).trim()
   try {
     const url = new URL(raw)
@@ -1667,35 +1677,24 @@ export async function buildPaperclipStatusPayload(input: {
   fetchImpl?: FetchLike
   baseUrl?: string | null
 }): Promise<PaperclipSafeStatusPayload> {
-  const endpoint = resolvePaperclipEndpoint(input.baseUrl)
+  const endpoint = await resolveReachablePaperclipEndpoint(input)
   const baseStatus = basePayload(input.generatedAt, endpoint.ownerVisible, endpoint.uiLink)
   if (endpoint.blocker) {
     return {
       ...baseStatus,
-      health: 'blocked',
+      service: serviceAccessForEndpoint(endpoint.ownerVisible),
+      health: 'degraded',
+      reachable: endpoint.blocker === 'paperclip_auth_required_or_not_configured',
       configured: false,
       blocker: endpoint.blocker,
     }
   }
 
-  const health = await fetchPaperclipJson('/api/health', {
-    baseUrl: endpoint.baseUrl,
-    fetchImpl: input.fetchImpl,
-  })
-  if (!health.ok) {
-    return {
-      ...baseStatus,
-      health: 'degraded',
-      reachable: false,
-      configured: false,
-      blocker: health.blocker,
-    }
-  }
-
-  const summary = summarizeHealthPayload(health.payload)
+  const summary = summarizeHealthPayload(endpoint.healthPayload)
   const workforce = await summarizeWorkforceState({ baseUrl: endpoint.baseUrl, fetchImpl: input.fetchImpl })
   return {
     ...baseStatus,
+    service: serviceAccessForEndpoint(endpoint.ownerVisible),
     health: workforce.blocker ? 'degraded' : 'connected',
     reachable: true,
     configured: true,
@@ -3221,8 +3220,62 @@ export function buildPaperclipBoardApprovalPlan(input: PaperclipBoardApprovalPla
   }
 }
 
+
+type ResolvedPaperclipEndpoint = PaperclipEndpointResolution & {
+  healthPayload?: unknown
+}
+
+async function resolveReachablePaperclipEndpoint(input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<ResolvedPaperclipEndpoint> {
+  const candidates = paperclipEndpointCandidates(input.baseUrl)
+  let firstBlocked: ResolvedPaperclipEndpoint | null = null
+  for (const candidate of candidates) {
+    if (candidate.blocker) {
+      firstBlocked ||= candidate
+      continue
+    }
+    const health = await fetchPaperclipJson('/api/health', { baseUrl: candidate.baseUrl, fetchImpl: input.fetchImpl })
+    if (health.ok) return { ...candidate, healthPayload: health.payload }
+    firstBlocked ||= { ...candidate, blocker: health.blocker }
+  }
+  return firstBlocked || resolvePaperclipEndpoint(input.baseUrl)
+}
+
+function paperclipEndpointCandidates(rawValue?: string | null): ResolvedPaperclipEndpoint[] {
+  const explicit = rawValue || process.env.PAPERCLIP_API_URL || process.env.PAPERCLIP_BASE_URL
+  if (explicit) return [resolvePaperclipEndpoint(explicit)]
+  const endpoints = [resolvePaperclipEndpoint(DEFAULT_PAPERCLIP_BASE_URL)]
+  for (const address of tailnetIpv4Addresses()) endpoints.push(resolvePaperclipEndpoint(`http://${address}:3100`))
+  const seen = new Set<string>()
+  return endpoints.filter((endpoint) => {
+    const key = endpoint.baseUrl
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function tailnetIpv4Addresses(): string[] {
+  const values: string[] = []
+  for (const iface of Object.values(networkInterfaces())) {
+    for (const entry of iface || []) {
+      if (entry.family === 'IPv4' && !entry.internal && entry.address.startsWith('100.')) values.push(entry.address)
+    }
+  }
+  return values.sort()
+}
+
+function serviceAccessForEndpoint(ownerVisible: string): PaperclipSafeStatusPayload['service'] {
+  return {
+    local_only: ownerVisible.startsWith('loopback:'),
+    tailnet_only: ownerVisible.startsWith('tailnet:'),
+    public_exposure: false,
+    persistent_service_enabled: false,
+    sandbox_expected: true,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
-  const endpoint = resolvePaperclipEndpoint(input.baseUrl)
+  const endpoint = await resolveReachablePaperclipEndpoint(input)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
   return fetchPaperclipJson(path, {
     baseUrl: endpoint.baseUrl,
@@ -3302,7 +3355,8 @@ function basePayload(generatedAt: string, endpoint: string, uiLink: string | nul
     dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations',
     research_tasks_endpoint: '/api/bridge/paperclip/research-tasks',
     service: {
-      local_only: true,
+      local_only: endpoint.startsWith('loopback:'),
+      tailnet_only: endpoint.startsWith('tailnet:'),
       public_exposure: false,
       persistent_service_enabled: false,
       sandbox_expected: true,

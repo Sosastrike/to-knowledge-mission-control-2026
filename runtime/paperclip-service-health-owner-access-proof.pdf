@@ -1,0 +1,345 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2325 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Paperclip Service Health and Owner Access Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:02:45.771Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Paperclip is now represented truthfully in Mission Control as a **PARTIAL GO** production) Tj
+T*
+(integration slice.) Tj
+T*
+() Tj
+T*
+(The previous Mission Control bridge only checked the loopback sandbox URL, so it reported) Tj
+T*
+(Paperclip as not running even though Paperclip was active on Tailnet. The bridge now discovers) Tj
+T*
+(the safe Tailnet sandbox endpoint, confirms the upstream health endpoint is reachable, and) Tj
+T*
+(keeps workforce APIs gated until Paperclip auth/session bridging is proven.) Tj
+T*
+() Tj
+T*
+(Current Production Truth) Tj
+T*
+() Tj
+T*
+(| Area | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Paperclip role | Workforce Control Plane before OpenClaw+ |) Tj
+T*
+(| Direct Paperclip health | PASS |) Tj
+T*
+(| Mission Control Paperclip status route | PASS |) Tj
+T*
+(| Mission Control unauthenticated protection | PASS |) Tj
+T*
+(| Owner-facing UI URL | Tailnet-only URL available |) Tj
+T*
+(| Public exposure | Blocked / not exposed |) Tj
+T*
+(| Persistent production service | Not enabled yet |) Tj
+T*
+(| Companies/agents/issues APIs | BLOCKED until Paperclip auth/session bridge is configured |) Tj
+T*
+(| External writes | Disabled |) Tj
+T*
+(| Secrets exposure | None detected |) Tj
+T*
+(| .env changes | None |) Tj
+T*
+() Tj
+T*
+(Verified Route Evidence) Tj
+T*
+() Tj
+T*
+(| Route | Auth | Result | Notes |) Tj
+T*
+(| --- | --- | --- | --- |) Tj
+T*
+(| Paperclip direct health | none | 200 | deploymentMode=authenticated, bootstrapStatus=ready |) Tj
+T*
+(| Mission Control Paperclip status | owner/admin API auth | 200 | reachable=true,) Tj
+T*
+(configured=true, endpoint=tailnet:3100 |) Tj
+T*
+(| Mission Control Paperclip status | unauthenticated | 401 | protected route blocks) Tj
+T*
+(unauthenticated access |) Tj
+T*
+(| Paperclip companies | owner/admin API auth | 503 | blocked by) Tj
+T*
+(paperclip_auth_required_or_not_configured |) Tj
+T*
+(| Paperclip agents | owner/admin API auth | 503 | blocked by) Tj
+T*
+(paperclip_auth_required_or_not_configured |) Tj
+T*
+(| Paperclip issues | owner/admin API auth | 503 | blocked by) Tj
+T*
+(paperclip_auth_required_or_not_configured |) Tj
+T*
+() Tj
+T*
+(Service Access Model) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2307 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(| Field | Value |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| UI mode | Tailnet-only sandbox |) Tj
+T*
+(| Tailnet URL | http://100.116.35.95:3100 |) Tj
+T*
+(| Loopback URL | not reachable in this runtime |) Tj
+T*
+(| Public internet exposure | false |) Tj
+T*
+(| Persistent service enabled | false |) Tj
+T*
+(| Execution enabled | false |) Tj
+T*
+(| Writes enabled | false |) Tj
+T*
+(| Sandbox expected | true |) Tj
+T*
+() Tj
+T*
+(Before / After) Tj
+T*
+() Tj
+T*
+(| Check | Before | After |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Mission Control bridge endpoint | loopback:3100 only | tailnet:3100 after safe discovery |) Tj
+T*
+(| Status route truth | degraded, not running | degraded, reachable, auth-gated |) Tj
+T*
+(| Paperclip direct health | reachable on Tailnet | reachable on Tailnet |) Tj
+T*
+(| Workforce APIs | not reached | reached but blocked by Paperclip auth/session gap |) Tj
+T*
+(| Owner-facing claim | not running | reachable but auth-gated |) Tj
+T*
+() Tj
+T*
+(Architecture Placement) Tj
+T*
+() Tj
+T*
+(Paperclip sits in the accepted Gateway operating chain:) Tj
+T*
+() Tj
+T*
+(Owner -> Gateway -> Agent Zero / Pi / Hermes -> Paperclip -> OpenClaw+ -> mini-agents /) Tj
+T*
+(specialist agents / skills / tools / reports / approvals) Tj
+T*
+() Tj
+T*
+(Paperclip does not replace Agent Zero, Hermes, Pi, SpaceAgent, OpenClaw+, or any existing) Tj
+T*
+(agent. It is the workforce and task orchestration layer. OpenClaw+ remains the runtime,) Tj
+T*
+(skills, adapters, reports, governance, and execution layer.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Paperclip service discovery | 90% | PASS, Tailnet health proven |) Tj
+T*
+(| Paperclip Mission Control status route | 85% | PASS, bridge reports real endpoint |) Tj
+T*
+(| Paperclip owner access | 65% | PARTIAL, Tailnet URL reachable but owner login not) Tj
+T*
+(browser-proven in this slice |) Tj
+T*
+(| Paperclip workforce APIs | 35% | BLOCKED, auth/session bridge required |) Tj
+T*
+(| Paperclip production service hardening | 40% | BLOCKED, persistent service not enabled yet |) Tj
+T*
+(| Paperclip overall | 62% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Tests Passed) Tj
+T*
+() Tj
+T*
+(- Mission Control typecheck passed.) Tj
+T*
+(- Paperclip bridge focused tests passed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2293 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(- Paperclip bridge route tests passed.) Tj
+T*
+(- Paperclip routing gauntlet passed.) Tj
+T*
+(- Agent Hub focused tests passed.) Tj
+T*
+(- Mission Control production build passed.) Tj
+T*
+(- Production Mission Control restart succeeded after build.) Tj
+T*
+(- Authenticated Paperclip status smoke passed.) Tj
+T*
+(- Unauthenticated Paperclip status smoke returned 401.) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Why It Matters | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| paperclip_auth_required_or_not_configured | Mission Control cannot list Paperclip companies,) Tj
+T*
+(agents, or issues yet. | Configure a safe Paperclip session/API bridge or owner-authenticated) Tj
+T*
+(proxy without exposing credentials. |) Tj
+T*
+(| Owner login proof not captured | Browser proof is needed before owner access is marked GO. |) Tj
+T*
+(Run owner-authenticated browser smoke against the Tailnet URL. |) Tj
+T*
+(| Persistent service not enabled | Paperclip is reachable as sandbox/Tailnet process, not yet) Tj
+T*
+(hardened as production service. | Create service plan after auth bridge and sandbox checks) Tj
+T*
+(pass. |) Tj
+T*
+(| Workforce actions not proven | Co-worker and issue creation must stay blocked until auth and) Tj
+T*
+(Bridge Session policy are wired. | Add read-only list routes first, then dry-run work product) Tj
+T*
+(routes. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No secrets were printed.) Tj
+T*
+(- No auth files were printed.) Tj
+T*
+(- No API keys or tokens were exposed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- No external writes were executed.) Tj
+T*
+(- No Zapier or HeyGen actions were executed.) Tj
+T*
+(- No SMB/Fork 2 action was performed.) Tj
+T*
+(- No farmer execution was performed.) Tj
+T*
+(- No public Paperclip exposure was enabled.) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Paperclip service health and owner access slice: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(The bridge now reports the real Tailnet Paperclip sandbox endpoint and blocks honestly where) Tj
+T*
+(auth/session integration is still missing. The next production phase should wire the Paperclip) Tj
+T*
+(auth/session bridge and run owner-authenticated browser proof before enabling any workforce) Tj
+T*
+(operations.) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002456 00000 n 
+0000002582 00000 n 
+0000004941 00000 n 
+0000005067 00000 n 
+0000007412 00000 n 
+0000007538 00000 n 
+0000007607 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+7656
+%%EOF

@@ -8,9 +8,11 @@ import {
   buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipSandboxHeartbeatPlan,
   buildPaperclipTokenGovernorPlan,
+  buildPaperclipWorkspaceMapPlan,
   PAPERCLIP_BOARD_APPROVAL_ACTIONS,
   PAPERCLIP_CREDENTIAL_SUBJECTS,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
+  PAPERCLIP_WORKSPACE_IDS,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
   PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES,
   createPaperclipCoWorkerAgentDefinition,
@@ -973,6 +975,143 @@ describe('Paperclip bridge payloads', () => {
     })
     expectOwnerSafe({ unknown, missingBlocker })
   })
+
+
+  it('maps Mission Control, ClaudeClaw/OpenClaw+, SpaceAgent, Pi, and Paperclip workspaces with safe refs', () => {
+    const plan = buildPaperclipWorkspaceMapPlan({
+      generatedAt: GENERATED_AT,
+      tasks: [
+        {
+          workspace: 'mission_control',
+          action: 'code',
+          taskTitle: 'Implement Gateway UI patch',
+          workspaceRef: 'workspace_ref_mission_control',
+          isolatedWorktreeRef: 'worktree_ref_gateway_ui_patch',
+          paperclipIssueId: 'TKG-231',
+          outputTitle: 'Gateway UI patch notes',
+        },
+        {
+          workspace: 'space_agent',
+          action: 'report',
+          taskTitle: 'Store SpaceAgent research packet',
+          workspaceRef: 'workspace_ref_space_agent',
+          paperclipIssueId: 'TKG-233',
+        },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      mode: 'paperclip_workspace_map_dry_run',
+      workspace_ids: [...PAPERCLIP_WORKSPACE_IDS],
+      isolated_worktree_policy: {
+        required_for_coding_tasks: true,
+        create_from_correct_workspace_only: true,
+        no_tasks_in_wrong_directory: true,
+        raw_paths_owner_visible: false,
+      },
+      work_product_policy: {
+        store_outputs_safely: true,
+        protected_output_refs_only: true,
+        attach_to_paperclip_issues: true,
+        link_back_to_mission_control_gateway: true,
+        paperclip_write_adapter_required: true,
+        bridge_session_required_for_issue_writes: true,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.workspaces.map((workspace) => workspace.id)).toEqual([
+      'mission_control',
+      'claudeclaw_openclaw',
+      'space_agent',
+      'pi',
+      'paperclip',
+    ])
+    expect(plan.workspaces).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'mission_control', kind: 'gateway_control_plane', gateway_node_id: 'gateway_mission_control' }),
+      expect.objectContaining({ id: 'claudeclaw_openclaw', kind: 'runtime_skills_layer', gateway_node_id: 'gateway_openclaw_runtime' }),
+      expect.objectContaining({ id: 'space_agent', kind: 'research_specialist', gateway_node_id: 'space_agent' }),
+      expect.objectContaining({ id: 'pi', kind: 'dispatcher_candidate', coding_tasks_allowed: false }),
+      expect.objectContaining({ id: 'paperclip', kind: 'workforce_layer', gateway_node_id: 'paperclip' }),
+    ]))
+    expect(plan.workspaces.every((workspace) => workspace.raw_path_exposed === false && workspace.repository_ref.startsWith('repo_ref_') && workspace.workspace_ref.startsWith('workspace_ref_'))).toBe(true)
+    expect(plan.task_decisions[0]).toMatchObject({
+      workspace: 'mission_control',
+      action: 'code',
+      correct_workspace: true,
+      isolated_worktree_created: true,
+      isolated_worktree_ref: 'worktree_ref_gateway_ui_patch',
+      safe_work_product_ref: 'paperclip_outputs_mission_control_gateway_ui_patch_notes',
+      paperclip_issue_attachment_planned: true,
+      paperclip_issue_attachment_recorded: false,
+      mission_control_gateway_linked: true,
+      mission_control_gateway_link_ref: 'gateway_link_gateway_mission_control_tkg-231',
+      policy_result: 'requires_session',
+      blocked_reason: null,
+    })
+    expect(plan.task_decisions[1]).toMatchObject({
+      workspace: 'space_agent',
+      action: 'report',
+      isolated_worktree_created: false,
+      safe_work_product_ref: 'paperclip_outputs_space_agent_store_spaceagent_research_packet',
+      paperclip_issue_attachment_planned: true,
+      mission_control_gateway_linked: true,
+      policy_result: 'requires_session',
+      blocked_reason: null,
+    })
+    expectOwnerSafe(plan)
+  })
+
+  it('blocks coding tasks in the wrong workspace or without isolated worktree refs', () => {
+    const plan = buildPaperclipWorkspaceMapPlan({
+      generatedAt: GENERATED_AT,
+      tasks: [
+        {
+          workspace: 'mission_control',
+          action: 'code',
+          taskTitle: 'Wrong directory edit',
+          workspaceRef: 'workspace_ref_space_agent',
+          isolatedWorktreeRef: 'worktree_ref_wrong_workspace',
+          paperclipIssueId: 'TKG-237',
+        },
+        {
+          workspace: 'paperclip',
+          action: 'code',
+          taskTitle: 'Missing worktree edit',
+          workspaceRef: 'workspace_ref_paperclip_lab',
+          paperclipIssueId: 'TKG-236',
+        },
+        {
+          workspace: 'pi',
+          action: 'code',
+          taskTitle: 'Pi direct coding task',
+          workspaceRef: 'workspace_ref_pi_dispatcher',
+          isolatedWorktreeRef: 'worktree_ref_pi_patch',
+          paperclipIssueId: 'TKG-234',
+        },
+        {
+          workspace: 'unknown_workspace',
+          action: 'read',
+          taskTitle: 'Unknown workspace task',
+        },
+      ],
+    })
+
+    expect(plan).toMatchObject({ ok: false, execution_enabled: false, writes_enabled: false })
+    expect(plan.blocked.map((decision) => decision.blocked_reason)).toEqual([
+      'paperclip_task_wrong_workspace_blocked',
+      'paperclip_isolated_worktree_required_for_coding_task',
+      'paperclip_workspace_coding_not_allowed',
+      'paperclip_workspace_unknown',
+    ])
+    expect(plan.task_decisions.every((decision) => decision.execution_enabled === false && decision.writes_enabled === false && decision.external_write === false)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
 
 
 

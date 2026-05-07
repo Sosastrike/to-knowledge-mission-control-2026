@@ -936,6 +936,103 @@ export type PaperclipCredentialModePlan = {
 
 
 
+export const PAPERCLIP_WORKSPACE_IDS = [
+  'mission_control',
+  'claudeclaw_openclaw',
+  'space_agent',
+  'pi',
+  'paperclip',
+] as const
+
+export type PaperclipWorkspaceId = (typeof PAPERCLIP_WORKSPACE_IDS)[number]
+export type PaperclipWorkspaceKind = 'gateway_control_plane' | 'runtime_skills_layer' | 'research_specialist' | 'dispatcher_candidate' | 'workforce_layer'
+export type PaperclipWorkspaceTaskAction = 'read' | 'code' | 'test' | 'report'
+
+export type PaperclipWorkspaceDefinition = {
+  id: PaperclipWorkspaceId
+  name: string
+  kind: PaperclipWorkspaceKind
+  role: string
+  repository_ref: string
+  workspace_ref: string
+  status: 'mapped'
+  coding_tasks_allowed: boolean
+  isolated_worktree_required_for_coding: boolean
+  protected_outputs_ref: string
+  gateway_node_id: string
+  paperclip_issue_attachment_supported: true
+  raw_path_exposed: false
+}
+
+export type PaperclipWorkspaceTaskInput = {
+  workspace?: string | null
+  action?: string | null
+  taskTitle?: string | null
+  workspaceRef?: string | null
+  isolatedWorktreeRef?: string | null
+  paperclipIssueId?: string | null
+  outputTitle?: string | null
+}
+
+export type PaperclipWorkspaceTaskDecision = {
+  task_title: string
+  workspace: PaperclipWorkspaceId | 'unknown'
+  action: PaperclipWorkspaceTaskAction
+  selected_workspace_ref: string | null
+  isolated_worktree_ref: string | null
+  correct_workspace: boolean
+  isolated_worktree_created: boolean
+  safe_work_product_ref: string
+  paperclip_issue_attachment_planned: boolean
+  paperclip_issue_attachment_recorded: false
+  mission_control_gateway_linked: boolean
+  mission_control_gateway_link_ref: string | null
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  execution_enabled: false
+  writes_enabled: false
+  external_write: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipWorkspaceMapPlanInput = {
+  generatedAt: string
+  tasks?: PaperclipWorkspaceTaskInput[] | null
+}
+
+export type PaperclipWorkspaceMapPlan = {
+  ok: boolean
+  mode: 'paperclip_workspace_map_dry_run'
+  generated_at: string
+  workspaces: PaperclipWorkspaceDefinition[]
+  workspace_ids: PaperclipWorkspaceId[]
+  isolated_worktree_policy: {
+    required_for_coding_tasks: true
+    create_from_correct_workspace_only: true
+    no_tasks_in_wrong_directory: true
+    raw_paths_owner_visible: false
+  }
+  work_product_policy: {
+    store_outputs_safely: true
+    protected_output_refs_only: true
+    attach_to_paperclip_issues: true
+    link_back_to_mission_control_gateway: true
+    paperclip_write_adapter_required: true
+    bridge_session_required_for_issue_writes: true
+  }
+  task_decisions: PaperclipWorkspaceTaskDecision[]
+  blocked: PaperclipWorkspaceTaskDecision[]
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+
+
 
 
 export const PAPERCLIP_BOARD_APPROVAL_ACTIONS = [
@@ -2236,6 +2333,122 @@ export function buildPaperclipCredentialModePlan(input: PaperclipCredentialModeP
 
 
 
+const PAPERCLIP_WORKSPACE_DEFINITIONS: Record<PaperclipWorkspaceId, PaperclipWorkspaceDefinition> = {
+  mission_control: {
+    id: 'mission_control',
+    name: 'Mission Control',
+    kind: 'gateway_control_plane',
+    role: 'Gateway dashboard, API, policy, registry, reports, and owner control plane',
+    repository_ref: 'repo_ref_mission_control',
+    workspace_ref: 'workspace_ref_mission_control',
+    status: 'mapped',
+    coding_tasks_allowed: true,
+    isolated_worktree_required_for_coding: true,
+    protected_outputs_ref: 'paperclip_outputs_mission_control',
+    gateway_node_id: 'gateway_mission_control',
+    paperclip_issue_attachment_supported: true,
+    raw_path_exposed: false,
+  },
+  claudeclaw_openclaw: {
+    id: 'claudeclaw_openclaw',
+    name: 'ClaudeClaw / OpenClaw+',
+    kind: 'runtime_skills_layer',
+    role: 'Shared runtime, skills, adapters, reports, and governance layer',
+    repository_ref: 'repo_ref_claudeclaw_openclaw',
+    workspace_ref: 'workspace_ref_claudeclaw_openclaw',
+    status: 'mapped',
+    coding_tasks_allowed: true,
+    isolated_worktree_required_for_coding: true,
+    protected_outputs_ref: 'paperclip_outputs_claudeclaw_openclaw',
+    gateway_node_id: 'gateway_openclaw_runtime',
+    paperclip_issue_attachment_supported: true,
+    raw_path_exposed: false,
+  },
+  space_agent: {
+    id: 'space_agent',
+    name: 'SpaceAgent',
+    kind: 'research_specialist',
+    role: 'Browser, web, YouTube, and Firecrawl research specialist workspace',
+    repository_ref: 'repo_ref_space_agent',
+    workspace_ref: 'workspace_ref_space_agent',
+    status: 'mapped',
+    coding_tasks_allowed: true,
+    isolated_worktree_required_for_coding: true,
+    protected_outputs_ref: 'paperclip_outputs_space_agent',
+    gateway_node_id: 'space_agent',
+    paperclip_issue_attachment_supported: true,
+    raw_path_exposed: false,
+  },
+  pi: {
+    id: 'pi',
+    name: 'Pi Dispatcher Candidate',
+    kind: 'dispatcher_candidate',
+    role: 'Gateway dispatcher candidate, route optimizer, and tool-use advisor workspace',
+    repository_ref: 'repo_ref_pi_dispatcher',
+    workspace_ref: 'workspace_ref_pi_dispatcher',
+    status: 'mapped',
+    coding_tasks_allowed: false,
+    isolated_worktree_required_for_coding: true,
+    protected_outputs_ref: 'paperclip_outputs_pi_dispatcher',
+    gateway_node_id: 'pi_dispatcher_candidate',
+    paperclip_issue_attachment_supported: true,
+    raw_path_exposed: false,
+  },
+  paperclip: {
+    id: 'paperclip',
+    name: 'Paperclip Workforce Layer',
+    kind: 'workforce_layer',
+    role: 'Workforce operations, issues, work products, budgets, routines, and co-worker orchestration workspace',
+    repository_ref: 'repo_ref_paperclip_lab',
+    workspace_ref: 'workspace_ref_paperclip_lab',
+    status: 'mapped',
+    coding_tasks_allowed: true,
+    isolated_worktree_required_for_coding: true,
+    protected_outputs_ref: 'paperclip_outputs_paperclip_lab',
+    gateway_node_id: 'paperclip',
+    paperclip_issue_attachment_supported: true,
+    raw_path_exposed: false,
+  },
+}
+
+export function buildPaperclipWorkspaceMapPlan(input: PaperclipWorkspaceMapPlanInput): PaperclipWorkspaceMapPlan {
+  const workspaces = PAPERCLIP_WORKSPACE_IDS.map((id) => PAPERCLIP_WORKSPACE_DEFINITIONS[id])
+  const taskDecisions = (input.tasks || []).map((task) => buildPaperclipWorkspaceTaskDecision(task))
+  const blocked = taskDecisions.filter((decision) => decision.blocked_reason !== null)
+
+  return {
+    ok: blocked.length === 0,
+    mode: 'paperclip_workspace_map_dry_run',
+    generated_at: input.generatedAt,
+    workspaces,
+    workspace_ids: [...PAPERCLIP_WORKSPACE_IDS],
+    isolated_worktree_policy: {
+      required_for_coding_tasks: true,
+      create_from_correct_workspace_only: true,
+      no_tasks_in_wrong_directory: true,
+      raw_paths_owner_visible: false,
+    },
+    work_product_policy: {
+      store_outputs_safely: true,
+      protected_output_refs_only: true,
+      attach_to_paperclip_issues: true,
+      link_back_to_mission_control_gateway: true,
+      paperclip_write_adapter_required: true,
+      bridge_session_required_for_issue_writes: true,
+    },
+    task_decisions: taskDecisions,
+    blocked,
+    owner_visible_summary: 'Paperclip workspaces are mapped with safe workspace refs. Coding tasks require isolated worktree refs, outputs are stored as protected work-product refs, and Paperclip issue/Gateway links are planned without enabling writes.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+
+
 
 type PaperclipBoardApprovalActionProfile = {
   action: PaperclipBoardApprovalAction
@@ -2803,6 +3016,94 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
 }
+
+function buildPaperclipWorkspaceTaskDecision(input: PaperclipWorkspaceTaskInput): PaperclipWorkspaceTaskDecision {
+  const workspace = normalizePaperclipWorkspaceId(input.workspace)
+  const definition = workspace ? PAPERCLIP_WORKSPACE_DEFINITIONS[workspace] : null
+  const action = normalizePaperclipWorkspaceTaskAction(input.action)
+  const taskTitle = sanitizeOwnerText(input.taskTitle || 'Paperclip workspace task').slice(0, 180) || 'Paperclip workspace task'
+  const workspaceRef = sanitizePaperclipWorkspaceRef(input.workspaceRef)
+  const isolatedWorktreeRef = sanitizePaperclipWorkspaceRef(input.isolatedWorktreeRef)
+  const paperclipIssueId = sanitizePaperclipWorkspaceRef(input.paperclipIssueId)
+  const expectedWorkspaceRef = definition?.workspace_ref || null
+  const correctWorkspace = Boolean(definition && (!workspaceRef || workspaceRef === expectedWorkspaceRef))
+  const codingTask = action === 'code' || action === 'test'
+  const isolatedWorktreeCreated = Boolean(codingTask && isolatedWorktreeRef)
+  const gatewayLinkRef = definition ? `gateway_link_${definition.gateway_node_id}_${paperclipIssueId || 'pending_issue'}` : null
+  const safeWorkProductRef = definition
+    ? `${definition.protected_outputs_ref}_${normalizePaperclipComparable(input.outputTitle || taskTitle) || 'work_product'}`
+    : 'paperclip_outputs_unknown_workspace'
+  const blockedReason = !definition
+    ? 'paperclip_workspace_unknown'
+    : !correctWorkspace
+      ? 'paperclip_task_wrong_workspace_blocked'
+      : codingTask && !definition.coding_tasks_allowed
+        ? 'paperclip_workspace_coding_not_allowed'
+        : codingTask && !isolatedWorktreeCreated
+          ? 'paperclip_isolated_worktree_required_for_coding_task'
+          : paperclipWorkspaceRefUnsafe(input.workspaceRef) || paperclipWorkspaceRefUnsafe(input.isolatedWorktreeRef)
+            ? 'paperclip_workspace_raw_path_or_secret_ref_blocked'
+            : null
+  const policyResult: PaperclipTaskPolicyResult = blockedReason
+    ? 'blocked'
+    : paperclipIssueId
+      ? 'requires_session'
+      : 'requires_session'
+
+  return {
+    task_title: taskTitle,
+    workspace: workspace || 'unknown',
+    action,
+    selected_workspace_ref: expectedWorkspaceRef,
+    isolated_worktree_ref: isolatedWorktreeRef,
+    correct_workspace: correctWorkspace,
+    isolated_worktree_created: isolatedWorktreeCreated,
+    safe_work_product_ref: safeWorkProductRef,
+    paperclip_issue_attachment_planned: Boolean(paperclipIssueId),
+    paperclip_issue_attachment_recorded: false,
+    mission_control_gateway_linked: Boolean(gatewayLinkRef),
+    mission_control_gateway_link_ref: gatewayLinkRef,
+    policy_result: policyResult,
+    blocked_reason: blockedReason,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_write: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+function normalizePaperclipWorkspaceId(value: unknown): PaperclipWorkspaceId | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'mission_control' || text === 'missioncontrol' || text === 'mc') return 'mission_control'
+  if (text === 'claudeclaw' || text === 'openclaw' || text === 'openclaw_plus' || text === 'claudeclaw_openclaw') return 'claudeclaw_openclaw'
+  if (text === 'space_agent' || text === 'spaceagent') return 'space_agent'
+  if (text === 'pi' || text === 'pi_dispatcher') return 'pi'
+  if (text === 'paperclip' || text === 'paperclip_lab') return 'paperclip'
+  return null
+}
+
+function normalizePaperclipWorkspaceTaskAction(value: unknown): PaperclipWorkspaceTaskAction {
+  const text = normalizePaperclipSlug(value || 'read')
+  if (text === 'code' || text === 'edit' || text === 'implement') return 'code'
+  if (text === 'test' || text === 'validate' || text === 'check') return 'test'
+  if (text === 'report' || text === 'document' || text === 'docs') return 'report'
+  return 'read'
+}
+
+function sanitizePaperclipWorkspaceRef(value: unknown): string | null {
+  const text = sanitizeOwnerText(String(value || '')).trim()
+  if (!text) return null
+  if (paperclipWorkspaceRefUnsafe(text)) return null
+  return normalizePaperclipComparable(text).slice(0, 120) || null
+}
+
+function paperclipWorkspaceRefUnsafe(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  const text = String(value)
+  return /(?:^\/|\/home\/|\/Users\/|\\|\.env|auth\.json|secret|token|password|api[_-]?key)/i.test(text)
+}
+
 
 function buildPaperclipCredentialDecision(input: PaperclipCredentialInput, strictSecretsMode: boolean): PaperclipCredentialDecision {
   const subject = normalizePaperclipCredentialSubject(input.subject)

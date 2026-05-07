@@ -1,0 +1,271 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2657 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Paperclip Co-Worker Dry-Run and Work Product Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:08:37.968Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Paperclip co-worker/task orchestration is **PARTIAL GO** in dry-run mode.) Tj
+T*
+() Tj
+T*
+(Mission Control can expose Paperclip task, proposal, dispatcher, research-task, and) Tj
+T*
+(workforce-flow route contracts. The routes correctly refuse real issue creation, work-product) Tj
+T*
+(storage, and task execution until Paperclip auth/session bridging, write adapters, Bridge) Tj
+T*
+(Session scope, and owner-approved policy are configured.) Tj
+T*
+() Tj
+T*
+(Production Route Proof) Tj
+T*
+() Tj
+T*
+(| Route | Method | Result | Meaning |) Tj
+T*
+(| --- | --- | --- | --- |) Tj
+T*
+(| /api/bridge/paperclip/tasks | GET authenticated | 200 | Read-only task route contract is) Tj
+T*
+(visible. |) Tj
+T*
+(| /api/bridge/paperclip/tasks | GET unauthenticated | 401 | Protected route blocks) Tj
+T*
+(unauthenticated access. |) Tj
+T*
+(| /api/bridge/paperclip/tasks | POST authenticated | 503 | Task creation blocked because) Tj
+T*
+(Paperclip auth/session bridge is not configured. |) Tj
+T*
+(| /api/bridge/paperclip/workforce-flow | GET authenticated | 200 | Workforce flow route) Tj
+T*
+(contract is visible. |) Tj
+T*
+(| /api/bridge/paperclip/workforce-flow | POST authenticated | 503 | Dry-run flow returns) Tj
+T*
+(missing credential blocker; no issue/work product stored. |) Tj
+T*
+(| /api/bridge/paperclip/test-chat | POST authenticated | 503 | Safe test-task adapter not) Tj
+T*
+(configured; no task created. |) Tj
+T*
+(| /api/bridge/paperclip/proposals | POST authenticated | 409 | Hermes proposal handoff is) Tj
+T*
+(draft-only and storage-blocked. |) Tj
+T*
+(| /api/bridge/paperclip/dispatcher-recommendations | POST authenticated | 503 | Pi) Tj
+T*
+(recommendation stays advisory and storage-blocked. |) Tj
+T*
+(| /api/bridge/paperclip/research-tasks | POST authenticated | 409 | SpaceAgent research packet) Tj
+T*
+(handoff remains safe and storage-blocked. |) Tj
+T*
+() Tj
+T*
+(Co-Worker Flow Truth) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Paperclip can be seen by Gateway | yes |) Tj
+T*
+(| Agent Zero can route a task request to Paperclip contract | yes, dry-run only |) Tj
+T*
+(| Hermes can draft a proposal for Paperclip | yes, draft-only |) Tj
+T*
+(| Pi can recommend Paperclip routes | yes, advisory/shadow only |) Tj
+T*
+(| SpaceAgent can appear as research worker | yes, safe Research Packet handoff only |) Tj
+T*
+(| Paperclip creates real issue | no |) Tj
+T*
+(| Paperclip stores real work product | no |) Tj
+T*
+(| Paperclip executes worker task | no |) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2489 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(| External write occurred | no |) Tj
+T*
+(| Bridge Session required for writes | yes |) Tj
+T*
+() Tj
+T*
+(Blocked Actions) Tj
+T*
+() Tj
+T*
+(| Action | Current Decision | Blocker |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Create Paperclip issue/task | blocked | paperclip_auth_required_or_not_configured |) Tj
+T*
+(| Store Paperclip work product | blocked | paperclip_auth_required_or_not_configured |) Tj
+T*
+(| Activate co-worker execution | blocked | active Bridge Session and approved write adapter) Tj
+T*
+(required |) Tj
+T*
+(| Store Hermes proposal in Paperclip | blocked | Paperclip storage auth/session bridge missing) Tj
+T*
+(|) Tj
+T*
+(| Store Pi dispatcher recommendation | blocked | Paperclip storage auth/session bridge missing) Tj
+T*
+(|) Tj
+T*
+(| Store SpaceAgent research issue | blocked | Paperclip storage auth/session bridge missing |) Tj
+T*
+() Tj
+T*
+(Safety Confirmation) Tj
+T*
+() Tj
+T*
+(- No Paperclip issue was created.) Tj
+T*
+(- No Paperclip work product was stored.) Tj
+T*
+(- No co-worker or mini-agent was activated.) Tj
+T*
+(- No external write was executed.) Tj
+T*
+(- No emails, Drive uploads, Zapier writes, HeyGen generations, SMB/Fork 2, or farmer runs) Tj
+T*
+(occurred.) Tj
+T*
+(- No secrets were printed or committed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- Paperclip remains behind Gateway and cannot bypass Agent Zero or Bridge Session policy.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Task route contract | 80% | read-only route works |) Tj
+T*
+(| Proposal route contract | 75% | draft-only route works |) Tj
+T*
+(| Dispatcher route contract | 70% | Pi shadow recommendation works |) Tj
+T*
+(| Research task route contract | 70% | SpaceAgent handoff dry-run works |) Tj
+T*
+(| Real Paperclip issue creation | 0% | blocked until auth/session/write adapter |) Tj
+T*
+(| Real work-product storage | 0% | blocked until auth/session/write adapter |) Tj
+T*
+(| Co-worker execution | 0% | blocked until Bridge Session and runtime adapter |) Tj
+T*
+(| Paperclip co-worker phase | 48% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Exact Next Step) Tj
+T*
+() Tj
+T*
+(Configure a safe Paperclip auth/session bridge for read-only companies, agents, issues, and) Tj
+T*
+(work products first. After read-only listings pass, add a Bridge Session-gated write adapter) Tj
+T*
+(for dry-run issue/work-product storage. Do not enable real worker execution until those checks) Tj
+T*
+(pass.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 286 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Paperclip co-worker and work product phase: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(The contracts and policy gates are present and safe. Real creation/storage/execution remains) Tj
+T*
+(intentionally blocked.) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002788 00000 n 
+0000002914 00000 n 
+0000005455 00000 n 
+0000005581 00000 n 
+0000005918 00000 n 
+0000006044 00000 n 
+0000006113 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+6162
+%%EOF

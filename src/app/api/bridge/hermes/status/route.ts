@@ -9,7 +9,7 @@ import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-conte
 import { isHermesInstalled, isHermesGatewayRunning, scanHermesSessions } from '@/lib/hermes-sessions'
 import { getHermesTasks } from '@/lib/hermes-tasks'
 import { getHermesMemory } from '@/lib/hermes-memory'
-import { classifyHermesStatus } from '@/lib/hermes-bridge'
+import { classifyHermesStatus, redactSecretsDeep } from '@/lib/hermes-bridge'
 import { buildHermesSkillInventory } from '@/lib/hermes-skills'
 
 export const runtime = 'nodejs'
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
   })
   const hermesSkillInventory = buildHermesSkillInventory(ecosystemContext)
 
-  return NextResponse.json({
+  return NextResponse.json(redactSecretsDeep({
     ok: true,
     mode: 'hermes_lieutenant_status_read_only',
     generated_at: new Date().toISOString(),
@@ -316,5 +316,5 @@ export async function GET(request: NextRequest) {
       protected_actions_created: false,
       writes_enabled: false,
     },
-  }, { headers: { 'Cache-Control': 'no-store' } })
+  }), { headers: { 'Cache-Control': 'no-store' } })
 }

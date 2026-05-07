@@ -240,7 +240,9 @@ export function classifyHermesStatus(input: {
 
 export function redactSecretsDeep<T>(value: T): T {
   if (typeof value === 'string') {
-    return value.replace(SECRET_VALUE_PATTERN, '<redacted>') as T
+    return value
+      .replace(SECRET_VALUE_PATTERN, '<redacted>')
+      .replace(RAW_PATH_PATTERN, '<redacted-path>') as T
   }
   if (Array.isArray(value)) {
     return value.map((item) => redactSecretsDeep(item)) as T

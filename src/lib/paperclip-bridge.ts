@@ -596,6 +596,104 @@ export type PaperclipGatewayTaskPayload = {
   raw_paths_exposed: false
 }
 
+export type PaperclipWorkforceFlowPhaseStatus = 'recorded' | 'planned' | 'blocked' | 'validated' | 'reported'
+
+export type PaperclipWorkforceFlowAuditEvent = {
+  event: string
+  actor: string
+  target: string
+  status: PaperclipWorkforceFlowPhaseStatus
+  external_write: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipGatewayWorkforceFlowPayload = {
+  ok: false
+  mode: 'paperclip_gateway_workforce_flow_dry_run'
+  generated_at: string
+  flow_id: string
+  owner_request: string
+  selected_route: ['owner', 'gateway', 'pi', 'agent_zero', 'paperclip', 'worker', 'gateway', 'agent_zero', 'owner']
+  endpoints: {
+    paperclip_status: '/api/bridge/paperclip/status'
+    paperclip_tasks: '/api/bridge/paperclip/tasks'
+    paperclip_workforce_flow: '/api/bridge/paperclip/workforce-flow'
+    paperclip_issues: '/api/bridge/paperclip/issues'
+  }
+  phases: Array<{
+    phase: 271 | 272 | 273 | 274 | 275 | 276 | 277 | 278 | 279 | 280
+    name: string
+    status: PaperclipWorkforceFlowPhaseStatus
+    summary: string
+    blocked_reason: string | null
+  }>
+  pi_route_recommendation: Pick<PaperclipPiDispatcherRecommendationPayload, 'recommendation_id' | 'requester' | 'recommendation' | 'advisory_contract'>
+  agent_zero_approval: {
+    commander: 'agent_zero'
+    mission_approved_for_planning: true
+    mission_approved_for_execution: false
+    final_decision_authority: true
+    approval_summary: string
+  }
+  paperclip_issue_task: {
+    paperclip_creates_issue: true
+    issue_created: false
+    issue_id: null
+    title: string
+    status: 'not_created'
+    blocked_reason: string
+  }
+  worker_assignment: {
+    paperclip_assigns_worker: true
+    assigned: false
+    worker: PaperclipTaskAssignee | 'blocked'
+    worker_role: string
+    blocked_reason: string
+  }
+  worker_execution: {
+    worker_performs_task: boolean
+    execution_mode: 'supplied_read_only_result' | 'not_executed'
+    result_summary: string | null
+    external_write: false
+    execution_enabled: false
+    writes_enabled: false
+    blocked_reason: string | null
+  }
+  work_product: {
+    paperclip_records_work_product: true
+    work_product_recorded: false
+    work_product_id: null
+    summary: string | null
+    blocked_reason: string
+  }
+  gateway_validation: {
+    gateway_validates_result: true
+    valid: boolean
+    decision: 'accepted_for_agent_zero_report' | 'blocked_pending_worker_result'
+    blocked_reason: string | null
+  }
+  agent_zero_owner_report: {
+    agent_zero_reports_to_owner: true
+    owner_visible_summary: string
+    no_fake_done: true
+  }
+  audit: {
+    gateway_audit_stored: true
+    paperclip_audit_stored: false
+    paperclip_audit_blocked_reason: string
+    gateway_audit_log: PaperclipWorkforceFlowAuditEvent[]
+    paperclip_audit_log: PaperclipWorkforceFlowAuditEvent[]
+  }
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 export const PAPERCLIP_GATEWAY_RECORD_MAPPINGS = [
   "gateway_mission_to_issue",
   "owner_command_to_issue",
@@ -1764,6 +1862,152 @@ export async function buildPaperclipGatewayTaskPayload(input: {
       handoffAuditEvent('agent_zero_completion_review_required', 'gateway', 'agent_zero', 'recorded'),
     ],
     response_text: `Sir, Paperclip task routing is visible through Gateway, but I did not create a Paperclip issue. Blocker: ${blockedReason.replace(/[_-]+/g, ' ')}.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+export async function buildPaperclipGatewayWorkforceFlowPayload(input: {
+  ownerRequest?: string | null
+  assignee?: string | null
+  workerResult?: string | null
+  generatedAt: string
+  bridgeSessionActive?: boolean
+  fetchImpl?: FetchLike
+  baseUrl?: string | null
+}): Promise<PaperclipGatewayWorkforceFlowPayload> {
+  const ownerRequest = sanitizeOwnerText(input.ownerRequest || 'Route an owner mission through Paperclip workforce tracking.').slice(0, 1200)
+  const piRecommendation = await buildPaperclipPiDispatcherRecommendationPayload({
+    ownerRequest,
+    generatedAt: input.generatedAt,
+    fetchImpl: input.fetchImpl,
+    baseUrl: input.baseUrl,
+  })
+  const worker = normalizePaperclipAssignee(input.assignee) || piRecommendation.recommendation.recommended_agent
+  const task = await buildPaperclipGatewayTaskPayload({
+    requester: 'agent_zero',
+    assignee: worker,
+    title: ownerRequest,
+    requestedAction: ownerRequest,
+    generatedAt: input.generatedAt,
+    bridgeSessionActive: input.bridgeSessionActive,
+    fetchImpl: input.fetchImpl,
+    baseUrl: input.baseUrl,
+  })
+  const resultSummary = sanitizeOwnerText(input.workerResult || '').slice(0, 1200)
+  const workerPerformedTask = Boolean(resultSummary)
+  const paperclipStorageBlocker = task.policy.blocked_reason || 'active_bridge_session_and_paperclip_write_adapter_required_for_workforce_flow_storage'
+  const validationBlockedReason = workerPerformedTask ? null : 'worker_result_required_before_gateway_validation_can_accept_completion'
+  const validationDecision = workerPerformedTask ? 'accepted_for_agent_zero_report' : 'blocked_pending_worker_result'
+  const policyResult: PaperclipTaskPolicyResult = workerPerformedTask ? task.policy_result : 'requires_session'
+  const finalBlocker = validationBlockedReason || paperclipStorageBlocker
+  const ownerSummary = workerPerformedTask
+    ? `Sir, Agent Zero reviewed the Paperclip workforce flow and can report the worker result. Paperclip issue/work-product writes remain blocked: ${paperclipStorageBlocker.replace(/[_-]+/g, ' ')}.`
+    : `Sir, Gateway routed the owner request through Pi, Agent Zero, and Paperclip planning, but no worker result was provided. Blocker: ${finalBlocker.replace(/[_-]+/g, ' ')}.`
+
+  return {
+    ok: false,
+    mode: 'paperclip_gateway_workforce_flow_dry_run',
+    generated_at: input.generatedAt,
+    flow_id: buildPaperclipWorkforceFlowId(input.generatedAt),
+    owner_request: ownerRequest,
+    selected_route: ['owner', 'gateway', 'pi', 'agent_zero', 'paperclip', 'worker', 'gateway', 'agent_zero', 'owner'],
+    endpoints: {
+      paperclip_status: '/api/bridge/paperclip/status',
+      paperclip_tasks: '/api/bridge/paperclip/tasks',
+      paperclip_workforce_flow: '/api/bridge/paperclip/workforce-flow',
+      paperclip_issues: '/api/bridge/paperclip/issues',
+    },
+    phases: [
+      { phase: 271, name: 'Owner request enters Gateway', status: 'recorded', summary: 'Owner request normalized and accepted by Gateway policy intake.', blocked_reason: null },
+      { phase: 272, name: 'Pi recommends route', status: 'recorded', summary: `Pi recommends ${piRecommendation.recommendation.recommended_agent} in shadow mode.`, blocked_reason: piRecommendation.recommendation.blocked_reason },
+      { phase: 273, name: 'Agent Zero approves mission', status: 'recorded', summary: 'Agent Zero approves planning and remains final commander.', blocked_reason: null },
+      { phase: 274, name: 'Paperclip creates issue/task', status: 'blocked', summary: 'Paperclip issue creation is planned but not executed.', blocked_reason: paperclipStorageBlocker },
+      { phase: 275, name: 'Paperclip assigns worker/co-worker', status: 'blocked', summary: `Worker assignment targets ${task.assignment.target}.`, blocked_reason: paperclipStorageBlocker },
+      { phase: 276, name: 'Worker performs task', status: workerPerformedTask ? 'recorded' : 'blocked', summary: workerPerformedTask ? 'Read-only worker result supplied for validation.' : 'No worker result supplied; no task execution occurred.', blocked_reason: workerPerformedTask ? null : validationBlockedReason },
+      { phase: 277, name: 'Paperclip records work product', status: 'blocked', summary: 'Work product storage remains gated.', blocked_reason: paperclipStorageBlocker },
+      { phase: 278, name: 'Gateway validates result', status: workerPerformedTask ? 'validated' : 'blocked', summary: workerPerformedTask ? 'Gateway accepted the supplied worker result for Agent Zero reporting.' : 'Gateway cannot accept completion without a worker result.', blocked_reason: validationBlockedReason },
+      { phase: 279, name: 'Agent Zero reports to owner', status: 'reported', summary: ownerSummary, blocked_reason: null },
+      { phase: 280, name: 'Audit trail stored in both systems', status: 'blocked', summary: 'Gateway audit is in payload; Paperclip audit storage is blocked until Bridge Session and write adapter.', blocked_reason: paperclipStorageBlocker },
+    ],
+    pi_route_recommendation: {
+      recommendation_id: piRecommendation.recommendation_id,
+      requester: piRecommendation.requester,
+      recommendation: piRecommendation.recommendation,
+      advisory_contract: piRecommendation.advisory_contract,
+    },
+    agent_zero_approval: {
+      commander: 'agent_zero',
+      mission_approved_for_planning: true,
+      mission_approved_for_execution: false,
+      final_decision_authority: true,
+      approval_summary: 'Agent Zero approves planning only; execution and Paperclip writes remain Gateway/Bridge Session gated.',
+    },
+    paperclip_issue_task: {
+      paperclip_creates_issue: true,
+      issue_created: false,
+      issue_id: null,
+      title: task.task_issue.title,
+      status: 'not_created',
+      blocked_reason: paperclipStorageBlocker,
+    },
+    worker_assignment: {
+      paperclip_assigns_worker: true,
+      assigned: false,
+      worker: task.assignment.target,
+      worker_role: task.assignment.target_role,
+      blocked_reason: paperclipStorageBlocker,
+    },
+    worker_execution: {
+      worker_performs_task: workerPerformedTask,
+      execution_mode: workerPerformedTask ? 'supplied_read_only_result' : 'not_executed',
+      result_summary: resultSummary || null,
+      external_write: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      blocked_reason: workerPerformedTask ? null : validationBlockedReason,
+    },
+    work_product: {
+      paperclip_records_work_product: true,
+      work_product_recorded: false,
+      work_product_id: null,
+      summary: resultSummary || null,
+      blocked_reason: paperclipStorageBlocker,
+    },
+    gateway_validation: {
+      gateway_validates_result: true,
+      valid: workerPerformedTask,
+      decision: validationDecision,
+      blocked_reason: validationBlockedReason,
+    },
+    agent_zero_owner_report: {
+      agent_zero_reports_to_owner: true,
+      owner_visible_summary: ownerSummary,
+      no_fake_done: true,
+    },
+    audit: {
+      gateway_audit_stored: true,
+      paperclip_audit_stored: false,
+      paperclip_audit_blocked_reason: paperclipStorageBlocker,
+      gateway_audit_log: [
+        workforceFlowAuditEvent('owner_request_entered_gateway', 'owner', 'gateway', 'recorded'),
+        workforceFlowAuditEvent('pi_recommended_route', 'pi', 'gateway', 'recorded'),
+        workforceFlowAuditEvent('agent_zero_approved_planning_mission', 'agent_zero', 'gateway', 'recorded'),
+        workforceFlowAuditEvent('gateway_validated_worker_result', 'gateway', 'agent_zero', workerPerformedTask ? 'validated' : 'blocked'),
+        workforceFlowAuditEvent('agent_zero_owner_report_prepared', 'agent_zero', 'owner', 'reported'),
+      ],
+      paperclip_audit_log: [
+        workforceFlowAuditEvent('paperclip_issue_creation_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+        workforceFlowAuditEvent('paperclip_worker_assignment_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+        workforceFlowAuditEvent('paperclip_work_product_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+        workforceFlowAuditEvent('paperclip_audit_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+      ],
+    },
+    policy_result: policyResult,
+    blocked_reason: finalBlocker,
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -4008,6 +4252,23 @@ function paperclipAssigneeRole(assignee: PaperclipTaskAssignee | 'blocked'): str
 function buildPaperclipHandoffId(generatedAt: string) {
   const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
   return `paperclip_handoff_${stamp}`
+}
+
+function buildPaperclipWorkforceFlowId(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
+  return `paperclip_workforce_flow_${stamp}`
+}
+
+function workforceFlowAuditEvent(event: string, actor: string, target: string, status: PaperclipWorkforceFlowPhaseStatus): PaperclipWorkforceFlowAuditEvent {
+  return {
+    event,
+    actor,
+    target,
+    status,
+    external_write: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
 }
 
 function researchAuditEvent(event: string, actor: string, target: string, status: 'recorded' | 'blocked' | 'needs_more_research') {

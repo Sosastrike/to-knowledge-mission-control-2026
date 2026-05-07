@@ -5,6 +5,7 @@ import {
   buildPaperclipGatewayPluginPlan,
   buildPaperclipGatewayRecordMapping,
   buildPaperclipGatewayTaskPayload,
+  buildPaperclipGatewayWorkforceFlowPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipSandboxHeartbeatPlan,
@@ -548,6 +549,143 @@ describe('Paperclip bridge payloads', () => {
     ])
     expect(hermes.gateway_handoff_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
     expectOwnerSafe(hermes)
+  })
+
+  it('runs the Paperclip workforce flow contract from owner request to Agent Zero report without writes', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const payload = await buildPaperclipGatewayWorkforceFlowPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      ownerRequest: 'Create a workforce task for Hermes to design an email triage skill.',
+      assignee: 'hermes',
+      workerResult: 'Hermes returned a read-only workflow plan for Agent Zero review.',
+    })
+
+    expect(payload).toMatchObject({
+      mode: 'paperclip_gateway_workforce_flow_dry_run',
+      selected_route: ['owner', 'gateway', 'pi', 'agent_zero', 'paperclip', 'worker', 'gateway', 'agent_zero', 'owner'],
+      endpoints: {
+        paperclip_status: '/api/bridge/paperclip/status',
+        paperclip_tasks: '/api/bridge/paperclip/tasks',
+        paperclip_workforce_flow: '/api/bridge/paperclip/workforce-flow',
+        paperclip_issues: '/api/bridge/paperclip/issues',
+      },
+      pi_route_recommendation: {
+        requester: 'pi',
+        advisory_contract: {
+          shadow_mode: true,
+          pi_can_execute: false,
+          agent_zero_final_decision_required: true,
+        },
+      },
+      agent_zero_approval: {
+        commander: 'agent_zero',
+        mission_approved_for_planning: true,
+        mission_approved_for_execution: false,
+        final_decision_authority: true,
+      },
+      paperclip_issue_task: {
+        paperclip_creates_issue: true,
+        issue_created: false,
+        issue_id: null,
+        status: 'not_created',
+      },
+      worker_assignment: {
+        paperclip_assigns_worker: true,
+        assigned: false,
+        worker: 'hermes',
+        worker_role: 'lieutenant_skill_workflow_builder',
+      },
+      worker_execution: {
+        worker_performs_task: true,
+        execution_mode: 'supplied_read_only_result',
+        result_summary: 'Hermes returned a read-only workflow plan for Agent Zero review.',
+        external_write: false,
+        execution_enabled: false,
+        writes_enabled: false,
+      },
+      work_product: {
+        paperclip_records_work_product: true,
+        work_product_recorded: false,
+        work_product_id: null,
+      },
+      gateway_validation: {
+        gateway_validates_result: true,
+        valid: true,
+        decision: 'accepted_for_agent_zero_report',
+        blocked_reason: null,
+      },
+      agent_zero_owner_report: {
+        agent_zero_reports_to_owner: true,
+        no_fake_done: true,
+      },
+      audit: {
+        gateway_audit_stored: true,
+        paperclip_audit_stored: false,
+      },
+      policy_result: 'requires_session',
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(payload.phases.map((phase) => phase.phase)).toEqual([271, 272, 273, 274, 275, 276, 277, 278, 279, 280])
+    expect(payload.phases.find((phase) => phase.phase === 280)).toMatchObject({
+      status: 'blocked',
+      blocked_reason: 'active_bridge_session_required_for_paperclip_task_create',
+    })
+    expect(payload.audit.gateway_audit_log.map((entry) => entry.event)).toEqual([
+      'owner_request_entered_gateway',
+      'pi_recommended_route',
+      'agent_zero_approved_planning_mission',
+      'gateway_validated_worker_result',
+      'agent_zero_owner_report_prepared',
+    ])
+    expect(payload.audit.paperclip_audit_log.map((entry) => entry.status)).toEqual(['blocked', 'blocked', 'blocked', 'blocked'])
+    expect(payload.audit.gateway_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expect(payload.audit.paperclip_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(payload)
+  })
+
+  it('keeps the Paperclip workforce flow blocked when no worker result exists', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const payload = await buildPaperclipGatewayWorkforceFlowPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      ownerRequest: 'Route this owner mission through Paperclip.',
+    })
+
+    expect(payload.worker_execution).toMatchObject({
+      worker_performs_task: false,
+      execution_mode: 'not_executed',
+      result_summary: null,
+      blocked_reason: 'worker_result_required_before_gateway_validation_can_accept_completion',
+    })
+    expect(payload.gateway_validation).toMatchObject({
+      valid: false,
+      decision: 'blocked_pending_worker_result',
+      blocked_reason: 'worker_result_required_before_gateway_validation_can_accept_completion',
+    })
+    expect(payload.blocked_reason).toBe('worker_result_required_before_gateway_validation_can_accept_completion')
+    expect(payload.agent_zero_owner_report.owner_visible_summary).toContain('no worker result was provided')
+    expectOwnerSafe(payload)
   })
 
   it('routes SpaceAgent research tasks through Paperclip and returns a validated Research Packet', async () => {

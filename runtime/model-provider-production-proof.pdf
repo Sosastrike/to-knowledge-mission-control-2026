@@ -1,0 +1,221 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2085 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Model / Provider Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:22:15.991Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Model/provider access is **PARTIAL GO** for registry and read-only discovery. Gateway can show) Tj
+T*
+(model/provider status, but live Codex/Claude provider execution is blocked because the) Tj
+T*
+(production PATH does not expose those CLIs. No billable model call was executed.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Gateway data-layer getModels | 200, read-only, execution false |) Tj
+T*
+(| Bridge providers | 200, 8 providers visible |) Tj
+T*
+(| Gateway models node | 200, read_only |) Tj
+T*
+(| Unauthenticated getModels | 401 |) Tj
+T*
+(| Codex CLI | unavailable on PATH |) Tj
+T*
+(| Claude CLI | unavailable on PATH |) Tj
+T*
+(| Ollama CLI | installed, version 0.20.4 |) Tj
+T*
+(| NVIDIA CLI | unavailable on PATH |) Tj
+T*
+() Tj
+T*
+(Credential Presence Booleans) Tj
+T*
+() Tj
+T*
+(| Provider key | Present in checked process env |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| OPENROUTER_API_KEY | false |) Tj
+T*
+(| OPENAI_API_KEY | false |) Tj
+T*
+(| ANTHROPIC_API_KEY | false |) Tj
+T*
+(| GEMINI_API_KEY | false |) Tj
+T*
+(| GROQ_API_KEY | false |) Tj
+T*
+() Tj
+T*
+(No key values were printed or inspected.) Tj
+T*
+() Tj
+T*
+(Provider Decision) Tj
+T*
+() Tj
+T*
+(| Provider | Status | Notes |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| OpenRouter | registry-visible, live key not present in checked env | blocked for live call |) Tj
+T*
+(| OpenAI | registry-visible, live key not present in checked env | blocked for live call |) Tj
+T*
+(| Claude / Anthropic | CLI unavailable, API key absent | subscription/OAuth CLI proof) Tj
+T*
+(required; API billing avoided |) Tj
+T*
+(| Codex / ChatGPT | CLI unavailable on production PATH | account auth cannot be smoke-tested) Tj
+T*
+(yet |) Tj
+T*
+(| Ollama | CLI installed | local model path can be evaluated in later scoped smoke |) Tj
+T*
+(| NVIDIA / Groq / Gemini | not live-proven | blocked until configured/proven |) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1719 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No model call was executed.) Tj
+T*
+(- No API key value was printed.) Tj
+T*
+(- No auth file was printed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- No Anthropic API billing path was used.) Tj
+T*
+(- Unauthenticated model discovery route returned 401.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Registry/provider visibility | 80% | live read-only routes |) Tj
+T*
+(| Auth protection | 90% | unauthenticated blocked |) Tj
+T*
+(| Ollama CLI proof | 70% | CLI installed, no model call |) Tj
+T*
+(| Codex CLI proof | 0% | CLI unavailable |) Tj
+T*
+(| Claude CLI proof | 0% | CLI unavailable |) Tj
+T*
+(| External provider live calls | 0% | no keys/no calls |) Tj
+T*
+(| Model/provider overall | 45% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| codex_cli_unavailable | Codex/ChatGPT plugin cannot be proven live. | Install/expose) Tj
+T*
+(approved Codex CLI and run no-write smoke. |) Tj
+T*
+(| claude_cli_unavailable | Claude Code OAuth cannot be proven live. | Install/expose approved) Tj
+T*
+(Claude CLI and run no-write smoke. |) Tj
+T*
+(| provider_keys_not_present_in_checked_env | OpenRouter/OpenAI/Gemini/Groq live calls cannot) Tj
+T*
+(be proven from this runtime. | Configure approved secret source without printing values. |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Models/providers: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Discovery works. Live provider execution remains blocked until CLI/auth or approved secret) Tj
+T*
+(sources are configured and smoke-tested.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002216 00000 n 
+0000002342 00000 n 
+0000004113 00000 n 
+0000004239 00000 n 
+0000004302 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+4351
+%%EOF

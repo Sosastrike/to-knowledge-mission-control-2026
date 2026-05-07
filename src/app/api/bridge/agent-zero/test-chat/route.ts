@@ -11,6 +11,32 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const OWNER_VISIBLE_SECRET_PATTERN =
+  /sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY|AUTH[_-]?FILE|COOKIE|STORAGE[_-]?STATE)\s*[:=]\s*[^,\s}"']+/gi
+const OWNER_VISIBLE_RAW_PATH_PATTERN =
+  /(?:\/(?:home|Users|a0|tmp|var|private)\/|runtime\/)[^\s`'"\])}]*/gi
+
+function redactOwnerVisiblePayload(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value
+      .replace(OWNER_VISIBLE_SECRET_PATTERN, '[redacted-secret]')
+      .replace(OWNER_VISIBLE_RAW_PATH_PATTERN, '[redacted-path]')
+  }
+
+  if (Array.isArray(value)) return value.map((item) => redactOwnerVisiblePayload(item))
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+        key,
+        redactOwnerVisiblePayload(item),
+      ]),
+    )
+  }
+
+  return value
+}
+
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -100,7 +126,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ...result,
     label: 'Agent Zero - read-only ecosystem test',
-    context_sent: context,
+    context_sent: redactOwnerVisiblePayload(context),
     ecosystem_context_endpoint: '/api/bridge/agent-zero/ecosystem',
     bridge_session_endpoint: '/api/bridge/agent-zero/bridge-session',
     report_delivery: reportDelivery ? {

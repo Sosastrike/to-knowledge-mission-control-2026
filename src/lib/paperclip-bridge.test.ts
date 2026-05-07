@@ -3,6 +3,7 @@ import {
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
+  buildPaperclipSpaceAgentResearchTaskPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
   listPaperclipAgents,
@@ -138,6 +139,17 @@ describe('Paperclip bridge payloads', () => {
       gateway_role: 'commander',
       bridge_session_required_for_execution: true,
     })
+    expect(agents.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'space_agent',
+        name: 'SpaceAgent',
+        role: 'browser_web_youtube_firecrawl_research_specialist',
+        reports_to: 'agent_zero',
+        gateway_role: 'space_agent_research_specialist',
+        owner_visible_status: 'read_only_paperclip_virtual_agent',
+        bridge_session_required_for_execution: true,
+      }),
+    ]))
     expect(issues.items[0]).toMatchObject({
       id: 'issue-1',
       identifier: 'TKG-1',
@@ -208,6 +220,167 @@ describe('Paperclip bridge payloads', () => {
     ])
     expect(hermes.gateway_handoff_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
     expectOwnerSafe(hermes)
+  })
+
+  it('routes SpaceAgent research tasks through Paperclip and returns a validated Research Packet', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const payload = await buildPaperclipSpaceAgentResearchTaskPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      requester: 'agent_zero',
+      taskType: 'web_research',
+      request: 'Read a public product page and summarize the evidence for Agent Zero.',
+      responsibleAgent: 'agent_zero',
+      evidence: [{ summary: 'The source describes a public product capability.', url: 'https://example.com/product' }],
+      webSources: [{ url: 'https://example.com/product', title: 'Public Product Page', status: 'success' }],
+    })
+
+    expect(payload).toMatchObject({
+      mode: 'paperclip_space_agent_research_task_handoff',
+      requester: 'agent_zero',
+      task_type: 'web_research',
+      selected_route: ['agent_zero', 'gateway', 'paperclip', 'space_agent'],
+      return_route: ['space_agent', 'gateway', 'agent_zero'],
+      paperclip_agent: {
+        id: 'space_agent',
+        name: 'SpaceAgent',
+        appears_as_paperclip_agent: true,
+        role: 'browser_web_youtube_firecrawl_research_specialist',
+        status: 'read_only_virtual_agent',
+        supervisors: ['agent_zero', 'hermes', 'pi'],
+        external_writes_enabled: false,
+        bridge_session_required_for_execution: true,
+      },
+      task_assignment: {
+        space_agent_can_receive_web_research_task: true,
+        space_agent_can_receive_youtube_research_task: true,
+        space_agent_can_receive_firecrawl_task: true,
+        execution_enabled: false,
+        writes_enabled: false,
+      },
+      paperclip_tracking: {
+        paperclip_tracks_research_issue: true,
+        paperclip_research_issue_recorded: false,
+        issue_id: null,
+        status: 'not_created',
+        blocked_reason: 'active_bridge_session_and_paperclip_write_adapter_required_for_research_issue_and_work_product_storage',
+      },
+      work_product: {
+        paperclip_stores_work_product: true,
+        paperclip_work_product_recorded: false,
+        work_product_id: null,
+      },
+      gateway_validation: {
+        gateway_validates_evidence: true,
+        decision: 'accepted',
+        valid: true,
+        evidence_count: 1,
+        source_count: 2,
+        citations_count: 1,
+        blocked_reason: null,
+      },
+      agent_zero_next_step: {
+        agent_zero_routes_next_step: true,
+        decision: 'handoff_to_responsible_agent',
+        next_agent: 'agent_zero',
+        execution_enabled: false,
+      },
+      responsible_agent_completion: {
+        responsible_agent_completes_final_task: true,
+        responsible_agent: 'agent_zero',
+        status: 'completed',
+        external_write: false,
+        execution_enabled: false,
+        writes_enabled: false,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(payload.research_packet).toMatchObject({
+      mode: 'space_agent_research_packet',
+      research_stage_owner: 'space_agent',
+      returns_to: 'agent_zero',
+      evidence: [expect.objectContaining({ summary: 'The source describes a public product capability.' })],
+      citations: ['https://example.com/product'],
+      no_secrets_exposed: true,
+      no_raw_paths: true,
+    })
+    expect(payload.research_completion).toMatchObject({
+      mode: 'gateway_space_agent_research_completion',
+      status: 'answer_ready',
+      space_agent_returned_research_packet: true,
+      gateway_validated_evidence: true,
+      agent_zero_decided_next_step: true,
+      responsible_agent_executed_next_non_web_step: true,
+      final_answer_cites_research_packet: true,
+    })
+    expect(payload.gateway_audit_log.map((entry) => entry.event)).toEqual([
+      'space_agent_appears_as_paperclip_agent',
+      'paperclip_research_issue_tracking_planned',
+      'space_agent_research_packet_returned',
+      'paperclip_work_product_storage_blocked_until_session_and_adapter',
+      'gateway_validated_research_evidence',
+      'agent_zero_routes_next_step',
+      'responsible_agent_final_task_planned',
+    ])
+    expect(payload.gateway_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(payload)
+  })
+
+  it('honestly pauses Paperclip SpaceAgent tasks that lack research evidence', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const payload = await buildPaperclipSpaceAgentResearchTaskPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      requester: 'agent_zero',
+      taskType: 'youtube_research',
+      request: 'Inspect this YouTube video and summarize claims.',
+      responsibleAgent: 'hermes',
+    })
+
+    expect(payload).toMatchObject({
+      task_type: 'youtube_research',
+      gateway_validation: {
+        gateway_validates_evidence: true,
+        decision: 'needs_more_research',
+        valid: true,
+        evidence_count: 0,
+        source_count: 0,
+        citations_count: 0,
+        blocked_reason: 'Research packet is structurally safe but needs stronger evidence before downstream action.',
+      },
+      agent_zero_next_step: {
+        agent_zero_routes_next_step: true,
+        decision: 'request_more_research',
+        next_agent: 'hermes',
+      },
+      responsible_agent_completion: {
+        responsible_agent_completes_final_task: false,
+        responsible_agent: 'hermes',
+        status: 'needs_more_research',
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(payload.gateway_audit_log.find((entry) => entry.event === 'space_agent_research_packet_returned')).toMatchObject({ status: 'needs_more_research' })
+    expect(payload.response_text).toContain('research packet needs more evidence')
+    expectOwnerSafe(payload)
   })
 
   it('supports safe assignment targets for SpaceAgent, Pi review, and mini-agent requests', async () => {

@@ -58,6 +58,7 @@ describe('Gateway route authentication policy', () => {
     const paperclipTasks = await import('@/app/api/bridge/paperclip/tasks/route')
     const paperclipProposals = await import('@/app/api/bridge/paperclip/proposals/route')
     const paperclipDispatcherRecommendations = await import('@/app/api/bridge/paperclip/dispatcher-recommendations/route')
+    const paperclipResearchTasks = await import('@/app/api/bridge/paperclip/research-tasks/route')
     const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
 
     const checks = [
@@ -123,6 +124,11 @@ describe('Gateway route authentication policy', () => {
       paperclipDispatcherRecommendations.POST(new NextRequest('http://localhost/api/bridge/paperclip/dispatcher-recommendations', {
         method: 'POST',
         body: JSON.stringify({ owner_request: 'Recommend route' }),
+      })),
+      paperclipResearchTasks.GET(new NextRequest('http://localhost/api/bridge/paperclip/research-tasks')),
+      paperclipResearchTasks.POST(new NextRequest('http://localhost/api/bridge/paperclip/research-tasks', {
+        method: 'POST',
+        body: JSON.stringify({ request: 'Research a public page.' }),
       })),
       paperclipTestChat.POST(new NextRequest('http://localhost/api/bridge/paperclip/test-chat', {
         method: 'POST',

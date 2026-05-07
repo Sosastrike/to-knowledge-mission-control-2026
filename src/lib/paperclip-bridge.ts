@@ -1,3 +1,9 @@
+import {
+  createSpaceAgentResearchCompletion,
+  type SpaceAgentResearchCompletion,
+  type SpaceAgentResponsibleAgent,
+} from './space-agent-research'
+
 export type PaperclipBridgeStatus = 'connected' | 'degraded' | 'blocked'
 
 export type PaperclipSafeStatusPayload = {
@@ -25,6 +31,7 @@ export type PaperclipSafeStatusPayload = {
   test_task_endpoint: '/api/bridge/paperclip/test-chat'
   proposals_endpoint: '/api/bridge/paperclip/proposals'
   dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations'
+  research_tasks_endpoint: '/api/bridge/paperclip/research-tasks'
   service: {
     local_only: boolean
     public_exposure: false
@@ -119,6 +126,7 @@ export type PaperclipTestTaskPayload = {
   status_endpoint: '/api/bridge/paperclip/status'
   test_task_endpoint: '/api/bridge/paperclip/test-chat'
   proposals_endpoint: '/api/bridge/paperclip/proposals'
+  research_tasks_endpoint: '/api/bridge/paperclip/research-tasks'
   execution_enabled: false
   writes_enabled: false
   protected_actions_enabled: false
@@ -182,6 +190,94 @@ export type PaperclipHermesProposalPayload = {
     actor: string
     target: string
     status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipSpaceAgentResearchTaskType = 'web_research' | 'youtube_research' | 'firecrawl_task'
+
+export type PaperclipSpaceAgentResearchTaskPayload = {
+  ok: false
+  mode: 'paperclip_space_agent_research_task_handoff'
+  generated_at: string
+  task_id: string
+  requester: 'agent_zero' | 'blocked'
+  task_type: PaperclipSpaceAgentResearchTaskType
+  owner_request: string
+  selected_route: ['agent_zero', 'gateway', 'paperclip', 'space_agent']
+  return_route: ['space_agent', 'gateway', 'agent_zero']
+  paperclip_status_endpoint: '/api/bridge/paperclip/status'
+  paperclip_agents_endpoint: '/api/bridge/paperclip/agents'
+  paperclip_issues_endpoint: '/api/bridge/paperclip/issues'
+  paperclip_research_tasks_endpoint: '/api/bridge/paperclip/research-tasks'
+  paperclip_agent: {
+    id: 'space_agent'
+    name: 'SpaceAgent'
+    appears_as_paperclip_agent: true
+    role: 'browser_web_youtube_firecrawl_research_specialist'
+    status: 'read_only_virtual_agent'
+    supervisors: ['agent_zero', 'hermes', 'pi']
+    external_writes_enabled: false
+    bridge_session_required_for_execution: true
+  }
+  task_assignment: {
+    space_agent_can_receive_web_research_task: true
+    space_agent_can_receive_youtube_research_task: true
+    space_agent_can_receive_firecrawl_task: true
+    execution_enabled: false
+    writes_enabled: false
+  }
+  paperclip_tracking: {
+    paperclip_tracks_research_issue: true
+    paperclip_research_issue_recorded: false
+    issue_id: null
+    status: 'not_created'
+    blocked_reason: string
+  }
+  research_packet: SpaceAgentResearchCompletion['handoff']['packet']
+  research_completion: SpaceAgentResearchCompletion
+  work_product: {
+    paperclip_stores_work_product: true
+    paperclip_work_product_recorded: false
+    work_product_id: null
+    blocked_reason: string
+  }
+  gateway_validation: {
+    gateway_validates_evidence: true
+    decision: SpaceAgentResearchCompletion['handoff']['gateway_validation']['decision']
+    valid: boolean
+    evidence_count: number
+    source_count: number
+    citations_count: number
+    blocked_reason: string | null
+  }
+  agent_zero_next_step: {
+    agent_zero_routes_next_step: true
+    decision: SpaceAgentResearchCompletion['handoff']['agent_zero_decision']['decision']
+    next_agent: SpaceAgentResponsibleAgent
+    execution_enabled: false
+  }
+  responsible_agent_completion: {
+    responsible_agent_completes_final_task: boolean
+    responsible_agent: SpaceAgentResponsibleAgent
+    status: SpaceAgentResearchCompletion['responsible_agent_next_step']['status']
+    external_write: false
+    execution_enabled: false
+    writes_enabled: false
+  }
+  gateway_audit_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: 'recorded' | 'blocked' | 'needs_more_research'
     external_write: false
     no_secrets_exposed: true
     raw_paths_exposed: false
@@ -425,7 +521,7 @@ export async function listPaperclipAgents(input: {
   const result = await fetchReadOnlyList(`/api/companies/${encodeURIComponent(company.companyId)}/agents`, input)
   if (!result.ok) return inventoryBlocked('paperclip_agents_read_only', input.generatedAt, result.blocker, company.companyId)
   const items = arrayFromPayload(result.payload).map(sanitizeAgent).filter(Boolean) as PaperclipAgentSummary[]
-  return inventoryOk('paperclip_agents_read_only', input.generatedAt, items, company.companyId)
+  return inventoryOk('paperclip_agents_read_only', input.generatedAt, withPaperclipVirtualSpaceAgent(items, company.companyId), company.companyId)
 }
 
 export async function listPaperclipIssues(input: {
@@ -464,6 +560,7 @@ export async function buildPaperclipTestTaskPayload(input: {
     status_endpoint: '/api/bridge/paperclip/status',
     test_task_endpoint: '/api/bridge/paperclip/test-chat',
     proposals_endpoint: '/api/bridge/paperclip/proposals',
+    research_tasks_endpoint: '/api/bridge/paperclip/research-tasks',
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -691,6 +788,127 @@ export async function buildPaperclipHermesProposalPayload(input: {
   }
 }
 
+export async function buildPaperclipSpaceAgentResearchTaskPayload(input: {
+  requester?: string | null
+  taskType?: string | null
+  request?: string | null
+  responsibleAgent?: string | null
+  generatedAt: string
+  firecrawlConfigured?: boolean
+  bridgeSessionActive?: boolean
+  fetchImpl?: FetchLike
+  baseUrl?: string | null
+  evidence?: Array<{ summary: string; url?: string | null; source?: string | null; retrieved_at?: string | null }>
+  webSources?: Array<{ url?: string | null; title?: string | null; type?: string | null; retrieved_at?: string | null; method?: string | null; status?: string | null }>
+  youtubeSources?: Array<{ video_url?: string | null; title?: string | null; channel?: string | null; status?: string | null }>
+}): Promise<PaperclipSpaceAgentResearchTaskPayload> {
+  const requester = normalizePaperclipRequester(input.requester)
+  const ownerRequest = sanitizeOwnerText(input.request || 'Prepare a read-only SpaceAgent research packet for Agent Zero review.').slice(0, 1600)
+  const taskType = normalizePaperclipSpaceAgentResearchTaskType(input.taskType, ownerRequest)
+  const responsibleAgent = normalizePaperclipResearchResponsibleAgent(input.responsibleAgent)
+  const status = await buildPaperclipStatusPayload({
+    generatedAt: input.generatedAt,
+    fetchImpl: input.fetchImpl,
+    baseUrl: input.baseUrl,
+  })
+  const storageBlockedReason = status.blocker || (!status.reachable ? 'paperclip_status_not_reachable' : input.bridgeSessionActive ? 'paperclip_write_adapter_not_configured_for_research_issue_and_work_product_storage' : 'active_bridge_session_and_paperclip_write_adapter_required_for_research_issue_and_work_product_storage')
+  const requestBlockedReason = requester !== 'agent_zero'
+    ? 'paperclip_space_agent_research_tasks_must_be_requested_by_agent_zero_through_gateway'
+    : storageBlockedReason
+  const completion = createSpaceAgentResearchCompletion({
+    request: ownerRequest,
+    requestedBy: 'agent_zero',
+    responsibleAgent,
+    generatedAt: input.generatedAt,
+    firecrawlConfigured: Boolean(input.firecrawlConfigured),
+    evidence: normalizePaperclipResearchEvidence(input.evidence),
+    webSources: normalizePaperclipResearchWebSources(input.webSources),
+    youtubeSources: normalizePaperclipResearchYouTubeSources(input.youtubeSources),
+  })
+  const validation = completion.handoff.gateway_validation
+  const nextStep = completion.responsible_agent_next_step
+  const taskStatus = validation.decision === 'needs_more_research' ? 'needs_more_research' : validation.decision === 'blocked' ? 'blocked' : 'recorded'
+
+  return {
+    ok: false,
+    mode: 'paperclip_space_agent_research_task_handoff',
+    generated_at: input.generatedAt,
+    task_id: buildPaperclipResearchTaskId(input.generatedAt),
+    requester: requester === 'agent_zero' ? 'agent_zero' : 'blocked',
+    task_type: taskType,
+    owner_request: ownerRequest,
+    selected_route: ['agent_zero', 'gateway', 'paperclip', 'space_agent'],
+    return_route: ['space_agent', 'gateway', 'agent_zero'],
+    paperclip_status_endpoint: '/api/bridge/paperclip/status',
+    paperclip_agents_endpoint: '/api/bridge/paperclip/agents',
+    paperclip_issues_endpoint: '/api/bridge/paperclip/issues',
+    paperclip_research_tasks_endpoint: '/api/bridge/paperclip/research-tasks',
+    paperclip_agent: paperclipSpaceAgentTaskAgent(),
+    task_assignment: {
+      space_agent_can_receive_web_research_task: true,
+      space_agent_can_receive_youtube_research_task: true,
+      space_agent_can_receive_firecrawl_task: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    },
+    paperclip_tracking: {
+      paperclip_tracks_research_issue: true,
+      paperclip_research_issue_recorded: false,
+      issue_id: null,
+      status: 'not_created',
+      blocked_reason: requestBlockedReason,
+    },
+    research_packet: completion.handoff.packet,
+    research_completion: completion,
+    work_product: {
+      paperclip_stores_work_product: true,
+      paperclip_work_product_recorded: false,
+      work_product_id: null,
+      blocked_reason: requestBlockedReason,
+    },
+    gateway_validation: {
+      gateway_validates_evidence: true,
+      decision: validation.decision,
+      valid: validation.valid,
+      evidence_count: validation.evidence_count,
+      source_count: validation.source_count,
+      citations_count: validation.citations_count,
+      blocked_reason: validation.decision === 'accepted' ? null : validation.blockers[0] || completion.handoff.agent_zero_decision.rationale || null,
+    },
+    agent_zero_next_step: {
+      agent_zero_routes_next_step: true,
+      decision: completion.handoff.agent_zero_decision.decision,
+      next_agent: completion.handoff.agent_zero_decision.next_agent,
+      execution_enabled: false,
+    },
+    responsible_agent_completion: {
+      responsible_agent_completes_final_task: nextStep.status === 'completed',
+      responsible_agent: nextStep.agent,
+      status: nextStep.status,
+      external_write: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    },
+    gateway_audit_log: [
+      researchAuditEvent('space_agent_appears_as_paperclip_agent', 'paperclip', 'space_agent', 'recorded'),
+      researchAuditEvent('paperclip_research_issue_tracking_planned', 'agent_zero', 'paperclip', requester === 'agent_zero' ? 'recorded' : 'blocked'),
+      researchAuditEvent('space_agent_research_packet_returned', 'space_agent', 'gateway', taskStatus),
+      researchAuditEvent('paperclip_work_product_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+      researchAuditEvent('gateway_validated_research_evidence', 'gateway', 'agent_zero', taskStatus),
+      researchAuditEvent('agent_zero_routes_next_step', 'agent_zero', nextStep.agent, taskStatus),
+      researchAuditEvent('responsible_agent_final_task_planned', nextStep.agent, 'agent_zero', taskStatus),
+    ],
+    response_text: nextStep.status === 'completed'
+      ? `Sir, SpaceAgent appears as a Paperclip agent and returned a Research Packet for Agent Zero routing. Paperclip issue/work-product storage is still blocked: ${requestBlockedReason.replace(/[_-]+/g, ' ')}.`
+      : `Sir, SpaceAgent appears as a Paperclip agent and returned a safe Research Packet, but the downstream final task is not complete yet: ${(completion.final_answer.blocked_reason || 'research_packet_needs_more_evidence').replace(/[_-]+/g, ' ')}. Paperclip storage is blocked: ${requestBlockedReason.replace(/[_-]+/g, ' ')}.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 export async function buildPaperclipPiDispatcherRecommendationPayload(input: {
   ownerRequest?: string | null
   generatedAt: string
@@ -852,6 +1070,7 @@ function basePayload(generatedAt: string, endpoint: string, uiLink: string | nul
     test_task_endpoint: '/api/bridge/paperclip/test-chat',
     proposals_endpoint: '/api/bridge/paperclip/proposals',
     dispatcher_recommendations_endpoint: '/api/bridge/paperclip/dispatcher-recommendations',
+    research_tasks_endpoint: '/api/bridge/paperclip/research-tasks',
     service: {
       local_only: true,
       public_exposure: false,
@@ -968,6 +1187,113 @@ function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
 }
 
+function paperclipSpaceAgentTaskAgent(): PaperclipSpaceAgentResearchTaskPayload['paperclip_agent'] {
+  return {
+    id: 'space_agent',
+    name: 'SpaceAgent',
+    appears_as_paperclip_agent: true,
+    role: 'browser_web_youtube_firecrawl_research_specialist',
+    status: 'read_only_virtual_agent',
+    supervisors: ['agent_zero', 'hermes', 'pi'],
+    external_writes_enabled: false,
+    bridge_session_required_for_execution: true,
+  }
+}
+
+function withPaperclipVirtualSpaceAgent(items: PaperclipAgentSummary[], companyId: string | null): PaperclipAgentSummary[] {
+  if (items.some((item) => item.id === 'space_agent' || item.name.toLowerCase() === 'spaceagent' || item.name.toLowerCase() === 'space agent')) return items
+  return [...items, paperclipVirtualSpaceAgent(companyId)]
+}
+
+function paperclipVirtualSpaceAgent(companyId: string | null): PaperclipAgentSummary {
+  return {
+    id: 'space_agent',
+    name: 'SpaceAgent',
+    role: 'browser_web_youtube_firecrawl_research_specialist',
+    title: 'Gateway browser, web, YouTube, and Firecrawl research specialist',
+    status: 'read_only_virtual_agent',
+    company_id: companyId,
+    reports_to: 'agent_zero',
+    capabilities: [
+      'web_research_task',
+      'youtube_research_task',
+      'firecrawl_task',
+      'research_packet_return',
+      'gateway_evidence_validation',
+    ],
+    budget_monthly_cents: null,
+    spent_monthly_cents: null,
+    last_heartbeat_at: null,
+    gateway_role: 'space_agent_research_specialist',
+    owner_visible_status: 'read_only_paperclip_virtual_agent',
+    bridge_session_required_for_execution: true,
+  }
+}
+
+function normalizePaperclipSpaceAgentResearchTaskType(value: unknown, request: string): PaperclipSpaceAgentResearchTaskType {
+  const text = `${sanitizeIdentifier(value)} ${request}`.toLowerCase()
+  if (/youtube|you_tube|video/.test(text)) return 'youtube_research'
+  if (/firecrawl|fire_crawl|scrape|crawl|map|extract/.test(text)) return 'firecrawl_task'
+  return 'web_research'
+}
+
+function normalizePaperclipResearchResponsibleAgent(value: unknown): SpaceAgentResponsibleAgent {
+  const text = sanitizeIdentifier(value).toLowerCase().replace(/[-\s]+/g, '_')
+  if (text === 'hermes') return 'hermes'
+  if (text === 'pi' || text === 'pi_review' || text === 'pi_dispatcher') return 'pi'
+  if (text === 'responsible_specialist_agent' || text === 'specialist') return 'responsible_specialist_agent'
+  return 'agent_zero'
+}
+
+function normalizePaperclipResearchEvidence(value: Array<{ summary: string; url?: string | null; source?: string | null; retrieved_at?: string | null }> | undefined) {
+  return (value || [])
+    .map((item) => ({
+      summary: sanitizeOwnerText(item.summary).slice(0, 500),
+      url: sanitizeNullable(item.url),
+      source: sanitizeNullable(item.source),
+      retrieved_at: sanitizeNullable(item.retrieved_at),
+    }))
+    .filter((item) => item.summary)
+    .slice(0, 12)
+}
+
+function normalizePaperclipResearchWebSources(value: Array<{ url?: string | null; title?: string | null; type?: string | null; retrieved_at?: string | null; method?: string | null; status?: string | null }> | undefined) {
+  return (value || [])
+    .map((item) => ({
+      type: 'web_source' as const,
+      url: sanitizeNullable(item.url),
+      title: sanitizeNullable(item.title),
+      status: normalizePaperclipWebSourceStatus(item.status),
+      last_checked: sanitizeNullable(item.retrieved_at),
+    }))
+    .filter((item) => item.url || item.title)
+    .slice(0, 12)
+}
+
+function normalizePaperclipWebSourceStatus(value: string | null | undefined): 'candidate' | 'checked' | 'blocked' {
+  const text = (value || '').toLowerCase()
+  if (text === 'blocked' || text === 'failed') return 'blocked'
+  if (text === 'success' || text === 'checked') return 'checked'
+  return 'candidate'
+}
+
+function normalizePaperclipResearchYouTubeSources(value: Array<{ video_url?: string | null; title?: string | null; channel?: string | null; status?: string | null }> | undefined) {
+  return (value || [])
+    .map((item) => ({
+      video_url: sanitizeNullable(item.video_url),
+      title: sanitizeNullable(item.title),
+      channel: sanitizeNullable(item.channel),
+      status: sanitizeNullable(item.status),
+    }))
+    .filter((item) => item.video_url || item.title)
+    .slice(0, 8)
+}
+
+function buildPaperclipResearchTaskId(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
+  return `paperclip_space_agent_research_${stamp}`
+}
+
 function recommendPaperclipAssigneeForOwnerRequest(ownerRequest: string): PaperclipTaskAssignee {
   const text = ownerRequest.toLowerCase()
   if (/web|browser|youtube|firecrawl|crawl|scrape|research|source|page|article|video/.test(text)) return 'space_agent'
@@ -1045,6 +1371,18 @@ function paperclipAssigneeRole(assignee: PaperclipTaskAssignee | 'blocked'): str
 function buildPaperclipHandoffId(generatedAt: string) {
   const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
   return `paperclip_handoff_${stamp}`
+}
+
+function researchAuditEvent(event: string, actor: string, target: string, status: 'recorded' | 'blocked' | 'needs_more_research') {
+  return {
+    event,
+    actor,
+    target,
+    status,
+    external_write: false as const,
+    no_secrets_exposed: true as const,
+    raw_paths_exposed: false as const,
+  }
 }
 
 function handoffAuditEvent(event: string, actor: string, target: string, status: 'recorded' | 'blocked') {

@@ -138,6 +138,90 @@ export type PaperclipTestTaskPayload = {
 export type PaperclipTaskAssignee = 'hermes' | 'space_agent' | 'pi_review' | 'mini_agent'
 export type PaperclipTaskPolicyResult = 'requires_session' | 'blocked' | 'missing_credential'
 
+export type PaperclipCoWorkerSupervisor = 'agent_zero' | 'hermes' | 'pi' | 'space_agent'
+
+export type PaperclipCoWorkerAgentBudget = {
+  mode: 'advisory_budget_only'
+  currency: 'USD'
+  max_cents: number
+  spent_cents: 0
+  spending_authority: false
+  budget_enforced_by: 'gateway_policy_and_paperclip_tracking'
+}
+
+export type PaperclipCoWorkerAgentAuditEvent = {
+  event: string
+  actor: string
+  target: string
+  summary: string
+  recorded_at: string
+  external_write: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipCoWorkerAgentDefinition = {
+  schema: 'paperclip_coworker_agent_v1'
+  mode: 'paperclip_coworker_definition_dry_run'
+  id: string
+  name: string
+  supervisor: PaperclipCoWorkerSupervisor
+  command_authority: 'agent_zero'
+  purpose: string
+  task_scope: string[]
+  budget: PaperclipCoWorkerAgentBudget
+  memory_ttl_minutes: number
+  created_at: string
+  expires_at: string
+  allowed_tools: string[]
+  forbidden_tools: string[]
+  expiration_condition: string
+  audit_trail_required: true
+  audit_trail: PaperclipCoWorkerAgentAuditEvent[]
+  lifecycle: 'proposed'
+  bridge_session_required_for_activation: true
+  read_enabled: true
+  write_enabled: false
+  execution_enabled: false
+  external_writes_enabled: false
+  direct_secret_access_allowed: false
+  raw_root_shell_allowed: false
+  docker_socket_allowed: false
+  can_self_promote: false
+  can_create_child_agents: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+  blocked_reason: string | null
+}
+
+export type PaperclipCoWorkerAgentInput = {
+  id?: string | null
+  name?: string | null
+  supervisor?: string | null
+  purpose?: string | null
+  taskScope?: string[] | null
+  budgetMaxCents?: number | null
+  memoryTtlMinutes?: number | null
+  allowedTools?: string[] | null
+  forbiddenTools?: string[] | null
+  expirationCondition?: string | null
+  generatedAt: string
+}
+
+export type PaperclipCoWorkerAgentDefinitionResult = {
+  ok: boolean
+  mode: 'paperclip_coworker_definition_dry_run'
+  definition: PaperclipCoWorkerAgentDefinition | null
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 export type PaperclipHermesProposalKind =
   | 'workflow_task_template'
   | 'mini_agent_spec'
@@ -453,6 +537,110 @@ export function resolvePaperclipEndpoint(rawValue?: string | null) {
       uiLink: null,
       blocker: 'paperclip_endpoint_invalid',
     }
+  }
+}
+
+export function createPaperclipCoWorkerAgentDefinition(input: PaperclipCoWorkerAgentInput): PaperclipCoWorkerAgentDefinitionResult {
+  const generatedAt = input.generatedAt
+  const name = sanitizeOwnerText(input.name || 'Paperclip co-worker agent').slice(0, 120) || 'Paperclip co-worker agent'
+  const id = buildPaperclipCoWorkerAgentId(input.id || name)
+  const supervisor = normalizePaperclipCoWorkerSupervisor(input.supervisor)
+  const purpose = sanitizeOwnerText(input.purpose || '').slice(0, 600)
+  const taskScope = sanitizePaperclipList(input.taskScope || [], 12, 220)
+  const allowedTools = sanitizePaperclipList(input.allowedTools || [], 20, 120)
+  const forbiddenTools = dedupeStrings([
+    ...sanitizePaperclipList(input.forbiddenTools || [], 20, 120),
+    'direct_secret_read',
+    'raw_root_shell',
+    'docker_socket',
+    'uncontrolled_delete',
+    'broad_connector_execution',
+    'zapier_write',
+    'heygen_generation',
+    'smb_mount',
+  ])
+  const budgetMaxCents = normalizePaperclipBudgetCents(input.budgetMaxCents)
+  const memoryTtlMinutes = normalizePaperclipMemoryTtl(input.memoryTtlMinutes)
+  const expirationCondition = sanitizeOwnerText(input.expirationCondition || 'Expire on task completion, TTL, budget cap, or Gateway policy block.').slice(0, 260)
+  const blockedReason = validatePaperclipCoWorkerAgentDefinition({
+    id,
+    supervisor,
+    purpose,
+    taskScope,
+    allowedTools,
+    forbiddenTools,
+    expirationCondition,
+  })
+
+  if (blockedReason) {
+    return {
+      ok: false,
+      mode: 'paperclip_coworker_definition_dry_run',
+      definition: null,
+      policy_result: 'blocked',
+      blocked_reason: blockedReason,
+      response_text: `Sir, the Paperclip co-worker definition is blocked: ${blockedReason.replace(/[_-]+/g, ' ')}.`,
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    }
+  }
+
+  const definition: PaperclipCoWorkerAgentDefinition = {
+    schema: 'paperclip_coworker_agent_v1',
+    mode: 'paperclip_coworker_definition_dry_run',
+    id,
+    name,
+    supervisor,
+    command_authority: 'agent_zero',
+    purpose,
+    task_scope: taskScope,
+    budget: {
+      mode: 'advisory_budget_only',
+      currency: 'USD',
+      max_cents: budgetMaxCents,
+      spent_cents: 0,
+      spending_authority: false,
+      budget_enforced_by: 'gateway_policy_and_paperclip_tracking',
+    },
+    memory_ttl_minutes: memoryTtlMinutes,
+    created_at: generatedAt,
+    expires_at: addPaperclipMinutes(generatedAt, memoryTtlMinutes),
+    allowed_tools: allowedTools,
+    forbidden_tools: forbiddenTools,
+    expiration_condition: expirationCondition,
+    audit_trail_required: true,
+    audit_trail: [paperclipCoWorkerAuditEvent('paperclip.coworker.definition.created', supervisor, id, 'Co-worker definition created in dry-run schema mode.', generatedAt)],
+    lifecycle: 'proposed',
+    bridge_session_required_for_activation: true,
+    read_enabled: true,
+    write_enabled: false,
+    execution_enabled: false,
+    external_writes_enabled: false,
+    direct_secret_access_allowed: false,
+    raw_root_shell_allowed: false,
+    docker_socket_allowed: false,
+    can_self_promote: false,
+    can_create_child_agents: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+    blocked_reason: null,
+  }
+
+  return {
+    ok: true,
+    mode: 'paperclip_coworker_definition_dry_run',
+    definition,
+    policy_result: 'requires_session',
+    blocked_reason: 'paperclip_coworker_activation_requires_bridge_session_and_runtime_adapter',
+    response_text: `Sir, ${definition.name} is defined as a supervised Paperclip co-worker under ${supervisor}, but activation is blocked until Bridge Session scope and a runtime adapter exist.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
   }
 }
 
@@ -1185,6 +1373,96 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function buildPaperclipCoWorkerAgentId(value: string | null | undefined): string {
+  const id = normalizePaperclipSlug(value || 'coworker_agent') || 'coworker_agent'
+  return id.startsWith('paperclip_coworker_') ? id : `paperclip_coworker_${id}`
+}
+
+function normalizePaperclipCoWorkerSupervisor(value: unknown): PaperclipCoWorkerSupervisor {
+  const text = normalizePaperclipSlug(value || 'agent_zero')
+  if (text === 'hermes') return 'hermes'
+  if (text === 'pi' || text === 'pi_dispatcher' || text === 'pi_review') return 'pi'
+  if (text === 'space_agent' || text === 'spaceagent') return 'space_agent'
+  return 'agent_zero'
+}
+
+function normalizePaperclipBudgetCents(value: number | null | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 0
+  return Math.min(Math.round(value), 1000000)
+}
+
+function normalizePaperclipMemoryTtl(value: number | null | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 1440
+  return Math.min(Math.max(Math.round(value), 30), 10080)
+}
+
+function validatePaperclipCoWorkerAgentDefinition(input: {
+  id: string
+  supervisor: PaperclipCoWorkerSupervisor
+  purpose: string
+  taskScope: string[]
+  allowedTools: string[]
+  forbiddenTools: string[]
+  expirationCondition: string
+}): string | null {
+  if (!input.id || /^(paperclip_coworker_)?(?:agent_zero|hermes|pi|space_agent|owner|gateway|tony)$/i.test(input.id)) return 'paperclip_coworker_id_reserved_or_missing'
+  if (!input.supervisor) return 'paperclip_coworker_supervisor_required'
+  if (!input.purpose) return 'paperclip_coworker_purpose_required'
+  if (input.taskScope.length === 0) return 'paperclip_coworker_task_scope_required'
+  if (!input.expirationCondition) return 'paperclip_coworker_expiration_condition_required'
+  if (input.allowedTools.some((tool) => paperclipCoWorkerForbiddenToolPattern().test(tool))) return 'paperclip_coworker_allowed_tool_forbidden'
+  const combined = [input.purpose, input.expirationCondition, ...input.taskScope, ...input.allowedTools].join(' ')
+  if (paperclipCoWorkerUnsafeTextPattern().test(combined)) return 'paperclip_coworker_scope_contains_forbidden_access'
+  return null
+}
+
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>()
+  return values.filter((value) => {
+    const key = value.toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function sanitizePaperclipList(values: string[], limit: number, maxLength: number): string[] {
+  return dedupeStrings(values
+    .map((item) => sanitizeOwnerText(String(item || '')).slice(0, maxLength))
+    .filter(Boolean))
+    .slice(0, limit)
+}
+
+function paperclipCoWorkerForbiddenToolPattern(): RegExp {
+  return /(?:direct_secret_read|read_secret|raw_root_shell|root_shell|docker_socket|uncontrolled_delete|broad_connector_execution|zapier_write|heygen_generation|smb_mount)/i
+}
+
+function paperclipCoWorkerUnsafeTextPattern(): RegExp {
+  return /(?:root\s+shell|docker\s+socket|direct\s+secret|read\s+secrets?|print\s+secrets?|auth\.json|unrestricted|bypass\s+gateway|zapier\s+write|heygen\s+generation|mount\s+smb|delete\s+opencloud|disable\s+build[-\s]?wiki)/i
+}
+
+function paperclipCoWorkerAuditEvent(event: string, actor: string, target: string, summary: string, recordedAt: string): PaperclipCoWorkerAgentAuditEvent {
+  return {
+    event,
+    actor,
+    target,
+    summary,
+    recorded_at: recordedAt,
+    external_write: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+function addPaperclipMinutes(iso: string, minutes: number): string {
+  const base = Number.isNaN(Date.parse(iso)) ? new Date('1970-01-01T00:00:00.000Z') : new Date(iso)
+  return new Date(base.getTime() + minutes * 60_000).toISOString()
+}
+
+function normalizePaperclipSlug(value: unknown): string {
+  return sanitizeIdentifier(value).toLowerCase().replace(/[_.:-]+/g, '_').replace(/^_+|_+$/g, '')
 }
 
 function paperclipSpaceAgentTaskAgent(): PaperclipSpaceAgentResearchTaskPayload['paperclip_agent'] {

@@ -3,6 +3,7 @@ import {
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
+  createPaperclipCoWorkerAgentDefinition,
   buildPaperclipSpaceAgentResearchTaskPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
@@ -157,6 +158,114 @@ describe('Paperclip bridge payloads', () => {
       assignee_agent: 'assigned',
     })
     expectOwnerSafe({ status, companies, agents, issues })
+  })
+
+  it('defines a Paperclip CoWorkerAgent with supervisor, budget, TTL, tools, expiration, and audit trail', () => {
+    const result = createPaperclipCoWorkerAgentDefinition({
+      id: 'research-helper',
+      name: 'Research Helper',
+      supervisor: 'hermes',
+      purpose: 'Summarize Paperclip workforce planning evidence for Agent Zero.',
+      taskScope: ['read-only registry discovery', 'return concise work product to Agent Zero'],
+      budgetMaxCents: 2500,
+      memoryTtlMinutes: 90,
+      allowedTools: ['gateway.getSystems', 'gateway.getSources'],
+      forbiddenTools: ['email_send'],
+      expirationCondition: 'Expire after the assigned research planning task or TTL.',
+      generatedAt: GENERATED_AT,
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      mode: 'paperclip_coworker_definition_dry_run',
+      policy_result: 'requires_session',
+      blocked_reason: 'paperclip_coworker_activation_requires_bridge_session_and_runtime_adapter',
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(result.definition).toMatchObject({
+      schema: 'paperclip_coworker_agent_v1',
+      mode: 'paperclip_coworker_definition_dry_run',
+      id: 'paperclip_coworker_research_helper',
+      name: 'Research Helper',
+      supervisor: 'hermes',
+      command_authority: 'agent_zero',
+      purpose: 'Summarize Paperclip workforce planning evidence for Agent Zero.',
+      task_scope: ['read-only registry discovery', 'return concise work product to Agent Zero'],
+      budget: {
+        mode: 'advisory_budget_only',
+        currency: 'USD',
+        max_cents: 2500,
+        spent_cents: 0,
+        spending_authority: false,
+        budget_enforced_by: 'gateway_policy_and_paperclip_tracking',
+      },
+      memory_ttl_minutes: 90,
+      created_at: GENERATED_AT,
+      allowed_tools: ['gateway.getSystems', 'gateway.getSources'],
+      forbidden_tools: expect.arrayContaining(['email_send', 'direct_secret_read', 'raw_root_shell', 'docker_socket']),
+      expiration_condition: 'Expire after the assigned research planning task or TTL.',
+      audit_trail_required: true,
+      lifecycle: 'proposed',
+      bridge_session_required_for_activation: true,
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      external_writes_enabled: false,
+      direct_secret_access_allowed: false,
+      raw_root_shell_allowed: false,
+      docker_socket_allowed: false,
+      can_self_promote: false,
+      can_create_child_agents: false,
+    })
+    expect(result.definition?.expires_at).toBe('2026-05-06T01:30:00.000Z')
+    expect(result.definition?.audit_trail).toEqual([
+      expect.objectContaining({
+        event: 'paperclip.coworker.definition.created',
+        actor: 'hermes',
+        target: 'paperclip_coworker_research_helper',
+        external_write: false,
+        no_secrets_exposed: true,
+        raw_paths_exposed: false,
+      }),
+    ])
+    expectOwnerSafe(result)
+  })
+
+  it('blocks Paperclip CoWorkerAgent definitions that miss required fields or request forbidden tools', () => {
+    const missingPurpose = createPaperclipCoWorkerAgentDefinition({
+      supervisor: 'agent_zero',
+      taskScope: ['read-only task'],
+      budgetMaxCents: 0,
+      expirationCondition: 'Expire on completion.',
+      generatedAt: GENERATED_AT,
+    })
+    const missingScope = createPaperclipCoWorkerAgentDefinition({
+      supervisor: 'agent_zero',
+      purpose: 'Plan safely.',
+      budgetMaxCents: 0,
+      expirationCondition: 'Expire on completion.',
+      generatedAt: GENERATED_AT,
+    })
+    const forbiddenTool = createPaperclipCoWorkerAgentDefinition({
+      supervisor: 'pi',
+      purpose: 'Route a scoped task.',
+      taskScope: ['read-only route review'],
+      budgetMaxCents: 0,
+      allowedTools: ['docker_socket'],
+      expirationCondition: 'Expire on completion.',
+      generatedAt: GENERATED_AT,
+    })
+
+    expect(missingPurpose).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'paperclip_coworker_purpose_required' })
+    expect(missingScope).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'paperclip_coworker_task_scope_required' })
+    expect(forbiddenTool).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'paperclip_coworker_allowed_tool_forbidden' })
+    expectOwnerSafe(missingPurpose)
+    expectOwnerSafe(missingScope)
+    expectOwnerSafe(forbiddenTool)
   })
 
   it('routes Agent Zero Paperclip task requests through Gateway without writing issues', async () => {

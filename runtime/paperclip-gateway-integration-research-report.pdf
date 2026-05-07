@@ -1,0 +1,304 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 2756 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(# Paperclip Gateway Integration Research Report) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07) Tj
+T*
+() Tj
+T*
+(## Executive Summary) Tj
+T*
+() Tj
+T*
+(Paperclip was evaluated as a Workforce Operations Layer for Mission Control Gateway. The) Tj
+T*
+(right role is task/company/workforce orchestration under Gateway policy, not command) Tj
+T*
+(authority. Agent Zero remains commander, Hermes remains lieutenant and skill/workflow) Tj
+T*
+(builder, Pi remains dispatcher candidate, SpaceAgent remains web research specialist,) Tj
+T*
+(OpenCloud remains a worker/runtime engine, and OpenClaw+ remains the runtime/skills/adapters) Tj
+T*
+(layer.) Tj
+T*
+() Tj
+T*
+(Research result: Paperclip is a strong fit for workforce tracking, co-worker modeling,) Tj
+T*
+(issue/task records, heartbeat routines, budgets, and work-product storage. It should stay) Tj
+T*
+(sandboxed until its own test blockers, owner login, and Gateway write-adapter design are) Tj
+T*
+(closed.) Tj
+T*
+() Tj
+T*
+(## What Paperclip Provides) Tj
+T*
+() Tj
+T*
+(- Company/workforce structure for agents and co-workers.) Tj
+T*
+(- Issue/task tracking that can map Gateway missions into work items.) Tj
+T*
+(- Work-product records for research packets, skill proposals, and final reports.) Tj
+T*
+(- Heartbeat/routine concepts for recurring status checks.) Tj
+T*
+(- Budget and cost governance concepts.) Tj
+T*
+(- Adapter/plugin extension points for local model/agent runtimes.) Tj
+T*
+(- UI for company, agents, tasks, issues, budgets, approvals, and work products.) Tj
+T*
+() Tj
+T*
+(## Gateway Fit) Tj
+T*
+() Tj
+T*
+(Paperclip should be represented as:) Tj
+T*
+() Tj
+T*
+(- Gateway node: paperclip.) Tj
+T*
+(- Type: workforce operations layer.) Tj
+T*
+(- Authority: subordinate to Gateway and Agent Zero.) Tj
+T*
+(- Access mode: read-only until sandbox health, owner auth, and Bridge Session write adapters) Tj
+T*
+(are proven.) Tj
+T*
+(- Write behavior: blocked unless Bridge Session scope and a registered Paperclip adapter) Tj
+T*
+(explicitly allow it.) Tj
+T*
+() Tj
+T*
+(## Role Matrix) Tj
+T*
+() Tj
+T*
+(- Owner: final authority.) Tj
+T*
+(- Gateway: routing, policy, registry, documentation, memory, and audit hub.) Tj
+T*
+(- Agent Zero: commander and final decision-maker.) Tj
+T*
+(- Hermes: lieutenant and skill/workflow builder.) Tj
+T*
+(- Pi: dispatcher candidate and route optimizer in shadow mode.) Tj
+T*
+(- SpaceAgent: browser/web/YouTube/Firecrawl research specialist.) Tj
+T*
+(- Paperclip: workforce/company/task orchestration layer.) Tj
+T*
+(- OpenCloud: worker/runtime and future agent-creation support layer.) Tj
+T*
+(- OpenClaw+: runtime, skills, adapters, reports, and governance layer.) Tj
+T*
+(- Existing agents: retained specialist workforce.) Tj
+T*
+() Tj
+T*
+(## Integration Model) Tj
+T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 2668 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+() Tj
+T*
+(Gateway request flow:) Tj
+T*
+() Tj
+T*
+(1. Owner request enters Gateway.) Tj
+T*
+(2. Gateway classifies the route.) Tj
+T*
+(3. Pi can recommend workforce routing in shadow mode.) Tj
+T*
+(4. Agent Zero approves the mission and remains accountable.) Tj
+T*
+(5. Paperclip records or tracks the task only when write adapter and Bridge Session allow it.) Tj
+T*
+(6. Worker or specialist returns work product.) Tj
+T*
+(7. Gateway validates the result.) Tj
+T*
+(8. Agent Zero reports to the owner.) Tj
+T*
+() Tj
+T*
+(## Paperclip Data Objects To Map) Tj
+T*
+() Tj
+T*
+(- Gateway mission to Paperclip issue.) Tj
+T*
+(- Owner command to Paperclip issue.) Tj
+T*
+(- Mini-agent task to Paperclip issue.) Tj
+T*
+(- SpaceAgent Research Packet to Paperclip work product.) Tj
+T*
+(- Hermes skill proposal to issue/work product.) Tj
+T*
+(- Pi dispatcher recommendation to issue comment.) Tj
+T*
+(- Agent Zero decision to issue approval.) Tj
+T*
+(- Bridge Session to governance event.) Tj
+T*
+(- Completed task to final report.) Tj
+T*
+(- Blocked task to exact blocker.) Tj
+T*
+() Tj
+T*
+(## Security Model) Tj
+T*
+() Tj
+T*
+(- Paperclip must not expose public UI routes.) Tj
+T*
+(- Paperclip must not receive raw secrets, auth files, or inline tokens.) Tj
+T*
+(- Paperclip writes require Bridge Session and registered adapter.) Tj
+T*
+(- Paperclip co-workers must have supervisor, purpose, scope, budget, memory TTL, allowed) Tj
+T*
+(tools, forbidden tools, expiration condition, and audit trail.) Tj
+T*
+(- Paperclip cannot replace Agent Zero, Hermes, Pi, SpaceAgent, OpenCloud, OpenClaw+, or) Tj
+T*
+(existing agents.) Tj
+T*
+(- Paperclip cannot use raw root shell, Docker socket, direct secret reads, Zapier writes,) Tj
+T*
+(HeyGen generation, SMB mount, or broad connector execution.) Tj
+T*
+() Tj
+T*
+(## Research Findings) Tj
+T*
+() Tj
+T*
+(- Sandbox install/build/typecheck previously passed.) Tj
+T*
+(- Paperclip test suite had Tailnet environment expectation failures in its own repo.) Tj
+T*
+(- Loopback and Tailnet sandbox access were previously proven when the sandbox server was) Tj
+T*
+(intentionally running.) Tj
+T*
+(- Owner login is not fully proven.) Tj
+T*
+(- Current live service is inactive, so health/UI are blocked until Paperclip is started) Tj
+T*
+(again in sandbox mode.) Tj
+T*
+() Tj
+T*
+(## Recommended Implementation Phases) Tj
+T*
+() Tj
+T*
+(1. Keep Paperclip sandbox-only while its own Tailnet test blocker is addressed or formally) Tj
+T*
+(waived.) Tj
+T*
+(2. Prove health and owner login over Tailnet.) Tj
+T*
+(3. Keep Gateway node and bridge routes read-only.) Tj
+T*
+(4. Add write adapter only after Bridge Session scope and audit design are complete.) Tj
+T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 591 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(5. Map Paperclip issues/work products to Gateway flows.) Tj
+T*
+(6. Add Paperclip budget and heartbeat telemetry after live auth is proven.) Tj
+T*
+(7. Re-run full Mission Control and Paperclip validation before persistent service) Tj
+T*
+(enablement.) Tj
+T*
+() Tj
+T*
+(## Final Research Decision) Tj
+T*
+() Tj
+T*
+(Paperclip is approved as a design and read-only Gateway integration track. It is not) Tj
+T*
+(approved for production workforce execution until sandbox health, owner login, write) Tj
+T*
+(adapter, Bridge Session scope, and tests pass.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000323 00000 n 
+0000003131 00000 n 
+0000003257 00000 n 
+0000005977 00000 n 
+0000006103 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6745
+%%EOF

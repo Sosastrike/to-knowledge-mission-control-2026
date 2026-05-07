@@ -1,3 +1,4 @@
+import type { SpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
 import type { GatewayApiNode } from './gateway-registry-api'
 import {
   buildGatewayFlowsPayload,
@@ -99,6 +100,7 @@ export type AgentHubStatusPayload = {
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
   }
   agents: AgentHubAgent[]
+  space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
   buildwiki_run_now: {
     target_service: 'opencloud-docs-farmer.service'
@@ -121,6 +123,7 @@ export type AgentHubRegistryPayload = {
   source: 'gateway_registry'
   mock_data_used: false
   agents: AgentHubAgent[]
+  space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
   execution_enabled: false
   writes_enabled: false
@@ -644,4 +647,15 @@ function ownerSafeText(value: string | null | undefined): string | null {
     .replace(/auth\.json/gi, '[redacted-auth-file]')
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
     .replace(/sk-[A-Za-z0-9]{12,}/gi, '[redacted-secret]')
+}
+
+
+export function attachSpaceAgentBrowserAutomationStatus(
+  payload: AgentHubStatusPayload,
+  browserAutomation: SpaceAgentBrowserAutomationPayload,
+): AgentHubStatusPayload {
+  return {
+    ...payload,
+    space_agent_browser_automation: browserAutomation,
+  }
 }

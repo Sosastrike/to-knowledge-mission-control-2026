@@ -51,6 +51,12 @@ describe('Gateway route authentication policy', () => {
     const spaceAgentTestChat = await import('@/app/api/bridge/space-agent/test-chat/route')
     const spaceAgentResearch = await import('@/app/api/gateway/space-agent/research/route')
     const spaceAgentJob = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
+    const spaceAgentBrowserStatus = await import('@/app/api/gateway/space-agent/browser/status/route')
+    const spaceAgentBrowserJobs = await import('@/app/api/gateway/space-agent/browser/jobs/route')
+    const playwrightMcpNode = await import('@/app/api/gateway/nodes/playwright-mcp/route')
+    const playwrightMcpStatus = await import('@/app/api/bridge/playwright-mcp/status/route')
+    const playwrightMcpSmoke = await import('@/app/api/bridge/playwright-mcp/smoke/route')
+    const playwrightEvidence = await import('@/app/api/gateway/space-agent/playwright-mcp/evidence/route')
     const paperclipStatus = await import('@/app/api/bridge/paperclip/status/route')
     const paperclipCompanies = await import('@/app/api/bridge/paperclip/companies/route')
     const paperclipAgents = await import('@/app/api/bridge/paperclip/agents/route')
@@ -94,7 +100,7 @@ describe('Gateway route authentication policy', () => {
       dataLayerExecute.GET(new NextRequest('http://localhost/api/gateway/data-layer/execute')),
       dataLayerExecute.POST(new NextRequest('http://localhost/api/gateway/data-layer/execute', {
         method: 'POST',
-        body: JSON.stringify({ node_id: 'opencloud', action: 'run' }),
+        body: JSON.stringify({ node_id: 'openclaw_plus', action: 'run' }),
       })),
       miniAgents.GET(new NextRequest('http://localhost/api/gateway/mini-agents')),
       miniAgents.POST(new NextRequest('http://localhost/api/gateway/mini-agents', {
@@ -114,6 +120,16 @@ describe('Gateway route authentication policy', () => {
       spaceAgentJob.GET(new NextRequest('http://localhost/api/gateway/space-agent/jobs/job-1'), {
         params: Promise.resolve({ id: 'job-1' }),
       }),
+      spaceAgentBrowserStatus.GET(new NextRequest('http://localhost/api/gateway/space-agent/browser/status')),
+      spaceAgentBrowserJobs.GET(new NextRequest('http://localhost/api/gateway/space-agent/browser/jobs')),
+      playwrightMcpNode.GET(new NextRequest('http://localhost/api/gateway/nodes/playwright-mcp')),
+      playwrightMcpStatus.GET(new NextRequest('http://localhost/api/bridge/playwright-mcp/status')),
+      playwrightMcpSmoke.POST(new NextRequest('http://localhost/api/bridge/playwright-mcp/smoke', { method: 'POST' })),
+      playwrightEvidence.GET(new NextRequest('http://localhost/api/gateway/space-agent/playwright-mcp/evidence')),
+      playwrightEvidence.POST(new NextRequest('http://localhost/api/gateway/space-agent/playwright-mcp/evidence', {
+        method: 'POST',
+        body: JSON.stringify({ url: 'https://example.com' }),
+      })),
       paperclipStatus.GET(new NextRequest('http://localhost/api/bridge/paperclip/status')),
       paperclipCompanies.GET(new NextRequest('http://localhost/api/bridge/paperclip/companies')),
       paperclipAgents.GET(new NextRequest('http://localhost/api/bridge/paperclip/agents')),

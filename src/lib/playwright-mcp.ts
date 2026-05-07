@@ -4,6 +4,9 @@ export type PlaywrightMcpStatus = {
   status: 'connected' | 'blocked'
   service_name: 'playwright-mcp.service'
   endpoint: 'localhost:8931/mcp'
+  service_endpoint: '127.0.0.1:8931'
+  mcp_endpoint: 'http://127.0.0.1:8931/mcp'
+  service_status: 'connected_local_only' | 'blocked'
   transport: 'streamable_http'
   bind_host: '127.0.0.1'
   local_only: true
@@ -72,6 +75,9 @@ export async function getPlaywrightMcpStatus(): Promise<PlaywrightMcpStatus> {
       status: requiredToolsPresent ? 'connected' : 'blocked',
       service_name: 'playwright-mcp.service',
       endpoint: 'localhost:8931/mcp',
+      service_endpoint: '127.0.0.1:8931',
+      mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+      service_status: requiredToolsPresent ? 'connected_local_only' : 'blocked',
       transport: 'streamable_http',
       bind_host: '127.0.0.1',
       local_only: true,
@@ -152,6 +158,86 @@ export async function createPlaywrightBrowserEvidencePacket(input: {
   }
 }
 
+
+export type PlaywrightMcpSmokePayload = {
+  ok: boolean
+  mode: 'playwright_mcp_mission_control_smoke'
+  generated_at: string
+  status: 'passed' | 'blocked'
+  target_url: string
+  service: PlaywrightMcpStatus
+  evidence: BrowserEvidencePacket
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  no_public_exposure: true
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+  blocker: string | null
+}
+
+export type PlaywrightMcpEvidenceIndexPayload = {
+  ok: true
+  mode: 'playwright_mcp_browser_evidence_index'
+  generated_at: string
+  latest_evidence_packet: 'pending_production_smoke'
+  latest_snapshot: 'pending_production_smoke'
+  latest_console: 'pending_production_smoke'
+  latest_network: 'pending_production_smoke'
+  smoke_route: '/api/bridge/playwright-mcp/smoke'
+  status_route: '/api/bridge/playwright-mcp/status'
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  no_public_exposure: true
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+  blocker: 'production_smoke_result_not_persisted_yet'
+}
+
+export async function runPlaywrightMcpMissionControlSmoke(input: { url?: string; generatedAt?: string } = {}): Promise<PlaywrightMcpSmokePayload> {
+  const generatedAt = input.generatedAt || new Date().toISOString()
+  const targetUrl = input.url?.trim() || 'https://mc.knowledge-vs-ai.com/login'
+  const evidence = await createPlaywrightBrowserEvidencePacket({ url: targetUrl, generatedAt })
+  return {
+    ok: evidence.ok,
+    mode: 'playwright_mcp_mission_control_smoke',
+    generated_at: generatedAt,
+    status: evidence.ok ? 'passed' : 'blocked',
+    target_url: sanitizeUrl(targetUrl),
+    service: evidence.service,
+    evidence,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_public_exposure: true,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+    blocker: evidence.blocker,
+  }
+}
+
+export function getPlaywrightMcpEvidenceIndex(generatedAt = new Date().toISOString()): PlaywrightMcpEvidenceIndexPayload {
+  return {
+    ok: true,
+    mode: 'playwright_mcp_browser_evidence_index',
+    generated_at: generatedAt,
+    latest_evidence_packet: 'pending_production_smoke',
+    latest_snapshot: 'pending_production_smoke',
+    latest_console: 'pending_production_smoke',
+    latest_network: 'pending_production_smoke',
+    smoke_route: '/api/bridge/playwright-mcp/smoke',
+    status_route: '/api/bridge/playwright-mcp/status',
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    no_public_exposure: true,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+    blocker: 'production_smoke_result_not_persisted_yet',
+  }
+}
+
 function blockedStatus(message: string): PlaywrightMcpStatus {
   return {
     ok: false,
@@ -159,6 +245,9 @@ function blockedStatus(message: string): PlaywrightMcpStatus {
     status: 'blocked',
     service_name: 'playwright-mcp.service',
     endpoint: 'localhost:8931/mcp',
+    service_endpoint: '127.0.0.1:8931',
+    mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+    service_status: 'blocked',
     transport: 'streamable_http',
     bind_host: '127.0.0.1',
     local_only: true,

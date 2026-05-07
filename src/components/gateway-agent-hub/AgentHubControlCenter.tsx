@@ -6,6 +6,11 @@ import type {
   AgentHubRuntimeSystem,
   AgentHubStatusPayload,
 } from '@/lib/gateway-agent-hub'
+import type {
+  SpaceAgentBrowserAutomationButton,
+  SpaceAgentBrowserAutomationCard,
+  SpaceAgentBrowserAutomationPayload,
+} from '@/lib/space-agent-browser-automation'
 
 export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayload }) {
   const paperclip = status.agents.find((agent) => agent.id === 'paperclip')
@@ -52,11 +57,13 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           </aside>
         </section>
 
+        {status.space_agent_browser_automation && <SpaceAgentBrowserAutomationPanel payload={status.space_agent_browser_automation} />}
+
         <section className='rounded-lg border border-white/10 bg-white/[0.03] p-5'>
           <div className='flex flex-wrap items-end justify-between gap-3'>
             <div>
               <h2 className='text-lg font-semibold text-white'>Supporting Runtime Systems</h2>
-              <p className='mt-1 text-sm text-slate-400'>Gateway, OpenClaw+, OpenCloud, Build-Wiki, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
+              <p className='mt-1 text-sm text-slate-400'>Gateway, Paperclip, OpenClaw+, Build-Wiki/Farmer, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
             </div>
             <StatusBadge label='read-only discovery' status='read_only' />
           </div>
@@ -212,6 +219,103 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
   )
 }
 
+
+function SpaceAgentBrowserAutomationPanel({ payload }: { payload: SpaceAgentBrowserAutomationPayload }) {
+  const playwright = payload.cards.find((card) => card.id === 'playwright_mcp')
+  return (
+    <section className='rounded-lg border border-sky-300/20 bg-sky-300/8 p-5'>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div>
+          <h2 className='text-lg font-semibold text-white'>SpaceAgent Browser Automation</h2>
+          <p className='mt-1 max-w-4xl text-sm leading-6 text-sky-100'>{payload.architecture_rule}</p>
+        </div>
+        <StatusBadge label={playwright?.status || 'pending'} status={playwright?.status || 'pending'} />
+      </div>
+
+      <div className='mt-4 grid gap-3 lg:grid-cols-3'>
+        {payload.cards.map((card) => <BrowserAutomationCard key={card.id} card={card} />)}
+      </div>
+
+      <div className='mt-5 grid gap-4 lg:grid-cols-2'>
+        <BrowserAutomationActions title='Safe Read-Only Actions' buttons={payload.safe_read_only_buttons} />
+        <BrowserAutomationActions title='Gated Actions' buttons={payload.gated_buttons} />
+      </div>
+
+      <dl className='mt-5 grid gap-3 text-sm text-slate-300 sm:grid-cols-2 lg:grid-cols-4'>
+        <Fact label='last evidence packet' value={payload.last_evidence_packet.status} />
+        <Fact label='last snapshot' value={payload.last_snapshot} />
+        <Fact label='last console' value={payload.last_console} />
+        <Fact label='last network' value={payload.last_network} />
+      </dl>
+    </section>
+  )
+}
+
+function BrowserAutomationCard({ card }: { card: SpaceAgentBrowserAutomationCard }) {
+  return (
+    <article className='rounded-lg border border-white/10 bg-black/20 p-4'>
+      <div className='flex items-start justify-between gap-3'>
+        <div>
+          <h3 className='font-semibold text-white'>{card.title}</h3>
+          <p className='mt-1 text-xs uppercase tracking-[0.12em] text-slate-500'>{card.id.replace(/_/g, ' ')}</p>
+        </div>
+        <StatusBadge label={card.status} status={card.status} />
+      </div>
+      <p className='mt-3 text-sm leading-6 text-slate-300'>{card.summary}</p>
+      <dl className='mt-4 grid grid-cols-2 gap-2 text-xs text-slate-300'>
+        <Fact label='installed' value={card.installed ? 'yes' : 'no'} />
+        <Fact label='configured' value={card.configured ? 'yes' : 'no'} />
+        <Fact label='connected' value={card.connected ? 'yes' : 'no'} />
+        <Fact label='public' value={card.public_exposure ? 'exposed' : 'blocked'} />
+        <Fact label='endpoint' value={card.service_endpoint || 'not proven'} />
+        <Fact label='MCP endpoint' value={card.mcp_endpoint || 'not proven'} />
+        <Fact label='interactive' value={card.bridge_required_for_interactive ? 'Bridge Session required' : 'read-only'} />
+        <Fact label='authenticated' value={card.bridge_required_for_authenticated ? 'Bridge Session required' : 'not required'} />
+      </dl>
+      <ul className='mt-3 space-y-1 text-xs leading-5 text-slate-400'>
+        {card.details.map((detail) => <li key={detail}>{detail}</li>)}
+      </ul>
+      {card.blocker && <p className='mt-3 rounded-lg border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Blocker: {card.blocker}</p>}
+    </article>
+  )
+}
+
+function BrowserAutomationActions({ title, buttons }: { title: string; buttons: SpaceAgentBrowserAutomationButton[] }) {
+  return (
+    <article className='rounded-lg border border-white/10 bg-black/20 p-4'>
+      <h3 className='font-semibold text-white'>{title}</h3>
+      <div className='mt-3 grid gap-2'>
+        {buttons.map((button) => <BrowserAutomationButton key={button.id} button={button} />)}
+      </div>
+    </article>
+  )
+}
+
+function BrowserAutomationButton({ button }: { button: SpaceAgentBrowserAutomationButton }) {
+  const baseClass = 'rounded-lg border px-3 py-2 text-left text-xs font-semibold transition'
+  const enabledClass = 'border-sky-300/30 bg-sky-300/10 text-sky-100 hover:bg-sky-300/15'
+  const disabledClass = 'cursor-not-allowed border-white/10 bg-white/5 text-slate-500'
+
+  if (!button.route || button.state !== 'enabled') {
+    return (
+      <div className={baseClass + ' ' + disabledClass} title={button.blocker || 'disabled'}>
+        <div>{button.label}</div>
+        <div className='mt-1 font-normal text-slate-500'>{button.blocker || button.owner_visible_summary}</div>
+      </div>
+    )
+  }
+
+  if (button.method === 'POST') {
+    return (
+      <form action={button.route} method='post'>
+        <button className={baseClass + ' w-full ' + enabledClass} type='submit' title={button.owner_visible_summary}>{button.label}</button>
+      </form>
+    )
+  }
+
+  return <a className={baseClass + ' ' + enabledClass} href={button.route} title={button.owner_visible_summary}>{button.label}</a>
+}
+
 function RuntimeSystemCard({ system }: { system: AgentHubRuntimeSystem }) {
   return (
     <article className='rounded-lg border border-white/10 bg-black/20 p-4'>
@@ -256,9 +360,9 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 function StatusBadge({ label, status }: { label: string; status: string }) {
-  const tone = status === 'partial_go' || status === 'read_only' || status === 'connected'
+  const tone = status === 'partial_go' || status === 'read_only' || status === 'connected' || status === 'connected_local_only'
     ? 'border-sky-300/30 bg-sky-300/10 text-sky-100'
-    : status === 'gated' || status === 'pending' || status === 'degraded'
+    : status === 'gated' || status === 'pending' || status === 'degraded' || status === 'limited_pending'
       ? 'border-amber-300/30 bg-amber-300/10 text-amber-100'
       : status === 'blocked' || status === 'missing'
         ? 'border-rose-300/30 bg-rose-300/10 text-rose-100'

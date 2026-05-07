@@ -962,6 +962,27 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       lastSeen: generatedAt,
     }),
     makeNode({
+      id: 'playwright_mcp',
+      label: 'Playwright MCP',
+      kind: 'mcp_server',
+      status: 'read_only',
+      capabilities: ['SpaceAgent browser automation tool', 'local-only MCP status', 'browser snapshot/evidence packets', 'Bridge Session gated interactive actions'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        agent: 'space_agent',
+        service_status: 'connected_local_only',
+        service_endpoint: '127.0.0.1:8931',
+        mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+        browser_mode: 'headless / isolated',
+        local_only: true,
+        public_exposure: false,
+        bridge_required_for_interactive: true,
+        bridge_required_for_authenticated: true,
+        execution_enabled: false,
+        writes_enabled: false,
+      },
+    }),
+    makeNode({
       id: 'tools',
       label: 'Tools',
       kind: 'tool',
@@ -1042,6 +1063,8 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('gateway', 'agent_zero', 'command', false, generatedAt, null),
     makeEdge('gateway', 'bridge_mcp', 'mcp-call', true, generatedAt, null),
     makeEdge('gateway', 'mcp_gateway', 'mcp-call', true, generatedAt, null),
+    makeEdge('gateway', 'playwright_mcp', 'mcp-call', false, generatedAt, null),
+    makeEdge('space_agent', 'playwright_mcp', 'mcp-call', false, generatedAt, null),
     makeEdge('gateway', 'models', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'llm_gateway', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
@@ -1094,6 +1117,7 @@ function buildGatewayCapabilities(context: AgentZeroReadOnlyContext | null, gene
     ...toolCapabilities(context, generatedAt),
     ...skillCapabilities(context, generatedAt),
     ...gatewayToolIntegrationCapabilities(context, generatedAt),
+    ...playwrightMcpCapabilities(generatedAt),
     ...spaceAgentFirecrawlCapabilities(context, generatedAt),
     ...integrationCapabilities(context, generatedAt),
     ...brainCapabilities(context, generatedAt),
@@ -1453,6 +1477,60 @@ function spaceAgentFirecrawlCapabilities(context: AgentZeroReadOnlyContext | nul
     },
     last_seen: generatedAt,
   }))
+}
+
+
+function playwrightMcpCapabilities(generatedAt: string): GatewayCapability[] {
+  return [
+    createGatewayCapability({
+      id: 'playwright_mcp.local_status',
+      label: 'Playwright MCP local-only status',
+      kind: 'mcp_server',
+      status: 'read_only',
+      source_node: 'playwright_mcp',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      requires_session: false,
+      available_to: ['space_agent', 'agent_zero', 'pi'],
+      required_tools: ['browser_navigate', 'browser_snapshot', 'browser_console_messages', 'browser_network_requests', 'browser_take_screenshot'],
+      execution_requirements: ['authenticated_gateway_route', 'local_only_service', 'no_public_exposure', 'read_only_smoke_only'],
+      status_details: {
+        service_status: 'connected_local_only',
+        service_endpoint: '127.0.0.1:8931',
+        mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+        status_route: '/api/bridge/playwright-mcp/status',
+        smoke_route: '/api/bridge/playwright-mcp/smoke',
+        evidence_route: '/api/gateway/space-agent/playwright-mcp/evidence',
+        public_exposure: false,
+        bridge_required_for_interactive: true,
+        bridge_required_for_authenticated: true,
+        external_writes_enabled: false,
+      },
+      last_seen: generatedAt,
+    }),
+    createGatewayCapability({
+      id: 'playwright_mcp.interactive_browser_actions',
+      label: 'Playwright MCP interactive browser actions',
+      kind: 'tool',
+      status: 'read_only',
+      source_node: 'playwright_mcp',
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      requires_session: true,
+      available_to: ['space_agent'],
+      execution_requirements: ['bridge_session_required', 'owner_scope_required', 'no_owner_browser_profile_by_default'],
+      blockers: ['bridge_session_required_for_interactive_browser_action'],
+      status_details: {
+        public_exposure: false,
+        authenticated_browsing: 'disabled_until_bridge_session',
+        submit_form: 'disabled_until_bridge_session',
+        upload_file: 'disabled_until_bridge_session',
+      },
+      last_seen: generatedAt,
+    }),
+  ]
 }
 
 function getFirecrawlToolIntegrationView(context: AgentZeroReadOnlyContext | null): GatewayToolIntegrationView | null {
@@ -2212,6 +2290,7 @@ function makeNode(input: {
   status: GatewayStatus
   capabilities: string[]
   blockers?: Array<string | null | undefined>
+  statusDetails?: GatewayNode['status_details']
   lastSeen: string
 }): GatewayNode {
   const blockers = input.blockers?.filter(Boolean).map(String) || []
@@ -2226,6 +2305,7 @@ function makeNode(input: {
     health: createGatewayHealth(status, blockers[0] || `${input.label} ${status}`, input.lastSeen),
     capabilities: input.capabilities.map(sanitizeText),
     blockers,
+    ...(input.statusDetails ? { status_details: { ...input.statusDetails } } : {}),
   }
 }
 

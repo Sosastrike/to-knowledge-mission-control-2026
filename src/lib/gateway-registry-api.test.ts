@@ -31,7 +31,7 @@ const context = {
         tool_count: 4,
         reachable: true,
         schema_available: true,
-        blocked_reason: null,
+        blocked_reason: 'bridge_session_required_for_interactive_browser_action',
         tools_endpoint: '/api/mcp/servers/zapier/tools',
       },
     ],
@@ -364,6 +364,7 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('space_agent')).toBe(true)
     expect(nodes.has('bridge_mcp')).toBe(true)
     expect(nodes.has('mcp_gateway')).toBe(true)
+    expect(nodes.has('playwright_mcp')).toBe(true)
     expect(nodes.has('integration_zapier')).toBe(true)
     expect(nodes.has('integration_heygen')).toBe(true)
     expect(nodes.has('integration_firecrawl')).toBe(true)
@@ -388,6 +389,8 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('graphify')).toBe(true)
     expect(nodes.has('buildwiki')).toBe(true)
     expect(capabilities.has('mcp_zapier')).toBe(true)
+    expect(capabilities.has('playwright_mcp_local_status')).toBe(true)
+    expect(capabilities.has('playwright_mcp_interactive_browser_actions')).toBe(true)
     expect(capabilities.has('model_openrouter')).toBe(true)
     expect(capabilities.has('model_openai')).toBe(true)
     expect(capabilities.has('model_codex_chatgpt')).toBe(true)
@@ -408,6 +411,23 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('space_agent_firecrawl_extract')).toBe(true)
     expect(capabilities.has('space_agent_firecrawl_interact_browser')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
+    const playwrightMcp = getGatewayNodeDetail(registry, 'playwright-mcp')
+    expect(playwrightMcp?.node).toMatchObject({
+      id: 'playwright_mcp',
+      connected: true,
+      configured: true,
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      blocked_reason: 'bridge_session_required_for_interactive_browser_action',
+    })
+    expect(playwrightMcp?.node.status_details).toMatchObject({
+      service_status: 'connected_local_only',
+      service_endpoint: '127.0.0.1:8931',
+      mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+      public_exposure: false,
+      bridge_required_for_interactive: true,
+    })
     const spaceAgent = registry.capabilities.find((capability) => capability.id === 'space_agent_research_packet')
     expect(spaceAgent).toMatchObject({
       kind: 'agent',

@@ -1,176 +1,203 @@
-# Final Production GO Report — Mission Control / Gateway / Agent Workforce
+# Final Production GO Report
 
-Generated: 2026-05-07T22:53:23Z
+Generated: 2026-05-07T23:26:39Z
 
-## Final Result
+## Executive Decision
 
-**Final Result:** NOT COMPLETE / PARTIAL GO
+**Final Result:** PARTIAL GO, not 100%.
 
-Do **not** claim 100%. The current production system is working in several important read-only paths, but the full production completion target is blocked by admin restart, Hermes live adapter, owner-authenticated visual proof, Firecrawl credential/backend, YouTube transcript connector, Paperclip auth bridge, and external delivery connector setup.
+Agent Zero is live through authenticated Mission Control test-chat, Playwright MCP is GO for local-only read-only browser automation, Gateway / Agent Hub APIs are protected and loading, Mission Control report links work, and the full Mission Control test suite passed. The release cannot be called GO or 100% because production restart, owner-authenticated visual proof, Hermes live adapter, Firecrawl, YouTube transcript connector, Paperclip owner session, external delivery connectors, and OpenClaw+ doctor health still have exact blockers.
 
-## Executive Summary
+## Current Production State
 
-Agent Zero is live through the authenticated Mission Control bridge and returns `agent_zero_called:true`. Playwright MCP is GO for local-only read-only browser automation. Gateway / Agent Hub APIs are live and protected, and the SpaceAgent Browser Automation truth model correctly shows Playwright MCP green, Firecrawl red/blocked, and YouTube yellow/limited.
+| Field | Value |
+| --- | --- |
+| Branch | `to-knowledge-mc` |
+| HEAD before final report commit | `e56383c` |
+| mission-control.service | `active` |
+| MainPID | `2121865` |
+| ActiveEnterTimestamp | `Thu 2026-05-07 18:15:50 EDT` |
+| claudeclaw.service | `active` |
+| hermes-gateway.service | `active` |
+| Build-Wiki/Farmer timer (`opencloud-docs-farmer.timer`) | `active` |
+| Build-Wiki/Farmer service (`opencloud-docs-farmer.service`) | `inactive` |
+| Agent Zero container | `agent-zero Up 21 hours` |
 
-The newly implemented SpaceAgent read-only browser ResearchPacket evidence path passed typecheck, build, and tests, and was pushed, but production Mission Control could not be restarted because `systemctl restart mission-control.service` requires interactive admin authentication. Until the restart happens, production still returns the old SpaceAgent research behavior with `research_performed:false`.
+## Percentages
 
-Hermes remains NO-GO live because `POST /api/bridge/hermes/test-chat` returns `hermes_called:false` with `hermes_safe_live_chat_adapter_not_configured`. Agent Zero can use the Mission Control Hermes collaboration contract route for planning-only handoff, but that is not the same as a live Hermes adapter.
-
-## Current Percentages
-
-| System / Project | Current % | Status | Notes |
-| --- | ---: | --- | --- |
-| Agent Zero | 91% | PARTIAL GO | Authenticated status/test-chat works and `agent_zero_called:true` passed. Blocked from full GO by Hermes live, delivery, and remaining production proof gaps. |
-| Hermes | 45% | NO-GO LIVE | Status route healthy, but live test-chat is blocked by `hermes_safe_live_chat_adapter_not_configured`. |
-| Gateway / Agent Hub | 76% | PARTIAL GO | APIs work and are auth-protected. Owner-authenticated browser visual proof still blocked. |
-| SpaceAgent | 72% | PARTIAL GO | Playwright MCP path proven; Firecrawl and YouTube remain blocked/limited. New ResearchPacket evidence code needs production restart. |
-| Playwright MCP | 92% | GO for local-only read-only | Local-only service is connected, snapshot/screenshot evidence works, public exposure false. Interactive/authenticated browsing remains Bridge Session-gated. |
-| Firecrawl | 25% | BLOCKED | Mission Control lacks credential and SDK/backend. |
-| YouTube Research | 45% | LIMITED | Schema/planning exists; live transcript connector is not proven. |
-| Paperclip | 48% | PARTIAL / DEGRADED | Tailnet health works; owner login and Mission Control Paperclip auth bridge remain blocked. |
-| Pi Dispatcher | 55% | SHADOW / PARTIAL | Present as advisory/contract route model; no live independent dispatcher execution claimed. |
-| Mini-Agent OS | 70% | READ-ONLY / PARTIAL | Registry/contracts and route exist; execution remains gated. |
-| OpenClaw+ Runtime | 58% | PARTIAL / NEEDS REPAIR | Runtime is represented, but doctor route reports unhealthy state. Build-Wiki/Farmer timer is active under legacy service name. |
-| Build-Wiki / Farmer | 68% | PARTIAL / SCOPED | Timer active; Run Now still requires Bridge Session and exact legacy service scope only. |
-| Delivery | 52% | PARTIAL GO | Mission Control report link works; Telegram, AgentMail send, Google Drive, and OneDrive remain blocked/gated. |
-| Overall Ecosystem | 85% | PARTIAL GO | Strong read-only control plane; live execution and delivery completion still blocked. |
+| System | Decision | Percent | Basis |
+| --- | --- | ---: | --- |
+| Agent Zero | `PARTIAL GO` | 90% | Authenticated status/test-chat pass with agent_zero_called:true; full GO still waits on production restart/owner browser proof/delivery connectors. |
+| Hermes | `NO-GO live` | 42% | Service/status healthy, but POST test-chat returns safe 503 with hermes_safe_live_chat_adapter_not_configured. |
+| Gateway / Agent Hub | `PARTIAL GO` | 74% | APIs and auth pass; owner-authenticated visual proof remains blocked. |
+| Playwright MCP | `GO local-only read-only` | 90% | Local-only status/smoke route passes; interactive/authenticated browser actions remain Bridge Session gated. |
+| SpaceAgent | `PARTIAL GO` | 66% | Browser automation is connected through Playwright MCP; Firecrawl and YouTube are blocked/limited. |
+| Firecrawl | `BLOCKED` | 25% | Credential/backend missing: firecrawl_credential_required. |
+| YouTube Research | `LIMITED` | 45% | Transcript connector not proven; no fake transcript claims. |
+| Paperclip | `PARTIAL / DEGRADED` | 45% | Sandbox health works; owner login/session bridge and task views blocked. |
+| Pi Dispatcher | `PENDING / SHADOW` | 35% | Dispatcher model/tests exist; live Pi runtime is not proven as authoritative. |
+| OpenClaw+ | `PARTIAL / UNHEALTHY` | 62% | Runtime service active and one permission issue repaired; doctor still reports auth/plugin/state issues. |
+| Mini-agent workflow | `PARTIAL GO` | 68% | Contracts and gauntlets pass; live execution remains Bridge Session gated. |
+| Delivery | `PARTIAL GO` | 45% | Mission Control report links work; Telegram, AgentMail, Drive, and OneDrive are blocked/gated. |
+| Bridge Session | `PARTIAL GO` | 60% | Policy/tests pass; no active execution session was opened for external writes. |
+| Build-Wiki / Farmer | `PARTIAL GO` | 64% | Timer active; Run Now remains scoped to legacy opencloud-docs-farmer.service and requires Bridge Session. |
+| Overall ecosystem | `PARTIAL GO` | 87% | Core route/test foundation is strong, but live Hermes, admin restart, owner visual proof, connector credentials, delivery adapters, and OpenClaw+ doctor remain blockers. |
 
 ## Phase Results
 
-| Phase | Result | Proof / Blocker |
-| --- | --- | --- |
-| Phase 1 — Owner-authenticated Agent Hub visual proof | PARTIAL / BLOCKED | Backend truth passes; exact blocker `owner_authenticated_browser_session_required`. |
-| Phase 2 — Firecrawl credential/read-only proof | BLOCKED | `firecrawl_credential_required`; Mission Control process/env has no Firecrawl key and SDK is missing. |
-| Phase 3 — YouTube transcript proof | LIMITED | `youtube_transcript_connector_not_proven`; no fake transcript claims. |
-| Phase 4 — SpaceAgent read-only research flow | CODE-COMPLETE / PROD RESTART BLOCKED | Commit `7dba45a`; tests pass; production restart blocked by admin auth. |
-| Phase 5 — Hermes safe live adapter | BLOCKED | `hermes_safe_live_chat_adapter_not_configured`; no fake `hermes_called:true`. |
-| Phase 6 — Agent Zero to Hermes collaboration | PARTIAL | Contract route returns planning handoff and audit; live Hermes adapter still blocked. |
-| Phase 7 — Paperclip service health/login | PARTIAL / DEGRADED | Tailnet health passes; owner login and data bridge blocked. |
-| Phase 8 — Paperclip Codex/Claude auth separation | PARTIAL | Auth separation policy correct; CLI/Paperclip smoke blocked. |
-| Phase 9 — Delivery connector proof | PARTIAL GO | Mission Control report link works; external channels blocked/gated honestly. |
-| Phase 10 — Integrated production gauntlet | NOT COMPLETE | Protected routes work; major blockers remain. |
+| Phase | Result | Proof / blocker | Commit |
+| --- | --- | --- | --- |
+| Phase 1 | `BLOCKED` | Mission Control restart blocked by admin authentication; service active but PID/timestamp unchanged. | `75deaa6` |
+| Phase 2 | `BLOCKED / PARTIAL` | Owner-auth browser visual proof blocked; API truth passes. | `721fe8e` |
+| Phase 3 | `BLOCKED` | Hermes live adapter not configured; safe 503 returned. | `025a7e5` |
+| Phase 4 | `PARTIAL` | Agent Zero -> Hermes planning contract works; independent Hermes live adapter still blocked. | `4441c70` |
+| Phase 5 | `BLOCKED` | Firecrawl credential/backend missing. | `dfffd4b` |
+| Phase 6 | `LIMITED / BLOCKED` | YouTube transcript connector not proven. | `c155d95` |
+| Phase 7 | `PARTIAL / DEGRADED` | Paperclip health works; owner login/session bridge blocked. | `f83bb35` |
+| Phase 8 | `BLOCKED` | Paperclip Codex/Claude smokes blocked by Paperclip session bridge; auth separation maintained. | `6d6ba7c` |
+| Phase 9 | `PARTIAL` | OpenClaw+ config permission fixed; doctor still unhealthy. | `25fea1c` |
+| Phase 10 | `PARTIAL GO` | Mission Control report links work; external delivery blocked/gated. | `e56383c` |
+| Phase 11 | `PARTIAL GO` | Typecheck, build, tests, route smoke, services, auth regression passed; release remains PARTIAL GO. | `this report` |
 
-## Routes Tested
+## Validation Passed
 
-| Route | Result |
-| --- | --- |
-| `GET /api/gateway/status` | HTTP 200, degraded, read-only |
-| `GET /api/gateway/registry` | HTTP 200, read-only |
-| `GET /api/gateway/agent-hub/status` | HTTP 200, read-only |
-| `GET /api/gateway/agent-hub/agents` | HTTP 200, read-only |
-| `GET /api/bridge/agent-zero/status` | HTTP 200 |
-| `POST /api/bridge/agent-zero/test-chat` | HTTP 200, `agent_zero_called:true` |
-| `GET /api/bridge/hermes/status` | HTTP 200, healthy/read-only |
-| `POST /api/bridge/hermes/test-chat` | HTTP 503, `hermes_called:false`, blocker `hermes_safe_live_chat_adapter_not_configured` |
-| `POST /api/bridge/agent-zero/hermes-handoff` | HTTP 200, contract handoff, no execution/write |
-| `GET /api/bridge/space-agent/status` | HTTP 200, degraded/read-only |
-| `GET /api/gateway/space-agent/browser/status` | HTTP 200, truthful cards |
-| `POST /api/gateway/space-agent/research` | HTTP 200, but production still old behavior until restart |
-| `GET /api/bridge/playwright-mcp/status` | HTTP 200, connected |
-| `POST /api/bridge/playwright-mcp/smoke` | HTTP 200, passed, snapshot/screenshot available |
-| `GET /api/firecrawl/status` | HTTP 200, credential required |
-| `GET /api/bridge/paperclip/status` | HTTP 200, degraded/auth blocker |
-| `GET /api/bridge/paperclip/agents` | HTTP 503, Paperclip auth blocker |
-| `GET /api/gateway/mini-agents` | HTTP 200, read-only Mini-Agent OS |
-| `GET /api/bridge/agent-zero/reports` | HTTP 200 |
-| `GET /api/bridge/agent-zero/google-drive/status` | HTTP 200, blocked connector |
-| `GET /api/bridge/agent-zero/onedrive/status` | HTTP 200, blocked connector |
-| `GET /api/openclaw/doctor` | HTTP 200, unhealthy state reported |
+- Mission Control `pnpm run typecheck` passed under Node v24.14.1.
+- Mission Control `pnpm run build` passed and produced Gateway / Agent Hub / SpaceAgent / Playwright MCP routes.
+- Mission Control `pnpm test` passed: 133 test files, 1,237 tests.
+- Agent Zero 10,000-scenario ecosystem gauntlet passed with zero failures.
+- Paperclip 1,000-scenario routing gauntlet passed with zero failures.
+- SpaceAgent gauntlets passed, including no-secret, no-fake-access, and no-unauthorized-execution coverage.
+- Gateway unauthenticated route regression returned 401 for protected API routes.
+- Production route smoke confirms Agent Zero `agent_zero_called:true` and Hermes safe blocker behavior.
+- No external writes were executed.
 
-## Auth / Security Proof
+## Route Smoke
 
-Unauthenticated protected route checks returned HTTP 401 for Gateway, Agent Hub, Agent Zero, Hermes, Playwright MCP, and reports.
+| Route | Auth | HTTP | Key result |
+| --- | --- | ---: | --- |
+| `GET /api/gateway/status` | yes | 200 | ok=True, mode=gateway_status_read_only, status=degraded, execution_enabled=False, writes_enabled=False |
+| `GET /api/gateway/agent-hub/status` | yes | 200 | ok=True, mode=gateway_agent_hub_status_read_only, execution_enabled=False, writes_enabled=False |
+| `GET /api/gateway/agent-hub/agents` | yes | 200 | ok=True, mode=gateway_agent_hub_agents_read_only, execution_enabled=False, writes_enabled=False |
+| `GET /api/gateway/space-agent/browser/status` | yes | 200 | ok=True, mode=space_agent_browser_automation_truth, execution_enabled=False, writes_enabled=False |
+| `GET /api/bridge/playwright-mcp/status` | yes | 200 | ok=True, mode=playwright_mcp_status, status=connected, blocker=None, execution_enabled=False, writes_enabled=False |
+| `POST /api/bridge/playwright-mcp/smoke` | yes | 200 | ok=True, mode=playwright_mcp_mission_control_smoke, status=passed, blocker=None, execution_enabled=False, writes_enabled=False |
+| `GET /api/bridge/agent-zero/status` | yes | 200 | ok=True, mode=agent_zero_commander_status_bridge_session_execution |
+| `POST /api/bridge/agent-zero/test-chat` | yes | 200 | ok=True, mode=agent_zero_read_only_test_chat, status=200, agent_zero_called=True, blocker=None, execution_enabled=False, writes_enabled=False |
+| `GET /api/bridge/hermes/status` | yes | 200 | ok=True, mode=hermes_lieutenant_status_read_only, blocker=None, execution_enabled=False |
+| `POST /api/bridge/hermes/test-chat` | yes | 503 | ok=False, mode=hermes_read_only_test_chat, status=503, hermes_called=False, blocker=hermes_safe_live_chat_adapter_not_configured, execution_enabled=False, writes_enabled=False |
+| `GET /api/firecrawl/status` | yes | 200 | ok=True, status=credential_required |
+| `GET /api/bridge/paperclip/status` | yes | 200 | ok=True, mode=paperclip_status_read_only, blocker=paperclip_auth_required_or_not_configured, execution_enabled=False, writes_enabled=False |
+| `GET /api/bridge/agent-zero/reports` | yes | 200 | ok=True, mode=agent_zero_report_delivery_surface |
+| `GET /api/openclaw/doctor` | yes | 200 | json payload |
+| `GET /api/gateway/status` | no | 401 | Unauthorized |
+| `GET /api/gateway/agent-hub/status` | no | 401 | Unauthorized |
+| `GET /api/gateway/agent-hub/agents` | no | 401 | Unauthorized |
+| `GET /api/gateway/space-agent/browser/status` | no | 401 | Unauthorized |
+| `GET /api/bridge/playwright-mcp/status` | no | 401 | Unauthorized |
+| `POST /api/bridge/playwright-mcp/smoke` | no | 401 | Unauthorized |
+| `GET /api/bridge/agent-zero/status` | no | 401 | Unauthorized |
+| `POST /api/bridge/agent-zero/test-chat` | no | 401 | Unauthorized |
+| `GET /api/bridge/hermes/status` | no | 401 | Unauthorized |
+| `POST /api/bridge/hermes/test-chat` | no | 401 | Unauthorized |
 
-No external writes were executed. No Zapier writes, HeyGen generation, SMB mount/Fork 2, Farmer execution, email send, Drive upload, OneDrive upload, or Telegram attachment send occurred. No secrets, tokens, auth files, passwords, or `.env` values were printed or committed.
+## Open Blockers
 
-## Services
+- `mission_control_admin_restart_required`
+- `owner_authenticated_browser_session_required`
+- `hermes_safe_live_chat_adapter_not_configured`
+- `firecrawl_credential_required`
+- `youtube_transcript_connector_not_proven`
+- `paperclip_auth_required_or_not_configured`
+- `paperclip_safe_test_task_adapter_not_configured`
+- `google_drive_upload_connector_not_configured`
+- `onedrive_upload_connector_not_configured`
+- `no_approved_telegram_document_attachment_route`
+- `agentmail_provider_not_visible_or_configured`
+- `openclaw_doctor_remaining_auth_plugin_state_issues`
 
-| Service | Status |
-| --- | --- |
-| `mission-control.service` | active |
-| Mission Control MainPID | `2121865` |
-| Mission Control restart timestamp | `Thu 2026-05-07 18:15:50 EDT` |
-| `claudeclaw.service` | active |
-| `hermes-gateway.service` | active |
-| `opencloud-docs-farmer.timer` | active, legacy service name only |
+## What Is Live
 
-## Tests Passed
+- Agent Zero authenticated status and read-only test-chat.
+- Gateway / Agent Hub read-only APIs and authentication protection.
+- Playwright MCP local-only read-only browser automation status/smoke.
+- Mission Control report link surface.
+- Paperclip sandbox health endpoint only, not owner session bridge.
+- Build-Wiki/Farmer timer visibility under OpenClaw+ naming.
 
-Before pushing the SpaceAgent read-only ResearchPacket evidence code:
+## What Is Blocked / Pending
 
-- `git diff --check`: pass
-- `pnpm run typecheck`: pass
-- `pnpm run build`: pass
-- `pnpm test -- src/lib/space-agent-research.test.ts src/lib/space-agent-end-to-end-research-flow.test.ts src/lib/space-agent-health.test.ts`: pass; the runner executed 133 test files and 1,237 tests, all passed.
-- Staged secret scans for all commits: pass
-- PDF headers for generated reports: valid
+- Admin restart is still required before claiming the latest pushed code is loaded by the production process.
+- Owner-authenticated browser visual proof needs an owner session; Codex did not touch session cookies.
+- Hermes needs a real no-tool/no-write live adapter before `hermes_called:true` can count as live.
+- Firecrawl needs a protected credential source and read-only adapter smoke.
+- YouTube needs a real transcript connector with transcript-backed evidence.
+- Paperclip needs owner login/session bridge and read-only company/agent/task views.
+- OpenClaw+ doctor needs targeted auth/plugin/state repairs beyond the permission fix already applied.
+- Telegram attachment, AgentMail, Google Drive, and OneDrive need configured adapters and Bridge Session proof.
 
-## Commits Pushed This Cycle
+## Commits Pushed
 
-| Commit | Purpose |
-| --- | --- |
-| `a5a92d4` | Phase 1 Agent Hub owner visual proof blocker report |
-| `31ec502` | Phase 2 Firecrawl credential blocker report |
-| `78d63f2` | Phase 3 YouTube transcript connector blocker report |
-| `7dba45a` | SpaceAgent read-only browser ResearchPacket evidence implementation |
-| `080fbfc` | Phase 4 SpaceAgent read-only research flow report |
-| `1f49dde` | Phase 5 Hermes live adapter blocker report |
-| `f5c6a90` | Phase 6 Agent Zero / Hermes collaboration proof report |
-| `3cf9efa` | Phase 7 Paperclip service health/login blocker report |
-| `aa3c37c` | Phase 8 Paperclip Codex/Claude auth separation blocker report |
-| `19a41b5` | Phase 9 Delivery connector proof report |
+- `e56383c docs(delivery): record connector proof and blockers`
+- `25fea1c docs(openclaw): record health repair status`
+- `6d6ba7c docs(paperclip): record codex claude auth separation blocker`
+- `f83bb35 docs(paperclip): record service health owner login blocker`
+- `c155d95 docs(space-agent): record youtube transcript blocker`
+- `dfffd4b docs(space-agent): record firecrawl readonly blocker`
+- `4441c70 docs(agents): record agent zero hermes collaboration proof`
+- `025a7e5 docs(hermes): record live adapter blocker`
+- `721fe8e docs(gateway): record owner browser visual proof blocker`
+- `75deaa6 docs(production): record mission control restart blocker`
+- `ded9d1c docs(production): add final go report`
+- `19a41b5 docs(delivery): record connector proof and blockers`
+- `aa3c37c docs(paperclip): record codex claude auth separation blocker`
+- `3cf9efa docs(paperclip): record service health and owner login blocker`
+- `f5c6a90 docs(agents): record agent zero hermes collaboration proof`
+- `1f49dde docs(hermes): record safe live adapter blocker`
+- `080fbfc docs(space-agent): record readonly research flow proof`
+- `7dba45a feat(space-agent): collect read-only browser research evidence`
+- `78d63f2 docs(space-agent): record youtube transcript connector blocker`
+- `31ec502 docs(space-agent): record firecrawl credential blocker`
+- `a5a92d4 docs(gateway): record agent hub owner visual proof blocker`
+- `10d95ea docs(delivery): record drive onedrive production proof`
+- `f4f61d5 docs(delivery): record agentmail production proof`
+- `88c569e docs(models): record provider production proof`
+- `42295eb docs(gateway): record bridge mcp discovery proof`
+- `f2b406c docs(brain): record read adapter production proof`
+- `c1329c3 docs(openclaw): record buildwiki farmer fork1 proof`
+- `e629be2 fix(gateway): block unsafe mini-agent capabilities`
+- `14a2972 docs(gateway): record pi shadow dispatcher proof`
+- `c52cf97 docs(paperclip): record coworker dry-run proof`
 
 ## Rollback Commands
 
-Use one revert per pushed commit to preserve history:
+Use one revert per pushed phase commit so unrelated work stays isolated:
 
-```bash
-git revert a5a92d4
-git revert 31ec502
-git revert 78d63f2
-git revert 7dba45a
-git revert 080fbfc
-git revert 1f49dde
-git revert f5c6a90
-git revert 3cf9efa
-git revert aa3c37c
-git revert 19a41b5
-```
+- `git revert e56383c`
+- `git revert 25fea1c`
+- `git revert 6d6ba7c`
+- `git revert f83bb35`
+- `git revert c155d95`
+- `git revert dfffd4b`
+- `git revert 4441c70`
+- `git revert 025a7e5`
+- `git revert 721fe8e`
+- `git revert 75deaa6`
+- For the OpenClaw+ config permission repair only, rollback would be `chmod 644` on the OpenClaw+ config file, but that is not recommended because it would reintroduce the doctor security warning.
 
-## Exact Remaining Blockers
+## Dirty Tree
 
-1. `mission_control_admin_restart_required`: latest SpaceAgent code is pushed but production could not restart because interactive admin auth is required.
-2. `owner_authenticated_browser_session_required`: visual proof of Gateway → Agent Hub → SpaceAgent panel still needs owner browser session.
-3. `hermes_safe_live_chat_adapter_not_configured`: Hermes cannot be marked live GO.
-4. `firecrawl_credential_required`: Mission Control lacks Firecrawl credential and SDK/backend.
-5. `youtube_transcript_connector_not_proven`: no live transcript adapter.
-6. `paperclip_auth_required_or_not_configured`: Paperclip data bridge and owner login proof blocked.
-7. `google_drive_upload_connector_not_configured`: Drive upload blocked.
-8. `onedrive_upload_connector_not_configured`: OneDrive upload blocked.
-9. `no_approved_telegram_document_attachment_route`: Telegram PDF attachment blocked.
-10. `openclaw_doctor_unhealthy`: OpenClaw+ doctor reports unhealthy state that needs repair.
-11. Parked artifacts remain untracked and intentionally untouched: `public/Voice-Biometrics-Executive-Report.pdf`, `public/lu-ai-collab-v2.mp4`.
+Remaining dirty items are parked artifacts and the final report before commit:
+- `?? public/Voice-Biometrics-Executive-Report.pdf`
+- `?? public/lu-ai-collab-v2.mp4`
+
+## No-Secrets Confirmation
+
+- No secrets, tokens, API keys, auth files, or `.env` values were printed in owner-facing reports.
+- No `.env` file was modified or staged.
+- Staged report diffs were scanned before each commit.
+- No external writes, Zapier writes, HeyGen generation, SMB/Fork 2, or farmer execution occurred.
+- OpenClaw+ naming is used correctly; the legacy `opencloud-docs-farmer.service` name appears only as a literal systemd unit.
 
 ## Exact Next Step
 
-Run the approved admin restart for Mission Control, then immediately rerun:
-
-1. `POST /api/gateway/space-agent/research` public webpage request and require `research_performed:true` plus evidence/citation count above zero.
-2. Owner-authenticated browser visual proof for Gateway → Agent Hub → SpaceAgent.
-3. Hermes live adapter implementation/proof until `POST /api/bridge/hermes/test-chat` returns `hermes_called:true` from a real safe adapter.
-
-## Final Decision
-
-**Agent Zero:** PARTIAL GO, 91%.
-
-**Hermes:** NO-GO LIVE, 45%.
-
-**Gateway / Agent Hub:** PARTIAL GO, 76%.
-
-**SpaceAgent:** PARTIAL GO, 72%.
-
-**Playwright MCP:** GO for local-only read-only browser automation, 92%.
-
-**Overall:** PARTIAL GO, 85%.
-
-This is not 100% complete yet.
+First, perform the admin-authenticated Mission Control restart and owner-authenticated browser visual proof. Second, implement the safe Hermes no-tool/no-write live adapter. Third, configure one connector at a time: Firecrawl, YouTube transcript, Paperclip owner session, then delivery adapters.

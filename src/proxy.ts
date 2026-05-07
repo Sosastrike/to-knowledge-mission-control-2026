@@ -84,13 +84,23 @@ function hostMatches(pattern: string, hostname: string): boolean {
   return h === p
 }
 
+function isGoogleAuthConfigured(): boolean {
+  return !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)
+}
+
+function isMicrosoftAuthConfigured(): boolean {
+  return !!(process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET && process.env.AZURE_AD_TENANT_ID)
+}
+
 function nextResponseWithNonce(request: NextRequest): { response: NextResponse; nonce: string } {
   const nonce = crypto.randomBytes(16).toString('base64')
-  const googleEnabled = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)
+  const googleEnabled = isGoogleAuthConfigured()
+  const microsoftEnabled = isMicrosoftAuthConfigured()
   const requestHeaders = buildNonceRequestHeaders({
     headers: request.headers,
     nonce,
     googleEnabled,
+    microsoftEnabled,
   })
   const response = NextResponse.next({
     request: {
@@ -129,9 +139,10 @@ function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce
   if (pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')) {
     response.headers.set('Content-Security-Policy', buildDesignerMissionControlCsp())
   } else {
-    const googleEnabled = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)
+    const googleEnabled = isGoogleAuthConfigured()
+    const microsoftEnabled = isMicrosoftAuthConfigured()
     const effectiveNonce = nonce || crypto.randomBytes(16).toString('base64')
-    response.headers.set('Content-Security-Policy', buildMissionControlCsp({ nonce: effectiveNonce, googleEnabled }))
+    response.headers.set('Content-Security-Policy', buildMissionControlCsp({ nonce: effectiveNonce, googleEnabled, microsoftEnabled }))
   }
 
   return response

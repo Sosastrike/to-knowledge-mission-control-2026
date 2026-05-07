@@ -10,6 +10,18 @@ describe('buildMissionControlCsp', () => {
     expect(csp).toContain("style-src-elem 'self' 'unsafe-inline'")
     expect(csp).toContain("style-src-attr 'unsafe-inline'")
   })
+
+  it('adds auth-provider origins only when the provider is configured', () => {
+    const csp = buildMissionControlCsp({ nonce: 'nonce-123', googleEnabled: true, microsoftEnabled: true })
+
+    expect(csp).toContain("script-src 'self' 'nonce-nonce-123' 'strict-dynamic' blob: https://accounts.google.com")
+    expect(csp).toContain("style-src-elem 'self' 'unsafe-inline' https://accounts.google.com")
+    expect(csp).toContain('connect-src')
+    expect(csp).toContain('https://accounts.google.com')
+    expect(csp).toContain('https://login.microsoftonline.com')
+    expect(csp).toContain('https://graph.microsoft.com')
+    expect(csp).toContain("form-action 'self' https://login.microsoftonline.com")
+  })
 })
 
 describe('buildNonceRequestHeaders', () => {
@@ -18,9 +30,11 @@ describe('buildNonceRequestHeaders', () => {
       headers: new Headers({ host: 'localhost:3000' }),
       nonce: 'nonce-123',
       googleEnabled: false,
+      microsoftEnabled: true,
     })
 
     expect(headers.get('x-nonce')).toBe('nonce-123')
     expect(headers.get('Content-Security-Policy')).toContain("style-src 'self' 'unsafe-inline'")
+    expect(headers.get('Content-Security-Policy')).toContain('https://login.microsoftonline.com')
   })
 })

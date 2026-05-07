@@ -1,0 +1,191 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2115 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(AgentMail Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:23:25.731Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(AgentMail is **PARTIAL GO** as a registered, policy-gated delivery adapter. Gateway can see) Tj
+T*
+(the AgentMail integration node and Agent Zero execution gateway lists the agentmail.send) Tj
+T*
+(adapter. A send attempt without Bridge Session was blocked with no email sent.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Gateway node integration_agentmail | 200, read_only |) Tj
+T*
+(| Legacy /api/gateway/nodes/agentmail alias | 404 |) Tj
+T*
+(| Execution gateway registry | 200 |) Tj
+T*
+(| AgentMail adapter visible | yes |) Tj
+T*
+(| Execution enabled | false |) Tj
+T*
+(| Writes enabled | false |) Tj
+T*
+(| Send attempt without Bridge Session | 423 blocked |) Tj
+T*
+(| Send blocker | active_bridge_session_required |) Tj
+T*
+(| Unauthenticated execute route | 401 |) Tj
+T*
+() Tj
+T*
+(Delivery Policy) Tj
+T*
+() Tj
+T*
+(| Rule | Status |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| AgentMail cannot send without Bridge Session | pass |) Tj
+T*
+(| AgentMail must use registered adapter | pass |) Tj
+T*
+(| AgentMail cannot fake done | pass |) Tj
+T*
+(| Domain/recipient allow-list required | policy present, not live-send tested |) Tj
+T*
+(| No email sent in this phase | pass |) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| active_bridge_session_required | No outgoing send can be marked live. | Open scoped Bridge) Tj
+T*
+(Session and test only an approved-domain recipient if owner authorizes. |) Tj
+T*
+(| live AgentMail connector not send-proven | Cannot claim outgoing delivery GO. | Verify) Tj
+T*
+(connector credentials and adapter invocation through Bridge Session without exposing secrets.) Tj
+T*
+(|) Tj
+T*
+(| node alias missing | /api/gateway/nodes/agentmail is not available. | Add compatibility) Tj
+T*
+(alias from agentmail to integration_agentmail if desired. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 959 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(- No email was sent.) Tj
+T*
+(- No external write occurred.) Tj
+T*
+(- No credentials or auth files were printed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- Unauthenticated execution route returned 401.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Gateway visibility | 75% | node exists as integration_agentmail |) Tj
+T*
+(| Adapter registry | 85% | agentmail.send visible |) Tj
+T*
+(| Blocked-send behavior | 90% | blocked correctly without session |) Tj
+T*
+(| Live outgoing send | 0% | not run |) Tj
+T*
+(| Incoming proof | 0% | not proven in this slice |) Tj
+T*
+(| AgentMail overall | 48% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(AgentMail: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(The adapter is registered and safely blocked. Live send/receive remains unproven until scoped) Tj
+T*
+(Bridge Session and connector proof exist.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002246 00000 n 
+0000002372 00000 n 
+0000003382 00000 n 
+0000003508 00000 n 
+0000003571 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+3620
+%%EOF

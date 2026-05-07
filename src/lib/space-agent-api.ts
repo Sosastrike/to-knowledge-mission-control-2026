@@ -3,6 +3,7 @@ import { getGatewayNodeDetail, type GatewayNodeDetailPayload } from './gateway-r
 import {
   createSpaceAgentResearchPacket,
   type SpaceAgentResearchPacket,
+  type SpaceAgentResearchPacketInput,
   type SpaceAgentResponsibleAgent,
 } from './space-agent-research'
 import type { PlaywrightMcpStatus } from './playwright-mcp'
@@ -110,7 +111,7 @@ export type SpaceAgentResearchPayload = {
   job: SpaceAgentResearchJobRecord
   packet: SpaceAgentResearchPacket
   accepted_for_execution: false
-  research_performed: false
+  research_performed: boolean
   execution_enabled: false
   writes_enabled: false
   protected_actions_enabled: false
@@ -238,6 +239,10 @@ export function createSpaceAgentResearchPayload(input: {
   registry: GatewayRegistry
   generatedAt: string
   responsibleAgent?: SpaceAgentResponsibleAgent
+  researchPerformed?: boolean
+  evidence?: SpaceAgentResearchPacketInput['evidence']
+  webSources?: SpaceAgentResearchPacketInput['webSources']
+  browserActions?: SpaceAgentResearchPacketInput['browserActions']
 }): SpaceAgentResearchPayload {
   const request = sanitizeOwnerText(input.request).slice(0, 4000)
   const status = buildSpaceAgentStatusPayload(input.registry, input.generatedAt)
@@ -247,8 +252,12 @@ export function createSpaceAgentResearchPayload(input: {
     responsibleAgent: input.responsibleAgent || 'agent_zero',
     generatedAt: input.generatedAt,
     firecrawlConfigured: status.firecrawl.credential_configured,
+    evidence: input.evidence,
+    webSources: input.webSources,
+    browserActions: input.browserActions,
   })
-  const bridgeSessionRequired = packet.requires_bridge_session || packet.research_operation === 'browser_interaction'
+  const browserEvidencePerformed = Boolean(input.researchPerformed && input.evidence?.length)
+  const bridgeSessionRequired = packet.requires_bridge_session || (packet.research_operation === 'browser_interaction' && !browserEvidencePerformed)
   const blockedReason = packet.blocked_reason || (bridgeSessionRequired ? packet.bridge_session_reason : null)
   const job: SpaceAgentResearchJobRecord = {
     id: packet.job_id,
@@ -262,7 +271,9 @@ export function createSpaceAgentResearchPayload(input: {
     blocked_reason: blockedReason,
     owner_visible_summary: packet.status === 'blocked'
       ? `Space Agent research is blocked: ${blockedReason}.`
-      : 'Space Agent Research Packet was prepared. No browser, Firecrawl, upload, send, or external write was executed.',
+      : browserEvidencePerformed
+        ? 'Space Agent collected read-only Playwright MCP browser evidence and prepared a Research Packet. No write or protected action occurred.'
+        : 'Space Agent Research Packet was prepared. No browser, Firecrawl, upload, send, or external write was executed.',
   }
   SPACE_AGENT_JOB_STORE.set(job.id, job)
 
@@ -273,7 +284,7 @@ export function createSpaceAgentResearchPayload(input: {
     job,
     packet,
     accepted_for_execution: false,
-    research_performed: false,
+    research_performed: browserEvidencePerformed,
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -283,7 +294,9 @@ export function createSpaceAgentResearchPayload(input: {
     raw_paths_exposed: false,
     next_action: packet.status === 'blocked'
       ? 'Open a scoped Bridge Session or remove the protected browser/private-content request. No research execution occurred.'
-      : 'Agent Zero may review the Research Packet and decide whether a Bridge Session is needed for any live research action.',
+      : browserEvidencePerformed
+        ? 'Agent Zero may review the Playwright MCP evidence packet and hand the Research Packet to the responsible agent.'
+        : 'Agent Zero may review the Research Packet and decide whether a Bridge Session is needed for any live research action.',
   }
 }
 

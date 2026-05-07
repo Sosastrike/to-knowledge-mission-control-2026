@@ -1,0 +1,189 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2293 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Bridge / MCP Discovery Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:21:03.928Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Bridge/MCP discovery is **PARTIAL GO**. Gateway and Bridge read-only discovery routes work and) Tj
+T*
+(are protected. No tool execution was requested. The direct MCP list route timed out in the) Tj
+T*
+(smoke window and remains a blocker for full MCP proof.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Route | Result | Notes |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| /api/bridge/providers | 200 | 8 providers visible through read-only registry proxy |) Tj
+T*
+(| /api/bridge/capability-matrix | 200 | Bridge read-only capability matrix visible |) Tj
+T*
+(| /api/gateway/data-layer/getSystems | 200 | discovery only, execution false |) Tj
+T*
+(| /api/gateway/data-layer/getTools | 200 | discovery only, execution false |) Tj
+T*
+(| /api/gateway/data-layer/getModels | 200 | discovery only, execution false |) Tj
+T*
+(| /api/gateway/data-layer/getIntegrations | 200 | discovery only, execution false |) Tj
+T*
+(| /api/gateway/nodes/bridge_mcp | 200 | Gateway node connected, no writes/execution |) Tj
+T*
+(| /api/gateway/data-layer/execute unauthenticated | 401 | protected route blocks) Tj
+T*
+(unauthenticated access |) Tj
+T*
+(| /api/mcp/list | timeout | direct MCP list proof incomplete |) Tj
+T*
+() Tj
+T*
+(Policy Confirmation) Tj
+T*
+() Tj
+T*
+(| Policy | Status |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Discovery first | pass |) Tj
+T*
+(| Execution second | pass, not invoked |) Tj
+T*
+(| Auth required | pass |) Tj
+T*
+(| No external write | pass |) Tj
+T*
+(| No fake access | pass, timeout reported honestly |) Tj
+T*
+(| Bridge Session for execution | required |) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| mcp_list_route_timeout | Cannot claim full direct MCP list proof. | Add bounded MCP list) Tj
+T*
+(timeout handling or fix upstream MCP list latency. |) Tj
+T*
+(| no safe tool execution smoke yet | Cannot claim Bridge/MCP execution GO. | Add one read-only) Tj
+T*
+(tool smoke through a registered adapter after route timeout is fixed. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No tool execution was requested.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 895 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(- No external write occurred.) Tj
+T*
+(- No secrets were printed or committed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- Protected execute route returned 401 without auth.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Bridge provider discovery | 85% | live |) Tj
+T*
+(| Gateway data-layer discovery | 85% | live |) Tj
+T*
+(| Gateway Bridge/MCP node | 85% | connected |) Tj
+T*
+(| Direct MCP list | 25% | timeout blocker |) Tj
+T*
+(| Tool execution smoke | 0% | not run |) Tj
+T*
+(| Bridge/MCP overall | 68% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Bridge/MCP discovery: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Read-only discovery is production-visible. Full MCP/tool execution proof remains blocked by) Tj
+T*
+(direct MCP list timeout and missing scoped tool smoke.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002424 00000 n 
+0000002550 00000 n 
+0000003496 00000 n 
+0000003622 00000 n 
+0000003685 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+3734
+%%EOF

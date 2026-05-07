@@ -6,6 +6,8 @@ import {
   createGatewayMiniAgentProposal,
   routeMiniAgentRequest,
 } from './gateway-mini-agent-os'
+import { createMiniAgentMemory } from './gateway-mini-agent-contracts'
+import { recommendPiGatewayRoute } from './gateway-pi-dispatcher'
 import { createGatewayRegistryFromAgentNetwork } from './gateway-model'
 
 const registry = createGatewayRegistryFromAgentNetwork({
@@ -215,6 +217,59 @@ describe('Gateway mini-agent operating system', () => {
       tests_passed: false,
     })
     expect(JSON.stringify({ missingReview, missingTests })).not.toMatch(/sk-live|Bearer\s+abc123|sample-token-placeholder/i)
+  })
+
+  it('composes the owner mission to Pi, Hermes, mini-agent, and Agent Zero return flow', () => {
+    const ownerMission = 'Create a workflow for recurring research summaries with a scoped mini-agent.'
+    const piRoute = recommendPiGatewayRoute(registry, { ownerRequest: ownerMission })
+    const hermesPlan = createGatewayImprovementProposal(registry, {
+      source: 'hermes_daily_skill_proposal',
+      title: 'Recurring research summary workflow',
+      evidence: ['owner mission routed through Gateway', 'Pi recommended Hermes for workflow design'],
+      agent_zero_reviewed: true,
+      tests_passed: true,
+    })
+    const miniAgent = createGatewayMiniAgentProposal(registry, {
+      name: 'Research Summary Scout',
+      purpose: 'Perform a scoped read-only research summary and return the result to Agent Zero.',
+      parent_supervisor: 'hermes',
+      scope: ['read-only research summary', 'return result to Agent Zero'],
+      allowed_capabilities: ['mini_agents.gateway_supervision'],
+    })
+    const miniAgentResult = createMiniAgentMemory({
+      mini_agent_id: miniAgent.mini_agent!.id,
+      parent_task: 'owner_gateway_workflow_summary',
+      parent_supervisor: 'hermes',
+      source: 'mini_agent_output',
+      facts: ['Scoped read-only result returned to Agent Zero.'],
+      assumptions: ['No external write was needed.'],
+      blocked_items: ['Activation remains Bridge Session gated.'],
+    })
+
+    expect(piRoute.recommended_agent).toBe('hermes')
+    expect(piRoute.selected_route.via).toEqual(['owner', 'gateway', 'agent_zero', 'hermes'])
+    expect(hermesPlan).toMatchObject({
+      ok: true,
+      proposer: 'hermes',
+      agent_zero_review: 'reviewed',
+      hermes_skill_proposal: { required: true, production_write: false },
+      deployment: { allowed: false },
+    })
+    expect(miniAgent).toMatchObject({
+      ok: true,
+      mini_agent: { parent_supervisor: 'hermes', command_authority: 'agent_zero' },
+      accepted_for_activation: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(miniAgent.route?.hops).toEqual(['owner', 'gateway', 'agent_zero', 'gateway', 'hermes', 'gateway', 'mini_agent_research_summary_scout'])
+    expect(miniAgentResult).toMatchObject({
+      ok: true,
+      memory: { state: 'temporary', parent_supervisor: 'hermes', contains_secrets: false },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(JSON.stringify({ piRoute, hermesPlan, miniAgent, miniAgentResult })).not.toMatch(/sk-live|Bearer\s+abc123|sample-token-placeholder/i)
   })
 
   it('keeps owner-facing proposal output free of raw paths, secrets, and fake completion', () => {

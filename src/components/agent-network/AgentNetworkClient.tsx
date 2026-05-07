@@ -4712,6 +4712,10 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and OpenCloud systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
+      <div className={styles.deprecationNotice}>
+        <strong>Agent Hub / Control Center is live as a production registry surface.</strong> Open <a className={styles.gatewayInlineLink} href='/gateway/agent-hub'>Agent Hub</a> for the real Gateway roster, health, routes, and audit endpoints. Paperclip has its own detail page at <a className={styles.gatewayInlineLink} href='/gateway/agent-hub/paperclip'>Paperclip Workforce Control Plane</a>.
+      </div>
+
       {/* Top stats strip */}
       <section className={styles.statsStrip}>
         <div className={styles.statBox}>

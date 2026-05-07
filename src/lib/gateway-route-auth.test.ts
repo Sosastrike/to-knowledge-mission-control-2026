@@ -61,6 +61,12 @@ describe('Gateway route authentication policy', () => {
     const paperclipResearchTasks = await import('@/app/api/bridge/paperclip/research-tasks/route')
     const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
     const paperclipWorkforceFlow = await import('@/app/api/bridge/paperclip/workforce-flow/route')
+    const agentHubStatus = await import('@/app/api/gateway/agent-hub/status/route')
+    const agentHubAgents = await import('@/app/api/gateway/agent-hub/agents/route')
+    const agentHubAgent = await import('@/app/api/gateway/agent-hub/agents/[id]/route')
+    const agentHubAgentHealth = await import('@/app/api/gateway/agent-hub/agents/[id]/health/route')
+    const agentHubAgentRoutes = await import('@/app/api/gateway/agent-hub/agents/[id]/routes/route')
+    const agentHubAgentAudit = await import('@/app/api/gateway/agent-hub/agents/[id]/audit/route')
 
     const checks = [
       registry.GET(new NextRequest('http://localhost/api/gateway/registry')),
@@ -140,6 +146,20 @@ describe('Gateway route authentication policy', () => {
         method: 'POST',
         body: JSON.stringify({ owner_request: 'Route a workforce task.', assignee: 'hermes' }),
       })),
+      agentHubStatus.GET(new NextRequest('http://localhost/api/gateway/agent-hub/status')),
+      agentHubAgents.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents')),
+      agentHubAgent.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents/agent-zero'), {
+        params: Promise.resolve({ id: 'agent-zero' }),
+      }),
+      agentHubAgentHealth.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents/hermes/health'), {
+        params: Promise.resolve({ id: 'hermes' }),
+      }),
+      agentHubAgentRoutes.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents/paperclip/routes'), {
+        params: Promise.resolve({ id: 'paperclip' }),
+      }),
+      agentHubAgentAudit.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents/pi-mono/audit'), {
+        params: Promise.resolve({ id: 'pi-mono' }),
+      }),
     ]
 
     const responses = await Promise.all(checks)

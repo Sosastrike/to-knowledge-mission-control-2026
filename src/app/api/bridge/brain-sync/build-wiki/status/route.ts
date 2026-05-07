@@ -30,14 +30,14 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // ---------------------------------------------------------------------------
-// Read-only status surface for the OpenCloud Build-Wiki / farmer sync.
+// Read-only status surface for the Build-Wiki/Farmer sync under OpenClaw+.
 //
 // Source of truth:
-//   • integration_connections row in /home/tony/claudeclaw/store/claudeclaw.db
+//   • integration_connections row in the ClaudeClaw integration database
 //     (provider = 'skill.build_wiki') for registry/meta state.
 //   • agent_skills row (name = 'build-wiki') for assignment + health.
 //   • systemd --user timer for live next-run / last-run.
-//   • Filesystem counts under /home/tony/obsidian-vault/08-Wiki/OpenCloud/.
+//   • Filesystem counts under the legacy Build-Wiki storage subtree.
 //
 // This route never writes, never reads .env, never exposes secrets, and never
 // triggers a farmer run. Controls in the response are advisory contracts only.

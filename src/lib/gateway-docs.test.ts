@@ -8,22 +8,7 @@ const baseRegistry = createGatewayRegistryFromAgentNetwork({
   generatedAt: '2026-05-05T12:00:00.000Z',
   hermes: { installed: true, reachable: true, authConfigured: true },
 })
-const opencloudNode = {
-  id: 'opencloud',
-  label: 'OpenCloud',
-  kind: 'opencloud_worker' as const,
-  status: 'read_only' as const,
-  owner: 'ecosystem',
-  visibility: 'owner_visible' as const,
-  health: createGatewayHealth('read_only', 'OpenCloud retained as worker/runtime engine.', '2026-05-05T12:00:00.000Z'),
-  capabilities: ['worker/runtime engine', 'future mini-agent creation layer'],
-  blockers: [],
-}
-const registry = {
-  ...baseRegistry,
-  nodes: [...baseRegistry.nodes, opencloudNode],
-  health: { ...baseRegistry.health, opencloud: opencloudNode.health },
-}
+const registry = baseRegistry
 
 describe('GatewayDocs documentation system', () => {
   it('creates owner-safe docs for every Gateway node and capability', () => {
@@ -43,7 +28,7 @@ describe('GatewayDocs documentation system', () => {
     expect(index.coverage.secret_findings).toEqual([])
     expect(index.docs.some((doc) => doc.registry_id === 'agent_zero' && doc.purpose.includes('Commander'))).toBe(true)
     expect(index.docs.some((doc) => doc.registry_id === 'hermes' && doc.owner_or_supervisor)).toBe(true)
-    expect(index.docs.some((doc) => doc.registry_id === 'opencloud' && doc.purpose.includes('worker'))).toBe(true)
+    expect(index.docs.some((doc) => doc.registry_id === 'openclaw_plus' && doc.purpose.includes('Runtime / skills'))).toBe(true)
     expect(index.docs.some((doc) => doc.registry_id === 'space_agent' && doc.purpose.includes('research specialist'))).toBe(true)
     expect(index.docs.every((doc) => typeof doc.read_enabled === 'boolean' && typeof doc.write_enabled === 'boolean' && typeof doc.execution_enabled === 'boolean')).toBe(true)
     expect(index.docs.every((doc) => Object.prototype.hasOwnProperty.call(doc, 'blocked_reason'))).toBe(true)
@@ -102,7 +87,7 @@ describe('GatewayDocs documentation system', () => {
       'model',
       'mcp_server',
       'brain_system',
-      'opencloud_worker',
+      'runtime_engine',
       'buildwiki_farmer',
       'delivery_channel',
       'event',

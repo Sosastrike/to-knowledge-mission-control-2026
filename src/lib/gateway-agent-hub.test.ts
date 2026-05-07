@@ -42,14 +42,14 @@ describe('Gateway Agent Hub', () => {
     }
   })
 
-  it('keeps Paperclip before OpenClaw+ and keeps OpenCloud/Build-Wiki gated', () => {
+  it('keeps Paperclip before OpenClaw+ and keeps Build-Wiki/Farmer gated', () => {
     const paperclip = getAgentHubAgentPayload(registry, 'paperclip')
     const routes = buildAgentHubAgentRoutesPayload(registry, 'paperclip')
     const status = buildAgentHubStatusPayload(registry)
 
     expect(paperclip?.agent.layer).toBe('workforce_and_task_orchestration_before_openclaw_runtime')
     expect(routes?.registered_flows.some((flow) => flow.selected_route.hops.join('>') === 'agent_zero>gateway>paperclip>openclaw_plus')).toBe(true)
-    expect(status.supporting_runtime_systems.some((system) => system.id === 'opencloud')).toBe(true)
+    expect(status.supporting_runtime_systems.some((system) => system.id === 'buildwiki')).toBe(true)
     expect(status.buildwiki_run_now).toMatchObject({
       target_service: 'opencloud-docs-farmer.service',
       bridge_session_required: true,

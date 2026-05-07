@@ -52,13 +52,13 @@ const registry: GatewayRegistry = {
       blockers: [],
     },
     {
-      id: 'opencloud',
-      label: 'OpenCloud / Build-Wiki',
-      kind: 'opencloud_worker',
+      id: 'openclaw_plus',
+      label: 'OpenClaw+ / Build-Wiki',
+      kind: 'runtime_engine',
       status: 'connected',
       owner: 'ecosystem',
       visibility: 'owner_visible',
-      health: createGatewayHealth('read_only', 'OpenCloud is retained as a worker/runtime engine.'),
+      health: createGatewayHealth('read_only', 'OpenClaw+ is retained as the runtime / skills engine.'),
       capabilities: ['buildwiki_status', 'farmer_status', 'skills_tools_source', 'mini_agent_creation_layer'],
       blockers: [],
     },
@@ -199,7 +199,7 @@ describe('Gateway Data Layer', () => {
   it('exposes systems, agents, skills, tools, integrations, Brain systems, and blockers before execution', () => {
     const layer = buildGatewayDataLayer(registry)
 
-    expect(getSystems(layer).map((system) => system.id)).toContain('system.opencloud_worker')
+    expect(getSystems(layer).map((system) => system.id)).toContain('system.runtime_engine')
     expect(getSystems(layer).map((system) => system.id)).toContain('system.workforce_layer')
     expect(getAgents(layer).map((agent) => agent.name)).toEqual(expect.arrayContaining(['Agent Zero', 'Space Agent']))
     expect(getSkills(layer).map((skill) => skill.name)).toContain('Report Skill')
@@ -210,7 +210,7 @@ describe('Gateway Data Layer', () => {
     ]))
     expect(getBrainSystems(layer).map((brain) => brain.name)).toEqual(expect.arrayContaining([
       'Obsidian',
-      'OpenCloud / Build-Wiki',
+      'OpenClaw+ / Build-Wiki',
     ]))
     expect(getBlockedReasons(layer)).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -268,19 +268,19 @@ describe('Gateway Data Layer', () => {
     expect(spaceAgent?.semantic_context).toContain('cannot bypass Gateway')
   })
 
-  it('keeps OpenCloud as a retained worker/runtime node, not a deletion target', () => {
+  it('keeps OpenClaw+ as the retained runtime / skills engine', () => {
     const layer = buildGatewayDataLayer(registry)
-    const opencloud = layer.nodes.find((node) => node.id === 'opencloud')
+    const openclaw = layer.nodes.find((node) => node.id === 'openclaw_plus')
 
-    expect(opencloud).toMatchObject({
-      type: 'opencloud_worker',
+    expect(openclaw).toMatchObject({
+      type: 'runtime_engine',
       read_enabled: true,
       write_enabled: false,
       execution_enabled: false,
     })
-    expect(opencloud?.semantic_context).toContain('not a deletion target')
-    expect(opencloud?.semantic_context).toContain('skills')
-    expect(opencloud?.semantic_context).toContain('future mini-agent creation')
+    expect(openclaw?.semantic_context).toContain('runtime / skills engine')
+    expect(openclaw?.semantic_context).toContain('skills')
+    expect(openclaw?.semantic_context).toContain('mini-agent execution')
   })
 
   it('allows read-only query only when the node is readable', () => {

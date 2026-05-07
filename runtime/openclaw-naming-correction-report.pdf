@@ -1,0 +1,139 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 2528 >>
+stream
+BT
+/F1 10 Tf
+50 790 Td
+14 TL
+(OpenClaw+ Naming Correction Report) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T21:06:55+00:00) Tj
+T*
+() Tj
+T*
+(#Executive Summary) Tj
+T*
+() Tj
+T*
+(Owner correction accepted and applied: OpenClaw+ is the runtime / skills / adapters /) Tj
+T*
+(reports / governance / agent execution layer. Paperclip remains the workforce / task /) Tj
+T*
+(co-worker orchestration layer before OpenClaw+. Build-Wiki / Farmer is treated as a) Tj
+T*
+(scoped worker/docs sync service under OpenClaw+.) Tj
+T*
+() Tj
+T*
+(The active Gateway model no longer creates an OpenCloud architecture node. Remaining) Tj
+T*
+(`opencloud-docs-farmer.*` strings are legacy systemd unit names only and are preserved) Tj
+T*
+(intentionally.) Tj
+T*
+() Tj
+T*
+(#What Changed) Tj
+T*
+() Tj
+T*
+(• Removed OpenCloud from the canonical Gateway hierarchy, Agent Hub runtime node list,) Tj
+T*
+(Gateway role matrix, Gateway node kinds, docs coverage, mini-agent gauntlet policy, and) Tj
+T*
+(Paperclip adapter naming.) Tj
+T*
+(• Promoted OpenClaw+ / ClaudeClaw to the runtime engine node type in Gateway.) Tj
+T*
+(• Replaced owner-facing runtime wording with OpenClaw+ / Build-Wiki / Farmer language.) Tj
+T*
+(• Preserved the literal legacy units `opencloud-docs-farmer.service` and `opencloud-) Tj
+T*
+(docs-farmer.timer` for command/status reporting only.) Tj
+T*
+(• Updated Gateway registry status from `buildwiki_opencloud` to `buildwiki_openclaw`.) Tj
+T*
+(• Updated Paperclip adapter naming from OpenCloud worker adapter to OpenClaw+ runtime) Tj
+T*
+(adapter.) Tj
+T*
+() Tj
+T*
+(#Files Updated) Tj
+T*
+() Tj
+T*
+(• `src/lib/agent-network-hierarchy.ts`) Tj
+T*
+(• `src/lib/gateway-model.ts`) Tj
+T*
+(• `src/lib/gateway-registry-api.ts`) Tj
+T*
+(• `src/lib/gateway-agent-hub.ts`) Tj
+T*
+(• `src/lib/gateway-data-layer.ts`) Tj
+T*
+(• `src/lib/gateway-docs.ts`) Tj
+T*
+(• `src/lib/gateway-mini-agent-os.ts`) Tj
+T*
+(• `src/lib/gateway-mini-agent-gauntlet.ts`) Tj
+T*
+(• `src/lib/hermes-visibility.ts`) Tj
+T*
+(• `src/lib/paperclip-bridge.ts`) Tj
+T*
+(• `src/lib/agent-zero-execution-gateway.ts`) Tj
+T*
+(• `public/designer-mission-control/src/replicas/BuildWikiFarmerSyncPanel.jsx`) Tj
+T*
+(• Related tests for Gateway, Agent Hub, Hermes, Paperclip, mini-agents, and operator) Tj
+T*
+(contracts.) Tj
+T*
+() Tj
+T*
+(#Validation) Tj
+T*
+() Tj
+T*
+(• `pnpm run typecheck`: PASS) Tj
+T*
+(• Focused Vitest suite: PASS, 11 files, 98 tests) Tj
+T*
+(• No external writes executed) Tj
+T*
+(• No SMB/Fork 2 action) Tj
+T*
+(• No farmer execution) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2891
+%%EOF

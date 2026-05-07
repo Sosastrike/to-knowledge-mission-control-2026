@@ -54,7 +54,7 @@ export function buildSpaceAgentDocumentationPage(generatedAt = '2026-05-06T00:00
         bullets: [
           'Routes through Gateway, Pi recommendation, and Agent Zero command authority.',
           'Returns evidence to the responsible agent instead of owning the final task.',
-          'Does not replace Agent Zero, Hermes, Pi, OpenCloud, OpenClaw+, Bridge/MCP, or Brain systems.',
+          'Does not replace Agent Zero, Hermes, Pi, OpenClaw+, Bridge/MCP, or Brain systems.',
         ],
       },
       {
@@ -133,7 +133,7 @@ export function buildSpaceAgentDocumentationPage(generatedAt = '2026-05-06T00:00
         summary: 'Disable Space Agent routes without deleting retained ecosystem systems.',
         bullets: [
           'Revert the Space Agent Gateway commits to disable the contract changes.',
-          'Disable Space Agent Gateway research routes while retaining external checkout, agents, OpenCloud, OpenClaw+, Brain, and Bridge/MCP data.',
+          'Disable Space Agent Gateway research routes while retaining external checkout, agents, OpenClaw+, Brain, and Bridge/MCP data.',
           'Do not delete existing agents or create a second Agent Zero during rollback.',
         ],
       },

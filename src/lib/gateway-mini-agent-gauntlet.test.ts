@@ -1,27 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { createGatewayCapability, createGatewayHealth, createGatewayRegistryFromAgentNetwork } from './gateway-model'
+import { createGatewayCapability, createGatewayRegistryFromAgentNetwork } from './gateway-model'
 import { runMiniAgentGatewayGauntlet } from './gateway-mini-agent-gauntlet'
 
 const baseRegistry = createGatewayRegistryFromAgentNetwork({
   generatedAt: '2026-05-05T12:00:00.000Z',
   hermes: { installed: true, reachable: true, authConfigured: true },
 })
-const opencloudNode = {
-  id: 'opencloud',
-  label: 'OpenCloud',
-  kind: 'opencloud_worker' as const,
-  status: 'read_only' as const,
-  owner: 'ecosystem',
-  visibility: 'owner_visible' as const,
-  health: createGatewayHealth('read_only', 'OpenCloud retained as worker/runtime engine.', '2026-05-05T12:00:00.000Z'),
-  capabilities: ['worker/runtime engine', 'future mini-agent creation layer'],
-  blockers: [],
-}
 const registry = {
   ...baseRegistry,
-  nodes: [...baseRegistry.nodes, opencloudNode],
-  health: { ...baseRegistry.health, opencloud: opencloudNode.health },
   capabilities: [
     ...baseRegistry.capabilities,
     createGatewayCapability({ id: 'model_ollama_local', label: 'Ollama local model', kind: 'model', status: 'connected', source_node: 'llm_gateway' }),

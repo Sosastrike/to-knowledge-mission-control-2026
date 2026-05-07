@@ -95,7 +95,7 @@ export type AgentHubStatusPayload = {
     pi_mono: 'candidate_pending_until_installed_and_live'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'pending_until_localhost_or_tailnet_ui_proven'
-    opencloud_fork2_smb: 'blocked'
+    buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
   }
   agents: AgentHubAgent[]
@@ -327,7 +327,6 @@ const SUPPORTING_RUNTIME_NODE_IDS = [
   'gateway',
   'paperclip',
   'openclaw_plus',
-  'opencloud',
   'buildwiki',
   'brain',
   'brain_sync',
@@ -372,7 +371,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       pi_mono: 'candidate_pending_until_installed_and_live',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'pending_until_localhost_or_tailnet_ui_proven',
-      opencloud_fork2_smb: 'blocked',
+      buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
     },
     agents,

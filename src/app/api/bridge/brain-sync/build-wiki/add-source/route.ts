@@ -33,7 +33,7 @@ export const dynamic = 'force-dynamic'
 // ---------------------------------------------------------------------------
 
 const REQUEST_REASON_DEFAULT =
-  'Owner-initiated add of a new local docs source folder to the OpenCloud Build-Wiki farmer (atomic write, rollback backup, no execution).'
+  'Owner-initiated add of a new local docs source folder to the Build-Wiki/Farmer (atomic write, rollback backup, no execution).'
 
 function stableJson(value: unknown): string {
   if (!value || typeof value !== 'object') return '{}'

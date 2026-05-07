@@ -1137,7 +1137,7 @@ export const PAPERCLIP_GATEWAY_PLUGIN_IDS = [
   'hermes_adapter',
   'pi_adapter',
   'space_agent_adapter',
-  'opencloud_worker_adapter',
+  'openclaw_runtime_adapter',
   'openclaw_skills_adapter',
   'mission_control_ui_contribution',
 ] as const
@@ -2976,11 +2976,11 @@ const PAPERCLIP_GATEWAY_PLUGIN_SPECS: Record<PaperclipGatewayPluginId, Paperclip
     no_secrets_exposed: true,
     raw_paths_exposed: false,
   },
-  opencloud_worker_adapter: {
-    id: 'opencloud_worker_adapter',
-    name: 'OpenCloud Worker Adapter Plugin',
+  openclaw_runtime_adapter: {
+    id: 'openclaw_runtime_adapter',
+    name: 'OpenClaw+ Runtime Adapter Plugin',
     kind: 'worker_adapter',
-    target_node: 'opencloud_worker',
+    target_node: 'openclaw_plus',
     supervisor: 'gateway',
     plugin_system: 'mission_control_explicit_plugin_loader',
     registers: ['gateway_node', 'adapter'],
@@ -3747,7 +3747,7 @@ function normalizePaperclipGatewayPluginId(value: unknown): PaperclipGatewayPlug
   if (text === 'hermes' || text === 'hermes_adapter') return 'hermes_adapter'
   if (text === 'pi' || text === 'pi_adapter' || text === 'pi_dispatcher') return 'pi_adapter'
   if (text === 'space_agent' || text === 'spaceagent' || text === 'space_agent_adapter') return 'space_agent_adapter'
-  if (text === 'opencloud' || text === 'opencloud_worker' || text === 'opencloud_worker_adapter') return 'opencloud_worker_adapter'
+  if (text === 'openclaw' || text === 'openclaw_plus' || text === 'openclaw_runtime' || text === 'openclaw_runtime_adapter') return 'openclaw_runtime_adapter'
   if (text === 'openclaw' || text === 'openclaw_plus' || text === 'openclaw_skills_adapter') return 'openclaw_skills_adapter'
   if (text === 'mission_control_ui' || text === 'mission_control_ui_contribution' || text === 'gateway_ui') return 'mission_control_ui_contribution'
   return null

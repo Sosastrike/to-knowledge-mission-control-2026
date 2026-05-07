@@ -586,7 +586,7 @@ const ADAPTERS: AdapterDefinition[] = [
     action: BUILDWIKI_ACTION_RUN_NOW,
     category: 'buildwiki_run_now',
     label: 'Build-Wiki Run Now',
-    description: 'Starts the local OpenCloud Build-Wiki farmer through exactly one scoped systemd user service command.',
+    description: 'Starts the local Build-Wiki/Farmer sync through exactly one scoped legacy systemd user service command.',
     status: 'available',
     execution_enabled: true,
     writes_enabled: true,

@@ -39,7 +39,7 @@ export type GatewayMiniAgentPolicy = {
   no_direct_secret_access: true
   no_external_writes_without_bridge_session: true
   no_second_agent_zero: true
-  opencloud_retained_as_worker_runtime: true
+  openclaw_plus_retained_as_runtime: true
 }
 
 export type GatewayMiniAgentRole = {
@@ -81,7 +81,6 @@ export type GatewayMiniAgentOperatingSystem = {
     space_agent: 'browser_web_youtube_research'
     mini_agents: 'temporary_or_reusable_subordinate_workers'
     openclaw_plus: 'runtime_skills_adapters_reports_layer'
-    opencloud: 'worker_runtime_skill_tool_agent_creation_layer'
     bridge_mcp: 'tools_models_integrations_access_layer'
     brain: 'obsidian_mempalace_graphify_buildwiki'
   }
@@ -108,8 +107,8 @@ export type GatewayMiniAgentOperatingSystem = {
     pi_present: boolean
     space_agent_present: boolean
     mini_agents_present: boolean
-    opencloud_present: boolean
-    opencloud_retained: true
+    openclaw_plus_present: boolean
+    openclaw_plus_retained: true
     tony_active_authority: false
     space_agent_commander_authority: false
   }
@@ -258,7 +257,6 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       space_agent: 'browser_web_youtube_research',
       mini_agents: 'temporary_or_reusable_subordinate_workers',
       openclaw_plus: 'runtime_skills_adapters_reports_layer',
-      opencloud: 'worker_runtime_skill_tool_agent_creation_layer',
       bridge_mcp: 'tools_models_integrations_access_layer',
       brain: 'obsidian_mempalace_graphify_buildwiki',
     },
@@ -285,8 +283,8 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       pi_present: nodeIds.has('pi'),
       space_agent_present: nodeIds.has('space_agent'),
       mini_agents_present: nodeIds.has('mini_agents'),
-      opencloud_present: nodeIds.has('opencloud'),
-      opencloud_retained: true,
+      openclaw_plus_present: nodeIds.has('openclaw_plus'),
+      openclaw_plus_retained: true,
       tony_active_authority: false,
       space_agent_commander_authority: false,
     },
@@ -643,7 +641,7 @@ function miniAgentPolicy(): GatewayMiniAgentPolicy {
     no_direct_secret_access: true,
     no_external_writes_without_bridge_session: true,
     no_second_agent_zero: true,
-    opencloud_retained_as_worker_runtime: true,
+    openclaw_plus_retained_as_runtime: true,
   }
 }
 

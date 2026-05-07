@@ -119,10 +119,10 @@ export type GatewayStatusPayload = {
     read_enabled: boolean
     write_enabled: boolean
   }>
-  buildwiki_opencloud: {
+  buildwiki_openclaw: {
     visible: boolean
-    opencloud_status: GatewayStatus
-    opencloud_roles: string[]
+    openclaw_status: GatewayStatus
+    openclaw_roles: string[]
     worker_runtime_engine: true
     skills_tools_source: true
     buildwiki_farmer_support_layer: true
@@ -149,10 +149,10 @@ export type GatewayStatusPayload = {
     fork2_blocker: string | null
     smb_mounted: boolean
     smb_blocker: string | null
-    opencloud_dependency_visible: boolean
-    opencloud_deletion_target: false
-    opencloud_disable_target: false
-    opencloud_destroy_allowed: false
+    openclaw_runtime_visible: boolean
+    openclaw_plus_deletion_target: false
+    openclaw_plus_disable_target: false
+    openclaw_plus_destroy_allowed: false
     blockers: string[]
   }
   safety: {
@@ -237,25 +237,26 @@ type UnknownRecord = Record<string, unknown>
 
 const DEFAULT_GENERATED_AT = '1970-01-01T00:00:00.000Z'
 
-const OPENCLOUD_GATEWAY_ROLES = [
-  'worker/runtime engine',
-  'skills/tools source',
+const OPENCLAW_GATEWAY_ROLES = [
+  'runtime / skills engine',
+  'skills/tools/adapters source',
+  'reports and governance layer',
   'Build-Wiki/Farmer support layer',
-  'future mini-agent creation layer',
+  'mini-agent execution layer',
 ] as const
 
-const OPENCLOUD_SKILLS_TOOLS_FALLBACK = [
+const OPENCLAW_SKILLS_TOOLS_FALLBACK = [
   'Build-Wiki status',
   'Farmer timer status',
   'Farmer service status',
   'Run Now adapter metadata',
-  'OpenCloud worker/runtime capability catalog',
+  'OpenClaw+ runtime capability catalog',
 ] as const
 
-const OPENCLOUD_BRIDGE_SESSION_ACTIONS = [
+const OPENCLAW_BRIDGE_SESSION_ACTIONS = [
   'buildwiki.run_now',
   'buildwiki.write',
-  'opencloud.worker_execution',
+  'openclaw.runtime_execution',
   'mini_agent_creation_activation',
 ] as const
 
@@ -448,8 +449,8 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
     }
   })
   const buildWikiCapability = registry.capabilities.find((capability) => capability.id === 'brain_buildwiki')
-  const openCloudCapability = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
-  const buildWikiOpenCloud = summarizeBuildWikiOpenCloud(buildWikiCapability, openCloudCapability)
+  const openClawCapability = registry.capabilities.find((capability) => capability.id === 'openclaw_plus_runtime_dependency')
+  const buildWikiOpenClaw = summarizeBuildWikiOpenClaw(buildWikiCapability, openClawCapability)
   const blocked = registry.nodes.filter((node) => node.status === 'blocked').length +
     registry.capabilities.filter((capability) => capability.status === 'blocked').length
   const degraded = registry.nodes.filter((node) => node.status === 'degraded').length +
@@ -484,7 +485,7 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
     mcp_gateway: mcpGateway,
     llm_gateway: llmGateway,
     brain_systems: brainSystems,
-    buildwiki_opencloud: buildWikiOpenCloud,
+    buildwiki_openclaw: buildWikiOpenClaw,
     safety: {
       auth_required: true,
       secrets_exposed: false,
@@ -745,14 +746,14 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       purpose: 'Agent Zero routes MCP tool discovery and tool-call planning through Gateway; execution remains policy-gated.',
     },
     {
-      flow_id: 'flow_agent_zero_gateway_opencloud_worker',
+      flow_id: 'flow_agent_zero_gateway_openclaw_runtime',
       source: 'agent_zero',
-      target: 'opencloud',
-      requested_action: 'opencloud_worker_route',
+      target: 'openclaw_plus',
+      requested_action: 'openclaw_runtime_route',
       edge_kind: 'sync' as const,
-      hops: ['agent_zero', 'gateway', 'opencloud'],
+      hops: ['agent_zero', 'gateway', 'paperclip', 'openclaw_plus'],
       requires_session: true,
-      purpose: 'Agent Zero routes OpenCloud worker/runtime requests through Gateway; OpenCloud remains a retained worker layer.',
+      purpose: 'Agent Zero routes runtime, skills, and Build-Wiki/Farmer work through Gateway and Paperclip before OpenClaw+ execution.',
     },
   ]
 
@@ -905,7 +906,9 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
   const mcpCount = asArray(pick(context, 'mcp', 'servers')).length
   const skillCount = asArray(pick(context, 'skills', 'registry')).length
   const brainRegistry = asRecords(pick(context, 'brain', 'registry'))
-  const buildwiki = pickRecord(context, 'opencloud_buildwiki')
+  const preferredBuildwiki = pickRecord(context, 'openclaw_buildwiki')
+  const legacyBuildwiki = pickRecord(context, 'opencloud_buildwiki')
+  const buildwiki = hasRecordValues(preferredBuildwiki) ? preferredBuildwiki : legacyBuildwiki
   const buildwikiVisible = hasRecordValues(buildwiki)
   const brainVisible = brainRegistry.length > 0 || buildwikiVisible
   const modelProviderNodes = buildModelProviderNodes(context, generatedAt)
@@ -1012,20 +1015,6 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       blockers: brainVisible ? [] : ['brain_registry_not_visible'],
       lastSeen: generatedAt,
     }),
-    makeNode({
-      id: 'opencloud',
-      label: 'OpenCloud',
-      kind: 'opencloud_worker',
-      status: buildwikiVisible ? 'read_only' : 'degraded',
-      capabilities: [
-        ...OPENCLOUD_GATEWAY_ROLES,
-        'OpenCloud skills/tools',
-        'Build-Wiki worker runtime',
-        'not deletion target',
-      ],
-      blockers: buildwikiVisible ? [] : ['opencloud_dependency_status_not_visible'],
-      lastSeen: generatedAt,
-    }),
     ...buildProviderNodes(context, generatedAt),
     ...buildMcpServerNodes(context, generatedAt),
   ]
@@ -1068,7 +1057,7 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('brain', 'mempalace', 'memory', true, generatedAt, null),
     makeEdge('brain', 'graphify', 'memory', true, generatedAt, null),
     makeEdge('brain', 'buildwiki', 'sync', true, generatedAt, null),
-    makeEdge('buildwiki', 'opencloud', 'sync', true, generatedAt, null),
+    makeEdge('openclaw_plus', 'buildwiki', 'sync', true, generatedAt, null),
     makeEdge('hermes', 'agent_zero', 'delegation', false, generatedAt, null),
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),
     makeEdge('mcp_gateway', 'mcp_tools', 'mcp-call', true, generatedAt, null),
@@ -1781,7 +1770,9 @@ function integrationCapabilities(context: AgentZeroReadOnlyContext | null, gener
 
 function brainCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayCapability[] {
   const registry = asRecords(pick(context, 'brain', 'registry'))
-  const buildwiki = pickRecord(context, 'opencloud_buildwiki')
+  const preferredBuildwiki = pickRecord(context, 'openclaw_buildwiki')
+  const legacyBuildwiki = pickRecord(context, 'opencloud_buildwiki')
+  const buildwiki = hasRecordValues(preferredBuildwiki) ? preferredBuildwiki : legacyBuildwiki
   const buildwikiVisible = hasRecordValues(buildwiki)
   const registryIds = new Set(registry.map((brain) => gatewayId(String(brain.id || brain.source || brain.name || 'brain'))))
   const items = registry.length > 0 ? [...registry] : [
@@ -1845,16 +1836,16 @@ function brainCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
   const smbBlocker = stringOrNull(smb.blocker)
   const timerUnit = stringOrNull(timer.unit) || 'opencloud-docs-farmer.timer'
   const serviceUnit = stringOrNull(service.unit) || BUILDWIKI_TARGET_SERVICE
-  const opencloudSkillsTools = uniqueStringArray([
+  const openclawSkillsTools = uniqueStringArray([
     ...asStringArray(buildwiki.skills_tools_available),
     ...asStringArray(buildwiki.skills),
     ...asStringArray(buildwiki.tools),
   ])
-  const skillsToolsAvailable = opencloudSkillsTools.length > 0
-    ? opencloudSkillsTools
-    : [...OPENCLOUD_SKILLS_TOOLS_FALLBACK]
+  const skillsToolsAvailable = openclawSkillsTools.length > 0
+    ? openclawSkillsTools
+    : [...OPENCLAW_SKILLS_TOOLS_FALLBACK]
   const skillsToolsSummary = skillsToolsAvailable.join(', ')
-  const bridgeSessionActionsSummary = OPENCLOUD_BRIDGE_SESSION_ACTIONS.join(', ')
+  const bridgeSessionActionsSummary = OPENCLAW_BRIDGE_SESSION_ACTIONS.join(', ')
   const buildWikiBlockers = buildwikiVisible
     ? blockersList(runNowBlocker, fork2Blocker, smbBlocker)
     : ['buildwiki_status_not_visible']
@@ -1905,62 +1896,62 @@ function brainCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
       skills_tools_source: true,
       buildwiki_farmer_support_layer: true,
       future_mini_agent_creation_layer: true,
-      opencloud_direct_access_visible: Boolean(buildwiki.direct_opencloud_access_visible),
-      opencloud_deletion_target: false,
-      opencloud_disable_target: false,
-      opencloud_destroy_allowed: false,
+      direct_openclaw_runtime_visible: Boolean(buildwiki.direct_openclaw_runtime_visible),
+      openclaw_plus_deletion_target: false,
+      openclaw_plus_disable_target: false,
+      openclaw_plus_destroy_allowed: false,
     },
     last_seen: generatedAt,
   })
 
-  const openCloudCapability = createGatewayCapability({
-    id: 'opencloud_dependency',
-    label: 'OpenCloud worker/runtime engine',
+  const openClawCapability = createGatewayCapability({
+    id: 'openclaw_plus_runtime_dependency',
+    label: 'OpenClaw+ runtime / skills engine',
     kind: 'api',
     status: buildwikiVisible ? 'read_only' : 'degraded',
-    source_node: 'opencloud',
+    source_node: 'openclaw_plus',
     requires_session: true,
     read_enabled: buildwikiVisible,
     available_to: ['agent_zero', 'hermes'],
     execution_requirements: [
-      'bridge_session_required_for_worker_execution',
+      'bridge_session_required_for_runtime_execution',
       'bridge_session_required_for_skill_tool_activation',
-      'bridge_session_required_for_future_mini_agent_creation',
-      'opencloud_not_deletion_target',
+      'bridge_session_required_for_mini_agent_execution',
+      'openclaw_plus_not_deletion_target',
     ],
     write_enabled: false,
     execution_enabled: false,
-    blockers: buildwikiVisible ? [] : ['opencloud_dependency_status_not_visible'],
+    blockers: buildwikiVisible ? [] : ['openclaw_plus_runtime_status_not_visible'],
     status_details: {
       visible: buildwikiVisible,
-      dependency_for: 'buildwiki_farmer',
+      dependency_for: 'buildwiki_farmer_and_runtime_execution',
       worker_runtime_engine: true,
       skills_tools_source: true,
       buildwiki_farmer_support_layer: true,
       future_mini_agent_creation_layer: true,
-      retained_in_gateway: true,
+      retained_runtime_in_gateway: true,
       requires_bridge_session: true,
-      opencloud_roles: OPENCLOUD_GATEWAY_ROLES.join(', '),
+      openclaw_roles: OPENCLAW_GATEWAY_ROLES.join(', '),
       skills_tools_available: skillsToolsSummary,
       bridge_session_required_actions: bridgeSessionActionsSummary,
       timer_unit: timerUnit,
       service_unit: serviceUnit,
-      opencloud_deletion_target: false,
-      opencloud_disable_target: false,
-      opencloud_destroy_allowed: false,
-      decommission_safe: false,
-      direct_opencloud_access_visible: Boolean(buildwiki.direct_opencloud_access_visible),
+      openclaw_plus_deletion_target: false,
+      openclaw_plus_disable_target: false,
+      openclaw_plus_destroy_allowed: false,
+      deletion_or_disable_safe: false,
+      direct_openclaw_runtime_visible: Boolean(buildwiki.direct_openclaw_runtime_visible),
       farmer_execution_enabled: false,
       fork1_scope: stringOrNull(fork1.service_scope) || BUILDWIKI_TARGET_SERVICE,
       fork2_state: stringOrNull(fork2.status) || 'blocked',
       fork2_smb_mounted: Boolean(fork2.smb_mounted),
       fork2_blocker: fork2Blocker || smbBlocker || 'smb_fork2_requires_verified_mount_and_owner_approval',
-      blocked_reason: buildwikiVisible ? null : 'opencloud_dependency_status_not_visible',
+      blocked_reason: buildwikiVisible ? null : 'openclaw_plus_runtime_status_not_visible',
     },
     last_seen: generatedAt,
   })
 
-  return [...brainItems, buildWikiCapability, openCloudCapability]
+  return [...brainItems, buildWikiCapability, openClawCapability]
 }
 
 function buildModelProviderNodes(context: AgentZeroReadOnlyContext | null, generatedAt: string): GatewayNode[] {
@@ -2258,20 +2249,20 @@ function makeEdge(
   }
 }
 
-function summarizeBuildWikiOpenCloud(
+function summarizeBuildWikiOpenClaw(
   buildWikiCapability: GatewayCapability | undefined,
-  openCloudCapability: GatewayCapability | undefined,
-): GatewayStatusPayload['buildwiki_opencloud'] {
+  openClawCapability: GatewayCapability | undefined,
+): GatewayStatusPayload['buildwiki_openclaw'] {
   const details = buildWikiCapability?.status_details || {}
-  const openCloudDetails = openCloudCapability?.status_details || {}
-  const blockers = blockersList(...(buildWikiCapability?.blockers || []), ...(openCloudCapability?.blockers || []))
-  const skillsToolsAvailable = detailStringArray(details, 'skills_tools_available', [...OPENCLOUD_SKILLS_TOOLS_FALLBACK])
-  const bridgeSessionRequiredActions = detailStringArray(details, 'bridge_session_required_actions', [...OPENCLOUD_BRIDGE_SESSION_ACTIONS])
-  const opencloudRoles = detailStringArray(openCloudDetails, 'opencloud_roles', [...OPENCLOUD_GATEWAY_ROLES])
+  const openClawDetails = openClawCapability?.status_details || {}
+  const blockers = blockersList(...(buildWikiCapability?.blockers || []), ...(openClawCapability?.blockers || []))
+  const skillsToolsAvailable = detailStringArray(details, 'skills_tools_available', [...OPENCLAW_SKILLS_TOOLS_FALLBACK])
+  const bridgeSessionRequiredActions = detailStringArray(details, 'bridge_session_required_actions', [...OPENCLAW_BRIDGE_SESSION_ACTIONS])
+  const openclawRoles = detailStringArray(openClawDetails, 'openclaw_roles', [...OPENCLAW_GATEWAY_ROLES])
   return {
     visible: Boolean(buildWikiCapability),
-    opencloud_status: openCloudCapability?.status || 'missing',
-    opencloud_roles: opencloudRoles,
+    openclaw_status: openClawCapability?.status || 'missing',
+    openclaw_roles: openclawRoles,
     worker_runtime_engine: true,
     skills_tools_source: true,
     buildwiki_farmer_support_layer: true,
@@ -2298,10 +2289,10 @@ function summarizeBuildWikiOpenCloud(
     fork2_blocker: detailString(details, 'fork2_blocker') || 'smb_fork2_requires_verified_mount_and_owner_approval',
     smb_mounted: detailBoolean(details, 'smb_mounted'),
     smb_blocker: detailString(details, 'smb_blocker') || 'smb_fork2_requires_verified_mount_and_owner_approval',
-    opencloud_dependency_visible: Boolean(openCloudCapability),
-    opencloud_deletion_target: false,
-    opencloud_disable_target: false,
-    opencloud_destroy_allowed: false,
+    openclaw_runtime_visible: Boolean(openClawCapability),
+    openclaw_plus_deletion_target: false,
+    openclaw_plus_disable_target: false,
+    openclaw_plus_destroy_allowed: false,
     blockers,
   }
 }
@@ -2353,7 +2344,7 @@ function nodeKindForCategory(category: string): GatewayNodeKind {
   if (normalized.includes('agent')) return 'mini_agent'
   if (normalized.includes('brain') || normalized.includes('memory')) return 'brain_system'
   if (normalized.includes('event')) return 'event'
-  if (normalized.includes('opencloud')) return 'opencloud_worker'
+  if (normalized.includes('openclaw') || normalized.includes('runtime')) return 'runtime_engine'
   if (normalized.includes('delivery') || normalized.includes('mail') || normalized.includes('drive')) return 'delivery_channel'
   if (normalized.includes('data') || normalized.includes('source')) return 'data_source'
   return 'api'

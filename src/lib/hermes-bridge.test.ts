@@ -419,7 +419,7 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.bridge_mcp.mcp_servers[0]).toMatchObject({ name: 'zapier', schema_available: true, execution_enabled: false })
     expect(context.bridge_mcp.endpoint_summaries[0].endpoint).toBe('/api/mcp/servers/zapier/tools')
     expect(context.models.providers.map((provider) => provider.id)).toEqual(expect.arrayContaining(['openrouter', 'openai', 'anthropic', 'codex_chatgpt', 'ollama', 'nvidia', 'groq', 'gemini']))
-    expect(context.integrations.registry.map((item) => item.id)).toEqual(expect.arrayContaining(['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'buildwiki_farmer', 'opencloud_direct', 'paperclip']))
+    expect(context.integrations.registry.map((item) => item.id)).toEqual(expect.arrayContaining(['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'buildwiki_farmer', 'buildwiki_farmer_runtime', 'paperclip']))
     expect(context.paperclip).toMatchObject({
       hermes_can_see_skills_task_registry: true,
       paperclip_task_registry_endpoint: '/api/bridge/paperclip/tasks',
@@ -556,7 +556,7 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(result.response_text).toContain('Zapier')
     expect(result.response_text).toContain('HeyGen')
     expect(result.response_text).toContain('AgentMail')
-    expect(result.response_text).toContain('OpenCloud direct access')
+    expect(result.response_text).toContain('Build-Wiki/Farmer runtime access')
     expect(result.execution_enabled).toBe(false)
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
   })
@@ -610,14 +610,14 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
   })
 
-  it('distinguishes Build-Wiki/Farmer status from direct OpenCloud access', async () => {
+  it('distinguishes Build-Wiki/Farmer status from unproven separate runtime access', async () => {
     const result = await sendHermesReadOnlyMessage({
-      ownerMessage: 'Can you see OpenCloud or Build-Wiki/Farmer status?',
+      ownerMessage: 'Can you see Build-Wiki/Farmer status?',
       context: fakeEcosystemContext(),
     })
 
     expect(result.response_text).toContain('Build-Wiki/Farmer status')
-    expect(result.response_text).toContain('Direct OpenCloud access is not proven')
+    expect(result.response_text).toContain('No separate runtime endpoint is proven')
     expect(result.response_text).toContain('opencloud-docs-farmer.service')
     expect(result.response_text).toContain('No farmer execution occurred')
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
@@ -706,7 +706,7 @@ describe('Hermes read-only test chat guardrail', () => {
       'Create a workflow plan for Agent Zero. Do not execute.',
       'What integrations can you see?',
       'Can you use Firecrawl/Drive/OneDrive right now?',
-      'Can you see OpenCloud or Build-Wiki/Farmer status?',
+      'Can you see Build-Wiki/Farmer status?',
       'What models can you help Agent Zero use?',
       'What tools and MCPs can you see?',
       'Send a test email.',

@@ -37,7 +37,7 @@ describe('Gateway mini-agent operating system', () => {
     expect(registry.nodes.filter((node) => node.id === 'agent_zero')).toHaveLength(1)
     expect(tonyNodes.every((node) => node.visibility === 'archived' && node.status === 'legacy_archived')).toBe(true)
     expect(os.registry.tony_active_authority).toBe(false)
-    expect(os.registry.opencloud_retained).toBe(true)
+    expect(os.registry.openclaw_plus_retained).toBe(true)
     expect(os.registry.space_agent_present).toBe(true)
     expect(os.registry.space_agent_commander_authority).toBe(false)
     expect(os.roles).toEqual(expect.arrayContaining([

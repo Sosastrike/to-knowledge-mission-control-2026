@@ -1,6 +1,6 @@
 // ============================================================
 // BuildWikiFarmerSyncPanel — read-only Brain Sync surface for
-// the OpenCloud Build-Wiki / farmer sync.
+// the Build-Wiki / Farmer sync under OpenClaw+.
 //
 // Live source: GET /api/bridge/brain-sync/build-wiki/status
 // (Mission Control proxies claudeclaw.db.integration_connections
@@ -1004,7 +1004,7 @@ function BuildWikiFarmerSyncPanel() {
           <div className="card-title">
             <span style={{ color: 'var(--accent)' }}>📚</span>
             Build-Wiki · Farmer Sync
-            <span className="card-subtitle">opencloud-docs-farmer · Obsidian</span>
+            <span className="card-subtitle">Build-Wiki/Farmer · Obsidian</span>
           </div>
         </div>
         <div className="card-body">
@@ -1054,7 +1054,7 @@ function BuildWikiFarmerSyncPanel() {
         <div className="card-title">
           <span style={{ color: 'var(--accent)' }}>📚</span>
           Build-Wiki · Farmer Sync
-          <span className="card-subtitle">opencloud-docs-farmer · Obsidian · stage A</span>
+          <span className="card-subtitle">Build-Wiki/Farmer · Obsidian · stage A</span>
         </div>
         <div className="hstack" style={{ gap: 6 }}>
           <BWPill tone={syncBadge.tone} title={`Live state: ${sync.state || 'unknown'}`}>

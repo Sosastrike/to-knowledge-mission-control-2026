@@ -418,8 +418,8 @@ export function buildHermesBuildWikiOpenCloudVisibility(context: AgentZeroReadOn
     fork2_smb_blocker: buildWiki.smb.blocker || buildWiki.fork_state.fork2.blocker || null,
     blocked_reason: buildWiki.blocked_reason || buildWiki.run_now.blocked_reason || null,
     distinction: buildWiki.direct_opencloud_access_visible
-      ? 'Direct OpenCloud access is visible separately from Build-Wiki/Farmer status.'
-      : 'Direct OpenCloud access is not proven here; only Build-Wiki/Farmer status is visible through Mission Control.',
+      ? 'A separate runtime endpoint is visible separately from Build-Wiki/Farmer status.'
+      : 'No separate runtime endpoint is proven here; only Build-Wiki/Farmer status is visible through Mission Control.',
   }
 }
 
@@ -487,9 +487,9 @@ export function buildHermesIntegrationsVisibility(context: AgentZeroReadOnlyCont
     notes: `${buildWiki.distinction} Run Now is scoped to opencloud-docs-farmer.service and requires Bridge Session approval.`,
   })
 
-  integrationsById.set('opencloud_direct', {
-    id: 'opencloud_direct',
-    name: 'OpenCloud direct access',
+  integrationsById.set('buildwiki_farmer_runtime', {
+    id: 'buildwiki_farmer_runtime',
+    name: 'Build-Wiki/Farmer runtime access',
     category: 'buildwiki',
     status: buildWiki.direct_opencloud_access_visible ? 'connected' : 'blocked',
     states: statesFor({
@@ -507,7 +507,7 @@ export function buildHermesIntegrationsVisibility(context: AgentZeroReadOnlyCont
     requires_bridge_session: true,
     tool_count: null,
     source: 'mission_control_buildwiki_farmer_status',
-    blocked_reason: buildWiki.direct_opencloud_access_visible ? null : 'direct_opencloud_access_not_proven',
+    blocked_reason: buildWiki.direct_opencloud_access_visible ? null : 'buildwiki_farmer_runtime_access_not_proven',
     notes: buildWiki.distinction,
   })
 
@@ -534,7 +534,7 @@ function capabilityLine(item: Pick<HermesIntegrationContext | HermesModelContext
 }
 
 export function summarizeHermesIntegrations(visibility: HermesIntegrationsVisibility): string {
-  const featured = ['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'telegram', 'whatsapp', 'codex_chatgpt', 'claude_anthropic', 'buildwiki_farmer', 'opencloud_direct', 'paperclip']
+  const featured = ['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'telegram', 'whatsapp', 'codex_chatgpt', 'claude_anthropic', 'buildwiki_farmer', 'buildwiki_farmer_runtime', 'paperclip']
     .map((id) => visibility.registry.find((item) => item.id === id))
     .filter((item): item is HermesIntegrationContext => Boolean(item))
     .map(capabilityLine)

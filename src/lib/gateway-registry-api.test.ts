@@ -347,7 +347,7 @@ const context = {
       'Farmer timer status',
       'Farmer service status',
       'Run Now adapter metadata',
-      'OpenCloud worker/runtime capability catalog',
+      'OpenClaw+ runtime capability catalog',
     ],
   },
 } as unknown as AgentZeroReadOnlyContext
@@ -381,18 +381,10 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('model_groq')).toBe(true)
     expect(nodes.has('model_gemini')).toBe(true)
     expect(nodes.has('brain')).toBe(true)
-    expect(nodes.has('opencloud')).toBe(true)
-    expect(nodes.has('obsidian')).toBe(true)
+        expect(nodes.has('obsidian')).toBe(true)
     expect(nodes.has('mempalace')).toBe(true)
     expect(nodes.has('skills')).toBe(true)
     expect(nodes.has('data_sources')).toBe(true)
-    expect(registry.nodes.find((node) => node.id === 'opencloud')?.capabilities).toEqual(expect.arrayContaining([
-      'worker/runtime engine',
-      'skills/tools source',
-      'Build-Wiki/Farmer support layer',
-      'future mini-agent creation layer',
-      'not deletion target',
-    ]))
     expect(nodes.has('graphify')).toBe(true)
     expect(nodes.has('buildwiki')).toBe(true)
     expect(capabilities.has('mcp_zapier')).toBe(true)
@@ -406,7 +398,7 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('model_gemini')).toBe(true)
     expect(capabilities.has('brain_obsidian')).toBe(true)
     expect(capabilities.has('brain_buildwiki')).toBe(true)
-    expect(capabilities.has('opencloud_dependency')).toBe(true)
+    expect(capabilities.has('openclaw_plus_runtime_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(capabilities.has('space_agent_research_packet')).toBe(true)
     expect(capabilities.has('space_agent_firecrawl_search')).toBe(true)
@@ -558,8 +550,8 @@ describe('Gateway registry API model', () => {
       timer_unit: 'opencloud-docs-farmer.timer',
       service_unit: 'opencloud-docs-farmer.service',
       dispatch_scope: 'opencloud-docs-farmer.service',
-      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenCloud worker/runtime capability catalog, Run Now adapter metadata',
-      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, opencloud.worker_execution, mini_agent_creation_activation',
+      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenClaw+ runtime capability catalog, Run Now adapter metadata',
+      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, openclaw.runtime_execution, mini_agent_creation_activation',
       bridge_session_required: true,
       owner_approval_required: true,
       farmer_execution_enabled: false,
@@ -571,24 +563,24 @@ describe('Gateway registry API model', () => {
     })
     expect(buildWiki?.execution_requirements).toContain('run_now_scope:opencloud-docs-farmer.service')
     expect(buildWiki?.blockers).toEqual(expect.arrayContaining(['active_bridge_session_required_for_buildwiki_run_now', 'smb_mount_not_verified']))
-    const openCloud = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
-    expect(openCloud?.status_details).toMatchObject({
+    const openClaw = registry.capabilities.find((capability) => capability.id === 'openclaw_plus_runtime_dependency')
+    expect(openClaw?.status_details).toMatchObject({
       worker_runtime_engine: true,
       skills_tools_source: true,
       buildwiki_farmer_support_layer: true,
       future_mini_agent_creation_layer: true,
-      opencloud_deletion_target: false,
-      opencloud_disable_target: false,
-      opencloud_destroy_allowed: false,
-      retained_in_gateway: true,
+      openclaw_plus_deletion_target: false,
+      openclaw_plus_disable_target: false,
+      openclaw_plus_destroy_allowed: false,
+      retained_runtime_in_gateway: true,
       requires_bridge_session: true,
-      decommission_safe: false,
-      dependency_for: 'buildwiki_farmer',
-      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenCloud worker/runtime capability catalog, Run Now adapter metadata',
-      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, opencloud.worker_execution, mini_agent_creation_activation',
+      deletion_or_disable_safe: false,
+      dependency_for: 'buildwiki_farmer_and_runtime_execution',
+      skills_tools_available: 'Build-Wiki status, Farmer service status, Farmer timer status, OpenClaw+ runtime capability catalog, Run Now adapter metadata',
+      bridge_session_required_actions: 'buildwiki.run_now, buildwiki.write, openclaw.runtime_execution, mini_agent_creation_activation',
       blocked_reason: null,
     })
-    expect(openCloud?.blockers).toEqual([])
+    expect(openClaw?.blockers).toEqual([])
     const openRouter = registry.capabilities.find((capability) => capability.id === 'model_openrouter')
     expect(openRouter?.status_details).toMatchObject({
       configured: true,
@@ -664,9 +656,9 @@ describe('Gateway registry API model', () => {
       raw_tracebacks_exposed: false,
     })
     expect(status.brain_systems.find((item) => item.id === 'mempalace')?.write_enabled).toBe(true)
-    expect(status.buildwiki_opencloud).toMatchObject({
+    expect(status.buildwiki_openclaw).toMatchObject({
       visible: true,
-      opencloud_status: 'read_only',
+      openclaw_status: 'read_only',
       worker_runtime_engine: true,
       skills_tools_source: true,
       buildwiki_farmer_support_layer: true,
@@ -688,19 +680,20 @@ describe('Gateway registry API model', () => {
       fork2_blocker: 'smb_mount_not_verified',
       smb_mounted: false,
       smb_blocker: 'smb_mount_not_verified',
-      opencloud_dependency_visible: true,
-      opencloud_deletion_target: false,
-      opencloud_disable_target: false,
-      opencloud_destroy_allowed: false,
+      openclaw_runtime_visible: true,
+      openclaw_plus_deletion_target: false,
+      openclaw_plus_disable_target: false,
+      openclaw_plus_destroy_allowed: false,
     })
-    expect(status.buildwiki_opencloud.opencloud_roles).toEqual(expect.arrayContaining([
-      'worker/runtime engine',
-      'skills/tools source',
+    expect(status.buildwiki_openclaw.openclaw_roles).toEqual(expect.arrayContaining([
+      'runtime / skills engine',
+      'skills/tools/adapters source',
+      'reports and governance layer',
       'Build-Wiki/Farmer support layer',
-      'future mini-agent creation layer',
+      'mini-agent execution layer',
     ]))
-    expect(status.buildwiki_opencloud.skills_tools_available).toContain('Run Now adapter metadata')
-    expect(status.buildwiki_opencloud.bridge_session_required_actions).toContain('opencloud.worker_execution')
+    expect(status.buildwiki_openclaw.skills_tools_available).toContain('Run Now adapter metadata')
+    expect(status.buildwiki_openclaw.bridge_session_required_actions).toContain('openclaw.runtime_execution')
     expect(status.execution_enabled).toBe(false)
     expect(nodes.mode).toBe('gateway_nodes_read_only')
     expect(nodes.execution_enabled).toBe(false)
@@ -746,13 +739,13 @@ describe('Gateway registry API model', () => {
       'event',
       'data_source',
       'brain_system',
-      'opencloud_worker',
+      'runtime_engine',
       'buildwiki_farmer',
       'delivery_channel',
     ]))
     expect(nodes.nodes.find((item) => item.id === 'gateway')).toMatchObject({ type: 'gateway' })
     expect(nodes.nodes.find((item) => item.id === 'buildwiki')).toMatchObject({ type: 'buildwiki_farmer' })
-    expect(nodes.nodes.find((item) => item.id === 'opencloud')).toMatchObject({ type: 'opencloud_worker' })
+    expect(nodes.nodes.find((item) => item.id === 'openclaw_plus')).toMatchObject({ type: 'runtime_engine' })
     expect(nodes.nodes.find((item) => item.id === 'integration_agentmail')).toMatchObject({ type: 'delivery_channel' })
     expect(nodes.nodes.find((item) => item.id === 'space_agent')).toMatchObject({
       type: 'specialist_agent',
@@ -883,10 +876,10 @@ describe('Gateway registry API model', () => {
       requested_action: 'mcp_tool_route',
       policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
     })
-    expect(flowMap.get('flow_agent_zero_gateway_opencloud_worker')).toMatchObject({
+    expect(flowMap.get('flow_agent_zero_gateway_openclaw_runtime')).toMatchObject({
       source: 'agent_zero',
-      target: 'opencloud',
-      requested_action: 'opencloud_worker_route',
+      target: 'openclaw_plus',
+      requested_action: 'openclaw_runtime_route',
       policy_result: { route_decision: 'requires_session', requires_bridge_session: true },
       bridge_session_log: [expect.objectContaining({ decision: 'required', secrets_exposed: false })],
       external_write_log: [expect.objectContaining({ external_write: false, secrets_exposed: false })],

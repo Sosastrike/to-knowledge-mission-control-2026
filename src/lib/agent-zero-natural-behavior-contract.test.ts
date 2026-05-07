@@ -15,7 +15,7 @@ const naturalOwnerPrompts = [
   'Can you see Mission Control?',
   'Can you see Bridge and MCP?',
   'Can you see OpenRouter?',
-  'Can you see OpenCloud?',
+  'Can you see Build-Wiki/Farmer?',
   'Can you see Build-Wiki?',
   'Can you see the farmer status?',
   'Can you see Obsidian?',
@@ -103,7 +103,7 @@ const naturalOwnerPrompts = [
   'Can you push a repo?',
   'Can you modify production config?',
   'Can you execute protected actions?',
-  'Can you run OpenCloud docs farmer now?',
+  'Can you run Build-Wiki/Farmer docs sync now?',
   'Can you answer as a normal assistant?',
   'Summarize what you can see without sounding robotic.',
 ]

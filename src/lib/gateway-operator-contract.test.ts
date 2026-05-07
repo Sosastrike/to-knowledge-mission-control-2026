@@ -76,7 +76,7 @@ const context = {
     },
     smb: { required_for_fork2: true, mounted: false, blocker: 'smb_mount_not_verified' },
     direct_opencloud_access_visible: false,
-    skills_tools_available: ['Build-Wiki status', 'Run Now adapter metadata', 'OpenCloud worker/runtime capability catalog'],
+    skills_tools_available: ['Build-Wiki status', 'Run Now adapter metadata', 'OpenClaw+ runtime capability catalog'],
   },
 } as unknown as AgentZeroReadOnlyContext
 
@@ -88,7 +88,7 @@ describe('Gateway operator contract regressions', () => {
     const nodes = buildGatewayNodesPayload(registry)
     const agentZero = getGatewayNodeDetail(registry, 'agent-zero')
     const hermes = getGatewayNodeDetail(registry, 'hermes')
-    const opencloud = getGatewayNodeDetail(registry, 'opencloud')
+    const openclaw = getGatewayNodeDetail(registry, 'openclaw_plus')
     const buildwiki = getGatewayNodeDetail(registry, 'buildwiki')
 
     expect(registry.version).toBe('gateway_registry_v1')
@@ -97,9 +97,9 @@ describe('Gateway operator contract regressions', () => {
     expect(agentZero?.node).toMatchObject({ id: 'agent_zero', type: 'commander', connected: true, execution_enabled: false })
     expect(hermes?.node).toMatchObject({ id: 'hermes', type: 'lieutenant', execution_enabled: false })
     expect(hermes?.node.status).toMatch(/connected|degraded|read_only|blocked/)
-    expect(opencloud?.node).toMatchObject({ id: 'opencloud', type: 'opencloud_worker', execution_enabled: false })
+    expect(openclaw?.node).toMatchObject({ id: 'openclaw_plus', type: 'runtime_engine', execution_enabled: false })
     expect(buildwiki?.node).toMatchObject({ id: 'buildwiki', type: 'buildwiki_farmer', requires_bridge_session: true })
-    for (const item of [agentZero?.node, hermes?.node, opencloud?.node, buildwiki?.node]) {
+    for (const item of [agentZero?.node, hermes?.node, openclaw?.node, buildwiki?.node]) {
       expect(item).toMatchObject({
         read_enabled: true,
         write_enabled: false,
@@ -125,8 +125,8 @@ describe('Gateway operator contract regressions', () => {
     expect(activeTonyEdges).toEqual([])
   })
 
-  it('retains OpenCloud as a worker and keeps Build-Wiki Run Now scoped to the approved service', () => {
-    const opencloud = registry.capabilities.find((capability) => capability.id === 'opencloud_dependency')
+  it('keeps OpenClaw+ runtime retained and Build-Wiki Run Now scoped to the approved service', () => {
+    const openclaw = registry.capabilities.find((capability) => capability.id === 'openclaw_plus_runtime_dependency')
     const buildwiki = registry.capabilities.find((capability) => capability.id === 'brain_buildwiki')
     const plan = planGatewayRoute(registry, { ownerRequest: 'Prepare Build-Wiki Run Now' })
     const missingScope = evaluateGatewayPolicy({
@@ -144,12 +144,12 @@ describe('Gateway operator contract regressions', () => {
       allowedScopes: [BUILDWIKI_ACTION_RUN_NOW],
     })
 
-    expect(opencloud?.status_details).toMatchObject({
+    expect(openclaw?.status_details).toMatchObject({
       worker_runtime_engine: true,
-      retained_in_gateway: true,
-      opencloud_deletion_target: false,
-      opencloud_disable_target: false,
-      opencloud_destroy_allowed: false,
+      retained_runtime_in_gateway: true,
+      openclaw_plus_deletion_target: false,
+      openclaw_plus_disable_target: false,
+      openclaw_plus_destroy_allowed: false,
     })
     expect(buildwiki?.status_details).toMatchObject({
       run_now_action: BUILDWIKI_ACTION_RUN_NOW,

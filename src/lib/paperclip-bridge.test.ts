@@ -1143,7 +1143,7 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe({ unknown, missingBlocker })
   })
 
-  it('defines Gateway adapter plugins for Agent Zero, Hermes, Pi, SpaceAgent, OpenCloud, and OpenClaw+', () => {
+  it('defines Gateway adapter plugins for Agent Zero, Hermes, Pi, SpaceAgent, OpenClaw+', () => {
     const plan = buildPaperclipGatewayPluginPlan({
       generatedAt: GENERATED_AT,
       lifecycle: [
@@ -1151,7 +1151,7 @@ describe('Paperclip bridge payloads', () => {
         { plugin: 'hermes_adapter', action: 'load' },
         { plugin: 'pi_adapter', action: 'load' },
         { plugin: 'space_agent_adapter', action: 'load' },
-        { plugin: 'opencloud_worker_adapter', action: 'load' },
+        { plugin: 'openclaw_runtime_adapter', action: 'load' },
         { plugin: 'openclaw_skills_adapter', action: 'load' },
         { plugin: 'mission_control_ui_contribution', action: 'load', safeUiContribution: true },
         { plugin: 'agent_zero_adapter', action: 'unload', loaded: true },
@@ -1185,7 +1185,7 @@ describe('Paperclip bridge payloads', () => {
       expect.objectContaining({ id: 'hermes_adapter', kind: 'agent_adapter', target_node: 'hermes', supervisor: 'agent_zero' }),
       expect.objectContaining({ id: 'pi_adapter', kind: 'agent_adapter', target_node: 'pi_dispatcher_candidate' }),
       expect.objectContaining({ id: 'space_agent_adapter', kind: 'agent_adapter', target_node: 'space_agent' }),
-      expect.objectContaining({ id: 'opencloud_worker_adapter', kind: 'worker_adapter', target_node: 'opencloud_worker' }),
+      expect.objectContaining({ id: 'openclaw_runtime_adapter', kind: 'worker_adapter', target_node: 'openclaw_plus' }),
       expect.objectContaining({ id: 'openclaw_skills_adapter', kind: 'skills_adapter', target_node: 'openclaw_plus', supervisor: 'paperclip' }),
       expect.objectContaining({ id: 'mission_control_ui_contribution', kind: 'ui_contribution', registers: ['nav_item', 'panel'], ui_contribution_safe: true, ui_contribution_enabled: false }),
     ]))

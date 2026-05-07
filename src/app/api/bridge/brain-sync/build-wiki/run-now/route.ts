@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic'
 // ---------------------------------------------------------------------------
 
 const REQUEST_REASON_DEFAULT =
-  'Owner-initiated manual run of the OpenCloud Build-Wiki local docs farmer (oneshot, append-only, no network egress).'
+  'Owner-initiated manual run of the Build-Wiki/Farmer local docs sync (oneshot, append-only, no network egress).'
 
 type TelegramApprovalCreatePayload = {
   ok?: boolean

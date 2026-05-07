@@ -1575,7 +1575,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     }),
     capability({
       id: 'opencloud_farmer',
-      name: 'OpenCloud farmer',
+      name: 'Build-Wiki/Farmer',
       category: 'buildwiki',
       connected: timerActive === true,
       configured: typeof timerActive === 'boolean',

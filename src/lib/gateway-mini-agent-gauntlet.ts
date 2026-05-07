@@ -20,7 +20,7 @@ export type MiniAgentGauntletScenarioType =
   | 'out_of_scope_refusal'
   | 'memory_ttl_expiration'
   | 'secret_access_denial'
-  | 'opencloud_worker_policy'
+  | 'openclaw_runtime_policy'
 
 export type MiniAgentGauntletScenario = {
   scenario_id: string
@@ -39,7 +39,7 @@ export type MiniAgentGauntletScenario = {
     no_raw_paths: boolean
     no_fake_done: boolean
     bridge_session_enforced: boolean
-    opencloud_retained: boolean
+    openclaw_runtime_retained: boolean
   }
 }
 
@@ -70,7 +70,7 @@ const SCENARIO_TYPES: MiniAgentGauntletScenarioType[] = [
   'out_of_scope_refusal',
   'memory_ttl_expiration',
   'secret_access_denial',
-  'opencloud_worker_policy',
+  'openclaw_runtime_policy',
 ]
 
 export function runMiniAgentGatewayGauntlet(registry: GatewayRegistry, count = 1000): MiniAgentGauntletResult {
@@ -169,10 +169,10 @@ function runScenario(registry: GatewayRegistry, index: number): MiniAgentGauntle
       })
       return scenarioFromBlocked(index, type, result.blocked_reason === 'mini_agent_memory_secret_storage_forbidden' && access.blocked_reason === 'mini_agent_cross_memory_access_not_allowed')
     }
-    case 'opencloud_worker_policy': {
+    case 'openclaw_runtime_policy': {
       const docs = buildGatewayDocsIndex(registry)
-      const opencloud = registry.nodes.find((node) => node.id === 'opencloud')
-      return scenarioFromOpenCloud(index, type, Boolean(opencloud && opencloud.kind === 'opencloud_worker' && docs.docs.some((doc) => doc.registry_id === 'opencloud')))
+      const openclaw = registry.nodes.find((node) => node.id === 'openclaw_plus')
+      return scenarioFromOpenClaw(index, type, Boolean(openclaw && openclaw.kind === 'runtime_engine' && docs.docs.some((doc) => doc.registry_id === 'openclaw_plus')))
     }
   }
 }
@@ -195,7 +195,7 @@ function baseScenario(index: number, type: MiniAgentGauntletScenarioType, passed
       no_raw_paths: true,
       no_fake_done: true,
       bridge_session_enforced: true,
-      opencloud_retained: true,
+      openclaw_runtime_retained: true,
     },
   }
 }
@@ -216,6 +216,6 @@ function scenarioFromMemory(index: number, type: MiniAgentGauntletScenarioType, 
   return baseScenario(index, type, ok)
 }
 
-function scenarioFromOpenCloud(index: number, type: MiniAgentGauntletScenarioType, ok: boolean): MiniAgentGauntletScenario {
+function scenarioFromOpenClaw(index: number, type: MiniAgentGauntletScenarioType, ok: boolean): MiniAgentGauntletScenario {
   return baseScenario(index, type, ok)
 }

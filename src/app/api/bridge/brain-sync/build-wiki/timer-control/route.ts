@@ -46,9 +46,9 @@ export const dynamic = 'force-dynamic'
 // ---------------------------------------------------------------------------
 
 const REQUEST_REASON_DEFAULT_PAUSE =
-  'Owner-initiated pause of the OpenCloud Build-Wiki farmer timer (stops calendar; service unaffected, manual Run Now still available).'
+  'Owner-initiated pause of the Build-Wiki/Farmer timer (stops calendar; service unaffected, manual Run Now still available).'
 const REQUEST_REASON_DEFAULT_RESUME =
-  'Owner-initiated resume of the OpenCloud Build-Wiki farmer timer (re-arms calendar at the next 3-hour mark).'
+  'Owner-initiated resume of the Build-Wiki/Farmer timer (re-arms calendar at the next 3-hour mark).'
 
 function stableJson(value: unknown): string {
   if (!value || typeof value !== 'object') return '{}'

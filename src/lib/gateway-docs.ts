@@ -10,7 +10,7 @@ export const GATEWAY_DOC_TYPES = [
   'model',
   'mcp_server',
   'brain_system',
-  'opencloud_worker',
+  'runtime_engine',
   'buildwiki_farmer',
   'delivery_channel',
   'event',
@@ -145,7 +145,7 @@ function docFromNode(node: GatewayNode, generatedAt: string, freshnessHours?: nu
     read_enabled: node.status !== 'missing' && node.status !== 'legacy_archived',
     write_enabled: node.status === 'write_enabled' || node.status === 'execution_enabled',
     execution_enabled: node.status === 'execution_enabled',
-    requires_bridge_session: ['tool', 'mcp_server', 'api', 'delivery_channel', 'opencloud_worker', 'buildwiki_farmer'].includes(node.kind),
+    requires_bridge_session: ['tool', 'mcp_server', 'api', 'delivery_channel', 'runtime_engine', 'buildwiki_farmer'].includes(node.kind),
     blocked_reason: blockedReason,
     last_verified_at: node.health.last_seen || generatedAt || null,
     stale: isStale(node.health.last_seen || generatedAt, generatedAt, node.kind === 'commander' || node.kind === 'lieutenant' ? LIVE_FRESHNESS_HOURS : freshnessHours),
@@ -227,8 +227,8 @@ function docTypeFromNode(node: GatewayNode): GatewayDocType {
       return 'integration'
     case 'brain_system':
       return 'brain_system'
-    case 'opencloud_worker':
-      return 'opencloud_worker'
+    case 'runtime_engine':
+      return 'runtime_engine'
     case 'buildwiki_farmer':
       return 'buildwiki_farmer'
     case 'delivery_channel':
@@ -270,20 +270,20 @@ function purposeForNode(node: GatewayNode): string {
   if (node.id === 'hermes') return 'Lieutenant for skill and workflow design.'
   if (node.id === 'pi') return 'Dispatcher candidate in shadow mode.'
   if (node.id === 'space_agent') return 'Browser, web, YouTube, video, crawl, scrape, search, extraction, and Firecrawl research specialist that returns Research Packets through Gateway.'
-  if (node.id === 'opencloud') return 'Retained worker/runtime engine and future mini-agent creation layer.'
+  if (node.id === 'openclaw_plus') return 'Runtime / skills / adapters / reports / governance / agent execution layer.'
   return `${node.label} Gateway node.`
 }
 
 function defaultLimitationsForNode(node: GatewayNode): string[] {
   const limitations = ['No secrets exposed', 'No raw local paths', 'No fake Done']
   if (node.kind !== 'owner' && node.kind !== 'gateway') limitations.push('Actions route through Gateway policy')
-  if (node.kind === 'opencloud_worker') limitations.push('No deletion route; no Gateway bypass')
+  if (node.kind === 'runtime_engine') limitations.push('No Gateway bypass; side effects require Bridge Session')
   if (node.id === 'space_agent') limitations.push('Research-only by default; no external writes, no commander authority, and no Gateway bypass')
   return limitations
 }
 
 function rollbackForNode(node: GatewayNode): string {
-  if (node.id === 'opencloud' || node.kind === 'buildwiki_farmer') return 'Retain service/data; disable only future Gateway route changes if needed.'
+  if (node.id === 'openclaw_plus' || node.kind === 'buildwiki_farmer') return 'Retain service/data; disable only future Gateway route changes if needed.'
   if (node.id === 'agent_zero') return 'Revert Gateway routing commit; do not create a second Agent Zero.'
   if (node.id === 'space_agent') return 'Disable Space Agent Gateway research routes; retain the external Space Agent checkout and do not delete existing agents.'
   return 'Revert the related Gateway registry/docs change.'

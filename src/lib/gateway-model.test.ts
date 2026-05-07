@@ -39,7 +39,7 @@ describe('canonical Gateway graph model', () => {
       'event',
       'data_source',
       'brain_system',
-      'opencloud_worker',
+      'runtime_engine',
       'buildwiki_farmer',
       'workforce_layer',
       'delivery_channel',
@@ -60,7 +60,6 @@ describe('canonical Gateway graph model', () => {
     const spaceAgent = getGatewayRoleMatrixEntry('space_agent')
     const paperclip = getGatewayRoleMatrixEntry('paperclip')
     const existingAgents = getGatewayRoleMatrixEntry('existing_agents')
-    const openCloud = getGatewayRoleMatrixEntry('opencloud')
     const openClaw = getGatewayRoleMatrixEntry('openclaw_plus')
     const tony = getGatewayRoleMatrixEntry('tony_legacy')
 
@@ -75,7 +74,6 @@ describe('canonical Gateway graph model', () => {
       'existing_agents',
       'mini_agents',
       'openclaw_plus',
-      'opencloud',
       'tony_legacy',
     ]))
     expect(agentZero).toMatchObject({ role: 'commander', commander: true, active: true })
@@ -126,8 +124,6 @@ describe('canonical Gateway graph model', () => {
       'paperclip_does_not_replace_existing_agents',
       'agent_zero_supervision_required',
     ]))
-    expect(openCloud).toMatchObject({ role: 'worker_runtime_engine_skill_tool_agent_creation_layer', commander: false, active: true })
-    expect(openCloud?.policy_tags).toContain('opencloud_retained')
     expect(openClaw).toMatchObject({ role: 'runtime_skills_engine', commander: false, active: true })
     expect(openClaw?.reports_to).toEqual(expect.arrayContaining(['paperclip', 'gateway', 'agent_zero']))
     expect(openClaw?.policy_tags).toEqual(expect.arrayContaining(['runtime_skills_engine', 'paperclip_supervised_runtime']))
@@ -403,7 +399,7 @@ describe('canonical Gateway graph model', () => {
         hermes_skill_builder: true,
         pi_can_recommend: true,
         mini_agents_are_subordinate_workers: true,
-        opencloud_openclaw_worker_runtime: true,
+        openclaw_plus_worker_runtime: true,
         tony_retired_archive_only: true,
         space_agent_is_commander: false,
         policy: 'space_agent_not_commander',

@@ -15,7 +15,7 @@ export const GATEWAY_DATA_LAYER_NODE_TYPES = [
   'event',
   'data_source',
   'brain_system',
-  'opencloud_worker',
+  'runtime_engine',
   'buildwiki_farmer',
   'workforce_layer',
   'delivery_channel',
@@ -300,9 +300,8 @@ export function getIntegrations(layer: GatewayDataLayerSnapshot): GatewayDataLay
 export function getBrainSystems(layer: GatewayDataLayerSnapshot): GatewayDataLayerNode[] {
   return layer.nodes.filter((node) =>
     node.type === 'brain_system' ||
-    node.type === 'opencloud_worker' ||
     node.type === 'buildwiki_farmer' ||
-    /brain|obsidian|mempalace|graphify|build-wiki|farmer|opencloud/i.test(`${node.id} ${node.name} ${node.semantic_context}`),
+    /brain|obsidian|mempalace|graphify|build-wiki|farmer/i.test(`${node.id} ${node.name} ${node.semantic_context}`),
   )
 }
 
@@ -603,8 +602,8 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'model'
     case 'brain_system':
       return 'brain_system'
-    case 'opencloud_worker':
-      return 'opencloud_worker'
+    case 'runtime_engine':
+      return 'runtime_engine'
     case 'buildwiki_farmer':
       return 'buildwiki_farmer'
     case 'workforce_layer':
@@ -629,7 +628,6 @@ function nodeTypeFromCapability(capability: GatewayCapability): GatewayDataLayer
   if (capability.kind === 'model') return 'model'
   if (capability.kind === 'brain') {
     if (id.includes('buildwiki') || id.includes('farmer') || label.includes('build-wiki') || label.includes('farmer')) return 'buildwiki_farmer'
-    if (id.includes('opencloud') || label.includes('opencloud')) return 'opencloud_worker'
     return 'brain_system'
   }
   if (capability.kind === 'integration') return isDeliveryCapability(id, label) ? 'delivery_channel' : 'api'
@@ -684,8 +682,8 @@ function systemLabelForNodeType(type: GatewayDataLayerNodeType): string {
 }
 
 function semanticContextFor(type: GatewayDataLayerNodeType, name: string): string {
-  if (type === 'opencloud_worker') {
-    return `${name} is a retained OpenCloud or Build-Wiki worker/runtime node under Gateway control, not a deletion target. It can expose skills, tools, Build-Wiki/Farmer support, and future mini-agent creation capabilities through Gateway policy.`
+  if (type === 'runtime_engine') {
+    return `${name} is a retained OpenClaw+ runtime / skills engine node under Gateway control. It exposes agents, skills, tools, reports, approvals, Build-Wiki/Farmer support, and mini-agent execution through Gateway policy.`
   }
   if (type === 'buildwiki_farmer') return `${name} is a Build-Wiki/Farmer node; Run Now requires Bridge Session approval and stays scoped to the farmer service.`
   if (type === 'workforce_layer') return `${name} is a workforce operations layer for co-worker agents, task queues, heartbeats, budgets, work products, and approval records. Mutations require Gateway policy and Bridge Session scope.`

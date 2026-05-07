@@ -3,7 +3,9 @@ import {
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
+  PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   createPaperclipCoWorkerAgentDefinition,
+  transitionPaperclipCoWorkerLifecycle,
   buildPaperclipSpaceAgentResearchTaskPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
@@ -233,6 +235,101 @@ describe('Paperclip bridge payloads', () => {
       }),
     ])
     expectOwnerSafe(result)
+  })
+
+  it('tracks every Paperclip CoWorkerAgent lifecycle state without enabling execution', () => {
+    const base = createPaperclipCoWorkerAgentDefinition({
+      id: 'qa-helper',
+      name: 'QA Helper',
+      supervisor: 'agent_zero',
+      purpose: 'Review scoped work products for Agent Zero.',
+      taskScope: ['read-only QA review'],
+      budgetMaxCents: 1000,
+      memoryTtlMinutes: 60,
+      allowedTools: ['gateway.getSystems'],
+      expirationCondition: 'Expire after review or TTL.',
+      generatedAt: GENERATED_AT,
+    }).definition!
+
+    expect(PAPERCLIP_COWORKER_LIFECYCLE_STATES).toEqual([
+      'proposed',
+      'awaiting_approval',
+      'approved',
+      'running',
+      'blocked',
+      'completed',
+      'failed',
+      'expired',
+      'archived',
+      'reviewed_by_agent_zero',
+    ])
+
+    const transitioned = PAPERCLIP_COWORKER_LIFECYCLE_STATES.reduce((definition, lifecycle, index) => {
+      const result = transitionPaperclipCoWorkerLifecycle({
+        definition,
+        lifecycle,
+        actor: lifecycle === 'reviewed_by_agent_zero' ? 'agent_zero' : 'gateway',
+        summary: `Lifecycle ${lifecycle} recorded.`,
+        recordedAt: `2026-05-06T00:${String(index + 1).padStart(2, '0')}:00.000Z`,
+      })
+
+      expect(result).toMatchObject({
+        ok: true,
+        mode: 'paperclip_coworker_lifecycle_transition_dry_run',
+        lifecycle,
+        execution_enabled: false,
+        writes_enabled: false,
+        protected_actions_enabled: false,
+        no_secrets_exposed: true,
+        raw_paths_exposed: false,
+      })
+      expect(result.definition).toMatchObject({
+        lifecycle,
+        execution_enabled: false,
+        write_enabled: false,
+        external_writes_enabled: false,
+      })
+      expect(result.definition?.audit_trail.at(-1)).toMatchObject({
+        event: `paperclip.coworker.lifecycle.${lifecycle}`,
+        external_write: false,
+        no_secrets_exposed: true,
+        raw_paths_exposed: false,
+      })
+      return result.definition!
+    }, base)
+
+    expect(transitioned.lifecycle).toBe('reviewed_by_agent_zero')
+    expect(transitioned.audit_trail).toHaveLength(PAPERCLIP_COWORKER_LIFECYCLE_STATES.length + 1)
+    expectOwnerSafe({ transitioned, execution_enabled: false, writes_enabled: false })
+  })
+
+  it('blocks invalid lifecycle transitions and non-Agent Zero review claims', () => {
+    const definition = createPaperclipCoWorkerAgentDefinition({
+      name: 'Route Reviewer',
+      supervisor: 'pi',
+      purpose: 'Review route plans.',
+      taskScope: ['read-only route review'],
+      expirationCondition: 'Expire after route review.',
+      generatedAt: GENERATED_AT,
+    }).definition!
+
+    const invalid = transitionPaperclipCoWorkerLifecycle({
+      definition,
+      lifecycle: 'self_promoted',
+      actor: 'gateway',
+      recordedAt: GENERATED_AT,
+    })
+    const wrongReviewer = transitionPaperclipCoWorkerLifecycle({
+      definition,
+      lifecycle: 'reviewed_by_agent_zero',
+      actor: 'hermes',
+      recordedAt: GENERATED_AT,
+    })
+
+    expect(invalid).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'paperclip_coworker_lifecycle_unknown' })
+    expect(wrongReviewer).toMatchObject({ ok: false, policy_result: 'blocked', blocked_reason: 'paperclip_coworker_review_requires_agent_zero' })
+    expectOwnerSafe(invalid)
+    expectOwnerSafe(wrongReviewer)
   })
 
   it('blocks Paperclip CoWorkerAgent definitions that miss required fields or request forbidden tools', () => {

@@ -138,6 +138,21 @@ export type PaperclipTestTaskPayload = {
 export type PaperclipTaskAssignee = 'hermes' | 'space_agent' | 'pi_review' | 'mini_agent'
 export type PaperclipTaskPolicyResult = 'requires_session' | 'blocked' | 'missing_credential'
 
+export const PAPERCLIP_COWORKER_LIFECYCLE_STATES = [
+  'proposed',
+  'awaiting_approval',
+  'approved',
+  'running',
+  'blocked',
+  'completed',
+  'failed',
+  'expired',
+  'archived',
+  'reviewed_by_agent_zero',
+] as const
+
+export type PaperclipCoWorkerLifecycleState = (typeof PAPERCLIP_COWORKER_LIFECYCLE_STATES)[number]
+
 export type PaperclipCoWorkerSupervisor = 'agent_zero' | 'hermes' | 'pi' | 'space_agent'
 
 export type PaperclipCoWorkerAgentBudget = {
@@ -178,7 +193,7 @@ export type PaperclipCoWorkerAgentDefinition = {
   expiration_condition: string
   audit_trail_required: true
   audit_trail: PaperclipCoWorkerAgentAuditEvent[]
-  lifecycle: 'proposed'
+  lifecycle: PaperclipCoWorkerLifecycleState
   bridge_session_required_for_activation: true
   read_enabled: true
   write_enabled: false
@@ -212,6 +227,33 @@ export type PaperclipCoWorkerAgentDefinitionResult = {
   ok: boolean
   mode: 'paperclip_coworker_definition_dry_run'
   definition: PaperclipCoWorkerAgentDefinition | null
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipCoWorkerLifecycleTransitionInput = {
+  definition: PaperclipCoWorkerAgentDefinition
+  lifecycle: string
+  actor?: string | null
+  summary?: string | null
+  recordedAt: string
+}
+
+export type PaperclipCoWorkerLifecycleTransitionResult = {
+  ok: boolean
+  mode: 'paperclip_coworker_lifecycle_transition_dry_run'
+  definition: PaperclipCoWorkerAgentDefinition | null
+  previous_lifecycle: PaperclipCoWorkerLifecycleState | null
+  requested_lifecycle: string
+  lifecycle: PaperclipCoWorkerLifecycleState | null
+  lifecycle_order: PaperclipCoWorkerLifecycleState[]
+  reviewed_by_agent_zero: boolean
   policy_result: PaperclipTaskPolicyResult
   blocked_reason: string | null
   response_text: string
@@ -636,6 +678,77 @@ export function createPaperclipCoWorkerAgentDefinition(input: PaperclipCoWorkerA
     policy_result: 'requires_session',
     blocked_reason: 'paperclip_coworker_activation_requires_bridge_session_and_runtime_adapter',
     response_text: `Sir, ${definition.name} is defined as a supervised Paperclip co-worker under ${supervisor}, but activation is blocked until Bridge Session scope and a runtime adapter exist.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+export function transitionPaperclipCoWorkerLifecycle(input: PaperclipCoWorkerLifecycleTransitionInput): PaperclipCoWorkerLifecycleTransitionResult {
+  const requestedLifecycle = sanitizeOwnerText(input.lifecycle || '')
+  const lifecycle = normalizePaperclipCoWorkerLifecycle(requestedLifecycle)
+  const actor = normalizePaperclipLifecycleActor(input.actor)
+  const previous = input.definition.lifecycle
+  const summary = sanitizeOwnerText(input.summary || `Transition co-worker lifecycle to ${lifecycle || requestedLifecycle}.`).slice(0, 260)
+  const blockedReason = !lifecycle
+    ? 'paperclip_coworker_lifecycle_unknown'
+    : lifecycle === 'reviewed_by_agent_zero' && actor !== 'agent_zero'
+      ? 'paperclip_coworker_review_requires_agent_zero'
+      : null
+
+  if (blockedReason) {
+    return {
+      ok: false,
+      mode: 'paperclip_coworker_lifecycle_transition_dry_run',
+      definition: null,
+      previous_lifecycle: previous || null,
+      requested_lifecycle: requestedLifecycle,
+      lifecycle: null,
+      lifecycle_order: [...PAPERCLIP_COWORKER_LIFECYCLE_STATES],
+      reviewed_by_agent_zero: false,
+      policy_result: 'blocked',
+      blocked_reason: blockedReason,
+      response_text: `Sir, the Paperclip co-worker lifecycle transition is blocked: ${blockedReason.replace(/[_-]+/g, ' ')}.`,
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    }
+  }
+
+  const lifecycleState = lifecycle as PaperclipCoWorkerLifecycleState
+  const transitioned: PaperclipCoWorkerAgentDefinition = {
+    ...input.definition,
+    lifecycle: lifecycleState,
+    audit_trail: [
+      ...input.definition.audit_trail,
+      paperclipCoWorkerAuditEvent(`paperclip.coworker.lifecycle.${lifecycleState}`, actor, input.definition.id, summary, input.recordedAt),
+    ],
+    execution_enabled: false,
+    write_enabled: false,
+    external_writes_enabled: false,
+    blocked_reason: lifecycleState === 'blocked' || lifecycleState === 'failed' ? summary : null,
+  }
+
+  return {
+    ok: true,
+    mode: 'paperclip_coworker_lifecycle_transition_dry_run',
+    definition: transitioned,
+    previous_lifecycle: previous,
+    requested_lifecycle: requestedLifecycle,
+    lifecycle: lifecycleState,
+    lifecycle_order: [...PAPERCLIP_COWORKER_LIFECYCLE_STATES],
+    reviewed_by_agent_zero: lifecycleState === 'reviewed_by_agent_zero',
+    policy_result: lifecycleState === 'running' ? 'requires_session' : 'blocked',
+    blocked_reason: lifecycleState === 'running'
+      ? 'paperclip_coworker_running_requires_bridge_session_and_runtime_adapter'
+      : 'paperclip_coworker_lifecycle_tracking_only_no_runtime_execution',
+    response_text: lifecycleState === 'running'
+      ? 'Sir, Paperclip co-worker lifecycle is marked running for tracking only; runtime execution remains blocked until Bridge Session and adapter approval.'
+      : `Sir, Paperclip co-worker lifecycle is now ${lifecycleState.replace(/_/g, ' ')} in dry-run tracking. No execution or external write occurred.`,
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -1373,6 +1486,19 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function normalizePaperclipCoWorkerLifecycle(value: string): PaperclipCoWorkerLifecycleState | null {
+  const normalized = normalizePaperclipSlug(value).replace(/^awaitingapproval$/, 'awaiting_approval').replace(/^reviewedbyagentzero$/, 'reviewed_by_agent_zero')
+  if ((PAPERCLIP_COWORKER_LIFECYCLE_STATES as readonly string[]).includes(normalized)) return normalized as PaperclipCoWorkerLifecycleState
+  return null
+}
+
+function normalizePaperclipLifecycleActor(value: unknown): string {
+  const actor = normalizePaperclipSlug(value || 'gateway')
+  if (actor === 'agentzero') return 'agent_zero'
+  if (actor === 'spaceagent') return 'space_agent'
+  return actor || 'gateway'
 }
 
 function buildPaperclipCoWorkerAgentId(value: string | null | undefined): string {

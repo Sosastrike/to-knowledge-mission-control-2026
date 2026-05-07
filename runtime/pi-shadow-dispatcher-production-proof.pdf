@@ -1,0 +1,237 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2250 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Pi Shadow Dispatcher Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:10:06.458Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Pi is **PARTIAL GO** as a Gateway dispatcher candidate in shadow mode.) Tj
+T*
+() Tj
+T*
+(Pi is visible in Agent Hub as pi-mono with the role Dispatcher / Route Optimizer Candidate. It) Tj
+T*
+(is protected by Mission Control auth, cannot execute, cannot write, and cannot become) Tj
+T*
+(commander. Paperclip-backed dispatcher recommendation routes return advisory responses only) Tj
+T*
+(and remain storage-blocked until Paperclip auth/session bridging is configured.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Agent Hub Pi route | 200 authenticated |) Tj
+T*
+(| Agent Hub Pi health | 200 authenticated |) Tj
+T*
+(| Unauthenticated Pi route | 401 |) Tj
+T*
+(| Pi status | pending |) Tj
+T*
+(| Pi blocker | dispatcher_candidate_not_authoritative |) Tj
+T*
+(| Execution enabled | false |) Tj
+T*
+(| Writes enabled | false |) Tj
+T*
+(| Shadow recommendation route | available through Paperclip dispatcher recommendations |) Tj
+T*
+(| Recommendation storage | blocked by paperclip_auth_required_or_not_configured |) Tj
+T*
+() Tj
+T*
+(Shadow Recommendation Smoke) Tj
+T*
+() Tj
+T*
+(| Prompt Class | Route Result | Safety Result |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Status report | advisory only | no execution, no write |) Tj
+T*
+(| Google Drive upload | advisory only | no upload, blocked until session/connector |) Tj
+T*
+(| Hermes skill design | advisory only | no skill activation |) Tj
+T*
+(| Build-Wiki Run Now | advisory only | no farmer execution |) Tj
+T*
+(| Raw root shell | advisory only | no shell access |) Tj
+T*
+(| Unknown connector | advisory only | no fake access |) Tj
+T*
+(| Mini-agent research task | advisory SpaceAgent route | no mini-agent activation |) Tj
+T*
+(| Complex model task | advisory only | no model execution |) Tj
+T*
+() Tj
+T*
+(Hierarchy Confirmation) Tj
+T*
+() Tj
+T*
+(| Role | Status |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Owner | final authority |) Tj
+T*
+(| Gateway | routing, policy, registry, audit hub |) Tj
+T*
+(| Agent Zero | commander |) Tj
+T*
+(| Hermes | lieutenant / skill-workflow builder |) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2251 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(| Pi | dispatcher candidate, shadow/advisory only |) Tj
+T*
+(| Paperclip | Workforce Control Plane after Agent Zero/Pi/Hermes and before OpenClaw+ |) Tj
+T*
+(| OpenClaw+ | runtime / skills / adapters / reports / governance / execution layer |) Tj
+T*
+() Tj
+T*
+(Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Required Fix |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| dispatcher_candidate_not_authoritative | Pi cannot be marked live or authoritative. |) Tj
+T*
+(Install/prove Pi runtime and keep it in shadow mode until evaluated. |) Tj
+T*
+(| paperclip_auth_required_or_not_configured | Pi recommendations cannot be stored as Paperclip) Tj
+T*
+(issue comments/work products. | Configure Paperclip auth/session bridge and write adapter) Tj
+T*
+(behind Bridge Session. |) Tj
+T*
+(| no live Pi process proven | Pi cannot be called as a standalone runtime. | Install/prove Pi) Tj
+T*
+(service or CLI with auth and no-write smoke. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- Pi did not execute any action.) Tj
+T*
+(- Pi did not write a Paperclip record.) Tj
+T*
+(- Pi did not create or activate a mini-agent.) Tj
+T*
+(- Pi did not access secrets.) Tj
+T*
+(- Pi did not request root shell, Docker socket, SMB, Zapier, HeyGen, Drive, OneDrive, email,) Tj
+T*
+(or farmer execution.) Tj
+T*
+(- Agent Zero remains commander.) Tj
+T*
+(- Tony remains retired/archive only.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Agent Hub visibility | 80% | visible and protected |) Tj
+T*
+(| Shadow dispatcher route | 70% | advisory route works through Paperclip contract |) Tj
+T*
+(| Policy enforcement | 85% | no execution or writes |) Tj
+T*
+(| Recommendation persistence | 0% | blocked until Paperclip auth/session bridge |) Tj
+T*
+(| Live Pi runtime | 0% | not installed/proven |) Tj
+T*
+(| Pi overall | 45% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Pi runtime: **NO-GO live**.) Tj
+T*
+() Tj
+T*
+(Pi shadow dispatcher: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Exact next step: install or prove Pi runtime separately, then run no-write smoke and compare) Tj
+T*
+(Pi recommendations against Gateway route decisions before authorizing any stronger role.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002381 00000 n 
+0000002507 00000 n 
+0000004810 00000 n 
+0000004936 00000 n 
+0000004999 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+5048
+%%EOF

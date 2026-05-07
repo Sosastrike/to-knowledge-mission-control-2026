@@ -1,0 +1,257 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2306 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Paperclip Codex and Claude Auth Separation Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:07:23.842Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Paperclip Codex/Claude auth separation is **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(The production host has protected Codex and Claude auth homes present, and the Paperclip) Tj
+T*
+(sandbox source includes Codex and Claude adapter references. However, neither the Codex CLI) Tj
+T*
+(nor Claude CLI is available on the production PATH, so no safe no-write model smoke was) Tj
+T*
+(executed and no adapter is marked live.) Tj
+T*
+() Tj
+T*
+(Current Truth) Tj
+T*
+() Tj
+T*
+(| Area | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Paperclip role | Workforce Control Plane before OpenClaw+ |) Tj
+T*
+(| Codex CLI | Unavailable on production PATH |) Tj
+T*
+(| Codex auth home | Present, values not inspected |) Tj
+T*
+(| Claude CLI | Unavailable on production PATH |) Tj
+T*
+(| Claude auth hint | Present, values not inspected |) Tj
+T*
+(| Anthropic API key | Not present in checked runtime/config surfaces |) Tj
+T*
+(| API billing mode | Avoided by default |) Tj
+T*
+(| Paperclip Codex adapter reference | Found in sandbox source |) Tj
+T*
+(| Paperclip Claude adapter reference | Found in sandbox source |) Tj
+T*
+(| Safe Codex no-write smoke | Blocked: codex_cli_unavailable |) Tj
+T*
+(| Safe Claude no-write smoke | Blocked: claude_cli_unavailable |) Tj
+T*
+() Tj
+T*
+(Auth Separation Requirements) Tj
+T*
+() Tj
+T*
+(| Requirement | Status |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Do not mix Claude with Codex auth files | PASS, no combined route was used |) Tj
+T*
+(| Codex/ChatGPT account mode preferred | BLOCKED until Codex CLI is installed/proven |) Tj
+T*
+(| Claude Code OAuth/subscription mode preferred | BLOCKED until Claude CLI is installed/proven) Tj
+T*
+(|) Tj
+T*
+(| Do not use Anthropic API billing by default | PASS |) Tj
+T*
+(| Do not print auth file contents | PASS |) Tj
+T*
+(| Do not print tokens or keys | PASS |) Tj
+T*
+(| Do not modify .env | PASS |) Tj
+T*
+(| Do not commit secrets | PASS |) Tj
+T*
+() Tj
+T*
+(Paperclip Adapter Readiness) Tj
+T*
+() Tj
+T*
+(| Adapter | Source Reference | Runtime CLI | Auth Source | Live Smoke |) Tj
+T*
+(| --- | --- | --- | --- | --- |) Tj
+T*
+(| Codex / ChatGPT | present | missing | protected home present | blocked |) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2586 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(| Claude / Anthropic | present | missing | protected home hint present | blocked |) Tj
+T*
+() Tj
+T*
+(What This Means) Tj
+T*
+() Tj
+T*
+(Paperclip can be modeled as the workforce control layer and can hold references to Codex and) Tj
+T*
+(Claude adapters, but it cannot truthfully run those adapters yet. The next production step is) Tj
+T*
+(to install or expose the official Codex and Claude CLIs in the approved service PATH, then run) Tj
+T*
+(no-write smoke checks using account/OAuth auth, not API billing.) Tj
+T*
+() Tj
+T*
+(Exact Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Required Fix |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| codex_cli_unavailable | Paperclip cannot run a Codex no-write smoke. | Install or expose the) Tj
+T*
+(approved Codex CLI in the service PATH and verify account auth without printing secrets. |) Tj
+T*
+(| claude_cli_unavailable | Paperclip cannot run Claude Code OAuth/subscription smoke. |) Tj
+T*
+(Install or expose the approved Claude CLI in the service PATH and verify subscription/OAuth) Tj
+T*
+(auth without printing secrets. |) Tj
+T*
+(| paperclip_adapter_runtime_not_registered | Paperclip adapter references exist, but runtime) Tj
+T*
+(registration is not proven. | Register adapters only after CLI/auth smoke passes. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No auth files were printed.) Tj
+T*
+(- No token, API key, password, or secret value was printed.) Tj
+T*
+(- No .env file was modified.) Tj
+T*
+(- No external write was executed.) Tj
+T*
+(- No Anthropic API billing key was used.) Tj
+T*
+(- No Paperclip task/co-worker action was executed.) Tj
+T*
+(- No Zapier, HeyGen, SMB, or farmer action was executed.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Auth source discovery | 80% | protected homes detected without reading contents |) Tj
+T*
+(| Codex adapter source readiness | 55% | reference found, runtime CLI missing |) Tj
+T*
+(| Claude adapter source readiness | 55% | reference found, runtime CLI missing |) Tj
+T*
+(| Billing avoidance | 95% | API key not present in checked surfaces |) Tj
+T*
+(| Live no-write adapter proof | 0% | blocked until CLIs exist |) Tj
+T*
+(| Paperclip Codex/Claude auth phase | 48% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Paperclip Codex + Claude auth separation: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(No live adapter execution can be claimed until the Codex and Claude CLIs are installed or) Tj
+T*
+(exposed in the approved runtime PATH and safe no-write smoke checks pass.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 36 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002437 00000 n 
+0000002563 00000 n 
+0000005201 00000 n 
+0000005327 00000 n 
+0000005413 00000 n 
+0000005539 00000 n 
+0000005608 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+5657
+%%EOF

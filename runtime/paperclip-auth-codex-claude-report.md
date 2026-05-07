@@ -1,51 +1,84 @@
-# Paperclip Auth, Codex, and Claude Report
+# Paperclip Codex and Claude Auth Separation Proof
 
-Generated: 2026-05-07
+Generated: 2026-05-07T22:07:23.842Z
 
-## Executive Summary
+## Executive Result
 
-Paperclip auth and local model-agent adapters must remain separated from Mission Control secrets and production credentials. Codex/ChatGPT and Claude/Anthropic integrations are not to be mixed. Claude/Anthropic should use Claude Code OAuth/subscription auth, not Anthropic API key billing unless explicitly approved by the owner.
+Paperclip Codex/Claude auth separation is **PARTIAL GO**.
 
-Current status: planning/blocked for live Paperclip adapter auth. No Paperclip production secret store was configured in this phase.
+The production host has protected Codex and Claude auth homes present, and the Paperclip sandbox source includes Codex and Claude adapter references. However, neither the Codex CLI nor Claude CLI is available on the production PATH, so no safe no-write model smoke was executed and no adapter is marked live.
 
-## Codex / ChatGPT
+## Current Truth
 
-- Desired auth mode: existing protected Codex/ChatGPT account auth, not inline API keys.
-- Adapter target: Paperclip `codex_local` style adapter, after sandbox review.
-- Company-scoped auth home: planned, not activated in production.
-- Safe no-write Codex smoke through Paperclip: not proven in this closure block.
-- Status: blocked until Paperclip sandbox service/auth is running and a company-scoped adapter test is performed.
+| Area | Result |
+| --- | --- |
+| Paperclip role | Workforce Control Plane before OpenClaw+ |
+| Codex CLI | Unavailable on production PATH |
+| Codex auth home | Present, values not inspected |
+| Claude CLI | Unavailable on production PATH |
+| Claude auth hint | Present, values not inspected |
+| Anthropic API key | Not present in checked runtime/config surfaces |
+| API billing mode | Avoided by default |
+| Paperclip Codex adapter reference | Found in sandbox source |
+| Paperclip Claude adapter reference | Found in sandbox source |
+| Safe Codex no-write smoke | Blocked: codex_cli_unavailable |
+| Safe Claude no-write smoke | Blocked: claude_cli_unavailable |
 
-## Claude / Anthropic
+## Auth Separation Requirements
 
-- Required auth method: `claude_code_oauth`.
-- Claude Code path: auto-discover with `command -v claude` when running the auth setup phase.
-- Claude token/source: separate protected Claude auth/token source.
-- Anthropic API billing: disabled by default.
-- `ANTHROPIC_API_KEY`: check only as boolean when running setup; value must never be printed.
-- Safe no-write Claude smoke through Paperclip: not proven in this closure block.
-- Status: blocked until Claude OAuth/subscription auth is verified safely and Paperclip sandbox adapter is running.
+| Requirement | Status |
+| --- | --- |
+| Do not mix Claude with Codex auth files | PASS, no combined route was used |
+| Codex/ChatGPT account mode preferred | BLOCKED until Codex CLI is installed/proven |
+| Claude Code OAuth/subscription mode preferred | BLOCKED until Claude CLI is installed/proven |
+| Do not use Anthropic API billing by default | PASS |
+| Do not print auth file contents | PASS |
+| Do not print tokens or keys | PASS |
+| Do not modify .env | PASS |
+| Do not commit secrets | PASS |
 
-## Separation Rules
+## Paperclip Adapter Readiness
 
-- Codex keeps its own OAuth endpoint/auth source.
-- Claude/Anthropic must not reuse Codex auth files or Codex endpoint labels.
-- No auth files or token paths should appear in owner-facing UI.
-- No token or API key values may be printed, committed, or stored inline.
-- `.env` must not be modified unless explicitly approved.
-- API billing must not be enabled accidentally.
+| Adapter | Source Reference | Runtime CLI | Auth Source | Live Smoke |
+| --- | --- | --- | --- | --- |
+| Codex / ChatGPT | present | missing | protected home present | blocked |
+| Claude / Anthropic | present | missing | protected home hint present | blocked |
 
-## Paperclip Auth Status
+## What This Means
 
-- Owner login: not fully proven.
-- Bootstrap invite: sensitive and not included in reports.
-- Tailnet UI: previously reachable during sandbox run, currently inactive because Paperclip is not running.
-- Current blocker: `paperclip_sandbox_service_not_running`.
+Paperclip can be modeled as the workforce control layer and can hold references to Codex and Claude adapters, but it cannot truthfully run those adapters yet. The next production step is to install or expose the official Codex and Claude CLIs in the approved service PATH, then run no-write smoke checks using account/OAuth auth, not API billing.
 
-## Safe Next Step
+## Exact Blockers
 
-Restart Paperclip sandbox in local/Tailnet-only mode, configure auth callback/base URL safely, complete owner login, then run separate no-write Codex and Claude adapter smokes with secret values hidden.
+| Blocker | Impact | Required Fix |
+| --- | --- | --- |
+| codex_cli_unavailable | Paperclip cannot run a Codex no-write smoke. | Install or expose the approved Codex CLI in the service PATH and verify account auth without printing secrets. |
+| claude_cli_unavailable | Paperclip cannot run Claude Code OAuth/subscription smoke. | Install or expose the approved Claude CLI in the service PATH and verify subscription/OAuth auth without printing secrets. |
+| paperclip_adapter_runtime_not_registered | Paperclip adapter references exist, but runtime registration is not proven. | Register adapters only after CLI/auth smoke passes. |
 
-## No-Secrets Confirmation
+## Security Confirmation
 
-No API keys, tokens, auth files, `.env` contents, passwords, or secret values are included in this report.
+- No auth files were printed.
+- No token, API key, password, or secret value was printed.
+- No .env file was modified.
+- No external write was executed.
+- No Anthropic API billing key was used.
+- No Paperclip task/co-worker action was executed.
+- No Zapier, HeyGen, SMB, or farmer action was executed.
+
+## Completion Estimate
+
+| Component | Percent | Status |
+| --- | ---: | --- |
+| Auth source discovery | 80% | protected homes detected without reading contents |
+| Codex adapter source readiness | 55% | reference found, runtime CLI missing |
+| Claude adapter source readiness | 55% | reference found, runtime CLI missing |
+| Billing avoidance | 95% | API key not present in checked surfaces |
+| Live no-write adapter proof | 0% | blocked until CLIs exist |
+| Paperclip Codex/Claude auth phase | 48% | PARTIAL GO |
+
+## Final Decision
+
+Paperclip Codex + Claude auth separation: **PARTIAL GO**.
+
+No live adapter execution can be claimed until the Codex and Claude CLIs are installed or exposed in the approved runtime PATH and safe no-write smoke checks pass.

@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  buildPaperclipBoardApprovalPlan,
   buildPaperclipGatewayRecordMapping,
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipSandboxHeartbeatPlan,
   buildPaperclipTokenGovernorPlan,
+  PAPERCLIP_BOARD_APPROVAL_ACTIONS,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
   PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES,
@@ -971,6 +973,93 @@ describe('Paperclip bridge payloads', () => {
   })
 
 
+
+
+  it('requires board approval for co-worker hiring and protected external actions while logging Paperclip and Gateway results', () => {
+    const plan = buildPaperclipBoardApprovalPlan({
+      generatedAt: GENERATED_AT,
+      approvals: PAPERCLIP_BOARD_APPROVAL_ACTIONS.map((action) => ({
+        action,
+        approvalState: 'approved',
+        requestedBy: action === 'co_worker_hire' ? 'agent_zero' : 'owner_board',
+        expiresAt: '2026-05-07T00:00:00.000Z',
+      })),
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      mode: 'paperclip_board_approval_dry_run',
+      required_actions: [...PAPERCLIP_BOARD_APPROVAL_ACTIONS],
+      paperclip_results_logged: true,
+      gateway_results_logged: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.decisions.map((decision) => decision.action)).toEqual([...PAPERCLIP_BOARD_APPROVAL_ACTIONS])
+    expect(plan.decisions.every((decision) => decision.board_approval_required && decision.paperclip_result_logged && decision.gateway_result_logged)).toBe(true)
+    expect(plan.decisions.every((decision) => decision.approval_result === 'approved' && decision.policy_result === 'requires_session')).toBe(true)
+    expect(plan.decisions.every((decision) => decision.execution_allowed === false && decision.execution_enabled === false && decision.writes_enabled === false)).toBe(true)
+    expect(plan.decisions.find((decision) => decision.action === 'drive_upload')).toMatchObject({ required_scope: 'google_drive.upload', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'onedrive_upload')).toMatchObject({ required_scope: 'onedrive.upload', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'agentmail_send')).toMatchObject({ required_scope: 'agentmail.send', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'buildwiki_run_now')).toMatchObject({ required_scope: 'buildwiki.run_now', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'zapier_write')).toMatchObject({ required_scope: 'zapier.write', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'heygen_generation')).toMatchObject({ required_scope: 'heygen.generate', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'smb_fork2')).toMatchObject({ required_scope: 'smb.fork2', external_write: true })
+    expect(plan.decisions.find((decision) => decision.action === 'co_worker_hire')).toMatchObject({ required_scope: 'paperclip.coworker.hire', external_write: false })
+    expect(plan.decisions.flatMap((decision) => decision.audit_log.map((entry) => entry.event))).toEqual(expect.arrayContaining([
+      'paperclip_board_approval_result_logged',
+      'gateway_board_approval_result_logged',
+    ]))
+    expectOwnerSafe(plan)
+  })
+
+  it('blocks denied, pending, unknown, and expired board approvals before execution', () => {
+    const plan = buildPaperclipBoardApprovalPlan({
+      generatedAt: GENERATED_AT,
+      approvals: [
+        { action: 'agentmail_send', approvalState: 'denied', expiresAt: '2026-05-07T00:00:00.000Z' },
+        { action: 'zapier_write', approvalState: 'pending', expiresAt: '2026-05-07T00:00:00.000Z' },
+        { action: 'mystery_action', approvalState: 'approved', expiresAt: '2026-05-07T00:00:00.000Z' },
+        { action: 'buildwiki_run_now', approvalState: 'approved', expiresAt: '2026-05-05T00:00:00.000Z' },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: false,
+      blocked: expect.any(Array),
+      expired: [expect.objectContaining({ action: 'buildwiki_run_now', approval_result: 'expired' })],
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(plan.blocked.map((decision) => decision.approval_result)).toEqual(['denied', 'pending', 'unknown_action', 'expired'])
+    expect(plan.decisions.find((decision) => decision.action === 'agentmail_send')).toMatchObject({
+      policy_result: 'blocked',
+      blocked_reason: 'paperclip_board_approval_denied',
+      execution_allowed: false,
+    })
+    expect(plan.decisions.find((decision) => decision.action === 'zapier_write')).toMatchObject({
+      policy_result: 'blocked',
+      blocked_reason: 'paperclip_board_approval_pending',
+      execution_allowed: false,
+    })
+    expect(plan.decisions.find((decision) => decision.action === 'unknown')).toMatchObject({
+      policy_result: 'blocked',
+      blocked_reason: 'paperclip_board_approval_action_unknown',
+      execution_allowed: false,
+    })
+    expect(plan.decisions.find((decision) => decision.action === 'buildwiki_run_now')).toMatchObject({
+      expired: true,
+      policy_result: 'blocked',
+      blocked_reason: 'paperclip_board_approval_expired',
+      execution_allowed: false,
+    })
+    expect(plan.decisions.every((decision) => decision.paperclip_result_logged && decision.gateway_result_logged)).toBe(true)
+    expectOwnerSafe(plan)
+  })
 
   it('imports Gateway Token Governor budgets into Paperclip across company, agent, project, goal, and model provider scopes', () => {
     const plan = buildPaperclipTokenGovernorPlan({

@@ -842,6 +842,88 @@ export type PaperclipTokenGovernorPlan = {
 }
 
 
+
+export const PAPERCLIP_BOARD_APPROVAL_ACTIONS = [
+  'co_worker_hire',
+  'external_write',
+  'drive_upload',
+  'onedrive_upload',
+  'agentmail_send',
+  'buildwiki_run_now',
+  'zapier_write',
+  'heygen_generation',
+  'smb_fork2',
+] as const
+
+export type PaperclipBoardApprovalAction = (typeof PAPERCLIP_BOARD_APPROVAL_ACTIONS)[number]
+export type PaperclipBoardApprovalState = 'pending' | 'approved' | 'denied'
+export type PaperclipBoardApprovalResult = PaperclipBoardApprovalState | 'expired' | 'unknown_action'
+
+export type PaperclipBoardApprovalInput = {
+  action?: string | null
+  title?: string | null
+  requestedBy?: string | null
+  approvalState?: string | null
+  scope?: string | null
+  requestedAt?: string | null
+  expiresAt?: string | null
+}
+
+export type PaperclipBoardApprovalDecision = {
+  action: PaperclipBoardApprovalAction | 'unknown'
+  title: string
+  requested_by: string
+  requested_at: string
+  expires_at: string | null
+  evaluated_at: string
+  required_scope: string | null
+  board_approval_required: true
+  approval_state: PaperclipBoardApprovalState | 'unknown'
+  approval_result: PaperclipBoardApprovalResult
+  expired: boolean
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  paperclip_result_logged: true
+  gateway_result_logged: true
+  execution_allowed: false
+  execution_enabled: false
+  writes_enabled: false
+  external_write: boolean
+  audit_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+}
+
+export type PaperclipBoardApprovalPlanInput = {
+  generatedAt: string
+  approvals: PaperclipBoardApprovalInput[]
+}
+
+export type PaperclipBoardApprovalPlan = {
+  ok: boolean
+  mode: 'paperclip_board_approval_dry_run'
+  generated_at: string
+  required_actions: PaperclipBoardApprovalAction[]
+  decisions: PaperclipBoardApprovalDecision[]
+  approved: PaperclipBoardApprovalDecision[]
+  blocked: PaperclipBoardApprovalDecision[]
+  expired: PaperclipBoardApprovalDecision[]
+  paperclip_results_logged: true
+  gateway_results_logged: true
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
   | { ok: false; status: number; blocker: string }
@@ -2008,6 +2090,97 @@ export function buildPaperclipTokenGovernorPlan(input: PaperclipTokenGovernorPla
 }
 
 
+
+type PaperclipBoardApprovalActionProfile = {
+  action: PaperclipBoardApprovalAction
+  title: string
+  scope: string | null
+  externalWrite: boolean
+}
+
+const PAPERCLIP_BOARD_APPROVAL_ACTION_PROFILES: Record<PaperclipBoardApprovalAction, PaperclipBoardApprovalActionProfile> = {
+  co_worker_hire: {
+    action: 'co_worker_hire',
+    title: 'Hire Paperclip co-worker agent',
+    scope: 'paperclip.coworker.hire',
+    externalWrite: false,
+  },
+  external_write: {
+    action: 'external_write',
+    title: 'Generic external write',
+    scope: 'external.write',
+    externalWrite: true,
+  },
+  drive_upload: {
+    action: 'drive_upload',
+    title: 'Google Drive upload',
+    scope: 'google_drive.upload',
+    externalWrite: true,
+  },
+  onedrive_upload: {
+    action: 'onedrive_upload',
+    title: 'OneDrive upload',
+    scope: 'onedrive.upload',
+    externalWrite: true,
+  },
+  agentmail_send: {
+    action: 'agentmail_send',
+    title: 'AgentMail send',
+    scope: 'agentmail.send',
+    externalWrite: true,
+  },
+  buildwiki_run_now: {
+    action: 'buildwiki_run_now',
+    title: 'Build-Wiki Run Now',
+    scope: 'buildwiki.run_now',
+    externalWrite: true,
+  },
+  zapier_write: {
+    action: 'zapier_write',
+    title: 'Zapier write',
+    scope: 'zapier.write',
+    externalWrite: true,
+  },
+  heygen_generation: {
+    action: 'heygen_generation',
+    title: 'HeyGen generation',
+    scope: 'heygen.generate',
+    externalWrite: true,
+  },
+  smb_fork2: {
+    action: 'smb_fork2',
+    title: 'SMB / Fork 2',
+    scope: 'smb.fork2',
+    externalWrite: true,
+  },
+}
+
+export function buildPaperclipBoardApprovalPlan(input: PaperclipBoardApprovalPlanInput): PaperclipBoardApprovalPlan {
+  const decisions = input.approvals.map((approval) => buildPaperclipBoardApprovalDecision(approval, input.generatedAt))
+  const approved = decisions.filter((decision) => decision.approval_result === 'approved')
+  const expired = decisions.filter((decision) => decision.expired)
+  const blocked = decisions.filter((decision) => decision.approval_result !== 'approved')
+
+  return {
+    ok: blocked.length === 0,
+    mode: 'paperclip_board_approval_dry_run',
+    generated_at: input.generatedAt,
+    required_actions: [...PAPERCLIP_BOARD_APPROVAL_ACTIONS],
+    decisions,
+    approved,
+    blocked,
+    expired,
+    paperclip_results_logged: true,
+    gateway_results_logged: true,
+    owner_visible_summary: 'Paperclip and Gateway board approval results are logged in dry-run mode. Execution remains disabled until approval is active, Bridge Session scope exists, and a safe adapter is configured.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -2483,6 +2656,87 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
+}
+
+function buildPaperclipBoardApprovalDecision(input: PaperclipBoardApprovalInput, generatedAt: string): PaperclipBoardApprovalDecision {
+  const action = normalizePaperclipBoardApprovalAction(input.action)
+  const profile = action ? PAPERCLIP_BOARD_APPROVAL_ACTION_PROFILES[action] : null
+  const title = sanitizeOwnerText(input.title || profile?.title || 'Unknown Paperclip board approval').slice(0, 180) || 'Unknown Paperclip board approval'
+  const requestedBy = normalizePaperclipApprovalActor(input.requestedBy)
+  const requestedAt = sanitizeOwnerText(input.requestedAt || generatedAt) || generatedAt
+  const expiresAt = sanitizeOwnerText(input.expiresAt || '') || null
+  const approvalState = normalizePaperclipBoardApprovalState(input.approvalState)
+  const expired = Boolean(expiresAt && Date.parse(expiresAt) <= Date.parse(generatedAt))
+  const approvalResult: PaperclipBoardApprovalResult = !action
+    ? 'unknown_action'
+    : expired
+      ? 'expired'
+      : approvalState
+  const blockedReason = !action
+    ? 'paperclip_board_approval_action_unknown'
+    : expired
+      ? 'paperclip_board_approval_expired'
+      : approvalState === 'denied'
+        ? 'paperclip_board_approval_denied'
+        : approvalState === 'pending'
+          ? 'paperclip_board_approval_pending'
+          : null
+  const policyResult: PaperclipTaskPolicyResult = blockedReason ? 'blocked' : 'requires_session'
+
+  return {
+    action: action || 'unknown',
+    title,
+    requested_by: requestedBy,
+    requested_at: requestedAt,
+    expires_at: expiresAt,
+    evaluated_at: generatedAt,
+    required_scope: sanitizeOwnerText(input.scope || profile?.scope || '') || null,
+    board_approval_required: true,
+    approval_state: approvalState,
+    approval_result: approvalResult,
+    expired,
+    policy_result: policyResult,
+    blocked_reason: blockedReason || 'active_bridge_session_and_safe_adapter_required_after_board_approval',
+    paperclip_result_logged: true,
+    gateway_result_logged: true,
+    execution_allowed: false,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_write: Boolean(profile?.externalWrite),
+    audit_log: [
+      handoffAuditEvent('paperclip_board_approval_result_logged', requestedBy, 'paperclip', 'recorded'),
+      handoffAuditEvent('gateway_board_approval_result_logged', 'gateway', profile?.scope || 'paperclip', blockedReason ? 'blocked' : 'recorded'),
+    ],
+  }
+}
+
+function normalizePaperclipBoardApprovalAction(value: unknown): PaperclipBoardApprovalAction | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'coworker_hire' || text === 'co_worker_hire' || text === 'hire_coworker' || text === 'hire_co_worker') return 'co_worker_hire'
+  if (text === 'external_write') return 'external_write'
+  if (text === 'drive_upload' || text === 'google_drive_upload' || text === 'googledrive_upload') return 'drive_upload'
+  if (text === 'onedrive_upload' || text === 'one_drive_upload') return 'onedrive_upload'
+  if (text === 'agentmail_send' || text === 'agent_mail_send' || text === 'email_send') return 'agentmail_send'
+  if (text === 'buildwiki_run_now' || text === 'build_wiki_run_now') return 'buildwiki_run_now'
+  if (text === 'zapier_write') return 'zapier_write'
+  if (text === 'heygen_generation' || text === 'heygen_generate') return 'heygen_generation'
+  if (text === 'smb_fork2' || text === 'smb_fork_2' || text === 'fork2_smb') return 'smb_fork2'
+  if (PAPERCLIP_BOARD_APPROVAL_ACTIONS.includes(text as PaperclipBoardApprovalAction)) return text as PaperclipBoardApprovalAction
+  return null
+}
+
+function normalizePaperclipBoardApprovalState(value: unknown): PaperclipBoardApprovalState {
+  const text = normalizePaperclipSlug(value || 'pending')
+  if (text === 'approved' || text === 'approve') return 'approved'
+  if (text === 'denied' || text === 'deny' || text === 'rejected' || text === 'reject') return 'denied'
+  return 'pending'
+}
+
+function normalizePaperclipApprovalActor(value: unknown): string {
+  const actor = normalizePaperclipSlug(value || 'owner_board')
+  if (actor === 'agentzero') return 'agent_zero'
+  if (actor === 'spaceagent') return 'space_agent'
+  return actor || 'owner_board'
 }
 
 function normalizePaperclipTokenGovernorScope(value: unknown): PaperclipTokenGovernorBudgetScope | null {

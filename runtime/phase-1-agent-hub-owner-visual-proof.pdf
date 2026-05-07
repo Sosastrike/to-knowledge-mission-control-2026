@@ -1,0 +1,299 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2734 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Phase 1 - Owner-Authenticated Agent Hub Visual Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:29:29.049Z) Tj
+T*
+() Tj
+T*
+(Phase Result) Tj
+T*
+() Tj
+T*
+(**BLOCKED / PARTIAL.** The production API and Playwright MCP browser smoke confirm the updated) Tj
+T*
+(SpaceAgent Browser Automation truth is present, but I cannot truthfully mark) Tj
+T*
+(owner-authenticated visual proof complete because Codex does not have an owner-authenticated) Tj
+T*
+(browser session available. Exact blocker: `owner_authenticated_browser_session_required`.) Tj
+T*
+() Tj
+T*
+(I did not read or reuse an owner session token directly. A live session may exist, but using a) Tj
+T*
+(session token from storage would be unsafe and would violate the no direct secret/session) Tj
+T*
+(handling rule.) Tj
+T*
+() Tj
+T*
+(Required Visual Checks) Tj
+T*
+() Tj
+T*
+(| Required Check | Result | Evidence |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Open Mission Control as owner | BLOCKED | owner_authenticated_browser_session_required |) Tj
+T*
+(| Open Gateway | BLOCKED | requires owner browser session |) Tj
+T*
+(| Open Agent Hub / Control Center | BLOCKED visually | route exists; page redirects to login) Tj
+T*
+(without session |) Tj
+T*
+(| Open SpaceAgent panel | BLOCKED visually | API detail route returns SpaceAgent data |) Tj
+T*
+(| Browser Automation section visible | PARTIAL | API route returns browser automation truth |) Tj
+T*
+(| Playwright MCP green / connected local-only | PASS via API | Playwright smoke passed;) Tj
+T*
+(service connected_local_only |) Tj
+T*
+(| Firecrawl red / blocked | PASS via API | Firecrawl card blocker is) Tj
+T*
+(firecrawl_credential_required |) Tj
+T*
+(| YouTube Research yellow / limited | PASS via API | YouTube card blocker is) Tj
+T*
+(youtube_transcript_connector_not_proven |) Tj
+T*
+(| Interactive/browser/auth/form/upload actions gated | PASS via API | all gated buttons) Tj
+T*
+(require Bridge Session |) Tj
+T*
+(| No secrets/raw paths/fake buttons | PASS via API smoke | no unsafe values observed in route) Tj
+T*
+(payloads |) Tj
+T*
+() Tj
+T*
+(Production Route Proof) Tj
+T*
+() Tj
+T*
+(| Route | Result | Notes |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| /api/gateway/agent-hub/status | 200 authenticated | 5 agents visible |) Tj
+T*
+(| /api/gateway/agent-hub/agents/spaceagent | 200 authenticated | role: Browser / Firecrawl /) Tj
+T*
+(YouTube Research Specialist |) Tj
+T*
+(| /api/gateway/nodes/playwright-mcp | 200 authenticated | read_only, interactive action) Tj
+T*
+(requires Bridge Session |) Tj
+T*
+(| /api/gateway/space-agent/browser/status | 200 authenticated | Browser Automation truth) Tj
+T*
+(surface present |) Tj
+T*
+(| /api/gateway/space-agent/playwright-mcp/evidence | 200 authenticated | evidence index) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2556 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(present; persistence pending |) Tj
+T*
+(| /api/bridge/playwright-mcp/smoke | 200 authenticated | screenshot_available=true,) Tj
+T*
+(snapshot_available=true |) Tj
+T*
+(| /gateway/agent-hub without session | 307 redirect to /login | page protection works |) Tj
+T*
+(| /api/gateway/agent-hub/status without auth | 401 | API protection works |) Tj
+T*
+() Tj
+T*
+(Browser Automation Card Truth) Tj
+T*
+() Tj
+T*
+(| Card | UI Truth From API | Correct Owner-Facing State |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Playwright MCP | installed=true, configured=true, connected=true,) Tj
+T*
+(status=connected_local_only, tone=green | GO local-only read-only |) Tj
+T*
+(| Firecrawl | installed=false, configured=false, connected=false, status=blocked, tone=red |) Tj
+T*
+(blocked until credential/live adapter |) Tj
+T*
+(| YouTube Research | installed=true, configured=false, connected=false,) Tj
+T*
+(status=limited_pending, tone=yellow | limited until transcript connector is proven |) Tj
+T*
+() Tj
+T*
+(Button Truth) Tj
+T*
+() Tj
+T*
+(| Button Group | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Check Playwright MCP status | enabled, real route |) Tj
+T*
+(| Open last browser evidence packet | enabled, real route |) Tj
+T*
+(| Run Mission Control UI smoke | enabled, real route |) Tj
+T*
+(| Start browser session | disabled / requires Bridge Session |) Tj
+T*
+(| Interactive browser action | disabled / requires Bridge Session |) Tj
+T*
+(| Authenticated browsing | disabled / requires Bridge Session |) Tj
+T*
+(| Submit form | disabled / requires Bridge Session |) Tj
+T*
+(| Upload file | disabled / requires Bridge Session |) Tj
+T*
+() Tj
+T*
+(Screenshot / Browser Smoke Evidence) Tj
+T*
+() Tj
+T*
+(The production Playwright MCP smoke route returned `screenshot_available=true` and) Tj
+T*
+(`snapshot_available=true` against the Mission Control login surface. This is supporting) Tj
+T*
+(browser smoke evidence only. It does not satisfy the owner-authenticated visual proof) Tj
+T*
+(requirement because no owner browser session was available to Codex.) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No secrets were printed.) Tj
+T*
+(- No API keys, tokens, auth files, or session tokens were printed or reused.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- No auth weakening occurred.) Tj
+T*
+(- No public local service exposure occurred.) Tj
+T*
+(- No external writes, Zapier writes, HeyGen generation, SMB/Fork 2, or farmer execution) Tj
+T*
+(occurred.) Tj
+T*
+(- OpenClaw+ naming remains correct; no OpenCloud architecture label was introduced.) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1007 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Phase 1 Decision) Tj
+T*
+() Tj
+T*
+(**Phase 1 is not fully complete.** API/backend truth and browser smoke passed, but) Tj
+T*
+(owner-authenticated visual proof remains blocked by) Tj
+T*
+(`owner_authenticated_browser_session_required`.) Tj
+T*
+() Tj
+T*
+(Updated Status) Tj
+T*
+() Tj
+T*
+(| System | Status | Percent |) Tj
+T*
+(| --- | --- | ---: |) Tj
+T*
+(| Gateway / Agent Hub | PARTIAL GO | 72% |) Tj
+T*
+(| SpaceAgent Browser Automation | PARTIAL GO | 66% |) Tj
+T*
+(| Playwright MCP | GO local-only read-only | 90% |) Tj
+T*
+(| Firecrawl | BLOCKED | 25% |) Tj
+T*
+(| YouTube Research | LIMITED | 45% |) Tj
+T*
+() Tj
+T*
+(Exact Next Step) Tj
+T*
+() Tj
+T*
+(Have the owner open Mission Control in an authenticated browser session, then rerun the visual) Tj
+T*
+(check on Gateway -> Agent Hub -> SpaceAgent. Until that browser session is available, continue) Tj
+T*
+(with Phase 2 Firecrawl credential/read-only adapter proof because it does not require owner) Tj
+T*
+(browser interaction.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002865 00000 n 
+0000002991 00000 n 
+0000005599 00000 n 
+0000005725 00000 n 
+0000006784 00000 n 
+0000006910 00000 n 
+0000006979 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+7028
+%%EOF

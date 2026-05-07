@@ -215,6 +215,26 @@ function fakeEcosystemContext() {
         notes: 'Domain restricted.',
       },
       {
+        id: 'paperclip',
+        name: 'Paperclip Workforce Control Plane',
+        category: 'automation',
+        status: 'blocked',
+        credential_present: false,
+        missing_credential: false,
+        credential_names: [],
+        credential_values_exposed: false,
+        read_only: true,
+        write_enabled: false,
+        requires_bridge_session: true,
+        execution_enabled: false,
+        direct_access: false,
+        proxy_access: true,
+        tool_count: null,
+        source: 'mission_control_paperclip_bridge',
+        blocked_reason: 'paperclip_service_not_configured',
+        notes: 'Hermes can draft Paperclip proposals; storage requires Bridge Session and write adapter.',
+      },
+      {
         id: 'telegram',
         name: 'Telegram',
         category: 'messaging',
@@ -399,7 +419,15 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.bridge_mcp.mcp_servers[0]).toMatchObject({ name: 'zapier', schema_available: true, execution_enabled: false })
     expect(context.bridge_mcp.endpoint_summaries[0].endpoint).toBe('/api/mcp/servers/zapier/tools')
     expect(context.models.providers.map((provider) => provider.id)).toEqual(expect.arrayContaining(['openrouter', 'openai', 'anthropic', 'codex_chatgpt', 'ollama', 'nvidia', 'groq', 'gemini']))
-    expect(context.integrations.registry.map((item) => item.id)).toEqual(expect.arrayContaining(['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'buildwiki_farmer', 'opencloud_direct']))
+    expect(context.integrations.registry.map((item) => item.id)).toEqual(expect.arrayContaining(['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'buildwiki_farmer', 'opencloud_direct', 'paperclip']))
+    expect(context.paperclip).toMatchObject({
+      hermes_can_see_skills_task_registry: true,
+      paperclip_task_registry_endpoint: '/api/bridge/paperclip/tasks',
+      paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals',
+      can_activate_execution: false,
+      agent_zero_review_required: true,
+      writes_enabled: false,
+    })
     expect(context.tools.registry[0].execution_enabled).toBe(false)
     expect(context.buildwiki_opencloud.run_now_target_service).toBe('opencloud-docs-farmer.service')
     expect(context.buildwiki_opencloud.direct_opencloud_access_visible).toBe(false)
@@ -592,6 +620,23 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(result.response_text).toContain('Direct OpenCloud access is not proven')
     expect(result.response_text).toContain('opencloud-docs-farmer.service')
     expect(result.response_text).toContain('No farmer execution occurred')
+    expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
+  })
+
+
+  it('answers Paperclip proposal prompts as Hermes planning-only work', async () => {
+    const result = await sendHermesReadOnlyMessage({
+      ownerMessage: 'Can Hermes see Paperclip skills/task registry and draft a mini-agent spec or routine?',
+      context: fakeEcosystemContext(),
+    })
+
+    expect(result.response_text).toContain('Hermes can see the Paperclip registry for skills and tasks')
+    expect(result.response_text).toContain('workflow templates')
+    expect(result.response_text).toContain('mini-agent specs')
+    expect(result.response_text).toContain('Agent Zero/Gateway approval')
+    expect(result.response_text).toContain('Bridge Session')
+    expect(result.execution_enabled).toBe(false)
+    expect(result.writes_enabled).toBe(false)
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
   })
 

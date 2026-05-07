@@ -846,6 +846,14 @@ describe('Gateway registry API model', () => {
       policy_result: { route_decision: 'allowed', requires_bridge_session: false },
       execution_mode: 'read_only',
     })
+    expect(flowMap.get('flow_hermes_gateway_agent_zero_paperclip_proposal')).toMatchObject({
+      source: 'hermes',
+      target: 'paperclip',
+      requested_action: 'paperclip_proposal_document',
+      selected_route: { hops: ['hermes', 'gateway', 'agent_zero', 'paperclip'] },
+      policy_result: { route_decision: 'blocked', requires_bridge_session: true },
+      execution_mode: 'bridge_session',
+    })
     expect(flowMap.get('flow_agent_zero_gateway_openclaw_skill')).toMatchObject({
       source: 'agent_zero',
       target: 'openclaw_plus',

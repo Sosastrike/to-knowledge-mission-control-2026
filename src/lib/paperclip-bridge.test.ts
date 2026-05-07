@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   buildPaperclipGatewayTaskPayload,
+  buildPaperclipHermesProposalPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
   listPaperclipAgents,
@@ -247,6 +248,67 @@ describe('Paperclip bridge payloads', () => {
       writes_enabled: false,
     })
     expectOwnerSafe(payload)
+  })
+
+
+  it('lets Hermes draft Paperclip workflow, mini-agent, routine, and skill proposals without storing work products', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse([{ id: 'company-1', name: 'To Knowledge Gateway' }])
+      if (url.endsWith('/api/companies/company-1/agents')) return jsonResponse({ agents: [] })
+      if (url.endsWith('/api/companies/company-1/issues')) return jsonResponse({ issues: [] })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const proposal = await buildPaperclipHermesProposalPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      proposalKind: 'mini-agent',
+      title: 'Email triage mini-agent spec with API_KEY=sample-redacted-input',
+      objective: 'Draft a mini-agent that triages allowed-domain email for Agent Zero.',
+      miniAgentScope: ['Read current registry', 'Return plan only'],
+    })
+
+    expect(proposal).toMatchObject({
+      mode: 'paperclip_hermes_proposal_handoff',
+      requester: 'hermes',
+      selected_route: ['hermes', 'gateway', 'agent_zero', 'paperclip'],
+      proposal_kind: 'mini_agent_spec',
+      hermes_can_see_paperclip_registry: true,
+      paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals',
+      design_authority: {
+        can_design_workflow_task_template: true,
+        can_propose_mini_agent_spec: true,
+        can_draft_paperclip_routine: true,
+        can_create_skill_proposal_document: true,
+        can_activate_execution: false,
+      },
+      storage: {
+        paperclip_issue_recorded: false,
+        work_product_recorded: false,
+        issue_id: null,
+        work_product_id: null,
+        blocked_reason: 'active_bridge_session_and_paperclip_write_adapter_required_for_issue_or_work_product_storage',
+      },
+      review: {
+        agent_zero_review_required: true,
+        owner_approval_required_if_protected_action: true,
+        hermes_final_authority: false,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(proposal.proposal.mini_agent_spec.parent_supervisor).toBe('agent_zero')
+    expect(proposal.proposal.mini_agent_spec.forbidden_tools).toEqual(expect.arrayContaining(['raw_shell', 'docker_socket', 'direct_secret_read']))
+    expect(proposal.gateway_audit_log.map((entry) => entry.event)).toEqual([
+      'hermes_read_paperclip_registry',
+      'hermes_drafted_paperclip_proposal',
+      'paperclip_issue_or_work_product_storage_blocked_until_session_and_adapter',
+      'agent_zero_review_required',
+    ])
+    expect(proposal.gateway_audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(proposal)
   })
 
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {

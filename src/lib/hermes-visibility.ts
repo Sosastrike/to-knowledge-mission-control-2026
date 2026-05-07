@@ -178,6 +178,7 @@ const REQUIRED_INTEGRATIONS: Array<{
   { id: 'whatsapp', name: 'WhatsApp', aliases: ['whatsapp', 'whats_app'], category: 'messaging', notes: 'Visible only if configured in registry.' },
   { id: 'codex_chatgpt', name: 'Codex/ChatGPT plugin', aliases: ['codex', 'chatgpt'], category: 'developer', notes: 'Plugin status only; auth values are never exposed.' },
   { id: 'claude_anthropic', name: 'Claude/Anthropic plugin', aliases: ['claude', 'anthropic'], category: 'developer', notes: 'Connected only if Claude plugin/auth source is configured.' },
+  { id: 'paperclip', name: 'Paperclip Workforce Control Plane', aliases: ['paperclip', 'workforce'], category: 'workforce', notes: 'Hermes can see Paperclip task/skills registry and draft proposals; issue/work-product writes require Agent Zero/Gateway Bridge Session.' },
 ]
 
 function statesFor(input: {
@@ -533,7 +534,7 @@ function capabilityLine(item: Pick<HermesIntegrationContext | HermesModelContext
 }
 
 export function summarizeHermesIntegrations(visibility: HermesIntegrationsVisibility): string {
-  const featured = ['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'telegram', 'whatsapp', 'codex_chatgpt', 'claude_anthropic', 'buildwiki_farmer', 'opencloud_direct']
+  const featured = ['agentmail', 'firecrawl', 'google_drive', 'onedrive', 'zapier', 'heygen', 'telegram', 'whatsapp', 'codex_chatgpt', 'claude_anthropic', 'buildwiki_farmer', 'opencloud_direct', 'paperclip']
     .map((id) => visibility.registry.find((item) => item.id === id))
     .filter((item): item is HermesIntegrationContext => Boolean(item))
     .map(capabilityLine)

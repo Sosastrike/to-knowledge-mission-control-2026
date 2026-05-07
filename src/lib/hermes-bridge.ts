@@ -60,6 +60,25 @@ export type HermesReadOnlyContext = {
   models: HermesModelsVisibility
   tools: HermesToolVisibility
   integrations: HermesIntegrationsVisibility
+  paperclip: {
+    visible: boolean
+    status: string
+    paperclip_status_endpoint: '/api/bridge/paperclip/status'
+    paperclip_task_registry_endpoint: '/api/bridge/paperclip/tasks'
+    paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals'
+    hermes_can_see_skills_task_registry: boolean
+    can_design_workflow_task_template: true
+    can_propose_mini_agent_spec: true
+    can_draft_paperclip_routine: true
+    can_create_skill_proposal_document: true
+    can_activate_execution: false
+    issue_storage_requires_bridge_session: true
+    work_product_storage_requires_bridge_session: true
+    agent_zero_review_required: true
+    blocker: string | null
+    execution_enabled: false
+    writes_enabled: false
+  }
   buildwiki_opencloud: HermesBuildWikiOpenCloudVisibility
   agents: {
     agent_zero: {
@@ -276,6 +295,7 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
   const modelVisibility = buildHermesModelsVisibility(context)
   const toolVisibility = buildHermesToolVisibility(context)
   const integrationVisibility = buildHermesIntegrationsVisibility(context)
+  const paperclipIntegration = integrationVisibility.registry.find((item) => item.id === 'paperclip')
   const buildWikiOpenCloudVisibility = buildHermesBuildWikiOpenCloudVisibility(context)
   const payload: HermesReadOnlyContext = {
     mode: 'hermes_mission_control_read_only_context',
@@ -296,6 +316,25 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
     models: modelVisibility,
     tools: toolVisibility,
     integrations: integrationVisibility,
+    paperclip: {
+      visible: Boolean(paperclipIntegration),
+      status: paperclipIntegration?.status || 'blocked',
+      paperclip_status_endpoint: '/api/bridge/paperclip/status',
+      paperclip_task_registry_endpoint: '/api/bridge/paperclip/tasks',
+      paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals',
+      hermes_can_see_skills_task_registry: true,
+      can_design_workflow_task_template: true,
+      can_propose_mini_agent_spec: true,
+      can_draft_paperclip_routine: true,
+      can_create_skill_proposal_document: true,
+      can_activate_execution: false,
+      issue_storage_requires_bridge_session: true,
+      work_product_storage_requires_bridge_session: true,
+      agent_zero_review_required: true,
+      blocker: paperclipIntegration?.blocked_reason || 'paperclip_write_adapter_requires_bridge_session',
+      execution_enabled: false,
+      writes_enabled: false,
+    },
     buildwiki_opencloud: buildWikiOpenCloudVisibility,
     agents: {
       agent_zero: {
@@ -428,6 +467,18 @@ export function buildHermesReadOnlyContractReply(input: {
       ? 'Yes, Sir. I can see Mission Control through the read-only Bridge context, and execution is disabled.'
       : 'No, Sir. Hermes cannot answer live through Mission Control yet; Mission Control prepared the read-only context, but the safe Hermes chat adapter is not configured.'
   }
+  if (/paperclip|workforce|task\s+registry|mini[-\s]?agent\s+spec|routine|work\s+product/i.test(message)) {
+    const paperclip = input.context.paperclip
+    return [
+      paperclip.visible
+        ? `Yes, Sir. Hermes can see the Paperclip registry for skills and tasks through Gateway; Paperclip status is ${paperclip.status}.`
+        : `Sir, Hermes can see the Paperclip route contract, but live Paperclip registry status is blocked: ${(paperclip.blocker || 'paperclip not visible').replace(/[_-]+/g, ' ')}.`,
+      'Hermes can design workflow templates, task templates, mini-agent specs, Paperclip routines, and skill proposal documents for Agent Zero review.',
+      'Hermes cannot activate execution, create Paperclip issues, or store work products without Agent Zero/Gateway approval, Bridge Session scope, and a configured Paperclip write adapter.',
+      `Proposal route: ${paperclip.paperclip_proposals_endpoint}.`,
+    ].join(' ')
+  }
+
   if (/workflow\s+plan|workflow\s+design|create.*workflow|operational\s+plan/i.test(message)) {
     return [
       'Yes, Sir. Hermes can design workflow plans for Agent Zero without executing anything.',

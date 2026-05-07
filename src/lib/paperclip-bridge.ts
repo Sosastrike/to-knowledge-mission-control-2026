@@ -23,6 +23,7 @@ export type PaperclipSafeStatusPayload = {
   agents_endpoint: '/api/bridge/paperclip/agents'
   issues_endpoint: '/api/bridge/paperclip/issues'
   test_task_endpoint: '/api/bridge/paperclip/test-chat'
+  proposals_endpoint: '/api/bridge/paperclip/proposals'
   service: {
     local_only: boolean
     public_exposure: false
@@ -116,6 +117,7 @@ export type PaperclipTestTaskPayload = {
   blocker: 'paperclip_safe_test_task_adapter_not_configured'
   status_endpoint: '/api/bridge/paperclip/status'
   test_task_endpoint: '/api/bridge/paperclip/test-chat'
+  proposals_endpoint: '/api/bridge/paperclip/proposals'
   execution_enabled: false
   writes_enabled: false
   protected_actions_enabled: false
@@ -126,6 +128,70 @@ export type PaperclipTestTaskPayload = {
 
 export type PaperclipTaskAssignee = 'hermes' | 'space_agent' | 'pi_review' | 'mini_agent'
 export type PaperclipTaskPolicyResult = 'requires_session' | 'blocked' | 'missing_credential'
+
+export type PaperclipHermesProposalKind =
+  | 'workflow_task_template'
+  | 'mini_agent_spec'
+  | 'paperclip_routine'
+  | 'skill_proposal_document'
+
+export type PaperclipHermesProposalPayload = {
+  ok: false
+  mode: 'paperclip_hermes_proposal_handoff'
+  generated_at: string
+  proposal_id: string
+  requester: 'hermes'
+  selected_route: ['hermes', 'gateway', 'agent_zero', 'paperclip']
+  proposal_kind: PaperclipHermesProposalKind
+  title: string
+  objective: string
+  hermes_can_see_paperclip_registry: true
+  paperclip_status_endpoint: '/api/bridge/paperclip/status'
+  paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks'
+  paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals'
+  visible_registries: Array<{ name: string; endpoint: string; access: 'read_only' }>
+  design_authority: {
+    can_design_workflow_task_template: true
+    can_propose_mini_agent_spec: true
+    can_draft_paperclip_routine: true
+    can_create_skill_proposal_document: true
+    can_activate_execution: false
+    activation_requires: 'agent_zero_gateway_bridge_session'
+  }
+  proposal: {
+    workflow_task_template: { goal: string; steps: string[]; success_criteria: string[] }
+    mini_agent_spec: { parent_supervisor: 'agent_zero'; scope: string[]; memory_ttl: '24h'; forbidden_tools: string[] }
+    paperclip_routine: { cadence: string; heartbeat: string; budget_policy: string; review_policy: string }
+    skill_proposal_document: { document_created: true; production_file_written: false; sections: string[] }
+  }
+  storage: {
+    paperclip_issue_recorded: false
+    work_product_recorded: false
+    issue_id: null
+    work_product_id: null
+    blocked_reason: string
+  }
+  review: {
+    agent_zero_review_required: true
+    owner_approval_required_if_protected_action: true
+    hermes_final_authority: false
+  }
+  gateway_audit_log: Array<{
+    event: string
+    actor: string
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+  response_text: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
 
 export type PaperclipGatewayTaskPayload = {
   ok: false
@@ -332,6 +398,7 @@ export async function buildPaperclipTestTaskPayload(input: {
     blocker: 'paperclip_safe_test_task_adapter_not_configured',
     status_endpoint: '/api/bridge/paperclip/status',
     test_task_endpoint: '/api/bridge/paperclip/test-chat',
+    proposals_endpoint: '/api/bridge/paperclip/proposals',
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -435,6 +502,130 @@ export async function buildPaperclipGatewayTaskPayload(input: {
   }
 }
 
+export async function buildPaperclipHermesProposalPayload(input: {
+  proposalKind?: string | null
+  title?: string | null
+  objective?: string | null
+  routineSteps?: string[] | null
+  miniAgentScope?: string[] | null
+  generatedAt: string
+  fetchImpl?: FetchLike
+  baseUrl?: string | null
+}): Promise<PaperclipHermesProposalPayload> {
+  const status = await buildPaperclipStatusPayload({
+    generatedAt: input.generatedAt,
+    fetchImpl: input.fetchImpl,
+    baseUrl: input.baseUrl,
+  })
+  const proposalKind = normalizePaperclipProposalKind(input.proposalKind)
+  const title = sanitizeOwnerText(input.title || paperclipProposalDefaultTitle(proposalKind)).slice(0, 180) || paperclipProposalDefaultTitle(proposalKind)
+  const objective = sanitizeOwnerText(input.objective || 'Design a safe Paperclip workforce proposal for Agent Zero review.').slice(0, 1000)
+  const routineSteps = (input.routineSteps || [])
+    .map((step) => sanitizeOwnerText(step).slice(0, 220))
+    .filter(Boolean)
+    .slice(0, 8)
+  const miniAgentScope = (input.miniAgentScope || [])
+    .map((item) => sanitizeOwnerText(item).slice(0, 220))
+    .filter(Boolean)
+    .slice(0, 8)
+  const blockedReason = status.blocker || (!status.reachable ? 'paperclip_status_not_reachable' : 'active_bridge_session_and_paperclip_write_adapter_required_for_issue_or_work_product_storage')
+  const steps = routineSteps.length ? routineSteps : [
+    'Confirm objective and owner-visible output contract.',
+    'Select assigned agent or mini-agent under Agent Zero supervision.',
+    'Check Gateway policy and Bridge Session scope before any mutation.',
+    'Record result as Paperclip issue/work product only after write adapter approval.',
+  ]
+  const scope = miniAgentScope.length ? miniAgentScope : [
+    'read-only planning',
+    'no external writes',
+    'no direct secret access',
+    'return proposal to Agent Zero for review',
+  ]
+
+  return {
+    ok: false,
+    mode: 'paperclip_hermes_proposal_handoff',
+    generated_at: input.generatedAt,
+    proposal_id: buildPaperclipProposalId(input.generatedAt),
+    requester: 'hermes',
+    selected_route: ['hermes', 'gateway', 'agent_zero', 'paperclip'],
+    proposal_kind: proposalKind,
+    title,
+    objective,
+    hermes_can_see_paperclip_registry: true,
+    paperclip_status_endpoint: '/api/bridge/paperclip/status',
+    paperclip_tasks_endpoint: '/api/bridge/paperclip/tasks',
+    paperclip_proposals_endpoint: '/api/bridge/paperclip/proposals',
+    visible_registries: [
+      { name: 'Paperclip status', endpoint: '/api/bridge/paperclip/status', access: 'read_only' },
+      { name: 'Paperclip companies', endpoint: '/api/bridge/paperclip/companies', access: 'read_only' },
+      { name: 'Paperclip agents', endpoint: '/api/bridge/paperclip/agents', access: 'read_only' },
+      { name: 'Paperclip issues/tasks', endpoint: '/api/bridge/paperclip/issues', access: 'read_only' },
+      { name: 'Gateway Paperclip task handoff', endpoint: '/api/bridge/paperclip/tasks', access: 'read_only' },
+    ],
+    design_authority: {
+      can_design_workflow_task_template: true,
+      can_propose_mini_agent_spec: true,
+      can_draft_paperclip_routine: true,
+      can_create_skill_proposal_document: true,
+      can_activate_execution: false,
+      activation_requires: 'agent_zero_gateway_bridge_session',
+    },
+    proposal: {
+      workflow_task_template: {
+        goal: objective,
+        steps,
+        success_criteria: [
+          'Agent Zero reviews and accepts the plan.',
+          'Gateway policy allows the selected route.',
+          'No execution happens until Bridge Session scope exists for protected actions.',
+        ],
+      },
+      mini_agent_spec: {
+        parent_supervisor: 'agent_zero',
+        scope,
+        memory_ttl: '24h',
+        forbidden_tools: ['raw_shell', 'docker_socket', 'direct_secret_read', 'zapier_write', 'heygen_generation', 'smb_mount'],
+      },
+      paperclip_routine: {
+        cadence: 'draft_only_until_agent_zero_approval',
+        heartbeat: 'status_check_and_blocker_summary',
+        budget_policy: 'track_costs_when_adapter_reports_usage; no spending authority granted here',
+        review_policy: 'Agent Zero reviews; owner approval required for protected actions or new execution scope',
+      },
+      skill_proposal_document: {
+        document_created: true,
+        production_file_written: false,
+        sections: ['purpose', 'inputs', 'assigned_agents', 'policy_gates', 'blocked_actions', 'tests', 'rollback'],
+      },
+    },
+    storage: {
+      paperclip_issue_recorded: false,
+      work_product_recorded: false,
+      issue_id: null,
+      work_product_id: null,
+      blocked_reason: blockedReason,
+    },
+    review: {
+      agent_zero_review_required: true,
+      owner_approval_required_if_protected_action: true,
+      hermes_final_authority: false,
+    },
+    gateway_audit_log: [
+      handoffAuditEvent('hermes_read_paperclip_registry', 'hermes', 'gateway', 'recorded'),
+      handoffAuditEvent('hermes_drafted_paperclip_proposal', 'hermes', 'agent_zero', 'recorded'),
+      handoffAuditEvent('paperclip_issue_or_work_product_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
+      handoffAuditEvent('agent_zero_review_required', 'gateway', 'agent_zero', 'recorded'),
+    ],
+    response_text: `Sir, Hermes can draft this Paperclip proposal for Agent Zero review, but Paperclip storage is blocked: ${blockedReason.replace(/[_-]+/g, ' ')}. No execution or external write occurred.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -512,6 +703,7 @@ function basePayload(generatedAt: string, endpoint: string, uiLink: string | nul
     agents_endpoint: '/api/bridge/paperclip/agents',
     issues_endpoint: '/api/bridge/paperclip/issues',
     test_task_endpoint: '/api/bridge/paperclip/test-chat',
+    proposals_endpoint: '/api/bridge/paperclip/proposals',
     service: {
       local_only: true,
       public_exposure: false,
@@ -626,6 +818,26 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function normalizePaperclipProposalKind(value: unknown): PaperclipHermesProposalKind {
+  const text = sanitizeIdentifier(value).toLowerCase().replace(/[-\s]+/g, '_')
+  if (text === 'mini_agent' || text === 'mini_agent_spec' || text === 'coworker' || text === 'co_worker') return 'mini_agent_spec'
+  if (text === 'routine' || text === 'paperclip_routine' || text === 'daily_routine') return 'paperclip_routine'
+  if (text === 'skill' || text === 'skill_proposal' || text === 'skill_proposal_document') return 'skill_proposal_document'
+  return 'workflow_task_template'
+}
+
+function paperclipProposalDefaultTitle(kind: PaperclipHermesProposalKind): string {
+  if (kind === 'mini_agent_spec') return 'Hermes mini-agent proposal for Agent Zero review'
+  if (kind === 'paperclip_routine') return 'Hermes Paperclip routine draft for Agent Zero review'
+  if (kind === 'skill_proposal_document') return 'Hermes skill proposal document for Paperclip tracking'
+  return 'Hermes workflow task template for Paperclip tracking'
+}
+
+function buildPaperclipProposalId(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 14) || 'pending'
+  return `paperclip_proposal_${stamp}`
 }
 
 function normalizePaperclipRequester(value: unknown): 'agent_zero' | 'blocked' {

@@ -665,6 +665,16 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       purpose: 'Agent Zero routes web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research stages to Space Agent; Space Agent returns a Research Packet.',
     },
     {
+      flow_id: 'flow_hermes_gateway_agent_zero_paperclip_proposal',
+      source: 'hermes',
+      target: 'paperclip',
+      requested_action: 'paperclip_proposal_document',
+      edge_kind: 'delegation' as const,
+      hops: ['hermes', 'gateway', 'agent_zero', 'paperclip'],
+      requires_session: true,
+      purpose: 'Hermes can read the Paperclip skills/task registry and draft workflow templates, mini-agent specs, routines, and skill proposal documents. Paperclip issue/work-product storage is blocked until Agent Zero/Gateway approval, Bridge Session scope, and a configured Paperclip write adapter exist.',
+    },
+    {
       flow_id: 'flow_agent_zero_gateway_paperclip_task_issue',
       source: 'agent_zero',
       target: 'paperclip',

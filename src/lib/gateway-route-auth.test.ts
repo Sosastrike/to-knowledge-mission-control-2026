@@ -56,6 +56,7 @@ describe('Gateway route authentication policy', () => {
     const paperclipAgents = await import('@/app/api/bridge/paperclip/agents/route')
     const paperclipIssues = await import('@/app/api/bridge/paperclip/issues/route')
     const paperclipTasks = await import('@/app/api/bridge/paperclip/tasks/route')
+    const paperclipProposals = await import('@/app/api/bridge/paperclip/proposals/route')
     const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
 
     const checks = [
@@ -111,6 +112,11 @@ describe('Gateway route authentication policy', () => {
       paperclipTasks.POST(new NextRequest('http://localhost/api/bridge/paperclip/tasks', {
         method: 'POST',
         body: JSON.stringify({ requester: 'agent_zero', assignee: 'hermes', title: 'Plan a workflow' }),
+      })),
+      paperclipProposals.GET(new NextRequest('http://localhost/api/bridge/paperclip/proposals')),
+      paperclipProposals.POST(new NextRequest('http://localhost/api/bridge/paperclip/proposals', {
+        method: 'POST',
+        body: JSON.stringify({ proposal_kind: 'mini_agent_spec', title: 'Draft spec' }),
       })),
       paperclipTestChat.POST(new NextRequest('http://localhost/api/bridge/paperclip/test-chat', {
         method: 'POST',

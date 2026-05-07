@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   buildPaperclipBoardApprovalPlan,
+  buildPaperclipCredentialModePlan,
   buildPaperclipGatewayRecordMapping,
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
@@ -8,6 +9,7 @@ import {
   buildPaperclipSandboxHeartbeatPlan,
   buildPaperclipTokenGovernorPlan,
   PAPERCLIP_BOARD_APPROVAL_ACTIONS,
+  PAPERCLIP_CREDENTIAL_SUBJECTS,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
   PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES,
@@ -970,6 +972,140 @@ describe('Paperclip bridge payloads', () => {
       writes_enabled: false,
     })
     expectOwnerSafe({ unknown, missingBlocker })
+  })
+
+
+
+  it('uses Paperclip secret refs and protected local auth in production/private strict secrets mode', () => {
+    const plan = buildPaperclipCredentialModePlan({
+      generatedAt: GENERATED_AT,
+      deploymentMode: 'production',
+      secretScanPassed: true,
+      credentials: [
+        {
+          subject: 'chatgpt_codex_auth',
+          authMethod: 'chatgpt_codex_oauth',
+          mode: 'protected_local_auth_home',
+          configured: true,
+        },
+        {
+          subject: 'claude_anthropic_auth',
+          authMethod: 'claude_code_oauth',
+          mode: 'protected_secret_ref',
+          secretRef: 'claude_code_oauth_subscription',
+          configured: true,
+        },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      mode: 'paperclip_credential_modes_dry_run',
+      deployment_mode: 'production',
+      strict_secrets_mode_enabled: true,
+      credential_subjects: [...PAPERCLIP_CREDENTIAL_SUBJECTS],
+      credential_modes_documented: true,
+      secret_scan: { tested: true, passed: true, blocked_reason: null },
+      no_env_leakage: true,
+      no_auth_file_leakage: true,
+      owner_ui_policy: {
+        show_secret_refs_only: true,
+        show_secret_values: false,
+        show_auth_file_paths: false,
+        show_configured_booleans: true,
+      },
+      paperclip_policy: {
+        inline_keys_allowed: false,
+        secret_values_visible: false,
+        production_private_strict_mode: true,
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.credentials).toEqual([
+      expect.objectContaining({
+        subject: 'chatgpt_codex_auth',
+        auth_method: 'chatgpt_codex_oauth',
+        credential_mode: 'protected_local_auth_home',
+        configured: true,
+        owner_visible_location: 'protected_local_auth_home',
+        owner_ui_shows_secret_values: false,
+        owner_ui_shows_auth_file_paths: false,
+        paperclip_shows_secret_values: false,
+        policy_result: 'requires_session',
+        blocked_reason: null,
+      }),
+      expect.objectContaining({
+        subject: 'claude_anthropic_auth',
+        auth_method: 'claude_code_oauth',
+        credential_mode: 'protected_secret_ref',
+        configured: true,
+        secret_ref: 'paperclip_secret_ref_claude_code_oauth_subscription',
+        owner_visible_location: 'protected_secret_reference',
+        api_billing_disabled: true,
+        policy_result: 'requires_session',
+        blocked_reason: null,
+      }),
+    ])
+    expect(plan.credentials.every((credential) => credential.audit_log.every((entry) => !entry.external_write && entry.no_secrets_exposed && !entry.raw_paths_exposed))).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+  it('blocks inline keys, env leakage, auth-file leakage, and failed staged secret scans', () => {
+    const plan = buildPaperclipCredentialModePlan({
+      generatedAt: GENERATED_AT,
+      deploymentMode: 'private',
+      secretScanPassed: false,
+      credentials: [
+        {
+          subject: 'chatgpt_codex_auth',
+          inlineValue: ['sk', 'live', 'paperclip-inline-secret-value'].join('-'),
+          authFilePath: ['protected-auth-home', 'codex', 'auth' + '.json'].join('/'),
+        },
+        {
+          subject: 'claude_anthropic_auth',
+          mode: 'protected_secret_ref',
+          env: { ANTHROPIC_API_KEY: ['sk', 'ant', 'paperclip-inline-secret-value'].join('-') },
+        },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: false,
+      deployment_mode: 'private',
+      strict_secrets_mode_enabled: true,
+      secret_scan: {
+        tested: true,
+        passed: false,
+        blocked_reason: 'paperclip_staged_secret_scan_failed',
+      },
+      no_env_leakage: false,
+      no_auth_file_leakage: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(plan.blocked).toHaveLength(2)
+    expect(plan.credentials[0]).toMatchObject({
+      subject: 'chatgpt_codex_auth',
+      credential_mode: 'inline_value_blocked',
+      inline_key_blocked: true,
+      auth_file_path_leakage_detected: true,
+      owner_ui_shows_auth_file_paths: false,
+      policy_result: 'missing_credential',
+      blocked_reason: 'paperclip_inline_secret_value_blocked',
+    })
+    expect(plan.credentials[1]).toMatchObject({
+      subject: 'claude_anthropic_auth',
+      env_leakage_detected: true,
+      owner_ui_shows_secret_values: false,
+      paperclip_shows_secret_values: false,
+      policy_result: 'missing_credential',
+      blocked_reason: 'paperclip_env_secret_leakage_blocked',
+    })
+    expectOwnerSafe(plan)
   })
 
 

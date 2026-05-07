@@ -841,6 +841,101 @@ export type PaperclipTokenGovernorPlan = {
   raw_paths_exposed: false
 }
 
+export const PAPERCLIP_CREDENTIAL_SUBJECTS = [
+  'chatgpt_codex_auth',
+  'claude_anthropic_auth',
+] as const
+
+export type PaperclipCredentialSubject = (typeof PAPERCLIP_CREDENTIAL_SUBJECTS)[number]
+export type PaperclipCredentialAuthMethod = 'chatgpt_codex_oauth' | 'claude_code_oauth'
+export type PaperclipCredentialMode = 'protected_local_auth_home' | 'protected_secret_ref' | 'paperclip_secret_ref' | 'missing' | 'inline_value_blocked'
+
+export type PaperclipCredentialInput = {
+  subject?: string | null
+  authMethod?: string | null
+  mode?: string | null
+  configured?: boolean | null
+  secretRef?: string | null
+  inlineValue?: string | null
+  authFilePath?: string | null
+  env?: Record<string, unknown> | null
+}
+
+export type PaperclipCredentialDecision = {
+  subject: PaperclipCredentialSubject | 'unknown'
+  auth_method: PaperclipCredentialAuthMethod | 'unknown'
+  credential_mode: PaperclipCredentialMode
+  configured: boolean
+  secret_ref_configured: boolean
+  secret_ref: string | null
+  owner_visible_location: 'protected_local_auth_home' | 'protected_secret_reference' | 'not_configured'
+  strict_secrets_mode: boolean
+  api_billing_disabled: boolean
+  inline_key_blocked: boolean
+  env_leakage_detected: boolean
+  auth_file_path_leakage_detected: boolean
+  owner_ui_shows_secret_values: false
+  owner_ui_shows_auth_file_paths: false
+  paperclip_shows_secret_values: false
+  policy_result: PaperclipTaskPolicyResult
+  blocked_reason: string | null
+  credential_modes_documented: true
+  audit_log: Array<{
+    event: string
+    actor: 'gateway'
+    target: string
+    status: 'recorded' | 'blocked'
+    external_write: false
+    no_secrets_exposed: true
+    raw_paths_exposed: false
+  }>
+}
+
+export type PaperclipCredentialModePlanInput = {
+  generatedAt: string
+  deploymentMode?: string | null
+  credentials: PaperclipCredentialInput[]
+  secretScanPassed?: boolean | null
+}
+
+export type PaperclipCredentialModePlan = {
+  ok: boolean
+  mode: 'paperclip_credential_modes_dry_run'
+  generated_at: string
+  deployment_mode: 'sandbox' | 'private' | 'production'
+  strict_secrets_mode_enabled: boolean
+  credential_subjects: PaperclipCredentialSubject[]
+  credentials: PaperclipCredentialDecision[]
+  blocked: PaperclipCredentialDecision[]
+  credential_modes_documented: true
+  secret_scan: {
+    tested: true
+    passed: boolean
+    blocked_reason: string | null
+  }
+  no_env_leakage: boolean
+  no_auth_file_leakage: boolean
+  owner_ui_policy: {
+    show_secret_refs_only: true
+    show_secret_values: false
+    show_auth_file_paths: false
+    show_configured_booleans: true
+  }
+  paperclip_policy: {
+    inline_keys_allowed: false
+    secret_values_visible: false
+    production_private_strict_mode: boolean
+  }
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+
+
 
 
 export const PAPERCLIP_BOARD_APPROVAL_ACTIONS = [
@@ -2090,6 +2185,57 @@ export function buildPaperclipTokenGovernorPlan(input: PaperclipTokenGovernorPla
 }
 
 
+export function buildPaperclipCredentialModePlan(input: PaperclipCredentialModePlanInput): PaperclipCredentialModePlan {
+  const deploymentMode = normalizePaperclipDeploymentMode(input.deploymentMode)
+  const strictSecretsMode = deploymentMode === 'production' || deploymentMode === 'private'
+  const credentials = input.credentials.map((credential) => buildPaperclipCredentialDecision(credential, strictSecretsMode))
+  const secretScanPassed = input.secretScanPassed !== false
+  const blocked = credentials.filter((credential) => credential.blocked_reason !== null)
+  const scanBlocked = secretScanPassed ? null : 'paperclip_staged_secret_scan_failed'
+  const noEnvLeakage = credentials.every((credential) => !credential.env_leakage_detected)
+  const noAuthFileLeakage = credentials.every((credential) => !credential.auth_file_path_leakage_detected)
+
+  return {
+    ok: blocked.length === 0 && secretScanPassed && noEnvLeakage && noAuthFileLeakage,
+    mode: 'paperclip_credential_modes_dry_run',
+    generated_at: input.generatedAt,
+    deployment_mode: deploymentMode,
+    strict_secrets_mode_enabled: strictSecretsMode,
+    credential_subjects: [...PAPERCLIP_CREDENTIAL_SUBJECTS],
+    credentials,
+    blocked,
+    credential_modes_documented: true,
+    secret_scan: {
+      tested: true,
+      passed: secretScanPassed,
+      blocked_reason: scanBlocked,
+    },
+    no_env_leakage: noEnvLeakage,
+    no_auth_file_leakage: noAuthFileLeakage,
+    owner_ui_policy: {
+      show_secret_refs_only: true,
+      show_secret_values: false,
+      show_auth_file_paths: false,
+      show_configured_booleans: true,
+    },
+    paperclip_policy: {
+      inline_keys_allowed: false,
+      secret_values_visible: false,
+      production_private_strict_mode: strictSecretsMode,
+    },
+    owner_visible_summary: strictSecretsMode
+      ? 'Paperclip production/private credential mode uses strict secret references and protected local auth only. Owner UI shows configured booleans, not secret values or auth file paths.'
+      : 'Paperclip sandbox credential mode still forbids inline keys and owner-visible auth file paths.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+
+
 
 type PaperclipBoardApprovalActionProfile = {
   action: PaperclipBoardApprovalAction
@@ -2657,6 +2803,127 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
 }
+
+function buildPaperclipCredentialDecision(input: PaperclipCredentialInput, strictSecretsMode: boolean): PaperclipCredentialDecision {
+  const subject = normalizePaperclipCredentialSubject(input.subject)
+  const authMethod = normalizePaperclipCredentialAuthMethod(input.authMethod, subject)
+  const requestedMode = normalizePaperclipCredentialMode(input.mode, subject)
+  const inlineKeyBlocked = paperclipLooksLikeInlineSecret(input.inlineValue)
+  const authFilePathLeakage = Boolean(input.authFilePath && sanitizeOwnerText(input.authFilePath).trim())
+  const envLeakage = paperclipEnvLeakageDetected(input.env)
+  const secretRef = normalizePaperclipSecretRef(input.secretRef, subject)
+  const secretRefConfigured = Boolean(secretRef)
+  const configured = input.configured === true || (secretRefConfigured && !inlineKeyBlocked && !authFilePathLeakage && !envLeakage)
+  const credentialMode: PaperclipCredentialMode = inlineKeyBlocked
+    ? 'inline_value_blocked'
+    : requestedMode
+  const ownerVisibleLocation: PaperclipCredentialDecision['owner_visible_location'] = credentialMode === 'protected_local_auth_home'
+    ? 'protected_local_auth_home'
+    : secretRefConfigured || credentialMode === 'protected_secret_ref' || credentialMode === 'paperclip_secret_ref'
+      ? 'protected_secret_reference'
+      : 'not_configured'
+  const blockedReason = !subject
+    ? 'paperclip_credential_subject_unknown'
+    : inlineKeyBlocked
+      ? 'paperclip_inline_secret_value_blocked'
+      : authFilePathLeakage
+        ? 'paperclip_auth_file_path_hidden_use_secret_ref'
+        : envLeakage
+          ? 'paperclip_env_secret_leakage_blocked'
+          : strictSecretsMode && !configured
+            ? 'paperclip_strict_secret_ref_required'
+            : null
+  const policyResult: PaperclipTaskPolicyResult = blockedReason
+    ? blockedReason.includes('credential') || blockedReason.includes('secret') || blockedReason.includes('auth')
+      ? 'missing_credential'
+      : 'blocked'
+    : 'requires_session'
+
+  return {
+    subject: subject || 'unknown',
+    auth_method: authMethod,
+    credential_mode: credentialMode,
+    configured,
+    secret_ref_configured: secretRefConfigured,
+    secret_ref: secretRef,
+    owner_visible_location: ownerVisibleLocation,
+    strict_secrets_mode: strictSecretsMode,
+    api_billing_disabled: subject === 'claude_anthropic_auth',
+    inline_key_blocked: inlineKeyBlocked,
+    env_leakage_detected: envLeakage,
+    auth_file_path_leakage_detected: authFilePathLeakage,
+    owner_ui_shows_secret_values: false,
+    owner_ui_shows_auth_file_paths: false,
+    paperclip_shows_secret_values: false,
+    policy_result: policyResult,
+    blocked_reason: blockedReason,
+    credential_modes_documented: true,
+    audit_log: [
+      {
+        event: 'paperclip.credential.mode.evaluated',
+        actor: 'gateway',
+        target: subject || 'unknown_credential',
+        status: blockedReason ? 'blocked' : 'recorded',
+        external_write: false,
+        no_secrets_exposed: true,
+        raw_paths_exposed: false,
+      },
+    ],
+  }
+}
+
+function normalizePaperclipDeploymentMode(value: unknown): 'sandbox' | 'private' | 'production' {
+  const text = normalizePaperclipSlug(value || 'sandbox')
+  if (text === 'production' || text === 'prod') return 'production'
+  if (text === 'private' || text === 'local_private') return 'private'
+  return 'sandbox'
+}
+
+function normalizePaperclipCredentialSubject(value: unknown): PaperclipCredentialSubject | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'codex' || text === 'chatgpt' || text === 'chatgpt_codex' || text === 'codex_chatgpt_auth') return 'chatgpt_codex_auth'
+  if (text === 'chatgpt_codex_auth') return 'chatgpt_codex_auth'
+  if (text === 'claude' || text === 'anthropic' || text === 'claude_anthropic' || text === 'claude_anthropic_auth') return 'claude_anthropic_auth'
+  return null
+}
+
+function normalizePaperclipCredentialAuthMethod(value: unknown, subject: PaperclipCredentialSubject | null): PaperclipCredentialAuthMethod | 'unknown' {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'claude_code_oauth' || subject === 'claude_anthropic_auth') return 'claude_code_oauth'
+  if (text === 'chatgpt_codex_oauth' || text === 'codex_oauth' || subject === 'chatgpt_codex_auth') return 'chatgpt_codex_oauth'
+  return 'unknown'
+}
+
+function normalizePaperclipCredentialMode(value: unknown, subject: PaperclipCredentialSubject | null): PaperclipCredentialMode {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'protected_local_auth_home') return 'protected_local_auth_home'
+  if (text === 'protected_secret_ref' || text === 'protected_secret_reference') return 'protected_secret_ref'
+  if (text === 'paperclip_secret_ref' || text === 'secret_ref') return 'paperclip_secret_ref'
+  if (text === 'missing' || text === 'not_configured') return 'missing'
+  if (subject === 'chatgpt_codex_auth') return 'protected_local_auth_home'
+  if (subject === 'claude_anthropic_auth') return 'protected_secret_ref'
+  return 'missing'
+}
+
+function normalizePaperclipSecretRef(value: unknown, subject: PaperclipCredentialSubject | null): string | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (!subject) return null
+  if (!text) return `paperclip_secret_ref_${subject}`
+  if (paperclipLooksLikeInlineSecret(text) || text.includes('auth_json') || text.includes('env')) return null
+  return text.startsWith('paperclip_secret_ref_') ? text : `paperclip_secret_ref_${text}`
+}
+
+function paperclipLooksLikeInlineSecret(value: unknown): boolean {
+  if (value === null || value === undefined) return false
+  const text = String(value)
+  return /(?:sk-[A-Za-z0-9_-]{8,}|Bearer\s+[A-Za-z0-9._-]{8,}|AIza[0-9A-Za-z_-]{12,}|xox[baprs]-[0-9A-Za-z-]{8,}|api[_-]?key|token|secret|password)/i.test(text)
+}
+
+function paperclipEnvLeakageDetected(env: Record<string, unknown> | null | undefined): boolean {
+  if (!env) return false
+  return Object.entries(env).some(([key, value]) => paperclipLooksLikeInlineSecret(key) || paperclipLooksLikeInlineSecret(value))
+}
+
 
 function buildPaperclipBoardApprovalDecision(input: PaperclipBoardApprovalInput, generatedAt: string): PaperclipBoardApprovalDecision {
   const action = normalizePaperclipBoardApprovalAction(input.action)

@@ -1,0 +1,195 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2338 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(Brain Read Adapters Production Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:19:58.031Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(Brain read adapters are **PARTIAL GO**. Obsidian and MemPalace read paths are live through) Tj
+T*
+(Agent Zero Bridge routes, Brain Sync is reachable, Graphify and Build-Wiki / Farmer are) Tj
+T*
+(represented as read-only Gateway nodes, and unauthenticated access is blocked. Write actions) Tj
+T*
+(remain correctly Bridge Session-gated.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| System | Route Evidence | Read | Write | Execution | Notes |) Tj
+T*
+(| --- | --- | --- | --- | --- | --- |) Tj
+T*
+(| Brain Sync | 200 authenticated, 401 unauthenticated | yes | no direct write | false |) Tj
+T*
+(readonly status route |) Tj
+T*
+(| Obsidian | 200 status and search | yes | false in adapter | false | safe search returned 3) Tj
+T*
+(results |) Tj
+T*
+(| MemPalace | 200 status/query | yes | false in adapter | false | raw private dump disabled |) Tj
+T*
+(| Graphify | 200 Gateway node | yes | false | false | graphify_write_adapter_disabled |) Tj
+T*
+(| Build-Wiki / Farmer | 200 Gateway node | yes | false | false | Run Now requires Bridge) Tj
+T*
+(Session and owner approval |) Tj
+T*
+() Tj
+T*
+(Optional Write Adapter Status) Tj
+T*
+() Tj
+T*
+(| System | Write Status | Bridge Session Required | Current Decision |) Tj
+T*
+(| --- | --- | --- | --- |) Tj
+T*
+(| Obsidian | available only through Bridge Session gateway actions | yes | not executed |) Tj
+T*
+(| MemPalace | available only through Bridge Session gateway actions | yes | not executed |) Tj
+T*
+(| Graphify | disabled | yes | blocked |) Tj
+T*
+(| Build-Wiki / Farmer | Run Now protected action only | yes | blocked without owner approval |) Tj
+T*
+() Tj
+T*
+(Safety Confirmation) Tj
+T*
+() Tj
+T*
+(- No Brain write was executed.) Tj
+T*
+(- No raw vault dump was returned.) Tj
+T*
+(- No raw private memory dump was returned.) Tj
+T*
+(- No Build-Wiki/Farmer execution occurred.) Tj
+T*
+(- No secrets were printed or committed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- No raw local paths are included in owner-facing status.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Brain Sync visibility | 85% | reachable and protected |) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1313 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(| Obsidian read | 90% | live safe search/status |) Tj
+T*
+(| Obsidian write | 0% | not executed, Bridge Session required |) Tj
+T*
+(| MemPalace read | 85% | live safe query/status |) Tj
+T*
+(| MemPalace write | 0% | not executed, Bridge Session required |) Tj
+T*
+(| Graphify read/status | 70% | Gateway node visible |) Tj
+T*
+(| Graphify write | 0% | disabled |) Tj
+T*
+(| Build-Wiki / Farmer read/status | 85% | visible under OpenClaw+ |) Tj
+T*
+(| Brain overall | 72% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Brain writes require Bridge Session | Cannot mark write adapters GO. | Open scoped Bridge) Tj
+T*
+(Session and run safe write probes only if approved. |) Tj
+T*
+(| graphify_write_adapter_disabled | Graphify cannot update graph live. | Add or enable) Tj
+T*
+(Graphify write adapter behind Bridge Session. |) Tj
+T*
+(| buildwiki_run_now_requires_bridge_session_and_owner_approval | Build-Wiki Run Now cannot) Tj
+T*
+(execute from read proof. | Use exact scoped Build-Wiki approval flow only. |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(Brain read adapters: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Read/status paths are live and protected. Writes remain intentionally blocked.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002469 00000 n 
+0000002595 00000 n 
+0000003960 00000 n 
+0000004086 00000 n 
+0000004149 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+4198
+%%EOF

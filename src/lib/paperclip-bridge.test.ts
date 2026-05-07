@@ -9,6 +9,7 @@ import {
   buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipSandboxHeartbeatPlan,
   buildPaperclipTokenGovernorPlan,
+  buildPaperclipUiAccessVerificationPlan,
   buildPaperclipWorkspaceMapPlan,
   PAPERCLIP_BOARD_APPROVAL_ACTIONS,
   PAPERCLIP_CREDENTIAL_SUBJECTS,
@@ -1637,6 +1638,97 @@ describe('Paperclip bridge payloads', () => {
     expect(duplicateAndPaused.routines.find((routine) => routine.id === 'daily_pi_dispatcher_optimization')).toMatchObject({ status: 'paused_skipped' })
     expectOwnerSafe({ nonSandbox, missingBudget, overBudget, duplicateAndPaused })
   })
+
+
+  it("confirms Paperclip UI access is blocked when the sandbox UI is not running", () => {
+    const plan = buildPaperclipUiAccessVerificationPlan({
+      generatedAt: GENERATED_AT,
+      localUrl: "http://127.0.0.1:3100",
+      tailnetUrl: "http://100.116.35.95:3100",
+      localReachable: false,
+      localStatusCode: 0,
+      tailnetReachable: false,
+      tailnetStatusCode: 0,
+      ownerLoginConfirmed: false,
+      mobileViewportConfirmed: false,
+    })
+
+    expect(plan).toMatchObject({
+      ok: false,
+      mode: "paperclip_ui_access_verification",
+      local_url: "http://127.0.0.1:3100",
+      local_url_confirmed: false,
+      tailnet_url: "http://100.116.35.95:3100",
+      tailnet_url_confirmed: false,
+      owner_login_confirmed: false,
+      company_dashboard_confirmed: false,
+      org_chart_confirmed: false,
+      issue_task_page_confirmed: false,
+      budget_page_confirmed: false,
+      approvals_page_confirmed: false,
+      agent_detail_pages_confirmed: false,
+      mobile_view_confirmed: false,
+      public_exposure: false,
+      tailnet_only_recommended: true,
+      blocker: "paperclip_ui_not_running",
+      execution_enabled: false,
+      writes_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.surfaces.map((surface) => surface.id)).toEqual([
+      "company_dashboard",
+      "org_chart",
+      "issues_tasks",
+      "budget",
+      "approvals",
+      "agent_detail_pages",
+    ])
+    expect(plan.surfaces.every((surface) => !surface.confirmed && surface.blocker === "paperclip_ui_not_running")).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+  it("confirms Paperclip owner pages and mobile view only when probes pass", () => {
+    const plan = buildPaperclipUiAccessVerificationPlan({
+      generatedAt: GENERATED_AT,
+      localUrl: "http://127.0.0.1:3100",
+      tailnetUrl: "http://100.116.35.95:3100",
+      localReachable: true,
+      localStatusCode: 200,
+      tailnetReachable: true,
+      tailnetStatusCode: 200,
+      ownerLoginConfirmed: true,
+      mobileViewportConfirmed: true,
+      surfaces: [
+        { id: "company_dashboard", reachable: true, statusCode: 200 },
+        { id: "org_chart", reachable: true, statusCode: 200 },
+        { id: "issues_tasks", reachable: true, statusCode: 200 },
+        { id: "budget", reachable: true, statusCode: 200 },
+        { id: "approvals", reachable: true, statusCode: 200 },
+        { id: "agent_detail_pages", reachable: true, statusCode: 200 },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      blocker: null,
+      local_url_confirmed: true,
+      tailnet_url_confirmed: true,
+      owner_login_confirmed: true,
+      company_dashboard_confirmed: true,
+      org_chart_confirmed: true,
+      issue_task_page_confirmed: true,
+      budget_page_confirmed: true,
+      approvals_page_confirmed: true,
+      agent_detail_pages_confirmed: true,
+      mobile_view_confirmed: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(plan.surfaces.every((surface) => surface.confirmed && surface.policy_result === "allowed" && surface.blocker === null)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
 
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ status: 'ok' }))

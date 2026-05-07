@@ -1137,6 +1137,81 @@ export type PaperclipGatewayPluginPlan = {
 
 
 
+
+
+export const PAPERCLIP_UI_ACCESS_SURFACES = [
+  "company_dashboard",
+  "org_chart",
+  "issues_tasks",
+  "budget",
+  "approvals",
+  "agent_detail_pages",
+] as const
+
+export type PaperclipUiAccessSurfaceId = (typeof PAPERCLIP_UI_ACCESS_SURFACES)[number]
+
+export type PaperclipUiAccessSurfaceProbe = {
+  id: string
+  reachable?: boolean | null
+  statusCode?: number | null
+  requiresLogin?: boolean | null
+  blocker?: string | null
+}
+
+export type PaperclipUiAccessVerificationInput = {
+  generatedAt: string
+  localUrl?: string | null
+  tailnetUrl?: string | null
+  localReachable?: boolean | null
+  localStatusCode?: number | null
+  tailnetReachable?: boolean | null
+  tailnetStatusCode?: number | null
+  ownerLoginConfirmed?: boolean | null
+  mobileViewportConfirmed?: boolean | null
+  surfaces?: PaperclipUiAccessSurfaceProbe[] | null
+}
+
+export type PaperclipUiAccessSurfaceConfirmation = {
+  id: PaperclipUiAccessSurfaceId
+  label: string
+  route_hint: string
+  confirmed: boolean
+  status_code: number | null
+  requires_owner_login: boolean
+  policy_result: "allowed" | "blocked"
+  blocker: string | null
+}
+
+export type PaperclipUiAccessVerificationPlan = {
+  ok: boolean
+  mode: "paperclip_ui_access_verification"
+  generated_at: string
+  local_url: string | null
+  local_url_confirmed: boolean
+  local_status_code: number | null
+  tailnet_url: string | null
+  tailnet_url_confirmed: boolean
+  tailnet_status_code: number | null
+  owner_login_confirmed: boolean
+  company_dashboard_confirmed: boolean
+  org_chart_confirmed: boolean
+  issue_task_page_confirmed: boolean
+  budget_page_confirmed: boolean
+  approvals_page_confirmed: boolean
+  agent_detail_pages_confirmed: boolean
+  mobile_view_confirmed: boolean
+  surfaces: PaperclipUiAccessSurfaceConfirmation[]
+  public_exposure: false
+  tailnet_only_recommended: true
+  blocker: string | null
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 export const PAPERCLIP_BOARD_APPROVAL_ACTIONS = [
   'co_worker_hire',
   'external_write',
@@ -2822,6 +2897,60 @@ const PAPERCLIP_BOARD_APPROVAL_ACTION_PROFILES: Record<PaperclipBoardApprovalAct
   },
 }
 
+
+
+export function buildPaperclipUiAccessVerificationPlan(input: PaperclipUiAccessVerificationInput): PaperclipUiAccessVerificationPlan {
+  const localEndpoint = resolvePaperclipEndpoint(input.localUrl || DEFAULT_PAPERCLIP_BASE_URL)
+  const tailnetEndpoint = input.tailnetUrl ? resolvePaperclipEndpoint(input.tailnetUrl) : null
+  const localConfirmed = input.localReachable === true && !localEndpoint.blocker
+  const tailnetConfirmed = input.tailnetReachable === true && !tailnetEndpoint?.blocker
+  const endpointConfirmed = localConfirmed || tailnetConfirmed
+  const ownerLoginConfirmed = input.ownerLoginConfirmed === true
+  const mobileViewConfirmed = input.mobileViewportConfirmed === true
+  const surfaceProbes = new Map((input.surfaces || []).map((probe) => [normalizePaperclipUiSurfaceId(probe.id), probe]))
+  const baseBlocker = localEndpoint.blocker || tailnetEndpoint?.blocker || (!endpointConfirmed ? "paperclip_ui_not_running" : null)
+  const surfaces = PAPERCLIP_UI_ACCESS_SURFACES.map((id) => buildPaperclipUiSurfaceConfirmation(id, {
+    reachable: localConfirmed || tailnetConfirmed,
+    ownerLoginConfirmed,
+    probe: surfaceProbes.get(id) || null,
+    baseBlocker,
+  }))
+  const surfaceBlocker = surfaces.find((surface) => !surface.confirmed)?.blocker || null
+  const blocker = baseBlocker || (!ownerLoginConfirmed ? "paperclip_owner_login_not_confirmed" : null) || surfaceBlocker || (!mobileViewConfirmed ? "paperclip_mobile_view_not_confirmed" : null)
+
+  return {
+    ok: !blocker,
+    mode: "paperclip_ui_access_verification",
+    generated_at: input.generatedAt,
+    local_url: localEndpoint.uiLink,
+    local_url_confirmed: localConfirmed,
+    local_status_code: numberOrNull(input.localStatusCode),
+    tailnet_url: tailnetEndpoint?.uiLink || null,
+    tailnet_url_confirmed: tailnetConfirmed,
+    tailnet_status_code: numberOrNull(input.tailnetStatusCode),
+    owner_login_confirmed: ownerLoginConfirmed,
+    company_dashboard_confirmed: isPaperclipSurfaceConfirmed(surfaces, "company_dashboard"),
+    org_chart_confirmed: isPaperclipSurfaceConfirmed(surfaces, "org_chart"),
+    issue_task_page_confirmed: isPaperclipSurfaceConfirmed(surfaces, "issues_tasks"),
+    budget_page_confirmed: isPaperclipSurfaceConfirmed(surfaces, "budget"),
+    approvals_page_confirmed: isPaperclipSurfaceConfirmed(surfaces, "approvals"),
+    agent_detail_pages_confirmed: isPaperclipSurfaceConfirmed(surfaces, "agent_detail_pages"),
+    mobile_view_confirmed: mobileViewConfirmed,
+    surfaces,
+    public_exposure: false,
+    tailnet_only_recommended: true,
+    blocker,
+    owner_visible_summary: blocker
+      ? `Paperclip UI access is not confirmed: ${blocker}. No public exposure or production service was enabled.`
+      : "Paperclip UI access is confirmed locally or through Tailnet with owner login, dashboard pages, and mobile view verified.",
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 export function buildPaperclipBoardApprovalPlan(input: PaperclipBoardApprovalPlanInput): PaperclipBoardApprovalPlan {
   const decisions = input.approvals.map((approval) => buildPaperclipBoardApprovalDecision(approval, input.generatedAt))
   const approved = decisions.filter((decision) => decision.approval_result === 'approved')
@@ -4044,6 +4173,66 @@ function booleanValue(value: unknown): boolean | null {
     if (/^(false|no|0)$/i.test(value)) return false
   }
   return null
+}
+
+
+
+function normalizePaperclipUiSurfaceId(value: unknown): PaperclipUiAccessSurfaceId {
+  const text = sanitizeIdentifier(value).toLowerCase().replace(/[-\s]+/g, "_")
+  if (text === "company_dashboard" || text === "dashboard" || text === "company") return "company_dashboard"
+  if (text === "org_chart" || text === "orgchart" || text === "organization") return "org_chart"
+  if (text === "issues_tasks" || text === "issues" || text === "tasks" || text === "issue_task_page") return "issues_tasks"
+  if (text === "budget" || text === "budgets") return "budget"
+  if (text === "approvals" || text === "approval") return "approvals"
+  if (text === "agent_detail_pages" || text === "agent_detail" || text === "agents") return "agent_detail_pages"
+  return "company_dashboard"
+}
+
+function paperclipUiSurfaceLabel(id: PaperclipUiAccessSurfaceId): string {
+  if (id === "company_dashboard") return "Company dashboard"
+  if (id === "org_chart") return "Org chart"
+  if (id === "issues_tasks") return "Issue and task page"
+  if (id === "budget") return "Budget page"
+  if (id === "approvals") return "Approvals page"
+  return "Agent detail pages"
+}
+
+function paperclipUiSurfaceRouteHint(id: PaperclipUiAccessSurfaceId): string {
+  if (id === "company_dashboard") return "/companies/to-knowledge-gateway"
+  if (id === "org_chart") return "/companies/to-knowledge-gateway/org-chart"
+  if (id === "issues_tasks") return "/companies/to-knowledge-gateway/issues"
+  if (id === "budget") return "/companies/to-knowledge-gateway/budget"
+  if (id === "approvals") return "/companies/to-knowledge-gateway/approvals"
+  return "/companies/to-knowledge-gateway/agents/agent-zero"
+}
+
+function buildPaperclipUiSurfaceConfirmation(id: PaperclipUiAccessSurfaceId, input: {
+  reachable: boolean
+  ownerLoginConfirmed: boolean
+  probe: PaperclipUiAccessSurfaceProbe | null
+  baseBlocker: string | null
+}): PaperclipUiAccessSurfaceConfirmation {
+  const probeReachable = input.probe?.reachable
+  const confirmed = input.reachable && input.ownerLoginConfirmed && probeReachable !== false && !input.probe?.blocker
+  const blocker = input.baseBlocker
+    || (!input.ownerLoginConfirmed ? "paperclip_owner_login_not_confirmed" : null)
+    || (probeReachable === false ? "paperclip_ui_surface_not_reachable" : null)
+    || sanitizeNullable(input.probe?.blocker)
+
+  return {
+    id,
+    label: paperclipUiSurfaceLabel(id),
+    route_hint: paperclipUiSurfaceRouteHint(id),
+    confirmed,
+    status_code: numberOrNull(input.probe?.statusCode),
+    requires_owner_login: input.probe?.requiresLogin !== false,
+    policy_result: confirmed ? "allowed" : "blocked",
+    blocker: confirmed ? null : blocker,
+  }
+}
+
+function isPaperclipSurfaceConfirmed(surfaces: PaperclipUiAccessSurfaceConfirmation[], id: PaperclipUiAccessSurfaceId): boolean {
+  return surfaces.some((surface) => surface.id === id && surface.confirmed)
 }
 
 function defaultPort(protocol: string) {

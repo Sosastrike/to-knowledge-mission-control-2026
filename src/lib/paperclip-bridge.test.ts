@@ -5,6 +5,7 @@ import {
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
   buildPaperclipSandboxHeartbeatPlan,
+  buildPaperclipTokenGovernorPlan,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
   PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES,
@@ -969,6 +970,106 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe({ unknown, missingBlocker })
   })
 
+
+
+  it('imports Gateway Token Governor budgets into Paperclip across company, agent, project, goal, and model provider scopes', () => {
+    const plan = buildPaperclipTokenGovernorPlan({
+      generatedAt: GENERATED_AT,
+      budgets: [
+        { scope: 'company', id: 'to-knowledge-gateway', budgetCents: 10000, spentCents: 1000, projectedCents: 500 },
+        { scope: 'agent', id: 'agent-zero', budgetCents: 10000, spentCents: 7300, projectedCents: 300 },
+        { scope: 'project', id: 'gateway-buildout', budgetCents: 10000, spentCents: 8700, projectedCents: 400 },
+        { scope: 'goal', id: 'hermes-live-proof', budgetCents: 10000, spentCents: 4000, projectedCents: 500 },
+        { scope: 'model_provider', id: 'openrouter', budgetCents: 10000, spentCents: 3000, projectedCents: 200 },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: false,
+      mode: 'paperclip_token_governor_dry_run',
+      concept: 'gateway_token_governor_for_paperclip',
+      imported_into_paperclip: true,
+      production_enforcement_enabled: false,
+      budget_scopes: ['company', 'agent', 'project', 'goal', 'model_provider'],
+      alert_threshold_percent: 75,
+      default_hard_stop_percent: 90,
+      blocked_reason: 'paperclip_token_governor_hard_stop_or_missing_budget',
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.budgets.map((budget) => budget.scope)).toEqual(['company', 'agent', 'project', 'goal', 'model_provider'])
+    expect(plan.budgets.find((budget) => budget.id === 'agent-zero')).toMatchObject({
+      status: 'alert',
+      decision: 'alert',
+      usage_percent: 76,
+      alert_at_75_percent: true,
+      hard_stop_at_threshold: false,
+    })
+    expect(plan.budgets.find((budget) => budget.id === 'gateway-buildout')).toMatchObject({
+      status: 'hard_stop',
+      decision: 'hard_stop',
+      usage_percent: 91,
+      alert_at_75_percent: false,
+      hard_stop_at_threshold: true,
+      blocked_reason: 'paperclip_token_governor_hard_stop_threshold_reached',
+    })
+    expect(plan.alerts.map((budget) => budget.id)).toEqual(['agent-zero'])
+    expect(plan.hard_stops.map((budget) => budget.id)).toEqual(['gateway-buildout'])
+    expect(plan.cost_audit_events).toHaveLength(5)
+    expect(plan.cost_audit_events.every((event) => event.event === 'paperclip.token_governor.cost_event' && !event.external_write && event.no_secrets_exposed && !event.raw_paths_exposed)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+  it('honors owner-defined hard-stop thresholds, pauses runaway agents, and blocks missing budgets', () => {
+    const plan = buildPaperclipTokenGovernorPlan({
+      generatedAt: GENERATED_AT,
+      alertPercent: 75,
+      hardStopPercent: 95,
+      budgets: [
+        { scope: 'agent', id: 'runaway-agent', budgetCents: 10000, spentCents: 2000, projectedCents: 100, runaway: true },
+        { scope: 'agent', id: 'custom-threshold-agent', budgetCents: 10000, spentCents: 8000, projectedCents: 600, ownerHardStopPercent: 85 },
+        { scope: 'model_provider', id: 'claude-oauth', spentCents: 1000, projectedCents: 250 },
+      ],
+    })
+
+    expect(plan).toMatchObject({
+      ok: false,
+      default_hard_stop_percent: 95,
+      blocked_reason: 'paperclip_token_governor_hard_stop_or_missing_budget',
+      production_enforcement_enabled: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
+    expect(plan.budgets.find((budget) => budget.id === 'runaway-agent')).toMatchObject({
+      scope: 'agent',
+      status: 'within_budget',
+      decision: 'allowed',
+      pause_runaway_agent: true,
+      blocked_reason: 'paperclip_token_governor_runaway_agent_pause_required',
+    })
+    expect(plan.budgets.find((budget) => budget.id === 'custom-threshold-agent')).toMatchObject({
+      status: 'hard_stop',
+      decision: 'hard_stop',
+      usage_percent: 86,
+      hard_stop_threshold_percent: 85,
+      hard_stop_at_threshold: true,
+      pause_runaway_agent: true,
+    })
+    expect(plan.budgets.find((budget) => budget.id === 'claude-oauth')).toMatchObject({
+      status: 'missing_budget',
+      decision: 'missing_budget',
+      budget_cents: null,
+      usage_percent: null,
+      blocked_reason: 'paperclip_token_governor_budget_missing',
+    })
+    expect(plan.paused_agents.map((budget) => budget.id)).toEqual(['runaway-agent', 'custom-threshold-agent'])
+    expect(plan.hard_stops.map((budget) => budget.id)).toEqual(['custom-threshold-agent', 'claude-oauth'])
+    expect(plan.cost_audit_events.map((event) => event.decision)).toEqual(['allowed', 'hard_stop', 'missing_budget'])
+    expectOwnerSafe(plan)
+  })
 
   it('creates sandbox-only daily Paperclip heartbeat routines without enabling execution', () => {
     const plan = buildPaperclipSandboxHeartbeatPlan({

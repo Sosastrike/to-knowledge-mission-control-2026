@@ -752,6 +752,96 @@ export type PaperclipSandboxHeartbeatPlan = {
   raw_paths_exposed: false
 }
 
+export const PAPERCLIP_TOKEN_GOVERNOR_BUDGET_SCOPES = [
+  'company',
+  'agent',
+  'project',
+  'goal',
+  'model_provider',
+] as const
+
+export type PaperclipTokenGovernorBudgetScope = (typeof PAPERCLIP_TOKEN_GOVERNOR_BUDGET_SCOPES)[number]
+export type PaperclipTokenGovernorBudgetStatus = 'within_budget' | 'alert' | 'hard_stop' | 'missing_budget'
+export type PaperclipTokenGovernorDecision = 'allowed' | 'alert' | 'hard_stop' | 'missing_budget'
+
+export type PaperclipTokenGovernorBudgetInput = {
+  scope: string
+  id?: string | null
+  name?: string | null
+  budgetCents?: number | null
+  spentCents?: number | null
+  projectedCents?: number | null
+  ownerHardStopPercent?: number | null
+  runaway?: boolean | null
+}
+
+export type PaperclipTokenGovernorPlanInput = {
+  generatedAt: string
+  budgets: PaperclipTokenGovernorBudgetInput[]
+  alertPercent?: number | null
+  hardStopPercent?: number | null
+}
+
+export type PaperclipTokenGovernorBudgetDecision = {
+  scope: PaperclipTokenGovernorBudgetScope
+  id: string
+  name: string
+  budget_cents: number | null
+  spent_cents: number
+  projected_cents: number
+  total_after_projection_cents: number
+  usage_percent: number | null
+  alert_threshold_percent: number
+  hard_stop_threshold_percent: number
+  status: PaperclipTokenGovernorBudgetStatus
+  decision: PaperclipTokenGovernorDecision
+  alert_at_75_percent: boolean
+  hard_stop_at_threshold: boolean
+  pause_runaway_agent: boolean
+  blocked_reason: string | null
+}
+
+export type PaperclipTokenGovernorCostAuditEvent = {
+  event: 'paperclip.token_governor.cost_event'
+  scope: PaperclipTokenGovernorBudgetScope
+  subject_id: string
+  subject_name: string
+  spent_cents: number
+  projected_cents: number
+  usage_percent: number | null
+  decision: PaperclipTokenGovernorDecision
+  blocked_reason: string | null
+  recorded_at: string
+  external_write: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+export type PaperclipTokenGovernorPlan = {
+  ok: boolean
+  mode: 'paperclip_token_governor_dry_run'
+  generated_at: string
+  concept: 'gateway_token_governor_for_paperclip'
+  imported_into_paperclip: true
+  production_enforcement_enabled: false
+  budget_scopes: PaperclipTokenGovernorBudgetScope[]
+  alert_threshold_percent: number
+  default_hard_stop_percent: number
+  budgets: PaperclipTokenGovernorBudgetDecision[]
+  alerts: PaperclipTokenGovernorBudgetDecision[]
+  hard_stops: PaperclipTokenGovernorBudgetDecision[]
+  paused_agents: PaperclipTokenGovernorBudgetDecision[]
+  cost_audit_events: PaperclipTokenGovernorCostAuditEvent[]
+  blocked_reason: string | null
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
+
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
   | { ok: false; status: number; blocker: string }
@@ -1864,6 +1954,60 @@ export function buildPaperclipSandboxHeartbeatPlan(input: PaperclipSandboxHeartb
   }
 }
 
+
+export function buildPaperclipTokenGovernorPlan(input: PaperclipTokenGovernorPlanInput): PaperclipTokenGovernorPlan {
+  const alertThreshold = normalizePaperclipPercent(input.alertPercent, 75)
+  const defaultHardStop = normalizePaperclipPercent(input.hardStopPercent, 90)
+  const budgets = input.budgets.map((budget) => buildPaperclipTokenGovernorBudgetDecision(budget, alertThreshold, defaultHardStop))
+  const alerts = budgets.filter((budget) => budget.status === 'alert')
+  const hardStops = budgets.filter((budget) => budget.status === 'hard_stop' || budget.status === 'missing_budget')
+  const pausedAgents = budgets.filter((budget) => budget.pause_runaway_agent)
+  const blockedReason = hardStops.length > 0
+    ? 'paperclip_token_governor_hard_stop_or_missing_budget'
+    : pausedAgents.length > 0
+      ? 'paperclip_token_governor_runaway_agent_pause_required'
+      : null
+
+  return {
+    ok: hardStops.length === 0,
+    mode: 'paperclip_token_governor_dry_run',
+    generated_at: input.generatedAt,
+    concept: 'gateway_token_governor_for_paperclip',
+    imported_into_paperclip: true,
+    production_enforcement_enabled: false,
+    budget_scopes: [...PAPERCLIP_TOKEN_GOVERNOR_BUDGET_SCOPES],
+    alert_threshold_percent: alertThreshold,
+    default_hard_stop_percent: defaultHardStop,
+    budgets,
+    alerts,
+    hard_stops: hardStops,
+    paused_agents: pausedAgents,
+    cost_audit_events: budgets.map((budget) => ({
+      event: 'paperclip.token_governor.cost_event' as const,
+      scope: budget.scope,
+      subject_id: budget.id,
+      subject_name: budget.name,
+      spent_cents: budget.spent_cents,
+      projected_cents: budget.projected_cents,
+      usage_percent: budget.usage_percent,
+      decision: budget.decision,
+      blocked_reason: budget.blocked_reason,
+      recorded_at: input.generatedAt,
+      external_write: false as const,
+      no_secrets_exposed: true as const,
+      raw_paths_exposed: false as const,
+    })),
+    blocked_reason: blockedReason,
+    owner_visible_summary: 'Paperclip Token Governor is imported as dry-run budget governance. Alerts, hard stops, paused-agent decisions, and cost audit events are modeled without enabling live execution.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -2339,6 +2483,88 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
+}
+
+function normalizePaperclipTokenGovernorScope(value: unknown): PaperclipTokenGovernorBudgetScope | null {
+  const text = normalizePaperclipSlug(value || '')
+  if (text === 'company') return 'company'
+  if (text === 'agent') return 'agent'
+  if (text === 'project') return 'project'
+  if (text === 'goal') return 'goal'
+  if (text === 'model_provider' || text === 'modelprovider' || text === 'provider') return 'model_provider'
+  return null
+}
+
+function normalizePaperclipPercent(value: number | null | undefined, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(100, Math.max(1, Math.round(value)))
+}
+
+function buildPaperclipTokenGovernorBudgetDecision(
+  input: PaperclipTokenGovernorBudgetInput,
+  alertThreshold: number,
+  defaultHardStop: number,
+): PaperclipTokenGovernorBudgetDecision {
+  const scope = normalizePaperclipTokenGovernorScope(input.scope)
+  const fallbackScope: PaperclipTokenGovernorBudgetScope = scope || 'project'
+  const id = sanitizeIdentifier(input.id || `${fallbackScope}_budget`) || `${fallbackScope}_budget`
+  const name = sanitizeOwnerText(input.name || id).slice(0, 160) || id
+  const budget = typeof input.budgetCents === 'number' && Number.isFinite(input.budgetCents) && input.budgetCents >= 0
+    ? Math.round(input.budgetCents)
+    : null
+  const spent = normalizePaperclipBudgetCents(input.spentCents)
+  const projected = normalizePaperclipBudgetCents(input.projectedCents)
+  const total = spent + projected
+  const hardStopThreshold = normalizePaperclipPercent(input.ownerHardStopPercent, defaultHardStop)
+  const usagePercent = budget === null || budget === 0 ? null : roundPaperclipPercent((total / budget) * 100)
+  const missingBudget = budget === null
+  const hardStop = missingBudget ? false : usagePercent !== null && usagePercent >= hardStopThreshold
+  const alert = !hardStop && usagePercent !== null && usagePercent >= alertThreshold
+  const runaway = Boolean(input.runaway) || (fallbackScope === 'agent' && hardStop)
+  const status: PaperclipTokenGovernorBudgetStatus = missingBudget
+    ? 'missing_budget'
+    : hardStop
+      ? 'hard_stop'
+      : alert
+        ? 'alert'
+        : 'within_budget'
+  const decision: PaperclipTokenGovernorDecision = missingBudget
+    ? 'missing_budget'
+    : hardStop
+      ? 'hard_stop'
+      : alert
+        ? 'alert'
+        : 'allowed'
+  const blockedReason = missingBudget
+    ? 'paperclip_token_governor_budget_missing'
+    : hardStop
+      ? 'paperclip_token_governor_hard_stop_threshold_reached'
+      : runaway
+        ? 'paperclip_token_governor_runaway_agent_pause_required'
+        : null
+
+  return {
+    scope: fallbackScope,
+    id,
+    name,
+    budget_cents: budget,
+    spent_cents: spent,
+    projected_cents: projected,
+    total_after_projection_cents: total,
+    usage_percent: usagePercent,
+    alert_threshold_percent: alertThreshold,
+    hard_stop_threshold_percent: hardStopThreshold,
+    status,
+    decision,
+    alert_at_75_percent: alert,
+    hard_stop_at_threshold: hardStop,
+    pause_runaway_agent: runaway,
+    blocked_reason: blockedReason,
+  }
+}
+
+function roundPaperclipPercent(value: number): number {
+  return Math.round(value * 100) / 100
 }
 
 function paperclipHeartbeatDayKey(generatedAt: string) {

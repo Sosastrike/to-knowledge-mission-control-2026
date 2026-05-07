@@ -264,6 +264,63 @@ export type PaperclipCoWorkerLifecycleTransitionResult = {
   raw_paths_exposed: false
 }
 
+export const PAPERCLIP_COWORKER_ROUTE_DECISIONS = ['allowed', 'blocked', 'requires_session', 'missing_credential'] as const
+
+export type PaperclipCoWorkerRouteDecision = (typeof PAPERCLIP_COWORKER_ROUTE_DECISIONS)[number]
+export type PaperclipCoWorkerRequestAction = 'read' | 'write' | 'execute'
+export type PaperclipCoWorkerCredentialMode = 'none_required' | 'configured' | 'missing'
+
+export type PaperclipCoWorkerPolicyCheckName =
+  | 'request_type'
+  | 'credential_mode'
+  | 'bridge_session'
+  | 'owner_approval'
+  | 'mini_agent_scope'
+  | 'forbidden_tools'
+  | 'memory_policy'
+  | 'audit_requirement'
+  | 'output_contract'
+
+export type PaperclipCoWorkerPolicyCheck = {
+  check: PaperclipCoWorkerPolicyCheckName
+  passed: boolean
+  decision: PaperclipCoWorkerRouteDecision
+  blocked_reason: string | null
+}
+
+export type PaperclipCoWorkerPolicyValidationInput = {
+  definition: PaperclipCoWorkerAgentDefinition
+  requestedAction: string
+  credentialMode?: string | null
+  bridgeSessionActive?: boolean | null
+  ownerApproved?: boolean | null
+  requestedScope?: string[] | null
+  requestedTools?: string[] | null
+  memoryTtlMinutes?: number | null
+  auditRequired?: boolean | null
+  outputContract?: string | null
+  recordedAt: string
+}
+
+export type PaperclipCoWorkerPolicyValidationResult = {
+  ok: boolean
+  mode: 'paperclip_coworker_gateway_policy_decision'
+  definition_id: string
+  requested_action: PaperclipCoWorkerRequestAction | null
+  credential_mode: PaperclipCoWorkerCredentialMode
+  route_decision: PaperclipCoWorkerRouteDecision
+  checks: PaperclipCoWorkerPolicyCheck[]
+  blocked_reason: string | null
+  bridge_session_required: boolean
+  owner_approval_required: boolean
+  audit_event: PaperclipCoWorkerAgentAuditEvent
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 export type PaperclipHermesProposalKind =
   | 'workflow_task_template'
   | 'mini_agent_spec'
@@ -749,6 +806,59 @@ export function transitionPaperclipCoWorkerLifecycle(input: PaperclipCoWorkerLif
     response_text: lifecycleState === 'running'
       ? 'Sir, Paperclip co-worker lifecycle is marked running for tracking only; runtime execution remains blocked until Bridge Session and adapter approval.'
       : `Sir, Paperclip co-worker lifecycle is now ${lifecycleState.replace(/_/g, ' ')} in dry-run tracking. No execution or external write occurred.`,
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
+export function validatePaperclipCoWorkerGatewayPolicy(input: PaperclipCoWorkerPolicyValidationInput): PaperclipCoWorkerPolicyValidationResult {
+  const requestedAction = normalizePaperclipCoWorkerRequestAction(input.requestedAction)
+  const credentialMode = normalizePaperclipCoWorkerCredentialMode(input.credentialMode)
+  const bridgeSessionActive = Boolean(input.bridgeSessionActive)
+  const ownerApproved = Boolean(input.ownerApproved)
+  const requestedScope = sanitizePaperclipList(input.requestedScope || [], 12, 220)
+  const requestedTools = sanitizePaperclipList(input.requestedTools || [], 20, 120)
+  const memoryTtlMinutes = input.memoryTtlMinutes == null ? input.definition.memory_ttl_minutes : normalizePaperclipMemoryTtl(input.memoryTtlMinutes)
+  const outputContract = sanitizeOwnerText(input.outputContract || '').slice(0, 400)
+  const protectedAction = requestedAction === 'write' || requestedAction === 'execute'
+  const checks: PaperclipCoWorkerPolicyCheck[] = []
+
+  const addCheck = (check: PaperclipCoWorkerPolicyCheckName, passed: boolean, decision: PaperclipCoWorkerRouteDecision, blockedReason: string | null) => {
+    checks.push({ check, passed, decision: passed ? 'allowed' : decision, blocked_reason: passed ? null : blockedReason })
+  }
+
+  addCheck('request_type', Boolean(requestedAction), 'blocked', 'paperclip_coworker_request_type_unknown')
+  addCheck('credential_mode', credentialMode !== 'missing', 'missing_credential', 'paperclip_coworker_missing_required_credential')
+  addCheck('bridge_session', !protectedAction || bridgeSessionActive, 'requires_session', 'paperclip_coworker_bridge_session_required')
+  addCheck('owner_approval', !protectedAction || ownerApproved, 'requires_session', 'paperclip_coworker_owner_approval_required')
+  addCheck('mini_agent_scope', paperclipCoWorkerScopeAllowed(input.definition, requestedScope), 'blocked', 'paperclip_coworker_scope_not_allowed')
+  addCheck('forbidden_tools', paperclipCoWorkerToolsAllowed(input.definition, requestedTools), 'blocked', 'paperclip_coworker_forbidden_tool_requested')
+  addCheck('memory_policy', memoryTtlMinutes > 0 && memoryTtlMinutes <= input.definition.memory_ttl_minutes, 'blocked', 'paperclip_coworker_memory_ttl_exceeds_policy')
+  addCheck('audit_requirement', input.auditRequired !== false && input.definition.audit_trail_required, 'blocked', 'paperclip_coworker_audit_required')
+  addCheck('output_contract', Boolean(outputContract) && !paperclipCoWorkerUnsafeOutputContract(outputContract), 'blocked', 'paperclip_coworker_output_contract_required')
+
+  const failed = checks.find((check) => !check.passed) || null
+  const routeDecision: PaperclipCoWorkerRouteDecision = failed?.decision || 'allowed'
+  const blockedReason = failed?.blocked_reason || null
+  const auditSummary = blockedReason
+    ? `Paperclip co-worker policy blocked route: ${blockedReason}.`
+    : `Paperclip co-worker policy allowed ${requestedAction} route in dry-run validation.`
+
+  return {
+    ok: routeDecision === 'allowed',
+    mode: 'paperclip_coworker_gateway_policy_decision',
+    definition_id: input.definition.id,
+    requested_action: requestedAction,
+    credential_mode: credentialMode,
+    route_decision: routeDecision,
+    checks,
+    blocked_reason: blockedReason,
+    bridge_session_required: protectedAction,
+    owner_approval_required: protectedAction,
+    audit_event: paperclipCoWorkerAuditEvent('paperclip.coworker.policy.decision', 'gateway', input.definition.id, auditSummary, input.recordedAt),
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -1486,6 +1596,50 @@ function isActivePaperclipAgent(agent: PaperclipAgentSummary) {
 function isActivePaperclipIssue(issue: PaperclipIssueSummary) {
   const status = (issue.status || '').toLowerCase()
   return !/(done|closed|complete|completed|cancelled|canceled|archived|deleted)/.test(status)
+}
+
+function normalizePaperclipCoWorkerRequestAction(value: unknown): PaperclipCoWorkerRequestAction | null {
+  const normalized = sanitizeOwnerText(String(value || '')).toLowerCase().replace(/[^a-z]/g, '')
+  if (normalized === 'read' || normalized === 'readonly' || normalized === 'discovery' || normalized === 'status') return 'read'
+  if (normalized === 'write' || normalized === 'mutate' || normalized === 'update' || normalized === 'create') return 'write'
+  if (normalized === 'execute' || normalized === 'run' || normalized === 'dispatch') return 'execute'
+  return null
+}
+
+function normalizePaperclipCoWorkerCredentialMode(value: unknown): PaperclipCoWorkerCredentialMode {
+  const normalized = sanitizeOwnerText(String(value || '')).toLowerCase().replace(/[^a-z_]/g, '')
+  if (normalized === 'missing' || normalized === 'missing_credential' || normalized === 'blocked') return 'missing'
+  if (normalized === 'configured' || normalized === 'available' || normalized === 'present') return 'configured'
+  return 'none_required'
+}
+
+function paperclipCoWorkerScopeAllowed(definition: PaperclipCoWorkerAgentDefinition, requestedScope: string[]): boolean {
+  if (!requestedScope.length) return false
+  const allowedScopes = definition.task_scope.map((scope) => normalizePaperclipComparable(scope))
+  return requestedScope.every((scope) => {
+    const normalized = normalizePaperclipComparable(scope)
+    return Boolean(normalized) && allowedScopes.some((allowed) => allowed === normalized || allowed.includes(normalized) || normalized.includes(allowed))
+  })
+}
+
+function paperclipCoWorkerToolsAllowed(definition: PaperclipCoWorkerAgentDefinition, requestedTools: string[]): boolean {
+  if (!requestedTools.length) return true
+  const forbiddenTools = new Set(definition.forbidden_tools.map((tool) => normalizePaperclipComparable(tool)))
+  return requestedTools.every((tool) => {
+    const normalized = normalizePaperclipComparable(tool)
+    return Boolean(normalized) && !forbiddenTools.has(normalized) && !paperclipCoWorkerForbiddenToolPattern().test(normalized)
+  })
+}
+
+function paperclipCoWorkerUnsafeOutputContract(value: string): boolean {
+  const normalized = value.toLowerCase()
+  const rawHome = `${'/home'}/${'tony'}`
+  const authFile = `auth${'.'}json`
+  return normalized.includes(rawHome) || normalized.includes(authFile) || normalized.includes('.env') || /failed stage|traceback|stack trace|task[_ -]?id/.test(normalized)
+}
+
+function normalizePaperclipComparable(value: string): string {
+  return sanitizeOwnerText(value).toLowerCase().replace(/[^a-z0-9_.:-]+/g, '_').replace(/^_+|_+$/g, '')
 }
 
 function normalizePaperclipCoWorkerLifecycle(value: string): PaperclipCoWorkerLifecycleState | null {

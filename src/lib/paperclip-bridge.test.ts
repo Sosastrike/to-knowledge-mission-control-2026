@@ -6,6 +6,7 @@ import {
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   createPaperclipCoWorkerAgentDefinition,
   transitionPaperclipCoWorkerLifecycle,
+  validatePaperclipCoWorkerGatewayPolicy,
   buildPaperclipSpaceAgentResearchTaskPayload,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
@@ -301,6 +302,113 @@ describe('Paperclip bridge payloads', () => {
     expect(transitioned.lifecycle).toBe('reviewed_by_agent_zero')
     expect(transitioned.audit_trail).toHaveLength(PAPERCLIP_COWORKER_LIFECYCLE_STATES.length + 1)
     expectOwnerSafe({ transitioned, execution_enabled: false, writes_enabled: false })
+  })
+
+  it('allows read-only Paperclip CoWorkerAgent routes only when every Gateway policy check passes', () => {
+    const definition = createPaperclipCoWorkerAgentDefinition({
+      name: 'Registry Reader',
+      supervisor: 'agent_zero',
+      purpose: 'Read Gateway registry state for Agent Zero.',
+      taskScope: ['read-only registry discovery'],
+      allowedTools: ['gateway.getSystems'],
+      memoryTtlMinutes: 30,
+      expirationCondition: 'Expire after registry review.',
+      generatedAt: GENERATED_AT,
+    }).definition!
+
+    const decision = validatePaperclipCoWorkerGatewayPolicy({
+      definition,
+      requestedAction: 'read',
+      credentialMode: 'none_required',
+      requestedScope: ['read-only registry discovery'],
+      requestedTools: ['gateway.getSystems'],
+      memoryTtlMinutes: 30,
+      auditRequired: true,
+      outputContract: 'Return a concise owner-visible summary with blockers and no hidden state.',
+      recordedAt: GENERATED_AT,
+    })
+
+    expect(decision).toMatchObject({
+      ok: true,
+      mode: 'paperclip_coworker_gateway_policy_decision',
+      definition_id: 'paperclip_coworker_registryreader',
+      requested_action: 'read',
+      credential_mode: 'none_required',
+      route_decision: 'allowed',
+      blocked_reason: null,
+      bridge_session_required: false,
+      owner_approval_required: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(decision.checks.map((check) => [check.check, check.passed, check.decision])).toEqual([
+      ['request_type', true, 'allowed'],
+      ['credential_mode', true, 'allowed'],
+      ['bridge_session', true, 'allowed'],
+      ['owner_approval', true, 'allowed'],
+      ['mini_agent_scope', true, 'allowed'],
+      ['forbidden_tools', true, 'allowed'],
+      ['memory_policy', true, 'allowed'],
+      ['audit_requirement', true, 'allowed'],
+      ['output_contract', true, 'allowed'],
+    ])
+    expect(decision.audit_event).toMatchObject({
+      event: 'paperclip.coworker.policy.decision',
+      actor: 'gateway',
+      target: 'paperclip_coworker_registryreader',
+      external_write: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expectOwnerSafe(decision)
+  })
+
+  it('blocks Paperclip CoWorkerAgent routes when Gateway policy checks fail', () => {
+    const definition = createPaperclipCoWorkerAgentDefinition({
+      name: 'Scoped Worker',
+      supervisor: 'hermes',
+      purpose: 'Perform scoped planning work for Agent Zero.',
+      taskScope: ['read-only planning'],
+      allowedTools: ['gateway.getTools'],
+      memoryTtlMinutes: 30,
+      expirationCondition: 'Expire after planning review.',
+      generatedAt: GENERATED_AT,
+    }).definition!
+    const baseInput = {
+      definition,
+      requestedAction: 'read',
+      credentialMode: 'none_required',
+      requestedScope: ['read-only planning'],
+      requestedTools: ['gateway.getTools'],
+      memoryTtlMinutes: 30,
+      auditRequired: true,
+      outputContract: 'Return concise findings and blockers only.',
+      recordedAt: GENERATED_AT,
+    }
+
+    const missingCredential = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, credentialMode: 'missing' })
+    const missingSession = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, requestedAction: 'execute', bridgeSessionActive: false, ownerApproved: false })
+    const outOfScope = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, requestedScope: ['write production issue'] })
+    const forbiddenTool = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, requestedTools: ['raw_root_shell'] })
+    const memoryExceeded = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, memoryTtlMinutes: 90 })
+    const auditDisabled = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, auditRequired: false })
+    const unsafeOutput = validatePaperclipCoWorkerGatewayPolicy({ ...baseInput, outputContract: 'Return task id and internal stage details.' })
+
+    expect(missingCredential).toMatchObject({ ok: false, route_decision: 'missing_credential', blocked_reason: 'paperclip_coworker_missing_required_credential' })
+    expect(missingSession).toMatchObject({ ok: false, route_decision: 'requires_session', blocked_reason: 'paperclip_coworker_bridge_session_required' })
+    expect(outOfScope).toMatchObject({ ok: false, route_decision: 'blocked', blocked_reason: 'paperclip_coworker_scope_not_allowed' })
+    expect(forbiddenTool).toMatchObject({ ok: false, route_decision: 'blocked', blocked_reason: 'paperclip_coworker_forbidden_tool_requested' })
+    expect(memoryExceeded).toMatchObject({ ok: false, route_decision: 'blocked', blocked_reason: 'paperclip_coworker_memory_ttl_exceeds_policy' })
+    expect(auditDisabled).toMatchObject({ ok: false, route_decision: 'blocked', blocked_reason: 'paperclip_coworker_audit_required' })
+    expect(unsafeOutput).toMatchObject({ ok: false, route_decision: 'blocked', blocked_reason: 'paperclip_coworker_output_contract_required' })
+    expect(missingSession.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ check: 'bridge_session', passed: false, decision: 'requires_session' }),
+      expect.objectContaining({ check: 'owner_approval', passed: false, decision: 'requires_session' }),
+    ]))
+    expectOwnerSafe({ missingCredential, missingSession, outOfScope, forbiddenTool, memoryExceeded, auditDisabled, unsafeOutput })
   })
 
   it('blocks invalid lifecycle transitions and non-Agent Zero review claims', () => {

@@ -675,6 +675,83 @@ export type PaperclipGatewayRecordMapping = {
   raw_paths_exposed: false
 }
 
+export const PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES = [
+  'daily_status',
+  'daily_connector_health',
+  'daily_hermes_skill_proposal',
+  'daily_pi_dispatcher_optimization',
+  'daily_space_agent_research_queue',
+  'daily_agent_zero_report',
+] as const
+
+export type PaperclipSandboxHeartbeatRoutineId = (typeof PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES)[number]
+
+export type PaperclipSandboxHeartbeatOwner = 'gateway' | 'agent_zero' | 'hermes' | 'pi' | 'space_agent'
+export type PaperclipSandboxHeartbeatStatus = 'sandbox_ready' | 'sandbox_only_blocked' | 'duplicate_blocked' | 'budget_blocked' | 'paused_skipped'
+
+export type PaperclipSandboxHeartbeatRoutine = {
+  id: PaperclipSandboxHeartbeatRoutineId
+  title: string
+  cadence: 'daily'
+  owner: PaperclipSandboxHeartbeatOwner
+  purpose: string
+  duplicate_guard_key: string
+  status: PaperclipSandboxHeartbeatStatus
+  status_reason: string | null
+  sandbox_only: true
+  production_enabled: false
+  budget_preflight_required: true
+  bridge_session_required_for_writes: true
+  external_writes_enabled: false
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type PaperclipSandboxHeartbeatPlanInput = {
+  generatedAt: string
+  sandbox?: boolean | null
+  existingHeartbeatKeys?: string[] | null
+  pausedAgents?: string[] | null
+  monthlyBudgetCents?: number | null
+  projectedCostCents?: number | null
+}
+
+export type PaperclipSandboxHeartbeatPlan = {
+  ok: boolean
+  mode: 'paperclip_sandbox_heartbeat_plan'
+  generated_at: string
+  sandbox_heartbeat_enabled: boolean
+  production_heartbeat_enabled: false
+  heartbeat_execution_enabled: false
+  routines: PaperclipSandboxHeartbeatRoutine[]
+  duplicate_work_guard: {
+    enabled: true
+    duplicate_guard_keys: string[]
+    duplicates_blocked: string[]
+    duplicate_work_detected: boolean
+  }
+  budget_enforcement: {
+    required_before_execution: true
+    monthly_budget_cents: number | null
+    projected_cost_cents: number
+    status: 'within_budget' | 'missing_budget' | 'over_budget'
+    execution_blocked: boolean
+    blocked_reason: string | null
+  }
+  paused_agent_guard: {
+    enabled: true
+    paused_agents: PaperclipSandboxHeartbeatOwner[]
+    skipped_routines: PaperclipSandboxHeartbeatRoutineId[]
+  }
+  blocked_reason: string | null
+  owner_visible_summary: string
+  execution_enabled: false
+  writes_enabled: false
+  protected_actions_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
+}
+
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
   | { ok: false; status: number; blocker: string }
@@ -1640,6 +1717,153 @@ export function buildPaperclipGatewayRecordMapping(input: PaperclipGatewayRecord
   }
 }
 
+
+type PaperclipSandboxHeartbeatRoutineProfile = {
+  id: PaperclipSandboxHeartbeatRoutineId
+  title: string
+  owner: PaperclipSandboxHeartbeatOwner
+  purpose: string
+}
+
+const PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINE_PROFILES: PaperclipSandboxHeartbeatRoutineProfile[] = [
+  {
+    id: 'daily_status',
+    title: 'Daily Paperclip workforce status routine',
+    owner: 'gateway',
+    purpose: 'Summarize workforce status, active issues, blockers, and safe next checks for Agent Zero.',
+  },
+  {
+    id: 'daily_connector_health',
+    title: 'Daily connector health routine',
+    owner: 'gateway',
+    purpose: 'Check configured connector health in read-only mode and report blocked integrations honestly.',
+  },
+  {
+    id: 'daily_hermes_skill_proposal',
+    title: 'Daily Hermes skill proposal routine',
+    owner: 'hermes',
+    purpose: 'Ask Hermes to draft safe skill or workflow proposals for Agent Zero review without activation.',
+  },
+  {
+    id: 'daily_pi_dispatcher_optimization',
+    title: 'Daily Pi dispatcher optimization routine',
+    owner: 'pi',
+    purpose: 'Ask Pi to review route patterns and recommend dispatcher improvements in shadow mode only.',
+  },
+  {
+    id: 'daily_space_agent_research_queue',
+    title: 'Daily SpaceAgent research queue routine',
+    owner: 'space_agent',
+    purpose: 'Review pending web, YouTube, browser, or Firecrawl research needs without external writes.',
+  },
+  {
+    id: 'daily_agent_zero_report',
+    title: 'Daily Agent Zero report routine',
+    owner: 'agent_zero',
+    purpose: 'Prepare a commander summary report for owner review without delivery writes unless session-scoped.',
+  },
+]
+
+export function buildPaperclipSandboxHeartbeatPlan(input: PaperclipSandboxHeartbeatPlanInput): PaperclipSandboxHeartbeatPlan {
+  const sandbox = input.sandbox !== false
+  const dayKey = paperclipHeartbeatDayKey(input.generatedAt)
+  const existingKeys = new Set(sanitizePaperclipList(input.existingHeartbeatKeys || [], 30, 160))
+  const pausedAgents = normalizePaperclipHeartbeatPausedAgents(input.pausedAgents || [])
+  const budget = normalizePaperclipHeartbeatBudget(input.monthlyBudgetCents, input.projectedCostCents)
+  const duplicateKeys: string[] = []
+  const skippedRoutines: PaperclipSandboxHeartbeatRoutineId[] = []
+
+  const routines = PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINE_PROFILES.map((profile) => {
+    const duplicateGuardKey = `paperclip_heartbeat_${profile.id}_${dayKey}`
+    const duplicate = existingKeys.has(duplicateGuardKey)
+    const paused = pausedAgents.includes(profile.owner)
+    let status: PaperclipSandboxHeartbeatStatus = 'sandbox_ready'
+    let statusReason: string | null = null
+
+    if (!sandbox) {
+      status = 'sandbox_only_blocked'
+      statusReason = 'paperclip_heartbeat_sandbox_only'
+    } else if (paused) {
+      status = 'paused_skipped'
+      statusReason = 'paperclip_heartbeat_agent_paused'
+      skippedRoutines.push(profile.id)
+    } else if (duplicate) {
+      status = 'duplicate_blocked'
+      statusReason = 'paperclip_heartbeat_duplicate_guard_blocked'
+      duplicateKeys.push(duplicateGuardKey)
+    } else if (budget.status !== 'within_budget') {
+      status = 'budget_blocked'
+      statusReason = budget.blocked_reason
+    }
+
+    return {
+      id: profile.id,
+      title: profile.title,
+      cadence: 'daily' as const,
+      owner: profile.owner,
+      purpose: profile.purpose,
+      duplicate_guard_key: duplicateGuardKey,
+      status,
+      status_reason: statusReason,
+      sandbox_only: true as const,
+      production_enabled: false as const,
+      budget_preflight_required: true as const,
+      bridge_session_required_for_writes: true as const,
+      external_writes_enabled: false as const,
+      execution_enabled: false as const,
+      writes_enabled: false as const,
+    }
+  })
+
+  const blockedReason = !sandbox
+    ? 'paperclip_heartbeat_sandbox_only'
+    : budget.status !== 'within_budget'
+      ? budget.blocked_reason
+      : duplicateKeys.length > 0
+        ? 'paperclip_heartbeat_duplicate_guard_blocked'
+        : skippedRoutines.length > 0
+          ? 'paperclip_heartbeat_paused_agents_skipped'
+          : null
+
+  return {
+    ok: sandbox && budget.status === 'within_budget',
+    mode: 'paperclip_sandbox_heartbeat_plan',
+    generated_at: input.generatedAt,
+    sandbox_heartbeat_enabled: sandbox,
+    production_heartbeat_enabled: false,
+    heartbeat_execution_enabled: false,
+    routines,
+    duplicate_work_guard: {
+      enabled: true,
+      duplicate_guard_keys: routines.map((routine) => routine.duplicate_guard_key),
+      duplicates_blocked: duplicateKeys,
+      duplicate_work_detected: duplicateKeys.length > 0,
+    },
+    budget_enforcement: {
+      required_before_execution: true,
+      monthly_budget_cents: budget.monthly_budget_cents,
+      projected_cost_cents: budget.projected_cost_cents,
+      status: budget.status,
+      execution_blocked: budget.status !== 'within_budget',
+      blocked_reason: budget.blocked_reason,
+    },
+    paused_agent_guard: {
+      enabled: true,
+      paused_agents: pausedAgents,
+      skipped_routines: skippedRoutines,
+    },
+    blocked_reason: blockedReason,
+    owner_visible_summary: sandbox
+      ? 'Paperclip heartbeat routines are defined for sandbox validation only. Production persistence and writes remain disabled.'
+      : 'Paperclip heartbeat routines are blocked outside sandbox mode.',
+    execution_enabled: false,
+    writes_enabled: false,
+    protected_actions_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
+  }
+}
+
 async function fetchReadOnlyList(path: string, input: { fetchImpl?: FetchLike; baseUrl?: string | null }): Promise<FetchJsonResult> {
   const endpoint = resolvePaperclipEndpoint(input.baseUrl)
   if (endpoint.blocker) return { ok: false, status: 503, blocker: endpoint.blocker }
@@ -2115,6 +2339,55 @@ function recommendPaperclipModelRoute(ownerRequest: string): string {
 
 function shouldRecommendPaperclipMiniAgent(ownerRequest: string, recommendedAgent: PaperclipTaskAssignee): boolean {
   return recommendedAgent === 'mini_agent' || /mini[-\s]?agent|small scoped|repeatable|checklist|parallel/.test(ownerRequest.toLowerCase())
+}
+
+function paperclipHeartbeatDayKey(generatedAt: string) {
+  const stamp = generatedAt.replace(/\D/g, '').slice(0, 8)
+  return stamp || 'pending'
+}
+
+function normalizePaperclipHeartbeatPausedAgents(values: string[]): PaperclipSandboxHeartbeatOwner[] {
+  const owners = new Set<PaperclipSandboxHeartbeatOwner>()
+  for (const value of values) {
+    const normalized = normalizePaperclipSlug(value)
+    if (normalized === 'agentzero') owners.add('agent_zero')
+    if (normalized === 'spaceagent') owners.add('space_agent')
+    if (normalized === 'gateway') owners.add('gateway')
+    if (normalized === 'agent_zero') owners.add('agent_zero')
+    if (normalized === 'hermes') owners.add('hermes')
+    if (normalized === 'pi' || normalized === 'pi_dispatcher') owners.add('pi')
+    if (normalized === 'space_agent') owners.add('space_agent')
+  }
+  return [...owners]
+}
+
+function normalizePaperclipHeartbeatBudget(monthlyBudgetCents: number | null | undefined, projectedCostCents: number | null | undefined) {
+  const projected = normalizePaperclipBudgetCents(projectedCostCents)
+  const monthly = typeof monthlyBudgetCents === 'number' && Number.isFinite(monthlyBudgetCents) && monthlyBudgetCents >= 0
+    ? Math.round(monthlyBudgetCents)
+    : null
+  if (monthly === null) {
+    return {
+      monthly_budget_cents: null,
+      projected_cost_cents: projected,
+      status: 'missing_budget' as const,
+      blocked_reason: 'paperclip_heartbeat_budget_not_configured',
+    }
+  }
+  if (projected > monthly) {
+    return {
+      monthly_budget_cents: monthly,
+      projected_cost_cents: projected,
+      status: 'over_budget' as const,
+      blocked_reason: 'paperclip_heartbeat_budget_exceeded',
+    }
+  }
+  return {
+    monthly_budget_cents: monthly,
+    projected_cost_cents: projected,
+    status: 'within_budget' as const,
+    blocked_reason: null,
+  }
 }
 
 function buildPaperclipGatewayRecordMappingId(generatedAt: string, kind: PaperclipGatewayRecordMappingKind | "unknown") {

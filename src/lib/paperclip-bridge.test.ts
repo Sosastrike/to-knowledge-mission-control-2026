@@ -4,8 +4,10 @@ import {
   buildPaperclipGatewayTaskPayload,
   buildPaperclipHermesProposalPayload,
   buildPaperclipPiDispatcherRecommendationPayload,
+  buildPaperclipSandboxHeartbeatPlan,
   PAPERCLIP_COWORKER_LIFECYCLE_STATES,
   PAPERCLIP_GATEWAY_RECORD_MAPPINGS,
+  PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES,
   createPaperclipCoWorkerAgentDefinition,
   transitionPaperclipCoWorkerLifecycle,
   validatePaperclipCoWorkerGatewayPolicy,
@@ -965,6 +967,134 @@ describe('Paperclip bridge payloads', () => {
       writes_enabled: false,
     })
     expectOwnerSafe({ unknown, missingBlocker })
+  })
+
+
+  it('creates sandbox-only daily Paperclip heartbeat routines without enabling execution', () => {
+    const plan = buildPaperclipSandboxHeartbeatPlan({
+      generatedAt: GENERATED_AT,
+      sandbox: true,
+      monthlyBudgetCents: 5000,
+      projectedCostCents: 250,
+    })
+
+    expect(plan).toMatchObject({
+      ok: true,
+      mode: 'paperclip_sandbox_heartbeat_plan',
+      sandbox_heartbeat_enabled: true,
+      production_heartbeat_enabled: false,
+      heartbeat_execution_enabled: false,
+      budget_enforcement: {
+        required_before_execution: true,
+        monthly_budget_cents: 5000,
+        projected_cost_cents: 250,
+        status: 'within_budget',
+        execution_blocked: false,
+        blocked_reason: null,
+      },
+      duplicate_work_guard: {
+        enabled: true,
+        duplicate_work_detected: false,
+        duplicates_blocked: [],
+      },
+      paused_agent_guard: {
+        enabled: true,
+        paused_agents: [],
+        skipped_routines: [],
+      },
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(plan.routines.map((routine) => routine.id)).toEqual([...PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES])
+    expect(plan.routines.map((routine) => routine.status)).toEqual(PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES.map(() => 'sandbox_ready'))
+    expect(plan.routines).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'daily_status', owner: 'gateway', production_enabled: false, budget_preflight_required: true }),
+      expect.objectContaining({ id: 'daily_connector_health', owner: 'gateway', production_enabled: false, budget_preflight_required: true }),
+      expect.objectContaining({ id: 'daily_hermes_skill_proposal', owner: 'hermes', production_enabled: false, budget_preflight_required: true }),
+      expect.objectContaining({ id: 'daily_pi_dispatcher_optimization', owner: 'pi', production_enabled: false, budget_preflight_required: true }),
+      expect.objectContaining({ id: 'daily_space_agent_research_queue', owner: 'space_agent', production_enabled: false, budget_preflight_required: true }),
+      expect.objectContaining({ id: 'daily_agent_zero_report', owner: 'agent_zero', production_enabled: false, budget_preflight_required: true }),
+    ]))
+    expect(new Set(plan.duplicate_work_guard.duplicate_guard_keys).size).toBe(PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINES.length)
+    expect(plan.routines.every((routine) => routine.external_writes_enabled === false && routine.execution_enabled === false && routine.writes_enabled === false)).toBe(true)
+    expectOwnerSafe(plan)
+  })
+
+  it('blocks Paperclip heartbeats outside sandbox, when budgets fail, when duplicates exist, and when agents are paused', () => {
+    const nonSandbox = buildPaperclipSandboxHeartbeatPlan({
+      generatedAt: GENERATED_AT,
+      sandbox: false,
+      monthlyBudgetCents: 5000,
+      projectedCostCents: 250,
+    })
+    const missingBudget = buildPaperclipSandboxHeartbeatPlan({
+      generatedAt: GENERATED_AT,
+      sandbox: true,
+    })
+    const overBudget = buildPaperclipSandboxHeartbeatPlan({
+      generatedAt: GENERATED_AT,
+      sandbox: true,
+      monthlyBudgetCents: 100,
+      projectedCostCents: 250,
+    })
+    const duplicateAndPaused = buildPaperclipSandboxHeartbeatPlan({
+      generatedAt: GENERATED_AT,
+      sandbox: true,
+      monthlyBudgetCents: 5000,
+      projectedCostCents: 250,
+      existingHeartbeatKeys: ['paperclip_heartbeat_daily_status_20260506'],
+      pausedAgents: ['hermes', 'pi'],
+    })
+
+    expect(nonSandbox).toMatchObject({
+      ok: false,
+      sandbox_heartbeat_enabled: false,
+      production_heartbeat_enabled: false,
+      blocked_reason: 'paperclip_heartbeat_sandbox_only',
+    })
+    expect(nonSandbox.routines.every((routine) => routine.status === 'sandbox_only_blocked')).toBe(true)
+
+    expect(missingBudget).toMatchObject({
+      ok: false,
+      budget_enforcement: {
+        status: 'missing_budget',
+        execution_blocked: true,
+        blocked_reason: 'paperclip_heartbeat_budget_not_configured',
+      },
+      blocked_reason: 'paperclip_heartbeat_budget_not_configured',
+    })
+    expect(missingBudget.routines.every((routine) => routine.status === 'budget_blocked')).toBe(true)
+
+    expect(overBudget).toMatchObject({
+      ok: false,
+      budget_enforcement: {
+        status: 'over_budget',
+        execution_blocked: true,
+        blocked_reason: 'paperclip_heartbeat_budget_exceeded',
+      },
+      blocked_reason: 'paperclip_heartbeat_budget_exceeded',
+    })
+    expect(overBudget.routines.every((routine) => routine.status === 'budget_blocked')).toBe(true)
+
+    expect(duplicateAndPaused).toMatchObject({
+      ok: true,
+      duplicate_work_guard: {
+        duplicate_work_detected: true,
+        duplicates_blocked: ['paperclip_heartbeat_daily_status_20260506'],
+      },
+      paused_agent_guard: {
+        paused_agents: ['hermes', 'pi'],
+        skipped_routines: ['daily_hermes_skill_proposal', 'daily_pi_dispatcher_optimization'],
+      },
+      blocked_reason: 'paperclip_heartbeat_duplicate_guard_blocked',
+    })
+    expect(duplicateAndPaused.routines.find((routine) => routine.id === 'daily_status')).toMatchObject({ status: 'duplicate_blocked' })
+    expect(duplicateAndPaused.routines.find((routine) => routine.id === 'daily_hermes_skill_proposal')).toMatchObject({ status: 'paused_skipped' })
+    expect(duplicateAndPaused.routines.find((routine) => routine.id === 'daily_pi_dispatcher_optimization')).toMatchObject({ status: 'paused_skipped' })
+    expectOwnerSafe({ nonSandbox, missingBudget, overBudget, duplicateAndPaused })
   })
 
   it('keeps test-task safely blocked until a no-write Paperclip adapter exists', async () => {

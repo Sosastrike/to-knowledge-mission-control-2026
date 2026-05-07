@@ -153,7 +153,7 @@ describe('Gateway route planner', () => {
     expect(plan.classification).toBe('skill')
     expect(plan.primary_target).toBe('agent_zero')
     expect(plan.dispatch_target).toBe('openclaw_plus')
-    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'openclaw_plus'])
+    expect(plan.route_via).toEqual(['owner', 'gateway', 'agent_zero', 'paperclip', 'openclaw_plus'])
     expect(plan.requires_bridge_session).toBe(true)
     expect(plan.blocked).toBe(true)
     expect(plan.route_decision).toBe('requires_session')

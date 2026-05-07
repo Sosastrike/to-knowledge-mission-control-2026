@@ -1152,7 +1152,7 @@ export type PaperclipGatewayPluginSpec = {
   name: string
   kind: PaperclipGatewayPluginKind
   target_node: string
-  supervisor: 'gateway' | 'agent_zero'
+  supervisor: 'gateway' | 'agent_zero' | 'paperclip'
   plugin_system: 'mission_control_explicit_plugin_loader'
   registers: Array<'integration' | 'category' | 'nav_item' | 'panel' | 'tool_provider' | 'gateway_node' | 'adapter'>
   capabilities: string[]
@@ -2774,7 +2774,7 @@ const PAPERCLIP_WORKSPACE_DEFINITIONS: Record<PaperclipWorkspaceId, PaperclipWor
     id: 'claudeclaw_openclaw',
     name: 'ClaudeClaw / OpenClaw+',
     kind: 'runtime_skills_layer',
-    role: 'Shared runtime, skills, adapters, reports, and governance layer',
+    role: 'Runtime / Skills Engine for agents, skills, functions, reports, approvals, runtime ledgers, mini-agent execution, and tool execution after Paperclip workforce supervision',
     repository_ref: 'repo_ref_claudeclaw_openclaw',
     workspace_ref: 'workspace_ref_claudeclaw_openclaw',
     status: 'mapped',
@@ -3002,10 +3002,10 @@ const PAPERCLIP_GATEWAY_PLUGIN_SPECS: Record<PaperclipGatewayPluginId, Paperclip
     name: 'OpenClaw+ Skills Adapter Plugin',
     kind: 'skills_adapter',
     target_node: 'openclaw_plus',
-    supervisor: 'gateway',
+    supervisor: 'paperclip',
     plugin_system: 'mission_control_explicit_plugin_loader',
     registers: ['gateway_node', 'adapter', 'tool_provider'],
-    capabilities: ['skill_registry', 'adapter_status', 'report_runtime', 'governance_layer'],
+    capabilities: ['skill_registry', 'adapter_status', 'report_runtime', 'governance_layer', 'mini_agent_execution', 'tool_execution_after_bridge_session'],
     load_mode: 'explicit_import_only',
     production_auto_load_enabled: false,
     unload_supported: true,

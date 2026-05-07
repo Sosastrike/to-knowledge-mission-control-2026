@@ -322,13 +322,13 @@ function routeSkillExecution(registry: GatewayRegistry, prompt: string): RouteTa
   return routeCapability({
     primaryTarget: 'agent_zero',
     fallbackDispatch: 'openclaw_plus',
-    via: ['owner', 'gateway', 'agent_zero', 'openclaw_plus'],
+    via: ['owner', 'gateway', 'agent_zero', 'paperclip', 'openclaw_plus'],
     capability,
     edgeKind: 'tool-call',
     requiresBridgeSession: true,
     executionMode: 'bridge_session',
     missingBlocker: 'skill_execution_capability_not_registered',
-    rationale: 'Skill execution routes to Agent Zero and the OpenClaw+ runtime, and requires an owner-approved Bridge Session.',
+    rationale: 'Skill execution routes to Agent Zero, then Paperclip workforce supervision, then the OpenClaw+ Runtime / Skills Engine, and requires an owner-approved Bridge Session.',
   })
 }
 

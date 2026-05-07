@@ -725,14 +725,14 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       purpose: 'Space Agent returns structured Research Packets through Gateway to the responsible agent; Agent Zero owns owner-facing response by default.',
     },
     {
-      flow_id: 'flow_agent_zero_gateway_openclaw_skill',
+      flow_id: 'flow_agent_zero_gateway_paperclip_openclaw_skill',
       source: 'agent_zero',
       target: 'openclaw_plus',
-      requested_action: 'openclaw_skill_route',
+      requested_action: 'paperclip_supervised_openclaw_skill_route',
       edge_kind: 'tool-call' as const,
-      hops: ['agent_zero', 'gateway', 'openclaw_plus'],
+      hops: ['agent_zero', 'gateway', 'paperclip', 'openclaw_plus'],
       requires_session: true,
-      purpose: 'Agent Zero routes OpenClaw+ skill usage through Gateway; execution-capable skills require Bridge Session scope.',
+      purpose: 'Agent Zero routes skill/runtime work through Gateway to Paperclip Workforce Control Plane before OpenClaw+ Runtime / Skills Engine executes it; execution-capable skills require Bridge Session scope.',
     },
     {
       flow_id: 'flow_agent_zero_gateway_mcp_tool',

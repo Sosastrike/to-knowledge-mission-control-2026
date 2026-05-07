@@ -79,7 +79,7 @@ describe('canonical Gateway graph model', () => {
       'tony_legacy',
     ]))
     expect(agentZero).toMatchObject({ role: 'commander', commander: true, active: true })
-    expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'paperclip', 'existing_agents', 'hermes', 'pi', 'mini_agents']))
+    expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'paperclip', 'hermes', 'pi']))
     expect(hermes).toMatchObject({ role: 'lieutenant_skill_workflow_builder', can_design: true, commander: false })
     expect(hermes?.policy_tags).toContain('can_design_space_agent_skills')
     expect(pi).toMatchObject({ role: 'gateway_dispatcher_candidate_route_optimizer_tool_use_advisor', can_recommend: true, commander: false })
@@ -110,6 +110,8 @@ describe('canonical Gateway graph model', () => {
       'no_public_exposure',
       'bridge_session_required_for_workforce_mutations',
       'production_install_blocked_by_dependency_audit',
+      'paperclip_before_openclaw_plus',
+      'workforce_control_plane',
     ]))
     expect(existingAgents).toMatchObject({
       role: 'retained_specialist_workforce',
@@ -118,7 +120,7 @@ describe('canonical Gateway graph model', () => {
       archived: false,
       execution_mode: 'gateway_route_and_bridge_session_required_for_side_effects',
     })
-    expect(existingAgents?.reports_to).toEqual(expect.arrayContaining(['gateway', 'agent_zero']))
+    expect(existingAgents?.reports_to).toEqual(expect.arrayContaining(['openclaw_plus', 'paperclip', 'agent_zero']))
     expect(existingAgents?.policy_tags).toEqual(expect.arrayContaining([
       'existing_agents_retained',
       'paperclip_does_not_replace_existing_agents',
@@ -126,7 +128,9 @@ describe('canonical Gateway graph model', () => {
     ]))
     expect(openCloud).toMatchObject({ role: 'worker_runtime_engine_skill_tool_agent_creation_layer', commander: false, active: true })
     expect(openCloud?.policy_tags).toContain('opencloud_retained')
-    expect(openClaw).toMatchObject({ role: 'worker_runtime_skills_adapters_reports_layer', commander: false, active: true })
+    expect(openClaw).toMatchObject({ role: 'runtime_skills_engine', commander: false, active: true })
+    expect(openClaw?.reports_to).toEqual(expect.arrayContaining(['paperclip', 'gateway', 'agent_zero']))
+    expect(openClaw?.policy_tags).toEqual(expect.arrayContaining(['runtime_skills_engine', 'paperclip_supervised_runtime']))
     expect(tony).toMatchObject({ role: 'retired_archive_only', commander: false, active: false, archived: true })
   })
 
@@ -302,6 +306,10 @@ describe('canonical Gateway graph model', () => {
       tasks_endpoint: '/api/bridge/paperclip/tasks',
       proposals_endpoint: '/api/bridge/paperclip/proposals',
       research_tasks_endpoint: '/api/bridge/paperclip/research-tasks',
+      corrected_gateway_chain: 'owner -> gateway -> agent_zero_pi_hermes -> paperclip -> openclaw_plus -> mini_agents_specialist_agents_skills_tools_reports_approvals',
+      paperclip_layer: 'workforce_control_plane',
+      openclaw_plus_layer: 'runtime_skills_engine',
+      paperclip_before_openclaw_plus: true,
       space_agent_appears_as_paperclip_agent: true,
       space_agent_can_receive_web_research_task: true,
       space_agent_can_receive_youtube_research_task: true,
@@ -328,8 +336,8 @@ describe('canonical Gateway graph model', () => {
     expect(existingAgents).toMatchObject({
       kind: 'specialist_agent',
       role: 'retained_specialist_workforce',
-      parent: 'gateway',
-      supervisors: ['agent_zero', 'gateway'],
+      parent: 'openclaw_plus',
+      supervisors: ['openclaw_plus', 'paperclip', 'agent_zero', 'gateway'],
       execution_state: 'bridge_session_required',
       external_writes: 'requires_bridge_session',
       status: 'read_only',
@@ -341,11 +349,15 @@ describe('canonical Gateway graph model', () => {
         'Agent Zero supervision',
         'historical agent IDs retained',
         'no replacement by Paperclip',
+        'Paperclip workforce supervision',
+        'OpenClaw+ runtime execution',
       ]),
     })
     expect(existingAgents?.status_details).toMatchObject({
       retained: true,
       paperclip_replaces_existing_agents: false,
+      paperclip_supervises_workforce_metadata: true,
+      openclaw_plus_executes_specialist_agents: true,
       agent_zero_commander: true,
       gateway_route_required: true,
       bridge_session_required_for_execution: true,
@@ -420,6 +432,10 @@ describe('canonical Gateway graph model', () => {
       ],
       status_details: {
         role: 'workforce_company_task_orchestration_layer',
+        corrected_gateway_chain: 'owner -> gateway -> agent_zero_pi_hermes -> paperclip -> openclaw_plus -> mini_agents_specialist_agents_skills_tools_reports_approvals',
+        paperclip_layer: 'workforce_control_plane',
+        openclaw_plus_layer: 'runtime_skills_engine',
+        paperclip_before_openclaw_plus: true,
         repo_audit_status: 'sandbox_audit_complete',
         sandbox_install: 'passed_with_ignore_scripts',
         token_scan: 'passed',
@@ -541,12 +557,15 @@ describe('canonical Gateway graph model', () => {
         expect.objectContaining({ source: 'space_agent', target: 'agent_zero', kind: 'report' }),
         expect.objectContaining({ source: 'gateway', target: 'paperclip', kind: 'delegation', status: 'blocked' }),
         expect.objectContaining({ source: 'agent_zero', target: 'paperclip', kind: 'delegation', status: 'blocked' }),
+        expect.objectContaining({ source: 'paperclip', target: 'openclaw_plus', kind: 'tool-call' }),
+        expect.objectContaining({ source: 'openclaw_plus', target: 'paperclip', kind: 'report' }),
         expect.objectContaining({ source: 'paperclip', target: 'agent_zero', kind: 'report' }),
         expect.objectContaining({ source: 'gateway', target: 'existing_agents', kind: 'delegation', status: 'blocked' }),
         expect.objectContaining({ source: 'agent_zero', target: 'existing_agents', kind: 'delegation', status: 'blocked' }),
         expect.objectContaining({ source: 'existing_agents', target: 'agent_zero', kind: 'report' }),
-        expect.objectContaining({ source: 'agent_zero', target: 'openclaw_plus', kind: 'tool-call' }),
         expect.objectContaining({ source: 'openclaw_plus', target: 'bridge_mcp', kind: 'mcp-call' }),
+        expect.objectContaining({ source: 'openclaw_plus', target: 'existing_agents', kind: 'delegation' }),
+        expect.objectContaining({ source: 'openclaw_plus', target: 'mini_agents', kind: 'delegation' }),
         expect.objectContaining({ source: 'agent_zero', target: 'brain_sync', kind: 'memory' }),
         expect.objectContaining({ source: 'gateway', target: 'mini_agents', kind: 'delegation' }),
         expect.objectContaining({ source: 'mini_agents', target: 'agent_zero', kind: 'report' }),

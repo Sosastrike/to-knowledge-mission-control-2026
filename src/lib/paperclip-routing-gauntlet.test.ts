@@ -134,6 +134,8 @@ describe('Paperclip final Gateway routing gauntlet', () => {
     expect(pi?.node.label).toContain('Pi')
     expect(spaceAgent?.node.label).toContain('Space')
     expect(JSON.stringify(paperclip)).toContain('paperclip_service_not_configured')
+    expect(JSON.stringify(paperclip)).toContain('paperclip_before_openclaw_plus')
+    expect(JSON.stringify(paperclip)).toContain('runtime_skills_engine')
     expect(JSON.stringify(paperclip)).toContain('paperclip_is_commander')
     expect(JSON.stringify(paperclip)).toContain('false')
     expectOwnerSafe({ paperclip, agentZero, hermes, pi, spaceAgent })

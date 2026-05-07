@@ -1515,7 +1515,7 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
     eyebrow: 'workforce',
     status: 'missing',
     statusLabel: 'not configured',
-    capabilities: ['company/task orchestration', 'co-worker agent records', 'daily task assignment', 'heartbeats', 'budget and cost visibility'],
+    capabilities: ['company/task orchestration', 'co-worker agent records', 'mini-agent requests', 'daily task assignment', 'heartbeats', 'budgets', 'approvals', 'work products'],
     blockers: ['production service not configured', 'workforce mutations require Bridge Session'],
     lastTest: '/api/bridge/paperclip/status',
     details: [
@@ -1525,9 +1525,10 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
       { label: 'Active issues/tasks', value: 'not loaded' },
       { label: 'Budget status', value: 'not loaded' },
       { label: 'Heartbeat status', value: 'not loaded' },
+      { label: 'Before runtime', value: 'supervises OpenClaw+ execution queue' },
     ],
   },
-  { id: 'runtime', label: 'OpenClaw+ Runtime', lane: 'core', eyebrow: 'runtime', status: 'connected', statusLabel: 'shared skills', capabilities: ['skills', 'adapters', 'reports', 'voice'], blockers: [], lastTest: 'OpenClaw+ skill registry' },
+  { id: 'runtime', label: 'OpenClaw+ Runtime / Skills Engine', lane: 'core', eyebrow: 'runtime', status: 'connected', statusLabel: 'execution runtime', capabilities: ['agents', 'skills', 'functions', 'reports', 'approvals', 'voice', 'runtime ledgers'], blockers: [], lastTest: 'OpenClaw+ skill registry' },
   { id: 'policy', label: 'Policy', lane: 'core', eyebrow: 'guardrail', status: 'connected', statusLabel: 'enforced', capabilities: ['auth', 'redaction', 'Bridge Session', 'audit'], blockers: [], lastTest: '/api/gateway/policies' },
   { id: 'openrouter', label: 'OpenRouter', lane: 'llm', eyebrow: 'model', status: 'gated', statusLabel: 'fallback guarded', capabilities: ['model routing', 'fallback'], blockers: ['provider failures stay redacted'], lastTest: 'model registry' },
   { id: 'openai', label: 'OpenAI', lane: 'llm', eyebrow: 'model', status: 'connected', statusLabel: 'configured if credential exists', capabilities: ['chat', 'reasoning'], blockers: [], lastTest: 'model registry' },
@@ -4708,7 +4709,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <strong>Bridge Mode preflight is mandatory.</strong> Every Gateway Node must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the Gateway Flow. If Bridge Mode says approval, credential, or backend work is required, the node must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
-        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Agent Zero commander, Hermes lieutenant support, OpenClaw+ runtime, then Bridge/MCP and Brain systems. Tony legacy is retired and hidden from active hierarchy.
+        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and OpenCloud systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
       {/* Top stats strip */}

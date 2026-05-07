@@ -1186,7 +1186,7 @@ describe('Paperclip bridge payloads', () => {
       expect.objectContaining({ id: 'pi_adapter', kind: 'agent_adapter', target_node: 'pi_dispatcher_candidate' }),
       expect.objectContaining({ id: 'space_agent_adapter', kind: 'agent_adapter', target_node: 'space_agent' }),
       expect.objectContaining({ id: 'opencloud_worker_adapter', kind: 'worker_adapter', target_node: 'opencloud_worker' }),
-      expect.objectContaining({ id: 'openclaw_skills_adapter', kind: 'skills_adapter', target_node: 'openclaw_plus' }),
+      expect.objectContaining({ id: 'openclaw_skills_adapter', kind: 'skills_adapter', target_node: 'openclaw_plus', supervisor: 'paperclip' }),
       expect.objectContaining({ id: 'mission_control_ui_contribution', kind: 'ui_contribution', registers: ['nav_item', 'panel'], ui_contribution_safe: true, ui_contribution_enabled: false }),
     ]))
     expect(plan.plugins.every((plugin) => plugin.load_mode === 'explicit_import_only' && plugin.production_auto_load_enabled === false && plugin.execution_enabled === false && plugin.writes_enabled === false)).toBe(true)

@@ -1,0 +1,299 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2481 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(OpenClaw+ Mini-Agent Execution Bridge Proof) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07T22:16:43.960Z) Tj
+T*
+() Tj
+T*
+(Executive Result) Tj
+T*
+() Tj
+T*
+(OpenClaw+ mini-agent execution bridge is **PARTIAL GO** for proposal, policy, and Gateway) Tj
+T*
+(visibility. Live mini-agent execution remains blocked until Bridge Session scope and a) Tj
+T*
+(registered runtime adapter are enabled.) Tj
+T*
+() Tj
+T*
+(A production policy bug was found and fixed in this phase: unsafe requested capabilities such) Tj
+T*
+(as raw shell were being filtered out before validation, allowing the proposal response to) Tj
+T*
+(remain ok=true. The validator now rejects forbidden purpose text, forbidden scope text, and) Tj
+T*
+(forbidden requested capabilities before proposal acceptance.) Tj
+T*
+() Tj
+T*
+(Production Route Evidence) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Gateway mini-agent OS GET | 200 authenticated |) Tj
+T*
+(| Gateway mini-agent OS unauthenticated | 401 |) Tj
+T*
+(| OpenClaw+ Gateway node | 200, connected, execution requires Bridge Session |) Tj
+T*
+(| OpenClaw+ version route | 200 |) Tj
+T*
+(| OpenClaw+ doctor route | timed out in smoke window |) Tj
+T*
+(| Safe mini-agent proposal | 200, ok=true, proposal_only |) Tj
+T*
+(| Unsafe mini-agent proposal | 400, ok=false |) Tj
+T*
+(| Unsafe blocker | mini_agent_purpose_contains_forbidden_access |) Tj
+T*
+(| Execution enabled | false |) Tj
+T*
+(| Writes enabled | false |) Tj
+T*
+() Tj
+T*
+(OpenClaw+ Role) Tj
+T*
+() Tj
+T*
+(OpenClaw+ is the runtime / skills / adapters / reports / governance / agent execution layer.) Tj
+T*
+(Paperclip sits before OpenClaw+ as the Workforce Control Plane. Agent Zero remains commander.) Tj
+T*
+(Hermes remains skill/workflow builder. Pi remains dispatcher candidate. Mini-agents remain) Tj
+T*
+(subordinate workers and cannot self-promote.) Tj
+T*
+() Tj
+T*
+(Policy Fix Applied) Tj
+T*
+() Tj
+T*
+(| Policy Area | Before | After |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| Forbidden capability validation | unsafe capability names could be filtered before) Tj
+T*
+(validation | forbidden requested capabilities block the proposal |) Tj
+T*
+(| Forbidden purpose validation | not explicitly checked | forbidden purpose text blocks the) Tj
+T*
+(proposal |) Tj
+T*
+(| Raw shell pattern | narrower text coverage | raw_shell, raw shell, and related variants) Tj
+T*
+(block |) Tj
+T*
+(| Docker socket pattern | narrower text coverage | docker_socket and docker socket variants) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2250 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(block |) Tj
+T*
+(| External write pattern | narrower text coverage | external_write and external write variants) Tj
+T*
+(block |) Tj
+T*
+() Tj
+T*
+(Mini-Agent Execution Status) Tj
+T*
+() Tj
+T*
+(| Capability | Status |) Tj
+T*
+(| --- | --- |) Tj
+T*
+(| Proposal creation | available for safe, scoped proposals |) Tj
+T*
+(| Supervisor requirement | enforced |) Tj
+T*
+(| Agent Zero command authority | preserved |) Tj
+T*
+(| Memory TTL | captured and bounded |) Tj
+T*
+(| Bridge Session requirement | enforced for activation |) Tj
+T*
+(| Runtime adapter execution | blocked until registered and scoped |) Tj
+T*
+(| Raw root shell | blocked |) Tj
+T*
+(| Docker socket | blocked |) Tj
+T*
+(| Direct secret reads | blocked |) Tj
+T*
+(| External writes | blocked without Bridge Session |) Tj
+T*
+() Tj
+T*
+(Tests Passed) Tj
+T*
+() Tj
+T*
+(- Mission Control typecheck passed after the policy patch.) Tj
+T*
+(- Gateway mini-agent OS tests passed.) Tj
+T*
+(- Gateway mini-agent contract tests passed.) Tj
+T*
+(- Gateway mini-agent gauntlet passed.) Tj
+T*
+(- Mission Control production build passed.) Tj
+T*
+(- Mission Control production restart succeeded.) Tj
+T*
+(- Production safe proposal smoke passed.) Tj
+T*
+(- Production unsafe proposal smoke blocked correctly.) Tj
+T*
+() Tj
+T*
+(Remaining Blockers) Tj
+T*
+() Tj
+T*
+(| Blocker | Impact | Exact Next Step |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| mini_agent_activation_requires_bridge_session_and_registered_runtime_adapter | Mini-agents) Tj
+T*
+(cannot run live yet. | Add/verify a registered OpenClaw+ runtime adapter and require Bridge) Tj
+T*
+(Session scope before activation. |) Tj
+T*
+(| OpenClaw+ doctor timeout | Full runtime health proof is incomplete. | Investigate doctor) Tj
+T*
+(route latency and return a bounded degraded payload instead of timing out. |) Tj
+T*
+(| No live mini-agent execution proof | Cannot mark mini-agent execution GO. | Run one scoped) Tj
+T*
+(read-only mini-agent through the approved runtime adapter after Bridge Session policy is) Tj
+T*
+(proven. |) Tj
+T*
+() Tj
+T*
+(Security Confirmation) Tj
+T*
+() Tj
+T*
+(- No mini-agent executed.) Tj
+T*
+(- No external write occurred.) Tj
+T*
+(- No raw shell, Docker socket, direct secret read, SMB/Fork 2, Zapier, HeyGen, or farmer) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1010 >>
+stream
+BT
+/F1 9 Tf
+50 770 Td
+12 TL
+(action occurred.) Tj
+T*
+(- No secrets were printed or committed.) Tj
+T*
+(- No .env changes were made.) Tj
+T*
+(- OpenClaw+ was retained as runtime layer and not replaced.) Tj
+T*
+() Tj
+T*
+(Completion Estimate) Tj
+T*
+() Tj
+T*
+(| Component | Percent | Status |) Tj
+T*
+(| --- | ---: | --- |) Tj
+T*
+(| Mini-agent proposal schema | 85% | working and policy-gated |) Tj
+T*
+(| Forbidden capability blocking | 90% | fixed and tested |) Tj
+T*
+(| Gateway/OpenClaw+ node visibility | 85% | connected, execution gated |) Tj
+T*
+(| Bridge Session activation enforcement | 80% | policy contract present |) Tj
+T*
+(| Live OpenClaw+ runtime execution | 0% | blocked until adapter/session proof |) Tj
+T*
+(| OpenClaw+ mini-agent bridge overall | 62% | PARTIAL GO |) Tj
+T*
+() Tj
+T*
+(Final Decision) Tj
+T*
+() Tj
+T*
+(OpenClaw+ mini-agent execution bridge: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Proposal and safety gates are production-visible and tested. Live execution remains correctly) Tj
+T*
+(blocked.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002612 00000 n 
+0000002738 00000 n 
+0000005040 00000 n 
+0000005166 00000 n 
+0000006228 00000 n 
+0000006354 00000 n 
+0000006423 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+6472
+%%EOF

@@ -102,11 +102,28 @@ describe('Gateway mini-agent operating system', () => {
       parent_supervisor: 'agent_zero',
       scope: ['use root shell and docker socket'],
     })
+    const rawShellCapability = createGatewayMiniAgentProposal(registry, {
+      name: 'Unsafe Capability Worker',
+      purpose: 'Attempt forbidden capability assignment',
+      parent_supervisor: 'agent_zero',
+      scope: ['system review'],
+      allowed_capabilities: ['raw_shell'],
+    })
+    const forbiddenPurpose = createGatewayMiniAgentProposal(registry, {
+      name: 'Unsafe Purpose Worker',
+      purpose: 'Open a raw root shell',
+      parent_supervisor: 'agent_zero',
+      scope: ['system review'],
+    })
 
     expect(secondAgentZero.ok).toBe(false)
     expect(secondAgentZero.blocked_reason).toBe('mini_agent_name_reserved_existing_agent_or_authority')
     expect(rootScope.ok).toBe(false)
     expect(rootScope.blocked_reason).toBe('mini_agent_scope_contains_forbidden_access')
+    expect(rawShellCapability.ok).toBe(false)
+    expect(rawShellCapability.blocked_reason).toBe('mini_agent_capability_contains_forbidden_access')
+    expect(forbiddenPurpose.ok).toBe(false)
+    expect(forbiddenPurpose.blocked_reason).toBe('mini_agent_purpose_contains_forbidden_access')
     expect(rootScope.safety).toMatchObject({
       no_raw_root_shell: true,
       no_docker_socket: true,

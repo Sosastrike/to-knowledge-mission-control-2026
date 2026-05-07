@@ -240,7 +240,7 @@ const RESERVED_AGENT_NAMES = new Set([
   'tony legacy',
   'tony v2',
 ])
-const FORBIDDEN_SCOPE_PATTERN = /(?:root\s+shell|docker\s+socket|direct\s+secret|read\s+secrets?|print\s+secrets?|\.env|auth\.json|unrestricted|bypass\s+gateway|external\s+write|zapier\s+write|heygen\s+generation|mount\s+smb)/i
+const FORBIDDEN_SCOPE_PATTERN = /(?:root\s+shell|raw[_\s-]*shell|docker[_\s-]*socket|direct[_\s-]*secret|read[_\s-]*secrets?|print[_\s-]*secrets?|\.env|auth\.json|unrestricted|bypass\s+gateway|external[_\s-]*write|zapier[_\s-]*write|heygen[_\s-]*generation|smb[_\s-]*mount|mount\s+smb)/i
 
 export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry): GatewayMiniAgentOperatingSystem {
   const nodeIds = new Set(registry.nodes.map((node) => node.id))
@@ -305,10 +305,11 @@ export function createGatewayMiniAgentProposal(
   const scope = normalizeScope(input.scope)
   const parentSupervisor = normalizeSupervisor(input.parent_supervisor)
   const requestedBy = normalizeId(input.requested_by || 'gateway') || 'gateway'
-  const allowedCapabilities = normalizeAllowedCapabilities(registry, input.allowed_capabilities)
+  const requestedCapabilities = normalizeRequestedCapabilities(input.allowed_capabilities)
+  const allowedCapabilities = normalizeAllowedCapabilities(registry, requestedCapabilities)
   const ttlHours = normalizeMemoryTtl(input.memory_ttl_hours)
   const bridgeSessionId = safeText(input.bridge_session_id || '') || null
-  const validationBlocker = validateMiniAgentProposal({ name, normalizedName, purpose, scope })
+  const validationBlocker = validateMiniAgentProposal({ name, normalizedName, purpose, scope, requestedCapabilities })
 
   if (validationBlocker) {
     return blockedMiniAgentProposal({ generatedAt, name, requestedBy, blocker: validationBlocker })
@@ -540,12 +541,15 @@ function validateMiniAgentProposal(input: {
   normalizedName: string
   purpose: string | null
   scope: string[]
+  requestedCapabilities: string[]
 }): string | null {
   if (!input.normalizedName) return 'mini_agent_name_required'
   if (RESERVED_AGENT_NAMES.has(input.normalizedName) || RESERVED_AGENT_NAMES.has(input.name.toLowerCase())) return 'mini_agent_name_reserved_existing_agent_or_authority'
   if (!input.purpose) return 'mini_agent_purpose_required'
+  if (FORBIDDEN_SCOPE_PATTERN.test(input.purpose)) return 'mini_agent_purpose_contains_forbidden_access'
   if (input.scope.length === 0) return 'mini_agent_scope_required'
   if (input.scope.some((item) => FORBIDDEN_SCOPE_PATTERN.test(item))) return 'mini_agent_scope_contains_forbidden_access'
+  if (input.requestedCapabilities.some((item) => FORBIDDEN_SCOPE_PATTERN.test(item))) return 'mini_agent_capability_contains_forbidden_access'
   return null
 }
 
@@ -559,6 +563,10 @@ function normalizeSupervisor(value: string | null | undefined): GatewayMiniAgent
 function normalizeScope(value: string | string[] | null | undefined): string[] {
   const values = Array.isArray(value) ? value : String(value || '').split(/[,\n]/)
   return values.map((item) => safeText(item)).filter((item): item is string => Boolean(item))
+}
+
+function normalizeRequestedCapabilities(value: string[] | null | undefined): string[] {
+  return (value || []).map((item) => safeText(item)).filter((item): item is string => Boolean(item))
 }
 
 function normalizeAllowedCapabilities(registry: GatewayRegistry, value: string[] | null | undefined): string[] {

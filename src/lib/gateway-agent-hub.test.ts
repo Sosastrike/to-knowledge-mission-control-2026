@@ -6,6 +6,7 @@ import {
   buildAgentHubAgentRoutesPayload,
   buildAgentHubAgentsPayload,
   buildAgentHubStatusPayload,
+  buildAgentHubRegistryPayload,
   getAgentHubAgentPayload,
   normalizeAgentHubAgentId,
 } from './gateway-agent-hub'
@@ -32,6 +33,13 @@ describe('Gateway Agent Hub', () => {
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'pending' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({ role: 'Dispatcher / Route Optimizer Candidate', status: 'pending' })
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
+    for (const agent of payload.agents) {
+      expect(agent.interface.auth_required).toBe(true)
+      expect(agent.interface.iframe_allowed).toBe(false)
+      expect(agent.interface.public_exposure).toBe(false)
+      expect(agent.interface.local_ui_url).toBeNull()
+      expect(agent.interface.tailnet_url).toBeNull()
+    }
   })
 
   it('keeps Paperclip before OpenClaw+ and keeps OpenCloud/Build-Wiki gated', () => {
@@ -56,7 +64,8 @@ describe('Gateway Agent Hub', () => {
     const health = buildAgentHubAgentHealthPayload(registry, 'pi')
     const routes = buildAgentHubAgentRoutesPayload(registry, 'agent_zero')
     const audit = buildAgentHubAgentAuditPayload(registry, 'space-agent')
-    const serialized = JSON.stringify({ agents, health, routes, audit })
+    const registryPayload = buildAgentHubRegistryPayload(registry)
+    const serialized = JSON.stringify({ agents, health, routes, audit, registryPayload })
 
     expect(normalizeAgentHubAgentId('pi')).toBe('pi-mono')
     expect(normalizeAgentHubAgentId('space_agent')).toBe('spaceagent')
@@ -66,5 +75,6 @@ describe('Gateway Agent Hub', () => {
     expect(serialized).not.toMatch(/\/home\/tony|\/a0\/|auth\.json|Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
     expect(agents.mock_data_used).toBe(false)
     expect(agents.execution_enabled).toBe(false)
+    expect(registryPayload).toMatchObject({ mode: 'gateway_agent_hub_registry_read_only', mock_data_used: false, execution_enabled: false, writes_enabled: false })
   })
 })

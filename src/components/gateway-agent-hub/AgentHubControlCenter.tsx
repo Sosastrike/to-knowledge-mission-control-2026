@@ -121,6 +121,10 @@ export function AgentHubPaperclipPage({
             <Fact label='Gateway route' value='Agent Zero / Pi / Hermes → Paperclip → OpenClaw+' />
             <Fact label='execution enabled' value={agent.execution_enabled ? 'yes' : 'no'} />
             <Fact label='public exposure' value={agent.interface.public_exposure ? 'yes' : 'no'} />
+            <Fact label='auth required' value={agent.interface.auth_required ? 'yes' : 'no'} />
+            <Fact label='UI mode' value={agent.interface.ui_mode} />
+            <Fact label='local UI' value={agent.interface.local_ui_url || 'not proven'} />
+            <Fact label='Tailnet UI' value={agent.interface.tailnet_url || 'not proven'} />
             <Fact label='owner access' value={agent.interface.owner_access} />
           </div>
         </section>
@@ -187,7 +191,11 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
       <dl className='mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2'>
         <Fact label='live proven' value={agent.live_interface_proven ? 'yes' : 'no'} />
         <Fact label='called true' value={agent.called_true_proven ? 'yes' : 'no'} />
-        <Fact label='execution' value={agent.execution_enabled ? 'enabled' : 'disabled'} />
+        <Fact label='UI mode' value={agent.interface.ui_mode} />
+        <Fact label='auth required' value={agent.interface.auth_required ? 'yes' : 'no'} />
+        <Fact label='iframe allowed' value={agent.interface.iframe_allowed ? 'yes' : 'no'} />
+        <Fact label='local UI' value={agent.interface.local_ui_url || 'not proven'} />
+        <Fact label='Tailnet UI' value={agent.interface.tailnet_url || 'not proven'} />
         <Fact label='writes' value={agent.write_enabled ? 'enabled' : 'session gated'} />
       </dl>
       <div className='mt-4 flex flex-wrap gap-2'>

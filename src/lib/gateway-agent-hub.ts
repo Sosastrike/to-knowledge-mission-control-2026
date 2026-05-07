@@ -56,6 +56,11 @@ export type AgentHubAgent = {
   interface: {
     mission_control_surface: string
     owner_access: string
+    local_ui_url: string | null
+    tailnet_url: string | null
+    ui_mode: 'mission_control_proxy' | 'local_only_pending' | 'tailnet_pending' | 'not_installed' | 'service_gated'
+    iframe_allowed: false
+    auth_required: true
     local_ui_proven: boolean
     tailnet_ui_proven: boolean
     public_exposure: false
@@ -107,6 +112,21 @@ export type AgentHubStatusPayload = {
     production_uses_mock_data: false
     note: string
   }
+}
+
+export type AgentHubRegistryPayload = {
+  ok: true
+  mode: 'gateway_agent_hub_registry_read_only'
+  generated_at: string
+  source: 'gateway_registry'
+  mock_data_used: false
+  agents: AgentHubAgent[]
+  supporting_runtime_systems: AgentHubRuntimeSystem[]
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  secrets_exposed: false
+  raw_paths_exposed: false
 }
 
 export type AgentHubAgentsPayload = {
@@ -208,6 +228,9 @@ type AgentHubDefinition = {
   liveInterfaceProven: boolean
   calledTrueProven: boolean
   interfaceSummary: string
+  localUiUrl: string | null
+  tailnetUrl: string | null
+  uiMode: AgentHubAgent['interface']['ui_mode']
   bridgeStatusRoute: string | null
   extraBlockers: string[]
 }
@@ -224,6 +247,9 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     liveInterfaceProven: false,
     calledTrueProven: false,
     interfaceSummary: 'Mission Control node only; Paperclip UI proof pending',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'local_only_pending',
     bridgeStatusRoute: '/api/bridge/paperclip/status',
     extraBlockers: ['paperclip_localhost_or_tailnet_ui_not_proven'],
   },
@@ -238,6 +264,9 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     liveInterfaceProven: true,
     calledTrueProven: false,
     interfaceSummary: 'Mission Control bridge surface available; agent_zero_called:true remains the promotion gate',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/agent-zero/status',
     extraBlockers: ['agent_zero_full_go_requires_live_authenticated_agent_zero_called_true'],
   },
@@ -252,6 +281,9 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     liveInterfaceProven: false,
     calledTrueProven: false,
     interfaceSummary: 'Read-only status visible; live chat proof pending',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'service_gated',
     bridgeStatusRoute: '/api/bridge/hermes/status',
     extraBlockers: ['hermes_called_true_not_proven'],
   },
@@ -266,6 +298,9 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     liveInterfaceProven: false,
     calledTrueProven: false,
     interfaceSummary: 'Gateway research node visible; runtime adapter proof pending',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'not_installed',
     bridgeStatusRoute: '/api/bridge/space-agent/status',
     extraBlockers: ['spaceagent_runtime_not_proven_live'],
   },
@@ -280,6 +315,9 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     liveInterfaceProven: false,
     calledTrueProven: false,
     interfaceSummary: 'Shadow dispatcher concept only; no execution authority',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'not_installed',
     bridgeStatusRoute: null,
     extraBlockers: ['pi_mono_not_installed_or_live'],
   },
@@ -364,6 +402,23 @@ export function buildAgentHubAgentsPayload(registry: GatewayRegistry): AgentHubA
     agents: buildAgentHubAgents(registry),
     execution_enabled: false,
     writes_enabled: false,
+    secrets_exposed: false,
+    raw_paths_exposed: false,
+  }
+}
+
+export function buildAgentHubRegistryPayload(registry: GatewayRegistry): AgentHubRegistryPayload {
+  return {
+    ok: true,
+    mode: 'gateway_agent_hub_registry_read_only',
+    generated_at: registry.generated_at,
+    source: 'gateway_registry',
+    mock_data_used: false,
+    agents: buildAgentHubAgents(registry),
+    supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
     secrets_exposed: false,
     raw_paths_exposed: false,
   }
@@ -539,8 +594,13 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       interface: {
         mission_control_surface: '/gateway/agent-hub' + (definition.id === 'paperclip' ? '/paperclip' : ''),
         owner_access: definition.interfaceSummary,
-        local_ui_proven: false,
-        tailnet_ui_proven: false,
+        local_ui_url: definition.localUiUrl,
+        tailnet_url: definition.tailnetUrl,
+        ui_mode: definition.uiMode,
+        iframe_allowed: false,
+        auth_required: true,
+        local_ui_proven: definition.localUiUrl !== null && definition.liveInterfaceProven,
+        tailnet_ui_proven: definition.tailnetUrl !== null && definition.liveInterfaceProven,
         public_exposure: false,
       },
       policy: {

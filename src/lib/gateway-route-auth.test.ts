@@ -62,6 +62,7 @@ describe('Gateway route authentication policy', () => {
     const paperclipTestChat = await import('@/app/api/bridge/paperclip/test-chat/route')
     const paperclipWorkforceFlow = await import('@/app/api/bridge/paperclip/workforce-flow/route')
     const agentHubStatus = await import('@/app/api/gateway/agent-hub/status/route')
+    const agentHubRegistry = await import('@/app/api/gateway/agent-hub/registry/route')
     const agentHubAgents = await import('@/app/api/gateway/agent-hub/agents/route')
     const agentHubAgent = await import('@/app/api/gateway/agent-hub/agents/[id]/route')
     const agentHubAgentHealth = await import('@/app/api/gateway/agent-hub/agents/[id]/health/route')
@@ -147,6 +148,7 @@ describe('Gateway route authentication policy', () => {
         body: JSON.stringify({ owner_request: 'Route a workforce task.', assignee: 'hermes' }),
       })),
       agentHubStatus.GET(new NextRequest('http://localhost/api/gateway/agent-hub/status')),
+      agentHubRegistry.GET(new NextRequest('http://localhost/api/gateway/agent-hub/registry')),
       agentHubAgents.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents')),
       agentHubAgent.GET(new NextRequest('http://localhost/api/gateway/agent-hub/agents/agent-zero'), {
         params: Promise.resolve({ id: 'agent-zero' }),

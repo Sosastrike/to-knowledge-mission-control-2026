@@ -1,0 +1,362 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 3245 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(# Paperclip Gateway Final Integration Report) Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-07) Tj
+T*
+() Tj
+T*
+(## Executive Summary) Tj
+T*
+() Tj
+T*
+(Paperclip is integrated into Mission Control Gateway as a read-only, policy-gated Workforce) Tj
+T*
+(Operations Layer. It is visible to Gateway, Agent Zero, Hermes, Pi, and SpaceAgent through) Tj
+T*
+(registry and bridge contracts. Paperclip is not the commander, does not replace existing) Tj
+T*
+(agents, and does not get execution authority by default.) Tj
+T*
+() Tj
+T*
+(Final status: PARTIAL GO for read-only Gateway visibility and route planning. NO-GO for live) Tj
+T*
+(Paperclip workforce operations until the sandbox service/UI is running and its health) Tj
+T*
+(endpoint passes.) Tj
+T*
+() Tj
+T*
+(No external writes were executed. No Zapier, HeyGen, SMB, farmer, email, Drive, or OneDrive) Tj
+T*
+(action was run. No secrets were exposed or committed.) Tj
+T*
+() Tj
+T*
+(## Phase 291-300 Results) Tj
+T*
+() Tj
+T*
+(| Phase | Result | Evidence |) Tj
+T*
+(| --- | --- | --- |) Tj
+T*
+(| 291 Paperclip sandbox smoke | Blocked | Paperclip user and system services are inactive. |) Tj
+T*
+(| 292 Paperclip Tailnet UI smoke | Blocked | No listener or health response on the expected) Tj
+T*
+(Paperclip port. |) Tj
+T*
+(| 293 Paperclip health check | Blocked | Loopback and Tailnet health checks returned) Tj
+T*
+(connection refused/no HTTP response. |) Tj
+T*
+(| 294 Gateway Paperclip node smoke | Passed | Gateway registry contains paperclip as) Tj
+T*
+(Paperclip Workforce Control Plane with blocked service status. |) Tj
+T*
+(| 295 Agent Zero sees Paperclip | Passed | Agent Zero bridge context exposes Paperclip) Tj
+T*
+(status/task routes, with writes blocked. |) Tj
+T*
+(| 296 Hermes sees Paperclip | Passed | Hermes bridge context exposes Paperclip registry and) Tj
+T*
+(planning-only proposal surface. |) Tj
+T*
+(| 297 Pi sees Paperclip | Passed | Pi dispatcher recommendation payload can route advisory) Tj
+T*
+(Paperclip workforce decisions. |) Tj
+T*
+(| 298 SpaceAgent sees Paperclip | Passed | SpaceAgent appears in Paperclip research-task) Tj
+T*
+(handoff and work-product flow, storage blocked until adapter/session. |) Tj
+T*
+(| 299 Paperclip routing gauntlet | Passed | 1,000 deterministic scenarios passed with zero) Tj
+T*
+(writes, zero secrets, and no fake completion. |) Tj
+T*
+(| 300 Final report/PDF | Completed | Markdown and PDF report artifacts created in Mission) Tj
+T*
+(Control runtime reports. |) Tj
+T*
+() Tj
+T*
+(## What Was Implemented) Tj
+T*
+() Tj
+T*
+(- Added a final Paperclip Gateway routing gauntlet covering 1,000 deterministic scenarios.) Tj
+T*
+(- Verified Paperclip remains subordinate to Gateway and Agent Zero.) Tj
+T*
+(- Verified Hermes can create Paperclip proposal payloads only in planning mode.) Tj
+T*
+(- Verified Pi can recommend Paperclip routes only in shadow/advisory mode.) Tj
+T*
+(- Verified SpaceAgent can be represented in Paperclip research-task tracking without) Tj
+T*
+(executing writes.) Tj
+T*
+(- Verified co-worker definitions, co-worker policy checks, workforce flows, task handoffs,) Tj
+T*
+(proposals, research tasks, and token-governor dry runs remain read-only or session-gated.) Tj
+T*
+(- Created this final Markdown/PDF report.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 2606 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(## What Stayed Blocked) Tj
+T*
+() Tj
+T*
+(- Paperclip sandbox service/UI is not running.) Tj
+T*
+(- Paperclip local health endpoint is not reachable.) Tj
+T*
+(- Paperclip Tailnet UI is not reachable.) Tj
+T*
+(- Owner login to Paperclip UI is not proven in this final block.) Tj
+T*
+(- Paperclip live issue/task/work-product write adapter is not configured.) Tj
+T*
+(- Persistent production service is not enabled.) Tj
+T*
+(- Live Paperclip workforce operations remain blocked until sandbox health and auth are) Tj
+T*
+(proven.) Tj
+T*
+() Tj
+T*
+(## Gateway Roles) Tj
+T*
+() Tj
+T*
+(- Owner: final authority.) Tj
+T*
+(- Gateway: routing, policy, registry, audit, documentation, and memory hub.) Tj
+T*
+(- Agent Zero: commander and final decision-maker.) Tj
+T*
+(- Hermes: lieutenant and workflow/skill builder.) Tj
+T*
+(- Pi: dispatcher candidate and route optimizer in shadow/advisory mode.) Tj
+T*
+(- SpaceAgent: web/browser/YouTube/Firecrawl research specialist.) Tj
+T*
+(- Paperclip: workforce/company/task orchestration layer, subordinate to Gateway and Agent) Tj
+T*
+(Zero.) Tj
+T*
+(- OpenCloud: retained worker/runtime engine.) Tj
+T*
+(- OpenClaw+: retained runtime, skills, adapters, and reports layer.) Tj
+T*
+(- Existing agents: retained specialist workforce.) Tj
+T*
+() Tj
+T*
+(## Security and Governance) Tj
+T*
+() Tj
+T*
+(- Paperclip routes are protected by Mission Control auth.) Tj
+T*
+(- Unauthenticated Paperclip bridge routes are covered by tests returning 401/403.) Tj
+T*
+(- External writes remain disabled without Bridge Session and scoped adapter approval.) Tj
+T*
+(- Paperclip co-workers cannot get direct secret access, raw root shell, Docker socket, or) Tj
+T*
+(self-promotion.) Tj
+T*
+(- Paperclip write flows return exact blockers instead of fake completion.) Tj
+T*
+(- Owner-facing payloads are checked for no local path leaks, no token patterns, no secret) Tj
+T*
+(placeholders, and no fake Done.) Tj
+T*
+() Tj
+T*
+(## Validation) Tj
+T*
+() Tj
+T*
+(Mission Control validation passed:) Tj
+T*
+() Tj
+T*
+(- git diff --check: passed.) Tj
+T*
+(- pnpm run typecheck: passed.) Tj
+T*
+(- pnpm run build: passed.) Tj
+T*
+(- pnpm test: passed, 131 test files and 1,230 tests.) Tj
+T*
+(- Focused Paperclip tests: passed, 42 tests across bridge, routes, and final gauntlet.) Tj
+T*
+(- New Paperclip gauntlet: passed, 1,000 scenarios, 0 failures.) Tj
+T*
+() Tj
+T*
+(Service checks:) Tj
+T*
+() Tj
+T*
+(- Mission Control service: active.) Tj
+T*
+(- ClaudeClaw service: active.) Tj
+T*
+(- Hermes gateway service: active.) Tj
+T*
+(- Build-Wiki/Farmer timer: active.) Tj
+T*
+(- Agent Zero container: running.) Tj
+T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 1454 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+50 750 Td
+(- Paperclip service: inactive/blocking live UI and health.) Tj
+T*
+() Tj
+T*
+(## Dirty Tree Notes) Tj
+T*
+() Tj
+T*
+(The Mission Control repo already had many unrelated untracked runtime/design artifacts) Tj
+T*
+(before this closure work. This phase only stages the Paperclip final gauntlet and Paperclip) Tj
+T*
+(final report artifacts.) Tj
+T*
+() Tj
+T*
+(## Commits) Tj
+T*
+() Tj
+T*
+(Existing Paperclip commits already pushed:) Tj
+T*
+() Tj
+T*
+(- cd18aec - feat\(gateway\): add paperclip workforce status panel) Tj
+T*
+(- dfb65a4 - feat\(gateway\): add paperclip workforce flow contract) Tj
+T*
+(- c8ca7e9 - test\(gateway\): harden paperclip bridge routes) Tj
+T*
+() Tj
+T*
+(The final closure commit is the commit that contains this report and the Paperclip gauntlet) Tj
+T*
+(proof.) Tj
+T*
+() Tj
+T*
+(## Rollback) Tj
+T*
+() Tj
+T*
+(Rollback the final Paperclip closure commit with:) Tj
+T*
+() Tj
+T*
+(bash) Tj
+T*
+(git revert <final-paperclip-closure-commit>) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Rollback the earlier Paperclip Gateway work, if needed, in reverse order:) Tj
+T*
+() Tj
+T*
+(bash) Tj
+T*
+(git revert c8ca7e9) Tj
+T*
+(git revert dfb65a4) Tj
+T*
+(git revert cd18aec) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(## Exact Next Step) Tj
+T*
+() Tj
+T*
+(Start Paperclip in a sandbox-only localhost/Tailnet mode, prove /api/health, prove owner) Tj
+T*
+(login, then rerun the Paperclip status/UI smoke before enabling any persistent service or) Tj
+T*
+(write adapter.) Tj
+T*
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000323 00000 n 
+0000003620 00000 n 
+0000003746 00000 n 
+0000006404 00000 n 
+0000006530 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8036
+%%EOF

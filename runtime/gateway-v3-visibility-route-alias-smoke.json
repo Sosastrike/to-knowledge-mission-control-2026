@@ -1,0 +1,72 @@
+{
+  "checked_at": "2026-05-08T19:46:02.085Z",
+  "base": "https://tkmc.knowledge-vs-ai.com",
+  "mode": "unauthenticated_manual_redirect_check",
+  "results": [
+    {
+      "route": "/gateway",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/routes",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/registry",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/policies",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/health",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/dispatcher",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/token-governor",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/agent-network",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/agents",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway-parent",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateways",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway-config",
+      "status": 307,
+      "location": "/login"
+    }
+  ]
+}

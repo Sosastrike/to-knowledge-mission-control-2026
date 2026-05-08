@@ -1,0 +1,181 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2730 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-owner-authenticated-visual-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway FULL v3 Visibility — Owner-Authenticated Visual Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Goal) Tj
+0 -12 Td
+(Confirm the owner can see the Gateway FULL v3 interface in an authenticated Mission Control brow) Tj
+0 -12 Td
+(ser session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(cannot mark GO without owner-authenticated confirmation evidence\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(`owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Why This Is Still Blocked) Tj
+0 -12 Td
+(- Production route and alias checks are passing.) Tj
+0 -12 Td
+(- Gateway FULL v3 routing fix \(`8972a3d`\) is in branch lineage.) Tj
+0 -12 Td
+(- But visual GO requires authenticated owner confirmation/screenshots of the actual interface.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Proof Checklist \(Required\)) Tj
+0 -12 Td
+(After logging in, open:) Tj
+0 -12 Td
+(1. `/gateway`) Tj
+0 -12 Td
+(2. `/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Confirm visible Gateway rail tabs:) Tj
+0 -12 Td
+(- Overview) Tj
+0 -12 Td
+(- Routes) Tj
+0 -12 Td
+(- Registry) Tj
+0 -12 Td
+(- Policies / Bridge) Tj
+0 -12 Td
+(- Health) Tj
+0 -12 Td
+(- Dispatcher) Tj
+0 -12 Td
+(- Token Governor) Tj
+0 -12 Td
+(- Agent Hub) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Confirm Agent Hub cards include:) Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- Pi) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Confirm presentation rules:) Tj
+0 -12 Td
+(- Paperclip appears before OpenClaw+ in the operating chain) Tj
+0 -12 Td
+(- No OpenCloud architecture label \(except literal legacy service name `opencloud-docs-farmer.ser) Tj
+0 -12 Td
+(vice`\)) Tj
+0 -12 Td
+(- No fake buttons) Tj
+0 -12 Td
+(- No raw local paths) Tj
+0 -12 Td
+(- No secrets) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Immediate Owner Retry Steps \(Cache-Safe\)) Tj
+0 -12 Td
+(1. Hard refresh while on `/gateway` \(`Cmd+Shift+R` on macOS\).) Tj
+0 -12 Td
+(2. Directly open `/gateway/agent-hub`.) Tj
+0 -12 Td
+(3. Verify `/agent-network` and `/agents` now land on Gateway Agent Hub surface.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Codex Verification After Owner Confirmation) Tj
+0 -12 Td
+(Once owner confirms or provides screenshot evidence, Codex will:) Tj
+0 -12 Td
+(1. Validate tab rail visibility and labels.) Tj
+0 -12 Td
+(2. Validate Agent Hub card ordering and alias landing behavior.) Tj
+0 -12 Td
+(3. Reclassify owner visual proof status from BLOCKED to GO/PARTIAL based on evidence.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No secret/token values requested) Tj
+0 -12 Td
+(- No `.env` changes) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 108 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No auth weakening) Tj
+0 -12 Td
+(- No public exposure changes) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003029 00000 n 
+0000003155 00000 n 
+0000003314 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3384
+%%EOF

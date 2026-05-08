@@ -1,0 +1,130 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2487 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-visibility-production-commit-verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway FULL v3 Visibility — Production Commit Verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Goal) Tj
+0 -12 Td
+(Confirm that the Gateway FULL v3 routing fix \(`8972a3d`\) is in the deployed production lineage a) Tj
+0 -12 Td
+(nd that runtime safety constraints remain intact.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS \(commit lineage verified; production route behavior consistent with deployed protected Gate) Tj
+0 -12 Td
+(way surface\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Verified active working branch:) Tj
+0 -12 Td
+(   - `to-knowledge-mc`) Tj
+0 -12 Td
+(2. Verified remote branch contains required fix commit:) Tj
+0 -12 Td
+(   - `git merge-base --is-ancestor 8972a3d origin/to-knowledge-mc` => `origin_contains_8972a3d=y) Tj
+0 -12 Td
+(es`) Tj
+0 -12 Td
+(3. Verified remote HEAD:) Tj
+0 -12 Td
+(   - `origin/to-knowledge-mc` => `be268e1`) Tj
+0 -12 Td
+(4. Verified production runtime reachability:) Tj
+0 -12 Td
+(   - `GET https://tkmc.knowledge-vs-ai.com/login` => `200`) Tj
+0 -12 Td
+(5. Verified designer Gateway entry route remains protected:) Tj
+0 -12 Td
+(   - `GET /designer-mission-control/design/gateway/index.html` => `307 /login`) Tj
+0 -12 Td
+(6. Verified no `.env` diff in repo.) Tj
+0 -12 Td
+(7. Confirmed no secret values were printed during verification commands.) Tj
+0 -12 Td
+(8. Confirmed no new public local service exposure was introduced by this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Runtime HEAD Assessment) Tj
+0 -12 Td
+(- Direct remote process git HEAD is not externally exposed by production.) Tj
+0 -12 Td
+(- Operational proof used:) Tj
+0 -12 Td
+(  - required commit is present in deployment branch lineage \(`origin/to-knowledge-mc`\);) Tj
+0 -12 Td
+(  - production Gateway surface remains deployed/protected and reachable;) Tj
+0 -12 Td
+(  - alias behavior is validated in Phase 2 + route contract test pass.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- `.env` changes: none) Tj
+0 -12 Td
+(- Secret output: none) Tj
+0 -12 Td
+(- Auth weakening: none) Tj
+0 -12 Td
+(- Public local exposure added: none) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(None for this verification phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Run full Gateway route/alias smoke and owner-auth visual proof gate \(owner confirmation required) Tj
+0 -12 Td
+( for GO\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002780 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2850
+%%EOF

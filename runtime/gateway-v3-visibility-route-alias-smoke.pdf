@@ -1,0 +1,162 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2789 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-visibility-route-alias-smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway FULL v3 Visibility — Route and Alias Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Goal) Tj
+0 -12 Td
+(Verify Gateway FULL v3 routes and legacy aliases resolve safely under production protection beha) Tj
+0 -12 Td
+(vior, and confirm alias contract coverage for authenticated flow.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS \(protection behavior confirmed on production; alias contract verified by test\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Unauthenticated Production Smoke) Tj
+0 -12 Td
+(Base: `https://tkmc.knowledge-vs-ai.com`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Evidence file:) Tj
+0 -12 Td
+(- `runtime/gateway-v3-visibility-route-alias-smoke.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Checked routes:) Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+(- `/gateway/routes`) Tj
+0 -12 Td
+(- `/gateway/registry`) Tj
+0 -12 Td
+(- `/gateway/policies`) Tj
+0 -12 Td
+(- `/gateway/health`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/agent-network`) Tj
+0 -12 Td
+(- `/agents`) Tj
+0 -12 Td
+(- `/gateway-parent`) Tj
+0 -12 Td
+(- `/gateways`) Tj
+0 -12 Td
+(- `/gateway-config`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed behavior:) Tj
+0 -12 Td
+(- All routes returned `307` to `/login` for unauthenticated access.) Tj
+0 -12 Td
+(- This matches expected protected-page policy \(no public unauthenticated access\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Alias Mapping Contract \(Authenticated/Route-Logic Proof\)) Tj
+0 -12 Td
+(Because auth middleware redirects unauthenticated traffic before panel redirect logic runs, alia) Tj
+0 -12 Td
+(s destination verification was proven via route contract tests:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm vitest run src/app/gateway-route-alias.test.ts`) Tj
+0 -12 Td
+(- Result: `6 passed`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Covered expectations:) Tj
+0 -12 Td
+(- `gateway-parent` -> `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `gateways` -> `/gateway`) Tj
+0 -12 Td
+(- `gateway-config` -> `/gateway/policies`) Tj
+0 -12 Td
+(- `/agent-network` and `/agents` compatibility alias -> `/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Route implementation source confirms same mapping in `src/app/[[...panel]]/route.ts`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes) Tj
+0 -12 Td
+(- No secret output) Tj
+0 -12 Td
+(- No auth weakening) Tj
+0 -12 Td
+(- No fake live claim) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(None for route-protection and alias-contract smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Owner-authenticated visual confirmation of the Gateway FULL v3 interface remains required before) Tj
+0 -12 Td
+( marking owner visual proof GO.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003082 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3152
+%%EOF

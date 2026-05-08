@@ -95,7 +95,7 @@ export type AgentHubStatusPayload = {
     hermes: 'gated_until_hermes_called_true'
     pi_mono: 'candidate_pending_until_installed_and_live'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
-    paperclip: 'pending_until_localhost_or_tailnet_ui_proven'
+    paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
   }
@@ -110,7 +110,7 @@ export type AgentHubStatusPayload = {
     fork2_smb_status: 'blocked'
   }
   design_handoff: {
-    expected_files_present: false
+    expected_files_present: boolean
     production_uses_mock_data: false
     note: string
   }
@@ -245,11 +245,11 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Paperclip',
     role: 'Workforce Control Plane',
     layer: 'workforce_and_task_orchestration_before_openclaw_runtime',
-    productionTruth: 'pending until localhost or Tailnet UI is proven; no production install yet',
+    productionTruth: 'partial/degraded until local or Tailnet owner login, company dashboard, agent roster, and task queue are proven',
     status: 'pending',
     liveInterfaceProven: false,
     calledTrueProven: false,
-    interfaceSummary: 'Mission Control node only; Paperclip UI proof pending',
+    interfaceSummary: 'Mission Control node visible; Paperclip service and owner session proof pending',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'local_only_pending',
@@ -262,16 +262,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Agent Zero',
     role: 'Commander',
     layer: 'command_authority',
-    productionTruth: 'commander track, partial GO until live proof closes every route',
+    productionTruth: 'commander track; authenticated test-chat has returned agent_zero_called:true, final GO still depends on every downstream route',
     status: 'partial_go',
     liveInterfaceProven: true,
-    calledTrueProven: false,
-    interfaceSummary: 'Mission Control bridge surface available; agent_zero_called:true remains the promotion gate',
+    calledTrueProven: true,
+    interfaceSummary: 'Mission Control bridge surface available; Agent Zero remains owner-facing commander',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/agent-zero/status',
-    extraBlockers: ['agent_zero_full_go_requires_live_authenticated_agent_zero_called_true'],
+    extraBlockers: ['agent_zero_full_go_requires_downstream_route_completion'],
   },
   {
     id: 'hermes',
@@ -305,7 +305,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['firecrawl_missing_credential', 'interactive_browser_actions_require_bridge_session'],
+    extraBlockers: ['firecrawl_credential_required', 'youtube_transcript_connector_not_proven', 'interactive_browser_actions_require_bridge_session'],
   },
   {
     id: 'pi-mono',
@@ -314,10 +314,10 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     role: 'Dispatcher / Route Optimizer Candidate',
     layer: 'shadow_dispatch_recommendation',
     productionTruth: 'Mission Control shadow dispatcher is available; separate Pi runtime/session is not proven',
-    status: 'read_only',
+    status: 'pending',
     liveInterfaceProven: false,
     calledTrueProven: false,
-    interfaceSummary: 'In-process shadow dispatcher recommendations only; no execution authority',
+    interfaceSummary: 'Shadow dispatcher candidate; recommendations only, no execution authority',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
@@ -373,7 +373,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       hermes: 'gated_until_hermes_called_true',
       pi_mono: 'candidate_pending_until_installed_and_live',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
-      paperclip: 'pending_until_localhost_or_tailnet_ui_proven',
+      paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
     },
@@ -387,9 +387,9 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       fork2_smb_status: 'blocked',
     },
     design_handoff: {
-      expected_files_present: false,
+      expected_files_present: true,
       production_uses_mock_data: false,
-      note: 'The accepted Agent Hub design files were not present in this production checkout; this surface is wired from Gateway registry/status data and does not import mock agent-data.js.',
+      note: 'The accepted Agent Hub v2 Browser Automation and Paperclip v1 handoff assets are present under design/gateway. Production renders the same control-center structure from live Gateway registry data, not stale mock agent-data.js.',
     },
   }
 }
@@ -559,11 +559,14 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
   return AGENT_HUB_DEFINITIONS.map((definition) => {
     const node = nodes.find((item) => item.id === definition.registryNodeId) || null
     const registryNode = registry.nodes.find((item) => item.id === definition.registryNodeId)
-    const blockers = ownerSafeList([
+    const observedBlockers = [
       ...(node?.blocked_reason ? [node.blocked_reason] : []),
       ...(registryNode?.blockers || []),
-      ...definition.extraBlockers,
-    ])
+    ]
+    const preferDefinitionBlocker = definition.id === 'pi-mono' || definition.id === 'spaceagent'
+    const blockers = ownerSafeList(preferDefinitionBlocker
+      ? [...definition.extraBlockers, ...observedBlockers]
+      : [...observedBlockers, ...definition.extraBlockers])
     return {
       id: definition.id,
       registry_node_id: definition.registryNodeId,

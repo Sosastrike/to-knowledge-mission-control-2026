@@ -27,17 +27,19 @@ describe('Gateway Agent Hub', () => {
       raw_paths_exposed: false,
     })
     expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono'])
-    expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go' })
+    expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
     expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({ role: 'Lieutenant / Skill + Workflow Builder', status: 'gated', called_true_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
-      status: 'read_only',
+      status: 'pending',
       routes: {
         bridge_status: '/api/bridge/pi/status',
       },
     })
+    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBe('pi_runtime_session_not_proven')
+    expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {
       expect(agent.interface.auth_required).toBe(true)

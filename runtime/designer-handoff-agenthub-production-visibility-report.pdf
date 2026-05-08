@@ -1,0 +1,554 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2497 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(DESIGNER HANDOFF AGENT HUB PRODUCTION VISIBILITY REPORT) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-08) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(OBJECTIVE) Tj
+T*
+() Tj
+T*
+(Explain why the latest designer changes were not visible in Mission Control, apply the accepted) Tj
+T*
+(design handoff to the live Gateway / Agent Hub production UI, restart the production process, and) Tj
+T*
+(prove that the production page now serves the updated Agent Hub control-center experience.) Tj
+T*
+() Tj
+T*
+(Final result for this slice: **GO for designer handoff visibility in production**.) Tj
+T*
+() Tj
+T*
+(Overall ecosystem remains: **PARTIAL GO**, not 100%, because Hermes, Firecrawl, YouTube, Paperclip,) Tj
+T*
+(Pi runtime, delivery connectors, owner-authenticated visual proof, and OpenClaw+ doctor items still) Tj
+T*
+(have separate blockers.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(ROOT CAUSE) Tj
+T*
+() Tj
+T*
+(The designer files were available in the owner-provided handoff location, but the production React) Tj
+T*
+(component had not been updated to render the designer control-center structure. A prior deployment) Tj
+T*
+(had routed Gateway entrypoints to Agent Hub and wired production truth data, but the visible web) Tj
+T*
+(interface was still mostly the older registry-style page.) Tj
+T*
+() Tj
+T*
+(This was **not** caused by missing owner paths. It was caused by a production) Tj
+T*
+(implementation/deployment gap: the handoff assets existed outside the live application, and the live) Tj
+T*
+(UI needed to be explicitly ported, wired to real Gateway data, tested, restarted, and smoked.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(DESIGN ASSETS APPLIED) Tj
+T*
+() Tj
+T*
+(The accepted handoff assets are now present under `design/gateway` for traceability:) Tj
+T*
+() Tj
+T*
+(- Agent Hub v2 Browser Automation handoff) Tj
+T*
+(- Browser Automation shared data file) Tj
+T*
+(- Gateway shared data file) Tj
+T*
+(- node card styling) Tj
+T*
+(- token styling) Tj
+T*
+(- Paperclip v1 final handoff) Tj
+T*
+(- Paperclip v1 developer handoff) Tj
+T*
+(- Paperclip v1 shared assets) Tj
+T*
+() Tj
+T*
+(Owner-facing architecture naming was corrected to **OpenClaw+**. The literal legacy service name) Tj
+T*
+(`opencloud-docs-farmer.service` remains only where it refers to the existing systemd unit.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(FILES CHANGED) Tj
+T*
+() Tj
+T*
+(- `design/gateway/**`) Tj
+T*
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+T*
+(- `src/lib/gateway-agent-hub.ts`) Tj
+T*
+(- `src/lib/gateway-agent-hub.test.ts`) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2965 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(- `src/app/api/gateway/agent-hub/status/route.ts`) Tj
+T*
+(- `src/app/api/gateway/space-agent/browser/status/route.ts`) Tj
+T*
+(- `runtime/designer-handoff-agenthub-production-visibility-report.md`) Tj
+T*
+(- `runtime/designer-handoff-agenthub-production-visibility-report.pdf`) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(UI CHANGES NOW IN PRODUCTION) Tj
+T*
+() Tj
+T*
+(The live Gateway / Agent Hub page now includes:) Tj
+T*
+() Tj
+T*
+(- Designer-inspired Agent Hub / Control Center layout.) Tj
+T*
+(- Top readiness summary.) Tj
+T*
+(- Control-center tabs for Agent Zero, Hermes, Pi-mono, SpaceAgent, and Paperclip.) Tj
+T*
+(- Operating Chain canvas:) Tj
+T*
+(  Owner -> Gateway / Nucleus -> Agent Zero / Pi / Hermes -> Paperclip -> OpenClaw+ -> mini-agents /) Tj
+T*
+(tools / reports.) Tj
+T*
+(- Owner Actions panel with real, gated, or blocked actions only.) Tj
+T*
+(- Policy / guardrail panel.) Tj
+T*
+(- Design Handoff panel showing the handoff assets are present and mock data is not used.) Tj
+T*
+(- Agent cards with read/write/execute truth flags.) Tj
+T*
+(- SpaceAgent Browser Automation section showing Playwright MCP, Firecrawl, and YouTube Research from) Tj
+T*
+(  current production truth.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(CURRENT PRODUCTION TRUTH REFLECTED) Tj
+T*
+() Tj
+T*
+(| System | Status Displayed | Production Truth |) Tj
+T*
+(|---|---:|---|) Tj
+T*
+(| Agent Zero | partial_go | Commander. Authenticated test-chat has proven `agent_zero_called:true`;) Tj
+T*
+(downstream routes still prevent full GO. |) Tj
+T*
+(| Hermes | gated | Lieutenant / workflow builder. Live adapter still requires `hermes_called:true`. |) Tj
+T*
+(| Pi | pending | Dispatcher / Route Optimizer Candidate. Advisory/shadow only. Execution and writes) Tj
+T*
+(disabled. Blocker: `pi_runtime_session_not_proven`. |) Tj
+T*
+(| SpaceAgent | read_only | Research specialist. Playwright MCP is local-only connected; Firecrawl and) Tj
+T*
+(YouTube remain blocked/limited. |) Tj
+T*
+(| Playwright MCP | connected_local_only | Local-only read-only browser automation. Endpoint stays) Tj
+T*
+(localhost-only. |) Tj
+T*
+(| Firecrawl | blocked | Blocker: `firecrawl_credential_required`. |) Tj
+T*
+(| YouTube Research | limited_pending | Blocker: `youtube_transcript_connector_not_proven`. |) Tj
+T*
+(| Paperclip | pending / degraded | Workforce Control Plane before OpenClaw+. Owner login/service/task) Tj
+T*
+(queue proof still pending. |) Tj
+T*
+(| OpenClaw+ | partial | Runtime / skills / agents / mini-agent execution layer. Doctor health remains a) Tj
+T*
+(separate phase. |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(ROUTES AND COMMANDS USED) Tj
+T*
+() Tj
+T*
+(Commands were run without printing secrets or auth files.) Tj
+T*
+() Tj
+T*
+(- Typecheck: `pnpm run typecheck`) Tj
+T*
+(- Test suite: focused Gateway/SpaceAgent tests, resulting in full Vitest pass) Tj
+T*
+(- Build: `pnpm run build`) Tj
+T*
+(- Production restart fallback: standalone Next production process on localhost-only bind) Tj
+T*
+(- Authenticated smoke:) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1965 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(  - `GET /gateway/agent-hub`) Tj
+T*
+(  - `GET /api/gateway/agent-hub/status`) Tj
+T*
+(  - `GET /api/gateway/space-agent/browser/status`) Tj
+T*
+(- Unauthenticated smoke:) Tj
+T*
+(  - `GET /api/gateway/agent-hub/status`) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(PRODUCTION RESTART PROOF) Tj
+T*
+() Tj
+T*
+(Production Mission Control was restarted with the controlled standalone fallback.) Tj
+T*
+() Tj
+T*
+(| Proof Item | Result |) Tj
+T*
+(|---|---|) Tj
+T*
+(| Previous PID | 3192525 |) Tj
+T*
+(| New PID | 3205313 |) Tj
+T*
+(| New start timestamp | 2026-05-08 07:46:23 |) Tj
+T*
+(| Production bind | localhost-only |) Tj
+T*
+(| Tailnet proxy | existing proxy remains in front |) Tj
+T*
+(| `.env` changed | no |) Tj
+T*
+(| secrets printed | no |) Tj
+T*
+() Tj
+T*
+(Note: `mission-control.service` is not currently installed as an active user unit on the production) Tj
+T*
+(host, so this slice used the established standalone fallback rather than claiming a systemd restart.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(SMOKE EVIDENCE) Tj
+T*
+() Tj
+T*
+(Authenticated smoke returned:) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(|---|---|) Tj
+T*
+(| `/gateway/agent-hub` HTTP | 200 |) Tj
+T*
+(| `/api/gateway/agent-hub/status` HTTP | 200 |) Tj
+T*
+(| `/api/gateway/space-agent/browser/status` HTTP | 200 |) Tj
+T*
+(| unauthenticated protected API | 401 |) Tj
+T*
+(| Operating Chain visible | yes |) Tj
+T*
+(| Owner Actions visible | yes |) Tj
+T*
+(| Agent Zero visible | yes |) Tj
+T*
+(| Hermes visible | yes |) Tj
+T*
+(| Pi-mono visible | yes |) Tj
+T*
+(| SpaceAgent visible | yes |) Tj
+T*
+(| Paperclip visible | yes |) Tj
+T*
+(| SpaceAgent Browser Automation visible | yes |) Tj
+T*
+(| Playwright MCP visible | yes |) Tj
+T*
+(| Firecrawl visible | yes |) Tj
+T*
+(| YouTube Research visible | yes |) Tj
+T*
+(| Design Handoff visible | yes |) Tj
+T*
+(| OpenClaw+ visible | yes |) Tj
+T*
+(| OpenCloud architecture label visible | no |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(TESTS) Tj
+T*
+() Tj
+T*
+(| Test | Result |) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2233 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(|---|---|) Tj
+T*
+(| `pnpm run typecheck` | PASS |) Tj
+T*
+(| Vitest suite | PASS, 134 files / 1241 tests |) Tj
+T*
+(| `pnpm run build` | PASS |) Tj
+T*
+(| Authenticated route smoke | PASS |) Tj
+T*
+(| Unauthenticated route smoke | PASS, 401 |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(SECURITY CONFIRMATION) Tj
+T*
+() Tj
+T*
+(- No secrets printed.) Tj
+T*
+(- No auth files printed.) Tj
+T*
+(- No token values printed.) Tj
+T*
+(- No `.env` changes.) Tj
+T*
+(- No public Playwright MCP exposure.) Tj
+T*
+(- No owner browser profile used.) Tj
+T*
+(- No SMB mount.) Tj
+T*
+(- No Fork 2.) Tj
+T*
+(- No Zapier writes.) Tj
+T*
+(- No HeyGen generation.) Tj
+T*
+(- No external farmers.) Tj
+T*
+(- No fake Done status.) Tj
+T*
+(- No fake live status.) Tj
+T*
+(- No fake buttons added.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(REMAINING BLOCKERS OUTSIDE THIS SLICE) Tj
+T*
+() Tj
+T*
+(These blockers still prevent overall 100% GO:) Tj
+T*
+() Tj
+T*
+(- `owner_authenticated_browser_session_required` for owner visual proof from the owner's active) Tj
+T*
+(  browser session.) Tj
+T*
+(- `hermes_safe_live_chat_adapter_not_configured` until Hermes returns `hermes_called:true`.) Tj
+T*
+(- `pi_runtime_session_not_proven` until Pi runtime/shadow session is proven.) Tj
+T*
+(- `firecrawl_credential_required` until Firecrawl credential/backend proof exists.) Tj
+T*
+(- `youtube_transcript_connector_not_proven` until a transcript connector is proven.) Tj
+T*
+(- Paperclip service/login/task queue proof is still pending.) Tj
+T*
+(- OpenClaw+ doctor health still needs completion.) Tj
+T*
+(- Delivery connectors remain gated or blocked unless Bridge Session and connector proof pass.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(ROLLBACK) Tj
+T*
+() Tj
+T*
+(Rollback should revert the production commit for this slice and restart Mission Control through the) Tj
+T*
+(same controlled restart path. Do not delete designer source handoff files from the original owner) Tj
+T*
+(storage location.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(UPDATED PERCENTAGES) Tj
+T*
+() Tj
+T*
+(| Workstream | Before | After This Slice | Decision |) Tj
+T*
+(|---|---:|---:|---|) Tj
+T*
+(| Gateway / Agent Hub UI visibility | 74-88% | 90% | PARTIAL GO, production UI now includes designer) Tj
+T*
+(handoff, owner session proof still pending |) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 828 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(| SpaceAgent Browser Automation UI | 66-82% | 86% | PARTIAL GO, Playwright MCP visible and truthful,) Tj
+T*
+(Firecrawl/YouTube still blocked/limited |) Tj
+T*
+(| Playwright MCP | 90% | 90% | GO for local-only read-only browser automation |) Tj
+T*
+(| Pi Dispatcher UI | 35% | 42% | DESIGN / PENDING / SHADOW, visible and truthful, runtime not proven |) Tj
+T*
+(| Paperclip UI surface | 45-55% | 60% | PARTIAL / DEGRADED, visible as workforce layer, live service) Tj
+T*
+(proof pending |) Tj
+T*
+(| Overall ecosystem | 86-87% | 87-88% | PARTIAL GO, not 100% |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(EXACT NEXT STEP) Tj
+T*
+() Tj
+T*
+(Use an owner-authenticated browser session to visually confirm the updated production Agent Hub) Tj
+T*
+(page, then continue with Hermes live adapter proof and Pi runtime proof.) Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000140 00000 n 
+0000000267 00000 n 
+0000002816 00000 n 
+0000002943 00000 n 
+0000005960 00000 n 
+0000006087 00000 n 
+0000008104 00000 n 
+0000008232 00000 n 
+0000010518 00000 n 
+0000010647 00000 n 
+0000011527 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+11598
+%%EOF

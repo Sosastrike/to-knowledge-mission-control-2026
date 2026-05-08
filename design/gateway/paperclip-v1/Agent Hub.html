@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gateway · Agent Hub</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<link rel="stylesheet" href="shared/node-card.css" />
+<style>
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); margin: 0; }
+
+.gw-crumbs { display:flex; align-items:center; gap:10px; padding:14px 24px; border-bottom:1px solid var(--line-2); background:var(--bg-1); font-size:12px; color:var(--t-3); }
+.gw-crumbs a { color:var(--t-3); text-decoration:none; }
+.gw-crumbs a:hover { color:var(--t-1); }
+.gw-crumbs .here { color:var(--t-1); font-weight:500; }
+.gw-crumbs .sep { color:var(--t-5); }
+
+.page-head { padding:22px 24px 18px; border-bottom:1px solid var(--line-2); background:var(--bg-1); display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; }
+.page-head h1 { margin:0 0 4px; font-size:26px; letter-spacing:-0.01em; display:flex; align-items:center; gap:12px; }
+.page-head h1 .icon { width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, rgba(167,139,250,0.32), rgba(94,234,212,0.30)); border:1px solid rgba(167,139,250,0.55); display:grid; place-items:center; font-family:var(--ff-mono); color:var(--st-purple); font-size:16px; font-weight:700; }
+.page-head .lede { margin:0; color:var(--t-3); font-size:13px; max-width:760px; line-height:1.55; }
+
+.head-meta { display:flex; gap:18px; align-items:center; }
+.head-meta .pill { font-family:var(--ff-mono); font-size:11px; color:var(--t-3); background:var(--bg-3); border:1px solid var(--line-2); padding:6px 10px; border-radius:6px; }
+.head-meta .pill strong { color:var(--t-1); font-weight:500; }
+
+/* Tabs */
+.tabs { display:flex; gap:0; padding:0 24px; background:var(--bg-1); border-bottom:1px solid var(--line-2); overflow-x:auto; }
+.tab { padding:14px 18px; border:none; background:transparent; color:var(--t-3); font-family:inherit; font-size:13px; cursor:pointer; border-bottom:2px solid transparent; display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.tab .dot { width:8px; height:8px; border-radius:50%; }
+.tab .role { font-size:10.5px; color:var(--t-5); margin-left:4px; }
+.tab:hover { color:var(--t-1); }
+.tab.active { color:var(--t-1); border-bottom-color:var(--brand-cyan); }
+.tab.active .role { color:var(--t-3); }
+
+/* Layout */
+.layout { display:grid; grid-template-columns:1fr 360px; min-height:calc(100vh - 49px - 96px - 49px); background:var(--bg-1); }
+.canvas { padding:24px 28px; overflow-y:auto; position:relative; }
+.canvas::before { content:''; position:absolute; inset:0; background-image: linear-gradient(var(--bg-grid) 1px, transparent 1px), linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px); background-size:28px 28px; opacity:0.45; pointer-events:none; }
+.canvas > * { position:relative; }
+
+.sec-head { display:flex; align-items:baseline; gap:12px; margin:0 0 14px; }
+.sec-head h3 { margin:0; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-3); font-weight:600; }
+.sec-head .meta { font-family:var(--ff-mono); font-size:11px; color:var(--t-4); }
+.sec-head .filler { flex:1; height:1px; background:var(--line-2); }
+
+/* Architecture chain */
+.chain { display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:22px; }
+.chain .node { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); padding:11px 12px; position:relative; }
+.chain .node::after { content:''; position:absolute; right:-8px; top:50%; transform:translateY(-50%); width:14px; height:12px; background:linear-gradient(90deg, transparent, var(--t-5)); clip-path:polygon(0 35%, 70% 35%, 70% 0, 100% 50%, 70% 100%, 70% 65%, 0 65%); opacity:0.45; }
+.chain .node:last-child::after { display:none; }
+.chain .node .lbl { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-4); font-weight:700; margin-bottom:4px; }
+.chain .node .nm { font-size:13px; font-weight:600; color:var(--t-1); }
+.chain .node .sub { font-size:10.5px; color:var(--t-3); margin-top:3px; }
+.chain .node.you { border-color:var(--brand-cyan); box-shadow:0 0 0 1px var(--brand-cyan), 0 0 18px rgba(94,234,212,0.10); }
+
+/* Agent cards (Hub overview) */
+.agent-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-bottom:22px; }
+.agent-card { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); padding:18px 20px; cursor:pointer; transition:border-color .15s, transform .15s; display:grid; gap:12px; }
+.agent-card:hover { border-color:var(--line-strong); transform:translateY(-1px); }
+.agent-card.active { border-color:var(--brand-cyan); box-shadow:0 0 0 1px var(--brand-cyan); }
+
+.ag-top { display:flex; align-items:center; gap:14px; }
+.ag-glyph { width:48px; height:48px; border-radius:12px; display:grid; place-items:center; font-family:var(--ff-mono); font-size:18px; font-weight:700; color:#0a0d12; flex-shrink:0; }
+.ag-glyph.paperclip   { background:linear-gradient(135deg, #c4b5fd, #8b5cf6); }
+.ag-glyph.agent-zero  { background:linear-gradient(135deg, #a78bfa, #7c3aed); }
+.ag-glyph.hermes      { background:linear-gradient(135deg, #fcd34d, #f59e0b); }
+.ag-glyph.space-agent { background:linear-gradient(135deg, #5eead4, #0d9488); }
+.ag-glyph.pi-mono     { background:linear-gradient(135deg, #fdba74, #ea580c); }
+
+.ag-title { display:grid; gap:2px; flex:1; }
+.ag-name { font-size:16px; font-weight:600; }
+.ag-role { font-size:11.5px; color:var(--t-3); }
+.ag-status-pill { font-family:var(--ff-mono); font-size:10px; letter-spacing:0.10em; text-transform:uppercase; padding:3px 8px; border-radius:4px; font-weight:700; }
+
+.ag-tag { font-size:11.5px; color:var(--t-3); border-top:1px solid var(--line-1); padding-top:10px; }
+
+.ag-stats { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.ag-stats .stat { background:var(--bg-3); border:1px solid var(--line-2); border-radius:6px; padding:8px 10px; }
+.ag-stats .stat .v { font-family:var(--ff-mono); font-size:13px; color:var(--t-1); }
+.ag-stats .stat .l { font-size:9.5px; letter-spacing:0.10em; text-transform:uppercase; color:var(--t-4); margin-top:2px; }
+
+.ag-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.ag-btn { font-family:inherit; font-size:11.5px; padding:7px 12px; border-radius:6px; cursor:pointer; background:var(--bg-3); border:1px solid var(--line-3); color:var(--t-1); display:inline-flex; align-items:center; gap:6px; }
+.ag-btn:hover { border-color:var(--line-strong); }
+.ag-btn.gated { border-color:var(--st-yellow-bd); color:var(--st-yellow); }
+.ag-btn.gated::before { content:'🔒'; font-size:10px; }
+.ag-btn.danger { border-color:var(--st-red-bd); color:var(--st-red); }
+.ag-btn.primary { background:rgba(94,234,212,0.12); border-color:rgba(94,234,212,0.45); color:var(--brand-cyan); }
+
+/* Detail panel */
+.detail { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); padding:0; overflow:hidden; margin-bottom:22px; }
+.detail-head { padding:18px 20px; display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; border-bottom:1px solid var(--line-2); background:linear-gradient(180deg, rgba(167,139,250,0.06), transparent); }
+.detail-head .glyph { width:54px; height:54px; border-radius:12px; display:grid; place-items:center; font-family:var(--ff-mono); font-size:22px; font-weight:700; color:#0a0d12; }
+.detail-head .meta h2 { margin:0 0 3px; font-size:18px; }
+.detail-head .meta .role { color:var(--t-3); font-size:12px; }
+.detail-head .meta .id { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-4); margin-top:4px; }
+.detail-head .actions { display:flex; gap:6px; }
+
+.detail-body { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.detail-body > div { padding:16px 20px; }
+.detail-body > div + div { border-left:1px solid var(--line-2); }
+
+h5 { margin:0 0 10px; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-3); font-weight:600; }
+
+/* Localhost embed */
+.localhost-embed { background:var(--bg-3); border:1px dashed var(--line-3); border-radius:var(--r-2); padding:20px; display:grid; gap:10px; place-items:center; text-align:center; }
+.localhost-embed .url { font-family:var(--ff-mono); font-size:11.5px; color:var(--brand-cyan); background:var(--bg-4); padding:5px 10px; border-radius:4px; }
+.localhost-embed .desc { font-size:11.5px; color:var(--t-3); max-width:340px; line-height:1.5; }
+.localhost-embed.unsafe { border-color:var(--st-yellow-bd); background:rgba(245,181,10,0.04); }
+.localhost-embed.unsafe .desc { color:var(--st-yellow); }
+.localhost-embed iframe { width:100%; aspect-ratio:16/10; background:#000; border:1px solid var(--line-2); border-radius:6px; }
+
+/* Gateway lane */
+.lane-grid { display:grid; gap:6px; }
+.lane-row { display:grid; grid-template-columns:78px 64px 1fr 110px 56px; gap:10px; padding:6px 10px; align-items:center; font-size:11px; border-bottom:1px solid var(--line-1); }
+.lane-row:last-child { border-bottom:none; }
+.lane-row.head { color:var(--t-4); font-size:9.5px; letter-spacing:0.10em; text-transform:uppercase; font-weight:600; padding-bottom:4px; border-bottom:1px solid var(--line-2); }
+.lane-row .ts { font-family:var(--ff-mono); color:var(--t-3); font-size:10.5px; }
+.lane-row .req { font-family:var(--ff-mono); font-size:10px; color:var(--brand-cyan); background:var(--bg-3); padding:1px 5px; border-radius:3px; justify-self:start; }
+.lane-row .op { color:var(--t-1); }
+.lane-row .op .eng { font-family:var(--ff-mono); font-size:10px; color:var(--t-4); display:block; margin-top:1px; }
+.lane-row .ms { font-family:var(--ff-mono); color:var(--t-3); text-align:right; font-size:10.5px; }
+.lane-row .res { text-align:center; font-family:var(--ff-mono); font-size:9px; padding:1px 4px; border-radius:3px; font-weight:700; }
+.res.ok      { color:var(--st-green); background:var(--st-green-bg); }
+.res.gated   { color:var(--st-yellow); background:var(--st-yellow-bg); }
+.res.denied  { color:var(--st-red); background:var(--st-red-bg); }
+.res.pending { color:var(--brand-cyan); background:rgba(94,234,212,0.12); }
+
+.empty-mini { padding:18px; text-align:center; color:var(--t-4); font-size:11.5px; border:1px dashed var(--line-2); border-radius:var(--r-2); }
+
+/* Brain panel */
+.brain-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.brain-card { background:var(--bg-3); border:1px solid var(--line-2); border-radius:var(--r-2); padding:10px 12px; }
+.brain-card h6 { margin:0 0 6px; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--t-4); font-weight:600; }
+.brain-card ul { margin:0; padding-left:14px; font-size:11.5px; color:var(--t-2); line-height:1.55; }
+.brain-card .v { font-family:var(--ff-mono); font-size:13px; color:var(--t-1); }
+.brain-card .l { font-size:10.5px; color:var(--t-3); margin-top:2px; }
+
+/* Side rail */
+.side { background:var(--bg-1); border-left:1px solid var(--line-2); padding:22px 20px; overflow-y:auto; display:grid; gap:18px; align-content:start; }
+.panel { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); overflow:hidden; }
+.panel header { padding:12px 14px; border-bottom:1px solid var(--line-2); display:flex; align-items:center; justify-content:space-between; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-3); font-weight:600; }
+.panel header .meta { font-family:var(--ff-mono); font-size:11px; color:var(--t-4); letter-spacing:0; }
+.panel .body { padding:12px 14px; }
+
+.gate-list { display:grid; gap:5px; }
+.gate-row { display:grid; grid-template-columns:1fr auto; gap:8px; padding:7px 10px; background:var(--bg-3); border:1px solid var(--line-2); border-radius:var(--r-2); font-size:11.5px; }
+.gate-row .nm { color:var(--t-1); }
+.gate-row .nm .danger { font-size:9px; padding:1px 5px; border-radius:3px; margin-left:6px; font-weight:700; letter-spacing:0.06em; }
+.gate-row .nm .danger.high { color:var(--st-red); background:var(--st-red-bg); border:1px solid var(--st-red-bd); }
+.gate-row .nm .danger.med  { color:var(--st-orange); background:var(--st-orange-bg); border:1px solid var(--st-orange-bd); }
+.gate-row .nm .danger.low  { color:var(--t-4); background:var(--bg-4); }
+.gate-row .lock { color:var(--st-yellow); font-size:11px; }
+
+.cost-meter { display:grid; gap:8px; padding:4px 0; }
+.cost-meter .row { display:flex; justify-content:space-between; align-items:center; font-size:11.5px; }
+.cost-meter .row .nm { color:var(--t-2); }
+.cost-meter .row .v { font-family:var(--ff-mono); color:var(--t-1); }
+.cost-meter .bar { height:6px; background:var(--bg-4); border-radius:3px; overflow:hidden; position:relative; }
+.cost-meter .bar .fill { height:100%; background:var(--st-green); border-radius:3px; }
+.cost-meter .bar .fill.warn { background:var(--st-orange); }
+.cost-meter .bar .fill.crit { background:var(--st-red); }
+
+footer.repo-note { padding:14px 24px; border-top:1px solid var(--line-2); background:var(--bg-1); display:flex; justify-content:space-between; gap:14px; font-size:11px; color:var(--t-4); }
+footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-3); background:var(--bg-3); padding:1px 5px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="gw-crumbs">
+  <a href="index.html">Gateway design</a>
+  <span class="sep">›</span>
+  <a href="Gateway Overview.html">Nucleus</a>
+  <span class="sep">›</span>
+  <span class="here">Agent Hub</span>
+  <span style="flex:1"></span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/agents</span>
+</div>
+
+<header class="page-head">
+  <div>
+    <h1><span class="icon">A</span>Agent Hub · Control Center</h1>
+    <p class="lede">One place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Design only — no production calls.</p>
+  </div>
+  <div class="head-meta">
+    <span class="pill">5 agents · <strong>1 green · 2 yellow · 2 gray</strong></span>
+    <span class="pill">Bridge · <strong>not active</strong></span>
+  </div>
+</header>
+
+<!-- Agent tabs -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-id="overview">
+    <span class="dot" style="background:var(--brand-cyan)"></span>
+    Overview <span class="role">5 agents</span>
+  </button>
+  <button class="tab" data-id="paperclip">
+    <span class="dot" style="background:var(--st-yellow)"></span>
+    Paperclip <span class="role">Workforce Control Plane</span>
+  </button>
+  <button class="tab" data-id="agent-zero">
+    <span class="dot" style="background:var(--st-green)"></span>
+    Agent Zero <span class="role">Commander</span>
+  </button>
+  <button class="tab" data-id="hermes">
+    <span class="dot" style="background:var(--st-yellow)"></span>
+    Hermes <span class="role">Lieutenant</span>
+  </button>
+  <button class="tab" data-id="space-agent">
+    <span class="dot" style="background:var(--st-gray)"></span>
+    SpaceAgent <span class="role">Browser/Firecrawl/YouTube</span>
+  </button>
+  <button class="tab" data-id="pi-mono">
+    <span class="dot" style="background:var(--st-gray)"></span>
+    Pi-mono <span class="role">Dispatcher candidate</span>
+  </button>
+</nav>
+
+<div class="layout">
+  <main class="canvas" id="canvas">
+    <!-- rendered by JS -->
+  </main>
+
+  <aside class="side">
+
+    <div class="panel">
+      <header>Architecture chain<span class="meta">locked</span></header>
+      <div class="body" style="padding:8px 12px;">
+        <div style="display:grid; gap:4px; font-size:11.5px; color:var(--t-2);">
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">1</span>Owner</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">2</span>Gateway</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">3</span>Agent Zero / Pi / Hermes</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--st-yellow); width:18px;">4</span><strong style="color:var(--st-purple);">Paperclip</strong></div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">5</span>OpenClaw+</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">6</span>Mini-agents · skills · tools · reports</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Owner actions<span class="meta">9 · 4 gated</span></header>
+      <div class="body">
+        <div class="gate-list" id="gate-list"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Today · spend across agents<span class="meta">since 00:00</span></header>
+      <div class="body">
+        <div class="cost-meter" id="cost-meter"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Repo grounding<span class="meta">5 of 5 pending</span></header>
+      <div class="body">
+        <div style="font-size:11.5px; color:var(--t-3); line-height:1.55;">
+          Public repo access not available in design environment. URLs preserved on each panel.
+          Engineering wires the live shape after handoff.
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<footer class="repo-note">
+  <div>Mission Control → Gateway → <strong style="color:var(--t-2);">Agent Hub</strong> · 5 agents · hybrid localhost embed · Bridge-gated dangerous actions</div>
+  <div>tokens: <code>shared/tokens.css</code> · data: <code>shared/agent-data.js</code></div>
+</footer>
+
+<script src="shared/agent-data.js"></script>
+<script>
+(function () {
+  const A = window.AGENTS;
+  const canvas = document.getElementById('canvas');
+  const tabs = document.getElementById('tabs');
+
+  // ---------- side rail: gate list + cost meter ----------
+  const gateList = document.getElementById('gate-list');
+  A.gatedActions.forEach(g => {
+    const row = document.createElement('div'); row.className = 'gate-row';
+    row.innerHTML = `<span class="nm">${g.label}<span class="danger ${g.danger}">${g.danger}</span></span>` +
+                    (g.bridge ? '<span class="lock">🔒 bridge</span>' : '<span style="color:var(--t-5);font-size:10.5px;">—</span>');
+    gateList.appendChild(row);
+  });
+
+  const meter = document.getElementById('cost-meter');
+  A.agents.forEach(a => {
+    const c = A.cost[a.id];
+    const pct = (c.today_usd / c.day_cap_usd) * 100;
+    const cls = pct >= 95 ? 'crit' : pct >= 70 ? 'warn' : '';
+    const row = document.createElement('div');
+    row.innerHTML = `<div class="row"><span class="nm">${a.name}</span><span class="v">$${c.today_usd.toFixed(2)} / $${c.day_cap_usd}</span></div>
+                     <div class="bar"><div class="fill ${cls}" style="width:${Math.min(pct,100)}%"></div></div>`;
+    meter.appendChild(row);
+  });
+
+  // ---------- helpers ----------
+  function statusPill(s) {
+    const map = { green:'CONNECTED', yellow:'GATED', blue:'READ-ONLY', red:'BLOCKED', gray:'NOT INSTALLED' };
+    return `<span class="ag-status-pill" style="color:var(--st-${s});background:var(--st-${s}-bg);border:1px solid var(--st-${s}-bd);">${map[s]||s.toUpperCase()}</span>`;
+  }
+  function actionBtns(a, opts={}) {
+    const btns = [
+      { l:'Open localhost', cls: a.iframe_safe ? 'primary' : 'primary' },
+      { l:'Send command',   cls: '' },
+      { l:'Pause queue',    cls: '' },
+      { l:'Bridge Session', cls: 'gated' },
+      { l:'Restart',        cls: 'gated danger' },
+      { l:'Audit',          cls: '' }
+    ];
+    return btns.map(b => `<button class="ag-btn ${b.cls}">${b.l}</button>`).join('');
+  }
+  function laneTable(rows) {
+    if (!rows.length) return `<div class="empty-mini">No Gateway requests for this agent yet.</div>`;
+    return `<div class="lane-grid"><div class="lane-row head"><div>time</div><div>req</div><div>op · engine</div><div style="text-align:right;">latency</div><div style="text-align:center;">res</div></div>` +
+      rows.map(r => `<div class="lane-row">
+        <div class="ts">${r.ts}</div>
+        <div class="req">${r.req}</div>
+        <div class="op">${r.op}<span class="eng">${r.engine === '—' ? '' : r.engine}</span></div>
+        <div class="ms">${r.ms} ms</div>
+        <div class="res ${r.result}">${r.result}</div>
+      </div>`).join('') + `</div>`;
+  }
+  function brainPanel(a) {
+    const m = A.memorySummary[a.id] || {};
+    const p = A.persona[a.id] || {};
+    const c = A.cost[a.id];
+    const e = A.errors[a.id] || [];
+    const conns = A.connections[a.id] || [];
+    const dec = A.decisionTrace[a.id] || [];
+    const tools = A.toolLog[a.id] || [];
+    return `
+      <div class="brain-grid">
+        <div class="brain-card">
+          <h6>Active task / working set</h6>
+          <ul>${(m.working_set||['—']).map(t=>`<li>${t}</li>`).join('') || '<li>—</li>'}</ul>
+        </div>
+        <div class="brain-card">
+          <h6>Persona loaded</h6>
+          <div class="v">${p.id || '—'}</div>
+          <div class="l">${p.tone || ''} · ${p.word_count||0} words · last edit ${p.last_edit||'—'}</div>
+        </div>
+        <div class="brain-card">
+          <h6>Token + cost meter (today)</h6>
+          <div class="v">$${c.today_usd.toFixed(2)} <span style="color:var(--t-4);font-size:11px;">/ $${c.day_cap_usd}</span></div>
+          <div class="l">${c.today_tokens.toLocaleString()} tokens · soft-cap $${c.soft_cap_usd}</div>
+        </div>
+        <div class="brain-card">
+          <h6>Decision trace · last ${dec.length}</h6>
+          ${dec.length ? '<ul>' + dec.map(d=>`<li><strong>${d.ts}</strong> · ${d.summary}<br/><span style="color:var(--t-4);font-size:10.5px;">${d.route}</span></li>`).join('') + '</ul>' : '<div class="l">No decisions yet.</div>'}
+        </div>
+        <div class="brain-card">
+          <h6>Tool calls · last ${tools.length}</h6>
+          ${tools.length ? '<ul>' + tools.slice(0,4).map(t=>`<li><code style="font-family:var(--ff-mono);font-size:10.5px;color:var(--brand-cyan);">${t.tool}</code> → ${t.target} · ${t.ms}ms</li>`).join('') + '</ul>' : '<div class="l">No tool calls.</div>'}
+        </div>
+        <div class="brain-card">
+          <h6>Connections · ${conns.length}</h6>
+          ${conns.length ? '<ul>' + conns.map(c=>`<li>→ ${c.to} <span style="color:var(--t-4);font-size:10.5px;">(${c.type})</span></li>`).join('') + '</ul>' : '<div class="l">No connections.</div>'}
+        </div>
+        <div class="brain-card" style="grid-column:1/-1;">
+          <h6>Errors + retry log</h6>
+          ${e.length ? '<ul>' + e.map(er=>`<li><code style="font-family:var(--ff-mono);font-size:10.5px;color:var(--st-red);">${er.code}</code> · ${er.target} · ${er.detail} <span style="color:var(--t-4);font-size:10.5px;">${er.resolved?'(resolved, '+er.retried+' retries)':'(unresolved)'}</span></li>`).join('') + '</ul>' : '<div class="l">No errors.</div>'}
+        </div>
+      </div>`;
+  }
+
+  // ---------- views ----------
+  function viewOverview() {
+    return `
+      <div class="sec-head"><h3>Architecture · where each agent fits</h3><span class="meta">owner → gateway → … → mini-agents</span><span class="filler"></span></div>
+      <div class="chain">
+        <div class="node"><div class="lbl">1</div><div class="nm">Owner</div><div class="sub">Mission Control</div></div>
+        <div class="node you"><div class="lbl">2</div><div class="nm">Gateway</div><div class="sub">center</div></div>
+        <div class="node"><div class="lbl">3</div><div class="nm">Agent Zero / Pi / Hermes</div><div class="sub">command + advise + build</div></div>
+        <div class="node"><div class="lbl">4</div><div class="nm" style="color:var(--st-purple);">Paperclip</div><div class="sub">workforce control</div></div>
+        <div class="node"><div class="lbl">5</div><div class="nm">OpenClaw+</div><div class="sub">runtime / skills</div></div>
+        <div class="node"><div class="lbl">6</div><div class="nm">Mini-agents · skills · tools</div><div class="sub">execution leaves</div></div>
+      </div>
+
+      <div class="sec-head"><h3>Agents · click to drill in</h3><span class="meta">5 cards</span><span class="filler"></span></div>
+      <div class="agent-grid" id="agent-grid"></div>
+    `;
+  }
+
+  function viewAgent(a) {
+    const lane = A.gatewayLog[a.id] || [];
+    const ph = A.paperclip;
+
+    let embedHtml = '';
+    if (a.iframe_safe) {
+      embedHtml = `
+        <div class="localhost-embed">
+          <span class="url">${a.localhost}</span>
+          <div class="desc">Hybrid embed available. Click <strong>Preview UI</strong> to render the agent's localhost UI in this pane, or <strong>Open in new tab</strong> to launch full-screen with native auth.</div>
+          <div style="display:flex; gap:8px;">
+            <button class="ag-btn primary">Preview UI</button>
+            <button class="ag-btn">Open in new tab</button>
+          </div>
+        </div>`;
+    } else {
+      embedHtml = `
+        <div class="localhost-embed unsafe">
+          <span class="url">${a.localhost}</span>
+          <div class="desc">Iframe not safe (cross-origin or auth in URL). Use <strong>Open in new tab</strong> — Mission Control will not bypass the agent's own auth.</div>
+          <div style="display:flex; gap:8px;">
+            <button class="ag-btn">Open in new tab</button>
+            <button class="ag-btn">Status only</button>
+          </div>
+        </div>`;
+    }
+
+    // Paperclip-specific summary block injected before the brain
+    const paperclipSummary = a.id === 'paperclip' ? `
+      <div class="sec-head"><h3>Workforce snapshot</h3><span class="meta">paperclip is before openclaw+</span><span class="filler"></span></div>
+      <div class="brain-grid" style="margin-bottom:14px;">
+        <div class="brain-card"><h6>Co-workers</h6><div class="v">${ph.workforce.co_workers_active} <span style="color:var(--t-4);font-size:11px;">/ ${ph.workforce.co_workers_total}</span></div><div class="l">active / registered</div></div>
+        <div class="brain-card"><h6>Mini-agents in flight</h6><div class="v">${ph.workforce.mini_agents_in_flight} <span style="color:var(--t-4);font-size:11px;">/ ${ph.workforce.mini_agents_max}</span></div><div class="l">running / cap</div></div>
+        <div class="brain-card"><h6>Tasks today</h6><div class="v">${ph.workforce.tasks_completed_today} <span style="color:var(--t-4);font-size:11px;">/ ${ph.workforce.tasks_today}</span></div><div class="l">completed / total</div></div>
+        <div class="brain-card"><h6>Approvals pending</h6><div class="v">${ph.workforce.approvals_pending}</div><div class="l">awaiting bridge</div></div>
+      </div>
+      <div style="text-align:right;margin-bottom:14px;"><a href="Paperclip.html" style="color:var(--brand-cyan);font-size:12px;">Open full Workforce Control Plane →</a></div>
+    ` : '';
+
+    return `
+      <div class="detail">
+        <div class="detail-head">
+          <div class="glyph ag-glyph ${a.id}">${a.name[0]}</div>
+          <div class="meta">
+            <h2>${a.name}</h2>
+            <div class="role">${a.role} · ${statusPill(a.status)}</div>
+            <div class="id">${a.localhost} · auth: ${a.auth} · ${a.repo}</div>
+          </div>
+          <div class="actions">${actionBtns(a)}</div>
+        </div>
+        <div class="detail-body">
+          <div>
+            <h5>Localhost</h5>
+            ${embedHtml}
+            ${a.gated_reason ? `<div style="margin-top:12px;padding:10px 12px;background:var(--st-yellow-bg);border:1px solid var(--st-yellow-bd);border-radius:var(--r-2);font-size:11.5px;color:var(--st-yellow);">⚠ ${a.gated_reason}</div>` : ''}
+            ${a.blocked_reason ? `<div style="margin-top:12px;padding:10px 12px;background:var(--st-red-bg);border:1px solid var(--st-red-bd);border-radius:var(--r-2);font-size:11.5px;color:var(--st-red);">⚠ ${a.blocked_reason}</div>` : ''}
+          </div>
+          <div>
+            <h5>Tools · models · capabilities</h5>
+            <div style="display:grid; gap:8px;">
+              <div style="font-size:11.5px;"><span style="color:var(--t-4);">caps · </span>${a.caps.map(c=>`<span style="background:var(--bg-3);padding:1px 6px;border-radius:3px;margin-right:4px;font-size:10.5px;">${c}</span>`).join('')}</div>
+              <div style="font-size:11.5px;"><span style="color:var(--t-4);">models · </span>${a.models.map(c=>`<span style="background:var(--bg-3);padding:1px 6px;border-radius:3px;margin-right:4px;font-family:var(--ff-mono);font-size:10.5px;color:var(--brand-cyan);">${c}</span>`).join('')}</div>
+              <div style="font-size:11.5px;"><span style="color:var(--t-4);">tools · </span>${a.tools.map(c=>`<span style="background:var(--bg-3);padding:1px 6px;border-radius:3px;margin-right:4px;font-family:var(--ff-mono);font-size:10.5px;">${c}</span>`).join('')}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${paperclipSummary}
+
+      <div class="sec-head"><h3>Gateway lane · last ${lane.length} requests</h3><span class="meta">routed via gateway only</span><span class="filler"></span></div>
+      <div style="background:var(--bg-2);border:1px solid var(--line-2);border-radius:var(--r-3);padding:14px;margin-bottom:22px;">
+        ${laneTable(lane)}
+      </div>
+
+      <div class="sec-head"><h3>Brain · summary, decision trace, tools, errors</h3><span class="meta">no chain-of-thought</span><span class="filler"></span></div>
+      ${brainPanel(a)}
+    `;
+  }
+
+  function render(id) {
+    if (id === 'overview') {
+      canvas.innerHTML = viewOverview();
+      const grid = document.getElementById('agent-grid');
+      A.agents.forEach(a => {
+        const c = A.cost[a.id];
+        const lane = A.gatewayLog[a.id] || [];
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.innerHTML = `
+          <div class="ag-top">
+            <div class="ag-glyph ${a.id}">${a.name[0]}</div>
+            <div class="ag-title">
+              <div class="ag-name">${a.name}</div>
+              <div class="ag-role">${a.role}</div>
+            </div>
+            ${statusPill(a.status)}
+          </div>
+          <div class="ag-tag">${a.tagline}</div>
+          <div class="ag-stats">
+            <div class="stat"><div class="v">${a.pulse.req_per_min || 0}</div><div class="l">req/min</div></div>
+            <div class="stat"><div class="v">${a.pulse.p95_ms ? a.pulse.p95_ms+'ms' : '—'}</div><div class="l">p95</div></div>
+            <div class="stat"><div class="v">$${c.today_usd.toFixed(2)}</div><div class="l">today</div></div>
+            <div class="stat"><div class="v">${lane.length}</div><div class="l">gw last</div></div>
+          </div>
+          <div class="ag-actions">${actionBtns(a)}</div>
+        `;
+        card.onclick = (e) => { if (!e.target.closest('button')) selectTab(a.id); };
+        grid.appendChild(card);
+      });
+    } else {
+      const a = A.byId(id);
+      canvas.innerHTML = viewAgent(a);
+    }
+  }
+
+  function selectTab(id) {
+    [...tabs.querySelectorAll('.tab')].forEach(t => t.classList.toggle('active', t.dataset.id === id));
+    render(id);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  tabs.addEventListener('click', e => {
+    const t = e.target.closest('.tab');
+    if (!t) return;
+    selectTab(t.dataset.id);
+  });
+
+  render('overview');
+})();
+</script>
+</body>
+</html>

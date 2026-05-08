@@ -4,7 +4,6 @@ import { attachSpaceAgentBrowserAutomationStatus, buildAgentHubStatusPayload } f
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
 import { getPlaywrightMcpStatus } from '@/lib/playwright-mcp'
 import { buildSpaceAgentBrowserAutomationPayload } from '@/lib/space-agent-browser-automation'
-import { isYouTubeTranscriptConnectorAvailable } from '@/lib/space-agent-youtube-runtime'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
   const playwrightMcp = await getPlaywrightMcpStatus()
   const payload = attachSpaceAgentBrowserAutomationStatus(
     buildAgentHubStatusPayload(registry),
-    buildSpaceAgentBrowserAutomationPayload({ generatedAt, playwrightMcp, youtubeTranscriptConnectorProven: isYouTubeTranscriptConnectorAvailable() }),
+    buildSpaceAgentBrowserAutomationPayload({ generatedAt, playwrightMcp }),
   )
 
   return NextResponse.json(payload, {

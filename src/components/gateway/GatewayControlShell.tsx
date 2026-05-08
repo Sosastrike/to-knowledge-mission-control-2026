@@ -39,8 +39,8 @@ export function GatewayControlShell(input: {
 
   return (
     <main className='h-full overflow-y-auto bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
-      <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5'>
-        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+      <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5 pb-10'>
+        <section className='sticky top-0 z-20 rounded-lg border border-white/10 bg-[#070912]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#070912]/75'>
           <div className='flex flex-wrap items-center justify-between gap-3'>
             <nav aria-label='Gateway exits' className='flex flex-wrap gap-2'>
               {TOP_NAV_LINKS.map((link) => (

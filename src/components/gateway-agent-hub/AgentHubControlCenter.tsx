@@ -21,8 +21,8 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
 
   return (
     <main className='h-full overflow-y-auto bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
-      <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5'>
-        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+      <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5 pb-10'>
+        <section className='sticky top-0 z-20 rounded-lg border border-white/10 bg-[#070912]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#070912]/75'>
           <div className='flex flex-wrap items-center justify-between gap-3'>
             <nav aria-label='Agent Hub exits' className='flex flex-wrap gap-2'>
               <a href='/tkmc' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Mission Control Home</a>
@@ -178,8 +178,8 @@ export function AgentHubPaperclipPage({
   const agent = detail.agent
   return (
     <main className='h-full overflow-y-auto bg-[#070912] px-6 py-8 text-slate-100'>
-      <div className='mx-auto flex w-full max-w-6xl flex-col gap-6'>
-        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+      <div className='mx-auto flex w-full max-w-6xl flex-col gap-6 pb-10'>
+        <section className='sticky top-0 z-20 rounded-lg border border-white/10 bg-[#070912]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#070912]/75'>
           <div className='flex flex-wrap items-center justify-between gap-3'>
             <nav aria-label='Paperclip exits' className='flex flex-wrap gap-2'>
               <a href='/tkmc' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Mission Control Home</a>

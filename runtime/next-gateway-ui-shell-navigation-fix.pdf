@@ -1,0 +1,150 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2649 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-gateway-ui-shell-navigation-fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-4 — Gateway UI Shell Navigation Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Keep Gateway owner visual proof moving from PARTIAL toward GO by fixing navigation/scroll shell ) Tj
+0 -12 Td
+(defects.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL+ \(navigation and scroll hardening implemented; owner re-test still required for GO\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+(1. Added visible top exits on Gateway/Agent Hub surfaces:) Tj
+0 -12 Td
+(   - Mission Control Home) Tj
+0 -12 Td
+(   - Dashboard) Tj
+0 -12 Td
+(   - Gateway Overview) Tj
+0 -12 Td
+(   - Agent Hub) Tj
+0 -12 Td
+(2. Added clickable breadcrumb:) Tj
+0 -12 Td
+(   - Mission Control / Gateway / Agent Hub) Tj
+0 -12 Td
+(3. Hardened scroll behavior for long Gateway/Agent Hub pages and added bottom padding so content) Tj
+0 -12 Td
+( below-the-fold stays reachable.) Tj
+0 -12 Td
+(4. Added sticky top shell controls on Gateway + Agent Hub + Paperclip drill-down:) Tj
+0 -12 Td
+(   - exits remain visible while scrolling,) Tj
+0 -12 Td
+(   - breadcrumb remains clickable above the fold,) Tj
+0 -12 Td
+(   - owner no longer depends on browser back to escape the page.) Tj
+0 -12 Td
+(4. Preserved aliases:) Tj
+0 -12 Td
+(   - `/agent-network`) Tj
+0 -12 Td
+(   - `/agents`) Tj
+0 -12 Td
+(5. Kept no-fake-button contract behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit) Tj
+0 -12 Td
+(- pending in current workstream batch \(includes additional sticky-shell + scroll hardening\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files \(UI Fix Batch\)) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Snapshot) Tj
+0 -12 Td
+(- typecheck PASS) Tj
+0 -12 Td
+(- build PASS) Tj
+0 -12 Td
+(- tests PASS \(`138` files / `1250` tests\)) Tj
+0 -12 Td
+(- button-contract route scan PASS) Tj
+0 -12 Td
+(- protected-file invariant scan PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker to GO) Tj
+0 -12 Td
+(- Owner must confirm fixed UX in authenticated browser re-test:) Tj
+0 -12 Td
+(  - exits visible) Tj
+0 -12 Td
+(  - breadcrumb clickable) Tj
+0 -12 Td
+(  - scroll natural \(no trap\)) Tj
+0 -12 Td
+(  - no trap behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/next-gateway-ui-shell-navigation-fix.md`) Tj
+0 -12 Td
+(- `runtime/next-gateway-ui-shell-navigation-fix.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Collect owner re-test confirmation and then promote this UI lane from PARTIAL to GO.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002942 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3012
+%%EOF

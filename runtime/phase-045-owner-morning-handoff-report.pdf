@@ -1,0 +1,150 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3421 >>
+stream
+BT
+/F1 8.5 Tf
+38 766 Td
+(Page 1 of 1) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Phase 045 - Owner Morning Handoff Report) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Morning Result) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(**PARTIAL GO at 89%, not 100%.** Mission Control is live, Gateway/Agent Hub routes are) Tj
+0 -11 Td
+(protected, Pi is included as shadow dispatcher, Agent Zero remains commander, OpenClaw+) Tj
+0 -11 Td
+(validates cleanly, Playwright MCP is local-only GO, and YouTube transcript runtime is available.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(What Is Now Live) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(- Mission Control public login: https://mc.knowledge-vs-ai.com/login) Tj
+0 -11 Td
+(- Agent Hub path after login: /gateway/agent-hub) Tj
+0 -11 Td
+(- Mission Control service active with fresh restart.) Tj
+0 -11 Td
+(- Pi shadow dispatcher in Gateway/Agent Hub.) Tj
+0 -11 Td
+(- Paperclip health endpoint OK, but owner login proof still pending.) Tj
+0 -11 Td
+(- Playwright MCP local-only read-only service.) Tj
+0 -11 Td
+(- Build-Wiki / Farmer timer active under OpenClaw+.) Tj
+0 -11 Td
+(- Runtime/UI hardening commit: e11d095.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(What Blocks 100%) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Blocker | Systems affected | Required next action |) Tj
+0 -11 Td
+(| --- | --- | --- |) Tj
+0 -11 Td
+(| owner_authenticated_browser_session_required | UI proof, authenticated route smoke, owner) Tj
+0 -11 Td
+(visual proof | Owner/admin browser session or approved test auth channel |) Tj
+0 -11 Td
+(| hermes_safe_live_chat_adapter_not_configured | Hermes, Agent Zero-Hermes live collaboration |) Tj
+0 -11 Td
+(Build a real no-tool/no-write Hermes chat adapter |) Tj
+0 -11 Td
+(| firecrawl_credential_required | Firecrawl, SpaceAgent Firecrawl branch | Add approved) Tj
+0 -11 Td
+(Firecrawl credential source, then read-only smoke |) Tj
+0 -11 Td
+(| paperclip_owner_session_required | Paperclip login/dashboard/roster/task queue | Owner) Tj
+0 -11 Td
+(completes/bridges local Paperclip session |) Tj
+0 -11 Td
+(| active_bridge_session_required | Delivery writes, Build-Wiki Run Now, protected actions,) Tj
+0 -11 Td
+(mini-agent activation | Open scoped Bridge Session for exact action |) Tj
+0 -11 Td
+(| telegram_attachment_route_not_proven | Telegram PDF delivery | Configure/prove approved owner) Tj
+0 -11 Td
+(document attachment route |) Tj
+0 -11 Td
+(| drive_connector_session_required | Google Drive / OneDrive delivery | Configure connector and) Tj
+0 -11 Td
+(scoped Bridge Session |) Tj
+0 -11 Td
+(| standalone_pi_runtime_session_not_proven | Pi full GO | Install/prove standalone Pi runtime if) Tj
+0 -11 Td
+(desired |) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Owner Action Needed) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(- Open or provide a safe owner-authenticated Mission Control browser session for visual proof.) Tj
+0 -11 Td
+(- Complete or approve Paperclip owner login/session bridge.) Tj
+0 -11 Td
+(- Provide Firecrawl credential through approved secret store if Firecrawl should move to GO.) Tj
+0 -11 Td
+(- Approve a scoped Bridge Session for delivery or Build-Wiki / Farmer Run Now proof.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Delivery Status) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Mission Control report files are ready in the repo. Telegram/Drive/OneDrive/AgentMail remain) Tj
+0 -11 Td
+(gated or blocked until connector/session proof passes.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(No-Secrets Confirmation) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(No secrets were printed or committed. No .env changes were made.) Tj
+0 -11 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003714 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3784
+%%EOF

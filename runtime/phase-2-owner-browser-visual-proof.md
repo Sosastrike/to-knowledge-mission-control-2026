@@ -1,70 +1,47 @@
-# Phase 2 — Owner-Authenticated Browser Visual Proof
+# Phase 2 — Owner Browser Visual Proof
 
-Generated: 2026-05-08T00:15:34Z
+Generated: 2026-05-08T00:53:15Z
 
 ## Result
 
-**Status:** BLOCKED / PARTIAL
+**Status:** BLOCKED
 
-Exact blocker: `owner_authenticated_browser_session_required`. Codex does not have an owner-authenticated browser session available for a real visual smoke. I did not read, reuse, export, or print session cookies or tokens.
+Exact blocker: `owner_authenticated_browser_session_required`.
 
-## Required Visual Checks
+Production Mission Control has been restarted, but this worker does not have a usable owner-authenticated browser session and the in-app browser control runtime is not available in this tool set. I did not read or copy browser cookies, auth files, tokens, or session secrets.
 
-| Check | Result | Evidence |
-| --- | --- | --- |
-| Open Mission Control as owner | BLOCKED | owner browser session unavailable |
-| Open Gateway | BLOCKED | requires owner browser session |
-| Open Agent Hub / Control Center | BLOCKED visually | API route is live; visual page cannot be owner-authenticated here |
-| Open SpaceAgent panel | BLOCKED visually | SpaceAgent API detail route returns data |
-| Playwright MCP green / connected local-only | PASS via API | `/api/gateway/space-agent/browser/status` card truth |
-| Firecrawl red / blocked | PASS via API | blocker `firecrawl_credential_required` |
-| YouTube Research yellow / limited | PASS via API | blocker `youtube_transcript_connector_not_proven` |
-| Paperclip partial/degraded, not fake-live | PASS via API | Agent Hub roster shows Paperclip pending/degraded |
-| No secrets/raw paths/auth files/task IDs/fake buttons | PASS via API review | No unsafe owner-facing values observed in summarized payloads |
+## Required Visual Checks Not Yet Proven
 
-## Browser Automation Card Truth
+| UI check | Result |
+| --- | --- |
+| Owner can open Mission Control | blocked |
+| Owner can open Gateway | blocked |
+| Owner can open Agent Hub / Control Center | blocked |
+| Owner can open SpaceAgent panel | blocked |
+| Playwright MCP appears green / connected local-only | blocked pending owner visual proof |
+| Firecrawl appears red / blocked | blocked pending owner visual proof |
+| YouTube Research appears yellow / limited | blocked pending owner visual proof |
+| Paperclip appears partial/degraded, not fake-live | blocked pending owner visual proof |
+| Agent Zero appears as commander | blocked pending owner visual proof |
+| Hermes appears as lieutenant/gated | blocked pending owner visual proof |
 
-| Card | Status | Tone | Connected | Configured | Public exposure | Blocker |
-| --- | --- | --- | --- | --- | --- | --- |
-| Playwright MCP | `connected_local_only` | `green` | `True` | `True` | `False` | `None` |
-| Firecrawl | `blocked` | `red` | `False` | `False` | `False` | `firecrawl_credential_required` |
-| YouTube Research | `limited_pending` | `yellow` | `False` | `False` | `False` | `youtube_transcript_connector_not_proven` |
+## Route Protection Smoke
 
-## Agent Hub Roster Truth
-
-| Agent | Role | Status | Blocker |
-| --- | --- | --- | --- |
-| Paperclip | Workforce Control Plane | `pending` | `production_install_blocked_by_dependency_audit` |
-| Agent Zero | Commander | `partial_go` | `agent_zero_full_go_requires_live_authenticated_agent_zero_called_true` |
-| Hermes | Lieutenant / Skill + Workflow Builder | `gated` | `hermes_degraded_or_pending_live_proof` |
-| SpaceAgent | Browser / Firecrawl / YouTube Research Specialist | `read_only` | `firecrawl_missing_credential` |
-| Pi-mono | Dispatcher / Route Optimizer Candidate | `pending` | `dispatcher_candidate_not_authoritative` |
-
-## Route Proof
-
-| Route | Auth | HTTP | Key result |
+| Route | Auth | HTTP | Result |
 | --- | --- | ---: | --- |
-| `GET /api/gateway/space-agent/browser/status` | yes | 200 | ok=True, mode=space_agent_browser_automation_truth, execution_enabled=False, writes_enabled=False |
-| `GET /api/gateway/agent-hub/status` | yes | 200 | ok=True, mode=gateway_agent_hub_status_read_only, execution_enabled=False, writes_enabled=False |
-| `GET /api/gateway/agent-hub/agents/spaceagent` | yes | 200 | ok=True, mode=gateway_agent_hub_agent_detail_read_only, execution_enabled=False, writes_enabled=False |
-| `GET /api/gateway/nodes/playwright-mcp` | yes | 200 | ok=True, execution_enabled=False, writes_enabled=False |
-| `GET /gateway/agent-hub` | no | 200 | <!DOCTYPE html><html lang="en" dir="ltr" class="dark"><head><meta charSet="utf-8"/><meta name="viewport" content="width= |
-| `GET /gateway/agent-hub/paperclip` | no | 200 | <!DOCTYPE html><html lang="en" dir="ltr" class="dark"><head><meta charSet="utf-8"/><meta name="viewport" content="width= |
-| `GET /api/gateway/agent-hub/status` | no | 401 | error=Unauthorized |
-| `GET /api/gateway/space-agent/browser/status` | no | 401 | error=Unauthorized |
+| `/gateway/agent-hub` | no | 307 | html_or_redirect |
+| `/gateway/space-agent` | no | 307 | html_or_redirect |
+| `/api/gateway/agent-hub/status` | no | 401 | Unauthorized |
+| `/api/gateway/space-agent/browser/status` | no | 401 | Unauthorized |
 
-## Screenshot / Snapshot Evidence
+## Guardrails Confirmed
 
-No owner-authenticated screenshot was captured. Supporting API evidence is not a substitute for the required owner visual proof. The correct next action is an owner/admin browser session smoke after Mission Control is restarted.
-
-## Security / Governance Confirmation
-
-- No secrets, tokens, auth files, session cookies, API keys, raw local paths, or task IDs were printed.
-- No .env file was modified.
-- No auth bypass was attempted.
-- No external writes, Zapier writes, HeyGen generation, SMB/Fork 2, farmer execution, email send, upload, or attachment send occurred.
-- OpenClaw+ naming remains correct.
+- No owner cookies, auth files, API keys, or browser profile data were read or printed.
+- No fake screenshot or fake visual proof was created.
+- No auth policy was weakened.
+- No `.env` file was modified.
+- No external write, SMB/Fork 2, Zapier, HeyGen, or farmer execution occurred.
 
 ## Phase 2 Decision
 
-Phase 2 remains **BLOCKED / PARTIAL** until an owner-authenticated browser session is available and the actual Gateway → Agent Hub → SpaceAgent visual page is verified.
+Phase 2 remains **BLOCKED** until an owner-authenticated browser session is available for visual proof.

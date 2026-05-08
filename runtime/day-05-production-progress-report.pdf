@@ -1,0 +1,223 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3999 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-production-progress-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Production Progress Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+(Day 05 shipping work advanced Gateway FULL v3 rollout verification and connector surface proofin) Tj
+0 -12 Td
+(g, but the program remains PARTIAL GO due to owner/session/credential-gated lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current overall status: **~91% PARTIAL GO**.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Day 05 Phase Outcomes) Tj
+0 -12 Td
+(1. Phase 1 \(Day 04 commit/push verification\): PASS) Tj
+0 -12 Td
+(   `ec9c891` confirmed on `origin/to-knowledge-mc`.) Tj
+0 -12 Td
+(2. Phase 2 \(Gateway v3 production rollout/restart\): PASS with deploy-script caveat) Tj
+0 -12 Td
+(   Standalone runtime verified and Gateway routes protected/served.) Tj
+0 -12 Td
+(3. Phase 3 \(owner-auth visual proof\): BLOCKED) Tj
+0 -12 Td
+(   `owner_authenticated_browser_session_required`.) Tj
+0 -12 Td
+(4. Phase 4 \(Telegram adapter route smoke\): PARTIAL) Tj
+0 -12 Td
+(   Routes live; delivery remains gated/blocked \(`bridge_session_persistence_not_applied` / conne) Tj
+0 -12 Td
+(ctor-not-configured states\).) Tj
+0 -12 Td
+(5. Phase 5 \(YouTube production smoke\): LIMITED) Tj
+0 -12 Td
+(   Metadata path available; transcript proof still not fully established.) Tj
+0 -12 Td
+(6. Phase 6 \(Paperclip owner session retry\): PARTIAL/BLOCKED) Tj
+0 -12 Td
+(   Health/status reachable; owner session/data routes still blocked.) Tj
+0 -12 Td
+(7. Phase 7 \(Bridge approved action\): BLOCKED) Tj
+0 -12 Td
+(   `active_bridge_session_required` / `owner_approval_pending` equivalent gate still active.) Tj
+0 -12 Td
+(8. Phase 8 \(Drive/OneDrive/AgentMail path\): BLOCKED/GATED) Tj
+0 -12 Td
+(   Status routes present; upload/send proof not achieved.) Tj
+0 -12 Td
+(9. Phase 9 \(OpenClaw+ doctor + security follow-up\): PARTIAL) Tj
+0 -12 Td
+(   Doctor reachable but unresolved issues remain; security score still needs hardening follow-th) Tj
+0 -12 Td
+(rough.) Tj
+0 -12 Td
+(10. Phase 10 \(Firecrawl parallel\): BLOCKED \(unchanged\)) Tj
+0 -12 Td
+(   `firecrawl_credential_required` + `firecrawl_backend_adapter_not_configured`.) Tj
+0 -12 Td
+(11. Phase 11 \(validation gates\): PARTIAL PASS) Tj
+0 -12 Td
+(   Typecheck/build/tests pass; unauth smoke passes; authenticated protected-route smoke still se) Tj
+0 -12 Td
+(ssion-gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Results \(Day 05\)) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS \(`138` files / `1247` tests\)) Tj
+0 -12 Td
+(- Unauthenticated smoke: PASS) Tj
+0 -12 Td
+(- Authenticated smoke: BLOCKED by auth/session context) Tj
+0 -12 Td
+(- Protected-file/secret scan \(`check-protected-file-invariants`\): PASS) Tj
+0 -12 Td
+(- `.env` diff check: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Truth Table \(Key Lanes\)) Tj
+0 -12 Td
+(- Mission Control runtime: PARTIAL GO \(running, routes protected, no new restart regression\)) Tj
+0 -12 Td
+(- Gateway / Agent Hub v3 surface: PARTIAL GO \(deployed surface present, owner visual proof still) Tj
+0 -12 Td
+( pending\)) Tj
+0 -12 Td
+(- Hermes live adapter: PARTIAL GO \(already proven, unchanged\)) Tj
+0 -12 Td
+(- Agent Zero ↔ Hermes planning: PARTIAL GO \(already proven, unchanged\)) Tj
+0 -12 Td
+(- Paperclip: PARTIAL \(owner session unresolved\)) Tj
+0 -12 Td
+(- Bridge Session: PARTIAL \(gating proven; approved execution still missing\)) Tj
+0 -12 Td
+(- Telegram delivery: PARTIAL \(adapter route exists; no verified live attachment send\)) Tj
+0 -12 Td
+(- YouTube: LIMITED) Tj
+0 -12 Td
+(- Firecrawl: BLOCKED \(35%\)) Tj
+0 -12 Td
+(- Drive / OneDrive / AgentMail: PARTIAL/BLOCKED \(gated, not live-proven\)) Tj
+0 -12 Td
+(- OpenClaw+: PARTIAL GO \(doctor reachable, unresolved issues remain\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits and Rollback) Tj
+0 -12 Td
+(- Already-shipped Day 04 integration commit:) Tj
+0 -12 Td
+(  - `ec9c891`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1197 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - Rollback: `git revert ec9c891`) Tj
+0 -12 Td
+(- Day 05 report commit: pending in next step.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No credential/token values printed in owner-facing report artifacts.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Create and push one isolated Day 05 reporting commit \(phase reports + validation/progress report) Tj
+0 -12 Td
+(s + PDFs\), then continue Day 06 implementation lanes with owner-action packages for remaining ow) Tj
+0 -12 Td
+(ner-gated blockers.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004298 00000 n 
+0000004424 00000 n 
+0000005673 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5743
+%%EOF

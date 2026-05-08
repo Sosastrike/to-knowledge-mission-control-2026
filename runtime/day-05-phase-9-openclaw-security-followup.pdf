@@ -1,0 +1,146 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2611 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-9-openclaw-security-followup) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 9 — OpenClaw+ Doctor And Security Follow-up) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Advance OpenClaw+ health and security posture with safe, non-destructive checks/fixes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Ran authenticated OpenClaw+ doctor route:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(2. Ran security scan route:) Tj
+0 -12 Td
+(   - `GET /api/security-scan`) Tj
+0 -12 Td
+(3. Parsed returned score/check categories and blockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- OpenClaw+ doctor route returned `400` with runtime error state:) Tj
+0 -12 Td
+(  - OpenClaw not installed/reachable in this runtime context.) Tj
+0 -12 Td
+(- Security scan returned `200` with:) Tj
+0 -12 Td
+(  - `overall=needs-attention`) Tj
+0 -12 Td
+(  - `score=63`) Tj
+0 -12 Td
+(  - notable warning/fail areas include:) Tj
+0 -12 Td
+(    - `auth_pass` \(not configured\)) Tj
+0 -12 Td
+(    - `hsts_enabled` \(not enabled\)) Tj
+0 -12 Td
+(    - `openclaw config found` \(warn / skipped\)) Tj
+0 -12 Td
+(    - `open_ports` \(fail\)) Tj
+0 -12 Td
+(    - backup/receipt-signing informational warnings) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe-Fix Constraint Applied) Tj
+0 -12 Td
+(- No destructive host changes were applied.) Tj
+0 -12 Td
+(- No `.env` changes were made in this phase.) Tj
+0 -12 Td
+(- No governance/memory/agent/skill deletion occurred.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Classification) Tj
+0 -12 Td
+(- OpenClaw+ health: **PARTIAL / BLOCKED in current runtime context**) Tj
+0 -12 Td
+(- Security hardening: **PARTIAL**) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-05-phase-9-openclaw-security-followup.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-9-openclaw-security-followup.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(- `production_security_scan_hardening_items_remain`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Provide approved OpenClaw runtime path/config for this production context.) Tj
+0 -12 Td
+(2. Approve host-level hardening items \(firewall/open ports/HSTS policy path\) outside app-only sc) Tj
+0 -12 Td
+(ope.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Apply approved OpenClaw runtime-path fix and rerun doctor; then apply safe app-level security ha) Tj
+0 -12 Td
+(rdening and rerun `/api/security-scan`.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002904 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2974
+%%EOF

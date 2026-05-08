@@ -1,0 +1,142 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2440 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-7-bridge-session-approved-action) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 7 — Bridge Session Approved Scoped Action) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Bridge Session from gating-only to one approved scoped execution proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked Bridge Session state:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/bridge-session`) Tj
+0 -12 Td
+(2. Checked execution gateway registry:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/execute`) Tj
+0 -12 Td
+(3. Attempted one safe scoped execution action:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/execute`) Tj
+0 -12 Td
+(   - action: `agent_zero.report.create`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Bridge session state reports:) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `status=blocked`) Tj
+0 -12 Td
+(  - `blocked_reason=bridge_session_persistence_not_applied`) Tj
+0 -12 Td
+(- Execution attempt result:) Tj
+0 -12 Td
+(  - `ok=false`) Tj
+0 -12 Td
+(  - `status=blocked`) Tj
+0 -12 Td
+(  - `accepted_for_execution=false`) Tj
+0 -12 Td
+(  - `blocked_reason=bridge_session_persistence_not_applied`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Classification) Tj
+0 -12 Td
+(- Bridge Session remains **PARTIAL / BLOCKED**.) Tj
+0 -12 Td
+(- One approved scoped action could not execute because session persistence is not applied.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No unauthorized execution occurred.) Tj
+0 -12 Td
+(- No SMB/Fork 2 actions executed.) Tj
+0 -12 Td
+(- No Zapier writes executed.) Tj
+0 -12 Td
+(- No HeyGen generation executed.) Tj
+0 -12 Td
+(- No external farmer execution executed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-05-phase-7-bridge-session-approved-action.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-7-bridge-session-approved-action.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `bridge_session_persistence_not_applied`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending` \(cannot be finalized until persistence path is functional\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Apply Bridge Session persistence schema/state fix, then rerun one scoped action and verify audit) Tj
+0 -12 Td
+( + expiry behavior for GO.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002733 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2803
+%%EOF

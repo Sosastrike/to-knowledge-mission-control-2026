@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-05-08T15:55:58.624Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "authenticated",
+  "results": [
+    {
+      "route": "/api/gateway/status",
+      "status": 401
+    },
+    {
+      "route": "/api/gateway/registry",
+      "status": 401
+    },
+    {
+      "route": "/api/gateway/agent-hub/status",
+      "status": 401
+    },
+    {
+      "route": "/api/bridge/agent-zero/status",
+      "status": 401
+    },
+    {
+      "route": "/api/bridge/hermes/status",
+      "status": 401
+    },
+    {
+      "route": "/api/bridge/pi/status",
+      "status": 401
+    },
+    {
+      "route": "/api/bridge/playwright-mcp/status",
+      "status": 401
+    },
+    {
+      "route": "/api/bridge/paperclip/status",
+      "status": 401
+    },
+    {
+      "route": "/api/gateway/space-agent/browser/status",
+      "status": 401
+    }
+  ]
+}

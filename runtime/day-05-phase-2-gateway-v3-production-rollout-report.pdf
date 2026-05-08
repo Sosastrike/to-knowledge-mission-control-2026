@@ -1,0 +1,195 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2948 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-2-gateway-v3-production-rollout-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 2 — Gateway FULL v3 Production Rollout Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Roll out the Day 04 Gateway FULL v3 integration so the new Gateway surface is live in runtime an) Tj
+0 -12 Td
+(d routable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS \(with one deployment-script verifier caveat\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Confirmed pushed HEAD:) Tj
+0 -12 Td
+(   - local HEAD = `ec9c891`) Tj
+0 -12 Td
+(   - remote branch HEAD = `ec9c891`) Tj
+0 -12 Td
+(2. Ran controlled standalone rollout flow:) Tj
+0 -12 Td
+(   - dependency install) Tj
+0 -12 Td
+(   - production build) Tj
+0 -12 Td
+(   - standalone runtime start on `127.0.0.1:3337`) Tj
+0 -12 Td
+(3. Verified runtime reachability:) Tj
+0 -12 Td
+(   - `GET /login` returns 200) Tj
+0 -12 Td
+(4. Smoked required Gateway FULL v3 routes:) Tj
+0 -12 Td
+(   - `/gateway`) Tj
+0 -12 Td
+(   - `/gateway/routes`) Tj
+0 -12 Td
+(   - `/gateway/registry`) Tj
+0 -12 Td
+(   - `/gateway/policies`) Tj
+0 -12 Td
+(   - `/gateway/health`) Tj
+0 -12 Td
+(   - `/gateway/dispatcher`) Tj
+0 -12 Td
+(   - `/gateway/token-governor`) Tj
+0 -12 Td
+(   - `/gateway/agent-hub`) Tj
+0 -12 Td
+(   - `/designer-mission-control/design/gateway/index.html`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- Protected Gateway routes: 307 redirect to `/login` \(expected unauthenticated behavior\)) Tj
+0 -12 Td
+(- Listener exposure check: local-only bind, no public local exposure added) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Restart / Runtime Evidence) Tj
+0 -12 Td
+(- No previous listener was active on port `3337` at phase start.) Tj
+0 -12 Td
+(- New runtime listener PID after rollout: `78013`) Tj
+0 -12 Td
+(- Runtime start timestamp: `Fri May 8 11:42:07 2026`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deployment Caveat) Tj
+0 -12 Td
+(- The standalone deployment script completed build/start but failed one post-start CSS verificat) Tj
+0 -12 Td
+(ion heuristic \(`no css asset found in rendered login HTML`\).) Tj
+0 -12 Td
+(- Manual runtime verification immediately after confirmed the new runtime is up and serving rout) Tj
+0 -12 Td
+(es correctly.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security / Safety) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No new public exposure on local service ports.) Tj
+0 -12 Td
+(- Log scan on rollout tail found no secret-shaped values.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-05-phase-2-gateway-v3-production-rollout-report.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-2-gateway-v3-production-rollout-report.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert ec9c891) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 431 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- None for this phase objective.) Tj
+0 -12 Td
+(- Owner-authenticated UI visual proof remains separate:) Tj
+0 -12 Td
+(  - `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Run Day 05 Phase 3 owner-authenticated Gateway/Agent Hub visual proof on the rolled-out runtime.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003247 00000 n 
+0000003373 00000 n 
+0000003855 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3925
+%%EOF

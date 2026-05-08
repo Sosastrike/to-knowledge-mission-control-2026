@@ -1,0 +1,154 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2973 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-8-drive-onedrive-agentmail-path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 8 — Drive / OneDrive / AgentMail Path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Convert delivery connectors from vague blocked state to precise runtime readiness truth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(precise blockers confirmed; no fake send/upload\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked Google Drive status route:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/google-drive/status`) Tj
+0 -12 Td
+(2. Checked OneDrive status route:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/onedrive/status`) Tj
+0 -12 Td
+(3. Checked connector visibility routes:) Tj
+0 -12 Td
+(   - `GET /api/bridge/connector-readiness`) Tj
+0 -12 Td
+(   - `GET /api/bridge/providers`) Tj
+0 -12 Td
+(4. Confirmed no send/upload execution was attempted without Bridge Session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Google Drive status:) Tj
+0 -12 Td
+(  - `connector_configured=false`) Tj
+0 -12 Td
+(  - `blocked_reason=google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- OneDrive status:) Tj
+0 -12 Td
+(  - `connector_configured=false`) Tj
+0 -12 Td
+(  - `blocked_reason=onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- Provider/connector discovery routes are reachable and auth-protected.) Tj
+0 -12 Td
+(- No successful upload action was claimed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## AgentMail Status) Tj
+0 -12 Td
+(- Direct dedicated AgentMail bridge route is not currently exposed in this runtime route set.) Tj
+0 -12 Td
+(- AgentMail capability remains discoverable only via higher-level ecosystem/registry payloads.) Tj
+0 -12 Td
+(- Outbound send remains gated by Bridge Session and connector readiness policy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Classification) Tj
+0 -12 Td
+(- Google Drive: **BLOCKED**) Tj
+0 -12 Td
+(- OneDrive: **BLOCKED**) Tj
+0 -12 Td
+(- AgentMail delivery path: **GATED / PARTIAL visibility**) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No tokens printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No raw local paths exposed.) Tj
+0 -12 Td
+(- No external write executed without approved Bridge Session.) Tj
+0 -12 Td
+(- Google Drive and OneDrive remain separate provider paths.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-05-phase-8-drive-onedrive-agentmail-path.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-8-drive-onedrive-agentmail-path.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `active_bridge_session_required_for_external_write`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Wire/enable provider-specific upload runners with Bridge Session enforcement, then run one scope) Tj
+0 -12 Td
+(d upload proof per provider.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003266 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3336
+%%EOF

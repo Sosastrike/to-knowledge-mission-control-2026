@@ -1,0 +1,136 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2343 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-5-youtube-connector-production-smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 5 — YouTube Connector Production Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Smoke YouTube connector routes in production runtime and prove current metadata/transcript state) Tj
+0 -12 Td
+( without bypasses.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(LIMITED \(improved route proof, transcript not proven\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked YouTube connector status route:) Tj
+0 -12 Td
+(   - `GET /api/gateway/space-agent/youtube/status`) Tj
+0 -12 Td
+(2. Ran research route smoke with public video request:) Tj
+0 -12 Td
+(   - `POST /api/gateway/space-agent/youtube/research`) Tj
+0 -12 Td
+(   - request included public URL: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route Results) Tj
+0 -12 Td
+(- Status route:) Tj
+0 -12 Td
+(  - `ok=true`) Tj
+0 -12 Td
+(  - `status=limited`) Tj
+0 -12 Td
+(  - `transcript_connector_proven=false`) Tj
+0 -12 Td
+(  - `blocked_reason=youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(- Research route:) Tj
+0 -12 Td
+(  - `ok=true`) Tj
+0 -12 Td
+(  - packet mode returned) Tj
+0 -12 Td
+(  - `packet.status=limited`) Tj
+0 -12 Td
+(  - `blocked_reason=youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(  - transcript segments returned: `0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Metadata / Transcript Outcome) Tj
+0 -12 Td
+(- Connector route wiring is live.) Tj
+0 -12 Td
+(- Transcript-backed claim extraction is not yet proven in this runtime.) Tj
+0 -12 Td
+(- No full video download performed.) Tj
+0 -12 Td
+(- No login/age/region/paywall bypass used.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Classification) Tj
+0 -12 Td
+(- YouTube connector: **LIMITED** \(not GO\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-05-phase-5-youtube-connector-production-smoke.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-5-youtube-connector-production-smoke.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Enable and prove transcript runtime path \(connector + dependency + provider behavior\), then reru) Tj
+0 -12 Td
+(n public transcript-enabled smoke for GO.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002636 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2706
+%%EOF

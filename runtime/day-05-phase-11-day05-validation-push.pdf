@@ -1,0 +1,223 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3251 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-phase-11-day05-validation-push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 Phase 11 — Day 05 Validation and Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Validate all Day 05 implementation/report work with production-safe checks, then prepare clean p) Tj
+0 -12 Td
+(ush evidence.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Validation checks passed for local code quality and test gates, but authenticated API smoke on t) Tj
+0 -12 Td
+(he running production-like runtime remained blocked by session/auth context \(all protected API r) Tj
+0 -12 Td
+(outes returned `401` with API-key-only attempts\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified repository state and branch:) Tj
+0 -12 Td
+(   - `git rev-parse --show-toplevel`) Tj
+0 -12 Td
+(   - `git branch --show-current`) Tj
+0 -12 Td
+(   - `git remote -v`) Tj
+0 -12 Td
+(2. Ran integrity and quality gates:) Tj
+0 -12 Td
+(   - `git diff --check`) Tj
+0 -12 Td
+(   - `pnpm run typecheck`) Tj
+0 -12 Td
+(   - `pnpm run build`) Tj
+0 -12 Td
+(   - `pnpm test`) Tj
+0 -12 Td
+(3. Ran authenticated route smoke attempt \(API key header\):) Tj
+0 -12 Td
+(   - Target: `http://127.0.0.1:3337`) Tj
+0 -12 Td
+(   - Evidence file: `runtime/day-05-phase-11-auth-api-smoke.json`) Tj
+0 -12 Td
+(4. Ran unauthenticated route smoke:) Tj
+0 -12 Td
+(   - Target: `http://127.0.0.1:3337`) Tj
+0 -12 Td
+(   - Evidence file: `runtime/day-05-phase-11-unauth-smoke.json`) Tj
+0 -12 Td
+(5. Ran secret/protected-file scan:) Tj
+0 -12 Td
+(   - `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(6. Checked `.env` diff:) Tj
+0 -12 Td
+(   - `git status --short -- .env .env.local .env.production .env.development .env.test`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands and Route Proof) Tj
+0 -12 Td
+(- Typecheck: PASS.) Tj
+0 -12 Td
+(- Build: PASS.) Tj
+0 -12 Td
+(- Tests: PASS \(`138` files, `1247` tests\).) Tj
+0 -12 Td
+(- Unauthenticated smoke: PASS \(protected API routes `401`; protected UI routes redirected to `/l) Tj
+0 -12 Td
+(ogin`\).) Tj
+0 -12 Td
+(- Authenticated smoke \(API-key header only\): BLOCKED \(`401` on protected APIs in current runtime) Tj
+0 -12 Td
+( context\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed \(Day 05 validation artifacts\)) Tj
+0 -12 Td
+(- `runtime/day-05-phase-11-auth-api-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-11-unauth-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-11-day05-validation-push.md`) Tj
+0 -12 Td
+(- `runtime/day-05-phase-11-day05-validation-push.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Active local production-like runtime listener verified on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Temporary validation runtime on `127.0.0.1:3341` started and stopped during checks.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(- `authenticated_api_session_required_for_protected_route_smoke` \(API-key-only calls return `401) Tj
+0 -12 Td
+(`; owner/session auth still required for full authenticated proof lane\)) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1100 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Commits / Push) Tj
+0 -12 Td
+(- No new commit in this phase yet \(reporting and artifact generation step only\).) Tj
+0 -12 Td
+(- Push pending final Day 05 artifact staging.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No source-code mutation rollback required in this phase.) Tj
+0 -12 Td
+(- If a Day 05 report commit is pushed, rollback command:) Tj
+0 -12 Td
+(  - `git revert <day05_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No token values printed in report content.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` modifications detected.) Tj
+0 -12 Td
+(- Protected-file invariant scan passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage \(honest\)) Tj
+0 -12 Td
+(- Overall ecosystem remains PARTIAL GO, approximately `91%`.) Tj
+0 -12 Td
+(- No 100% claim.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Stage only Day 05 report/evidence artifacts, run staged secret check, commit isolated Day 05 rep) Tj
+0 -12 Td
+(orting batch, and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003550 00000 n 
+0000003676 00000 n 
+0000004828 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4898
+%%EOF

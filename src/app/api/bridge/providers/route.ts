@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 import {
   buildAgentZeroEcosystemAgentRecord,
   type AgentZeroEcosystemAgentRecord,
@@ -95,7 +96,9 @@ function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZer
   return visibleProviders([
     ...normalizedProviders,
     agentZero,
-  ], includeLegacy).sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
+  ], includeLegacy)
+    .map((provider) => sanitizeBridgeProviderPayload(provider))
+    .sort((a, b) => String(a.id || a.name || '').localeCompare(String(b.id || b.name || '')))
 }
 
 function summarizeProviders(providers: BridgeProvider[]) {
@@ -325,7 +328,7 @@ export async function GET(request: NextRequest) {
         ? (upstreamPayload.providers.filter((item): item is BridgeProvider => Boolean(item && typeof item === 'object')) as BridgeProvider[])
         : []
       const providers = mergeAgentZeroProvider(upstreamProviders, await agentZeroRecordPromise, includeLegacy)
-      payload = {
+      payload = sanitizeBridgeProviderPayload({
         ok: response.ok,
         mode: 'bridge_provider_registry_proxy_read_only',
         upstream_ok: response.ok,
@@ -334,7 +337,7 @@ export async function GET(request: NextRequest) {
         ...upstreamPayload,
         providers,
         summary: summarizeProviders(providers),
-      }
+      })
     }
 
     return NextResponse.json(payload, {

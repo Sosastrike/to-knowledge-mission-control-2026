@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 import { buildAgentZeroEcosystemAgentRecord } from '@/lib/agent-zero-bridge'
 
 export const runtime = 'nodejs'
@@ -133,7 +134,7 @@ export async function GET(
         ok: response.ok,
         mode: 'bridge_provider_detail_proxy_read_only',
         upstream_ok: response.ok,
-        provider,
+        provider: sanitizeBridgeProviderPayload(provider),
         execution_enabled: false,
         no_routing_changes_enabled: true,
       },

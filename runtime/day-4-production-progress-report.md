@@ -1,0 +1,104 @@
+# Day 4 Production Progress Report - SpaceAgent, Playwright, Firecrawl, YouTube
+
+Generated: 2026-05-07 23:30 EDT
+Result: PARTIAL GO - Day 4 proved SpaceAgent read-only browser research and kept Firecrawl/YouTube honest.
+
+## Objective
+- Summarize Day 4 SpaceAgent production proof, adapter truth, route hygiene fix, and validation.
+## Actions Completed
+- Proved Playwright MCP is local-only, read-only, and route-protected.
+- Proved SpaceAgent can return a real public-page ResearchPacket with browser evidence.
+- Fixed and deployed raw-path redaction for the video status route.
+- Confirmed Firecrawl remains blocked by missing Mission Control credential/backend.
+- Confirmed YouTube remains metadata-only/limited because transcript fetch is provider-blocked without owner login/cookies, which were not used.
+- Ran targeted tests, typecheck, build, restart, and post-restart smoke.
+## Commands And Routes Used
+- GET /api/bridge/playwright-mcp/status authenticated: 200; unauthenticated: 401.
+- POST /api/bridge/playwright-mcp/smoke authenticated: 200; unauthenticated: 401.
+- GET /api/gateway/nodes/playwright-mcp authenticated: 200; unauthenticated: 401.
+- GET /api/gateway/space-agent/browser/status authenticated: 200; unauthenticated: 401.
+- GET /api/gateway/space-agent/browser/jobs authenticated: 200; unauthenticated: 401.
+- GET /api/bridge/space-agent/status authenticated: 200; unauthenticated: 401.
+- POST /api/gateway/space-agent/research authenticated: 200; unauthenticated protected.
+- GET /api/firecrawl/status authenticated: 200; unauthenticated: 401.
+- GET /api/viral-crawl/video/status authenticated: 200; unauthenticated: 401.
+- Focused SpaceAgent vitest suites, production typecheck, production build, service restart, and post-restart route smoke.
+## Proof
+- playwright-mcp.service active/running.
+- Listener proof: 127.0.0.1:8931 only; no public bind detected.
+- Status route reports connected_local_only, public_exposure=false, headless isolated browser mode, execution_enabled=false.
+- Smoke route reports passed with no raw local paths and no secret-shaped values.
+- Interactive actions remain Bridge Session gated.
+- Authenticated browsing remains disabled by default; no owner browser profile was used.
+- SpaceAgent status route is read-only/degraded because Firecrawl and YouTube remain incomplete.
+- SpaceAgent research route returned a ResearchPacket for public page research.
+- ResearchPacket proof: schema research_packet_v1, status ready, research_type web, research_operation web_search.
+- Evidence count: 1; browser action count: 1; responsible agent: agent_zero.
+- No external writes, delivery, upload, Zapier, HeyGen, SMB, farmer execution, or authenticated browsing occurred.
+- Credential source check was boolean-only; no credential value was printed.
+- Mission Control process credential: no.
+- Mission Control env-file credential name: no.
+- External OpenClaw+ / ClaudeClaw credential name presence: yes by name only; value was not read or copied.
+- Mission Control Firecrawl SDK: no.
+- Status route state: CREDENTIAL_REQUIRED.
+- No Firecrawl smoke crawl was run because credential/backend is missing.
+- Blocker: firecrawl_credential_required plus firecrawl_backend_not_wired.
+- Public YouTube metadata-only oEmbed check succeeded for “The first 20 hours -- how to learn anything | Josh Kaufman | TEDxCSU” by TEDx Talks.
+- Server-side transcript library is installed, but transcript fetch is blocked by YouTube RequestBlocked in this server environment.
+- yt-dlp metadata/transcript path is blocked by YouTube bot/sign-in check.
+- No cookies, browser profile, login bypass, age/region bypass, copyright bypass, or full video download was attempted.
+- No transcript-backed claims were made because transcript was not fetched.
+- SpaceAgent research route classifies YouTube request as youtube_video_inspection with research_packet_only status.
+- Blocker: youtube_transcript_connector_not_proven_due_provider_bot_check.
+- Video status route now returns raw_path_visible=false after restart.
+## System Percentages
+| System | Percent | Decision | Note |
+| --- | --- | --- | --- |
+| SpaceAgent | 86% | PARTIAL GO | Read-only public web research packet proven; Firecrawl and YouTube remain blocked/limited. |
+| Playwright MCP | 94% | GO local-only read-only | Service active, localhost-only, smoke passed, interactive actions gated. |
+| Firecrawl | 25% | BLOCKED | Credential and backend SDK missing in Mission Control. |
+| YouTube Research | 55% | LIMITED | Metadata-only proof works; transcript connector blocked by provider bot check. |
+| Gateway / Agent Hub | 93% | PARTIAL GO | Day 4 sanitized video status payload; owner-auth visual proof still pending. |
+| Pi Dispatcher | 80% | PARTIAL GO / SHADOW | Still included; recommends only. |
+| Agent Zero | 94% | PARTIAL GO | Receives SpaceAgent ResearchPacket route; Telegram live prompt still pending. |
+| Hermes | 42% | NO-GO live | Unchanged live adapter blocker. |
+| Paperclip | 62% | PARTIAL / DEGRADED | Day 5 target. |
+| Overall ecosystem | 92.5% | PARTIAL GO | SpaceAgent browser path advanced; external credential/session blockers remain. |
+## Files Changed
+- src/app/api/viral-crawl/video/status/route.ts
+
+## Tests
+- SpaceAgent/YouTube/status focused tests: 38 passed.
+- SpaceAgent end-to-end, mini-agent, health, and gauntlet tests: 11 passed.
+- Mission Control typecheck: passed.
+- Mission Control production build: passed.
+- git diff --check: passed.
+
+## Services
+- mission-control.service active/running after controlled respawn restart.
+- MainPID changed from 2717651 to 2734213.
+- ActiveEnterTimestamp changed from Thu 2026-05-07 23:11:08 EDT to Thu 2026-05-07 23:23:52 EDT.
+- playwright-mcp.service active/running.
+- Playwright MCP listener bound only to 127.0.0.1:8931.
+
+## Blockers
+- firecrawl_credential_required: Mission Control Firecrawl credential/backend missing.
+- youtube_transcript_connector_not_proven_due_provider_bot_check: transcript fetch blocked without owner-approved login/cookie path.
+- space_agent_runtime_adapter_not_configured: live chat adapter remains blocked; read-only research packet path works.
+- owner_authenticated_browser_session_required: owner personal visual proof still pending from earlier days.
+- csp_inline_script_warning_requires_safe_nonce_hash_cleanup: existing UI warning remains.
+
+## Commits
+- Starting Day 4 HEAD: cd13ea9. Day 4 commit pending at report generation time.
+
+## Rollback
+- After commit, rollback command: git revert <day-4-commit>. Service rollback is not required unless a later restart needs to return to a prior build.
+
+## No-Secrets Confirmation
+- No credential values, auth files, API keys, token values, passwords, or environment values were printed or committed. Firecrawl and provider checks were boolean-only. No .env file was changed. No owner browser profile, cookies, or login session was used for YouTube or Playwright.
+
+## Updated Percentage
+- Overall ecosystem: 92.5% PARTIAL GO. SpaceAgent: 86% PARTIAL GO. Playwright MCP: 94% GO local-only read-only. Firecrawl: 25% BLOCKED. YouTube Research: 55% LIMITED. Pi remains included at 80% PARTIAL GO / SHADOW.
+
+## Exact Next Step
+- Proceed to Day 5 Paperclip Workforce Control Plane.

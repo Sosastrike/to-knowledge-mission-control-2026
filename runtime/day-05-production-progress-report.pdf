@@ -148,14 +148,18 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 1197 >>
+<< /Length 1186 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
 (  - Rollback: `git revert ec9c891`) Tj
 0 -12 Td
-(- Day 05 report commit: pending in next step.) Tj
+(- Day 05 reporting commit:) Tj
+0 -12 Td
+(  - `b209cb1`) Tj
+0 -12 Td
+(  - Rollback: `git revert b209cb1`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -193,11 +197,9 @@ BT
 0 -12 Td
 (## Exact Next Step) Tj
 0 -12 Td
-(Create and push one isolated Day 05 reporting commit \(phase reports + validation/progress report) Tj
+(Continue Day 06 implementation lanes with owner-action packages for remaining owner-gated blocke) Tj
 0 -12 Td
-(s + PDFs\), then continue Day 06 implementation lanes with owner-action packages for remaining ow) Tj
-0 -12 Td
-(ner-gated blockers.) Tj
+(rs and real live-proof attempts on connectors/runtime surfaces.) Tj
 0 -12 Td
 () Tj
 ET
@@ -215,9 +217,9 @@ xref
 0000000247 00000 n 
 0000004298 00000 n 
 0000004424 00000 n 
-0000005673 00000 n 
+0000005662 00000 n 
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-5743
+5732
 %%EOF

@@ -56,13 +56,13 @@ Validation checks passed for local code quality and test gates, but authenticate
 - `authenticated_api_session_required_for_protected_route_smoke` (API-key-only calls return `401`; owner/session auth still required for full authenticated proof lane)
 
 ## Commits / Push
-- No new commit in this phase yet (reporting and artifact generation step only).
-- Push pending final Day 05 artifact staging.
+- Day 05 reporting batch committed and pushed:
+  - `b209cb1`
+  - branch: `to-knowledge-mc`
 
 ## Rollback
-- No source-code mutation rollback required in this phase.
-- If a Day 05 report commit is pushed, rollback command:
-  - `git revert <day05_report_commit_sha>`
+- Rollback command:
+  - `git revert b209cb1`
 
 ## No-Secrets Confirmation
 - No token values printed in report content.
@@ -75,4 +75,4 @@ Validation checks passed for local code quality and test gates, but authenticate
 - No 100% claim.
 
 ## Exact Next Step
-Stage only Day 05 report/evidence artifacts, run staged secret check, commit isolated Day 05 reporting batch, and push.
+Proceed to Day 06 implementation phases, prioritizing owner/session action packages and live connector/runtime proofs for remaining blocked lanes.

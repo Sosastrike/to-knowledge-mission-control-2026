@@ -56,7 +56,9 @@ Current overall status: **~91% PARTIAL GO**.
 - Already-shipped Day 04 integration commit:
   - `ec9c891`
   - Rollback: `git revert ec9c891`
-- Day 05 report commit: pending in next step.
+- Day 05 reporting commit:
+  - `b209cb1`
+  - Rollback: `git revert b209cb1`
 
 ## No-Secrets Confirmation
 - No credential/token values printed in owner-facing report artifacts.
@@ -75,4 +77,4 @@ Current overall status: **~91% PARTIAL GO**.
 - `onedrive_upload_connector_not_configured`
 
 ## Exact Next Step
-Create and push one isolated Day 05 reporting commit (phase reports + validation/progress reports + PDFs), then continue Day 06 implementation lanes with owner-action packages for remaining owner-gated blockers.
+Continue Day 06 implementation lanes with owner-action packages for remaining owner-gated blockers and real live-proof attempts on connectors/runtime surfaces.

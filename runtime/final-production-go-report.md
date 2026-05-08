@@ -166,6 +166,27 @@
 4. Bridge Paperclip owner session.
 5. Open scoped Bridge Session for one approved delivery or Build-Wiki / Farmer Run Now proof.
 
+
+## Urgent Telegram Commander Cutover Update
+
+**Telegram commander cutover status: PARTIAL GO, not full GO.** ClaudeClaw now routes active owner-facing Telegram identity to Agent Zero, and Tony is legacy/archive-only in the runtime identity/governance text. The Telegram bot public username/display still references Tony and requires an owner-side BotFather rename.
+
+| Field | Current truth |
+|---|---|
+| Telegram owner route | Configured for Agent Zero after claudeclaw.service restart |
+| Bot display name | Still Tony MC / Tony_MC88_bot |
+| Agent Zero voice | Preserved; no voice route deletion occurred |
+| Tony active authority | No; Tony is archive-only |
+| Remaining Telegram blocker | owner_telegram_live_prompt_required |
+
+Reports generated in ClaudeClaw runtime:
+
+- runtime/phase-telegram-1-routing-audit-report.md/pdf
+- runtime/phase-telegram-2-agent-zero-route-fix-report.md/pdf
+- runtime/phase-telegram-3-agent-zero-live-proof-report.md/pdf
+- runtime/phase-telegram-4-bot-name-note-report.md/pdf
+- runtime/phase-telegram-5-final-decision-report.md/pdf
+
 ## No-Secrets Confirmation
 
 No secrets, auth files, token values, password values, or environment values were printed or committed. No .env files were modified. No SMB/Fork 2, Zapier write, HeyGen generation, broad connector execution, external farmer, Docker socket exposure, or raw root shell was used.

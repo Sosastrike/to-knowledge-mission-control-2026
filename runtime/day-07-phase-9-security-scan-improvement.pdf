@@ -1,0 +1,229 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3281 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-9-security-scan-improvement) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 9 — Security Scan Improvement) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Improve security scan score where safely possible, or produce exact owner/admin hardening runboo) Tj
+0 -12 Td
+(k when app-level changes are constrained.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(runbook produced; score unchanged in this runtime context\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Ran authenticated security scan:) Tj
+0 -12 Td
+(   - `GET /api/security-scan`) Tj
+0 -12 Td
+(2. Extracted non-pass checks and categorized by remediation ownership.) Tj
+0 -12 Td
+(3. Evaluated safe app-level change options under hard rules:) Tj
+0 -12 Td
+(   - no `.env` changes) Tj
+0 -12 Td
+(   - no auth weakening) Tj
+0 -12 Td
+(   - no destructive host changes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-9-security-scan.json`) Tj
+0 -12 Td
+(- Scan output:) Tj
+0 -12 Td
+(  - status: `200`) Tj
+0 -12 Td
+(  - overall: `needs-attention`) Tj
+0 -12 Td
+(  - score: `63`) Tj
+0 -12 Td
+(  - non-pass checks: `12`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Why Score Did Not Improve in This Pass) Tj
+0 -12 Td
+(The current non-pass items are primarily host-level or env-seeded requirements that cannot be sa) Tj
+0 -12 Td
+(fely changed from this phase without violating hard rules:) Tj
+0 -12 Td
+(- `auth_pass` \(requires secure admin secret seeding path\)) Tj
+0 -12 Td
+(- `open_ports` \(host/network hardening\)) Tj
+0 -12 Td
+(- `hsts_enabled` / `cookie_secure` \(HTTPS/proxy deployment context\)) Tj
+0 -12 Td
+(- `allowed_hosts` \(deployment/network allow-list tuning\)) Tj
+0 -12 Td
+(- OS hardening items \(NTP/auto-updates/stealth mode/remote login\)) Tj
+0 -12 Td
+(- Runtime operational items \(`backup_recent`, `receipt_signing`\) requiring approved infrastructu) Tj
+0 -12 Td
+(re state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Hardening Runbook) Tj
+0 -12 Td
+(1. **Auth seed hardening**) Tj
+0 -12 Td
+(   - Seed `AUTH_PASS` via approved secret manager path for runtime account.) Tj
+0 -12 Td
+(2. **HTTPS + HSTS**) Tj
+0 -12 Td
+(   - Terminate TLS at approved proxy and enforce HSTS in production HTTPS path.) Tj
+0 -12 Td
+(3. **Allowed hosts**) Tj
+0 -12 Td
+(   - Explicitly set trusted host list for deployed domains only.) Tj
+0 -12 Td
+(4. **Cookie secure flags**) Tj
+0 -12 Td
+(   - Ensure secure cookie behavior under HTTPS deployment.) Tj
+0 -12 Td
+(5. **Open ports review**) Tj
+0 -12 Td
+(   - Limit listening ports to required services only.) Tj
+0 -12 Td
+(6. **Backup recency**) Tj
+0 -12 Td
+(   - Enable/verify periodic backup job and retention evidence.) Tj
+0 -12 Td
+(7. **Receipt signing**) Tj
+0 -12 Td
+(   - Enable signing key path through approved secret store.) Tj
+0 -12 Td
+(8. **OS baseline**) Tj
+0 -12 Td
+(   - Enforce NTP sync, automatic updates, stealth mode, remote-login policy per owner/admin stan) Tj
+0 -12 Td
+(dard.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-9-security-scan-improvement.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-9-security-scan-improvement.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-9-security-scan.json`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1115 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused authenticated security-scan route validation in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Host/admin-only hardening controls required.) Tj
+0 -12 Td
+(- Env-seeded auth hardening required through approved secret path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No `.env` modifications made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Security remains PARTIAL; runbook quality improved, but score unchanged until owner/admin acti) Tj
+0 -12 Td
+(ons are applied.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 10 Firecrawl parallel status refresh \(without blocking main lane\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003580 00000 n 
+0000003706 00000 n 
+0000004873 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4943
+%%EOF

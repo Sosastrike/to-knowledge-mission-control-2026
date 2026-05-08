@@ -1,0 +1,56 @@
+{
+  "checked_at": "2026-05-08T16:51:30.657Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "bridge_phase2",
+  "steps": [
+    {
+      "name": "bridge_session_get_before",
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T16:51:30.755Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,\"http_status\":200,\"version\":\"M v1.12\"},\"agent_zero_api_key_configured\":false,\"persistence_ready\":true,\"bridge_session\":{\"session_id\":null,\"owner_id\":null,\"agent"
+    },
+    {
+      "name": "bridge_session_request",
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "POST",
+      "status": 201,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_approval_required\",\"generated_at\":\"2026-05-08T16:51:30.762Z\",\"persistence_ready\":true,\"approval_request_created\":true,\"duplicate_prompt_prevented\":false,\"no_approval_spam\":true,\"approval_needed\":true,\"owner_approval_prompt\":\"Approval needed: Open Agent Ze"
+    },
+    {
+      "name": "approval_request_create",
+      "path": "/api/bridge/approval-requests",
+      "method": "POST",
+      "status": 201,
+      "preview": "{\"ok\":true,\"mode\":\"approval_request_created_no_execution\",\"persistence\":\"connected\",\"approval_request_created\":true,\"approval_id\":\"apr_5a211cf5-d8e2-4d9d-bf20-d8065af0258e\",\"reused_idempotency_key\":false,\"approval_state\":\"pending\",\"execution_enabled\":false,\"accepted_for_execution\":false,\"no_connecto"
+    },
+    {
+      "name": "execute_attempt_scoped",
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 400,
+      "preview": "{\"ok\":false,\"http_status\":400,\"mode\":\"agent_zero_bridge_execution_gateway\",\"action\":\"report_link_confirmation\",\"adapter_registered\":false,\"adapter\":null,\"bridge_session_required\":true,\"bridge_session\":{\"session_id\":\"bs_079ed803-efc3-4309-8000-761b86a71f6f\",\"status\":\"pending_approval\",\"expires_at\":\"2"
+    },
+    {
+      "name": "execute_attempt_out_of_scope",
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 400,
+      "preview": "{\"ok\":false,\"http_status\":400,\"mode\":\"agent_zero_bridge_execution_gateway\",\"action\":\"zapier_write\",\"adapter_registered\":false,\"adapter\":null,\"bridge_session_required\":true,\"bridge_session\":{\"session_id\":\"bs_079ed803-efc3-4309-8000-761b86a71f6f\",\"status\":\"pending_approval\",\"expires_at\":\"2026-05-09T04"
+    },
+    {
+      "name": "bridge_session_get_after",
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T16:51:30.808Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,\"http_status\":200,\"version\":\"M v1.12\"},\"agent_zero_api_key_configured\":false,\"persistence_ready\":true,\"bridge_session\":{\"session_id\":\"bs_079ed803-efc3-4309-8000"
+    }
+  ],
+  "summary": {
+    "bridge_session_request_status": 201,
+    "approval_request_status": 201,
+    "execute_scoped_status": 400,
+    "execute_out_of_scope_status": 400,
+    "bridge_session_mode_after": "agent_zero_bridge_session_status"
+  }
+}

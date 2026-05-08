@@ -1,0 +1,211 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2883 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-3-telegram-pdf-live-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 3 — Telegram PDF Live Attachment Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Use the implemented Telegram adapter path and determine whether live PDF attachment can execute ) Tj
+0 -12 Td
+(now.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(GATED/BLOCKED \(honest, no fake send\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated as operator.) Tj
+0 -12 Td
+(2. Created a fresh Agent Zero report \(Markdown + PDF artifact available in Mission Control\).) Tj
+0 -12 Td
+(3. Checked Telegram adapter status:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(4. Attempted upload route:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(5. Confirmed result payload and blocked reason.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-3-telegram-proof.json`) Tj
+0 -12 Td
+(- Results:) Tj
+0 -12 Td
+(  - report create -> `201`) Tj
+0 -12 Td
+(  - telegram status -> `200`) Tj
+0 -12 Td
+(  - telegram upload -> `423` \(blocked\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live-Truth Outcome) Tj
+0 -12 Td
+(- Adapter route exists and responds correctly.) Tj
+0 -12 Td
+(- Real attachment send did **not** execute.) Tj
+0 -12 Td
+(- `accepted_for_execution` remained `false`.) Tj
+0 -12 Td
+(- `telegram_message_id` remained `null`.) Tj
+0 -12 Td
+(- No fake delivery claim was made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `telegram_report_delivery_adapter_not_configured`) Tj
+0 -12 Td
+(  - missing config flags in status payload:) Tj
+0 -12 Td
+(    - `TELEGRAM_BOT_TOKEN`) Tj
+0 -12 Td
+(    - `AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package) Tj
+0 -12 Td
+(To move this to GO:) Tj
+0 -12 Td
+(1. Configure Telegram connector through approved secret path \(no tokens shared in chat\).) Tj
+0 -12 Td
+(2. Approve active Bridge Session scope for one Telegram PDF send.) Tj
+0 -12 Td
+(3. After that, Codex will rerun upload route and verify:) Tj
+0 -12 Td
+(   - `status=completed`) Tj
+0 -12 Td
+(   - `accepted_for_execution=true`) Tj
+0 -12 Td
+(   - non-null `telegram_message_id`) Tj
+0 -12 Td
+(   - matching audit event) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-3-telegram-pdf-live-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-3-telegram-pdf-live-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-3-telegram-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused API/runtime smoke for Telegram flow in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 779 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No bot token printed.) Tj
+0 -12 Td
+(- No credential file contents printed.) Tj
+0 -12 Td
+(- No raw local path exposed in API output captured.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Telegram remains PARTIAL/GATED.) Tj
+0 -12 Td
+(- Not GO until real attachment send succeeds.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 4 \(Paperclip owner session proof\) and publish owner-action package if ow) Tj
+0 -12 Td
+(ner session is unavailable.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003182 00000 n 
+0000003308 00000 n 
+0000004138 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4208
+%%EOF

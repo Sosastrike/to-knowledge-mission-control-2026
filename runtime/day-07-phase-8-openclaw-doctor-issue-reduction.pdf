@@ -1,0 +1,225 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2985 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-8-openclaw-doctor-issue-reduction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 8 — OpenClaw+ Doctor Issue Reduction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Run authenticated OpenClaw+ doctor, reduce safe issues where possible, and capture exact remaini) Tj
+0 -12 Td
+(ng blockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(doctor runtime not reachable in current runtime environment\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Ran:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(3. Ran:) Tj
+0 -12 Td
+(   - `GET /api/security-scan`) Tj
+0 -12 Td
+(4. Extracted current failing/warning scan items for runbook follow-up.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-8-openclaw-proof.json`) Tj
+0 -12 Td
+(- OpenClaw+ doctor result:) Tj
+0 -12 Td
+(  - HTTP `400`) Tj
+0 -12 Td
+(  - error: `OpenClaw is not installed or not reachable`) Tj
+0 -12 Td
+(- Security scan result:) Tj
+0 -12 Td
+(  - HTTP `200`) Tj
+0 -12 Td
+(  - overall: `needs-attention`) Tj
+0 -12 Td
+(  - score: `63`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blocker) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe-Fix Outcome) Tj
+0 -12 Td
+(- No destructive or governance-changing operations were attempted.) Tj
+0 -12 Td
+(- No `.env` modification was made.) Tj
+0 -12 Td
+(- No agents/skills/memory/reports were deleted.) Tj
+0 -12 Td
+(- Because doctor runtime was unreachable, no doctor issue reduction was possible in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security Follow-up Snapshot) Tj
+0 -12 Td
+(Current non-pass checks captured in this environment include:) Tj
+0 -12 Td
+(- `auth_pass` \(fail\)) Tj
+0 -12 Td
+(- `allowed_hosts` \(warn\)) Tj
+0 -12 Td
+(- `hsts_enabled` \(warn\)) Tj
+0 -12 Td
+(- `cookie_secure` \(warn\)) Tj
+0 -12 Td
+(- `config_found` \(warn\)) Tj
+0 -12 Td
+(- `backup_recent` \(warn\)) Tj
+0 -12 Td
+(- `receipt_signing` \(warn\)) Tj
+0 -12 Td
+(- `ntp_sync` \(warn\)) Tj
+0 -12 Td
+(- `open_ports` \(fail\)) Tj
+0 -12 Td
+(- `auto_updates` \(warn\)) Tj
+0 -12 Td
+(- `macos_stealth_mode` \(warn\)) Tj
+0 -12 Td
+(- `macos_remote_login` \(warn\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(To continue OpenClaw+ issue reduction:) Tj
+0 -12 Td
+(1. Ensure OpenClaw+ runtime/CLI is installed and reachable from Mission Control runtime host.) Tj
+0 -12 Td
+(2. Confirm doctor command path is available to the running service account.) Tj
+0 -12 Td
+(3. Re-run `/api/openclaw/doctor` in authenticated context.) Tj
+0 -12 Td
+(4. Then apply only safe app-level remediations; keep host-level hardening in admin runbook.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-8-openclaw-doctor-issue-reduction.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-8-openclaw-doctor-issue-reduction.pdf`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1032 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `runtime/day-07-phase-8-openclaw-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused authenticated route checks in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active.) Tj
+0 -12 Td
+(- OpenClaw+ runtime unreachable from current host/runtime context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- OpenClaw+ remains PARTIAL/BLOCKED in this environment until doctor reachability is restored.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 9 \(security scan improvement pass + owner/admin runbook packaging\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003284 00000 n 
+0000003410 00000 n 
+0000004494 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4564
+%%EOF

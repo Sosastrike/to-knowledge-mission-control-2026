@@ -1,0 +1,261 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3781 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-1-day06-commit-push-deploy) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 1 — Day 06 Commit, Push, and Deploy Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Ship-close Day 06 Bridge persistence work and verify production runtime state before Day 07 impl) Tj
+0 -12 Td
+(ementation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS \(closeout with fresh runtime smoke evidence\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Key Outcome) Tj
+0 -12 Td
+(Day 06 was already committed and pushed before this phase began:) Tj
+0 -12 Td
+(- `ed7b11c` on `origin/to-knowledge-mc`) Tj
+0 -12 Td
+(- includes Bridge persistence migration `053_bridge_approval_audit_persistence`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This phase completed deployment/state verification and smoke checks on the active runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified branch/HEAD state against required shipped commits:) Tj
+0 -12 Td
+(   - `ec9c891`) Tj
+0 -12 Td
+(   - `b209cb1`) Tj
+0 -12 Td
+(   - `ed7b11c`) Tj
+0 -12 Td
+(2. Confirmed local runtime listener is active and bound to `127.0.0.1:3337` only.) Tj
+0 -12 Td
+(3. Verified protected Gateway FULL v3 pages still redirect unauthenticated access to `/login`.) Tj
+0 -12 Td
+(4. Executed authenticated smoke \(session-authenticated\) for required Phase 1 API routes:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/bridge-session`) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/execute`) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(   - `GET /api/gateway/space-agent/youtube/status`) Tj
+0 -12 Td
+(5. Executed unauthenticated smoke for the same API routes and confirmed `401`.) Tj
+0 -12 Td
+(6. Confirmed `.env` diff remains clean.) Tj
+0 -12 Td
+(7. Confirmed no new public local exposure \(local-only bind\).) Tj
+0 -12 Td
+(8. Confirmed no secret values were printed in command outputs/log snippets used for this report.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands and Route Proof) Tj
+0 -12 Td
+(- Commit/lineage checks:) Tj
+0 -12 Td
+(  - `git rev-parse --short HEAD` -> `ed7b11c`) Tj
+0 -12 Td
+(  - `git rev-parse --short origin/to-knowledge-mc` -> `ed7b11c`) Tj
+0 -12 Td
+(  - `git merge-base --is-ancestor ec9c891 origin/to-knowledge-mc` -> `OK`) Tj
+0 -12 Td
+(  - `git merge-base --is-ancestor b209cb1 origin/to-knowledge-mc` -> `OK`) Tj
+0 -12 Td
+(  - `git merge-base --is-ancestor ed7b11c origin/to-knowledge-mc` -> `OK`) Tj
+0 -12 Td
+(- Runtime listener:) Tj
+0 -12 Td
+(  - `lsof -nP -iTCP:3337 -sTCP:LISTEN`) Tj
+0 -12 Td
+(  - observed `node` listening on `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Protected page checks \(unauthenticated\):) Tj
+0 -12 Td
+(  - `/gateway` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/routes` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/registry` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/policies` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/health` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/dispatcher` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/token-governor` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub` -> `307 /login`) Tj
+0 -12 Td
+(  - `/designer-mission-control/design/gateway/index.html` -> `307 /login`) Tj
+0 -12 Td
+(- Authenticated smoke evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-1-auth-smoke.json`) Tj
+0 -12 Td
+(  - statuses:) Tj
+0 -12 Td
+(    - `GET /api/bridge/agent-zero/bridge-session` -> `200`) Tj
+0 -12 Td
+(    - `POST /api/bridge/agent-zero/execute` -> `400` \(expected blocked execution contract; no fa) Tj
+0 -12 Td
+(ke success\)) Tj
+0 -12 Td
+(    - `GET /api/bridge/agent-zero/telegram/status` -> `200` \(blocked/gated status payload\)) Tj
+0 -12 Td
+(    - `GET /api/gateway/space-agent/youtube/status` -> `200` \(limited status payload\)) Tj
+0 -12 Td
+(- Unauthenticated smoke evidence file:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1922 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - `runtime/day-07-phase-1-unauth-smoke.json`) Tj
+0 -12 Td
+(  - all required protected routes returned `401`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-1-day06-commit-push-deploy.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-1-day06-commit-push-deploy.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-1-auth-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-1-unauth-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-1-gateway-route-check.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime: active on `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Current runtime PID observed: `5517`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(Not rerun in this closeout phase \(Day 06 already passed typecheck/build/tests\).) Tj
+0 -12 Td
+(This phase focused on commit/push/deploy-state proof and production smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(None for Day 07 Phase 1 closeout itself.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No new source commit required in this phase.) Tj
+0 -12 Td
+(- Day 06 shipped commit confirmed: `ed7b11c`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(If Day 06 persistence change must be reverted:) Tj
+0 -12 Td
+(- `git revert ed7b11c`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(Confirmed:) Tj
+0 -12 Td
+(- no API key/token values printed,) Tj
+0 -12 Td
+(- no auth file contents printed,) Tj
+0 -12 Td
+(- ephemeral cookie artifact removed after smoke run,) Tj
+0 -12 Td
+(- `.env` unchanged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(Overall remains low 90s PARTIAL GO \(no 100% claim\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 2: Bridge approved scoped execution proof \(or exact owner-approval actio) Tj
+0 -12 Td
+(n package if approval/session is unavailable\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004080 00000 n 
+0000004206 00000 n 
+0000006180 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6250
+%%EOF

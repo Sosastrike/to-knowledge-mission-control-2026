@@ -1,0 +1,251 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3501 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-5-drive-onedrive-upload-adapter-implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 5 — Google Drive / OneDrive Upload Adapter Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Drive/OneDrive from generic blocked status to concrete implemented-route proof with exact b) Tj
+0 -12 Td
+(lockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS \(provider-specific adapter routes are implemented and safely gated; live uploads re) Tj
+0 -12 Td
+(main blocked by connector auth/config\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Created a fresh Agent Zero report artifact for upload testing.) Tj
+0 -12 Td
+(3. Probed provider-specific status routes:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/google-drive/status`) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/onedrive/status`) Tj
+0 -12 Td
+(4. Probed upload routes with report id:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+(5. Verified responses enforce:) Tj
+0 -12 Td
+(   - Bridge Session requirement) Tj
+0 -12 Td
+(   - owner approval requirement) Tj
+0 -12 Td
+(   - provider-specific blocked reasons) Tj
+0 -12 Td
+(   - no fake upload claims) Tj
+0 -12 Td
+(   - no token leakage) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route/Adapter Proof) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-5-drive-onedrive-proof.json`) Tj
+0 -12 Td
+(- Status routes:) Tj
+0 -12 Td
+(  - Google Drive status -> `200` \(`blocked`, provider-specific step matrix present\)) Tj
+0 -12 Td
+(  - OneDrive status -> `200` \(`blocked`, provider-specific step matrix present\)) Tj
+0 -12 Td
+(- Upload routes:) Tj
+0 -12 Td
+(  - Google Drive upload -> `423`, `accepted_for_execution=false`, blocker `google_drive_upload_c) Tj
+0 -12 Td
+(onnector_not_configured`) Tj
+0 -12 Td
+(  - OneDrive upload -> `423`, `accepted_for_execution=false`, blocker `onedrive_upload_connector) Tj
+0 -12 Td
+(_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Is Implemented) Tj
+0 -12 Td
+(- Distinct provider routes exist and are wired:) Tj
+0 -12 Td
+(  - Google Drive:) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/google-drive/status`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/google-drive/folder-lookup`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/google-drive/upload-test-file`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/google-drive/verify-link`) Tj
+0 -12 Td
+(  - OneDrive:) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/onedrive/status`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/onedrive/folder-lookup`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/onedrive/upload-test-file`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+(    - `/api/bridge/agent-zero/onedrive/verify-link`) Tj
+0 -12 Td
+(- Provider separation is preserved \(no merged fake abstraction\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner OAuth / Connector Action Package) Tj
+0 -12 Td
+(To progress from blocked to GO:) Tj
+0 -12 Td
+(1. Complete approved OAuth/connector setup for Google Drive and OneDrive via the sanctioned inte) Tj
+0 -12 Td
+(gration path.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1751 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(2. Keep tokens in secret store only \(no token sharing in chat/reports\).) Tj
+0 -12 Td
+(3. Approve a scoped Bridge Session for one upload test per provider.) Tj
+0 -12 Td
+(4. Codex will then verify:) Tj
+0 -12 Td
+(   - successful upload response,) Tj
+0 -12 Td
+(   - safe link returned,) Tj
+0 -12 Td
+(   - audit record,) Tj
+0 -12 Td
+(   - out-of-scope writes still blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-5-drive-onedrive-upload-adapter-implementation.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-5-drive-onedrive-upload-adapter-implementation.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-5-drive-onedrive-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused adapter route smoke performed in this phase.) Tj
+0 -12 Td
+(- Full suite not rerun in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No OAuth token values printed.) Tj
+0 -12 Td
+(- No credential files printed.) Tj
+0 -12 Td
+(- No raw local paths exposed in captured owner-facing payloads.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Drive/OneDrive readiness increased for implementation clarity and safe gating.) Tj
+0 -12 Td
+(- GO remains blocked until real uploads succeed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 6 \(AgentMail incoming/outgoing proof\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003800 00000 n 
+0000003926 00000 n 
+0000005729 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5799
+%%EOF

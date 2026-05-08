@@ -1,0 +1,201 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3008 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-10-firecrawl-parallel-status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 10 — Firecrawl Parallel Status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Keep Firecrawl tracking current without blocking the main delivery/Bridge/Paperclip lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(unchanged, with refreshed proof\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Checked Firecrawl runtime status:) Tj
+0 -12 Td
+(   - `GET /api/firecrawl/status`) Tj
+0 -12 Td
+(3. Cross-checked Gateway registry visibility for Firecrawl surfaces:) Tj
+0 -12 Td
+(   - `GET /api/gateway/registry`) Tj
+0 -12 Td
+(4. Verified local SDK package presence in current runtime workspace.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-10-firecrawl-parallel-status.json`) Tj
+0 -12 Td
+(- Status route:) Tj
+0 -12 Td
+(  - HTTP `200`) Tj
+0 -12 Td
+(  - `state=CREDENTIAL_REQUIRED`) Tj
+0 -12 Td
+(  - `mission_control_process_has_firecrawl_api_key=false`) Tj
+0 -12 Td
+(  - `mission_control_sdk_present=false`) Tj
+0 -12 Td
+(- Local workspace check:) Tj
+0 -12 Td
+(  - Firecrawl SDK package not present in `node_modules`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(1. `firecrawl_credential_required`) Tj
+0 -12 Td
+(2. `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No credential values printed.) Tj
+0 -12 Td
+(- No auth file content printed.) Tj
+0 -12 Td
+(- No `.env` modification.) Tj
+0 -12 Td
+(- No crawl/write execution attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(To move Firecrawl forward:) Tj
+0 -12 Td
+(1. Provide Mission Control runtime with approved Firecrawl credential source \(value hidden; yes/) Tj
+0 -12 Td
+(no validation only\).) Tj
+0 -12 Td
+(2. Install/wire Firecrawl SDK/backend runner for read-only status + single-page smoke.) Tj
+0 -12 Td
+(3. Keep scope constrained to one safe public-page read-only smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Codex follow-up verification after unblock:) Tj
+0 -12 Td
+(1. Run exactly one read-only smoke on `https://example.com/`.) Tj
+0 -12 Td
+(2. Confirm no broad crawl/private/login/write behavior.) Tj
+0 -12 Td
+(3. Return ResearchPacket and update Gateway/Agent Hub status.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-10-firecrawl-parallel-status.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-10-firecrawl-parallel-status.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-10-firecrawl-parallel-status.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused Firecrawl status/runtime verification in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 444 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Confirmed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Firecrawl remains 35% BLOCKED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 11 validation/push with honest blocker retention.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003307 00000 n 
+0000003433 00000 n 
+0000003928 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3998
+%%EOF

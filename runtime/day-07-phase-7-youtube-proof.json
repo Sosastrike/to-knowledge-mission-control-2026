@@ -1,0 +1,148 @@
+{
+  "checked_at": "2026-05-08T16:57:15.306Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "youtube_phase7",
+  "steps": [
+    {
+      "name": "youtube_status",
+      "path": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "mode": "space_agent_youtube_connector_status",
+        "status": "limited",
+        "metadata_enabled": true,
+        "transcript_connector_proven": false,
+        "blocked_reason": "youtube_transcript_connector_not_proven",
+        "no_secrets_exposed": true,
+        "no_raw_paths": true,
+        "no_fake_done": true
+      }
+    },
+    {
+      "name": "youtube_research",
+      "path": "/api/gateway/space-agent/youtube/research",
+      "method": "POST",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "mode": "space_agent_youtube_connector",
+        "blocked_reason": "youtube_transcript_connector_not_proven",
+        "packet": {
+          "packet_id": "youtube_research_dqw4w9wgxcq",
+          "schema": "youtube_research_packet_v1",
+          "mode": "youtube_research_packet",
+          "status": "limited",
+          "research_stage_owner": "space_agent",
+          "returns_to": "agent_zero",
+          "requested_by": "gateway",
+          "responsible_agent": "agent_zero",
+          "youtube_research_intent": {
+            "intent_id": "youtube_research_intent_dqw4w9wgxcq",
+            "schema": "youtube_research_intent_v1",
+            "request_summary": "Research this video and extract transcript-backed claims with timestamps if available: https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "requested_by": "gateway",
+            "responsible_agent": "agent_zero",
+            "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "video_id": "dQw4w9WgXcQ",
+            "official_paths_first": true,
+            "source_priority": [
+              "official",
+              "transcript",
+              "metadata"
+            ],
+            "metadata_required": true,
+            "transcript_or_captions_preferred": true,
+            "frame_capture_allowed": false,
+            "full_video_download_allowed": false,
+            "created_at": "2026-05-08T16:57:15.434Z",
+            "no_secrets_exposed": true,
+            "no_raw_paths": true,
+            "blocked_reason": "youtube_transcript_unavailable"
+          },
+          "route": {
+            "route_id": "owner_gateway_pi_agent_zero_space_agent_research",
+            "source": "owner",
+            "target": "space_agent",
+            "hops": [
+              "owner",
+              "gateway",
+              "pi",
+              "gateway",
+              "agent_zero",
+              "gateway",
+              "space_agent"
+            ],
+            "pi_recommendation": "space_agent",
+            "agent_zero_approval": "required",
+            "execution_mode": "read_only_research_packet",
+            "policy_decision": "allowed",
+            "blocked_reason": null
+          },
+          "return_route": {
+            "route_id": "space_agent_gateway_responsible_agent_return",
+            "source": "space_agent",
+            "target": "agent_zero",
+            "hops": [
+              "space_agent",
+              "gateway",
+              "agent_zero"
+            ],
+            "returns_packet": true,
+            "owner_facing_response_owner": "agent_zero",
+            "execution_mode": "read_only_research_packet_return"
+          },
+          "metadata": {
+            "schema": "youtube_metadata_v1",
+            "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+            "channel": "Rick Astley",
+            "publish_date": null,
+            "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "description": null,
+            "metadata_status": "available",
+            "video_id": "dQw4w9WgXcQ"
+          },
+          "transcript_status": "missing",
+          "captions_available": false,
+          "transcript_segments": [],
+          "chapters": [],
+          "key_claims": [],
+          "frame_captures": [],
+          "allowed_paths": [
+            "official",
+            "transcript",
+            "metadata"
+          ],
+          "official_paths_first": true,
+          "full_video_download_allowed": false,
+          "full_video_download_blocked_by_default": true,
+          "blocked_reason": "youtube_transcript_unavailable",
+          "limitations": [
+            "Transcript or captions unavailable; key claims are limited to supplied metadata and cannot be treated as transcript-backed."
+          ],
+          "citations": [
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          ],
+          "no_secrets_exposed": true,
+          "no_raw_paths": true,
+          "owner_visible_summary": "YouTube research packet is limited: youtube_transcript_unavailable."
+        },
+        "no_secrets_exposed": true,
+        "no_raw_paths": true,
+        "no_fake_done": true
+      }
+    }
+  ],
+  "summary": {
+    "status_status": 200,
+    "status_value": "limited",
+    "transcript_connector_proven": false,
+    "research_status": 200,
+    "packet_status": "limited",
+    "blocked_reason": "youtube_transcript_connector_not_proven",
+    "has_transcript_segments": false,
+    "has_claims": false
+  }
+}

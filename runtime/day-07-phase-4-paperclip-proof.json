@@ -1,0 +1,132 @@
+{
+  "checked_at": "2026-05-08T16:53:44.836Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "paperclip_phase4",
+  "steps": [
+    {
+      "name": "paperclip_status",
+      "path": "/api/bridge/paperclip/status",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "mode": "paperclip_status_read_only",
+        "generated_at": "2026-05-08T16:53:44.845Z",
+        "health": "degraded",
+        "reachable": false,
+        "configured": false,
+        "endpoint": "loopback:3100",
+        "ui_link": "http://127.0.0.1:3100",
+        "workforce_summary": {
+          "company_count": null,
+          "active_agents": null,
+          "active_issues": null,
+          "budget_status": "not reachable",
+          "heartbeat_status": "not reachable"
+        },
+        "role": "workforce_company_task_orchestration_layer",
+        "authority": "subordinate_to_gateway_and_agent_zero",
+        "status_endpoint": "/api/bridge/paperclip/status",
+        "companies_endpoint": "/api/bridge/paperclip/companies",
+        "agents_endpoint": "/api/bridge/paperclip/agents",
+        "issues_endpoint": "/api/bridge/paperclip/issues",
+        "test_task_endpoint": "/api/bridge/paperclip/test-chat",
+        "proposals_endpoint": "/api/bridge/paperclip/proposals",
+        "dispatcher_recommendations_endpoint": "/api/bridge/paperclip/dispatcher-recommendations",
+        "research_tasks_endpoint": "/api/bridge/paperclip/research-tasks",
+        "service": {
+          "local_only": true,
+          "tailnet_only": false,
+          "public_exposure": false,
+          "persistent_service_enabled": false,
+          "sandbox_expected": true
+        },
+        "upstream": {
+          "health_status": null,
+          "version": null,
+          "deployment_mode": null,
+          "deployment_exposure": null,
+          "auth_ready": null
+        },
+        "bridge_session": {
+          "required_for_mutations": true,
+          "external_writes_enabled": false
+        },
+        "blocker": "paperclip_sandbox_service_not_running",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "protected_actions_enabled": false,
+        "no_secrets_exposed": true,
+        "raw_paths_exposed": false
+      }
+    },
+    {
+      "name": "paperclip_companies",
+      "path": "/api/bridge/paperclip/companies",
+      "status": 503,
+      "body": {
+        "ok": false,
+        "mode": "paperclip_companies_read_only",
+        "generated_at": "2026-05-08T16:53:44.853Z",
+        "paperclip_reachable": false,
+        "company_selector": null,
+        "items": [],
+        "count": 0,
+        "blocker": "paperclip_sandbox_service_not_running",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "protected_actions_enabled": false,
+        "no_secrets_exposed": true,
+        "raw_paths_exposed": false
+      }
+    },
+    {
+      "name": "paperclip_agents",
+      "path": "/api/bridge/paperclip/agents",
+      "status": 503,
+      "body": {
+        "ok": false,
+        "mode": "paperclip_agents_read_only",
+        "generated_at": "2026-05-08T16:53:44.859Z",
+        "paperclip_reachable": false,
+        "company_selector": null,
+        "items": [],
+        "count": 0,
+        "blocker": "paperclip_sandbox_service_not_running",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "protected_actions_enabled": false,
+        "no_secrets_exposed": true,
+        "raw_paths_exposed": false
+      }
+    },
+    {
+      "name": "paperclip_issues",
+      "path": "/api/bridge/paperclip/issues",
+      "status": 503,
+      "body": {
+        "ok": false,
+        "mode": "paperclip_issues_read_only",
+        "generated_at": "2026-05-08T16:53:44.865Z",
+        "paperclip_reachable": false,
+        "company_selector": null,
+        "items": [],
+        "count": 0,
+        "blocker": "paperclip_sandbox_service_not_running",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "protected_actions_enabled": false,
+        "no_secrets_exposed": true,
+        "raw_paths_exposed": false
+      }
+    }
+  ],
+  "summary": {
+    "status_status": 200,
+    "companies_status": 503,
+    "agents_status": 503,
+    "issues_status": 503,
+    "paperclip_url": null,
+    "auth_mode": null,
+    "blocked_reason": null
+  }
+}

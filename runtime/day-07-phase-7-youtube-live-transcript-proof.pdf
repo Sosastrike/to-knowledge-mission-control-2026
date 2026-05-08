@@ -1,0 +1,195 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3002 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-7-youtube-live-transcript-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 7 — YouTube Live Transcript Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Use the implemented YouTube connector routes to prove live metadata/transcript behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(LIMITED \(metadata path works; transcript connector still not proven\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Checked YouTube connector status:) Tj
+0 -12 Td
+(   - `GET /api/gateway/space-agent/youtube/status`) Tj
+0 -12 Td
+(3. Ran live research request with a public YouTube URL:) Tj
+0 -12 Td
+(   - `POST /api/gateway/space-agent/youtube/research`) Tj
+0 -12 Td
+(4. Evaluated packet status, transcript segment availability, and claims/timestamps presence.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-7-youtube-proof.json`) Tj
+0 -12 Td
+(- Summary:) Tj
+0 -12 Td
+(  - status endpoint -> `200`, `status=limited`) Tj
+0 -12 Td
+(  - transcript connector proven -> `false`) Tj
+0 -12 Td
+(  - research endpoint -> `200`, packet `status=limited`) Tj
+0 -12 Td
+(  - transcript-backed segments -> none) Tj
+0 -12 Td
+(  - transcript-backed claims/timestamps -> none) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blocker) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No full-video download performed.) Tj
+0 -12 Td
+(- No login/paywall/age/region bypass behavior used.) Tj
+0 -12 Td
+(- No secrets exposed.) Tj
+0 -12 Td
+(- No fake transcript claim made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(To move YouTube beyond LIMITED:) Tj
+0 -12 Td
+(1. Install/enable transcript runtime dependency on the production host.) Tj
+0 -12 Td
+(2. Keep request path read-only \(metadata/transcript extraction only\).) Tj
+0 -12 Td
+(3. Re-run one public transcript-enabled video smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Codex follow-up verification:) Tj
+0 -12 Td
+(1. `transcript_connector_proven=true` on status route.) Tj
+0 -12 Td
+(2. Non-empty transcript segments in research packet.) Tj
+0 -12 Td
+(3. Transcript-backed claims with timestamps.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-7-youtube-live-transcript-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-7-youtube-live-transcript-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-7-youtube-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused connector/runtime route smoke in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 374 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Confirmed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- YouTube remains LIMITED until transcript connector is proven live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 8 \(OpenClaw+ doctor issue reduction\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003301 00000 n 
+0000003427 00000 n 
+0000003852 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3922
+%%EOF

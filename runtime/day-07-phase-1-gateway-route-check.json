@@ -1,0 +1,52 @@
+{
+  "checked_at": "2026-05-08T16:49:01.492Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "route_protection_check",
+  "results": [
+    {
+      "route": "/gateway",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/routes",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/registry",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/policies",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/health",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/dispatcher",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/token-governor",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/designer-mission-control/design/gateway/index.html",
+      "status": 307,
+      "location": "/login"
+    }
+  ]
+}

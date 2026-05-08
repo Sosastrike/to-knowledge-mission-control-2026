@@ -1,0 +1,290 @@
+{
+  "checked_at": "2026-05-08T16:57:55.336Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "openclaw_phase8",
+  "steps": [
+    {
+      "name": "openclaw_doctor",
+      "path": "/api/openclaw/doctor",
+      "status": 400,
+      "body": {
+        "error": "OpenClaw is not installed or not reachable"
+      },
+      "preview": "{\"error\":\"OpenClaw is not installed or not reachable\"}"
+    },
+    {
+      "name": "security_scan",
+      "path": "/api/security-scan",
+      "status": 200,
+      "body": {
+        "overall": "needs-attention",
+        "score": 63,
+        "timestamp": 1778259475679,
+        "categories": {
+          "credentials": {
+            "score": 50,
+            "checks": [
+              {
+                "id": "auth_pass",
+                "name": "Admin password configured",
+                "status": "fail",
+                "detail": "AUTH_PASS is not configured",
+                "fix": "Set AUTH_PASS in .env to a strong password (12+ characters)",
+                "severity": "critical"
+              },
+              {
+                "id": "api_key_set",
+                "name": "API key configured",
+                "status": "pass",
+                "detail": "API_KEY is configured",
+                "fix": "",
+                "severity": "critical"
+              }
+            ]
+          },
+          "network": {
+            "score": 36,
+            "checks": [
+              {
+                "id": "allowed_hosts",
+                "name": "Host allowlist configured",
+                "status": "warn",
+                "detail": "MC_ALLOWED_HOSTS is not set",
+                "fix": "Set MC_ALLOWED_HOSTS=localhost,127.0.0.1 in .env",
+                "severity": "high"
+              },
+              {
+                "id": "hsts_enabled",
+                "name": "HSTS enabled",
+                "status": "warn",
+                "detail": "HSTS is not enabled",
+                "fix": "Set MC_ENABLE_HSTS=1 in .env (requires HTTPS)",
+                "severity": "medium"
+              },
+              {
+                "id": "cookie_secure",
+                "name": "Secure cookies",
+                "status": "warn",
+                "detail": "Cookies not explicitly set to secure",
+                "fix": "Set MC_COOKIE_SECURE=1 in .env (requires HTTPS)",
+                "severity": "medium"
+              },
+              {
+                "id": "gateway_local",
+                "name": "Gateway bound to localhost",
+                "status": "pass",
+                "detail": "Gateway host is 127.0.0.1",
+                "fix": "",
+                "severity": "critical"
+              }
+            ]
+          },
+          "openclaw": {
+            "score": 0,
+            "checks": [
+              {
+                "id": "config_found",
+                "name": "OpenClaw config found",
+                "status": "warn",
+                "detail": "openclaw.json not found — OpenClaw checks skipped",
+                "fix": "Set OPENCLAW_HOME or OPENCLAW_CONFIG_PATH in .env",
+                "severity": "low"
+              }
+            ]
+          },
+          "runtime": {
+            "score": 73,
+            "checks": [
+              {
+                "id": "injection_guard",
+                "name": "Injection guard active",
+                "status": "pass",
+                "detail": "Prompt and command injection protection is loaded",
+                "fix": "",
+                "severity": "critical"
+              },
+              {
+                "id": "rate_limiting",
+                "name": "Rate limiting active",
+                "status": "pass",
+                "detail": "Rate limiting is active",
+                "fix": "",
+                "severity": "high"
+              },
+              {
+                "id": "backup_recent",
+                "name": "Recent backup exists",
+                "status": "warn",
+                "detail": "No backup directory",
+                "fix": "Enable auto_backup in Settings",
+                "severity": "medium"
+              },
+              {
+                "id": "db_integrity",
+                "name": "Database integrity",
+                "status": "pass",
+                "detail": "Integrity check passed",
+                "fix": "",
+                "severity": "critical"
+              },
+              {
+                "id": "receipt_signing",
+                "name": "MCP audit receipt signing",
+                "status": "warn",
+                "detail": "No MCP calls logged in the last 24h",
+                "fix": "",
+                "severity": "medium"
+              }
+            ]
+          },
+          "os": {
+            "score": 73,
+            "checks": [
+              {
+                "id": "not_root",
+                "name": "Not running as root",
+                "status": "pass",
+                "detail": "Running as UID 501",
+                "fix": "",
+                "severity": "critical",
+                "platform": "all"
+              },
+              {
+                "id": "node_supported",
+                "name": "Node.js version supported",
+                "status": "pass",
+                "detail": "Node.js v22.22.2",
+                "fix": "",
+                "severity": "medium",
+                "platform": "all"
+              },
+              {
+                "id": "uptime",
+                "name": "System reboot freshness",
+                "status": "pass",
+                "detail": "System uptime: 0 days",
+                "fix": "",
+                "severity": "low",
+                "platform": "all"
+              },
+              {
+                "id": "ntp_sync",
+                "name": "Time synchronization",
+                "status": "warn",
+                "detail": "Network time may be disabled",
+                "fix": "Enable: sudo systemsetup -setusingnetworktime on",
+                "severity": "low",
+                "platform": "darwin"
+              },
+              {
+                "id": "firewall",
+                "name": "Firewall active",
+                "status": "pass",
+                "detail": "macOS application firewall is enabled",
+                "fix": "",
+                "severity": "critical",
+                "platform": "darwin"
+              },
+              {
+                "id": "open_ports",
+                "name": "Listening ports",
+                "status": "fail",
+                "detail": "46 listening ports detected",
+                "fix": "Review open ports and close unnecessary services",
+                "severity": "medium",
+                "platform": "darwin"
+              },
+              {
+                "id": "auto_updates",
+                "name": "Automatic software updates",
+                "status": "warn",
+                "detail": "Automatic update status unknown",
+                "fix": "Enable in System Settings > General > Software Update",
+                "severity": "medium",
+                "platform": "darwin"
+              },
+              {
+                "id": "disk_encryption",
+                "name": "Disk encryption (FileVault)",
+                "status": "pass",
+                "detail": "FileVault is enabled",
+                "fix": "",
+                "severity": "high",
+                "platform": "darwin"
+              },
+              {
+                "id": "world_writable",
+                "name": "No world-writable app files",
+                "status": "pass",
+                "detail": "No world-writable files in app directory",
+                "fix": "",
+                "severity": "medium",
+                "fixSafety": "safe",
+                "platform": "darwin"
+              },
+              {
+                "id": "macos_sip",
+                "name": "System Integrity Protection",
+                "status": "pass",
+                "detail": "SIP is enabled",
+                "fix": "",
+                "severity": "critical",
+                "fixSafety": "manual-only",
+                "platform": "darwin"
+              },
+              {
+                "id": "macos_gatekeeper",
+                "name": "Gatekeeper active",
+                "status": "pass",
+                "detail": "Gatekeeper is enabled",
+                "fix": "",
+                "severity": "high",
+                "fixSafety": "manual-only",
+                "platform": "darwin"
+              },
+              {
+                "id": "macos_stealth_mode",
+                "name": "Firewall stealth mode",
+                "status": "warn",
+                "detail": "Stealth mode is disabled",
+                "fix": "Enable: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on",
+                "severity": "medium",
+                "fixSafety": "manual-only",
+                "platform": "darwin"
+              },
+              {
+                "id": "macos_remote_login",
+                "name": "Remote login disabled",
+                "status": "warn",
+                "detail": "Remote login (SSH) is enabled",
+                "fix": "Disable if not needed: sudo systemsetup -setremotelogin off",
+                "severity": "medium",
+                "fixSafety": "manual-only",
+                "platform": "darwin"
+              },
+              {
+                "id": "macos_guest_account",
+                "name": "Guest account disabled",
+                "status": "pass",
+                "detail": "Guest account is disabled",
+                "fix": "",
+                "severity": "low",
+                "fixSafety": "manual-only",
+                "platform": "darwin"
+              }
+            ]
+          }
+        }
+      },
+      "preview": "{\"overall\":\"needs-attention\",\"score\":63,\"timestamp\":1778259475679,\"categories\":{\"credentials\":{\"score\":50,\"checks\":[{\"id\":\"auth_pass\",\"name\":\"Admin password configured\",\"status\":\"fail\",\"detail\":\"AUTH_PASS is not configured\",\"fix\":\"Set AUTH_PASS in .env to a strong password (12+ characters)\",\"severit"
+    }
+  ],
+  "summary": {
+    "doctor_status": 400,
+    "doctor_ok": null,
+    "doctor_blocker": "OpenClaw is not installed or not reachable",
+    "security_status": 200,
+    "security_overall": "needs-attention",
+    "security_score": 63
+  }
+}

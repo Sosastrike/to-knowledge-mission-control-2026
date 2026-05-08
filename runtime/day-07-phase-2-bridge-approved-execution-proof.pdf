@@ -1,0 +1,261 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3709 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-2-bridge-approved-execution-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 2 — Bridge Approved Execution Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Bridge Session from persistence/gating to one approved scoped execution proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS \(persistence/audit proven, approved execution still blocked by owner approval\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Truth) Tj
+0 -12 Td
+(- Bridge session persistence is active.) Tj
+0 -12 Td
+(- Approval request creation is active.) Tj
+0 -12 Td
+(- Audit event persistence is active.) Tj
+0 -12 Td
+(- Scoped and out-of-scope execution attempts remain blocked while approval is pending.) Tj
+0 -12 Td
+(- No fake execution claim made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Logged in with authenticated operator session.) Tj
+0 -12 Td
+(2. Read Bridge Session status before request.) Tj
+0 -12 Td
+(3. Opened exact-scope Bridge Session request:) Tj
+0 -12 Td
+(   - scope: Mission Control report link confirmation only; no connector writes.) Tj
+0 -12 Td
+(4. Created explicit approval request through `/api/bridge/approval-requests`.) Tj
+0 -12 Td
+(5. Attempted scoped execution action \(`report_link_confirmation`\) and confirmed blocked.) Tj
+0 -12 Td
+(6. Attempted out-of-scope action \(`zapier_write`\) and confirmed blocked.) Tj
+0 -12 Td
+(7. Re-read Bridge Session status and confirmed pending owner approval state.) Tj
+0 -12 Td
+(8. Verified DB persistence rows exist for both approval requests and audit events.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands and Route Proof) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-2-bridge-proof.json`) Tj
+0 -12 Td
+(- API results:) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/bridge-session` -> `200`) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/bridge-session` -> `201` \(approval required; session created in) Tj
+0 -12 Td
+( pending state\)) Tj
+0 -12 Td
+(  - `POST /api/bridge/approval-requests` -> `201` \(approval request persisted\)) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/execute` scoped action -> `400` \(blocked; execution not accepte) Tj
+0 -12 Td
+(d\)) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/execute` out-of-scope action -> `400` \(blocked; execution not a) Tj
+0 -12 Td
+(ccepted\)) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/bridge-session` after requests -> `200` with pending approval st) Tj
+0 -12 Td
+(ate) Tj
+0 -12 Td
+(- DB persistence checks:) Tj
+0 -12 Td
+(  - `bridge_approval_requests` row count: `2`) Tj
+0 -12 Td
+(  - `bridge_audit_events` row count: `2`) Tj
+0 -12 Td
+(  - latest rows confirm `approval_requested` events exist for newly created approvals.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Execution State) Tj
+0 -12 Td
+(- `accepted_for_execution`: **false**) Tj
+0 -12 Td
+(- `execution_enabled`: **false**) Tj
+0 -12 Td
+(- blocking reason: **owner_approval_pending**) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Approval Action Package) Tj
+0 -12 Td
+(Owner-only step needed to promote this phase to GO:) Tj
+0 -12 Td
+(1. Open Mission Control.) Tj
+0 -12 Td
+(2. Go to Gateway -> Policies / Bridge.) Tj
+0 -12 Td
+(3. Approve the existing pending Agent Zero Bridge Session request \(do not create a duplicate pro) Tj
+0 -12 Td
+(mpt\).) Tj
+0 -12 Td
+(4. Keep scope restricted to the current safe action proof \(report-link confirmation path\).) Tj
+0 -12 Td
+(5. Notify Codex after approval so the scoped action execution + audit + expiry verification can ) Tj
+0 -12 Td
+(be run immediately.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Codex verification after owner approval:) Tj
+0 -12 Td
+(1. Re-run `POST /api/bridge/agent-zero/execute` with approved scoped action.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2011 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(2. Confirm `accepted_for_execution=true`.) Tj
+0 -12 Td
+(3. Confirm new `bridge_audit_events` execution row exists.) Tj
+0 -12 Td
+(4. Confirm session expiry enforcement by validating blocked behavior after expiry or explicit cl) Tj
+0 -12 Td
+(ose.) Tj
+0 -12 Td
+(5. Confirm out-of-scope action remains blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-2-bridge-approved-execution-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-2-bridge-approved-execution-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-2-bridge-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-2-bridge-session-post.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused runtime/API verification only for this phase.) Tj
+0 -12 Td
+(- Full suite not rerun in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `active_bridge_session_required` \(for execution-enabled state\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No new source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No source mutation requiring rollback in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets or token values printed.) Tj
+0 -12 Td
+(- No auth file contents printed.) Tj
+0 -12 Td
+(- `.env` unchanged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Bridge Session remains PARTIAL GO; increased confidence in persistence/audit readiness, but no) Tj
+0 -12 Td
+(t GO until one approved scoped action executes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 3 \(Telegram PDF live attachment proof\) and keep status honest:) Tj
+0 -12 Td
+(- GO only on real attachment send,) Tj
+0 -12 Td
+(- otherwise gated/blocked with exact reason.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004008 00000 n 
+0000004134 00000 n 
+0000006197 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6267
+%%EOF

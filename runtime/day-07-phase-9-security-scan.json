@@ -1,0 +1,94 @@
+{
+  "checked_at": "2026-05-08T16:58:42.631Z",
+  "base": "http://127.0.0.1:3337",
+  "status": 200,
+  "overall": "needs-attention",
+  "score": 63,
+  "failing_checks": [
+    {
+      "category": "credentials",
+      "id": "auth_pass",
+      "status": "fail",
+      "name": "Admin password configured",
+      "remediation": null
+    },
+    {
+      "category": "network",
+      "id": "allowed_hosts",
+      "status": "warn",
+      "name": "Host allowlist configured",
+      "remediation": null
+    },
+    {
+      "category": "network",
+      "id": "hsts_enabled",
+      "status": "warn",
+      "name": "HSTS enabled",
+      "remediation": null
+    },
+    {
+      "category": "network",
+      "id": "cookie_secure",
+      "status": "warn",
+      "name": "Secure cookies",
+      "remediation": null
+    },
+    {
+      "category": "openclaw",
+      "id": "config_found",
+      "status": "warn",
+      "name": "OpenClaw config found",
+      "remediation": null
+    },
+    {
+      "category": "runtime",
+      "id": "backup_recent",
+      "status": "warn",
+      "name": "Recent backup exists",
+      "remediation": null
+    },
+    {
+      "category": "runtime",
+      "id": "receipt_signing",
+      "status": "warn",
+      "name": "MCP audit receipt signing",
+      "remediation": null
+    },
+    {
+      "category": "os",
+      "id": "ntp_sync",
+      "status": "warn",
+      "name": "Time synchronization",
+      "remediation": null
+    },
+    {
+      "category": "os",
+      "id": "open_ports",
+      "status": "fail",
+      "name": "Listening ports",
+      "remediation": null
+    },
+    {
+      "category": "os",
+      "id": "auto_updates",
+      "status": "warn",
+      "name": "Automatic software updates",
+      "remediation": null
+    },
+    {
+      "category": "os",
+      "id": "macos_stealth_mode",
+      "status": "warn",
+      "name": "Firewall stealth mode",
+      "remediation": null
+    },
+    {
+      "category": "os",
+      "id": "macos_remote_login",
+      "status": "warn",
+      "name": "Remote login disabled",
+      "remediation": null
+    }
+  ],
+  "total_failing": 12
+}

@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-05-08T16:48:43.494Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "unauthenticated",
+  "results": [
+    {
+      "route": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "route": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 401,
+      "location": null,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "route": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "route": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "status": 401,
+      "location": null,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    }
+  ]
+}

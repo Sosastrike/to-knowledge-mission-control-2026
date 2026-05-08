@@ -1,0 +1,221 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3223 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-4-paperclip-owner-session-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 4 — Paperclip Owner Login / Session Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Paperclip beyond health/status-only and verify owner-session-backed read-only data routes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(service/runtime blocker reached before owner-session step\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Truth) Tj
+0 -12 Td
+(- Paperclip bridge status route responds.) Tj
+0 -12 Td
+(- Paperclip sandbox upstream is not running/reachable at loopback endpoint.) Tj
+0 -12 Td
+(- Companies/agents/issues routes remain blocked with `503`.) Tj
+0 -12 Td
+(- Owner login/session proof cannot proceed until sandbox service is available.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Ran Paperclip bridge probes:) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/status`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/companies`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/agents`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/issues`) Tj
+0 -12 Td
+(3. Verified local Paperclip listener availability on port `3100`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route/Runtime Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-4-paperclip-proof.json`) Tj
+0 -12 Td
+(- Endpoint results:) Tj
+0 -12 Td
+(  - status route -> `200` with degraded state) Tj
+0 -12 Td
+(  - companies -> `503`) Tj
+0 -12 Td
+(  - agents -> `503`) Tj
+0 -12 Td
+(  - issues -> `503`) Tj
+0 -12 Td
+(- Status payload blocker:) Tj
+0 -12 Td
+(  - `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- Local listener check:) Tj
+0 -12 Td
+(  - no process listening on `127.0.0.1:3100`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(1. `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(2. `paperclip_owner_session_required` \(still applicable after service recovery for owner-dashboa) Tj
+0 -12 Td
+(rd proof\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(Required before Paperclip GO proof can continue:) Tj
+0 -12 Td
+(1. Start Paperclip local/Tailnet service on approved endpoint \(`127.0.0.1:3100` or approved Tail) Tj
+0 -12 Td
+(net-only endpoint\).) Tj
+0 -12 Td
+(2. Keep Paperclip non-public.) Tj
+0 -12 Td
+(3. Confirm owner login path is available in Paperclip UI.) Tj
+0 -12 Td
+(4. Notify Codex once service is running and owner session is ready.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Codex verification immediately after unblock:) Tj
+0 -12 Td
+(1. Re-run status/companies/agents/issues routes.) Tj
+0 -12 Td
+(2. Confirm read-only data loads.) Tj
+0 -12 Td
+(3. Capture owner dashboard/roster/task-queue proof.) Tj
+0 -12 Td
+(4. Keep writes blocked unless Bridge Session + scoped adapter approval is active.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-4-paperclip-owner-session-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-4-paperclip-owner-session-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-4-paperclip-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused Paperclip runtime/route smoke in this phase.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 988 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active.) Tj
+0 -12 Td
+(- Paperclip sandbox upstream inactive at expected local endpoint.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No credentials, tokens, or auth files printed.) Tj
+0 -12 Td
+(- No raw paths exposed in owner-facing responses.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Paperclip remains PARTIAL/BLOCKED until sandbox service and owner session proof are both avail) Tj
+0 -12 Td
+(able.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 5 \(Drive/OneDrive adapter implementation proof\) while Paperclip service/) Tj
+0 -12 Td
+(start + owner session are pending.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003522 00000 n 
+0000003648 00000 n 
+0000004687 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4757
+%%EOF

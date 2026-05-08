@@ -1,0 +1,209 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3005 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-phase-6-agentmail-status-send-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 Phase 6 — AgentMail Incoming/Outgoing Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move AgentMail from vague/gated state to exact route-level proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL/BLOCKED \(adapter visibility proven; live send still blocked\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Authenticated to Mission Control operator session.) Tj
+0 -12 Td
+(2. Read execution adapter registry:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/execute`) Tj
+0 -12 Td
+(3. Attempted AgentMail send through registered execution adapter:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/execute` with `action=agentmail.send`) Tj
+0 -12 Td
+(4. Captured blocked reasons and safety contract fields.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Evidence file:) Tj
+0 -12 Td
+(  - `runtime/day-07-phase-6-agentmail-proof.json`) Tj
+0 -12 Td
+(- Results:) Tj
+0 -12 Td
+(  - adapter registry fetch -> `200`) Tj
+0 -12 Td
+(  - AgentMail execution attempt -> `423` \(blocked\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Verified Behavior) Tj
+0 -12 Td
+(- AgentMail adapter is present in execution registry \(`agentmail.send`\).) Tj
+0 -12 Td
+(- Adapter is currently blocked and does not fake completion.) Tj
+0 -12 Td
+(- Send attempt was rejected safely:) Tj
+0 -12 Td
+(  - `accepted_for_execution=false`) Tj
+0 -12 Td
+(  - Bridge Session still pending approval) Tj
+0 -12 Td
+(  - no external email sent) Tj
+0 -12 Td
+(  - no token leakage) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(1. `active_bridge_session_required`) Tj
+0 -12 Td
+(2. `owner_approval_pending`) Tj
+0 -12 Td
+(3. `agentmail_send_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Additional constraint status:) Tj
+0 -12 Td
+(- Allowed-domain send cannot be proven until connector + approved Bridge Session are both active) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(To progress AgentMail:) Tj
+0 -12 Td
+(1. Configure AgentMail send connector through approved secret path.) Tj
+0 -12 Td
+(2. Keep send scope restricted to domain allow-list.) Tj
+0 -12 Td
+(3. Approve scoped Bridge Session for one allowed-domain test send.) Tj
+0 -12 Td
+(4. Codex will verify:) Tj
+0 -12 Td
+(   - execution accepted,) Tj
+0 -12 Td
+(   - one allowed-domain send success,) Tj
+0 -12 Td
+(   - audit event,) Tj
+0 -12 Td
+(   - out-of-scope/non-allowlisted send still blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-07-phase-6-agentmail-status-send-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-6-agentmail-status-send-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-07-phase-6-agentmail-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused adapter/execution route smoke for AgentMail in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 666 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase \(verification + reporting\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No API key/token values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- AgentMail remains PARTIAL/BLOCKED pending connector config + approved scoped execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 07 Phase 7 \(YouTube live transcript proof\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003304 00000 n 
+0000003430 00000 n 
+0000004147 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4217
+%%EOF

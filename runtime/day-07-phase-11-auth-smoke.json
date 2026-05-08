@@ -1,0 +1,67 @@
+{
+  "checked_at": "2026-05-08T17:02:39.552Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "authenticated_session",
+  "results": [
+    {
+      "route": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T17:02:39.655Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,\"http_status\":200,\"version\":\"M v1.12\"},\"agent_zero_api_key_configured\":false,\"pe"
+    },
+    {
+      "route": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 423,
+      "preview": "{\"ok\":false,\"http_status\":423,\"mode\":\"agent_zero_bridge_execution_gateway\",\"action\":\"agentmail.send\",\"adapter_registered\":true,\"adapter\":{\"action\":\"agentmail.send\",\"category\":\"agentmail_delivery\",\"label\":\"AgentMail send\""
+    },
+    {
+      "route": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"provider\":\"telegram\",\"mode\":\"agent_zero_telegram_delivery_adapter\",\"status\":\"blocked\",\"connector_configured\":false,\"execution_enabled\":false,\"writes_enabled\":false,\"bridge_session_required\":true,\"external_wri"
+    },
+    {
+      "route": "/api/bridge/agent-zero/telegram/upload-report",
+      "method": "POST",
+      "status": 423,
+      "preview": "{\"ok\":false,\"provider\":\"telegram\",\"action\":\"telegram.upload_report_pdf\",\"status\":\"blocked\",\"accepted_for_execution\":false,\"execution_enabled\":false,\"writes_enabled\":false,\"bridge_session_required\":true,\"owner_approval_re"
+    },
+    {
+      "route": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_youtube_connector_status\",\"status\":\"limited\",\"metadata_enabled\":true,\"transcript_connector_proven\":false,\"blocked_reason\":\"youtube_transcript_connector_not_proven\",\"no_secrets_exposed\":true"
+    },
+    {
+      "route": "/api/gateway/space-agent/youtube/research",
+      "method": "POST",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_youtube_connector\",\"blocked_reason\":\"youtube_transcript_connector_not_proven\",\"packet\":{\"packet_id\":\"youtube_research_dqw4w9wgxcq\",\"schema\":\"youtube_research_packet_v1\",\"mode\":\"youtube_rese"
+    },
+    {
+      "route": "/api/bridge/paperclip/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"paperclip_status_read_only\",\"generated_at\":\"2026-05-08T17:02:39.764Z\",\"health\":\"degraded\",\"reachable\":false,\"configured\":false,\"endpoint\":\"loopback:3100\",\"ui_link\":\"http://127.0.0.1:3100\",\"workforce_su"
+    },
+    {
+      "route": "/api/bridge/paperclip/companies",
+      "method": "GET",
+      "status": 503,
+      "preview": "{\"ok\":false,\"mode\":\"paperclip_companies_read_only\",\"generated_at\":\"2026-05-08T17:02:39.770Z\",\"paperclip_reachable\":false,\"company_selector\":null,\"items\":[],\"count\":0,\"blocker\":\"paperclip_sandbox_service_not_running\",\"exe"
+    },
+    {
+      "route": "/api/firecrawl/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"status\":\"credential_required\",\"state\":\"CREDENTIAL_REQUIRED\",\"keyPresent\":false,\"sdkLoaded\":false,\"key_present\":false,\"sdk_loaded\":false,\"firecrawl_backend_truth\":{\"mission_control_process_has_firecrawl_api_ke"
+    },
+    {
+      "route": "/api/security-scan",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"overall\":\"needs-attention\",\"score\":63,\"timestamp\":1778259760096,\"categories\":{\"credentials\":{\"score\":50,\"checks\":[{\"id\":\"auth_pass\",\"name\":\"Admin password configured\",\"status\":\"fail\",\"detail\":\"AUTH_PASS is not configur"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-05-08T16:48:27.464Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "authenticated_session_cookie",
+  "results": [
+    {
+      "route": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T16:48:27.705Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,\"http_status\":200,\"version\":\"M v1.12\"},\"agent_zero_api_key_configured\":false,\"pe"
+    },
+    {
+      "route": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 400,
+      "preview": "{\"ok\":false,\"http_status\":400,\"mode\":\"agent_zero_bridge_execution_gateway\",\"action\":\"report_link_confirmation\",\"adapter_registered\":false,\"adapter\":null,\"bridge_session_required\":true,\"bridge_session\":{\"session_id\":null,"
+    },
+    {
+      "route": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"provider\":\"telegram\",\"mode\":\"agent_zero_telegram_delivery_adapter\",\"status\":\"blocked\",\"connector_configured\":false,\"execution_enabled\":false,\"writes_enabled\":false,\"bridge_session_required\":true,\"external_wri"
+    },
+    {
+      "route": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_youtube_connector_status\",\"status\":\"limited\",\"metadata_enabled\":true,\"transcript_connector_proven\":false,\"blocked_reason\":\"youtube_transcript_connector_not_proven\",\"no_secrets_exposed\":true"
+    }
+  ]
+}

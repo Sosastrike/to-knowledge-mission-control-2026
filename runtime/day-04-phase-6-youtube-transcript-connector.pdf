@@ -1,0 +1,211 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3219 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-6-youtube-transcript-connector) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 6 — YouTube Transcript Connector) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Implement a dedicated SpaceAgent YouTube connector route that supports metadata mode and transcr) Tj
+0 -12 Td
+(ipt-backed mode when connector/runtime prerequisites exist.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Completed) Tj
+0 -12 Td
+(### New connector module) Tj
+0 -12 Td
+(- `src/lib/space-agent-youtube-connector.ts`) Tj
+0 -12 Td
+(  - parses YouTube URL/video id from request) Tj
+0 -12 Td
+(  - fetches metadata via YouTube oEmbed) Tj
+0 -12 Td
+(  - attempts transcript segment retrieval via `youtube_transcript_api` only when runtime connect) Tj
+0 -12 Td
+(or is available) Tj
+0 -12 Td
+(  - returns `YouTubeResearchPacket` through existing packet contract) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### New API routes) Tj
+0 -12 Td
+(- `GET /api/gateway/space-agent/youtube/status`) Tj
+0 -12 Td
+(  - `src/app/api/gateway/space-agent/youtube/status/route.ts`) Tj
+0 -12 Td
+(- `POST /api/gateway/space-agent/youtube/research`) Tj
+0 -12 Td
+(  - `src/app/api/gateway/space-agent/youtube/research/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### New test coverage) Tj
+0 -12 Td
+(- `src/lib/space-agent-youtube-connector.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Behavior Contract) Tj
+0 -12 Td
+(1. Metadata mode always available if URL is valid and oEmbed returns data.) Tj
+0 -12 Td
+(2. Transcript mode only when transcript connector runtime is available.) Tj
+0 -12 Td
+(3. No full video download.) Tj
+0 -12 Td
+(4. No bypass of login/age/region/paywall/copyright protections.) Tj
+0 -12 Td
+(5. Truthful blocked reasons:) Tj
+0 -12 Td
+(   - `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(   - `youtube_transcript_unavailable`) Tj
+0 -12 Td
+(   - `youtube_transcript_lookup_failed`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands/Tests Run) Tj
+0 -12 Td
+(- `pnpm run typecheck` PASS) Tj
+0 -12 Td
+(- `pnpm run build` PASS) Tj
+0 -12 Td
+(- `pnpm run test` PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Build route manifest includes:) Tj
+0 -12 Td
+(  - `/api/gateway/space-agent/youtube/status`) Tj
+0 -12 Td
+(  - `/api/gateway/space-agent/youtube/research`) Tj
+0 -12 Td
+(- Connector test passes in full suite.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Live Status) Tj
+0 -12 Td
+(- Connector path is implemented and test-proven in code.) Tj
+0 -12 Td
+(- Transcript live proof is still environment-dependent on transcript runtime availability and au) Tj
+0 -12 Td
+(thenticated endpoint execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker \(for transcript GO claim\)) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven` \(until runtime availability + live transcript smoke ) Tj
+0 -12 Td
+(are confirmed in authorized environment\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/space-agent-youtube-connector.ts`) Tj
+0 -12 Td
+(- `src/lib/space-agent-youtube-connector.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/space-agent/youtube/status/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/space-agent/youtube/research/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending Day 04 commit batch.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 830 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Revert files above to restore pre-connector limited route state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No raw paths exposed in connector responses.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- YouTube track improved from vague LIMITED to explicit connector implementation + packet contra) Tj
+0 -12 Td
+(ct.) Tj
+0 -12 Td
+(- Not marked GO until transcript smoke succeeds in live authorized run.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Run one public transcript-enabled video request through the new research route in authorized e) Tj
+0 -12 Td
+(nvironment and capture packet/timestamp evidence.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003518 00000 n 
+0000003644 00000 n 
+0000004525 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4595
+%%EOF

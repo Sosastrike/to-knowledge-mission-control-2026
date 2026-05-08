@@ -1,0 +1,195 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2820 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-8-security-hardening-safe-implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 8 — Security Hardening Safe Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move security hardening forward with safe app-level work and explicit admin runbook items, witho) Tj
+0 -12 Td
+(ut destructive host changes or auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Confirmed security scan surfaces are present and protected:) Tj
+0 -12 Td
+(   - `/api/security-scan`) Tj
+0 -12 Td
+(   - `/api/security-scan/fix`) Tj
+0 -12 Td
+(2. Verified unauthenticated access is denied \(`401`\), preserving auth boundary.) Tj
+0 -12 Td
+(3. Reviewed code paths for fixable security checks:) Tj
+0 -12 Td
+(   - `src/lib/security-scan.ts`) Tj
+0 -12 Td
+(   - `src/app/api/security-scan/fix/route.ts`) Tj
+0 -12 Td
+(4. Confirmed no Day 04 changes weakened auth, expanded public exposure, or modified `.env`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- `curl` auth guard checks) Tj
+0 -12 Td
+(- `rg`/`sed` code-path review) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Open Items Reviewed) Tj
+0 -12 Td
+(- `auth_pass`) Tj
+0 -12 Td
+(- `hsts_enabled`) Tj
+0 -12 Td
+(- `exec_restricted`) Tj
+0 -12 Td
+(- `tools_deny_list`) Tj
+0 -12 Td
+(- `sandbox_mode`) Tj
+0 -12 Td
+(- `backup_recent`) Tj
+0 -12 Td
+(- `receipt_signing`) Tj
+0 -12 Td
+(- `firewall`) Tj
+0 -12 Td
+(- `open_ports`) Tj
+0 -12 Td
+(- `disk_encryption`) Tj
+0 -12 Td
+(- `linux_core_dumps`) Tj
+0 -12 Td
+(- `linux_mac_framework`) Tj
+0 -12 Td
+(- `linux_tmp_noexec`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe Implementation Status) Tj
+0 -12 Td
+(- App-level hardening logic exists and remains enforceable through authenticated fix route.) Tj
+0 -12 Td
+(- Local unauthenticated runner cannot execute admin-only fix operations safely.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `security_scan_admin_execution_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Run authenticated `/api/security-scan`.) Tj
+0 -12 Td
+(2. Apply only approved app-level fixes from `/api/security-scan/fix`.) Tj
+0 -12 Td
+(3. For host-level controls \(`firewall`, `open_ports`, `disk_encryption`, `linux_*`\), execute inf) Tj
+0 -12 Td
+(rastructure runbook outside app runtime.) Tj
+0 -12 Td
+(4. Re-run scan and capture score delta.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- Report artifact only for this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Security scan/fix test coverage remains green in `pnpm run test`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending Day 04 commit batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No security mutation was executed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 462 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No key/token values printed.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Security remains PARTIAL until authenticated scan/fix run and host-admin runbook actions are e) Tj
+0 -12 Td
+(xecuted with before/after evidence.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute authenticated scan/fix pass and capture hardening score improvement.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003119 00000 n 
+0000003245 00000 n 
+0000003758 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3828
+%%EOF

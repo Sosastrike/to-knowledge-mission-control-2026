@@ -1,0 +1,227 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3203 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-1-day03-closeout-validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 1 — Day 03 Closeout Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Close Day 03 cleanly by resolving the local validation gate failure and re-running the required ) Tj
+0 -12 Td
+(checks before continuing implementation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified current branch and workspace state.) Tj
+0 -12 Td
+(2. Resolved local `pnpm` execution gate:) Tj
+0 -12 Td
+(   - `corepack enable pnpm`) Tj
+0 -12 Td
+(   - verified `pnpm --version` returned `11.0.8`.) Tj
+0 -12 Td
+(3. Re-ran validation commands:) Tj
+0 -12 Td
+(   - `git diff --check`) Tj
+0 -12 Td
+(   - `pnpm run typecheck`) Tj
+0 -12 Td
+(   - `pnpm run build`) Tj
+0 -12 Td
+(   - `pnpm run test`) Tj
+0 -12 Td
+(4. Started local production server for route smoke:) Tj
+0 -12 Td
+(   - `PORT=3000 pnpm run start`) Tj
+0 -12 Td
+(5. Ran unauthenticated smoke against protected route families:) Tj
+0 -12 Td
+(   - all sampled Gateway/Bridge/SpaceAgent routes returned `401`.) Tj
+0 -12 Td
+(6. Ran route rendering smoke:) Tj
+0 -12 Td
+(   - `MISSION_CONTROL_BASE_URL=http://127.0.0.1:3000 node scripts/check-mission-control-route-re) Tj
+0 -12 Td
+(ndering.mjs`) Tj
+0 -12 Td
+(   - returned `ok: true` for local unauth contract behavior.) Tj
+0 -12 Td
+(7. Ran secret-pattern scan on modified files only \(no hits\).) Tj
+0 -12 Td
+(8. Checked `.env` diff status \(no `.env` changes\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- `corepack enable pnpm`) Tj
+0 -12 Td
+(- `pnpm --version`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm run test`) Tj
+0 -12 Td
+(- `PORT=3000 pnpm run start`) Tj
+0 -12 Td
+(- `MISSION_CONTROL_BASE_URL=http://127.0.0.1:3000 node scripts/check-mission-control-route-rende) Tj
+0 -12 Td
+(ring.mjs`) Tj
+0 -12 Td
+(- `curl` unauth status probes for protected routes) Tj
+0 -12 Td
+(- `git status --short -- .env .env.*`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- `typecheck`: PASS) Tj
+0 -12 Td
+(- `build`: PASS) Tj
+0 -12 Td
+(- `test`: PASS \(`138` test files, `1247` tests passed\)) Tj
+0 -12 Td
+(- unauthenticated protected routes: PASS \(`401` across sampled protected endpoints\)) Tj
+0 -12 Td
+(- route rendering smoke: PASS \(`ok: true`\)) Tj
+0 -12 Td
+(- secret scan on changed files: PASS \(no secret-pattern hits\)) Tj
+0 -12 Td
+(- `.env` diff check: PASS \(clean\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Authenticated Smoke Status) Tj
+0 -12 Td
+(- Local authenticated smoke is currently blocked by missing local API key seed in `.data/mission) Tj
+0 -12 Td
+(-control.db`:) Tj
+0 -12 Td
+(  - blocker: `mission_control_api_key_not_seeded`) Tj
+0 -12 Td
+(- This does **not** invalidate accepted Day 01 production authenticated smoke evidence already c) Tj
+0 -12 Td
+(onfirmed by owner.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `scripts/render-report-pdf.mjs`) Tj
+0 -12 Td
+(- Day 04 phase reports \(this batch\)) Tj
+0 -12 Td
+(- Implementation files already in Day 04 working set \(Telegram adapter + YouTube connector\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1336 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Local app server started successfully on `http://127.0.0.1:3000` for smoke.) Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No new commit yet in this phase closeout checkpoint.) Tj
+0 -12 Td
+(- Day 03 report commit remains previously pushed \(`fa66d00`\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Validation-only actions are reversible by stopping local server session.) Tj
+0 -12 Td
+(- No database mutation and no `.env` mutation were introduced in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No token values printed.) Tj
+0 -12 Td
+(- No credential file contents printed.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Day 03 validation blocker `ERR_PNPM_IGNORED_BUILDS` moved to resolved in local execution path.) Tj
+0 -12 Td
+(- Overall ecosystem remains PARTIAL GO pending owner/session/credential-dependent tracks.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Continue Day 04 implementation phases:) Tj
+0 -12 Td
+(  - Phase 2 owner-session package for Paperclip,) Tj
+0 -12 Td
+(  - Phase 3 Bridge Session approved execution package,) Tj
+0 -12 Td
+(  - delivery adapter implementation tracks and proof routes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003502 00000 n 
+0000003628 00000 n 
+0000005016 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5086
+%%EOF

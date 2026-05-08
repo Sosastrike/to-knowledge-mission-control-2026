@@ -1,0 +1,144 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2388 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-9-firecrawl-parallel-prep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 9 — Firecrawl Parallel Prep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Advance Firecrawl readiness in parallel without blocking main implementation lane and without ex) Tj
+0 -12 Td
+(posing credentials.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked Firecrawl credential presence by name only \(no value output\).) Tj
+0 -12 Td
+(2. Verified backend route presence in Mission Control:) Tj
+0 -12 Td
+(   - `src/app/api/firecrawl/[[...path]]/route.ts` exists.) Tj
+0 -12 Td
+(3. Checked dependency inventory for explicit Firecrawl SDK package.) Tj
+0 -12 Td
+(4. Preserved no-write/no-.env policy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- env presence check script \(`yes/no` only\)) Tj
+0 -12 Td
+(- file existence check for backend route) Tj
+0 -12 Td
+(- dependency presence check in `package.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- `firecrawl_credential_present`: `no`) Tj
+0 -12 Td
+(- `firecrawl_backend_route_present`: `yes`) Tj
+0 -12 Td
+(- `firecrawl_sdk_dependency_present`: `no`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blockers) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No credential values printed.) Tj
+0 -12 Td
+(- No auth file contents printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No crawl/write/login/private-page execution attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- Report artifact only for this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending Day 04 commit batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No runtime mutation performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Confirmed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Firecrawl remains BLOCKED at current level until credential + backend adapter + one live read-) Tj
+0 -12 Td
+(only smoke pass.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- As soon as approved credential source is connected, run exactly one read-only smoke on `https:) Tj
+0 -12 Td
+(//example.com/` and return ResearchPacket through SpaceAgent.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002681 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2751
+%%EOF

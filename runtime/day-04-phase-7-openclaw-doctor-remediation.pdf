@@ -1,0 +1,179 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3002 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-7-openclaw-doctor-remediation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 7 — OpenClaw+ Doctor Remediation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Continue OpenClaw+ health remediation from reachable state to lower unresolved issue count, with) Tj
+0 -12 Td
+(out destructive changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified OpenClaw+ doctor endpoint is present in route map:) Tj
+0 -12 Td
+(   - `/api/openclaw/doctor`) Tj
+0 -12 Td
+(2. Probed local endpoint access:) Tj
+0 -12 Td
+(   - unauthenticated call returns `401` \(protected as expected\).) Tj
+0 -12 Td
+(3. Reviewed doctor/fix code surfaces:) Tj
+0 -12 Td
+(   - `src/app/api/openclaw/doctor/route.ts`) Tj
+0 -12 Td
+(   - `src/lib/openclaw-doctor.ts`) Tj
+0 -12 Td
+(   - `src/lib/openclaw-doctor-fix.ts`) Tj
+0 -12 Td
+(4. Confirmed no destructive fallback actions were introduced in Day 04 code changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- `curl http://127.0.0.1:3000/api/openclaw/doctor` \(auth guard check\)) Tj
+0 -12 Td
+(- source inspection with `rg`/`sed`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Endpoint is reachable in app and properly protected \(`401` unauthenticated\).) Tj
+0 -12 Td
+(- Day 04 build includes `/api/openclaw/doctor`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blocker) Tj
+0 -12 Td
+(- Live doctor remediation execution requires authenticated admin path in runtime where OpenClaw+) Tj
+0 -12 Td
+( service context and credentials are available.) Tj
+0 -12 Td
+(- blocker: `openclaw_doctor_admin_execution_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe-Fix Policy Confirmation) Tj
+0 -12 Td
+(- No agent/skill/memory/report deletion performed.) Tj
+0 -12 Td
+(- No governance modification performed.) Tj
+0 -12 Td
+(- No `.env` mutation performed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Provide authenticated admin session to OpenClaw+ doctor route.) Tj
+0 -12 Td
+(2. Run doctor snapshot and return issue list.) Tj
+0 -12 Td
+(3. Codex applies only safe app/runtime fixes from categorized list.) Tj
+0 -12 Td
+(4. Re-run doctor and capture before/after unresolved counts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- Report artifact only for this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Existing doctor parser/fix tests continue passing in full test suite.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending Day 04 commit batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No runtime mutation performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No auth material exposed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- OpenClaw+ health remains PARTIAL until authenticated doctor remediation run completes with mea) Tj
+0 -12 Td
+(surable issue count reduction.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 114 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Execute authenticated doctor run and apply categorized safe fixes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003301 00000 n 
+0000003427 00000 n 
+0000003592 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3662
+%%EOF

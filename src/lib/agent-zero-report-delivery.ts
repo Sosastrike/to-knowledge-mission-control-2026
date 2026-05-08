@@ -159,6 +159,10 @@ function normalizeRequestedDelivery(input: unknown, ownerMessage?: string): Agen
 function deliveryChannels(requested: AgentZeroReportRequestedDelivery[], id: string): AgentZeroReportDeliveryChannel[] {
   const requestedProviders = new Map(requested.map((item) => [item.provider, item]))
   const missionControlUrl = `/api/bridge/agent-zero/reports/${id}`
+  const telegramConfigured = Boolean(
+    (process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_TOKEN || process.env.BOT_TOKEN)
+    && (process.env.AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID || process.env.TELEGRAM_CHAT_ID),
+  )
   return [
     {
       provider: 'mission_control',
@@ -175,7 +179,9 @@ function deliveryChannels(requested: AgentZeroReportRequestedDelivery[], id: str
       status: 'blocked',
       url: null,
       reason: requestedProviders.get('telegram')
-        ? 'no_approved_telegram_document_attachment_route'
+        ? (telegramConfigured
+            ? 'telegram_report_delivery_requires_bridge_session'
+            : 'telegram_report_delivery_adapter_not_configured')
         : 'telegram_attachment_not_requested',
       requires_bridge_session: true,
       external_write: true,

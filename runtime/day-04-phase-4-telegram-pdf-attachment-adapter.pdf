@@ -1,0 +1,231 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3329 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-4-telegram-pdf-attachment-adapter) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 4 — Telegram PDF Attachment Adapter) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Implement a real Telegram PDF attachment adapter path for Agent Zero report delivery, with truth) Tj
+0 -12 Td
+(ful blocked/completed states and strict safety controls.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Completed) Tj
+0 -12 Td
+(### New runtime adapter) Tj
+0 -12 Td
+(- Added `src/lib/agent-zero-telegram-delivery.ts`) Tj
+0 -12 Td
+(  - `getAgentZeroTelegramDeliveryStatus\(\)`) Tj
+0 -12 Td
+(  - `uploadAgentZeroReportToTelegram\(...\)`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### New API routes) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(  - file: `src/app/api/bridge/agent-zero/telegram/status/route.ts`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(  - file: `src/app/api/bridge/agent-zero/telegram/upload-report/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Delivery contract wiring) Tj
+0 -12 Td
+(- Updated Telegram delivery blocker mapping in:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-report-delivery.ts`) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-report-delivery.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-bridge.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Behavior Contract) Tj
+0 -12 Td
+(1. Requires preconfigured owner-channel token/chat mapping \(by name only; value never exposed\).) Tj
+0 -12 Td
+(2. Requires active approved Bridge Session for external send.) Tj
+0 -12 Td
+(3. Uses report id, not raw file path input.) Tj
+0 -12 Td
+(4. Returns truthful status:) Tj
+0 -12 Td
+(   - `blocked` when connector/session/approval/report is missing) Tj
+0 -12 Td
+(   - `failed` on Telegram API boundary failure) Tj
+0 -12 Td
+(   - `completed` only on real Telegram API success) Tj
+0 -12 Td
+(5. Returns `no_fake_done: true` and `no_tokens_exposed: true`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands/Tests Run) Tj
+0 -12 Td
+(- `pnpm run typecheck` \(PASS\)) Tj
+0 -12 Td
+(- `pnpm run build` \(PASS\)) Tj
+0 -12 Td
+(- `pnpm run test` \(PASS\)) Tj
+0 -12 Td
+(- target tests included:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-telegram-delivery.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-report-delivery.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Build output includes:) Tj
+0 -12 Td
+(  - `/api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(  - `/api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(- New adapter tests pass.) Tj
+0 -12 Td
+(- No raw path exposure introduced in adapter response contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Live Status) Tj
+0 -12 Td
+(- Adapter path is implemented.) Tj
+0 -12 Td
+(- Live send remains gated until connector credentials + approved Bridge Session are present.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers \(if live send attempted now\)) Tj
+0 -12 Td
+(- `telegram_report_delivery_adapter_not_configured` \(if token/chat missing\), or) Tj
+0 -12 Td
+(- `active_bridge_session_required` / `owner_approval_pending` \(if no active approved Bridge sess) Tj
+0 -12 Td
+(ion\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/agent-zero-telegram-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-telegram-delivery.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/telegram/status/route.ts`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1287 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `src/app/api/bridge/agent-zero/telegram/upload-report/route.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.test.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-bridge.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No public service exposure added.) Tj
+0 -12 Td
+(- External send only possible through scoped Bridge Session gating.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending commit in current Day 04 workstream.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Revert the files above to restore prior blocked-only Telegram behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Bot token values are never logged or returned.) Tj
+0 -12 Td
+(- No `.env` file mutation.) Tj
+0 -12 Td
+(- No auth file contents exposed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Telegram delivery moved from "no adapter route" to "implemented + gated + test-proven".) Tj
+0 -12 Td
+(- Not marked GO until one approved scoped send succeeds.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute one owner-approved Bridge-scoped Telegram report attachment and capture audited succes) Tj
+0 -12 Td
+(s.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003628 00000 n 
+0000003754 00000 n 
+0000005093 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5163
+%%EOF

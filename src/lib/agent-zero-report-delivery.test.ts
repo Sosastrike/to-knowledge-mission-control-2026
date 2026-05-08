@@ -86,7 +86,7 @@ describe('Agent Zero report delivery surface', () => {
 
     const telegram = result.report.delivery_channels.find((channel) => channel.provider === 'telegram')
     expect(telegram).toMatchObject({ requested: true, status: 'blocked' })
-    expect(telegram?.reason).toBe('no_approved_telegram_document_attachment_route')
+    expect(telegram?.reason).toBe('telegram_report_delivery_adapter_not_configured')
     expect(result.report.normal_reply).not.toMatch(/^Done\b/)
   })
 

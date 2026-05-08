@@ -674,6 +674,8 @@ export type AgentZeroReadOnlyContext = {
     telegram_reports_visible: boolean
     telegram_pdf_attachment_status: EcosystemAccessState
     telegram_pdf_attachment_blocked_reason: string | null
+    telegram_status_endpoint: '/api/bridge/agent-zero/telegram/status'
+    telegram_upload_report_endpoint: '/api/bridge/agent-zero/telegram/upload-report'
     mission_control_reports_visible: boolean
     mission_control_report_links_enabled: true
     google_drive_delivery_visible: boolean
@@ -2353,7 +2355,9 @@ export function buildAgentZeroReadOnlyContext(input: {
       agent_zero_pdf_download_endpoint: '/api/bridge/agent-zero/reports/:id/pdf',
       telegram_reports_visible: true,
       telegram_pdf_attachment_status: 'blocked',
-      telegram_pdf_attachment_blocked_reason: 'no_approved_telegram_document_attachment_route',
+      telegram_pdf_attachment_blocked_reason: 'telegram_report_delivery_adapter_not_configured',
+      telegram_status_endpoint: '/api/bridge/agent-zero/telegram/status',
+      telegram_upload_report_endpoint: '/api/bridge/agent-zero/telegram/upload-report',
       mission_control_reports_visible: true,
       mission_control_report_links_enabled: true,
       google_drive_delivery_visible: Boolean(input.googleDriveVisible),

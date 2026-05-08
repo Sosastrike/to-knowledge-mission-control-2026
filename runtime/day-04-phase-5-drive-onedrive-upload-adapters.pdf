@@ -1,0 +1,209 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3257 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-5-drive-onedrive-upload-adapters) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 5 — Google Drive / OneDrive Upload Adapters) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Drive/OneDrive from vague "blocked" state to precise provider-specific adapter status with ) Tj
+0 -12 Td
+(truthful gating and no fake upload claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Audited provider-specific adapter implementations:) Tj
+0 -12 Td
+(   - `src/lib/agent-zero-google-drive-delivery.ts`) Tj
+0 -12 Td
+(   - `src/lib/agent-zero-onedrive-delivery.ts`) Tj
+0 -12 Td
+(2. Audited provider-specific upload routes:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+(3. Verified contract behavior:) Tj
+0 -12 Td
+(   - provider separation is preserved \(no merged provider abstraction\).) Tj
+0 -12 Td
+(   - both adapters enforce blocked status until scoped execution adapter is configured.) Tj
+0 -12 Td
+(   - both adapters keep `no_fake_done: true` and no token exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Adapter State) Tj
+0 -12 Td
+(- Google Drive:) Tj
+0 -12 Td
+(  - status route exists) Tj
+0 -12 Td
+(  - upload route exists) Tj
+0 -12 Td
+(  - currently returns blocked with `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- OneDrive:) Tj
+0 -12 Td
+(  - status route exists) Tj
+0 -12 Td
+(  - upload route exists) Tj
+0 -12 Td
+(  - currently returns blocked with `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Bridge Session Contract) Tj
+0 -12 Td
+(- Both providers require Bridge Session for any external upload action.) Tj
+0 -12 Td
+(- Without scoped approval, upload actions remain blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands/Tests) Tj
+0 -12 Td
+(- Included in full validation pass:) Tj
+0 -12 Td
+(  - `pnpm run typecheck` PASS) Tj
+0 -12 Td
+(  - `pnpm run build` PASS) Tj
+0 -12 Td
+(  - `pnpm run test` PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Build route manifest includes:) Tj
+0 -12 Td
+(  - `/api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(  - `/api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+(- Adapter tests in suite pass:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-google-drive-delivery.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-onedrive-delivery.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- plus Bridge approval gating when connector config is later enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package \(when credentials are ready\)) Tj
+0 -12 Td
+(1. Configure provider auth through approved secret path.) Tj
+0 -12 Td
+(2. Approve minimal Bridge Session upload scope.) Tj
+0 -12 Td
+(3. Provide target folder identifier/name.) Tj
+0 -12 Td
+(4. Codex verifies one upload per provider with audit + safe link.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- No new code edits required in this phase; existing provider-specific skeletons confirmed.) Tj
+0 -12 Td
+(- Report artifact added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 753 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Pending Day 04 commit batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No runtime mutation performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No OAuth token values printed.) Tj
+0 -12 Td
+(- No credential files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Delivery clarity improved via explicit provider-specific readiness contract.) Tj
+0 -12 Td
+(- Google Drive and OneDrive remain PARTIAL/BLOCKED until real scoped upload proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute one scoped upload proof per provider after auth+Bridge scope become available.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003556 00000 n 
+0000003682 00000 n 
+0000004486 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4556
+%%EOF

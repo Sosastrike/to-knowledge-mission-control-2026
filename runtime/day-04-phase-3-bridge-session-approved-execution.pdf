@@ -1,0 +1,189 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3006 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-3-bridge-session-approved-execution) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 3 — Bridge Session Approved Execution) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Bridge Session from "gating proven" to "one scoped approved action executed", or emit the e) Tj
+0 -12 Td
+(xact owner approval package when approval is unavailable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified Bridge Session routes remain protected in local smoke:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/bridge-session`) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/bridge-session/audit`) Tj
+0 -12 Td
+(2. Confirmed unauthenticated requests are denied \(`401`\) and execution is not faked.) Tj
+0 -12 Td
+(3. Reviewed Bridge Session code paths and blockers:) Tj
+0 -12 Td
+(   - `owner_approval_pending`) Tj
+0 -12 Td
+(   - `active_bridge_session_required`) Tj
+0 -12 Td
+(4. Confirmed no unsafe fallback execution path was introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- `curl` route status probes) Tj
+0 -12 Td
+(- source inspection in `src/lib/agent-zero-bridge-session.ts` and related route handlers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Bridge Session endpoints are locked behind auth and do not execute unauthenticated actions.) Tj
+0 -12 Td
+(- Prior accepted evidence \(Day 02/03\) that approval-gating behavior is enforced remains consiste) Tj
+0 -12 Td
+(nt.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `owner_approval_pending` \(or `active_bridge_session_required` until a scoped session is approv) Tj
+0 -12 Td
+(ed\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package) Tj
+0 -12 Td
+(1. Approve one scoped Bridge Session for exactly one safe action:) Tj
+0 -12 Td
+(   - preferred: Mission Control report link confirmation.) Tj
+0 -12 Td
+(2. Scope must be explicit and minimal.) Tj
+0 -12 Td
+(3. After approval, Codex will run exactly one action and verify:) Tj
+0 -12 Td
+(   - `accepted_for_execution=true`) Tj
+0 -12 Td
+(   - audit record persisted) Tj
+0 -12 Td
+(   - session expiration) Tj
+0 -12 Td
+(   - out-of-scope action still blocked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety/Policy Confirmation) Tj
+0 -12 Td
+(- No broad connector execution.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No external farmer execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- Report artifact only for this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Covered by existing Bridge/Agent Zero execution tests in full test suite \(PASS\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No new commit yet for this phase checkpoint.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No runtime mutation performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No auth/session internals exposed.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 373 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Bridge Session remains PARTIAL GO until one owner-approved scoped execution completes end-to-e) Tj
+0 -12 Td
+(nd with audit + expiry proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute the owner-approved scoped action and capture live audited completion evidence.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003305 00000 n 
+0000003431 00000 n 
+0000003855 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3925
+%%EOF

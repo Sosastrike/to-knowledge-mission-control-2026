@@ -1,0 +1,197 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3096 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-2-paperclip-owner-session-implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 2 — Paperclip Owner Session Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Advance Paperclip from service-health-only evidence toward owner login/session proof, and produc) Tj
+0 -12 Td
+(e an exact owner action package when automation cannot complete owner-authenticated steps.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified Paperclip bridge/state code and default endpoint behavior in `src/lib/paperclip-brid) Tj
+0 -12 Td
+(ge.ts`.) Tj
+0 -12 Td
+(2. Confirmed expected local endpoint baseline:) Tj
+0 -12 Td
+(   - default local URL: `http://127.0.0.1:3100`) Tj
+0 -12 Td
+(3. Probed Paperclip local service endpoints:) Tj
+0 -12 Td
+(   - `GET http://127.0.0.1:3100/api/health`) Tj
+0 -12 Td
+(   - `GET http://127.0.0.1:3100/login`) Tj
+0 -12 Td
+(4. Confirmed current automation environment could not establish owner-authenticated Paperclip se) Tj
+0 -12 Td
+(ssion proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands Used) Tj
+0 -12 Td
+(- `rg`/`sed` inspection of Paperclip bridge implementation) Tj
+0 -12 Td
+(- `curl` probes to Paperclip local endpoints) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Local Paperclip endpoint probes returned `000` \(connection unavailable in current runner conte) Tj
+0 -12 Td
+(xt\).) Tj
+0 -12 Td
+(- Owner-authenticated Paperclip UI/login flow could not be proven in this automation window.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package) Tj
+0 -12 Td
+(1. Open Paperclip URL in owner-authenticated session \(local/Tailnet instance used by deployment\)) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+(2. Complete owner sign-in flow.) Tj
+0 -12 Td
+(3. Confirm owner can open:) Tj
+0 -12 Td
+(   - company dashboard) Tj
+0 -12 Td
+(   - agent roster) Tj
+0 -12 Td
+(   - task queue) Tj
+0 -12 Td
+(4. Notify Codex after login completion.) Tj
+0 -12 Td
+(5. Codex follow-up verification immediately after owner login:) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/status`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/companies`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/agents`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/issues`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety/Policy Confirmation) Tj
+0 -12 Td
+(- No public exposure added.) Tj
+0 -12 Td
+(- Writes/task creation remain blocked unless Bridge Session + adapter path is active.) Tj
+0 -12 Td
+(- Paperclip remains positioned before OpenClaw+ in operating chain.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- Report artifact only for this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Covered indirectly by existing Paperclip bridge and route tests in `pnpm run test` \(PASS\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No new commit yet for this phase checkpoint.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- No runtime mutation performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 488 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No auth tokens printed.) Tj
+0 -12 Td
+(- No session cookies printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Paperclip remains PARTIAL GO until owner login + read-only data route proof is complete.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute owner login action package, then re-run Paperclip bridge read routes with authenticate) Tj
+0 -12 Td
+(d proof.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003395 00000 n 
+0000003521 00000 n 
+0000004060 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4130
+%%EOF

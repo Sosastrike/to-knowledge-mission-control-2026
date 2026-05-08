@@ -1,0 +1,364 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2147 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(MISSION CONTROL BUTTON HARDENING REPORT) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Generated: 2026-05-08) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(OBJECTIVE) Tj
+T*
+() Tj
+T*
+(Begin the button-by-button hardening pass for Mission Control so visible actions are not fake,) Tj
+T*
+(stale, or misleading.) Tj
+T*
+() Tj
+T*
+(Rule applied:) Tj
+T*
+() Tj
+T*
+(- A button may be live only when it maps to a real route.) Tj
+T*
+(- A read-only button may only call a read-only route.) Tj
+T*
+(- A protected action must be Bridge Session-gated or owner-approval-gated.) Tj
+T*
+(- A missing backend, missing credential, or unavailable integration must render as blocked/disabled) Tj
+T*
+(  with an exact blocker.) Tj
+T*
+(- No fake Done, fake live status, fake upload, fake send, or fake execution state is allowed.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(SCOPE COMPLETED IN THIS SLICE) Tj
+T*
+() Tj
+T*
+(This slice focused on the newly updated Gateway / Agent Hub / SpaceAgent Browser Automation surface) Tj
+T*
+(and the central Mission Control button contract registry.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(CHANGES MADE) Tj
+T*
+() Tj
+T*
+(| File | Change |) Tj
+T*
+(|---|---|) Tj
+T*
+(| `src/app/gateway/status/page.tsx` | Added a real read-only Gateway Status page so the Agent Hub header) Tj
+T*
+(button no longer points at a loose route target. |) Tj
+T*
+(| `src/lib/button-contracts-route.test.ts` | Added a route-contract test that fails if any LIVE or) Tj
+T*
+(READ_ONLY button contract points at a missing API route. |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(BUTTON CONTRACT STATUS) Tj
+T*
+() Tj
+T*
+(The existing `GET /api/bridge/button-contracts` contract already classifies Mission Control actions) Tj
+T*
+(into allowed states:) Tj
+T*
+() Tj
+T*
+(- `LIVE`) Tj
+T*
+(- `READ_ONLY`) Tj
+T*
+(- `BACKEND_REQUIRED`) Tj
+T*
+(- `CREDENTIAL_REQUIRED`) Tj
+T*
+(- `OWNER_APPROVAL_REQUIRED`) Tj
+T*
+(- `DISABLED`) Tj
+T*
+() Tj
+T*
+(The new test verifies:) Tj
+T*
+() Tj
+T*
+(- all `LIVE` and `READ_ONLY` API endpoints physically exist in the Next.js route tree;) Tj
+T*
+(- blocked, credential-required, owner-approval-required, or disabled actions are not executable;) Tj
+T*
+(- `fake_success_allowed` is false for every contract.) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1869 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+() Tj
+T*
+() Tj
+T*
+(CONCRETE ISSUE FOUND) Tj
+T*
+() Tj
+T*
+(| Issue | Fix |) Tj
+T*
+(|---|---|) Tj
+T*
+(| The Agent Hub header had a `Gateway status` button targeting `/gateway/status`, but no dedicated page) Tj
+T*
+(existed at that route. | Added `/gateway/status` as a real read-only production status page. |) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(GATEWAY STATUS PAGE BEHAVIOR) Tj
+T*
+() Tj
+T*
+(The new `/gateway/status` page shows:) Tj
+T*
+() Tj
+T*
+(- Gateway status summary.) Tj
+T*
+(- Agent Zero status and blockers.) Tj
+T*
+(- Hermes status and blockers.) Tj
+T*
+(- Bridge / MCP status.) Tj
+T*
+(- OpenClaw+ / Build-Wiki / Farmer status.) Tj
+T*
+(- Button hardening rule.) Tj
+T*
+(- Safety confirmation.) Tj
+T*
+() Tj
+T*
+(It does not trigger writes, uploads, sends, Zapier, HeyGen, SMB, farmer execution, or connector) Tj
+T*
+(execution.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(VALIDATION) Tj
+T*
+() Tj
+T*
+(| Check | Result |) Tj
+T*
+(|---|---|) Tj
+T*
+(| Direct TypeScript check with local binary | PASS |) Tj
+T*
+(| Focused Vitest suite | PASS, 4 files / 10 tests |) Tj
+T*
+(| Production build with Next.js | PASS |) Tj
+T*
+(| `.env` changes | none |) Tj
+T*
+(| Secrets printed | no |) Tj
+T*
+(| Raw auth files printed | no |) Tj
+T*
+(| Fake buttons added | no |) Tj
+T*
+() Tj
+T*
+(Focused tests run:) Tj
+T*
+() Tj
+T*
+(- `src/lib/button-contracts-route.test.ts`) Tj
+T*
+(- `src/lib/gateway-agent-hub.test.ts`) Tj
+T*
+(- `src/lib/space-agent-browser-automation.test.ts`) Tj
+T*
+(- `src/app/gateway-route-alias.test.ts`) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(CURRENT BLOCKER) Tj
+T*
+() Tj
+T*
+(Production SSH currently requires a fresh Tailscale authorization check. Because of that, this slice) Tj
+T*
+(can be pushed to the remote branch, but the live production host cannot be pulled/restarted/smoked) Tj
+T*
+(by Codex until that authorization is restored.) Tj
+T*
+() Tj
+T*
+(Exact blocker:) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1476 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(`tailscale_ssh_reauthorization_required_for_production_restart_and_smoke`) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(WHAT I NEED FROM OWNER IF YOU WANT THIS LIVE IMMEDIATELY) Tj
+T*
+() Tj
+T*
+(Approve/complete the Tailscale SSH authorization prompt for the production host, then I can:) Tj
+T*
+() Tj
+T*
+(1. pull the pushed commit on production;) Tj
+T*
+(2. rebuild if needed;) Tj
+T*
+(3. restart Mission Control;) Tj
+T*
+(4. run authenticated route smoke;) Tj
+T*
+(5. run unauthenticated 401/403 smoke;) Tj
+T*
+(6. verify `/gateway/status`, `/gateway/agent-hub`, and the button contract route from production.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(NO-SECRETS CONFIRMATION) Tj
+T*
+() Tj
+T*
+(- No tokens printed.) Tj
+T*
+(- No API keys printed.) Tj
+T*
+(- No auth files printed.) Tj
+T*
+(- No `.env` changes made.) Tj
+T*
+(- No SMB mount.) Tj
+T*
+(- No Fork 2.) Tj
+T*
+(- No Zapier writes.) Tj
+T*
+(- No HeyGen generation.) Tj
+T*
+(- No external farmers.) Tj
+T*
+(- No public local service exposure added.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(UPDATED DECISION) Tj
+T*
+() Tj
+T*
+(Gateway / Agent Hub button hardening: **PARTIAL GO**.) Tj
+T*
+() Tj
+T*
+(Reason: code-level route contract and local build/test proof passed, but live production) Tj
+T*
+(restart/smoke is blocked by Tailscale SSH re-authorization.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(EXACT NEXT STEP) Tj
+T*
+() Tj
+T*
+(After production SSH authorization is restored, deploy this button-hardening patch to the live host) Tj
+T*
+(and run production smoke.) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002452 00000 n 
+0000002578 00000 n 
+0000004499 00000 n 
+0000004625 00000 n 
+0000006153 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6223
+%%EOF

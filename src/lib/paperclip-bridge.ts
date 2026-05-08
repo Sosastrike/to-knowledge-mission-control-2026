@@ -3244,6 +3244,7 @@ function paperclipEndpointCandidates(rawValue?: string | null): ResolvedPapercli
   const explicit = rawValue || process.env.PAPERCLIP_API_URL || process.env.PAPERCLIP_BASE_URL
   if (explicit) return [resolvePaperclipEndpoint(explicit)]
   const endpoints = [resolvePaperclipEndpoint(DEFAULT_PAPERCLIP_BASE_URL)]
+  for (const baseUrl of paperclipTailnetFallbackBaseUrls()) endpoints.push(resolvePaperclipEndpoint(baseUrl))
   for (const address of tailnetIpv4Addresses()) endpoints.push(resolvePaperclipEndpoint(`http://${address}:3100`))
   const seen = new Set<string>()
   return endpoints.filter((endpoint) => {
@@ -3252,6 +3253,32 @@ function paperclipEndpointCandidates(rawValue?: string | null): ResolvedPapercli
     seen.add(key)
     return true
   })
+}
+
+function paperclipTailnetFallbackBaseUrls(): string[] {
+  const values = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.MC_PUBLIC_BASE_URL,
+    process.env.APP_URL,
+    process.env.MISSION_CONTROL_PUBLIC_URL,
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+
+  const candidates: string[] = []
+  for (const value of values) {
+    try {
+      const parsed = new URL(value)
+      const host = parsed.hostname.toLowerCase()
+      if (!host.startsWith('100.')) continue
+      const protocol = parsed.protocol === 'https:' ? 'https:' : 'http:'
+      const port = process.env.PAPERCLIP_TAILNET_PORT?.trim() || '3100'
+      candidates.push(`${protocol}//${host}:${port}`)
+    } catch {
+      // Ignore invalid public URL env entries.
+    }
+  }
+  return candidates
 }
 
 function tailnetIpv4Addresses(): string[] {

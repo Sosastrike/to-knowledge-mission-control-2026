@@ -80,6 +80,36 @@ describe('Paperclip bridge payloads', () => {
     expectOwnerSafe(payload)
   })
 
+  it('falls back to Mission Control tailnet host when loopback is unreachable', async () => {
+    const priorPublicUrl = process.env.MC_PUBLIC_BASE_URL
+    delete process.env.PAPERCLIP_API_URL
+    delete process.env.PAPERCLIP_BASE_URL
+    process.env.MC_PUBLIC_BASE_URL = 'http://100.116.35.95:3337'
+
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.startsWith('http://127.0.0.1:3100/')) throw new Error('connection refused')
+      if (url.startsWith('http://100.116.35.95:3100/')) return jsonResponse({ status: 'ok', version: '0.0.0' })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    try {
+      const payload = await buildPaperclipStatusPayload({ generatedAt: GENERATED_AT, fetchImpl })
+      expect(payload).toMatchObject({
+        health: 'degraded',
+        reachable: true,
+        configured: true,
+        endpoint: 'tailnet:3100',
+        ui_link: 'http://100.116.35.95:3100',
+      })
+      expect(fetchImpl).toHaveBeenCalled()
+      expectOwnerSafe(payload)
+    } finally {
+      if (typeof priorPublicUrl === 'string') process.env.MC_PUBLIC_BASE_URL = priorPublicUrl
+      else delete process.env.MC_PUBLIC_BASE_URL
+    }
+  })
+
   it('sanitizes read-only company, agent, and issue inventory', async () => {
     const fetchImpl = vi.fn(async (input: string | URL | Request) => {
       const url = String(input)

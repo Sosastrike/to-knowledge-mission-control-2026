@@ -1,0 +1,183 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3513 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-paperclip-sandbox-service-recovery) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-2 — Paperclip Sandbox Service Recovery) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Paperclip from `paperclip_sandbox_service_not_running` toward live health proof in local/Ta) Tj
+0 -12 Td
+(ilnet-safe mode.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL+ \(Tailnet Paperclip health is reachable directly, and Mission Control now includes an au) Tj
+0 -12 Td
+(tomatic Tailnet fallback candidate derived from the Mission Control public host; owner login pro) Tj
+0 -12 Td
+(of is still pending\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Probed local loopback Paperclip health endpoint.) Tj
+0 -12 Td
+(2. Probed Tailnet Paperclip health endpoint.) Tj
+0 -12 Td
+(3. Implemented Paperclip endpoint candidate fallback in runtime code:) Tj
+0 -12 Td
+(   - when loopback is unavailable and no explicit Paperclip endpoint is set,) Tj
+0 -12 Td
+(   - derive Tailnet host from `NEXT_PUBLIC_APP_URL` / `MC_PUBLIC_BASE_URL` / `APP_URL` / `MISSIO) Tj
+0 -12 Td
+(N_CONTROL_PUBLIC_URL`,) Tj
+0 -12 Td
+(   - probe `http\(s\)://<tailnet-host>:3100`.) Tj
+0 -12 Td
+(4. Added regression test covering loopback failure + Tailnet fallback success.) Tj
+0 -12 Td
+(5. Confirmed no public exposure changes were introduced.) Tj
+0 -12 Td
+(6. Prepared exact owner/admin runtime wiring package for cases where environment requires explic) Tj
+0 -12 Td
+(it endpoint pinning.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- `http://127.0.0.1:3100/api/health` -> unreachable from this runtime context.) Tj
+0 -12 Td
+(- `http://100.116.35.95:3100/api/health` -> `200` with `{"status":"ok","deploymentMode":"authent) Tj
+0 -12 Td
+(icated","bootstrapStatus":"ready",...}`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Interpretation) Tj
+0 -12 Td
+(- Paperclip service is reachable on Tailnet endpoint.) Tj
+0 -12 Td
+(- Bridge runtime now has a safe automatic Tailnet fallback path for Paperclip health checks.) Tj
+0 -12 Td
+(- Paperclip remains non-GO because owner login/session and live workforce data routes are still ) Tj
+0 -12 Td
+(not proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Set Mission Control runtime Paperclip endpoint via service manager \(not `.env` file edits\):) Tj
+0 -12 Td
+(   - `PAPERCLIP_API_URL=http://100.116.35.95:3100`) Tj
+0 -12 Td
+(2. Restart Mission Control runtime.) Tj
+0 -12 Td
+(3. Re-run:) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/status`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/companies`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/agents`) Tj
+0 -12 Td
+(   - `GET /api/bridge/paperclip/issues`) Tj
+0 -12 Td
+(4. Keep writes blocked until Bridge Session scope and adapter proof are complete.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blockers) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+(- `paperclip_auth_required_or_not_configured` \(for company/agent/issue reads when owner session ) Tj
+0 -12 Td
+(is absent\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmations) Tj
+0 -12 Td
+(- No public exposure added.) Tj
+0 -12 Td
+(- No production secrets used.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/paperclip-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/paperclip-bridge.test.ts`) Tj
+0 -12 Td
+(- `runtime/next-paperclip-sandbox-service-recovery.md`) Tj
+0 -12 Td
+(- `runtime/next-paperclip-sandbox-service-recovery.pdf`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 181 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(After endpoint/runtime wiring, re-run Paperclip bridge read-only routes and owner-login lane.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003812 00000 n 
+0000003938 00000 n 
+0000004170 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4240
+%%EOF

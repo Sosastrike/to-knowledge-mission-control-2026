@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-05-08T23:47:28.210Z",
+  "base": "http://100.116.35.95:3337",
+  "api_key_present_locally": true,
+  "authed": [
+    {
+      "path": "/api/bridge/capability-matrix",
+      "method": "GET",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/paperclip/status",
+      "method": "GET",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/upload-report",
+      "method": "POST",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/upload-report",
+      "method": "POST",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "auth": true,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    }
+  ],
+  "unauth": [
+    {
+      "path": "/api/bridge/capability-matrix",
+      "method": "GET",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/paperclip/status",
+      "method": "GET",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/upload-report",
+      "method": "POST",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/upload-report",
+      "method": "POST",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    },
+    {
+      "path": "/api/gateway/space-agent/youtube/status",
+      "method": "GET",
+      "auth": false,
+      "status": 401,
+      "location": null,
+      "mode": null,
+      "error": "Unauthorized",
+      "blocker": null
+    }
+  ],
+  "pages": [
+    {
+      "path": "/gateway",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "path": "/gateway/agent-hub",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "path": "/agent-network",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "path": "/agents",
+      "status": 307,
+      "location": "/login"
+    }
+  ],
+  "blocker_if_auth_fails": "mission_control_api_key_not_seeded"
+}

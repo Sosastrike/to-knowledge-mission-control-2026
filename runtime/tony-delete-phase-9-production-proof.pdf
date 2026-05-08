@@ -1,0 +1,138 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2314 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-9-production-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 9 - Deploy/Restart/Production Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Deploy Tony active-removal changes and verify production behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PARTIAL \(validation complete; commit/push/deploy step pending in this report snapshot\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Completed local validation gates:) Tj
+0 -12 Td
+(  - typecheck pass) Tj
+0 -12 Td
+(  - build pass) Tj
+0 -12 Td
+(  - full tests pass) Tj
+0 -12 Td
+(  - protected-file invariant pass) Tj
+0 -12 Td
+(  - `.env` diff clean) Tj
+0 -12 Td
+(- Ran production route rendering smoke script against live URL.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Smoke Result) Tj
+0 -12 Td
+(- Auth-gated pages and aliases behaved as protected \(`/login` redirect or `401`\) on unauthentica) Tj
+0 -12 Td
+(ted paths.) Tj
+0 -12 Td
+(- API-key authenticated smoke for some Bridge endpoints remained `401`, indicating key/session m) Tj
+0 -12 Td
+(ismatch in this environment.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending` / `active_bridge_session_required` for write-path live proofs) Tj
+0 -12 Td
+(- `mission_control_api_key_not_seeded` \(for authenticated live route checks from this runner con) Tj
+0 -12 Td
+(text\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No restart executed in this phase snapshot.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending \(to be completed at end of this execution batch\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Planned rollback command after commit: `git revert <commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 92% \(awaiting deploy + owner-side visual/routing confirmations\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Commit/push this Tony deletion batch, then perform production restart/smoke on the deployed re) Tj
+0 -12 Td
+(vision.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002607 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2677
+%%EOF

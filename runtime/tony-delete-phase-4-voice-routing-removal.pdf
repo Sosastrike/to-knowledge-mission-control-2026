@@ -1,0 +1,126 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2031 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-4-voice-routing-removal) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 4 - Voice Routing Removal) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Remove Tony as default runtime/voice identity and enforce Agent Zero as active runtime identity.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PASS \(code-level runtime identity migration complete\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Updated runtime service identity fallback mapping:) Tj
+0 -12 Td
+(  - `claudeclaw.service` now resolves to `agent_zero` \(not `tony`\).) Tj
+0 -12 Td
+(- Updated process-scan fallback name from `tony` to `agent_zero`.) Tj
+0 -12 Td
+(- Updated service unit reverse mapping for fallback status rendering.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/claudeclaw-runtime-status.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Runtime identity normalization no longer assigns `tony` as default active unit identity.) Tj
+0 -12 Td
+(- Active fallback identity is now Agent Zero.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- External provider display metadata may still require owner-side rename:) Tj
+0 -12 Td
+(  - `owner_BotFather_rename_required` \(if applicable to UI branding\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Full suite passed after change \(`138` files / `1250` tests\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services / Commits / Rollback) Tj
+0 -12 Td
+(- Service restart deferred to deploy phase.) Tj
+0 -12 Td
+(- Commit pending final phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No provider keys printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 62% -> 70%.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Migrate remaining Tony-branded controller/report contracts to Agent Zero/Gateway-neutral namin) Tj
+0 -12 Td
+(g.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002324 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2394
+%%EOF

@@ -1,0 +1,187 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3301 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-1-active-inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 1 - Active Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Inventory every active Tony reference and classify each as delete, migrate, rename, or historica) Tj
+0 -12 Td
+(l-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PASS \(inventory complete\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Searched runtime/UI/API/controller/test surfaces for `tony`, `tony_legacy`, `tony_v2`.) Tj
+0 -12 Td
+(- Split findings into:) Tj
+0 -12 Td
+(  - active runtime reference,) Tj
+0 -12 Td
+(  - owner-facing label,) Tj
+0 -12 Td
+(  - compatibility/historical-only,) Tj
+0 -12 Td
+(  - test fixture.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Active References Identified \(actioned in next phases\)) Tj
+0 -12 Td
+(| Area | Example Locations | Classification | Required Action |) Tj
+0 -12 Td
+(|---|---|---|---|) Tj
+0 -12 Td
+(| Gateway role matrix and nodes | `src/lib/gateway-model.ts` | active runtime + owner-facing | d) Tj
+0 -12 Td
+(elete active Tony node |) Tj
+0 -12 Td
+(| Agent Hub owner text | `src/components/gateway-agent-hub/AgentHubControlCenter.tsx` | owner-fa) Tj
+0 -12 Td
+(cing label | remove Tony text |) Tj
+0 -12 Td
+(| Legacy provider projection | `src/app/api/bridge/providers/route.ts` | active route logic | re) Tj
+0 -12 Td
+(move Tony provider output |) Tj
+0 -12 Td
+(| Capability matrix retired agent section | `src/app/api/bridge/capability-matrix/route.ts` | ow) Tj
+0 -12 Td
+(ner-facing status surface | remove Tony from current-state payload |) Tj
+0 -12 Td
+(| Agent Zero/Hermes response contracts | `src/lib/agent-zero-bridge.ts`, `src/lib/hermes-bridge.) Tj
+0 -12 Td
+(ts` | owner-facing controller language | migrate wording to "not part of active system" |) Tj
+0 -12 Td
+(| Report contract naming/aliases | `src/lib/executive-reports.ts`, `src/app/api/reports/route.ts) Tj
+0 -12 Td
+(` | active report pipeline | migrate to neutral naming |) Tj
+0 -12 Td
+(| Runtime identity fallback | `src/lib/claudeclaw-runtime-status.ts` | active runtime identity |) Tj
+0 -12 Td
+( switch default runtime identity to Agent Zero |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Historical/Non-Active References) Tj
+0 -12 Td
+(- Legacy historical records remain in older runtime artifacts and test prompts.) Tj
+0 -12 Td
+(- These are not active route targets after this deletion batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands) Tj
+0 -12 Td
+(- `rg -n "tony|Tony|tony_legacy|tony_v2" src/app src/lib src/components`) Tj
+0 -12 Td
+(- `rg -n "tony|Tony|tony_legacy|tony_v2" public/designer-mission-control/src public/designer-mis) Tj
+0 -12 Td
+(sion-control/design/gateway`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Inventory mapped to concrete edit targets completed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- None for inventory.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Not applicable in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services / Commits / Rollback) Tj
+0 -12 Td
+(- No service changes in this phase.) Tj
+0 -12 Td
+(- Commit pending later phases.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 296 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 20% -> 35% \(inventory complete, implementation started\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute active runtime removal from Gateway/Mission Control surfaces.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003600 00000 n 
+0000003726 00000 n 
+0000004073 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4143
+%%EOF

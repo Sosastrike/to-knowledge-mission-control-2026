@@ -1,0 +1,132 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2252 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-7-report-language-cleanup) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 7 - Report and Owner Language Cleanup) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Remove Tony from current owner-facing report and runtime language.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PASS \(active report/runtime language updated\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Removed Tony-specific wording from active Agent Hub policy/facts.) Tj
+0 -12 Td
+(- Removed Tony wording from Agent Network active topology notice.) Tj
+0 -12 Td
+(- Updated Agent Zero and Hermes contract responses to "not part of active system".) Tj
+0 -12 Td
+(- Updated capability and provider summaries to avoid Tony legacy framing as current state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+(- `src/components/agent-network/AgentNetworkClient.tsx`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/hermes-bridge.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/capability-matrix/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/hermes/status/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Current active runtime surfaces no longer present Tony as a current subsystem row/authority.) Tj
+0 -12 Td
+(- Commander language is Agent Zero-only in active responses.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Historical appendices and old runtime artifacts still include legacy Tony references.) Tj
+0 -12 Td
+(- These remain historical-only and outside active runtime UI path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Contract tests updated and passing.) Tj
+0 -12 Td
+(- Full suite passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services / Commits / Rollback) Tj
+0 -12 Td
+(- Pending commit/deploy phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret leakage.) Tj
+0 -12 Td
+(- No `.env` modifications.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 84% -> 88%.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Run regression/gauntlet proof for no-active-Tony leakage.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002545 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2615
+%%EOF

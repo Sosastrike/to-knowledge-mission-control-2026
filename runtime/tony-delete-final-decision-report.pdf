@@ -1,0 +1,225 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3372 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-final-decision-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Final Decision Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Final Decision) Tj
+0 -12 Td
+(PARTIAL GO) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Why Not Full GO Yet) Tj
+0 -12 Td
+(Remaining owner/admin-gated proof items are still open:) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(- `mission_control_api_key_not_seeded` for this runner's authenticated production probe path) Tj
+0 -12 Td
+(- optional branding cleanup if Telegram bot display name still carries old Tony branding \(`owner) Tj
+0 -12 Td
+(_BotFather_rename_required`\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 1\) Active Tony References Before Deletion) Tj
+0 -12 Td
+(- Gateway role matrix node) Tj
+0 -12 Td
+(- Agent Hub policy/fact labels) Tj
+0 -12 Td
+(- Provider fallback projection) Tj
+0 -12 Td
+(- Capability matrix retired-agents section) Tj
+0 -12 Td
+(- Agent Zero/Hermes owner-facing wording) Tj
+0 -12 Td
+(- Runtime identity fallback defaults) Tj
+0 -12 Td
+(- Tony-branded report contract function name) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 2\) What Was Removed) Tj
+0 -12 Td
+(- Tony active node from Gateway role matrix.) Tj
+0 -12 Td
+(- Tony owner-facing labels from active Agent Hub/Gateway surfaces.) Tj
+0 -12 Td
+(- Tony provider projection from active provider payload.) Tj
+0 -12 Td
+(- Tony retired row from current capability matrix payload.) Tj
+0 -12 Td
+(- Tony defaults in runtime service identity fallback.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 3\) What Was Migrated) Tj
+0 -12 Td
+(- `buildTonyReportCreationContract` -> `buildReportCreationContract`) Tj
+0 -12 Td
+(- Legacy compatibility normalization mapped to neutral legacy-deleted controller wording.) Tj
+0 -12 Td
+(- Controller response contracts updated to Agent Zero-centric active authority messaging.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 4\) Historical-Only Remaining) Tj
+0 -12 Td
+(- Historical runtime reports/artifacts and some design archive files still contain legacy Tony l) Tj
+0 -12 Td
+(anguage.) Tj
+0 -12 Td
+(- These are not used as active runtime route targets after this batch.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 5\) Telegram Route Result) Tj
+0 -12 Td
+(- Active Telegram route namespace remains Agent Zero \(`/api/bridge/agent-zero/telegram/*`\).) Tj
+0 -12 Td
+(- Live send proof remains Bridge/owner approval gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 6\) Bot Display Name Status) Tj
+0 -12 Td
+(- Runtime routing is separate from BotFather display metadata.) Tj
+0 -12 Td
+(- Owner-side rename may still be required if display branding has not been updated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 7\) Voice Route Result) Tj
+0 -12 Td
+(- Active fallback runtime identity now defaults to Agent Zero for `claudeclaw.service`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 8\) Gateway / Agent Hub Result) Tj
+0 -12 Td
+(- Active chain shows Owner -> Gateway -> Agent Zero/Pi/Hermes -> Paperclip -> OpenClaw+.) Tj
+0 -12 Td
+(- Tony removed from active role matrix and owner-visible control labels.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 9\) Report Template Result) Tj
+0 -12 Td
+(- Active report contract naming and aliases removed Tony-brand dependency.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 10\) Tests Passed) Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Tests: PASS \(`138` files / `1250` tests\)) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1138 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## 11\) Gauntlet Result) Tj
+0 -12 Td
+(- Agent Zero gauntlet \(10,000 scenarios\): PASS) Tj
+0 -12 Td
+(- Paperclip routing gauntlet \(1,000 scenarios\): PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 12\) Services Restarted) Tj
+0 -12 Td
+(- Not restarted in this report snapshot.) Tj
+0 -12 Td
+(- Restart/deploy required after commit push for production proof closeout.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 13\) Commits Pushed) Tj
+0 -12 Td
+(- Pending in this report snapshot.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 14\) Rollback Commands) Tj
+0 -12 Td
+(- Planned post-commit rollback:) Tj
+0 -12 Td
+(  - `git revert <tony_delete_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 15\) No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth file contents printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## 16\) Final Status Summary) Tj
+0 -12 Td
+(- Tony is removed from active code paths and owner-facing active surfaces in this implementation) Tj
+0 -12 Td
+( batch.) Tj
+0 -12 Td
+(- Final GO is pending owner/session-gated production confirmations and commit/deploy closeout.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003671 00000 n 
+0000003797 00000 n 
+0000004987 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5057
+%%EOF

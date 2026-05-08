@@ -1,0 +1,150 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2709 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-5-tony-v2-migration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 5 - Tony v2 Migration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Stop active Tony controller projection and migrate reusable logic to Agent Zero/Gateway-neutral ) Tj
+0 -12 Td
+(forms.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PASS \(primary migration completed\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Removed Tony provider projection from active provider registry merge path.) Tj
+0 -12 Td
+(- Changed legacy remap from `tony_legacy` to neutral `legacy_deleted_controller` where historica) Tj
+0 -12 Td
+(l compatibility normalization is still needed.) Tj
+0 -12 Td
+(- Removed Tony language from active Agent Zero/Hermes response contracts.) Tj
+0 -12 Td
+(- Renamed report contract builder:) Tj
+0 -12 Td
+(  - `buildTonyReportCreationContract` -> `buildReportCreationContract`.) Tj
+0 -12 Td
+(- Removed Tony alias from executive report assignment alias map.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/app/api/bridge/providers/route.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/hermes-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/executive-reports.ts`) Tj
+0 -12 Td
+(- `src/app/api/reports/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Active provider payload no longer synthesizes Tony legacy records.) Tj
+0 -12 Td
+(- Controller text now reports Tony as not part of active system.) Tj
+0 -12 Td
+(- Report creation contract no longer has Tony-branded function name or assignment alias.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Historical artifacts remain in old runtime reports and design package archive content.) Tj
+0 -12 Td
+(- These are not active runtime routes, but full archival scrub is separate cleanup workstream.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Updated tests:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-bridge.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/hermes-bridge.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/executive-reports.test.ts`) Tj
+0 -12 Td
+(- Full test suite passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services / Commits / Rollback) Tj
+0 -12 Td
+(- Deploy/restart deferred to phase 9.) Tj
+0 -12 Td
+(- Commit pending final phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret/token output.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 70% -> 80%.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Handle memory/history visibility so Tony is not an active memory owner in current runtime surf) Tj
+0 -12 Td
+(aces.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003002 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3072
+%%EOF

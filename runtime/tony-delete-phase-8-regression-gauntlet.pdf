@@ -1,0 +1,128 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2049 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(tony-delete-phase-8-regression-gauntlet) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Tony Delete Phase 8 - Regression and Gauntlet) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Prove no active Tony leakage in runtime behavior and guardrails.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(PASS \(test/gauntlet evidence complete\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(- Ran typecheck.) Tj
+0 -12 Td
+(- Ran production build.) Tj
+0 -12 Td
+(- Ran full test suite \(includes 10,000-scenario Agent Zero gauntlet and 1,000-scenario Paperclip) Tj
+0 -12 Td
+( routing gauntlet paths in suite output\).) Tj
+0 -12 Td
+(- Ran protected-file invariant scan.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test -- ...` \(full run reached `138` test files / `1250` tests\)) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Highlights) Tj
+0 -12 Td
+(- `Agent Zero full ecosystem gauntlet`: `10,000` scenarios, `0` failures.) Tj
+0 -12 Td
+(- `Paperclip routing gauntlet`: `1,000` scenarios, `0` failures.) Tj
+0 -12 Td
+(- Updated Tony-removal expectations in bridge/hermes/gateway tests are green.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Live owner-auth browser screenshot confirmation still required:) Tj
+0 -12 Td
+(  - `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services / Commits / Rollback) Tj
+0 -12 Td
+(- No deploy in this phase.) Tj
+0 -12 Td
+(- Commit pending phase 9.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Protected-file invariant scan passed.) Tj
+0 -12 Td
+(- `.env` diff clean.) Tj
+0 -12 Td
+(- No auth weakening introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Tony deletion lane: 88% -> 92%.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Commit/push/deploy and run production proof smokes for active Tony removal.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002342 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2412
+%%EOF

@@ -102,21 +102,23 @@ describe('Agent Zero to Hermes collaboration protocol', () => {
     })
 
     expect(result.ok).toBe(true)
-    expect(result.hermes_called).toBe(true)
+    expect(result.hermes_called).toBe(false)
+    expect(result.hermes_contract_plan_prepared).toBe(true)
+    expect(result.live_hermes_adapter_required).toBe(true)
     expect(result.plan?.task_type).toBe('skill_design')
     expect(result.plan?.title).toMatch(/email triage/i)
     expect(result.agent_zero_review.usable).toBe(true)
     expect(result.execution_enabled).toBe(false)
     expect(result.writes_enabled).toBe(false)
     expect(result.raw_ids_exposed_to_owner).toBe(false)
-    expect(result.owner_reply).toContain('Hermes drafted')
+    expect(result.owner_reply).toContain('Hermes skill design contract plan')
     expect(result.owner_reply).not.toMatch(/azht_|hermes_[a-f0-9]|\/home\/tony|Done|Failed stage|Traceback/i)
     expect(audit.events).toHaveLength(1)
     expect(audit.events[0].detail).toMatchObject({
       agent_zero_task_id: 'az-task-123456',
       task_type: 'skill_design',
       status: 'completed',
-      hermes_called: true,
+      hermes_called: false,
       raw_ids_exposed_to_owner: false,
       no_execution: true,
       no_external_writes: true,
@@ -139,6 +141,8 @@ describe('Agent Zero to Hermes collaboration protocol', () => {
     expect(first.agent_zero_review.revision_available).toBe(true)
     expect(revision.ok).toBe(true)
     expect(revision.plan?.steps.join(' ')).toContain('Bridge Session')
+    expect(revision.hermes_called).toBe(false)
+    expect(revision.hermes_contract_plan_prepared).toBe(true)
     expect(revision.owner_reply).not.toMatch(/\/home\/tony|Done/i)
   })
 
@@ -155,6 +159,7 @@ describe('Agent Zero to Hermes collaboration protocol', () => {
     expect(result.http_status).toBe(403)
     expect(result.blocked_reason).toBe('hermes_forbidden_task_requested')
     expect(result.hermes_called).toBe(false)
+    expect(result.hermes_contract_plan_prepared).toBe(false)
     expect(result.owner_reply).toContain('Hermes is blocked')
     expect(audit.events[0].detail).toMatchObject({ status: 'blocked', blocked_reason: 'hermes_forbidden_task_requested' })
   })

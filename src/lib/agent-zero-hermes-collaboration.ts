@@ -67,6 +67,8 @@ export type AgentZeroHermesCollaborationResult = {
   supported_task_types: HermesCollaborationTaskType[]
   forbidden_tasks: typeof HERMES_FORBIDDEN_TASKS
   hermes_called: boolean
+  hermes_contract_plan_prepared: boolean
+  live_hermes_adapter_required: boolean
   hermes_response_source: 'mission_control_hermes_contract' | 'blocked'
   hermes_reachable: boolean
   accepted_for_handoff: boolean
@@ -371,6 +373,8 @@ function blockedResult(input: {
     supported_task_types: [...HERMES_COLLABORATION_TASK_TYPES],
     forbidden_tasks: HERMES_FORBIDDEN_TASKS,
     hermes_called: false,
+    hermes_contract_plan_prepared: false,
+    live_hermes_adapter_required: true,
     hermes_response_source: 'blocked',
     hermes_reachable: Boolean(input.hermesReachable),
     accepted_for_handoff: false,
@@ -533,8 +537,8 @@ export async function requestAgentZeroHermesCollaboration(input: AgentZeroHermes
     blockedReason: plan.blockers[0] || null,
     prompt,
     depth,
-    hermesCalled: true,
-  })
+      hermesCalled: false,
+    })
 
   return {
     ok: true,
@@ -555,7 +559,9 @@ export async function requestAgentZeroHermesCollaboration(input: AgentZeroHermes
     task_type: taskType,
     supported_task_types: [...HERMES_COLLABORATION_TASK_TYPES],
     forbidden_tasks: HERMES_FORBIDDEN_TASKS,
-    hermes_called: true,
+    hermes_called: false,
+    hermes_contract_plan_prepared: true,
+    live_hermes_adapter_required: true,
     hermes_response_source: 'mission_control_hermes_contract',
     hermes_reachable: hermesReachable,
     accepted_for_handoff: true,
@@ -579,13 +585,13 @@ export async function requestAgentZeroHermesCollaboration(input: AgentZeroHermes
     agent_zero_review: {
       usable: plan.blockers.length === 0,
       summary: plan.blockers.length
-        ? `Agent Zero can use this as a draft after resolving: ${plan.blockers.join(', ')}.`
-        : 'Agent Zero reviewed the Hermes draft and it is usable as a planning/specification artifact.',
+        ? `Agent Zero can use this as a contract draft after resolving: ${plan.blockers.join(', ')}. Live Hermes runtime remains blocked until the safe adapter is proven.`
+        : 'Agent Zero reviewed the contract draft and it is usable as a planning/specification artifact. Live Hermes runtime remains blocked until the safe adapter is proven.',
       revision_available: true,
     },
     report_contribution: {
       mention_hermes: true,
-      summary: `Hermes contributed a ${taskType.replace(/_/g, ' ')} recommendation for Agent Zero review.`,
+      summary: `Mission Control prepared a Hermes ${taskType.replace(/_/g, ' ')} contract recommendation for Agent Zero review. Live Hermes runtime was not called.`,
     },
     audit: {
       attempted: true,
@@ -593,8 +599,8 @@ export async function requestAgentZeroHermesCollaboration(input: AgentZeroHermes
       action: 'agent_zero.hermes_handoff',
       raw_ids_stored_in_audit_only: true,
     },
-    owner_reply: safeOwnerText(`Hermes drafted the ${taskType.replace(/_/g, ' ')} plan for Agent Zero review. No execution occurred.`, prompt),
-    blocked_reason: plan.blockers[0] || null,
+    owner_reply: safeOwnerText(`Mission Control prepared the Hermes ${taskType.replace(/_/g, ' ')} contract plan for Agent Zero review. Live Hermes runtime is still blocked until the safe adapter is proven. No execution occurred.`, prompt),
+    blocked_reason: plan.blockers[0] || 'hermes_safe_live_chat_adapter_not_configured',
   }
 }
 

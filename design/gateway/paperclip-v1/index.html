@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Sprint Index</title>
+<link rel="stylesheet" href="shared/tokens.css"/>
+<style>
+body{margin:0;background:var(--bg-1);color:var(--t-1);font-family:var(--ff-sans);}
+.wrap{max-width:1280px;margin:0 auto;padding:48px 32px;}
+.hero{background:linear-gradient(180deg,rgba(94,234,212,0.10),var(--bg-2));border:1px solid rgba(94,234,212,0.30);border-radius:18px;padding:32px 40px;margin-bottom:32px;}
+.hero h1{margin:0 0 6px;font-size:32px;letter-spacing:-0.02em;}
+.hero .subtitle{color:var(--t-3);font-size:14.5px;max-width:760px;line-height:1.6;}
+.hero .meta{margin-top:18px;display:flex;gap:24px;font-size:12px;color:var(--t-4);}
+.hero .meta strong{color:var(--t-2);font-weight:600;}
+section{margin-bottom:36px;}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:0.10em;color:var(--t-4);font-weight:600;margin:0 0 14px;border-bottom:1px solid var(--line-2);padding-bottom:8px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+a.card{display:block;background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:18px 20px;text-decoration:none;color:inherit;transition:all 0.15s;}
+a.card:hover{border-color:var(--line-strong);background:var(--bg-3);transform:translateY(-1px);}
+a.card .num{font-size:10.5px;color:var(--t-5);font-family:var(--ff-mono);letter-spacing:0.06em;text-transform:uppercase;}
+a.card h3{margin:4px 0 6px;font-size:15px;font-weight:600;color:var(--t-1);}
+a.card p{margin:0;font-size:12px;color:var(--t-3);line-height:1.55;}
+a.card .tags{margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;}
+.tag{font-size:9.5px;padding:2px 6px;border-radius:3px;background:var(--bg-4);color:var(--t-4);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
+.tag.green{background:var(--st-green-bg);color:var(--st-green);}
+.tag.yellow{background:var(--st-yellow-bg);color:var(--st-yellow);}
+.tag.blue{background:var(--st-blue-bg);color:var(--st-blue);}
+.tag.red{background:var(--st-red-bg);color:var(--st-red);}
+.tag.purple{background:rgba(168,85,247,0.15);color:#c084fc;}
+.docs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.doc{background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;font-size:13px;}
+.doc a{color:var(--t-2);text-decoration:none;font-weight:500;}
+.doc a:hover{color:var(--t-1);}
+.doc .desc{color:var(--t-4);font-size:11px;margin-top:4px;}
+footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--line-2);color:var(--t-5);font-size:11.5px;display:flex;justify-content:space-between;}
+</style></head><body>
+<div class="wrap">
+
+<div class="hero">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+    <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#5eead4,#0d9488);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0a1f1c;">G</div>
+    <div>
+      <div style="font-size:11px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.10em;font-weight:600;">Sprint · Gateway architecture</div>
+      <h1>To-Knowledge Gateway</h1>
+    </div>
+  </div>
+  <div class="subtitle">CData-shape, n8n-clarity, Kong-discipline. The single hop every owner intent passes through. Discovery-first, RBAC-respecting, Bridge-Session-gated, fully audited. <strong style="color:var(--t-1);">Tony retired · Agent Zero commander · Hermes lieutenant.</strong></div>
+  <div class="meta">
+    <div><strong>19</strong> deliverables</div>
+    <div><strong>22</strong> registered nodes</div>
+    <div><strong>5</strong> agents in hub</div>
+    <div><strong>9-step</strong> execution gate</div>
+  </div>
+</div>
+
+<section>
+<h2>① Foundation</h2>
+<div class="docs">
+  <div class="doc"><a href="00-design-brief.md">📄 00 · Design brief</a><div class="desc">Architecture principles, what we copy from CData, what we don't.</div></div>
+  <div class="doc"><a href="open-questions.md">❓ Open questions</a><div class="desc">5 decisions needed before Phase 0 execution.</div></div>
+  <div class="doc"><a href="developer-handoff.md">🛠 Developer handoff</a><div class="desc">Tables, routes, file targets, proof scripts 26–40.</div></div>
+</div>
+</section>
+
+<section>
+<h2>② Design system</h2>
+<div class="grid">
+  <a class="card" href="color-status-legend.html">
+    <div class="num">DS-01</div>
+    <h3>Color & status legend</h3>
+    <p>The locked status grammar. Every node, edge, and pill across the sprint reads from this single source.</p>
+    <div class="tags"><span class="tag">tokens</span><span class="tag green">5 statuses</span></div>
+  </a>
+  <a class="card" href="node-card-spec.html">
+    <div class="num">DS-02</div>
+    <h3>Node card spec</h3>
+    <p>Card anatomy: identity, R/W/X capability pills, status, blockers, last success, cache age.</p>
+    <div class="tags"><span class="tag">component</span><span class="tag">R/W/X</span></div>
+  </a>
+</div>
+</section>
+
+<section>
+<h2>③ Gateway core</h2>
+<div class="grid">
+  <a class="card" href="Gateway Overview.html">
+    <div class="num">GW-01</div>
+    <h3>Gateway overview</h3>
+    <p>Hero canvas — owner → Gateway → Agent Zero → Hermes → tools. Three layout treatments live behind Tweaks.</p>
+    <div class="tags"><span class="tag green">primary</span><span class="tag">Kong × n8n</span></div>
+  </a>
+  <a class="card" href="Gateway Routes.html">
+    <div class="num">GW-02</div>
+    <h3>Routes & flows</h3>
+    <p>Owner intent → 9-step gate → execution. Read, write, and Bridge-required swimlanes.</p>
+    <div class="tags"><span class="tag">9-step gate</span></div>
+  </a>
+  <a class="card" href="Gateway Node Detail.html">
+    <div class="num">GW-03</div>
+    <h3>Node detail</h3>
+    <p>Drill-down for any registered node. Identity, RBAC, discovery contract, audit, denials.</p>
+    <div class="tags"><span class="tag">drilldown</span></div>
+  </a>
+  <a class="card" href="Gateway Registry.html">
+    <div class="num">GW-04</div>
+    <h3>Registry</h3>
+    <p>Every node the Gateway can route to. Filterable, R/W/X-aware, blocker-flagged.</p>
+    <div class="tags"><span class="tag">22 rows</span></div>
+  </a>
+  <a class="card" href="Gateway Policies.html">
+    <div class="num">GW-05</div>
+    <h3>Policies & Bridge Session</h3>
+    <p>Active Bridge Session, the policy catalog, R/W/X enforcement table, severity tiers.</p>
+    <div class="tags"><span class="tag yellow">bridge</span><span class="tag">policies</span></div>
+  </a>
+  <a class="card" href="Gateway Health.html">
+    <div class="num">GW-06</div>
+    <h3>Health</h3>
+    <p>Live status across every node. Degraded section above operational. Refresh-now bypasses cache.</p>
+    <div class="tags"><span class="tag">live</span><span class="tag">5m TTL</span></div>
+  </a>
+</div>
+</section>
+
+<section>
+<h2>④ Agent Hub · control center</h2>
+<div class="grid">
+  <a class="card" href="Agent Hub.html">
+    <div class="num">HUB-01</div>
+    <h3>Agent Hub · 5 agents in one place</h3>
+    <p>Unified control center under Gateway. Tabs for Paperclip, Agent Zero, Hermes, SpaceAgent, Pi-mono. Hybrid localhost embed, Gateway lane per agent, brain summary, gated owner actions.</p>
+    <div class="tags"><span class="tag green">primary</span><span class="tag">5 agents</span><span class="tag yellow">hybrid embed</span></div>
+  </a>
+  <a class="card" href="Paperclip.html">
+    <div class="num">HUB-02</div>
+    <h3>Paperclip · Workforce Control Plane</h3>
+    <p>Workforce manager. Sits before OpenClaw+. Co-workers, task queue, budgets, heartbeats, approvals, OpenClaw+ handoff contract v0.3, Bridge Session modal.</p>
+    <div class="tags"><span class="tag purple">workforce</span><span class="tag yellow">gated</span><span class="tag">before OpenClaw+</span></div>
+  </a>
+</div>
+</section>
+
+<section>
+<h2>⑤ Command tree</h2>
+<div class="grid">
+  <a class="card" href="Agent Zero Commander.html">
+    <div class="num">CMD-01</div>
+    <h3>Agent Zero · commander</h3>
+    <p>Sole commander. All intents land here. Memory inheritance from retired Tony, with provenance.</p>
+    <div class="tags"><span class="tag green">commander</span><span class="tag blue">tony-memory R/O</span></div>
+  </a>
+  <a class="card" href="Hermes Lieutenant.html">
+    <div class="num">CMD-02</div>
+    <h3>Hermes · lieutenant</h3>
+    <p>Yellow-by-design. Read-biased; writes require AZ delegation + Bridge. Cannot delegate further.</p>
+    <div class="tags"><span class="tag yellow">gated</span><span class="tag">scoped</span></div>
+  </a>
+</div>
+</section>
+
+<section>
+<h2>⑥ Workers, skills, brain, delivery</h2>
+<div class="grid">
+  <a class="card" href="OpenClaw+ Workers.html">
+    <div class="num">WRK-01</div>
+    <h3>OpenClaw+ · workers</h3>
+    <p>Parent → child structure. Farmer ✓, Build-Wiki gated, Fork 2 SMB blocked with explicit fix path.</p>
+    <div class="tags"><span class="tag purple">workflow</span><span class="tag red">1 blocked</span></div>
+  </a>
+  <a class="card" href="OpenClaw+ Skills.html">
+    <div class="num">SKL-01</div>
+    <h3>OpenClaw+ · skills</h3>
+    <p>Versioned skill registry. Each skill has scope, severity, cost, and a discovery contract.</p>
+    <div class="tags"><span class="tag">14 skills</span></div>
+  </a>
+  <a class="card" href="Brain Systems.html">
+    <div class="num">BRN-01</div>
+    <h3>Brain · systems</h3>
+    <p>All Brain access via Gateway. Tony Memory inherited as read-only with full provenance.</p>
+    <div class="tags"><span class="tag blue">tony R/O</span><span class="tag">8 systems</span></div>
+  </a>
+  <a class="card" href="Delivery Connectors.html">
+    <div class="num">DLV-01</div>
+    <h3>Delivery · connectors</h3>
+    <p>Mail, voice/SMS, files, web/workflow. Each registered, scoped, severity-tagged.</p>
+    <div class="tags"><span class="tag">mail · voice · files</span></div>
+  </a>
+</div>
+</section>
+
+<section>
+<h2>⑦ Responsive</h2>
+<div class="grid">
+  <a class="card" href="Gateway Mobile Tablet.html">
+    <div class="num">RSP-01</div>
+    <h3>Mobile & tablet</h3>
+    <p>iPhone Bridge-approve flow, mobile node detail, tablet collapsed canvas. Phone-as-Bridge-factor.</p>
+    <div class="tags"><span class="tag">mobile</span><span class="tag">tablet</span></div>
+  </a>
+</div>
+</section>
+
+<footer>
+  <span>To-Knowledge · Gateway sprint</span>
+  <span>19 deliverables · Agent Hub + Paperclip added · ready for Phase 0 execution</span>
+</footer>
+</div>
+</body></html>

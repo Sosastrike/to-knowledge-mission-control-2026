@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2497 >>
+<< /Length 2523 >>
 stream
 BT
 /F1 9 Tf
@@ -97,6 +97,10 @@ T*
 T*
 (- Paperclip v1 final handoff) Tj
 T*
+(- Paperclip v1 README) Tj
+T*
+(- Paperclip v1 sprint index) Tj
+T*
 (- Paperclip v1 developer handoff) Tj
 T*
 (- Paperclip v1 shared assets) Tj
@@ -106,6 +110,51 @@ T*
 (Owner-facing architecture naming was corrected to **OpenClaw+**. The literal legacy service name) Tj
 T*
 (`opencloud-docs-farmer.service` remains only where it refers to the existing systemd unit.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(SOURCE PATH RECONCILIATION) Tj
+T*
+() Tj
+T*
+(Two owner-provided handoff folders were checked from the already-mounted Personal-Drive location) Tj
+T*
+(without mounting SMB:) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2889 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+() Tj
+T*
+(| Handoff | Result |) Tj
+T*
+(|---|---|) Tj
+T*
+(| `handoff 2` | Agent Hub Playwright MCP v2 assets copied and reconciled. |) Tj
+T*
+(| `handoff` | Paperclip v1 final assets copied and reconciled. |) Tj
+T*
+() Tj
+T*
+(The first Paperclip handoff contained two archive files that were not in the first production commit) Tj
+T*
+(for this slice: `README.md` and `index.html`. Those files have now been added under the Paperclip) Tj
+T*
+(design archive. The sprint index had legacy runtime labels in the designer package, so those labels) Tj
+T*
+(were corrected to OpenClaw+ before committing.) Tj
 T*
 () Tj
 T*
@@ -123,19 +172,6 @@ T*
 T*
 (- `src/lib/gateway-agent-hub.test.ts`) Tj
 T*
-ET
-endstream
-endobj
-5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
-endobj
-6 0 obj
-<< /Length 2965 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (- `src/app/api/gateway/agent-hub/status/route.ts`) Tj
 T*
 (- `src/app/api/gateway/space-agent/browser/status/route.ts`) Tj
@@ -208,6 +244,19 @@ T*
 T*
 (| Playwright MCP | connected_local_only | Local-only read-only browser automation. Endpoint stays) Tj
 T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2287 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 (localhost-only. |) Tj
 T*
 (| Firecrawl | blocked | Blocker: `firecrawl_credential_required`. |) Tj
@@ -244,19 +293,6 @@ T*
 T*
 (- Authenticated smoke:) Tj
 T*
-ET
-endstream
-endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
-endobj
-8 0 obj
-<< /Length 1965 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (  - `GET /gateway/agent-hub`) Tj
 T*
 (  - `GET /api/gateway/agent-hub/status`) Tj
@@ -329,6 +365,19 @@ T*
 T*
 (| Operating Chain visible | yes |) Tj
 T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2009 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 (| Owner Actions visible | yes |) Tj
 T*
 (| Agent Zero visible | yes |) Tj
@@ -353,7 +402,7 @@ T*
 T*
 (| OpenClaw+ visible | yes |) Tj
 T*
-(| OpenCloud architecture label visible | no |) Tj
+(| Legacy runtime architecture label visible | no |) Tj
 T*
 () Tj
 T*
@@ -365,19 +414,6 @@ T*
 T*
 (| Test | Result |) Tj
 T*
-ET
-endstream
-endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
-endobj
-10 0 obj
-<< /Length 2233 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (|---|---|) Tj
 T*
 (| `pnpm run typecheck` | PASS |) Tj
@@ -450,6 +486,19 @@ T*
 T*
 (- `youtube_transcript_connector_not_proven` until a transcript connector is proven.) Tj
 T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1648 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 (- Paperclip service/login/task queue proof is still pending.) Tj
 T*
 (- OpenClaw+ doctor health still needs completion.) Tj
@@ -486,19 +535,6 @@ T*
 T*
 (handoff, owner session proof still pending |) Tj
 T*
-ET
-endstream
-endobj
-11 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
-endobj
-12 0 obj
-<< /Length 828 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (| SpaceAgent Browser Automation UI | 66-82% | 86% | PARTIAL GO, Playwright MCP visible and truthful,) Tj
 T*
 (Firecrawl/YouTube still blocked/limited |) Tj
@@ -538,17 +574,17 @@ xref
 0000000058 00000 n 
 0000000140 00000 n 
 0000000267 00000 n 
-0000002816 00000 n 
-0000002943 00000 n 
-0000005960 00000 n 
-0000006087 00000 n 
-0000008104 00000 n 
-0000008232 00000 n 
-0000010518 00000 n 
-0000010647 00000 n 
-0000011527 00000 n 
+0000002842 00000 n 
+0000002969 00000 n 
+0000005910 00000 n 
+0000006037 00000 n 
+0000008376 00000 n 
+0000008504 00000 n 
+0000010566 00000 n 
+0000010695 00000 n 
+0000012396 00000 n 
 trailer
 << /Size 14 /Root 1 0 R >>
 startxref
-11598
+12467
 %%EOF

@@ -26,10 +26,23 @@ The accepted handoff assets are now present under `design/gateway` for traceabil
 - node card styling
 - token styling
 - Paperclip v1 final handoff
+- Paperclip v1 README
+- Paperclip v1 sprint index
 - Paperclip v1 developer handoff
 - Paperclip v1 shared assets
 
 Owner-facing architecture naming was corrected to **OpenClaw+**. The literal legacy service name `opencloud-docs-farmer.service` remains only where it refers to the existing systemd unit.
+
+## Source Path Reconciliation
+
+Two owner-provided handoff folders were checked from the already-mounted Personal-Drive location without mounting SMB:
+
+| Handoff | Result |
+|---|---|
+| `handoff 2` | Agent Hub Playwright MCP v2 assets copied and reconciled. |
+| `handoff` | Paperclip v1 final assets copied and reconciled. |
+
+The first Paperclip handoff contained two archive files that were not in the first production commit for this slice: `README.md` and `index.html`. Those files have now been added under the Paperclip design archive. The sprint index had legacy runtime labels in the designer package, so those labels were corrected to OpenClaw+ before committing.
 
 ## Files Changed
 
@@ -125,7 +138,7 @@ Authenticated smoke returned:
 | YouTube Research visible | yes |
 | Design Handoff visible | yes |
 | OpenClaw+ visible | yes |
-| OpenCloud architecture label visible | no |
+| Legacy runtime architecture label visible | no |
 
 ## Tests
 

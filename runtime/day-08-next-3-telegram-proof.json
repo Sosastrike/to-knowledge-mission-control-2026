@@ -1,0 +1,211 @@
+{
+  "checked_at": "2026-05-08T19:59:33.870Z",
+  "base": "http://127.0.0.1:3337",
+  "calls": [
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "provider": "telegram",
+        "mode": "agent_zero_telegram_delivery_adapter",
+        "status": "blocked",
+        "connector_configured": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "external_write_requires_bridge_session": true,
+        "credential_present": false,
+        "credential_values_exposed": false,
+        "owner_channel_configured": false,
+        "missing_credentials": [
+          "TELEGRAM_BOT_TOKEN",
+          "AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID"
+        ],
+        "blocked_reason": "telegram_report_delivery_adapter_not_configured",
+        "normal_reply": "Telegram report delivery is blocked because bot token or owner chat channel is not configured.",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/reports",
+      "method": "POST",
+      "status": 201,
+      "body": {
+        "ok": true,
+        "mode": "agent_zero_report_delivery_surface",
+        "report": {
+          "id": "azr_moxc9m4d_31beb06fd77d",
+          "title": "Day 08 Telegram Delivery Probe",
+          "summary": "PDF delivery gating check",
+          "created_at": "2026-05-08T19:59:33.950Z",
+          "created_by": "agent_zero",
+          "source": "api",
+          "mission_control_url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d",
+          "markdown_url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d/markdown",
+          "pdf_url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d/pdf",
+          "markdown_filename": "day-08-telegram-delivery-probe.md",
+          "pdf_filename": "day-08-telegram-delivery-probe.pdf",
+          "delivery_channels": [
+            {
+              "provider": "mission_control",
+              "requested": true,
+              "status": "available",
+              "url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d",
+              "reason": null,
+              "requires_bridge_session": false,
+              "external_write": false
+            },
+            {
+              "provider": "telegram",
+              "requested": false,
+              "status": "blocked",
+              "url": null,
+              "reason": "telegram_attachment_not_requested",
+              "requires_bridge_session": true,
+              "external_write": true
+            },
+            {
+              "provider": "onedrive",
+              "requested": false,
+              "status": "blocked",
+              "url": null,
+              "reason": "onedrive_delivery_not_requested",
+              "requires_bridge_session": true,
+              "external_write": true
+            },
+            {
+              "provider": "google_drive",
+              "requested": false,
+              "status": "blocked",
+              "url": null,
+              "reason": "google_drive_delivery_not_requested",
+              "requires_bridge_session": true,
+              "external_write": true
+            }
+          ],
+          "normal_reply": "Done. The report is ready in Mission Control.",
+          "safety": {
+            "raw_local_paths_exposed": false,
+            "task_ids_in_normal_reply": false,
+            "protected_actions_executed": false,
+            "external_writes_executed": false,
+            "telegram_attachment_sent": false
+          }
+        },
+        "attachments": [
+          {
+            "type": "pdf",
+            "label": "PDF report",
+            "url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d/pdf"
+          },
+          {
+            "type": "markdown",
+            "label": "Markdown report",
+            "url": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d/markdown"
+          }
+        ],
+        "normal_reply": "Done. The report is ready in Mission Control.",
+        "safety": {
+          "execution_enabled": false,
+          "protected_actions_executed": false,
+          "external_writes_executed": false,
+          "telegram_attachment_sent": false,
+          "raw_local_paths_exposed": false,
+          "task_ids_in_normal_replies": false
+        },
+        "next_action": "Open the Mission Control report link or download the PDF/Markdown attachment from Mission Control."
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/upload-report",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "provider": "telegram",
+        "action": "telegram.upload_report_pdf",
+        "status": "blocked",
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "owner_approval_required": true,
+        "connector_configured": false,
+        "report_link": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d",
+        "telegram_message_id": null,
+        "blocked_reason": "owner_approval_pending",
+        "normal_reply": "Telegram PDF delivery is blocked until an approved active Bridge Session is available.",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "http_status": 423,
+        "mode": "agent_zero_bridge_execution_gateway",
+        "action": "mission_control.report.attach",
+        "adapter_registered": true,
+        "adapter": {
+          "action": "mission_control.report.attach",
+          "category": "mission_control_attachment",
+          "label": "Expose report through Mission Control",
+          "description": "Returns Mission Control report links only; Telegram file sending is not enabled by this adapter.",
+          "status": "available",
+          "execution_enabled": true,
+          "writes_enabled": false,
+          "bridge_session_required": true,
+          "allowed_scope_keys": [
+            "agent_zero.reports.create",
+            "mission_control.report.attach"
+          ],
+          "blocked_reason": null,
+          "safety": {
+            "raw_shell_enabled": false,
+            "arbitrary_filesystem_enabled": false,
+            "root_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false
+          }
+        },
+        "bridge_session_required": true,
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "status": "pending_approval",
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "execution_enabled": false,
+          "blocked_reason": "owner_approval_pending"
+        },
+        "execution_enabled": false,
+        "accepted_for_execution": false,
+        "writes_enabled": false,
+        "status": "blocked",
+        "result_checked": true,
+        "no_fake_done": true,
+        "raw_local_paths_exposed": false,
+        "raw_shell_enabled": false,
+        "arbitrary_filesystem_enabled": false,
+        "root_enabled": false,
+        "docker_socket_enabled": false,
+        "direct_secret_reads_enabled": false,
+        "audit": {
+          "started": false,
+          "finished": false,
+          "start_event_id": null,
+          "finish_event_id": null,
+          "blocked_reason": null
+        },
+        "result": null,
+        "normal_reply": "Agent Zero needs an active Bridge Session before this adapter can run.",
+        "blocked_reason": "active_bridge_session_required",
+        "error": null
+      }
+    }
+  ]
+}

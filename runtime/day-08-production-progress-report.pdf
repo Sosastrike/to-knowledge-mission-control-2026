@@ -1,0 +1,275 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3993 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-production-progress-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 Production Progress Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+(Day 08 advanced live-proof execution on Bridge, Paperclip, Telegram, Drive/OneDrive, AgentMail, ) Tj
+0 -12 Td
+(YouTube, and Firecrawl lanes while keeping OpenClaw+ honest with exact owner/admin unblock steps) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Overall ecosystem remains **PARTIAL GO \(low 90s\)**.) Tj
+0 -12 Td
+(No 100% claim.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Day 08 Phase Outcomes) Tj
+0 -12 Td
+(1. **OpenClaw+ owner/admin unblock package**: PASS) Tj
+0 -12 Td
+(   - Exact runtime blocker documented: `openclaw_doctor_runtime_not_reachable`.) Tj
+0 -12 Td
+(   - Safe owner/admin install/PATH action package produced.) Tj
+0 -12 Td
+(2. **NEXT-1 Bridge approved execution proof**: PARTIAL PASS) Tj
+0 -12 Td
+(   - Approval/audit persistence proven.) Tj
+0 -12 Td
+(   - Execution still blocked by owner approval/session state.) Tj
+0 -12 Td
+(3. **NEXT-2 Paperclip service recovery**: BLOCKED) Tj
+0 -12 Td
+(   - Status route alive; read-only data routes blocked by service runtime unavailability.) Tj
+0 -12 Td
+(4. **NEXT-3 Telegram PDF gating proof**: GATED/BLOCKED) Tj
+0 -12 Td
+(   - Report creation live.) Tj
+0 -12 Td
+(   - Upload route and execution remain blocked by approval/session/connector conditions.) Tj
+0 -12 Td
+(5. **NEXT-4 Drive/OneDrive adapter escalation**: PARTIAL PASS) Tj
+0 -12 Td
+(   - Provider-specific routes proven.) Tj
+0 -12 Td
+(   - Uploads blocked with exact provider blockers.) Tj
+0 -12 Td
+(6. **NEXT-5 AgentMail connector proof**: BLOCKED/PARTIAL) Tj
+0 -12 Td
+(   - Registry and adapter visibility proven.) Tj
+0 -12 Td
+(   - Send path blocked with exact connector and Bridge blockers.) Tj
+0 -12 Td
+(7. **NEXT-6 YouTube transcript escalation**: LIMITED) Tj
+0 -12 Td
+(   - Metadata path proven live.) Tj
+0 -12 Td
+(   - Transcript path remains unavailable in runtime.) Tj
+0 -12 Td
+(8. **NEXT-7 Firecrawl parallel status**: BLOCKED \(unchanged\)) Tj
+0 -12 Td
+(   - Credential absent and backend runner not configured.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence Artifacts) Tj
+0 -12 Td
+(- `runtime/day-08-phase-2-openclaw-runtime-service-proof.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-phase-3-openclaw-doctor-issue-reduction.md/.pdf` \(gated by blocker\)) Tj
+0 -12 Td
+(- `runtime/day-08-openclaw-owner-admin-action-package.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-1-bridge-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-2-paperclip-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-3-telegram-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-4-drive-onedrive-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-5-agentmail-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-6-youtube-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-7-firecrawl-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-08-next-1-bridge-approved-execution-proof.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-2-paperclip-service-recovery.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-3-telegram-pdf-final-gating-proof.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-4-drive-onedrive-adapter-escalation.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-5-agentmail-connector-proof.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-6-youtube-transcript-escalation.md/.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-7-firecrawl-parallel-status.md/.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation \(Day 08 Batch\)) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS \(`138` files / `1250` tests\)) Tj
+0 -12 Td
+(- Auth smoke \(`runtime/day-08-phase-8-auth-smoke.json`\): PASS with known blocker surface) Tj
+0 -12 Td
+(  - `11/12` routes returned `200`) Tj
+0 -12 Td
+(  - `1/12` route returned expected blocker state \(`/api/openclaw/doctor` -> `400`\)) Tj
+0 -12 Td
+(- Unauth smoke \(`runtime/day-08-phase-8-unauth-smoke.json`\): PASS) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2729 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - `12/12` protected routes returned `401`) Tj
+0 -12 Td
+(- Protected-file invariant scan \(`scripts/check-protected-file-invariants.mjs`\): PASS) Tj
+0 -12 Td
+(- Secret-pattern scan across changed text artifacts: PASS \(no matches\)) Tj
+0 -12 Td
+(- `.env` diff check: PASS \(clean\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers \(Current\)) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- `telegram_report_delivery_adapter_not_configured`) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `email_provider_not_visible_or_configured`) Tj
+0 -12 Td
+(- `agentmail_send_connector_not_configured`) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(- `youtube_transcript_unavailable`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety / Policy Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public exposure of local services added.) Tj
+0 -12 Td
+(- No fake Done / fake GO claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits / Push) Tj
+0 -12 Td
+(- Day 08 artifacts: pending commit/push in final closeout.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- For report-only artifact commit: `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage Guidance) Tj
+0 -12 Td
+(- OpenClaw+: readiness clarity improved; cannot GO until runtime CLI is installed/reachable and ) Tj
+0 -12 Td
+(doctor payload is live.) Tj
+0 -12 Td
+(- Bridge Session: improved persistence confidence; cannot GO without one approved scoped executi) Tj
+0 -12 Td
+(on.) Tj
+0 -12 Td
+(- Paperclip: remains blocked pending service runtime + owner session.) Tj
+0 -12 Td
+(- Telegram: remains gated/blocked; GO only after real attachment send.) Tj
+0 -12 Td
+(- Drive/OneDrive: remain blocked; GO only after real uploads.) Tj
+0 -12 Td
+(- AgentMail: remains blocked; GO only after allowed-domain send proof.) Tj
+0 -12 Td
+(- YouTube: remains LIMITED with metadata live, transcript unproven.) Tj
+0 -12 Td
+(- Firecrawl: remains **35% BLOCKED**.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Complete Day 08 validation gates, commit/push this Day 08 evidence batch, then continue the next) Tj
+0 -12 Td
+( owner-dependent execution windows as soon as approval/session access is available.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004292 00000 n 
+0000004418 00000 n 
+0000007199 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+7269
+%%EOF

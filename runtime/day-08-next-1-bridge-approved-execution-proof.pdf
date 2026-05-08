@@ -1,0 +1,191 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3087 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-next-1-bridge-approved-execution-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 NEXT-1 — Bridge Approved Execution Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Use persisted Bridge approval/audit tables to prove one approved scoped action, or return exact ) Tj
+0 -12 Td
+(blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS \(approval persistence proven; approved execution still blocked\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Queried active Bridge Session status.) Tj
+0 -12 Td
+(2. Opened exact-scope Bridge Session request.) Tj
+0 -12 Td
+(3. Listed pending approval requests.) Tj
+0 -12 Td
+(4. Attempted approval route in Mission Control mirror path.) Tj
+0 -12 Td
+(5. Re-checked session status and execution adapter surface.) Tj
+0 -12 Td
+(6. Attempted scoped and out-of-scope execution probes.) Tj
+0 -12 Td
+(7. Verified DB persistence counts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes / Proof) Tj
+0 -12 Td
+(- Evidence: `runtime/day-08-next-1-bridge-proof.json`) Tj
+0 -12 Td
+(- Route results:) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/bridge-session` -> `200`) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/bridge-session` -> `201` \(pending approval\)) Tj
+0 -12 Td
+(  - `GET /api/bridge/approval-requests` -> `200`) Tj
+0 -12 Td
+(  - `POST /api/bridge/approval-requests/{id}/approve` -> `423` \(owner-channel approval required\)) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/execute` probes -> blocked) Tj
+0 -12 Td
+(- DB proof:) Tj
+0 -12 Td
+(  - `bridge_approval_requests`: `1`) Tj
+0 -12 Td
+(  - `bridge_audit_events`: `1`) Tj
+0 -12 Td
+(  - `approved_requests`: `0`) Tj
+0 -12 Td
+(  - `pending_requests`: `1`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Approval Action Package) Tj
+0 -12 Td
+(1. Open Mission Control -> Gateway -> Policies / Bridge.) Tj
+0 -12 Td
+(2. Approve the existing pending Bridge request \(do not create duplicates\).) Tj
+0 -12 Td
+(3. Keep scope restricted to one safe action for proof.) Tj
+0 -12 Td
+(4. Notify Codex; Codex will execute exactly one scoped action and verify audit + expiry.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-08-next-1-bridge-approved-execution-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-08-next-1-bridge-approved-execution-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-1-bridge-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Focused Bridge API/persistence proof only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits / Rollback) Tj
+0 -12 Td
+(- Commits: pending Day 08 batch commit.) Tj
+0 -12 Td
+(- Rollback \(report-only\): `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth file contents printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 440 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Bridge Session confidence increased for persistence/audit.) Tj
+0 -12 Td
+(- Bridge remains PARTIAL GO until one approved scoped action executes successfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Paperclip service recovery and Telegram/Drive/AgentMail/YouTube live-proof lanes whil) Tj
+0 -12 Td
+(e awaiting owner approval.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003386 00000 n 
+0000003512 00000 n 
+0000004003 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4073
+%%EOF

@@ -1,0 +1,2144 @@
+{
+  "checked_at": "2026-05-08T19:57:22.283Z",
+  "base": "http://127.0.0.1:3337",
+  "steps": [
+    {
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "agent_zero_bridge_session_status",
+        "generated_at": "2026-05-08T19:57:22.451Z",
+        "runtime": {
+          "reachable": true,
+          "health_ok": true,
+          "http_status": 200,
+          "version": "M v1.12"
+        },
+        "agent_zero_api_key_configured": false,
+        "persistence_ready": true,
+        "bridge_session": {
+          "session_id": null,
+          "owner_id": null,
+          "agent_id": "agent_zero",
+          "participants": [
+            {
+              "agent_id": "agent_zero",
+              "role": "commander",
+              "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            },
+            {
+              "agent_id": "hermes",
+              "role": "lieutenant_skill_workflow_specialist",
+              "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            }
+          ],
+          "agent_zero_authority": {
+            "commander": true,
+            "approves_and_delegates_hermes_actions": true,
+            "final_owner_facing_responsibility": true
+          },
+          "hermes_permissions": {
+            "role": "lieutenant_skill_workflow_specialist",
+            "default_allowed_actions": [
+              "hermes.plan",
+              "hermes.design",
+              "hermes.suggest",
+              "hermes.workflow_plan",
+              "hermes.integration_mapping",
+              "hermes.failure_analysis",
+              "hermes.docs_report_outline"
+            ],
+            "explicit_execution_actions": [
+              "hermes.report.draft",
+              "hermes.skill_spec.draft",
+              "hermes.obsidian.write_via_adapter",
+              "hermes.mempalace.write_via_adapter",
+              "hermes.registered_adapter.execute_if_scoped"
+            ],
+            "execution_enabled": false,
+            "execution_requires_agent_zero_delegation": true,
+            "execution_requires_explicit_session_scope": true,
+            "external_email_requires_domain_allow_list": true,
+            "blocked_actions": [
+              "hermes.raw_shell",
+              "hermes.root_access",
+              "hermes.docker_socket",
+              "hermes.direct_secret_read",
+              "hermes.external_email_without_allow_list",
+              "hermes.buildwiki_direct_execution",
+              "hermes.unregistered_adapter"
+            ]
+          },
+          "started_at": null,
+          "expires_at": null,
+          "scope": "Agent Zero may use all registered Mission Control / Bridge tools, skills, models, agents, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes participates as lieutenant for planning/design/recommendations by default and may execute only explicitly allowed registered adapters delegated by Agent Zero.",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          },
+          "audit_log": [],
+          "execution_enabled": false,
+          "bridge_session_required": true,
+          "status": "not_requested",
+          "approval_request_id": null,
+          "approval_state": null,
+          "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duplicate_prompt_prevented": false,
+          "no_approval_spam": true,
+          "blocked_reason": null,
+          "note": "Agent Zero needs one owner-approved Bridge Session before scoped execution can run. Hermes may plan/design/suggest by default and execute only explicitly scoped registered adapters delegated by Agent Zero."
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "no_approval_spam": true,
+        "approval_contract": {
+          "action": "agent_zero.bridge_session.open",
+          "prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duration_hours": 12,
+          "one_bridge_session_approval_model": true,
+          "scope": "all registered tools, skills, models, integrations, Brain adapters, and delivery surfaces available in this environment for this mission",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "one_prompt_per_pending_or_active_session": true,
+          "repeated_small_step_approvals_required": false,
+          "every_action_audited": true,
+          "no_fake_completion": true
+        },
+        "safety": {
+          "docker_socket_enabled": false,
+          "root_system_access_enabled": false,
+          "arbitrary_shell_enabled": false,
+          "secrets_exposed": false,
+          "direct_agent_zero_root_access": false,
+          "every_action_requires_session_audit": true,
+          "session_expires_automatically": true,
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          }
+        },
+        "next_action": "POST this route to create one owner approval request for a 12-hour Agent Zero Bridge Session."
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "POST",
+      "status": 201,
+      "json": {
+        "ok": true,
+        "mode": "agent_zero_bridge_session_approval_required",
+        "generated_at": "2026-05-08T19:57:22.476Z",
+        "persistence_ready": true,
+        "approval_request_created": true,
+        "duplicate_prompt_prevented": false,
+        "no_approval_spam": true,
+        "approval_needed": true,
+        "owner_approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "owner_id": null,
+          "agent_id": "agent_zero",
+          "participants": [
+            {
+              "agent_id": "agent_zero",
+              "role": "commander",
+              "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            },
+            {
+              "agent_id": "hermes",
+              "role": "lieutenant_skill_workflow_specialist",
+              "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            }
+          ],
+          "agent_zero_authority": {
+            "commander": true,
+            "approves_and_delegates_hermes_actions": true,
+            "final_owner_facing_responsibility": true
+          },
+          "hermes_permissions": {
+            "role": "lieutenant_skill_workflow_specialist",
+            "default_allowed_actions": [
+              "hermes.plan",
+              "hermes.design",
+              "hermes.suggest",
+              "hermes.workflow_plan",
+              "hermes.integration_mapping",
+              "hermes.failure_analysis",
+              "hermes.docs_report_outline"
+            ],
+            "explicit_execution_actions": [
+              "hermes.report.draft",
+              "hermes.skill_spec.draft",
+              "hermes.obsidian.write_via_adapter",
+              "hermes.mempalace.write_via_adapter",
+              "hermes.registered_adapter.execute_if_scoped"
+            ],
+            "execution_enabled": false,
+            "execution_requires_agent_zero_delegation": true,
+            "execution_requires_explicit_session_scope": true,
+            "external_email_requires_domain_allow_list": true,
+            "blocked_actions": [
+              "hermes.raw_shell",
+              "hermes.root_access",
+              "hermes.docker_socket",
+              "hermes.direct_secret_read",
+              "hermes.external_email_without_allow_list",
+              "hermes.buildwiki_direct_execution",
+              "hermes.unregistered_adapter"
+            ]
+          },
+          "started_at": null,
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "scope": "mission_control_report_link_confirmation_only",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          },
+          "audit_log": [
+            {
+              "id": "bsa_9c89ba27-1dec-4892-8fac-bd1487743748",
+              "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+              "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+              "actor": "api",
+              "actor_user_id": null,
+              "action": "bridge_session.approval_requested",
+              "target": "bridge_session",
+              "outcome": "approval_requested",
+              "metadata": {
+                "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+                "blocked_scopes": [
+                  "broad_shell",
+                  "docker_socket",
+                  "root_system_access",
+                  "credential_exfiltration",
+                  "auth_bypass",
+                  "smb_mount_without_separate_smb_phase",
+                  "memory_write_without_explicit_owner_scope",
+                  "hermes_direct_buildwiki_execution",
+                  "hermes_external_email_without_domain_allow_list",
+                  "hermes_unregistered_adapter_execution"
+                ],
+                "every_action_audited": true,
+                "every_agent_zero_and_hermes_action_audited": true,
+                "expires_at": "2026-05-09T07:57:22.471Z",
+                "hermes_permissions": {
+                  "blocked_actions": [
+                    "hermes.raw_shell",
+                    "hermes.root_access",
+                    "hermes.docker_socket",
+                    "hermes.direct_secret_read",
+                    "hermes.external_email_without_allow_list",
+                    "hermes.buildwiki_direct_execution",
+                    "hermes.unregistered_adapter"
+                  ],
+                  "default_allowed_actions": [
+                    "hermes.plan",
+                    "hermes.design",
+                    "hermes.suggest",
+                    "hermes.workflow_plan",
+                    "hermes.integration_mapping",
+                    "hermes.failure_analysis",
+                    "hermes.docs_report_outline"
+                  ],
+                  "execution_enabled": false,
+                  "execution_requires_agent_zero_delegation": true,
+                  "execution_requires_explicit_session_scope": true,
+                  "explicit_execution_actions": [
+                    "hermes.report.draft",
+                    "hermes.skill_spec.draft",
+                    "hermes.obsidian.write_via_adapter",
+                    "hermes.mempalace.write_via_adapter",
+                    "hermes.registered_adapter.execute_if_scoped"
+                  ],
+                  "external_email_requires_domain_allow_list": true,
+                  "role": "lieutenant_skill_workflow_specialist"
+                },
+                "no_approval_spam": true,
+                "one_bridge_session_approval_model": true,
+                "participants": [
+                  {
+                    "agent_id": "agent_zero",
+                    "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "commander"
+                  },
+                  {
+                    "agent_id": "hermes",
+                    "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "lieutenant_skill_workflow_specialist"
+                  }
+                ]
+              },
+              "created_at": "2026-05-08T19:57:22.475Z"
+            }
+          ],
+          "execution_enabled": false,
+          "bridge_session_required": true,
+          "status": "pending_approval",
+          "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+          "approval_state": "pending",
+          "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duplicate_prompt_prevented": true,
+          "no_approval_spam": true,
+          "blocked_reason": "owner_approval_pending",
+          "note": "One owner approval opens the Agent Zero Bridge Session. Do not create duplicate prompts for the same pending session."
+        },
+        "approval_contract": {
+          "action": "agent_zero.bridge_session.open",
+          "prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "one_bridge_session_approval_model": true,
+          "repeated_small_step_approvals_required": false,
+          "every_action_audited": true,
+          "no_fake_completion": true,
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ]
+        },
+        "safety": {
+          "one_bridge_session_approval_model": true,
+          "no_approval_spam": true,
+          "every_action_audited": true,
+          "every_agent_zero_and_hermes_action_audited": true,
+          "no_fake_completion": true,
+          "raw_root_shell_enabled": false,
+          "docker_socket_enabled": false,
+          "direct_secret_reads_enabled": false,
+          "raw_arbitrary_filesystem_enabled": false
+        },
+        "execution_enabled": false,
+        "accepted_for_execution": false,
+        "writes_enabled": false,
+        "agent_zero_called": false,
+        "request_dispatched": false,
+        "next_action": "Send the single owner approval prompt, then activate Agent Zero actions only after approval_state becomes approved."
+      }
+    },
+    {
+      "path": "/api/bridge/approval-requests",
+      "method": "GET",
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "approval_requests_read_only_queue",
+        "generated_at": "2026-05-08T19:57:22.524Z",
+        "persistence": "read_only_connected",
+        "no_execution_enabled": true,
+        "no_connector_writes_enabled": true,
+        "migration_required": "bridge approval/audit persistence migration",
+        "canonical_contract": "/api/bridge/approval-contract",
+        "approval_queue_connected": true,
+        "active_queue_visible": true,
+        "active_approvals": [
+          {
+            "id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+            "connector": "agent_zero",
+            "action": "agent_zero.bridge_session.open",
+            "target": "bridge_session",
+            "target_key": "agent_zero:bridge_session:mission",
+            "requester": "api",
+            "risk_level": "medium",
+            "approval_state": "pending",
+            "protected_category": "agent_execution",
+            "reason": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+            "required_approver": "owner",
+            "expires_at": "2026-05-09T07:57:22.471Z",
+            "resolved_at": null,
+            "resolved_by": null,
+            "correlation_id": "corr_c6f87d37-bd75-4949-a6ae-46fc08558f19",
+            "created_at": "2026-05-08T19:57:22.473Z"
+          }
+        ],
+        "history_approvals": [],
+        "approvals": [
+          {
+            "id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+            "connector": "agent_zero",
+            "action": "agent_zero.bridge_session.open",
+            "target": "bridge_session",
+            "target_key": "agent_zero:bridge_session:mission",
+            "requester": "api",
+            "risk_level": "medium",
+            "approval_state": "pending",
+            "protected_category": "agent_execution",
+            "reason": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+            "required_approver": "owner",
+            "expires_at": "2026-05-09T07:57:22.471Z",
+            "resolved_at": null,
+            "resolved_by": null,
+            "correlation_id": "corr_c6f87d37-bd75-4949-a6ae-46fc08558f19",
+            "created_at": "2026-05-08T19:57:22.473Z"
+          }
+        ],
+        "summary": {
+          "total": 1,
+          "pending": 1,
+          "active_pending": 1,
+          "approved": 0,
+          "denied": 0,
+          "expired": 0,
+          "revoked": 0,
+          "running": 0,
+          "completed": 0,
+          "failed": 0,
+          "history": 0
+        },
+        "error": null,
+        "ui_placeholder": {
+          "title": "Approval Queue",
+          "state": "PENDING",
+          "message": "Pending owner decisions are waiting in the canonical approval queue.",
+          "next_backend_step": "Owner-approved approval/audit persistence migration + queue API write path.",
+          "no_fake_approval_requests": true,
+          "approval_request_created": false,
+          "protected_actions_locked": true,
+          "protected_action_http_status": 423
+        },
+        "next_action": "Queue is readable. Protected execution remains locked until owner explicitly approves scoped execution runners."
+      }
+    },
+    {
+      "path": "/api/bridge/approval-requests/apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7/approve",
+      "method": "POST",
+      "status": 423,
+      "json": {
+        "ok": false,
+        "owner_approval_required": true,
+        "approval_state": "required",
+        "http_status_when_blocked": 423,
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "approval_request_created": false,
+        "approval_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+        "action": "approve",
+        "reason": "canonical_approval_decisions_are_telegram_only",
+        "current_state": "OWNER_APPROVAL_REQUIRED",
+        "approval_channel": "Agent Zero -> owner channel",
+        "decision_surface": "Telegram inline Approve/Deny buttons only",
+        "persistence": "canonical_telegram_approval_queue",
+        "no_execution_enabled": true,
+        "no_connector_writes_enabled": true,
+        "no_duplicate_approval_system": true,
+        "next_action": "Use the canonical Agent Zero owner-channel Approve/Deny decision for this exact approval id. Mission Control mirrors state but does not approve directly."
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "method": "GET",
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "agent_zero_bridge_session_status",
+        "generated_at": "2026-05-08T19:57:22.572Z",
+        "runtime": {
+          "reachable": true,
+          "health_ok": true,
+          "http_status": 200,
+          "version": "M v1.12"
+        },
+        "agent_zero_api_key_configured": false,
+        "persistence_ready": true,
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "owner_id": null,
+          "agent_id": "agent_zero",
+          "participants": [
+            {
+              "agent_id": "agent_zero",
+              "role": "commander",
+              "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            },
+            {
+              "agent_id": "hermes",
+              "role": "lieutenant_skill_workflow_specialist",
+              "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            }
+          ],
+          "agent_zero_authority": {
+            "commander": true,
+            "approves_and_delegates_hermes_actions": true,
+            "final_owner_facing_responsibility": true
+          },
+          "hermes_permissions": {
+            "role": "lieutenant_skill_workflow_specialist",
+            "default_allowed_actions": [
+              "hermes.plan",
+              "hermes.design",
+              "hermes.suggest",
+              "hermes.workflow_plan",
+              "hermes.integration_mapping",
+              "hermes.failure_analysis",
+              "hermes.docs_report_outline"
+            ],
+            "explicit_execution_actions": [
+              "hermes.report.draft",
+              "hermes.skill_spec.draft",
+              "hermes.obsidian.write_via_adapter",
+              "hermes.mempalace.write_via_adapter",
+              "hermes.registered_adapter.execute_if_scoped"
+            ],
+            "execution_enabled": false,
+            "execution_requires_agent_zero_delegation": true,
+            "execution_requires_explicit_session_scope": true,
+            "external_email_requires_domain_allow_list": true,
+            "blocked_actions": [
+              "hermes.raw_shell",
+              "hermes.root_access",
+              "hermes.docker_socket",
+              "hermes.direct_secret_read",
+              "hermes.external_email_without_allow_list",
+              "hermes.buildwiki_direct_execution",
+              "hermes.unregistered_adapter"
+            ]
+          },
+          "started_at": null,
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "scope": "mission_control_report_link_confirmation_only",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          },
+          "audit_log": [
+            {
+              "id": "bsa_9c89ba27-1dec-4892-8fac-bd1487743748",
+              "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+              "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+              "actor": "api",
+              "actor_user_id": null,
+              "action": "bridge_session.approval_requested",
+              "target": "bridge_session",
+              "outcome": "approval_requested",
+              "metadata": {
+                "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+                "blocked_scopes": [
+                  "broad_shell",
+                  "docker_socket",
+                  "root_system_access",
+                  "credential_exfiltration",
+                  "auth_bypass",
+                  "smb_mount_without_separate_smb_phase",
+                  "memory_write_without_explicit_owner_scope",
+                  "hermes_direct_buildwiki_execution",
+                  "hermes_external_email_without_domain_allow_list",
+                  "hermes_unregistered_adapter_execution"
+                ],
+                "every_action_audited": true,
+                "every_agent_zero_and_hermes_action_audited": true,
+                "expires_at": "2026-05-09T07:57:22.471Z",
+                "hermes_permissions": {
+                  "blocked_actions": [
+                    "hermes.raw_shell",
+                    "hermes.root_access",
+                    "hermes.docker_socket",
+                    "hermes.direct_secret_read",
+                    "hermes.external_email_without_allow_list",
+                    "hermes.buildwiki_direct_execution",
+                    "hermes.unregistered_adapter"
+                  ],
+                  "default_allowed_actions": [
+                    "hermes.plan",
+                    "hermes.design",
+                    "hermes.suggest",
+                    "hermes.workflow_plan",
+                    "hermes.integration_mapping",
+                    "hermes.failure_analysis",
+                    "hermes.docs_report_outline"
+                  ],
+                  "execution_enabled": false,
+                  "execution_requires_agent_zero_delegation": true,
+                  "execution_requires_explicit_session_scope": true,
+                  "explicit_execution_actions": [
+                    "hermes.report.draft",
+                    "hermes.skill_spec.draft",
+                    "hermes.obsidian.write_via_adapter",
+                    "hermes.mempalace.write_via_adapter",
+                    "hermes.registered_adapter.execute_if_scoped"
+                  ],
+                  "external_email_requires_domain_allow_list": true,
+                  "role": "lieutenant_skill_workflow_specialist"
+                },
+                "no_approval_spam": true,
+                "one_bridge_session_approval_model": true,
+                "participants": [
+                  {
+                    "agent_id": "agent_zero",
+                    "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "commander"
+                  },
+                  {
+                    "agent_id": "hermes",
+                    "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "lieutenant_skill_workflow_specialist"
+                  }
+                ]
+              },
+              "created_at": "2026-05-08T19:57:22.475Z"
+            }
+          ],
+          "execution_enabled": false,
+          "bridge_session_required": true,
+          "status": "pending_approval",
+          "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+          "approval_state": "pending",
+          "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duplicate_prompt_prevented": true,
+          "no_approval_spam": true,
+          "blocked_reason": "owner_approval_pending",
+          "note": "One owner approval opens the Agent Zero Bridge Session. Do not create duplicate prompts for the same pending session."
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "no_approval_spam": true,
+        "approval_contract": {
+          "action": "agent_zero.bridge_session.open",
+          "prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duration_hours": 12,
+          "one_bridge_session_approval_model": true,
+          "scope": "all registered tools, skills, models, integrations, Brain adapters, and delivery surfaces available in this environment for this mission",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "one_prompt_per_pending_or_active_session": true,
+          "repeated_small_step_approvals_required": false,
+          "every_action_audited": true,
+          "no_fake_completion": true
+        },
+        "safety": {
+          "docker_socket_enabled": false,
+          "root_system_access_enabled": false,
+          "arbitrary_shell_enabled": false,
+          "secrets_exposed": false,
+          "direct_agent_zero_root_access": false,
+          "every_action_requires_session_audit": true,
+          "session_expires_automatically": true,
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          }
+        },
+        "next_action": "Owner approval is already pending. Reuse this request; do not create another prompt."
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "GET",
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "agent_zero_bridge_execution_gateway_registry",
+        "generated_at": "2026-05-08T19:57:22.579Z",
+        "bridge_session_required": true,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "owner_id": null,
+          "agent_id": "agent_zero",
+          "participants": [
+            {
+              "agent_id": "agent_zero",
+              "role": "commander",
+              "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            },
+            {
+              "agent_id": "hermes",
+              "role": "lieutenant_skill_workflow_specialist",
+              "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+              "planning_enabled": true,
+              "execution_enabled": false,
+              "execution_requires_explicit_scope": true
+            }
+          ],
+          "agent_zero_authority": {
+            "commander": true,
+            "approves_and_delegates_hermes_actions": true,
+            "final_owner_facing_responsibility": true
+          },
+          "hermes_permissions": {
+            "role": "lieutenant_skill_workflow_specialist",
+            "default_allowed_actions": [
+              "hermes.plan",
+              "hermes.design",
+              "hermes.suggest",
+              "hermes.workflow_plan",
+              "hermes.integration_mapping",
+              "hermes.failure_analysis",
+              "hermes.docs_report_outline"
+            ],
+            "explicit_execution_actions": [
+              "hermes.report.draft",
+              "hermes.skill_spec.draft",
+              "hermes.obsidian.write_via_adapter",
+              "hermes.mempalace.write_via_adapter",
+              "hermes.registered_adapter.execute_if_scoped"
+            ],
+            "execution_enabled": false,
+            "execution_requires_agent_zero_delegation": true,
+            "execution_requires_explicit_session_scope": true,
+            "external_email_requires_domain_allow_list": true,
+            "blocked_actions": [
+              "hermes.raw_shell",
+              "hermes.root_access",
+              "hermes.docker_socket",
+              "hermes.direct_secret_read",
+              "hermes.external_email_without_allow_list",
+              "hermes.buildwiki_direct_execution",
+              "hermes.unregistered_adapter"
+            ]
+          },
+          "started_at": null,
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "scope": "mission_control_report_link_confirmation_only",
+          "allowed_tools": [
+            "all_registered_tools",
+            "all_registered_execution_adapters",
+            "mission_control.status",
+            "bridge.providers.list",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute",
+            "agent_zero.reports.create",
+            "buildwiki.run_now",
+            "google_drive.delivery_adapter_if_configured",
+            "onedrive.delivery_adapter_if_configured"
+          ],
+          "allowed_integrations": [
+            "all_registered_integrations",
+            "mission_control",
+            "bridge",
+            "mcp",
+            "zapier_schema_read_only",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured",
+            "agentmail_if_configured",
+            "build_wiki_farmer_scoped",
+            "telegram_status_delivery_if_route_configured"
+          ],
+          "allowed_models": [
+            "openrouter_if_configured",
+            "openai_if_configured",
+            "anthropic_if_configured",
+            "gemini_if_configured",
+            "groq_if_configured",
+            "local_models_if_configured"
+          ],
+          "allowed_skills": [
+            "all_registered_skills",
+            "openclaw_plus_shared_runtime",
+            "agent_zero_skills",
+            "hermes_skills",
+            "mission_control_repo_skills"
+          ],
+          "allowed_brain_access": [
+            "all_registered_brain_adapters",
+            "brain_sync.status",
+            "obsidian.read_adapter",
+            "obsidian.write_adapter",
+            "mempalace.read_adapter",
+            "mempalace.write_adapter",
+            "graphify.status",
+            "brain_watchers.status"
+          ],
+          "allowed_delivery_surfaces": [
+            "all_registered_delivery_surfaces",
+            "mission_control.report.attach",
+            "telegram.delivery_if_route_configured",
+            "agentmail_if_connector_configured",
+            "google_drive_if_connector_configured",
+            "onedrive_if_connector_configured"
+          ],
+          "blocked_scopes": [
+            "broad_shell",
+            "docker_socket",
+            "root_system_access",
+            "credential_exfiltration",
+            "auth_bypass",
+            "smb_mount_without_separate_smb_phase",
+            "memory_write_without_explicit_owner_scope",
+            "hermes_direct_buildwiki_execution",
+            "hermes_external_email_without_domain_allow_list",
+            "hermes_unregistered_adapter_execution"
+          ],
+          "safety_contract": {
+            "one_bridge_session_approval_model": true,
+            "no_approval_spam": true,
+            "every_action_audited": true,
+            "every_agent_zero_and_hermes_action_audited": true,
+            "no_fake_completion": true,
+            "raw_root_shell_enabled": false,
+            "docker_socket_enabled": false,
+            "direct_secret_reads_enabled": false,
+            "raw_arbitrary_filesystem_enabled": false
+          },
+          "audit_log": [
+            {
+              "id": "bsa_9c89ba27-1dec-4892-8fac-bd1487743748",
+              "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+              "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+              "actor": "api",
+              "actor_user_id": null,
+              "action": "bridge_session.approval_requested",
+              "target": "bridge_session",
+              "outcome": "approval_requested",
+              "metadata": {
+                "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+                "blocked_scopes": [
+                  "broad_shell",
+                  "docker_socket",
+                  "root_system_access",
+                  "credential_exfiltration",
+                  "auth_bypass",
+                  "smb_mount_without_separate_smb_phase",
+                  "memory_write_without_explicit_owner_scope",
+                  "hermes_direct_buildwiki_execution",
+                  "hermes_external_email_without_domain_allow_list",
+                  "hermes_unregistered_adapter_execution"
+                ],
+                "every_action_audited": true,
+                "every_agent_zero_and_hermes_action_audited": true,
+                "expires_at": "2026-05-09T07:57:22.471Z",
+                "hermes_permissions": {
+                  "blocked_actions": [
+                    "hermes.raw_shell",
+                    "hermes.root_access",
+                    "hermes.docker_socket",
+                    "hermes.direct_secret_read",
+                    "hermes.external_email_without_allow_list",
+                    "hermes.buildwiki_direct_execution",
+                    "hermes.unregistered_adapter"
+                  ],
+                  "default_allowed_actions": [
+                    "hermes.plan",
+                    "hermes.design",
+                    "hermes.suggest",
+                    "hermes.workflow_plan",
+                    "hermes.integration_mapping",
+                    "hermes.failure_analysis",
+                    "hermes.docs_report_outline"
+                  ],
+                  "execution_enabled": false,
+                  "execution_requires_agent_zero_delegation": true,
+                  "execution_requires_explicit_session_scope": true,
+                  "explicit_execution_actions": [
+                    "hermes.report.draft",
+                    "hermes.skill_spec.draft",
+                    "hermes.obsidian.write_via_adapter",
+                    "hermes.mempalace.write_via_adapter",
+                    "hermes.registered_adapter.execute_if_scoped"
+                  ],
+                  "external_email_requires_domain_allow_list": true,
+                  "role": "lieutenant_skill_workflow_specialist"
+                },
+                "no_approval_spam": true,
+                "one_bridge_session_approval_model": true,
+                "participants": [
+                  {
+                    "agent_id": "agent_zero",
+                    "authority": "Agent Zero remains commander and approves/delegates Hermes actions within the owner-approved Bridge Session.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "commander"
+                  },
+                  {
+                    "agent_id": "hermes",
+                    "authority": "Hermes assists Agent Zero with planning, skill design, workflows, automation plans, failure analysis, report drafts, and explicitly scoped registered adapters only.",
+                    "execution_enabled": false,
+                    "execution_requires_explicit_scope": true,
+                    "planning_enabled": true,
+                    "role": "lieutenant_skill_workflow_specialist"
+                  }
+                ]
+              },
+              "created_at": "2026-05-08T19:57:22.475Z"
+            }
+          ],
+          "execution_enabled": false,
+          "bridge_session_required": true,
+          "status": "pending_approval",
+          "approval_request_id": "apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7",
+          "approval_state": "pending",
+          "approval_prompt": "Approval needed: Open Agent Zero Bridge Session.\nScope: Agent Zero may use all registered tools, skills, models, integrations, Brain adapters, Build-Wiki actions, and delivery surfaces available in this environment for this mission. Hermes may assist as lieutenant for planning, design, recommendations, and explicitly allowed registered adapters only.\nDuration: 12 hours.\nRule: Every Agent Zero and Hermes action is audited. Agent Zero remains commander and approves/delegates Hermes actions. Neither agent may fake completion, request repeated approvals, use raw root shell, use the Docker socket, or read secrets directly.\nApprove or deny?",
+          "duplicate_prompt_prevented": true,
+          "no_approval_spam": true,
+          "blocked_reason": "owner_approval_pending",
+          "note": "One owner approval opens the Agent Zero Bridge Session. Do not create duplicate prompts for the same pending session."
+        },
+        "adapters": [
+          {
+            "action": "agent_zero.report.create",
+            "category": "report_creation",
+            "label": "Create Agent Zero report",
+            "description": "Creates a Markdown/PDF report and exposes Mission Control download links without raw local paths.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "agent_zero.reports.create",
+              "agent_zero.report.create"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "agent_zero.pdf.create",
+            "category": "report_creation",
+            "label": "Create Agent Zero PDF",
+            "description": "Creates a PDF-backed Agent Zero report and exposes Mission Control download links without raw local paths.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "agent_zero.reports.create",
+              "agent_zero.pdf.create"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mission_control.report.attach",
+            "category": "mission_control_attachment",
+            "label": "Expose report through Mission Control",
+            "description": "Returns Mission Control report links only; Telegram file sending is not enabled by this adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "agent_zero.reports.create",
+              "mission_control.report.attach"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "agentmail.send",
+            "category": "agentmail_delivery",
+            "label": "AgentMail send",
+            "description": "Registered AgentMail delivery adapter. It blocks honestly until a working send connector is configured.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "agentmail_if_configured",
+              "agentmail.send",
+              "agentmail_if_connector_configured"
+            ],
+            "blocked_reason": "agentmail_send_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "google_drive.folder_lookup",
+            "category": "google_drive_delivery",
+            "label": "Google Drive folder lookup",
+            "description": "Registered delivery adapter. Currently reports blocked unless a connector invocation adapter is configured.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "google_drive_if_connector_configured"
+            ],
+            "blocked_reason": "google_drive_folder_lookup_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "google_drive.upload_test_file",
+            "category": "google_drive_delivery",
+            "label": "Google Drive upload test file",
+            "description": "External write adapter placeholder. It blocks honestly until upload connector invocation exists.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "google_drive_if_connector_configured"
+            ],
+            "blocked_reason": "google_drive_upload_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "google_drive.upload_report_pdf",
+            "category": "google_drive_delivery",
+            "label": "Google Drive upload report",
+            "description": "External report upload adapter placeholder. It blocks honestly until upload connector invocation exists.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "google_drive_if_connector_configured"
+            ],
+            "blocked_reason": "google_drive_upload_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "google_drive.verify_link",
+            "category": "google_drive_delivery",
+            "label": "Google Drive verify link",
+            "description": "Registered verification adapter. It blocks until link verification is configured.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "google_drive_if_connector_configured"
+            ],
+            "blocked_reason": "google_drive_link_verification_adapter_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "onedrive.folder_lookup",
+            "category": "onedrive_delivery",
+            "label": "OneDrive folder lookup",
+            "description": "Registered delivery adapter. Currently reports blocked unless a connector invocation adapter is configured.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "onedrive_if_connector_configured"
+            ],
+            "blocked_reason": "onedrive_folder_lookup_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "onedrive.upload_test_file",
+            "category": "onedrive_delivery",
+            "label": "OneDrive upload test file",
+            "description": "External write adapter placeholder. It blocks honestly until upload connector invocation exists.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "onedrive_if_connector_configured"
+            ],
+            "blocked_reason": "onedrive_upload_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "onedrive.upload_report_pdf",
+            "category": "onedrive_delivery",
+            "label": "OneDrive upload report",
+            "description": "External report upload adapter placeholder. It blocks honestly until upload connector invocation exists.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "onedrive_if_connector_configured"
+            ],
+            "blocked_reason": "onedrive_upload_connector_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "onedrive.verify_link",
+            "category": "onedrive_delivery",
+            "label": "OneDrive verify link",
+            "description": "Registered verification adapter. It blocks until link verification is configured.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "onedrive_if_connector_configured"
+            ],
+            "blocked_reason": "onedrive_link_verification_adapter_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "buildwiki.run_now",
+            "category": "buildwiki_run_now",
+            "label": "Build-Wiki Run Now",
+            "description": "Starts the local Build-Wiki/Farmer sync through exactly one scoped legacy systemd user service command.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "buildwiki.run_now"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.status",
+            "category": "obsidian_adapter",
+            "label": "Obsidian status",
+            "description": "Reads Obsidian vault status through the registered adapter without exposing filesystem paths.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.read_adapter",
+              "obsidian.status"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.search",
+            "category": "obsidian_adapter",
+            "label": "Search Obsidian notes",
+            "description": "Searches safe Obsidian note previews through the registered adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.read_adapter",
+              "obsidian.note.search"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.read",
+            "category": "obsidian_adapter",
+            "label": "Read Obsidian note",
+            "description": "Reads one safe Obsidian note preview through the registered adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.read_adapter",
+              "obsidian.note.read"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.summarize",
+            "category": "obsidian_adapter",
+            "label": "Summarize Obsidian note",
+            "description": "Summarizes one safe Obsidian note through the registered adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.read_adapter",
+              "obsidian.note.summarize"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.create",
+            "category": "obsidian_adapter",
+            "label": "Create Obsidian note",
+            "description": "Creates one safe Markdown note inside the configured Obsidian vault through the adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.write_adapter",
+              "obsidian.note.create"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.update",
+            "category": "obsidian_adapter",
+            "label": "Update Obsidian note",
+            "description": "Replaces one safe Markdown note through the Obsidian adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.write_adapter",
+              "obsidian.note.update"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.append_report_summary",
+            "category": "obsidian_adapter",
+            "label": "Append report summary to Obsidian note",
+            "description": "Appends a bounded report summary section to one safe Markdown note.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.write_adapter",
+              "obsidian.note.append_report_summary"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.tag",
+            "category": "obsidian_adapter",
+            "label": "Tag Obsidian note",
+            "description": "Adds safe tags to one Markdown note through the Obsidian adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.write_adapter",
+              "obsidian.note.tag"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "obsidian.note.link_task_report",
+            "category": "obsidian_adapter",
+            "label": "Link Obsidian note to task or report",
+            "description": "Appends safe task/report reference metadata to one Markdown note.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "obsidian.write_adapter",
+              "obsidian.note.link_task_report"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.status",
+            "category": "mempalace_adapter",
+            "label": "MemPalace status",
+            "description": "Reads MemPalace status and safe counts through the registered adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.read_adapter",
+              "mempalace.status"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.query",
+            "category": "mempalace_adapter",
+            "label": "Query MemPalace memory summary",
+            "description": "Queries safe MemPalace memory summaries without returning raw private records.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.read_adapter",
+              "mempalace.memory.query"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.summary",
+            "category": "mempalace_adapter",
+            "label": "Summarize MemPalace memory",
+            "description": "Summarizes safe MemPalace memory index state without returning raw private records.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.read_adapter",
+              "mempalace.memory.summary"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.remember_task_result",
+            "category": "mempalace_adapter",
+            "label": "Remember task result in MemPalace",
+            "description": "Stores a bounded owner-visible task-result memory summary through the MemPalace adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.write_adapter",
+              "mempalace.memory.remember_task_result"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.remember_owner_preference",
+            "category": "mempalace_adapter",
+            "label": "Remember owner preference in MemPalace",
+            "description": "Stores a bounded owner-visible preference summary through the MemPalace adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.write_adapter",
+              "mempalace.memory.remember_owner_preference"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.update_safe_summary",
+            "category": "mempalace_adapter",
+            "label": "Update safe MemPalace summary",
+            "description": "Appends a new safe summary version for a MemPalace memory key without overwriting prior records.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.write_adapter",
+              "mempalace.memory.update_safe_summary"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mempalace.memory.link_report_task",
+            "category": "mempalace_adapter",
+            "label": "Link MemPalace memory to task/report",
+            "description": "Stores a safe audited memory link to a task and/or report through the MemPalace adapter.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mempalace.write_adapter",
+              "mempalace.memory.link_report_task"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mcp.tools.schema_read",
+            "category": "mcp_tool",
+            "label": "Query Bridge/MCP tool schemas",
+            "description": "Reads Bridge/MCP tool visibility and schema metadata without invoking tools.",
+            "status": "available",
+            "execution_enabled": true,
+            "writes_enabled": false,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mcp.tools.schema_read",
+              "bridge.providers.list"
+            ],
+            "blocked_reason": null,
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          },
+          {
+            "action": "mcp.tool.execute",
+            "category": "mcp_tool",
+            "label": "MCP tool execution",
+            "description": "MCP execution placeholder. It blocks unless the requested tool has a registered invocation adapter and Bridge Session scope.",
+            "status": "blocked",
+            "execution_enabled": true,
+            "writes_enabled": true,
+            "bridge_session_required": true,
+            "allowed_scope_keys": [
+              "mcp.tool.execute"
+            ],
+            "blocked_reason": "mcp_tool_execution_adapter_not_configured",
+            "safety": {
+              "raw_shell_enabled": false,
+              "arbitrary_filesystem_enabled": false,
+              "root_enabled": false,
+              "docker_socket_enabled": false,
+              "direct_secret_reads_enabled": false
+            }
+          }
+        ],
+        "safety": {
+          "raw_shell_enabled": false,
+          "arbitrary_filesystem_enabled": false,
+          "root_enabled": false,
+          "docker_socket_enabled": false,
+          "direct_secret_reads_enabled": false,
+          "every_execution_audited": true,
+          "result_checked": true,
+          "no_fake_done": true
+        },
+        "next_action": "Open and approve an Agent Zero Bridge Session before POSTing adapter actions."
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 400,
+      "json": {
+        "ok": false,
+        "http_status": 400,
+        "mode": "agent_zero_bridge_execution_gateway",
+        "action": "report.create",
+        "adapter_registered": false,
+        "adapter": null,
+        "bridge_session_required": true,
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "status": "pending_approval",
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "execution_enabled": false,
+          "blocked_reason": "owner_approval_pending"
+        },
+        "execution_enabled": false,
+        "accepted_for_execution": false,
+        "writes_enabled": false,
+        "status": "blocked",
+        "result_checked": true,
+        "no_fake_done": true,
+        "raw_local_paths_exposed": false,
+        "raw_shell_enabled": false,
+        "arbitrary_filesystem_enabled": false,
+        "root_enabled": false,
+        "docker_socket_enabled": false,
+        "direct_secret_reads_enabled": false,
+        "audit": {
+          "started": false,
+          "finished": false,
+          "start_event_id": null,
+          "finish_event_id": null,
+          "blocked_reason": null
+        },
+        "result": {
+          "registered_actions": [
+            "agent_zero.report.create",
+            "agent_zero.pdf.create",
+            "mission_control.report.attach",
+            "agentmail.send",
+            "google_drive.folder_lookup",
+            "google_drive.upload_test_file",
+            "google_drive.upload_report_pdf",
+            "google_drive.verify_link",
+            "onedrive.folder_lookup",
+            "onedrive.upload_test_file",
+            "onedrive.upload_report_pdf",
+            "onedrive.verify_link",
+            "buildwiki.run_now",
+            "obsidian.status",
+            "obsidian.note.search",
+            "obsidian.note.read",
+            "obsidian.note.summarize",
+            "obsidian.note.create",
+            "obsidian.note.update",
+            "obsidian.note.append_report_summary",
+            "obsidian.note.tag",
+            "obsidian.note.link_task_report",
+            "mempalace.status",
+            "mempalace.memory.query",
+            "mempalace.memory.summary",
+            "mempalace.memory.remember_task_result",
+            "mempalace.memory.remember_owner_preference",
+            "mempalace.memory.update_safe_summary",
+            "mempalace.memory.link_report_task",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute"
+          ],
+          "action_invoked": false
+        },
+        "normal_reply": "That action is not available through the Agent Zero Bridge execution gateway.",
+        "blocked_reason": "adapter_not_registered",
+        "error": null
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/execute",
+      "method": "POST",
+      "status": 400,
+      "json": {
+        "ok": false,
+        "http_status": 400,
+        "mode": "agent_zero_bridge_execution_gateway",
+        "action": "zapier.write",
+        "adapter_registered": false,
+        "adapter": null,
+        "bridge_session_required": true,
+        "bridge_session": {
+          "session_id": "bs_036335d2-74ff-430f-a2fa-de99258820cf",
+          "status": "pending_approval",
+          "expires_at": "2026-05-09T07:57:22.471Z",
+          "execution_enabled": false,
+          "blocked_reason": "owner_approval_pending"
+        },
+        "execution_enabled": false,
+        "accepted_for_execution": false,
+        "writes_enabled": false,
+        "status": "blocked",
+        "result_checked": true,
+        "no_fake_done": true,
+        "raw_local_paths_exposed": false,
+        "raw_shell_enabled": false,
+        "arbitrary_filesystem_enabled": false,
+        "root_enabled": false,
+        "docker_socket_enabled": false,
+        "direct_secret_reads_enabled": false,
+        "audit": {
+          "started": false,
+          "finished": false,
+          "start_event_id": null,
+          "finish_event_id": null,
+          "blocked_reason": null
+        },
+        "result": {
+          "registered_actions": [
+            "agent_zero.report.create",
+            "agent_zero.pdf.create",
+            "mission_control.report.attach",
+            "agentmail.send",
+            "google_drive.folder_lookup",
+            "google_drive.upload_test_file",
+            "google_drive.upload_report_pdf",
+            "google_drive.verify_link",
+            "onedrive.folder_lookup",
+            "onedrive.upload_test_file",
+            "onedrive.upload_report_pdf",
+            "onedrive.verify_link",
+            "buildwiki.run_now",
+            "obsidian.status",
+            "obsidian.note.search",
+            "obsidian.note.read",
+            "obsidian.note.summarize",
+            "obsidian.note.create",
+            "obsidian.note.update",
+            "obsidian.note.append_report_summary",
+            "obsidian.note.tag",
+            "obsidian.note.link_task_report",
+            "mempalace.status",
+            "mempalace.memory.query",
+            "mempalace.memory.summary",
+            "mempalace.memory.remember_task_result",
+            "mempalace.memory.remember_owner_preference",
+            "mempalace.memory.update_safe_summary",
+            "mempalace.memory.link_report_task",
+            "mcp.tools.schema_read",
+            "mcp.tool.execute"
+          ],
+          "action_invoked": false
+        },
+        "normal_reply": "That action is not available through the Agent Zero Bridge execution gateway.",
+        "blocked_reason": "adapter_not_registered",
+        "error": null
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/bridge-session/audit",
+      "method": "GET",
+      "status": 405,
+      "json": {
+        "raw": ""
+      }
+    }
+  ],
+  "db_counts": {
+    "approval_requests": 1,
+    "audit_events": 1,
+    "approved_requests": 0,
+    "pending_requests": 1
+  }
+}

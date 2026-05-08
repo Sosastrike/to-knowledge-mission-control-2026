@@ -1,0 +1,66 @@
+{
+  "checked_at": "2026-05-08T20:07:26.829Z",
+  "base": "http://127.0.0.1:3337",
+  "routes": [
+    {
+      "path": "/api/gateway/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/gateway/registry",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/gateway/agent-hub/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/bridge/agent-zero/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/bridge/hermes/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/bridge/pi/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/gateway/space-agent/youtube/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/openclaw/doctor",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/firecrawl/status",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/security-scan",
+      "status": 401,
+      "preview": "{\"error\":\"Unauthorized\"}"
+    }
+  ]
+}

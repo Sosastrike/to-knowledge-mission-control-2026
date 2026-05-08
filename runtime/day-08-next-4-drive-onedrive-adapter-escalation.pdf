@@ -1,0 +1,185 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3278 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-next-4-drive-onedrive-adapter-escalation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 NEXT-4 — Drive / OneDrive Adapter Escalation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Google Drive and OneDrive from generic blocked to exact adapter and auth readiness proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS \(provider-specific routes are live and safely gated; both providers remain blocked ) Tj
+0 -12 Td
+(for upload\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked provider status endpoints for Google Drive and OneDrive.) Tj
+0 -12 Td
+(2. Probed folder lookup and upload-report routes for each provider.) Tj
+0 -12 Td
+(3. Verified Bridge Session requirement on mutation-capable routes.) Tj
+0 -12 Td
+(4. Verified provider separation \(no merged fake abstraction\).) Tj
+0 -12 Td
+(5. Verified no token exposure and no raw path exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes / Proof) Tj
+0 -12 Td
+(- Evidence: `runtime/day-08-next-4-drive-onedrive-proof.json`) Tj
+0 -12 Td
+(- Status routes:) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/google-drive/status` -> `200`, blocked `google_drive_upload_conn) Tj
+0 -12 Td
+(ector_not_configured`) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/onedrive/status` -> `200`, blocked `onedrive_upload_connector_no) Tj
+0 -12 Td
+(t_configured`) Tj
+0 -12 Td
+(- Mutation probes:) Tj
+0 -12 Td
+(  - Google Drive folder lookup -> `423` blocked) Tj
+0 -12 Td
+(  - OneDrive folder lookup -> `423` blocked) Tj
+0 -12 Td
+(  - Google Drive upload report -> `423` blocked) Tj
+0 -12 Td
+(  - OneDrive upload report -> `423` blocked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner OAuth Action Package) Tj
+0 -12 Td
+(1. Complete approved OAuth/connector setup for Google Drive.) Tj
+0 -12 Td
+(2. Complete approved OAuth/connector setup for OneDrive.) Tj
+0 -12 Td
+(3. Keep providers separate in policy and execution.) Tj
+0 -12 Td
+(4. Approve scoped Bridge Session for one upload test per provider.) Tj
+0 -12 Td
+(5. Codex verifies real upload + safe link + audit trail.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-08-next-4-drive-onedrive-adapter-escalation.md`) Tj
+0 -12 Td
+(- `runtime/day-08-next-4-drive-onedrive-adapter-escalation.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-4-drive-onedrive-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Services / Commits) Tj
+0 -12 Td
+(- Tests: focused route probes only.) Tj
+0 -12 Td
+(- Services: Mission Control runtime local-only.) Tj
+0 -12 Td
+(- Commits: pending Day 08 batch commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Report-only rollback: `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No OAuth token values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No fake upload claim.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Drive/OneDrive readiness increased for route clarity and policy gating.) Tj
+0 -12 Td
+(- GO remains blocked until real uploads succeed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 249 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Continue with AgentMail and YouTube live-proof lanes; retry Drive/OneDrive live upload immediate) Tj
+0 -12 Td
+(ly after OAuth + Bridge scope are available.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003577 00000 n 
+0000003703 00000 n 
+0000004003 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4073
+%%EOF

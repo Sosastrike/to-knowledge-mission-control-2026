@@ -1,0 +1,66 @@
+{
+  "checked_at": "2026-05-08T20:07:22.212Z",
+  "base": "http://127.0.0.1:3337",
+  "routes": [
+    {
+      "path": "/api/gateway/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_status_read_only\",\"generated_at\":\"2026-05-08T20:07:22.239Z\",\"status\":\"degraded\",\"execution_enabled\":false,\"writes_enabled\":false,\"external_writes_enabled\":false,\"totals\":{\"nodes\":45,\"edges\":82,\"capabilities\":86,\"f"
+    },
+    {
+      "path": "/api/gateway/registry",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_registry_read_only\",\"registry\":{\"version\":\"gateway_registry_v1\",\"generated_at\":\"2026-05-08T20:07:23.003Z\",\"nodes\":[{\"id\":\"owner\",\"label\":\"Owner\",\"kind\":\"owner\",\"status\":\"connected\",\"owner\":\"owner\",\"visibility\":\"ow"
+    },
+    {
+      "path": "/api/gateway/agent-hub/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_agent_hub_status_read_only\",\"generated_at\":\"2026-05-08T20:07:23.750Z\",\"title\":\"Agent Hub / Control Center\",\"source\":\"gateway_registry\",\"mock_data_used\":false,\"execution_enabled\":false,\"writes_enabled\":false,\"exter"
+    },
+    {
+      "path": "/api/bridge/agent-zero/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_commander_status_bridge_session_execution\",\"generated_at\":\"2026-05-08T20:07:24.589Z\",\"agent\":{\"id\":\"agent_zero\",\"name\":\"Agent Zero\",\"status\":\"degraded\",\"role\":\"ecosystem commander\",\"mode\":\"bridge_session_execut"
+    },
+    {
+      "path": "/api/bridge/hermes/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"hermes_lieutenant_status_read_only\",\"generated_at\":\"2026-05-08T20:07:25.445Z\",\"health\":\"unreachable\",\"version\":null,\"reachable\":false,\"auth_configured\":false,\"execution_enabled\":false,\"blocker\":\"hermes_not_installed\",\"sta"
+    },
+    {
+      "path": "/api/bridge/pi/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"pi_dispatcher_shadow_status\",\"generated_at\":\"2026-05-08T20:07:26.186Z\",\"node_id\":\"pi\",\"agent_hub_id\":\"pi-mono\",\"canonical_gateway_node\":\"pi_dispatcher\",\"role\":\"Dispatcher / Route Optimizer Candidate\",\"authority\":\"advisory"
+    },
+    {
+      "path": "/api/bridge/agent-zero/bridge-session",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T20:07:26.240Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,\"http_status\":200,\"version\":\"M v1.12\"},\"agent_zero_api_key_configured\":false,\"persistence_ready\":tru"
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"provider\":\"telegram\",\"mode\":\"agent_zero_telegram_delivery_adapter\",\"status\":\"blocked\",\"connector_configured\":false,\"execution_enabled\":false,\"writes_enabled\":false,\"bridge_session_required\":true,\"external_write_requires_bridge_s"
+    },
+    {
+      "path": "/api/gateway/space-agent/youtube/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_youtube_connector_status\",\"status\":\"limited\",\"metadata_enabled\":true,\"transcript_connector_proven\":false,\"blocked_reason\":\"youtube_transcript_connector_not_proven\",\"no_secrets_exposed\":true,\"no_raw_paths\":true"
+    },
+    {
+      "path": "/api/openclaw/doctor",
+      "status": 400,
+      "preview": "{\"error\":\"OpenClaw is not installed or not reachable\"}"
+    },
+    {
+      "path": "/api/firecrawl/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"status\":\"credential_required\",\"state\":\"CREDENTIAL_REQUIRED\",\"keyPresent\":false,\"sdkLoaded\":false,\"key_present\":false,\"sdk_loaded\":false,\"firecrawl_backend_truth\":{\"mission_control_process_has_firecrawl_api_key\":false,\"mission_co"
+    },
+    {
+      "path": "/api/security-scan",
+      "status": 200,
+      "preview": "{\"overall\":\"needs-attention\",\"score\":63,\"timestamp\":1778270846825,\"categories\":{\"credentials\":{\"score\":50,\"checks\":[{\"id\":\"auth_pass\",\"name\":\"Admin password configured\",\"status\":\"fail\",\"detail\":\"AUTH_PASS is not configured\",\"fix\":\"Set AUTH_"
+    }
+  ]
+}

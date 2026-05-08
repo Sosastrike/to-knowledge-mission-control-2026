@@ -1,0 +1,193 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3070 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-openclaw-owner-admin-action-package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 — OpenClaw+ Owner/Admin Action Package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Unblock authenticated OpenClaw+ doctor execution in Mission Control without weakening auth and w) Tj
+0 -12 Td
+(ithout `.env` edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Truth) Tj
+0 -12 Td
+(- `GET /api/openclaw/doctor` returns `400`.) Tj
+0 -12 Td
+(- `POST /api/openclaw/doctor` returns `400`.) Tj
+0 -12 Td
+(- Response: `OpenClaw is not installed or not reachable`.) Tj
+0 -12 Td
+(- Runtime user/context: `sosastrike`.) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337` \(local-only\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blocker) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Root Cause) Tj
+0 -12 Td
+(No executable OpenClaw+ CLI binary is reachable from Mission Control runtime PATH or configured ) Tj
+0 -12 Td
+(fallback binary path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Required Owner/Admin Action) Tj
+0 -12 Td
+(Install or expose one approved CLI binary for runtime execution:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Preferred binary: `openclaw`) Tj
+0 -12 Td
+(2. Accepted fallback binaries: `clawdbot`, `claudeclaw`) Tj
+0 -12 Td
+(3. Ensure Mission Control runtime service user can execute the binary.) Tj
+0 -12 Td
+(4. Expose via one of:) Tj
+0 -12 Td
+(   - runtime PATH, or) Tj
+0 -12 Td
+(   - `OPENCLAW_BIN`, or) Tj
+0 -12 Td
+(   - `CLAWDBOT_BIN`, or) Tj
+0 -12 Td
+(   - `OPENCLAW_FALLBACK_BIN` \(service-manager level\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Rules Preserved) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No destructive repair.) Tj
+0 -12 Td
+(- No deletion of agents/skills/memory/reports/governance.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Codex Verification Steps After Owner/Admin Action) Tj
+0 -12 Td
+(1. Restart Mission Control runtime if required by service manager.) Tj
+0 -12 Td
+(2. Run authenticated:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(   - `POST /api/openclaw/doctor` \(safe path only\)) Tj
+0 -12 Td
+(3. Confirm doctor returns real payload with issue list/count.) Tj
+0 -12 Td
+(4. Start Day 08 OpenClaw+ issue-reduction phase immediately after payload is live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-08-openclaw-owner-admin-action-package.md`) Tj
+0 -12 Td
+(- `runtime/day-08-openclaw-owner-admin-action-package.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Services / Commits) Tj
+0 -12 Td
+(- Tests: not applicable for this action package.) Tj
+0 -12 Td
+(- Service state: Mission Control runtime remained local-only on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Commits: pending Day 08 batch commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Report-only rollback: `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Confirmed: no secret values, tokens, or auth file contents exposed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 502 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- OpenClaw+ readiness can increase for blocker clarity only.) Tj
+0 -12 Td
+(- OpenClaw+ cannot move to GO until doctor payload is live and issue reduction executes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Continue non-dependent Day 08 tracks \(Bridge, Paperclip, Telegram, Drive/OneDrive, AgentMail, Yo) Tj
+0 -12 Td
+(uTube, Firecrawl parallel\) while owner/admin unblocks CLI runtime.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003369 00000 n 
+0000003495 00000 n 
+0000004048 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4118
+%%EOF

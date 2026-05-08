@@ -1,0 +1,160 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3124 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-next-5-agentmail-connector-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 NEXT-5 — AgentMail Connector Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move AgentMail from vague visibility to exact incoming/outgoing connector truth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED/PARTIAL \(connector surfaces visible; send remains blocked and Bridge-gated\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Queried Gateway registry for AgentMail node visibility.) Tj
+0 -12 Td
+(2. Queried Bridge execution adapters and filtered AgentMail send adapter state.) Tj
+0 -12 Td
+(3. Probed execution path with `agentmail.send` action under current session state.) Tj
+0 -12 Td
+(4. Verified no unrestricted external send was executed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes / Proof) Tj
+0 -12 Td
+(- Evidence: `runtime/day-08-next-5-agentmail-proof.json`) Tj
+0 -12 Td
+(- Route results:) Tj
+0 -12 Td
+(  - `GET /api/gateway/registry` -> `200`; `integration_agentmail` status `blocked`, blocker `ema) Tj
+0 -12 Td
+(il_provider_not_visible_or_configured`) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/execute` -> `200`; adapter `agentmail.send` present, status `blo) Tj
+0 -12 Td
+(cked`, blocker `agentmail_send_connector_not_configured`) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/execute` \(`agentmail.send`\) -> `423`, blocker `active_bridge_se) Tj
+0 -12 Td
+(ssion_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `email_provider_not_visible_or_configured`) Tj
+0 -12 Td
+(- `agentmail_send_connector_not_configured`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package) Tj
+0 -12 Td
+(1. Configure approved AgentMail provider/connector.) Tj
+0 -12 Td
+(2. Confirm domain allow-list policy.) Tj
+0 -12 Td
+(3. Approve scoped Bridge Session.) Tj
+0 -12 Td
+(4. Run one allowed-domain send proof and verify audit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-08-next-5-agentmail-connector-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-08-next-5-agentmail-connector-proof.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-5-agentmail-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Services / Commits) Tj
+0 -12 Td
+(- Tests: focused adapter status + execution-gate probes.) Tj
+0 -12 Td
+(- Services: Mission Control runtime local-only.) Tj
+0 -12 Td
+(- Commits: pending Day 08 batch commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Report-only rollback: `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No API keys printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- AgentMail remains PARTIAL/BLOCKED until connector config and one approved allowed-domain send ) Tj
+0 -12 Td
+(proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed with YouTube transcript escalation and Firecrawl parallel status while awaiting connecto) Tj
+0 -12 Td
+(r + approval unblock.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003417 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3487
+%%EOF

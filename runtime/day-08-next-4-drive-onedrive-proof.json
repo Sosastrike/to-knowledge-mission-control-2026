@@ -1,0 +1,266 @@
+{
+  "checked_at": "2026-05-08T19:59:50.509Z",
+  "base": "http://127.0.0.1:3337",
+  "calls": [
+    {
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "provider": "google_drive",
+        "mode": "agent_zero_google_drive_delivery_adapter",
+        "status": "blocked",
+        "connected": false,
+        "configured": false,
+        "upload_connector_configured": false,
+        "upload_tool_visible": false,
+        "folder_lookup_tool_visible": false,
+        "schema_available": false,
+        "tool_names": [],
+        "folder_lookup_tool_names": [],
+        "upload_tool_names": [],
+        "credential_present": false,
+        "credential_values_exposed": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "external_write_requires_bridge_session": true,
+        "steps": [
+          {
+            "id": "status_only",
+            "label": "Status only",
+            "status": "available",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": false,
+            "connector_configured": true,
+            "blocked_reason": null
+          },
+          {
+            "id": "folder_lookup",
+            "label": "Folder lookup",
+            "status": "blocked",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "google_drive_folder_lookup_connector_not_configured"
+          },
+          {
+            "id": "upload_test_file",
+            "label": "Upload test file",
+            "status": "blocked",
+            "read_only": false,
+            "external_write": true,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "google_drive_upload_connector_not_configured"
+          },
+          {
+            "id": "upload_report_pdf",
+            "label": "Upload report/PDF",
+            "status": "blocked",
+            "read_only": false,
+            "external_write": true,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "google_drive_upload_connector_not_configured"
+          },
+          {
+            "id": "verify_link",
+            "label": "Verify link",
+            "status": "blocked",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "google_drive_link_verification_adapter_not_configured"
+          }
+        ],
+        "normal_reply": "Google Drive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "google_drive_upload_connector_not_configured",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/status",
+      "method": "GET",
+      "status": 200,
+      "body": {
+        "ok": true,
+        "provider": "onedrive",
+        "mode": "agent_zero_onedrive_delivery_adapter",
+        "status": "blocked",
+        "connected": false,
+        "configured": false,
+        "upload_connector_configured": false,
+        "upload_tool_visible": false,
+        "folder_lookup_tool_visible": false,
+        "schema_available": false,
+        "tool_names": [],
+        "folder_lookup_tool_names": [],
+        "upload_tool_names": [],
+        "credential_present": false,
+        "credential_values_exposed": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "external_write_requires_bridge_session": true,
+        "steps": [
+          {
+            "id": "status_only",
+            "label": "Status only",
+            "status": "available",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": false,
+            "connector_configured": true,
+            "blocked_reason": null
+          },
+          {
+            "id": "folder_lookup",
+            "label": "Folder lookup",
+            "status": "blocked",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "onedrive_folder_lookup_connector_not_configured"
+          },
+          {
+            "id": "upload_test_file",
+            "label": "Upload test file",
+            "status": "blocked",
+            "read_only": false,
+            "external_write": true,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "onedrive_upload_connector_not_configured"
+          },
+          {
+            "id": "upload_report_pdf",
+            "label": "Upload report/PDF",
+            "status": "blocked",
+            "read_only": false,
+            "external_write": true,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "onedrive_upload_connector_not_configured"
+          },
+          {
+            "id": "verify_link",
+            "label": "Verify link",
+            "status": "blocked",
+            "read_only": true,
+            "external_write": false,
+            "bridge_session_required": true,
+            "connector_configured": false,
+            "blocked_reason": "onedrive_link_verification_adapter_not_configured"
+          }
+        ],
+        "normal_reply": "OneDrive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "onedrive_upload_connector_not_configured",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/folder-lookup",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "provider": "google_drive",
+        "action": "google_drive.folder_lookup",
+        "status": "blocked",
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "owner_approval_required": true,
+        "upload_connector_configured": false,
+        "normal_reply": "Google Drive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "google_drive_upload_connector_not_configured",
+        "folder": "Mission Control Reports",
+        "verify_link": null,
+        "report_link": null,
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/folder-lookup",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "provider": "onedrive",
+        "action": "onedrive.folder_lookup",
+        "status": "blocked",
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "owner_approval_required": true,
+        "upload_connector_configured": false,
+        "normal_reply": "OneDrive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "onedrive_upload_connector_not_configured",
+        "folder": "Mission Control Reports",
+        "verify_link": null,
+        "report_link": null,
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/upload-report",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "provider": "google_drive",
+        "action": "google_drive.upload_report_pdf",
+        "status": "blocked",
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "owner_approval_required": true,
+        "upload_connector_configured": false,
+        "normal_reply": "Google Drive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "google_drive_upload_connector_not_configured",
+        "folder": "Mission Control Reports",
+        "verify_link": null,
+        "report_link": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/upload-report",
+      "method": "POST",
+      "status": 423,
+      "body": {
+        "ok": false,
+        "provider": "onedrive",
+        "action": "onedrive.upload_report_pdf",
+        "status": "blocked",
+        "accepted_for_execution": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "bridge_session_required": true,
+        "owner_approval_required": true,
+        "upload_connector_configured": false,
+        "normal_reply": "OneDrive upload is blocked because the upload connector is not configured.",
+        "blocked_reason": "onedrive_upload_connector_not_configured",
+        "folder": "Mission Control Reports",
+        "verify_link": null,
+        "report_link": "/api/bridge/agent-zero/reports/azr_moxc9m4d_31beb06fd77d",
+        "no_fake_done": true,
+        "no_tokens_exposed": true
+      }
+    }
+  ]
+}

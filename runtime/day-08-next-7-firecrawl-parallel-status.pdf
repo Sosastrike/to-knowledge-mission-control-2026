@@ -1,0 +1,177 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3161 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-next-7-firecrawl-parallel-status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 NEXT-7 — Firecrawl Parallel Status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Track Firecrawl readiness without blocking other Day 08 production lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(unchanged\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Checked Firecrawl credential presence as yes/no only.) Tj
+0 -12 Td
+(2. Checked Firecrawl SDK/backend runner presence.) Tj
+0 -12 Td
+(3. Queried Firecrawl status routes.) Tj
+0 -12 Td
+(4. Probed read-only search route availability.) Tj
+0 -12 Td
+(5. Cross-checked Gateway registry visibility for ecosystem context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes / Proof) Tj
+0 -12 Td
+(- Evidence: `runtime/day-08-next-7-firecrawl-proof.json`) Tj
+0 -12 Td
+(- Runtime checks:) Tj
+0 -12 Td
+(  - `env_firecrawl_key_present=false`) Tj
+0 -12 Td
+(  - `sdk_installed=false`) Tj
+0 -12 Td
+(- Route results:) Tj
+0 -12 Td
+(  - `GET /api/firecrawl/status` -> `200`, state `CREDENTIAL_REQUIRED`) Tj
+0 -12 Td
+(  - `GET /api/firecrawl/readiness` -> `404` \(backend readiness route not present\)) Tj
+0 -12 Td
+(  - `POST /api/firecrawl/search` -> `404` \(read-only runner route not present\)) Tj
+0 -12 Td
+(  - `GET /api/gateway/registry` -> `200`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No credential values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No broad crawl/private/login/write activity attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Provide approved Firecrawl credential source to Mission Control runtime.) Tj
+0 -12 Td
+(2. Install/wire Firecrawl backend SDK/runner for read-only operations.) Tj
+0 -12 Td
+(3. Keep scope to one read-only public-page smoke only.) Tj
+0 -12 Td
+(4. After unblock, Codex runs one smoke against `https://example.com/` and returns ResearchPacket) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-08-next-7-firecrawl-parallel-status.md`) Tj
+0 -12 Td
+(- `runtime/day-08-next-7-firecrawl-parallel-status.pdf`) Tj
+0 -12 Td
+(- `runtime/day-08-next-7-firecrawl-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Services / Commits) Tj
+0 -12 Td
+(- Tests: focused Firecrawl readiness probes only.) Tj
+0 -12 Td
+(- Services: Mission Control runtime local-only.) Tj
+0 -12 Td
+(- Commits: pending Day 08 batch commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Report-only rollback: `git revert <day08_report_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Firecrawl remains **35% BLOCKED** until credential + backend + live smoke are available.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Continue Bridge/Paperclip/Telegram/Drive/AgentMail/YouTube lanes; keep Firecrawl in parallel blo) Tj
+0 -12 Td
+(cked state until owner/admin prerequisites are delivered.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 31 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003460 00000 n 
+0000003586 00000 n 
+0000003667 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3737
+%%EOF

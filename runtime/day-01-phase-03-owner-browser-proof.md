@@ -16,6 +16,19 @@ This phase is intentionally strict. A server-side route smoke, temp-admin smoke,
 
 No owner-auth visual proof is being faked.
 
+## Follow-Up Attempt
+
+Follow-up checked on 2026-05-08 after Day 1 restart/smoke acceptance:
+
+| Item | Result |
+| --- | --- |
+| Owner-authenticated browser/session tool availability | Not available in this Codex session |
+| Browser-use callable tool discovery | No browser navigation/screenshot tool exposed |
+| Production restart repeat | Not repeated, per owner instruction |
+| Owner visual proof state | Still blocked by `owner_authenticated_browser_session_required` |
+
+This report remains the authoritative owner-browser proof report until a real owner-authenticated session is available.
+
 ## Scope
 
 Required owner-authenticated visual checks:
@@ -139,4 +152,4 @@ This phase writes reports only. Rollback is to revert the eventual Day 1 report 
 
 ## Exact Next Step
 
-Continue to Day 1 / Phase 4: UI and API security hygiene. Re-run owner-auth visual proof as soon as an owner-authenticated browser session is safely available.
+Continue to Hermes safe live adapter work. Re-run owner-auth visual proof as soon as an owner-authenticated browser session is safely available.

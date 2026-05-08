@@ -1,0 +1,144 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3126 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-delivery-adapter-implementation-path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-3 — Delivery Adapter Implementation Path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move delivery from repeated blocked checks to concrete adapter-path implementation and exact blo) Tj
+0 -12 Td
+(ckers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(adapter routes are wired; Google Drive/OneDrive route status mapping was fixed; connect) Tj
+0 -12 Td
+(ors remain blocked/gated until auth + Bridge approval\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Work Completed) Tj
+0 -12 Td
+(1. Confirmed Telegram upload route uses Agent Zero adapter path:) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(2. Confirmed Bridge Session gating in Telegram adapter \(`active_bridge_session_required` / `owne) Tj
+0 -12 Td
+(r_approval_pending` behavior\).) Tj
+0 -12 Td
+(3. Fixed Google Drive upload route HTTP status mapping:) Tj
+0 -12 Td
+(   - was hard-coded `423`) Tj
+0 -12 Td
+(   - now returns `200` on success, `502` on failed adapter execution, `423` while blocked.) Tj
+0 -12 Td
+(4. Fixed OneDrive upload route HTTP status mapping:) Tj
+0 -12 Td
+(   - was hard-coded `423`) Tj
+0 -12 Td
+(   - now returns `200` on success, `502` on failed adapter execution, `423` while blocked.) Tj
+0 -12 Td
+(5. Confirmed no route claims send/upload success while still blocked by missing approval/session) Tj
+0 -12 Td
+(/auth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/google-drive/upload-report/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/onedrive/upload-report/route.ts`) Tj
+0 -12 Td
+(- `runtime/next-delivery-adapter-implementation-path.md`) Tj
+0 -12 Td
+(- `runtime/next-delivery-adapter-implementation-path.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Delivery Truth) Tj
+0 -12 Td
+(- Telegram: gated/blocked until connector + approved Bridge Session.) Tj
+0 -12 Td
+(- Google Drive: adapter route implemented; upload connector still blocked.) Tj
+0 -12 Td
+(- OneDrive: adapter route implemented; upload connector still blocked.) Tj
+0 -12 Td
+(- AgentMail: registry/gateway visibility exists; outgoing send remains Bridge-scoped and connect) Tj
+0 -12 Td
+(or-dependent.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blockers) Tj
+0 -12 Td
+(- `telegram_report_delivery_adapter_not_configured` or `active_bridge_session_required`) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `agentmail_send_connector_not_configured` \(or domain/approval gate blocker when applicable\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmations) Tj
+0 -12 Td
+(- No fake send/upload claims.) Tj
+0 -12 Td
+(- No token printing.) Tj
+0 -12 Td
+(- No raw local path exposure in delivery responses.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(After owner-approved Bridge Session and connector auth availability, run one real scoped send/up) Tj
+0 -12 Td
+(load proof per provider and verify success/audit.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003419 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3489
+%%EOF

@@ -1,0 +1,187 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3315 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-bridge-approved-execution-action-package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-1 — Bridge Approved Execution Action Package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Prepare one exact owner approval path for Bridge execution instead of repeating generic `owner_a) Tj
+0 -12 Td
+(pproval_pending`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(action package ready; owner approval still required for live execution\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified Bridge persistence tables exist:) Tj
+0 -12 Td
+(   - `bridge_approval_requests`) Tj
+0 -12 Td
+(   - `bridge_audit_events`) Tj
+0 -12 Td
+(2. Queried latest pending approval and linked Bridge session from local Mission Control DB.) Tj
+0 -12 Td
+(3. Defined one exact safe action scope and expected execution/audit behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- `bridge_approval_requests` row count: `1`) Tj
+0 -12 Td
+(- `bridge_audit_events` row count: `1`) Tj
+0 -12 Td
+(- latest approval:) Tj
+0 -12 Td
+(  - `id=apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7`) Tj
+0 -12 Td
+(  - `connector=agent_zero`) Tj
+0 -12 Td
+(  - `action=agent_zero.bridge_session.open`) Tj
+0 -12 Td
+(  - `approval_state=pending`) Tj
+0 -12 Td
+(- linked bridge session:) Tj
+0 -12 Td
+(  - `id=bs_036335d2-74ff-430f-a2fa-de99258820cf`) Tj
+0 -12 Td
+(  - `session_state=pending_approval`) Tj
+0 -12 Td
+(  - `execution_enabled=0`) Tj
+0 -12 Td
+(  - `approval_request_id=apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Approval Path) Tj
+0 -12 Td
+(1. **Scope**: `agent_zero.bridge_session.open` for one safe read-only confirmation action.) Tj
+0 -12 Td
+(2. **Preferred safe action**: Mission Control report-link confirmation \(no external write\).) Tj
+0 -12 Td
+(3. **Expected route**: `POST /api/bridge/agent-zero/execute` with approved `bridge_session_id`.) Tj
+0 -12 Td
+(4. **Expected audit row**: new row in `bridge_audit_events` for approved execution action.) Tj
+0 -12 Td
+(5. **Expected expiration**: Bridge session expires at configured session expiry \(`expires_at` in) Tj
+0 -12 Td
+( `bridge_sessions`\).) Tj
+0 -12 Td
+(6. **Outside-scope behavior**: blocked with scope/approval reason \(must remain non-executable\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Approval Package) Tj
+0 -12 Td
+(1. Approve pending request ID: `apr_7848d653-dee4-4d54-9e0c-ac334de2f8b7` through canonical owne) Tj
+0 -12 Td
+(r approval channel.) Tj
+0 -12 Td
+(2. Confirm approved session: `bs_036335d2-74ff-430f-a2fa-de99258820cf`.) Tj
+0 -12 Td
+(3. Notify Codex to run one scoped execution proof and audit verification immediately.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Explicit Blockers) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmations) Tj
+0 -12 Td
+(- No SMB/Fork 2 execution.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/next-bridge-approved-execution-action-package.md`) Tj
+0 -12 Td
+(- `runtime/next-bridge-approved-execution-action-package.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 301 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Run one approved scoped action immediately after owner approval and verify:) Tj
+0 -12 Td
+(- `accepted_for_execution=true`) Tj
+0 -12 Td
+(- new `bridge_audit_events` row) Tj
+0 -12 Td
+(- session expiry enforcement) Tj
+0 -12 Td
+(- outside-scope action blocked) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003614 00000 n 
+0000003740 00000 n 
+0000004092 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4162
+%%EOF

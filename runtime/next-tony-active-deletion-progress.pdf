@@ -1,0 +1,160 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3176 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-tony-active-deletion-progress) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-5 — Tony Active Deletion Progress) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Remove Tony from active system assumptions and active owner-facing/control surfaces.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(active-assumption removals started; full cross-surface cleanup still in progress\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory Snapshot \(Active Code Surface\)) Tj
+0 -12 Td
+(Active Tony-linked references were found in:) Tj
+0 -12 Td
+(1. Bridge live-check script assumptions \(`scripts/check-bridge-capability-matrix-live.mjs`\).) Tj
+0 -12 Td
+(2. Bridge read-only MVP script assumptions \(`scripts/check-bridge-readonly-mvp.mjs`\).) Tj
+0 -12 Td
+(3. Capability matrix owner-visible payload details in `src/app/api/bridge/capability-matrix/rout) Tj
+0 -12 Td
+(e.ts`.) Tj
+0 -12 Td
+(4. Additional Tony mentions remain in tests and historical/runtime artifacts; these are being tr) Tj
+0 -12 Td
+(iaged by active runtime vs historical/test-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Progress in This Phase) Tj
+0 -12 Td
+(1. Removed active Tony requirement from Bridge live-check script.) Tj
+0 -12 Td
+(2. Updated live-check required active agents to:) Tj
+0 -12 Td
+(   - Agent Zero) Tj
+0 -12 Td
+(   - Hermes) Tj
+0 -12 Td
+(   - Pi) Tj
+0 -12 Td
+(   - SpaceAgent) Tj
+0 -12 Td
+(   - Paperclip) Tj
+0 -12 Td
+(   - OpenClaw+ gateway layer) Tj
+0 -12 Td
+(3. Removed Tony-specific preview assertion in Bridge read-only MVP script.) Tj
+0 -12 Td
+(4. Expanded capability-matrix active agent payload to include Pi, SpaceAgent, and Paperclip expl) Tj
+0 -12 Td
+(icitly.) Tj
+0 -12 Td
+(5. Removed raw Tony home-path from Hermes provider-route display in capability matrix payload \(`) Tj
+0 -12 Td
+(sandbox_home=hermes-sandbox`\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `scripts/check-bridge-capability-matrix-live.mjs`) Tj
+0 -12 Td
+(- `scripts/check-bridge-readonly-mvp.mjs`) Tj
+0 -12 Td
+(- `src/app/api/bridge/capability-matrix/route.ts`) Tj
+0 -12 Td
+(- `runtime/next-tony-active-deletion-progress.md`) Tj
+0 -12 Td
+(- `runtime/next-tony-active-deletion-progress.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Work) Tj
+0 -12 Td
+(1. Continue active runtime/controller cleanup for remaining Tony references in non-test code whe) Tj
+0 -12 Td
+(re still owner-visible or runtime-coupled.) Tj
+0 -12 Td
+(2. Keep historical/audit records non-active and non-owner-loop.) Tj
+0 -12 Td
+(3. Ensure current owner-facing active surfaces list only:) Tj
+0 -12 Td
+(   - Agent Zero) Tj
+0 -12 Td
+(   - Hermes) Tj
+0 -12 Td
+(   - Pi) Tj
+0 -12 Td
+(   - SpaceAgent) Tj
+0 -12 Td
+(   - Paperclip) Tj
+0 -12 Td
+(   - OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmations) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secret printing.) Tj
+0 -12 Td
+(- No unrelated data deletion.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Run focused validation for updated capability matrix + scripts, then continue phased Tony active) Tj
+0 -12 Td
+(-surface removal through remaining runtime paths.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003469 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3539
+%%EOF

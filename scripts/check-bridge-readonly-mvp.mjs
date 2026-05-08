@@ -97,7 +97,7 @@ if (failures.length === 0) {
     'no_persistence_enabled: true',
     'no_telegram_send_enabled: true',
     'approval_request_created: false',
-    'Tony -> Telegram',
+    'Agent Zero -> owner-channel approval',
   ]) {
     if (!telegramApprovalPreview.includes(needle)) failures.push(`Telegram approval preview missing ${needle}`)
   }

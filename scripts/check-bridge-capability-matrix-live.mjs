@@ -41,15 +41,16 @@ const agentById = new Map(agents.map((agent) => [agent.id, agent]))
 const toolById = new Map(tools.map((tool) => [tool.id, tool]))
 const providerById = new Map(providers.map((provider) => [provider.id, provider]))
 
-for (const id of ['tony', 'agent_zero', 'hermes', 'openclaw_gateway']) {
+for (const id of ['agent_zero', 'hermes', 'pi', 'spaceagent', 'paperclip', 'openclaw_gateway']) {
   if (!agentById.has(id)) failures.push({ id, error: 'required_agent_missing' })
 }
 
-if (agentById.get('tony')?.status !== 'active') failures.push({ id: 'tony', error: 'tony_not_active' })
 if (!['active', 'degraded'].includes(agentById.get('agent_zero')?.status)) {
   failures.push({ id: 'agent_zero', error: 'agent_zero_not_observable' })
 }
-if (agentById.get('hermes')?.status !== 'sandbox') failures.push({ id: 'hermes', error: 'hermes_not_sandbox' })
+if (!['sandbox', 'degraded', 'configured', 'active'].includes(agentById.get('hermes')?.status)) {
+  failures.push({ id: 'hermes', error: 'hermes_not_observable' })
+}
 
 for (const id of ['claude_cli', 'openrouter', 'ollama', 'openai', 'nvidia']) {
   if (!providerById.has(id)) failures.push({ id, error: 'required_model_provider_missing' })

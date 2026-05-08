@@ -15,5 +15,7 @@ export async function POST(request: NextRequest) {
     folder: typeof body.folder === 'string' ? body.folder : null,
     bridgeSessionId: typeof body.bridge_session_id === 'string' ? body.bridge_session_id : null,
   })
-  return NextResponse.json(result, { status: 423, headers: { 'Cache-Control': 'no-store' } })
+  const statusPayload = result as { ok?: boolean; status?: string }
+  const httpStatus = statusPayload.ok ? 200 : statusPayload.status === 'failed' ? 502 : 423
+  return NextResponse.json(result, { status: httpStatus, headers: { 'Cache-Control': 'no-store' } })
 }

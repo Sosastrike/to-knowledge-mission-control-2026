@@ -4709,7 +4709,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <strong>Bridge Mode preflight is mandatory.</strong> Every Gateway Node must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the Gateway Flow. If Bridge Mode says approval, credential, or backend work is required, the node must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
-        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and OpenCloud systems. Tony legacy is retired and hidden from active hierarchy.
+        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and Build-Wiki / Farmer systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
       <div className={styles.deprecationNotice}>

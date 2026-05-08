@@ -65,6 +65,14 @@ const KNOWN_LOCAL_SOURCES = [
   '/home/tony/to-knowledge-lightrag/docs/',
 ]
 
+function ownerSafeLocalRef(value: string | null | undefined, fallback: string): string | null {
+  return value ? fallback : null
+}
+
+function ownerSafeLocalRefs(values: string[], prefix: string): string[] {
+  return values.map((_, index) => `${prefix}_${index + 1}`)
+}
+
 type IntegrationRow = {
   provider: string
   connected: number
@@ -372,8 +380,8 @@ export async function GET(request: NextRequest) {
   const draftFarmers = (meta.draft_farmers || []).map((d) => ({
     name: d.name,
     state: d.state || 'draft_disabled',
-    source: d.source || null,
-    script_path: d.script_path || null,
+    source: ownerSafeLocalRef(d.source, 'configured_source'),
+    script_path: ownerSafeLocalRef(d.script_path, 'configured_farmer_script'),
     blockers: Array.isArray(d.blockers) ? d.blockers : [],
   }))
 
@@ -400,7 +408,7 @@ export async function GET(request: NextRequest) {
       ? {
           name: scheduled.name,
           enabled,
-          script_path: scheduled.script_path || null,
+          script_path: ownerSafeLocalRef(scheduled.script_path, 'configured_farmer_script'),
           systemd_service: scheduled.systemd_service || SERVICE_UNIT,
           systemd_timer: scheduled.systemd_timer || TIMER_UNIT,
           cadence: scheduled.cadence || meta.cadence_summary || null,
@@ -423,13 +431,13 @@ export async function GET(request: NextRequest) {
         }
       : null,
     destination: {
-      obsidian_path: VAULT_BASE.endsWith('/') ? VAULT_BASE : `${VAULT_BASE}/`,
+      obsidian_path: ownerSafeLocalRef(VAULT_BASE, 'configured_buildwiki_destination'),
       raw_count: counts.raw || meta.raw_files_count || 0,
       wiki_count: counts.wiki || meta.wiki_files_count || 0,
       archive_count: counts.archive || meta.archive_files_count || 0,
     },
-    active_sources: activeSources,
-    available_source_expansions: availableExpansions,
+    active_sources: ownerSafeLocalRefs(activeSources, 'active_source'),
+    available_source_expansions: ownerSafeLocalRefs(availableExpansions, 'available_local_source'),
     draft_external_farmers: draftFarmers,
     assigned_agents: safeAssignedAgents(meta, agentSkill),
     skill: {
@@ -506,7 +514,7 @@ export async function GET(request: NextRequest) {
         target_script: BUILDWIKI_TARGET_FARMER_SCRIPT,
         ui_state: ui.ui_state,
         is_terminal: ui.is_terminal,
-        latest_proposed_path: latest.approval ? latest.approval.target_key : null,
+        latest_proposed_path: latest.approval ? 'pending_local_source' : null,
         approval: ADD_SOURCE_PUBLIC_VIEW.pickApproval(latest.approval),
         run: ADD_SOURCE_PUBLIC_VIEW.pickRun(latest.run),
         endpoints: {

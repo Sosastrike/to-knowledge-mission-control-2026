@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       {
         ok: false,
         error: 'farmer_log_not_found',
-        log_path: '/home/tony/.openclaw/logs/opencloud-docs-farmer.log',
+        log_ref: 'buildwiki_farmer_log',
       },
       { status: 404 },
     )

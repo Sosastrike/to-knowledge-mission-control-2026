@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Delivery · Connectors</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.dl-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
+.dl-page h1{margin:0 0 6px;font-size:24px;}
+.lead{color:var(--t-3);margin:0 0 22px;max-width:760px;}
+.cat{margin-bottom:24px;}
+.cat h2{font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--t-3);margin:0 0 12px;font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;}
+.conn{background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;}
+.conn .header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.conn .ic{width:36px;height:36px;border-radius:8px;background:var(--bg-3);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.conn .nm{flex:1;font-weight:600;font-size:13.5px;}
+.conn .desc{color:var(--t-3);font-size:11.5px;line-height:1.55;min-height:34px;}
+.conn .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;font-size:11px;}
+.conn .meta div{padding:6px 8px;background:var(--bg-3);border-radius:5px;}
+.conn .meta .lbl{color:var(--t-5);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;}
+.conn .meta .val{color:var(--t-1);font-weight:600;font-size:12.5px;margin-top:1px;}
+.conn .actions{display:flex;gap:6px;margin-top:10px;}
+.conn.gray{opacity:0.55;}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="dl-page">
+<h1>Delivery Connectors</h1>
+<p class="lead">External services the Gateway can write to. Every entry has its own credentials, scope, and severity. Adding a connector means: register node → add discovery contract → set RBAC → green-light from Registry. There is no global "connect everything" switch.</p>
+
+<div class="cat">
+<h2>📧 Mail</h2>
+<div class="grid">
+  <div class="conn">
+    <div class="header"><div class="ic">📨</div><div class="nm">AgentMail</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W · primary</span></div>
+    <div class="desc">Primary mail client. Send/receive/draft/list. AZ-only for sends; Hermes can draft.</div>
+    <div class="meta"><div><div class="lbl">Mailbox</div><div class="val">ops@to-knowledge</div></div><div><div class="lbl">Today sent</div><div class="val">7</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn gray">
+    <div class="header"><div class="ic">📤</div><div class="nm">SendGrid</div><span class="pill gray" style="font-size:10px;"><span class="dot"></span>not configured</span></div>
+    <div class="desc">Bulk-send fallback. Configure API key + sender domain to enable.</div>
+    <div class="meta"><div><div class="lbl">Domain</div><div class="val">—</div></div><div><div class="lbl">Today sent</div><div class="val">—</div></div></div>
+    <div class="actions"><button class="btn sm primary">Configure</button></div>
+  </div>
+</div>
+</div>
+
+<div class="cat">
+<h2>📞 Voice & SMS</h2>
+<div class="grid">
+  <div class="conn">
+    <div class="header"><div class="ic">☎️</div><div class="nm">Twilio Voice</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+    <div class="desc">Outbound calls + inbound webhook. Signature verification active.</div>
+    <div class="meta"><div><div class="lbl">From</div><div class="val">+1 415 ···</div></div><div><div class="lbl">Today calls</div><div class="val">12</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn">
+    <div class="header"><div class="ic">💬</div><div class="nm">Twilio SMS</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+    <div class="desc">SMS send + inbound. Per-recipient throttle.</div>
+    <div class="meta"><div><div class="lbl">From</div><div class="val">+1 415 ···</div></div><div><div class="lbl">Today sent</div><div class="val">28</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn">
+    <div class="header"><div class="ic">🎙</div><div class="nm">ElevenLabs</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+    <div class="desc">TTS voice synthesis for outbound calls.</div>
+    <div class="meta"><div><div class="lbl">Voice</div><div class="val">Aiden v2</div></div><div><div class="lbl">Mins/24h</div><div class="val">42</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+</div>
+</div>
+
+<div class="cat">
+<h2>📁 Files</h2>
+<div class="grid">
+  <div class="conn">
+    <div class="header"><div class="ic">📂</div><div class="nm">Google Drive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+    <div class="desc">Project workspace. Folder allowlist on writes.</div>
+    <div class="meta"><div><div class="lbl">Account</div><div class="val">ops@to…</div></div><div><div class="lbl">Today ops</div><div class="val">142</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn">
+    <div class="header"><div class="ic">☁️</div><div class="nm">OneDrive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+    <div class="desc">Backup + cross-team handoff folder.</div>
+    <div class="meta"><div><div class="lbl">Account</div><div class="val">ops@to…</div></div><div><div class="lbl">Today ops</div><div class="val">38</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn">
+    <div class="header"><div class="ic">📁</div><div class="nm">SMB share <span class="pill red" style="font-size:9.5px;margin-left:4px;"><span class="dot"></span>blocked</span></div><span></span></div>
+    <div class="desc">Legacy on-prem share. Refused by policy — credentials outside vault.</div>
+    <div class="meta"><div><div class="lbl">Mount</div><div class="val">//corp/shared</div></div><div><div class="lbl">Status</div><div class="val" style="color:var(--st-red);">blocked</div></div></div>
+    <div class="actions"><button class="btn sm">Migration plan</button></div>
+  </div>
+</div>
+</div>
+
+<div class="cat">
+<h2>🔧 Workflow & Web</h2>
+<div class="grid">
+  <div class="conn">
+    <div class="header"><div class="ic">🔥</div><div class="nm">Firecrawl</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+    <div class="desc">Web fetch & crawl. URL allowlist enforced.</div>
+    <div class="meta"><div><div class="lbl">Quota</div><div class="val">8.4k / 10k</div></div><div><div class="lbl">Today</div><div class="val">68</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+  </div>
+  <div class="conn">
+    <div class="header"><div class="ic">🛠</div><div class="nm">n8n (OpenCloud)</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/X</span></div>
+    <div class="desc">Workflow runtime. Routed via the OpenCloud parent node.</div>
+    <div class="meta"><div><div class="lbl">Workers</div><div class="val">4</div></div><div><div class="lbl">Today runs</div><div class="val">450</div></div></div>
+    <div class="actions"><button class="btn sm">Open</button></div>
+  </div>
+  <div class="conn gray">
+    <div class="header"><div class="ic">📅</div><div class="nm">Google Calendar</div><span class="pill gray" style="font-size:10px;"><span class="dot"></span>not configured</span></div>
+    <div class="desc">Scheduling integration. Configure OAuth to enable.</div>
+    <div class="meta"><div><div class="lbl">Account</div><div class="val">—</div></div><div><div class="lbl">Today events</div><div class="val">—</div></div></div>
+    <div class="actions"><button class="btn sm primary">Configure</button></div>
+  </div>
+  <div class="conn gray">
+    <div class="header"><div class="ic">💼</div><div class="nm">Slack</div><span class="pill gray" style="font-size:10px;"><span class="dot"></span>not configured</span></div>
+    <div class="desc">Team channel posts + DMs. Add webhook + bot token to enable.</div>
+    <div class="meta"><div><div class="lbl">Workspace</div><div class="val">—</div></div><div><div class="lbl">Today msgs</div><div class="val">—</div></div></div>
+    <div class="actions"><button class="btn sm primary">Configure</button></div>
+  </div>
+</div>
+</div>
+
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Delivery · Connectors'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Delivery Connectors.html'));
+</script></body></html>

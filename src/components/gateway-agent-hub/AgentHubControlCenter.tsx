@@ -36,6 +36,17 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           </div>
         </header>
 
+        <nav className='flex gap-2 overflow-x-auto rounded-lg border border-white/10 bg-white/[0.03] p-2' aria-label='Gateway sections'>
+          <a href='/gateway' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Overview</a>
+          <a href='/gateway/routes' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Routes</a>
+          <a href='/gateway/registry' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Registry</a>
+          <a href='/gateway/policies' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Policies / Bridge</a>
+          <a href='/gateway/health' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Health</a>
+          <a href='/gateway/dispatcher' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Dispatcher</a>
+          <a href='/gateway/token-governor' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Token Governor</a>
+          <a href='/gateway/agent-hub' className='rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100'>Agent Hub</a>
+        </nav>
+
         <section className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4' aria-label='Gateway readiness summary'>
           <Metric label='agents' value={String(status.agents_total)} />
           <Metric label='live interfaces proven' value={String(status.live_interfaces_proven)} />

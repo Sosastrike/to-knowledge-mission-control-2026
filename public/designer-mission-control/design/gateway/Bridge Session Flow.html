@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gateway · Bridge Session</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<style>
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); margin: 0; }
+
+/* Crumbs */
+.gw-crumbs {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  font-size: 12px; color: var(--t-3);
+}
+.gw-crumbs a { color: var(--t-3); text-decoration: none; }
+.gw-crumbs a:hover { color: var(--t-1); }
+.gw-crumbs .here { color: var(--t-1); font-weight: 500; }
+.gw-crumbs .sep { color: var(--t-5); }
+
+/* Header */
+.page-head {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+}
+.page-head h1 {
+  margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 12px;
+}
+.page-head h1 .icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, rgba(245,181,10,0.32), rgba(255,138,61,0.30));
+  border: 1px solid rgba(245,181,10,0.55);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); color: var(--st-yellow); font-size: 16px;
+}
+.page-head .lede { margin: 0; color: var(--t-3); font-size: 13px; max-width: 720px; line-height: 1.55; }
+
+/* Active session pill (right-aligned in header) */
+.active-pill {
+  display: grid; grid-template-columns: auto auto; gap: 18px; align-items: center;
+  background: linear-gradient(135deg, rgba(245,181,10,0.10), rgba(255,138,61,0.05));
+  border: 1px solid var(--st-yellow-bd); border-radius: var(--r-2);
+  padding: 10px 14px;
+}
+.active-pill .lock {
+  width: 38px; height: 38px; border-radius: 8px;
+  background: var(--bg-3); border: 1px solid var(--st-yellow-bd);
+  display: grid; place-items: center;
+  color: var(--st-yellow); font-size: 18px;
+}
+.active-pill .meta { display: grid; gap: 2px; }
+.active-pill .id { font-family: var(--ff-mono); font-size: 11px; color: var(--st-yellow); }
+.active-pill .lbl { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); }
+.active-pill .timer { font-family: var(--ff-mono); font-size: 16px; color: var(--t-1); font-weight: 500; }
+
+/* ============ Layout ============ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+  background: var(--bg-1);
+  min-height: calc(100vh - 49px - 96px);
+}
+
+.canvas {
+  padding: 26px 28px;
+  position: relative;
+  overflow-y: auto;
+}
+.canvas::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.45; pointer-events: none;
+}
+.canvas > * { position: relative; }
+
+.sec-head {
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 14px;
+}
+.sec-head h3 { margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600; }
+.sec-head .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); }
+.sec-head .filler { flex: 1; height: 1px; background: var(--line-2); }
+
+/* ============ Stepper ============ */
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.stp {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 12px 14px;
+  display: grid; gap: 8px;
+  position: relative;
+}
+.stp::after {
+  content: ''; position: absolute; right: -8px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 12px;
+  background: linear-gradient(90deg, transparent, var(--st-yellow));
+  clip-path: polygon(0 35%, 70% 35%, 70% 0, 100% 50%, 70% 100%, 70% 65%, 0 65%);
+  opacity: 0.45;
+}
+.stepper .stp:last-child::after { display: none; }
+
+.stp .h { display: flex; align-items: center; justify-content: space-between; }
+.stp .h .num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg-4); border: 1px solid var(--line-3);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); font-size: 11px; color: var(--t-3); font-weight: 600;
+}
+.stp .h .t {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-4); font-weight: 700;
+}
+.stp h4 {
+  margin: 0; font-size: 13px; font-weight: 600; color: var(--t-1);
+}
+.stp p {
+  margin: 0; color: var(--t-3); font-size: 11.5px; line-height: 1.5;
+}
+
+.stp.done .h .num   { background: var(--st-green-bg); border-color: var(--st-green-bd); color: var(--st-green); }
+.stp.done .h .num::before { content: '✓'; }
+.stp.done .h .num span { display: none; }
+.stp.done .h .t { color: var(--st-green); }
+
+.stp.active {
+  border-color: var(--st-yellow-bd);
+  box-shadow: 0 0 0 1px var(--st-yellow-bd), 0 0 24px rgba(245,181,10,0.15);
+}
+.stp.active .h .num {
+  background: var(--st-yellow-bg); border-color: var(--st-yellow-bd); color: var(--st-yellow);
+}
+.stp.active .h .t { color: var(--st-yellow); }
+.stp.active::before {
+  content: ''; position: absolute; inset: -6px; border-radius: var(--r-3);
+  border: 1px solid var(--st-yellow-bd);
+  animation: pulse-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes pulse-ring {
+  0%   { opacity: 0.55; transform: scale(0.99); }
+  100% { opacity: 0;    transform: scale(1.04); }
+}
+
+.stp.future { opacity: 0.55; }
+
+/* ============ Active proof card ============ */
+.proof-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+.proof-head {
+  background: linear-gradient(180deg, rgba(245,181,10,0.10), transparent);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; gap: 16px; align-items: center;
+}
+.proof-head .ico {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--bg-3); border: 1px solid var(--st-yellow-bd);
+  display: grid; place-items: center;
+  color: var(--st-yellow); font-size: 22px;
+}
+.proof-head .meta { flex: 1; }
+.proof-head h3 { margin: 0 0 4px; font-size: 16px; }
+.proof-head .id {
+  font-family: var(--ff-mono); font-size: 11px; color: var(--t-4);
+  display: flex; gap: 14px;
+}
+.proof-head .id strong { color: var(--st-yellow); font-weight: 500; }
+.proof-head .actions { display: flex; gap: 6px; }
+.proof-head .actions button {
+  font-family: inherit; font-size: 11.5px;
+  padding: 7px 14px; border-radius: 6px; cursor: pointer;
+}
+.proof-head .actions .extend {
+  background: var(--bg-3); border: 1px solid var(--line-3); color: var(--t-1);
+}
+.proof-head .actions .revoke {
+  background: var(--st-red-bg); border: 1px solid var(--st-red-bd); color: var(--st-red);
+}
+
+.proof-body {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0;
+}
+.proof-body > div { padding: 16px 20px; }
+.proof-body > div + div { border-left: 1px solid var(--line-2); }
+
+.proof-body h5 {
+  margin: 0 0 10px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--t-3); font-weight: 600;
+}
+
+/* Scopes granted */
+.scope-grid { display: grid; gap: 6px; }
+.scope-row {
+  display: grid; grid-template-columns: 16px 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+  font-size: 12px;
+}
+.scope-row .ck {
+  width: 14px; height: 14px; border-radius: 3px;
+  display: grid; place-items: center;
+  background: var(--st-green); color: #000; font-size: 9px; font-weight: 800;
+}
+.scope-row .nm { color: var(--t-1); font-weight: 500; }
+.scope-row .nm code {
+  font-family: var(--ff-mono); font-size: 10.5px; color: var(--brand-cyan);
+  background: var(--bg-4); padding: 1px 5px; border-radius: 3px;
+  margin-left: 6px; font-weight: 400;
+}
+.scope-row .lim {
+  font-family: var(--ff-mono); font-size: 10px; color: var(--t-4);
+}
+
+/* Timer ring */
+.timer-block { display: grid; gap: 14px; place-items: center; padding: 14px 0; }
+.timer-svg { width: 160px; height: 160px; }
+.timer-svg .track { stroke: var(--bg-4); }
+.timer-svg .arc { stroke: var(--st-yellow); transition: stroke-dashoffset 1s linear; }
+.timer-svg .arc.warn { stroke: var(--st-orange); }
+.timer-svg text.big { font-family: var(--ff-mono); font-size: 26px; fill: var(--t-1); font-weight: 600; }
+.timer-svg text.lbl { font-family: var(--ff-mono); font-size: 9px; fill: var(--t-4); letter-spacing: 0.14em; }
+.timer-meta {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
+  font-size: 11px; color: var(--t-3);
+}
+.timer-meta .it { display: grid; gap: 2px; }
+.timer-meta .it .v { font-family: var(--ff-mono); color: var(--t-1); font-size: 12px; }
+
+/* ============ Path comparison ============ */
+.paths {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  margin-bottom: 22px;
+}
+.path {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 16px 18px;
+}
+.path.locked { border-color: rgba(74,163,255,0.30); }
+.path.bridged { border-color: var(--st-yellow-bd); background: linear-gradient(180deg, rgba(245,181,10,0.06), var(--bg-2)); }
+
+.path .top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.path h4 {
+  margin: 0; font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.path h4 .pdot { width: 9px; height: 9px; border-radius: 50%; }
+.path .tag {
+  font-size: 9px; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;
+  padding: 2px 6px; border-radius: 3px;
+}
+.path.locked .tag {
+  color: var(--st-blue); background: var(--st-blue-bg); border: 1px solid var(--st-blue-bd);
+}
+.path.bridged .tag {
+  color: var(--st-yellow); background: var(--st-yellow-bg); border: 1px solid var(--st-yellow-bd);
+}
+.path .sub { color: var(--t-3); font-size: 11.5px; line-height: 1.55; margin-bottom: 12px; }
+
+.path-list { display: grid; gap: 4px; }
+.path-list .it {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  font-size: 11.5px; color: var(--t-2);
+  border-top: 1px solid var(--line-1);
+}
+.path-list .it:first-child { border-top: none; }
+.path-list .it .ck {
+  width: 14px; height: 14px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 800;
+}
+.path-list .it.yes .ck { background: var(--st-green); color: #000; }
+.path-list .it.yes .ck::before { content: '✓'; }
+.path-list .it.no  .ck { background: var(--st-gray-bg); color: var(--t-4); border: 1px solid var(--line-3); }
+.path-list .it.no  .ck::before { content: '·'; }
+.path-list .it.no  { color: var(--t-4); }
+.path-list .it code {
+  font-family: var(--ff-mono); font-size: 10.5px; color: var(--brand-cyan);
+  background: var(--bg-3); padding: 1px 4px; border-radius: 3px;
+}
+
+/* ============ Audit timeline ============ */
+.audit-tbl {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.audit-grid {
+  display: grid;
+  grid-template-columns: 100px 90px 1fr 130px 100px;
+}
+.audit-grid .hd {
+  padding: 10px 14px;
+  border-right: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t-4); font-weight: 600;
+}
+.audit-grid .hd:last-child { border-right: none; }
+
+.arow > div {
+  padding: 10px 14px;
+  border-right: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 11.5px;
+}
+.arow > div:last-child { border-right: none; }
+.arow:last-child > div { border-bottom: none; }
+
+.arow .ts { font-family: var(--ff-mono); font-size: 10.5px; color: var(--t-3); }
+.arow .ev {
+  font-family: var(--ff-mono); font-size: 10px;
+  font-weight: 700; letter-spacing: 0.08em;
+}
+.arow .ev.granted { color: var(--st-green); }
+.arow .ev.used    { color: var(--brand-cyan); }
+.arow .ev.denied  { color: var(--st-red); }
+.arow .ev.extended{ color: var(--st-orange); }
+.arow .ev.expired { color: var(--t-4); }
+.arow .what { color: var(--t-1); }
+.arow .what .sub { color: var(--t-4); font-size: 10.5px; margin-top: 2px; }
+.arow .who  { font-family: var(--ff-mono); color: var(--t-3); }
+.arow .lat  { font-family: var(--ff-mono); color: var(--t-3); text-align: right; }
+
+/* ============ Side panel ============ */
+.side {
+  background: var(--bg-1);
+  border-left: 1px solid var(--line-2);
+  padding: 22px 20px;
+  overflow-y: auto;
+  display: grid; gap: 18px; align-content: start;
+}
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.panel header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600;
+}
+.panel header .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); letter-spacing: 0; }
+.panel .body { padding: 12px 14px; }
+
+/* Triggers list — what kicks off a Bridge prompt */
+.trig-list { display: grid; gap: 6px; }
+.trig {
+  display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+  font-size: 11.5px;
+}
+.trig .ic {
+  width: 22px; height: 22px; border-radius: 5px;
+  background: var(--st-yellow-bg); color: var(--st-yellow); border: 1px solid var(--st-yellow-bd);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); font-size: 12px;
+}
+.trig .ttl { color: var(--t-1); font-weight: 500; }
+.trig .why { color: var(--t-3); font-size: 11px; margin-top: 2px; }
+.trig .why code { font-family: var(--ff-mono); font-size: 10.5px; color: var(--brand-cyan); background: var(--bg-4); padding: 1px 4px; border-radius: 3px; }
+
+/* Telegram preview — the actual prompt the owner sees */
+.telegram {
+  background: #17212b;
+  border-radius: var(--r-3);
+  padding: 14px;
+  display: grid; gap: 10px;
+}
+.tg-bot {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.tg-bot .av {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+  display: grid; place-items: center; color: #0a0d12;
+  font-family: var(--ff-mono); font-size: 14px; font-weight: 700;
+}
+.tg-bot .nm { font-size: 12px; color: #fff; font-weight: 500; }
+.tg-bot .nm .sub { color: #6b7a8a; font-size: 10.5px; font-weight: 400; }
+.tg-msg {
+  background: #2b5278; color: #fff; border-radius: 10px 10px 10px 2px;
+  padding: 10px 12px; font-size: 12px; line-height: 1.55;
+  max-width: 92%;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.18);
+}
+.tg-msg strong { color: var(--st-yellow); }
+.tg-msg code { font-family: var(--ff-mono); font-size: 10.5px; background: rgba(0,0,0,0.22); padding: 1px 4px; border-radius: 3px; }
+.tg-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tg-btn {
+  background: rgba(94,234,212,0.12); color: #5eead4;
+  border: 1px solid rgba(94,234,212,0.40);
+  border-radius: 6px;
+  padding: 8px; text-align: center;
+  font-size: 11.5px; font-weight: 500; cursor: pointer;
+}
+.tg-btn.deny { background: rgba(239,68,68,0.10); color: #f87171; border-color: rgba(239,68,68,0.40); }
+
+/* Recent sessions */
+.sess-list { display: grid; gap: 6px; }
+.sess {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+  font-size: 11.5px;
+}
+.sess .id { font-family: var(--ff-mono); font-size: 10.5px; color: var(--brand-cyan); }
+.sess .meta { color: var(--t-3); font-size: 10.5px; margin-top: 2px; }
+.sess .meta strong { color: var(--t-2); font-weight: 500; }
+.sess .stat {
+  font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.10em; font-weight: 700;
+  padding: 2px 6px; border-radius: 3px;
+}
+.sess .stat.expired { color: var(--t-4); background: var(--bg-4); border: 1px solid var(--line-3); }
+.sess .stat.revoked { color: var(--st-red); background: var(--st-red-bg); border: 1px solid var(--st-red-bd); }
+.sess .stat.active  { color: var(--st-yellow); background: var(--st-yellow-bg); border: 1px solid var(--st-yellow-bd); }
+</style>
+</head>
+<body>
+
+<!-- Crumbs -->
+<div class="gw-crumbs">
+  <a href="index.html">Gateway design</a>
+  <span class="sep">›</span>
+  <a href="Gateway Overview.html">Nucleus</a>
+  <span class="sep">›</span>
+  <span class="here">Bridge Session</span>
+  <span style="flex:1"></span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/bridge</span>
+</div>
+
+<!-- Page header -->
+<header class="page-head">
+  <div>
+    <h1><span class="icon">🔒</span>Bridge Session</h1>
+    <p class="lede">The owner ritual that unlocks <strong style="color:var(--st-yellow);">yellow</strong>: write-scope tools, Hermes specialist work, outbound channels. Time-boxed, scope-explicit, fully audited. Read-only never asks; everything else asks once and remembers.</p>
+  </div>
+  <div class="active-pill">
+    <div class="lock">🔒</div>
+    <div class="meta">
+      <div class="lbl">Active session</div>
+      <div class="id">bs_4f12 · owner=luis</div>
+      <div class="timer">24:18</div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ========== Canvas ========== -->
+  <div class="canvas">
+
+    <!-- Stepper -->
+    <div class="sec-head">
+      <h3>Lifecycle</h3>
+      <span class="meta">request → prove → grant → use → expire/revoke</span>
+      <span class="filler"></span>
+    </div>
+
+    <div class="stepper">
+      <div class="stp done">
+        <div class="h"><span class="num"><span>1</span></span><span class="t">Request</span></div>
+        <h4>Hermes asks</h4>
+        <p>Specialist work or write-scope detected. Dispatcher pauses with <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">requires:bridge</code>.</p>
+      </div>
+      <div class="stp done">
+        <div class="h"><span class="num"><span>2</span></span><span class="t">Prove</span></div>
+        <h4>Owner approves</h4>
+        <p>Owner identity verified via Telegram bot or web magic-link. Single tap, no password.</p>
+      </div>
+      <div class="stp active">
+        <div class="h"><span class="num">3</span><span class="t">Grant · 24m left</span></div>
+        <h4>Scopes granted</h4>
+        <p>5 scopes active. Hermes proof <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">hermes_called:true</code> attached to plan.</p>
+      </div>
+      <div class="stp future">
+        <div class="h"><span class="num">4</span><span class="t">Use</span></div>
+        <h4>Dispatcher reuses</h4>
+        <p>All in-window requests inherit proof. No re-prompt while session is alive.</p>
+      </div>
+      <div class="stp future">
+        <div class="h"><span class="num">5</span><span class="t">Expire</span></div>
+        <h4>Auto-revoke</h4>
+        <p>Session ends at TTL or owner revoke. Yellow returns. Audit row written.</p>
+      </div>
+    </div>
+
+    <!-- Active proof card -->
+    <div class="proof-card">
+      <div class="proof-head">
+        <div class="ico">🔒</div>
+        <div class="meta">
+          <h3>Active proof · <code style="font-family:var(--ff-mono);font-size:13px;color:var(--st-yellow);background:var(--bg-3);padding:1px 6px;border-radius:3px;">bs_4f12</code></h3>
+          <div class="id">
+            <span>granted <strong>14:02:11</strong></span>
+            <span>expires <strong>14:32:11</strong></span>
+            <span>via <strong>telegram · @luis</strong></span>
+            <span>plans inherit <strong>147</strong></span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="extend">+ 30 min</button>
+          <button class="revoke">Revoke now</button>
+        </div>
+      </div>
+
+      <div class="proof-body">
+        <!-- Scopes -->
+        <div>
+          <h5>Scopes granted</h5>
+          <div class="scope-grid">
+            <div class="scope-row">
+              <span class="ck">✓</span>
+              <span class="nm">Hermes lieutenant <code>hermes:invoke</code></span>
+              <span class="lim">unlimited / window</span>
+            </div>
+            <div class="scope-row">
+              <span class="ck">✓</span>
+              <span class="nm">Build-Wiki write <code>wiki:write</code></span>
+              <span class="lim">10 docs / window</span>
+            </div>
+            <div class="scope-row">
+              <span class="ck">✓</span>
+              <span class="nm">AgentMail outbound <code>email:send</code></span>
+              <span class="lim">3 sends / window</span>
+            </div>
+            <div class="scope-row">
+              <span class="ck">✓</span>
+              <span class="nm">Obsidian write <code>obsidian:write</code></span>
+              <span class="lim">25 notes / window</span>
+            </div>
+            <div class="scope-row">
+              <span class="ck">✓</span>
+              <span class="nm">Zapier execute <code>zapier:exec</code></span>
+              <span class="lim">per-call confirm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div>
+          <h5>TTL</h5>
+          <div class="timer-block">
+            <svg class="timer-svg" viewBox="0 0 160 160">
+              <!-- 30 minute ring; current = 24:18 of 30:00 -->
+              <circle class="track" cx="80" cy="80" r="62" fill="none" stroke-width="14"/>
+              <!-- circumference = 2πr = 389.56; remaining ≈ 24/30 = 0.81 → drawn arc length = 0.81 * 389.56 = 315.5 -->
+              <circle class="arc" cx="80" cy="80" r="62" fill="none" stroke-width="14"
+                stroke-dasharray="389.56" stroke-dashoffset="74.06"
+                transform="rotate(-90 80 80)" stroke-linecap="round"/>
+              <text class="big" x="80" y="80" text-anchor="middle">24:18</text>
+              <text class="lbl" x="80" y="98" text-anchor="middle">REMAINING</text>
+            </svg>
+            <div class="timer-meta">
+              <div class="it"><span>Granted</span><span class="v">14:02:11</span></div>
+              <div class="it"><span>Expires</span><span class="v">14:32:11</span></div>
+              <div class="it"><span>Total TTL</span><span class="v">30 min</span></div>
+              <div class="it"><span>Idle reset</span><span class="v">+5 min/use</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Path comparison -->
+    <div class="sec-head">
+      <h3>What changes when bridged</h3>
+      <span class="meta">read-only path always available · bridged path adds writes</span>
+      <span class="filler"></span>
+    </div>
+
+    <div class="paths">
+      <div class="path locked">
+        <div class="top">
+          <h4><span class="pdot" style="background:var(--st-blue)"></span>Read-only path</h4>
+          <span class="tag">Default · always on</span>
+        </div>
+        <div class="sub">No Bridge needed. Owner identity is enough. Dispatcher can read every brain and surface, return summaries, suggest plans — but nothing leaves the system.</div>
+        <div class="path-list">
+          <div class="it yes"><span class="ck"></span>MCP <code>read</code> any registered server</div>
+          <div class="it yes"><span class="ck"></span>Brain queries · Obsidian, MemPalace, Build-Wiki</div>
+          <div class="it yes"><span class="ck"></span>Tool registry browse</div>
+          <div class="it yes"><span class="ck"></span>Agent Zero plan drafting</div>
+          <div class="it no"><span class="ck"></span>Hermes lieutenant invocation</div>
+          <div class="it no"><span class="ck"></span>Outbound channels (email, Zapier)</div>
+          <div class="it no"><span class="ck"></span>Brain writes</div>
+        </div>
+      </div>
+
+      <div class="path bridged">
+        <div class="top">
+          <h4><span class="pdot" style="background:var(--st-yellow)"></span>Bridged path</h4>
+          <span class="tag">bs_4f12 · 24m left</span>
+        </div>
+        <div class="sub">Adds the yellow surface. Hermes runs, writes go through, outbound sends fire. Each scope still checked at execute-time against the proof.</div>
+        <div class="path-list">
+          <div class="it yes"><span class="ck"></span>Everything in read-only</div>
+          <div class="it yes"><span class="ck"></span>Hermes lieutenant <code>hermes:invoke</code></div>
+          <div class="it yes"><span class="ck"></span>Brain writes <code>wiki:write</code> · <code>obsidian:write</code></div>
+          <div class="it yes"><span class="ck"></span>Outbound email <code>email:send</code> (3/window)</div>
+          <div class="it yes"><span class="ck"></span>Zapier execute <code>zapier:exec</code> (per-call confirm)</div>
+          <div class="it no"><span class="ck"></span>Outside granted scopes → re-prompt</div>
+          <div class="it no"><span class="ck"></span>Past TTL → auto-revoke</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit timeline -->
+    <div class="sec-head">
+      <h3>Session audit · bs_4f12</h3>
+      <span class="meta">8 events</span>
+      <span class="filler"></span>
+    </div>
+
+    <div class="audit-tbl">
+      <div class="audit-grid">
+        <div class="hd">timestamp</div>
+        <div class="hd">event</div>
+        <div class="hd">what</div>
+        <div class="hd">via</div>
+        <div class="hd" style="text-align:right;">latency</div>
+
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:02:09.604</div>
+          <div class="ev granted">REQUESTED</div>
+          <div class="what">Hermes flagged plan as specialist work<div class="sub">request <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">req_8c41a92f</code></div></div>
+          <div class="who">dispatcher</div>
+          <div class="lat">2 ms</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:02:11.207</div>
+          <div class="ev granted">GRANTED</div>
+          <div class="what">Owner approved via Telegram tap<div class="sub">5 scopes · TTL 30 min</div></div>
+          <div class="who">telegram:@luis</div>
+          <div class="lat">1.6 s</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:02:11.208</div>
+          <div class="ev used">PROOF ATTACHED</div>
+          <div class="what">Hermes invoke · plan composer<div class="sub">request <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">req_8c41a92f</code></div></div>
+          <div class="who">dispatcher</div>
+          <div class="lat">— </div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:04:32.118</div>
+          <div class="ev used">USED · wiki:write</div>
+          <div class="what">Build-Wiki <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">reports/q3-marketing-ops.md</code> created<div class="sub">2 of 10 docs / window</div></div>
+          <div class="who">archivist</div>
+          <div class="lat">340 ms</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:08:54.882</div>
+          <div class="ev denied">DENIED · out of scope</div>
+          <div class="what">Tried <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">notion:write</code> — not in granted scopes<div class="sub">re-prompt sent · still pending</div></div>
+          <div class="who">writer</div>
+          <div class="lat">8 ms</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:11:07.219</div>
+          <div class="ev used">USED · email:send</div>
+          <div class="what">AgentMail outbound · digest to ops@<div class="sub">1 of 3 sends / window</div></div>
+          <div class="who">writer</div>
+          <div class="lat">820 ms</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:14:44.503</div>
+          <div class="ev extended">EXTENDED · +30 min</div>
+          <div class="what">Owner tapped extend · new TTL <strong>14:32 → 15:02</strong><div class="sub">no re-prove required (within idle window)</div></div>
+          <div class="who">telegram:@luis</div>
+          <div class="lat">920 ms</div>
+        </div>
+        <div class="arow" style="display:contents;">
+          <div class="ts">14:18:02.411</div>
+          <div class="ev used">USED · obsidian:write</div>
+          <div class="what">Obsidian note appended to <code style="font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 4px;border-radius:3px;color:var(--brand-cyan);">vault/inbox/q3-marketing-ops.md</code><div class="sub">3 of 25 notes / window</div></div>
+          <div class="who">archivist</div>
+          <div class="lat">110 ms</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== Side ========== -->
+  <aside class="side">
+
+    <!-- Why bridges happen -->
+    <div class="panel">
+      <header>What triggers a Bridge<span class="meta">5 reasons</span></header>
+      <div class="body">
+        <div class="trig-list">
+          <div class="trig">
+            <div class="ic">H</div>
+            <div>
+              <div class="ttl">Specialist work routes to Hermes</div>
+              <div class="why">Plan needs <code>hermes:invoke</code>. Read-only path can't compose.</div>
+            </div>
+          </div>
+          <div class="trig">
+            <div class="ic">W</div>
+            <div>
+              <div class="ttl">Brain or wiki write</div>
+              <div class="why">Anything with scope <code>*:write</code> on a brain surface.</div>
+            </div>
+          </div>
+          <div class="trig">
+            <div class="ic">→</div>
+            <div>
+              <div class="ttl">Outbound channel</div>
+              <div class="why">Email, Zapier, webhook send. Always per-window capped.</div>
+            </div>
+          </div>
+          <div class="trig">
+            <div class="ic">$</div>
+            <div>
+              <div class="ttl">Workflow trigger w/o owner present</div>
+              <div class="why">Cron or event firing without a live owner — needs prior bridge.</div>
+            </div>
+          </div>
+          <div class="trig">
+            <div class="ic">!</div>
+            <div>
+              <div class="ttl">Token Governor over soft-cap</div>
+              <div class="why">Per-request reserve &gt; <code>$0.35</code>. Owner approves the spend.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Owner prompt preview -->
+    <div class="panel">
+      <header>Owner-side prompt<span class="meta">telegram</span></header>
+      <div class="body" style="padding:0;">
+        <div class="telegram">
+          <div class="tg-bot">
+            <div class="av">TK</div>
+            <div class="nm">To-Knowledge bot<div class="sub">@toknowledge_bot · just now</div></div>
+          </div>
+          <div class="tg-msg">
+            <strong>🔒 Bridge Session requested</strong><br/>
+            Hermes needs to compose a Q3 marketing-ops report from Notion + email threads.
+            <br/><br/>
+            <strong>Scopes:</strong> hermes · wiki:write · email:send · obsidian:write · zapier:exec<br/>
+            <strong>TTL:</strong> 30 minutes<br/>
+            <strong>Caller:</strong> <code>req_8c41a92f</code>
+          </div>
+          <div class="tg-buttons">
+            <div class="tg-btn">Approve · 30m</div>
+            <div class="tg-btn deny">Deny</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent sessions -->
+    <div class="panel">
+      <header>Recent sessions<span class="meta">7d · 23 total</span></header>
+      <div class="body">
+        <div class="sess-list">
+          <div class="sess">
+            <div>
+              <div class="id">bs_4f12</div>
+              <div class="meta"><strong>5 scopes</strong> · 30m · telegram</div>
+            </div>
+            <span class="stat active">ACTIVE</span>
+          </div>
+          <div class="sess">
+            <div>
+              <div class="id">bs_4d8a</div>
+              <div class="meta"><strong>2 scopes</strong> · 15m · web · 2h ago</div>
+            </div>
+            <span class="stat expired">EXPIRED</span>
+          </div>
+          <div class="sess">
+            <div>
+              <div class="id">bs_4c91</div>
+              <div class="meta"><strong>1 scope</strong> · 5m · telegram · 6h ago</div>
+            </div>
+            <span class="stat expired">EXPIRED</span>
+          </div>
+          <div class="sess">
+            <div>
+              <div class="id">bs_4b0e</div>
+              <div class="meta"><strong>4 scopes</strong> · 30m · telegram · revoked at 12m</div>
+            </div>
+            <span class="stat revoked">REVOKED</span>
+          </div>
+          <div class="sess">
+            <div>
+              <div class="id">bs_4a72</div>
+              <div class="meta"><strong>3 scopes</strong> · 30m · web · yesterday</div>
+            </div>
+            <span class="stat expired">EXPIRED</span>
+          </div>
+          <div class="sess">
+            <div>
+              <div class="id">bs_4992</div>
+              <div class="meta"><strong>5 scopes</strong> · 60m · telegram · yesterday</div>
+            </div>
+            <span class="stat expired">EXPIRED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+</body>
+</html>

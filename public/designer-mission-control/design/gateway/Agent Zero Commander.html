@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Agent Zero · Commander</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.az-page{padding:24px 32px;max-width:1380px;margin:0 auto;}
+.az-hero{background:linear-gradient(180deg,rgba(99,102,241,0.12),var(--bg-2));border:1px solid rgba(99,102,241,0.35);border-radius:14px;padding:22px 24px;margin-bottom:20px;display:grid;grid-template-columns:80px 1fr auto;gap:18px;align-items:center;}
+.az-hero .badge{width:80px;height:80px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:white;}
+.az-hero h1{margin:0 0 4px;font-size:22px;}
+.az-hero .role{color:var(--t-3);font-size:13px;}
+.az-hero .meta{display:flex;gap:14px;margin-top:8px;font-size:11.5px;color:var(--t-4);}
+.az-hero .meta span{font-family:var(--ff-mono);}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.section{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.section h2{margin:0 0 10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--t-3);}
+.tool-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line-1);font-size:12px;}
+.tool-row:last-child{border-bottom:0;}
+.tool-row .nm{display:flex;gap:8px;align-items:center;}
+.delegate-row{display:grid;grid-template-columns:30px 1fr 100px 80px;gap:10px;align-items:center;padding:8px 0;font-size:12px;border-bottom:1px solid var(--line-1);}
+.mem-prov{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--t-3);padding:6px 8px;background:var(--bg-3);border-radius:6px;margin-bottom:4px;}
+.mem-prov .src{font-family:var(--ff-mono);font-size:10.5px;color:var(--t-4);}
+.mem-prov.readonly{border-left:3px solid var(--st-blue);}
+.live-feed{font-family:var(--ff-mono);font-size:11px;color:var(--t-3);max-height:200px;overflow:hidden;}
+.live-feed .line{padding:3px 0;border-bottom:1px solid var(--line-1);}
+.live-feed .ts{color:var(--t-5);margin-right:8px;}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="az-page">
+<div class="az-hero">
+  <div class="badge">A0</div>
+  <div>
+    <h1>Agent Zero <span class="pill green" style="margin-left:8px;"><span class="dot"></span>commander · operational</span></h1>
+    <div class="role">Sole commander. All owner intents land here first. Routes through the Gateway exclusively — no direct tool dispatch.</div>
+    <div class="meta">
+      <span>id: agent-zero</span><span>commander since: 2026-04-28</span><span>delegates: 4 active</span><span>budget: $42.18 / $200 today</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <button class="btn primary">Open chat</button>
+    <button class="btn">View audit</button>
+  </div>
+</div>
+
+<div class="cols">
+  <div>
+    <div class="section">
+      <h2>Authority & Scope</h2>
+      <div style="font-size:12.5px;color:var(--t-2);line-height:1.65;">
+        Agent Zero holds <strong>commander_role = primary</strong>. Tony is retired (read-only memory inheritance). Hermes is the active lieutenant for delegated reads/writes within scope. All execution requests from Agent Zero pass through the 9-step Gateway gate — no shortcuts, no shadow paths.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Tools available <span style="color:var(--t-5);font-weight:400;">via Gateway</span></h2>
+      <div class="tool-row"><div class="nm">📚 Brain (read)</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+      <div class="tool-row"><div class="nm">📝 Brain (write)</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+      <div class="tool-row"><div class="nm">📧 AgentMail send</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+      <div class="tool-row"><div class="nm">📁 Google Drive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+      <div class="tool-row"><div class="nm">☁️ OneDrive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+      <div class="tool-row"><div class="nm">🔧 OpenCloud · Build-Wiki</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>X · bridge</span></div>
+      <div class="tool-row"><div class="nm">🔧 OpenCloud · Farmer</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/X</span></div>
+      <div class="tool-row"><div class="nm">🚫 OpenCloud · Fork 2 (SMB)</div><span class="pill red" style="font-size:10px;"><span class="dot"></span>blocked</span></div>
+    </div>
+
+    <div class="section">
+      <h2>Delegates</h2>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:#fbbf24;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1500;">H</span><span><strong>Hermes</strong> · lieutenant<br><span style="color:var(--t-4);font-size:10.5px;">read-bias · gated writes</span></span><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>gated</span><button class="btn sm">open</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">OC</span><span><strong>Build-Wiki worker</strong> · workflow runner<br><span style="color:var(--t-4);font-size:10.5px;">OpenCloud n8n</span></span><span class="pill purple" style="font-size:10px;"><span class="dot"></span>workflow</span><button class="btn sm">open</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">OC</span><span><strong>Farmer worker</strong> · automation<br><span style="color:var(--t-4);font-size:10.5px;">OpenCloud n8n</span></span><span class="pill green" style="font-size:10px;"><span class="dot"></span>active</span><button class="btn sm">open</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--t-5);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1a1a;">T</span><span><strong>Tony</strong> · retired commander<br><span style="color:var(--t-4);font-size:10.5px;">memory inheritance only · read-only</span></span><span class="pill gray" style="font-size:10px;"><span class="dot"></span>retired</span><button class="btn sm">memory</button></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section">
+      <h2>Memory · with provenance</h2>
+      <div style="color:var(--t-4);font-size:11px;margin-bottom:10px;">Inherited memory shows source. Tony entries are read-only and tagged.</div>
+      <div class="mem-prov readonly"><span style="font-size:14px;">📘</span><span style="flex:1;"><strong>Project SOPs</strong> · 142 docs</span><span class="src">src: tony-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
+      <div class="mem-prov readonly"><span style="font-size:14px;">📒</span><span style="flex:1;"><strong>Customer history</strong> · 38 threads</span><span class="src">src: tony-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
+      <div class="mem-prov" style="border-left:3px solid var(--st-green);"><span style="font-size:14px;">📔</span><span style="flex:1;"><strong>Active session notes</strong> · 12 entries</span><span class="src">src: agent-zero</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
+      <div class="mem-prov" style="border-left:3px solid var(--st-green);"><span style="font-size:14px;">📕</span><span style="flex:1;"><strong>Wiki index</strong> · 3,142 entries</span><span class="src">src: brain</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+    </div>
+
+    <div class="section">
+      <h2>Live activity</h2>
+      <div class="live-feed">
+        <div class="line"><span class="ts">14:24:08</span>read brain.wiki_index → 12 results · 89ms</div>
+        <div class="line"><span class="ts">14:23:51</span>delegate hermes · "summarize active threads" · running</div>
+        <div class="line"><span class="ts">14:23:32</span>discover oc.buildwiki → ready · cached 2m</div>
+        <div class="line"><span class="ts">14:22:14</span>execute oc.buildwiki.run · bridge required · prompt</div>
+        <div class="line"><span class="ts">14:21:50</span>read gdrive · folder=projects/ · 24 items · 142ms</div>
+        <div class="line"><span class="ts">14:21:30</span>read brain.session_notes → 8 entries · 31ms</div>
+        <div class="line"><span class="ts">14:20:12</span>denied tony.write · denied_node_blocked (retired)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Today</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px;">
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Reads</div><div style="font-size:18px;font-weight:600;color:var(--st-green);">418</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Writes</div><div style="font-size:18px;font-weight:600;color:var(--st-yellow);">23</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Denied</div><div style="font-size:18px;font-weight:600;color:var(--st-red);">7</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Cost</div><div style="font-size:18px;font-weight:600;">$42.18</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">P50</div><div style="font-size:18px;font-weight:600;">312ms</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">P95</div><div style="font-size:18px;font-weight:600;">1.84s</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Agent Zero · Commander'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Agent Zero Commander.html'));
+</script></body></html>

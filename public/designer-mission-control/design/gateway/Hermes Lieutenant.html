@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Hermes · Lieutenant</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.h-page{padding:24px 32px;max-width:1380px;margin:0 auto;}
+.h-hero{background:linear-gradient(180deg,rgba(245,158,11,0.10),var(--bg-2));border:1px solid var(--st-yellow-bd);border-radius:14px;padding:22px 24px;margin-bottom:20px;display:grid;grid-template-columns:80px 1fr auto;gap:18px;align-items:center;}
+.h-hero .badge{width:80px;height:80px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#d97706);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:#1a1500;}
+.h-hero h1{margin:0 0 4px;font-size:22px;}
+.h-hero .role{color:var(--t-3);font-size:13px;max-width:680px;}
+.h-hero .meta{display:flex;gap:14px;margin-top:8px;font-size:11.5px;color:var(--t-4);}
+.h-hero .meta span{font-family:var(--ff-mono);}
+.section{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.section h2{margin:0 0 10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--t-3);}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.scope-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 0;font-size:12px;border-bottom:1px solid var(--line-1);align-items:center;}
+.scope-row:last-child{border-bottom:0;}
+.scope-row .desc{color:var(--t-4);font-size:11px;margin-top:2px;}
+.gate-list{font-size:12px;line-height:1.7;}
+.gate-list li{padding:5px 0;border-bottom:1px solid var(--line-1);display:flex;align-items:center;gap:8px;}
+.gate-list li:last-child{border-bottom:0;}
+.gate-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--st-yellow-bg);color:var(--st-yellow);font-size:10.5px;font-weight:700;border:1px solid var(--st-yellow-bd);}
+.callout{background:var(--st-yellow-bg);border:1px solid var(--st-yellow-bd);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start;}
+.callout .icon{font-size:20px;}
+.callout strong{color:var(--st-yellow);}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="h-page">
+<div class="h-hero">
+  <div class="badge">H</div>
+  <div>
+    <h1>Hermes <span class="pill yellow" style="margin-left:8px;"><span class="dot"></span>lieutenant · gated</span></h1>
+    <div class="role">Sub-commander under Agent Zero. Read-biased. Writes are gated by a Bridge Session and a narrower scope than Agent Zero. Cannot delegate further; Hermes is a leaf in the command tree.</div>
+    <div class="meta">
+      <span>id: hermes</span><span>parent: agent-zero</span><span>created: 2026-04-28</span><span>scope: 6 tools</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <button class="btn primary">Open chat</button>
+    <button class="btn">View audit</button>
+  </div>
+</div>
+
+<div class="callout">
+  <span class="icon">⚠</span>
+  <div>
+    <strong>Why yellow.</strong> Hermes is functional but lives behind the gate. Every Hermes write requires (1) Agent Zero to have delegated this session, (2) an active Bridge Session, and (3) the action to fall inside Hermes's scope. If any is missing, the Gateway returns <code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">denied_*</code> and Hermes never sees the call.
+  </div>
+</div>
+
+<div class="cols">
+  <div>
+    <div class="section">
+      <h2>Allowed scope</h2>
+      <div class="scope-row"><div><strong>brain.read</strong><div class="desc">Wiki, session notes, project docs</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+      <div class="scope-row"><div><strong>brain.write</strong><div class="desc">Append-only · session notes only · bridge</div></div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+      <div class="scope-row"><div><strong>gdrive.read</strong><div class="desc">All folders user has access to</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+      <div class="scope-row"><div><strong>gdrive.write</strong><div class="desc">Drafts folder only · bridge</div></div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+      <div class="scope-row"><div><strong>agentmail.draft</strong><div class="desc">Draft only · sending requires AZ + bridge</div></div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+      <div class="scope-row"><div><strong>oc.farmer.read</strong><div class="desc">Read workflow status</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+    </div>
+
+    <div class="section">
+      <h2>Explicitly denied</h2>
+      <div class="scope-row"><div><strong>agentmail.send</strong><div class="desc">Outbound mail · AZ-only</div></div><span class="pill red" style="font-size:10px;"><span class="dot"></span>denied</span></div>
+      <div class="scope-row"><div><strong>oc.buildwiki.run</strong><div class="desc">Workflow execution · AZ-only</div></div><span class="pill red" style="font-size:10px;"><span class="dot"></span>denied</span></div>
+      <div class="scope-row"><div><strong>tony.*</strong><div class="desc">Tony retired · all access denied</div></div><span class="pill red" style="font-size:10px;"><span class="dot"></span>denied</span></div>
+      <div class="scope-row"><div><strong>delegate.* </strong><div class="desc">Hermes cannot delegate further</div></div><span class="pill red" style="font-size:10px;"><span class="dot"></span>denied</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section">
+      <h2>9-step gate · Hermes-specific notes</h2>
+      <ol class="gate-list" style="list-style:none;padding:0;margin:0;">
+        <li><span class="gate-num">1</span>authn — owner identity verified by Agent Zero header</li>
+        <li><span class="gate-num">2</span>discovery — TTL 5 min, last refresh 2m ago</li>
+        <li><span class="gate-num">3</span>connected — Hermes runtime reachable</li>
+        <li><span class="gate-num">4</span>R/W/X flag — must match Hermes scope, not AZ scope</li>
+        <li><span class="gate-num">5</span>RBAC — owner permission AND <strong>delegated by AZ this session</strong></li>
+        <li><span class="gate-num">6</span>Bridge — required for all Hermes W/X</li>
+        <li><span class="gate-num">7</span>audit pre-write — logged with <code style="font-family:var(--ff-mono);font-size:11px;">delegated_via=agent-zero</code></li>
+        <li><span class="gate-num">8</span>execute — Hermes runs the action</li>
+        <li><span class="gate-num">9</span>audit post-write — outcome + cost rolls up to Agent Zero ledger</li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <h2>Activity (last hour)</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px;">
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Reads</div><div style="font-size:18px;font-weight:600;color:var(--st-green);">87</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Writes</div><div style="font-size:18px;font-weight:600;color:var(--st-yellow);">3</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Denied</div><div style="font-size:18px;font-weight:600;color:var(--st-red);">2</div></div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2);font-family:var(--ff-mono);font-size:11px;color:var(--t-3);">
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:23:51</span> read brain.session_notes · 8 results</div>
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:18:02</span> draft agentmail · saved · pending AZ approval</div>
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:14:38</span> <span style="color:var(--st-red);">denied</span> oc.buildwiki.run · denied_no_permission</div>
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:12:11</span> read gdrive · folder=drafts · 3 items</div>
+      </div>
+    </div>
+  </div>
+</div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Hermes · Lieutenant'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Hermes Lieutenant.html'));
+</script></body></html>

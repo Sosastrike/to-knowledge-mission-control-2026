@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Node Detail</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 56px - 44px); }
+.list { border-right: 1px solid var(--line-2); overflow-y: auto; background: var(--bg-1); }
+.list .item { padding: 10px 14px; border-bottom: 1px solid var(--line-1); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.list .item:hover { background: var(--bg-2); }
+.list .item.active { background: var(--bg-3); border-left: 2px solid var(--brand-cyan); padding-left: 12px; }
+.list .item .dot { width: 8px; height: 8px; border-radius: 50%; }
+.list .item .nm { flex: 1; font-size: 12.5px; }
+.list .item .ty { font-size: 10px; color: var(--t-4); text-transform: uppercase; letter-spacing: 0.08em; }
+.list .filter { padding: 12px 14px; border-bottom: 1px solid var(--line-2); position: sticky; top: 0; background: var(--bg-1); z-index: 2; }
+.list .filter input { width: 100%; padding: 7px 10px; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px; color: var(--t-1); font-family: inherit; font-size: 12px; }
+.detail { overflow-y: auto; padding: 24px 32px 60px; max-width: 920px; }
+.detail h1 { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; font-size: 24px; }
+.detail h1 .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 12px currentColor; }
+.detail .lead { color: var(--t-3); margin: 0 0 16px; font-size: 14px; line-height: 1.55; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); margin: 18px 0; }
+.card { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px 16px; }
+.card h3 { margin: 0 0 10px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t-3); font-weight: 600; }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; font-size: 12.5px; }
+.kv dt { color: var(--t-3); }
+.kv dd { margin: 0; color: var(--t-1); }
+.bool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bool-cell { padding: 10px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--bg-3); }
+.bool-cell.on { border-color: var(--st-green-bd); background: var(--st-green-bg); }
+.bool-cell .lbl { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); }
+.bool-cell .val { font-size: 14px; font-weight: 600; margin-top: 2px; }
+.route-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--line-2); font-size: 11px; font-family: var(--ff-mono); color: var(--t-2); }
+.route-arrow { color: var(--t-5); margin: 0 4px; }
+.audit-row { display: grid; grid-template-columns: 70px 80px 80px 1fr 110px 60px; gap: 8px; padding: 7px 10px; font-size: 11.5px; align-items: center; border-bottom: 1px solid var(--line-1); }
+.audit-row:hover { background: var(--bg-3); }
+.audit-row .ts { color: var(--t-4); font-family: var(--ff-mono); }
+.audit-row .res.ok { color: var(--st-green); }
+.audit-row .res.deny { color: var(--st-red); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.blocker-banner { background: var(--st-yellow-bg); border: 1px solid var(--st-yellow-bd); color: var(--st-yellow); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin: 12px 0 16px; }
+.blocker-banner.red { background: var(--st-red-bg); border-color: var(--st-red-bd); color: var(--st-red); }
+.blocker-banner.gray { background: var(--st-gray-bg); border-color: var(--st-gray-bd); color: var(--t-2); }
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<div class="layout">
+<aside class="list">
+<div class="filter"><input id="q" placeholder="Filter nodes…"/></div>
+<div id="list"></div>
+</aside>
+<main class="detail" id="detail"></main>
+</div></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+const G = window.GATEWAY;
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Gateway · Node Detail'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Gateway Node Detail.html'));
+
+const list = document.getElementById('list');
+let current = 'agent.zero';
+
+function renderList(filter) {
+  list.innerHTML = '';
+  G.NODES.filter(n => !filter || n.name.toLowerCase().includes(filter.toLowerCase()) || n.id.includes(filter.toLowerCase()))
+    .forEach(n => {
+      const d = GW.el('div', { class: 'item' + (n.id === current ? ' active' : ''), onClick: () => { current = n.id; renderList(filter); renderDetail(); }},
+        GW.el('span', { class: 'dot', style: { background: G.statusColor(n.status) }}),
+        GW.el('span', { class: 'nm' }, n.name),
+        GW.el('span', { class: 'ty' }, n.type)
+      );
+      list.appendChild(d);
+    });
+}
+document.getElementById('q').oninput = e => renderList(e.target.value);
+
+function renderDetail() {
+  const n = G.get(current);
+  const d = document.getElementById('detail');
+  const blockerCls = n.status === 'red' ? 'red' : n.status === 'gray' ? 'gray' : '';
+  const audit = G.AUDIT.filter(a => a.node === n.id || a.actor === n.id || a.route?.includes(n.id));
+  d.innerHTML = `
+    <h1><span class="dot" style="background:${G.statusColor(n.status)}"></span> ${n.name}</h1>
+    <p class="lead">${n.summary || ''}</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="pill ${n.status}"><span class="dot"></span>${G.STATUS[n.status]?.label || n.status}</span>
+      <span style="color:var(--t-4);font-size:11px;text-transform:uppercase;letter-spacing:0.10em;">${n.type} · ${n.role || '—'}</span>
+    </div>
+    ${n.blocked_reason ? `<div class="blocker-banner ${blockerCls}">⚠ ${n.blocked_reason}</div>` : ''}
+
+    <div class="grid">
+      <div class="card">
+        <h3>Capabilities (R / W / X)</h3>
+        <div class="bool-grid">
+          <div class="bool-cell ${n.R?'on':''}"><div class="lbl">Read</div><div class="val">${n.R?'enabled':'off'}</div></div>
+          <div class="bool-cell ${n.W?'on':''}"><div class="lbl">Write</div><div class="val">${n.W?'enabled':'off'}</div></div>
+          <div class="bool-cell ${n.X?'on':''}"><div class="lbl">Execute</div><div class="val">${n.X?'enabled':'off'}</div></div>
+        </div>
+        ${n.bridge ? '<div style="margin-top:10px;font-size:12px;color:var(--st-yellow);"><strong>🔐 Bridge Session required</strong> for write/execute.</div>' : '<div style="margin-top:10px;font-size:12px;color:var(--t-4);">No Bridge Session required.</div>'}
+      </div>
+      <div class="card">
+        <h3>Status & freshness</h3>
+        <dl class="kv">
+          <dt>Connected</dt><dd>${n.connected?'yes':'no'}</dd>
+          <dt>Configured</dt><dd>${n.configured?'yes':'no'}</dd>
+          <dt>Last success</dt><dd>${n.lastSuccess || '—'}</dd>
+          <dt>Cache age</dt><dd>${n.cacheAge || '—'}</dd>
+          <dt>Discovery TTL</dt><dd>5 min (default)</dd>
+          <dt>Stale?</dt><dd style="color:var(--st-green)">no — within TTL</dd>
+        </dl>
+      </div>
+      <div class="card" style="grid-column:1/-1;">
+        <h3>Routes connected to this node</h3>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+          ${G.EDGES.filter(e=>e.from===n.id||e.to===n.id).map(e=>`
+            <div style="font-family:var(--ff-mono);font-size:11.5px;color:var(--t-2);">
+              <span class="route-pill">${e.from}</span><span class="route-arrow">→</span><span class="route-pill">${e.to}</span>
+              <span style="color:var(--t-4);margin-left:8px;font-family:var(--ff-sans);font-size:11px;">${e.relation}</span>
+            </div>
+          `).join('') || '<span style="color:var(--t-4);">No edges yet.</span>'}
+        </div>
+      </div>
+      <div class="card" style="grid-column:1/-1;">
+        <h3>Recent audit (Gateway scope)</h3>
+        ${audit.length ? audit.map(a=>`
+          <div class="audit-row">
+            <span class="ts">${a.ts}</span>
+            <span class="pill ${a.action==='discover'?'blue':a.action==='read'?'blue':a.action==='execute'?'green':'yellow'}" style="font-size:10px;">${a.action}</span>
+            <span style="color:var(--t-3);font-size:11px;">${a.actor}</span>
+            <span style="color:var(--t-2);font-family:var(--ff-mono);font-size:10.5px;">${(a.route||[]).join(' → ')}</span>
+            <span class="res ${a.result==='ok'?'ok':'deny'}">${a.result}</span>
+            <span style="color:var(--t-4);font-family:var(--ff-mono);font-size:10.5px;">${a.latency}ms</span>
+          </div>
+        `).join('') : '<div style="color:var(--t-4);font-size:12px;">No recent activity.</div>'}
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn"><span style="font-family:var(--ff-mono)">↻</span> Refresh now (bypass cache)</button>
+      <button class="btn">Show route through here</button>
+      <button class="btn">Run discovery</button>
+      ${n.bridge ? '<button class="btn primary">Open Bridge Session</button>' : ''}
+      <button class="btn">Open in Registry</button>
+      <button class="btn ghost">Copy node ID</button>
+    </div>
+  `;
+}
+renderList('');
+renderDetail();
+</script>
+</body></html>

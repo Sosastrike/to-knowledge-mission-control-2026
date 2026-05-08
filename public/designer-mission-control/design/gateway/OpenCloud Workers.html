@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>OpenCloud · Workers</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.oc-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
+.oc-hero{background:linear-gradient(180deg,rgba(168,85,247,0.10),var(--bg-2));border:1px solid rgba(168,85,247,0.30);border-radius:14px;padding:20px 22px;margin-bottom:18px;display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;}
+.oc-hero .badge{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#a855f7,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;}
+.oc-hero h1{margin:0 0 4px;font-size:22px;}
+.oc-hero .role{color:var(--t-3);font-size:13px;}
+.oc-hero .meta{display:flex;gap:14px;margin-top:6px;font-size:11.5px;color:var(--t-4);font-family:var(--ff-mono);}
+.tree{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.tree h2{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--t-3);}
+.parent-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 16px;background:var(--bg-3);border:1px solid var(--line-2);border-radius:10px;margin-bottom:8px;}
+.parent-row .ic{font-size:24px;}
+.parent-row strong{font-size:14px;}
+.parent-row .desc{color:var(--t-3);font-size:11.5px;margin-top:2px;}
+.workers{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px;margin-top:14px;padding-left:24px;border-left:2px solid var(--line-2);}
+.worker{background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;}
+.worker.red{border-color:var(--st-red-bd);background:linear-gradient(180deg,var(--st-red-bg),var(--bg-2));}
+.worker.green{border-color:var(--st-green-bd);}
+.worker.yellow{border-color:var(--st-yellow-bd);}
+.worker .header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.worker .nm{font-weight:600;font-size:13px;}
+.worker .desc{color:var(--t-3);font-size:11.5px;line-height:1.5;}
+.worker .why{margin-top:10px;padding:10px 12px;border-radius:6px;font-size:11.5px;line-height:1.55;}
+.worker .why.red{background:rgba(248,113,113,0.10);border:1px solid var(--st-red-bd);color:#fca5a5;}
+.worker .why.yellow{background:rgba(245,158,11,0.10);border:1px solid var(--st-yellow-bd);color:#fcd34d;}
+.worker .why strong{color:var(--t-1);}
+.worker code{font-family:var(--ff-mono);font-size:10.5px;background:var(--bg-3);padding:1px 5px;border-radius:3px;}
+.worker .actions{margin-top:10px;display:flex;gap:6px;}
+.worker .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;font-size:11px;}
+.worker .stats div{padding:6px 8px;background:var(--bg-3);border-radius:5px;}
+.worker .stats .lbl{color:var(--t-5);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;}
+.worker .stats .val{color:var(--t-1);font-weight:600;font-size:13px;margin-top:2px;}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="oc-page">
+<div class="oc-hero">
+  <div class="badge">OC</div>
+  <div>
+    <h1>OpenCloud · Workers <span class="pill purple" style="margin-left:8px;"><span class="dot"></span>workflow runner</span></h1>
+    <div class="role">n8n-style workflow runner. The Gateway routes only via the parent OpenCloud node, never directly to a worker — children inherit RBAC from the parent and discovery happens through it.</div>
+    <div class="meta"><span>parent: opencloud</span><span>children: 4</span><span>discovery TTL: 5m</span><span>last refresh: 2m ago</span></div>
+  </div>
+  <div><button class="btn primary">Open OpenCloud UI</button></div>
+</div>
+
+<div class="tree">
+  <h2>Parent → workers</h2>
+  <div class="parent-row">
+    <div class="ic">☁️</div>
+    <div>
+      <strong>OpenCloud</strong> <span class="pill green" style="font-size:10px;margin-left:6px;"><span class="dot"></span>parent · operational</span>
+      <div class="desc">Workflow host. RBAC + discovery owned here. Workers are addressed as <code>opencloud/&lt;worker&gt;</code> through the Gateway.</div>
+    </div>
+    <div><button class="btn sm">↻ refresh</button></div>
+  </div>
+
+  <div class="workers">
+
+    <div class="worker green">
+      <div class="header"><span class="nm">🌾 Farmer</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>operational · R/X</span></div>
+      <div class="desc">General-purpose automation worker — file moves, scheduled scrapes, cleanup tasks. Scoped to project workspace.</div>
+      <div class="stats">
+        <div><div class="lbl">Runs/24h</div><div class="val">142</div></div>
+        <div><div class="lbl">Success</div><div class="val">99.3%</div></div>
+        <div><div class="lbl">P95</div><div class="val">4.2s</div></div>
+      </div>
+      <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Logs</button></div>
+    </div>
+
+    <div class="worker yellow">
+      <div class="header"><span class="nm">🛠 Build-Wiki</span><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>gated · X · bridge</span></div>
+      <div class="desc">Generates wiki pages from source. Writes to Brain. Execution requires a Bridge Session because it produces external-facing content.</div>
+      <div class="why yellow"><strong>Why gated.</strong> Outputs land in published Brain wiki — every Run must be auditable to a human-attested session. Approve once per session, run many times within scope.</div>
+      <div class="stats">
+        <div><div class="lbl">Runs/24h</div><div class="val">18</div></div>
+        <div><div class="lbl">Pending</div><div class="val">2</div></div>
+        <div><div class="lbl">P95</div><div class="val">22s</div></div>
+      </div>
+      <div class="actions"><button class="btn sm">Open</button><button class="btn sm primary">Request Bridge</button></div>
+    </div>
+
+    <div class="worker red">
+      <div class="header"><span class="nm">📁 Fork 2 (SMB)</span><span class="pill red" style="font-size:10px;"><span class="dot"></span>blocked</span></div>
+      <div class="desc">Legacy SMB-mount worker. Moves files between on-prem shares.</div>
+      <div class="why red"><strong>Why red.</strong> Refuses execution: SMB credential pathway is outside the Credentials Vault, and the worker requires unauthenticated network share access. Gateway returns <code>denied_node_blocked</code>. Fix path: migrate to vault-stored creds + add discovery contract, then unblock from Registry.</div>
+      <div class="stats">
+        <div><div class="lbl">Runs/24h</div><div class="val">0</div></div>
+        <div><div class="lbl">Last success</div><div class="val">14d ago</div></div>
+        <div><div class="lbl">Status</div><div class="val" style="color:var(--st-red);">blocked</div></div>
+      </div>
+      <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Migration plan</button></div>
+    </div>
+
+    <div class="worker green">
+      <div class="header"><span class="nm">🔁 Sync-Edge</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>operational · R/X</span></div>
+      <div class="desc">Bidirectional sync between Brain and external knowledge bases. Read-heavy, writes append-only.</div>
+      <div class="stats">
+        <div><div class="lbl">Runs/24h</div><div class="val">288</div></div>
+        <div><div class="lbl">Success</div><div class="val">100%</div></div>
+        <div><div class="lbl">P95</div><div class="val">1.1s</div></div>
+      </div>
+      <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Logs</button></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tree">
+  <h2>Routing rules</h2>
+  <div style="font-size:12.5px;color:var(--t-2);line-height:1.7;">
+    Owner → <strong>Gateway</strong> → Agent Zero → <strong>opencloud</strong> (parent) → child worker. Agent Zero never names a worker directly; it asks the parent to dispatch by capability. The parent's discovery contract (<code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">discovery_kind=opencloud_workflow_list</code>) returns the live worker list per request, so retired workers disappear without a code push and new workers light up without hand-wiring.
+  </div>
+</div>
+
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('OpenCloud · Workers'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('OpenCloud Workers.html'));
+</script></body></html>

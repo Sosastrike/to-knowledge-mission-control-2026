@@ -15,6 +15,7 @@ Move from Day 03 blocker classification to concrete implementation while preserv
 | Day 04 Phase 7 — OpenClaw+ doctor remediation | PARTIAL | endpoint protected; authenticated doctor run still required |
 | Day 04 Phase 8 — Security hardening | PARTIAL | safe path reviewed; authenticated scan/fix + host actions pending |
 | Day 04 Phase 9 — Firecrawl prep | BLOCKED (parallel, non-blocking) | credential + backend adapter still missing |
+| Day 04 Phase 11 — Designer FULL v3 package integration | IMPLEMENTED + VERIFIED (pre-deploy) | additive Gateway tab shell/pages wired; designer handoff assets imported |
 
 ## Implementation Delivered Today
 1. Added Telegram report delivery adapter and API routes:
@@ -27,12 +28,18 @@ Move from Day 03 blocker classification to concrete implementation while preserv
 4. Added/updated tests for Telegram and YouTube connector contracts.
 5. Added local Markdown→PDF report renderer:
    - `scripts/render-report-pdf.mjs`
+6. Imported and wired `Mission-Control-Gateway-FULL-v3` additive package:
+   - full designer gateway handoff static assets under `public/designer-mission-control/design/gateway`
+   - new Gateway tabs/pages: Overview, Routes, Registry, Policies/Bridge, Health, Dispatcher, Token Governor, Agent Hub
+   - Mission Control shell routing updated so Gateway opens `/gateway` while Agent Network alias still resolves to `/gateway/agent-hub`
 
 ## Validation Evidence
 - `git diff --check`: PASS
 - `pnpm run typecheck`: PASS
 - `pnpm run build`: PASS
 - `pnpm run test`: PASS (`1247` passed)
+- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`: PASS (`ok: true`)
+- Gateway tab route probe (`/gateway*`, `/designer-mission-control/design/gateway/index.html`): PASS as protected redirects (`307` to `/login`)
 - unauthenticated protected route smoke: PASS (`401` expected across sampled protected routes)
 - authenticated local route smoke: BLOCKED (`mission_control_api_key_not_seeded`)
 - secret scan on changed files: PASS (no matches)
@@ -53,9 +60,23 @@ Move from Day 03 blocker classification to concrete implementation while preserv
 - `openclaw_doctor_admin_execution_required`
 - `security_scan_admin_execution_required`
 - `mission_control_api_key_not_seeded` (local authenticated smoke only)
+- `production_runtime_rollout_required` (new Gateway integration must be deployed/restarted to be owner-visible in production)
 
 ## Files Changed
 - `scripts/render-report-pdf.mjs`
+- `public/designer-mission-control/design/DEVELOPER-INTEGRATION-NOTE.md`
+- `public/designer-mission-control/design/gateway/*`
+- `public/designer-mission-control/src/app.jsx`
+- `public/designer-mission-control/src/replicas/WorkspaceRail.jsx`
+- `src/components/gateway/GatewayControlShell.tsx`
+- `src/app/gateway/page.tsx`
+- `src/app/gateway/routes/page.tsx`
+- `src/app/gateway/registry/page.tsx`
+- `src/app/gateway/policies/page.tsx`
+- `src/app/gateway/health/page.tsx`
+- `src/app/gateway/dispatcher/page.tsx`
+- `src/app/gateway/token-governor/page.tsx`
+- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`
 - `src/lib/agent-zero-telegram-delivery.ts`
 - `src/lib/agent-zero-telegram-delivery.test.ts`
 - `src/app/api/bridge/agent-zero/telegram/status/route.ts`
@@ -84,6 +105,7 @@ Move from Day 03 blocker classification to concrete implementation while preserv
 
 ## Percentage Update (Honest)
 - Overall ecosystem remains PARTIAL GO (around low 90s).
+- Gateway/Agent Hub implementation readiness increased from code integration + compile/test proof, pending production rollout and owner-auth visual proof.
 - Hermes and Agent Zero↔Hermes prior gains retained.
 - Telegram delivery: improved to implemented/gated, not GO.
 - YouTube: improved to implemented connector path, remains LIMITED until live transcript proof.
@@ -98,3 +120,4 @@ Move from Day 03 blocker classification to concrete implementation while preserv
   3. one approved Bridge-scoped execution,
   4. live Telegram scoped attachment proof,
   5. live YouTube transcript smoke (if connector runtime is available).
+  6. deploy/restart runtime with this Gateway package integration and rerun owner-auth visual proof.

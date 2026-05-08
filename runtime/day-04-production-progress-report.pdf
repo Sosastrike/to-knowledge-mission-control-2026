@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 3876 >>
+<< /Length 4288 >>
 stream
 BT
 /F1 10 Tf
@@ -72,6 +72,10 @@ BT
 0 -12 Td
 (ter still missing |) Tj
 0 -12 Td
+(| Day 04 Phase 11 — Designer FULL v3 package integration | IMPLEMENTED + VERIFIED \(pre-deploy\) |) Tj
+0 -12 Td
+( additive Gateway tab shell/pages wired; designer handoff assets imported |) Tj
+0 -12 Td
 () Tj
 0 -12 Td
 (## Implementation Delivered Today) Tj
@@ -96,6 +100,20 @@ BT
 0 -12 Td
 (   - `scripts/render-report-pdf.mjs`) Tj
 0 -12 Td
+(6. Imported and wired `Mission-Control-Gateway-FULL-v3` additive package:) Tj
+0 -12 Td
+(   - full designer gateway handoff static assets under `public/designer-mission-control/design/g) Tj
+0 -12 Td
+(ateway`) Tj
+0 -12 Td
+(   - new Gateway tabs/pages: Overview, Routes, Registry, Policies/Bridge, Health, Dispatcher, To) Tj
+0 -12 Td
+(ken Governor, Agent Hub) Tj
+0 -12 Td
+(   - Mission Control shell routing updated so Gateway opens `/gateway` while Agent Network alias) Tj
+0 -12 Td
+( still resolves to `/gateway/agent-hub`) Tj
+0 -12 Td
 () Tj
 0 -12 Td
 (## Validation Evidence) Tj
@@ -108,6 +126,14 @@ BT
 0 -12 Td
 (- `pnpm run test`: PASS \(`1247` passed\)) Tj
 0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`: PASS \(`ok: tru) Tj
+0 -12 Td
+(e`\)) Tj
+0 -12 Td
+(- Gateway tab route probe \(`/gateway*`, `/designer-mission-control/design/gateway/index.html`\): ) Tj
+0 -12 Td
+(PASS as protected redirects \(`307` to `/login`\)) Tj
+0 -12 Td
 (- unauthenticated protected route smoke: PASS \(`401` expected across sampled protected routes\)) Tj
 0 -12 Td
 (- authenticated local route smoke: BLOCKED \(`mission_control_api_key_not_seeded`\)) Tj
@@ -115,7 +141,18 @@ BT
 (- secret scan on changed files: PASS \(no matches\)) Tj
 0 -12 Td
 (- `.env` diff check: PASS) Tj
-0 -12 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3503 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 () Tj
 0 -12 Td
 (## Services) Tj
@@ -141,29 +178,48 @@ BT
 (- `firecrawl_backend_adapter_not_configured`) Tj
 0 -12 Td
 (- `youtube_transcript_connector_not_proven` \(for transcript GO claim\)) Tj
-ET
-endstream
-endobj
-5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
-endobj
-6 0 obj
-<< /Length 2617 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
+0 -12 Td
 (- `openclaw_doctor_admin_execution_required`) Tj
 0 -12 Td
 (- `security_scan_admin_execution_required`) Tj
 0 -12 Td
 (- `mission_control_api_key_not_seeded` \(local authenticated smoke only\)) Tj
 0 -12 Td
+(- `production_runtime_rollout_required` \(new Gateway integration must be deployed/restarted to b) Tj
+0 -12 Td
+(e owner-visible in production\)) Tj
+0 -12 Td
 () Tj
 0 -12 Td
 (## Files Changed) Tj
 0 -12 Td
 (- `scripts/render-report-pdf.mjs`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/DEVELOPER-INTEGRATION-NOTE.md`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/*`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/app.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/WorkspaceRail.jsx`) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/routes/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/registry/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/policies/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/health/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/dispatcher/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/token-governor/page.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
 0 -12 Td
 (- `src/lib/agent-zero-telegram-delivery.ts`) Tj
 0 -12 Td
@@ -221,6 +277,21 @@ BT
 0 -12 Td
 (- Overall ecosystem remains PARTIAL GO \(around low 90s\).) Tj
 0 -12 Td
+(- Gateway/Agent Hub implementation readiness increased from code integration + compile/test proo) Tj
+0 -12 Td
+(f, pending production rollout and owner-auth visual proof.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1036 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (- Hermes and Agent Zero↔Hermes prior gains retained.) Tj
 0 -12 Td
 (- Telegram delivery: improved to implemented/gated, not GO.) Tj
@@ -249,25 +320,31 @@ BT
 0 -12 Td
 (  5. live YouTube transcript smoke \(if connector runtime is available\).) Tj
 0 -12 Td
+(  6. deploy/restart runtime with this Gateway package integration and rerun owner-auth visual pr) Tj
+0 -12 Td
+(oof.) Tj
+0 -12 Td
 () Tj
 ET
 endstream
 endobj
-7 0 obj
+9 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 8
+0 10
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000121 00000 n 
-0000000247 00000 n 
-0000004175 00000 n 
-0000004301 00000 n 
-0000006970 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000004593 00000 n 
+0000004719 00000 n 
+0000008274 00000 n 
+0000008400 00000 n 
+0000009488 00000 n 
 trailer
-<< /Size 8 /Root 1 0 R >>
+<< /Size 10 /Root 1 0 R >>
 startxref
-7040
+9558
 %%EOF

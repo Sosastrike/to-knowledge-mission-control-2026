@@ -1,0 +1,263 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3472 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-phase-11-designer-package-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 Phase 11 — Designer Gateway Package Integration \(FULL v3\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Integrate the `Mission-Control-Gateway-FULL-v3` handoff package additively into Mission Control,) Tj
+0 -12 Td
+( preserve existing surfaces, and wire the new Gateway control-center entry path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Input Package) Tj
+0 -12 Td
+(- Source package: `Mission-Control-Gateway-FULL-v3`) Tj
+0 -12 Td
+(- Source integration notes loaded from package:) Tj
+0 -12 Td
+(  - `DEVELOPER-INTEGRATION-NOTE.md`) Tj
+0 -12 Td
+(  - `design/gateway/developer-handoff.md`) Tj
+0 -12 Td
+(  - `design/gateway/00-design-brief.md`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Imported the full designer Gateway handoff assets into served static assets:) Tj
+0 -12 Td
+(   - `public/designer-mission-control/design/gateway/*`) Tj
+0 -12 Td
+(   - `public/designer-mission-control/design/DEVELOPER-INTEGRATION-NOTE.md`) Tj
+0 -12 Td
+(2. Added additive Gateway tab shell and pages in Next app:) Tj
+0 -12 Td
+(   - `/gateway` \(Overview\)) Tj
+0 -12 Td
+(   - `/gateway/routes`) Tj
+0 -12 Td
+(   - `/gateway/registry`) Tj
+0 -12 Td
+(   - `/gateway/policies`) Tj
+0 -12 Td
+(   - `/gateway/health`) Tj
+0 -12 Td
+(   - `/gateway/dispatcher`) Tj
+0 -12 Td
+(   - `/gateway/token-governor`) Tj
+0 -12 Td
+(   - existing `/gateway/agent-hub` retained) Tj
+0 -12 Td
+(3. Updated Agent Hub page to include full Gateway tab rail for the requested entry model:) Tj
+0 -12 Td
+(   - Mission Control → Gateway → Agent Hub / Control Center.) Tj
+0 -12 Td
+(4. Updated designer shell navigation behavior:) Tj
+0 -12 Td
+(   - Gateway rail now routes to `/gateway` \(additive entrypoint\).) Tj
+0 -12 Td
+(   - Agent Network compatibility alias still routes to `/gateway/agent-hub`.) Tj
+0 -12 Td
+(5. Kept additive model and did not remove existing Mission Control surfaces.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/DEVELOPER-INTEGRATION-NOTE.md`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/*`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/app.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/WorkspaceRail.jsx`) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/routes/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/registry/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/policies/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/health/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/dispatcher/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/token-governor/page.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Commands) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `PORT=3337 pnpm start` \(local validation server\)) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `curl` route probes for new Gateway pages) Tj
+0 -12 Td
+(- changed-file secret pattern scan \(`rg` pattern scan on modified/untracked files\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Results) Tj
+0 -12 Td
+(- Diff check: PASS) Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Build: PASS) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2453 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Tests: PASS \(`138` files, `1247` tests passed\)) Tj
+0 -12 Td
+(- Route rendering smoke: PASS \(`ok: true`\)) Tj
+0 -12 Td
+(- New Gateway routes: PASS as auth-gated redirects \(`307` to `/login`, expected without owner au) Tj
+0 -12 Td
+(th session\)) Tj
+0 -12 Td
+(- Secret-pattern scan on changed files: PASS) Tj
+0 -12 Td
+(- `.env` changes: none) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Truth / Why Changes Were Not Visible Yet) Tj
+0 -12 Td
+(- Root cause: designer handoff assets were not previously copied into the served static tree and) Tj
+0 -12 Td
+( full Gateway tab pages were not fully wired in app routes.) Tj
+0 -12 Td
+(- Secondary cause: production runtime must run a build containing these changes; until deploy/re) Tj
+0 -12 Td
+(start, owner web UI will continue serving previous revision.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required` for owner-personal visual proof.) Tj
+0 -12 Td
+(- `production_runtime_rollout_required` \(deploy/restart required for this new code to appear in ) Tj
+0 -12 Td
+(production runtime\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety / Hard Rules Confirmation) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secret or token values printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public exposure of local-only services.) Tj
+0 -12 Td
+(- No destructive deletion of existing Mission Control areas.) Tj
+0 -12 Td
+(- OpenClaw+ naming preserved for architecture layer.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Gateway / Agent Hub implementation readiness increased \(code integration and compile/test proo) Tj
+0 -12 Td
+(f complete\).) Tj
+0 -12 Td
+(- Overall remains PARTIAL GO until production rollout + owner-auth visual proof + remaining exte) Tj
+0 -12 Td
+(rnal blockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending in working tree at this phase report checkpoint.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Revert this integration by checking out prior commit for the changed files listed above.) Tj
+0 -12 Td
+(- If needed after deployment, roll back by redeploying prior known-good commit hash.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(1. Commit and push this integration batch.) Tj
+0 -12 Td
+(2. Roll out updated build to production runtime.) Tj
+0 -12 Td
+(3. Run owner-authenticated visual proof on Gateway/Agent Hub path.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003771 00000 n 
+0000003897 00000 n 
+0000006402 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6472
+%%EOF

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>OpenClaw+ · Skills</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.cl-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
+.cl-hero{background:linear-gradient(180deg,rgba(244,114,182,0.10),var(--bg-2));border:1px solid rgba(244,114,182,0.30);border-radius:14px;padding:20px 22px;margin-bottom:18px;display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;}
+.cl-hero .badge{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#f472b6,#db2777);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;}
+.cl-hero h1{margin:0 0 4px;font-size:22px;}
+.cl-hero .role{color:var(--t-3);font-size:13px;}
+.cl-hero .meta{display:flex;gap:14px;margin-top:6px;font-size:11.5px;color:var(--t-4);font-family:var(--ff-mono);}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
+.skill{background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;}
+.skill .header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.skill .ic{width:34px;height:34px;border-radius:8px;background:var(--bg-3);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.skill .nm{font-size:13.5px;font-weight:600;flex:1;}
+.skill .desc{color:var(--t-3);font-size:11.5px;line-height:1.55;min-height:48px;}
+.skill .perms{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;}
+.skill .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;}
+.skill .stat{padding:6px 8px;background:var(--bg-3);border-radius:5px;font-size:11px;}
+.skill .stat .lbl{color:var(--t-5);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;}
+.skill .stat .val{color:var(--t-1);font-weight:600;font-size:12.5px;margin-top:1px;}
+.skill .actions{margin-top:10px;display:flex;gap:6px;}
+.section{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+.section h2{margin:0 0 10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--t-3);}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="cl-page">
+<div class="cl-hero">
+  <div class="badge">C+</div>
+  <div>
+    <h1>OpenClaw+ · Skills <span class="pill green" style="margin-left:8px;"><span class="dot"></span>operational</span></h1>
+    <div class="role">Skill registry. Each skill is a versioned, scoped capability the Gateway can invoke. Skills are composable but never auto-installed — every entry is registered with an explicit RBAC class and severity.</div>
+    <div class="meta"><span>id: openclaw-plus</span><span>skills: 14</span><span>discovery TTL: 5m</span><span>ver: 1.4.2</span></div>
+  </div>
+  <div><button class="btn primary">Browse marketplace</button></div>
+</div>
+
+<div class="section">
+<h2>Installed skills</h2>
+<div class="skills-grid">
+
+<div class="skill">
+  <div class="header"><div class="ic">📚</div><div class="nm">Wiki Search</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+  <div class="desc">Semantic search over Brain wiki + project docs. Returns top-K passages with citations.</div>
+  <div class="perms"><span class="pill green" style="font-size:9.5px;">read-only</span><span class="pill green" style="font-size:9.5px;">low severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">412</div></div><div class="stat"><div class="lbl">P95</div><div class="val">189ms</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">📝</div><div class="nm">Draft Email</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+  <div class="desc">Compose a draft into AgentMail. Sending is a separate skill (high severity).</div>
+  <div class="perms"><span class="pill yellow" style="font-size:9.5px;">draft only</span><span class="pill yellow" style="font-size:9.5px;">med severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">18</div></div><div class="stat"><div class="lbl">P95</div><div class="val">2.1s</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">📤</div><div class="nm">Send Email</div><span class="pill red" style="font-size:10px;"><span class="dot"></span>W · high</span></div>
+  <div class="desc">Send a previously drafted message. Bridge Session required, AZ-only by RBAC.</div>
+  <div class="perms"><span class="pill red" style="font-size:9.5px;">external write</span><span class="pill red" style="font-size:9.5px;">high severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">7</div></div><div class="stat"><div class="lbl">P95</div><div class="val">820ms</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Audit</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">🔎</div><div class="nm">Web Fetch</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+  <div class="desc">Fetch URL → text via Firecrawl. URL allowlist enforced upstream.</div>
+  <div class="perms"><span class="pill green" style="font-size:9.5px;">read</span><span class="pill green" style="font-size:9.5px;">low severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">68</div></div><div class="stat"><div class="lbl">P95</div><div class="val">3.4s</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">📊</div><div class="nm">Summarize Doc</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+  <div class="desc">LLM summarize: 1-pager, exec summary, or bullet list. Cost-capped per call.</div>
+  <div class="perms"><span class="pill green" style="font-size:9.5px;">read</span><span class="pill green" style="font-size:9.5px;">low severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">94</div></div><div class="stat"><div class="lbl">P95</div><div class="val">5.8s</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">📁</div><div class="nm">Drive Move</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+  <div class="desc">Move/copy files within Google Drive or OneDrive. Folder allowlist applies.</div>
+  <div class="perms"><span class="pill yellow" style="font-size:9.5px;">scoped write</span><span class="pill yellow" style="font-size:9.5px;">med severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">23</div></div><div class="stat"><div class="lbl">P95</div><div class="val">980ms</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">🧠</div><div class="nm">Brain Append</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
+  <div class="desc">Append entry to a brain table (session_notes, decisions, action_items).</div>
+  <div class="perms"><span class="pill yellow" style="font-size:9.5px;">append-only</span><span class="pill yellow" style="font-size:9.5px;">med severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">31</div></div><div class="stat"><div class="lbl">P95</div><div class="val">112ms</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">📈</div><div class="nm">Cost Report</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+  <div class="desc">Pull today's spend from cost ledger. Filters by agent, model, route.</div>
+  <div class="perms"><span class="pill green" style="font-size:9.5px;">read</span><span class="pill green" style="font-size:9.5px;">low severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">22</div></div><div class="stat"><div class="lbl">P95</div><div class="val">76ms</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill">
+  <div class="header"><div class="ic">🎙</div><div class="nm">Transcribe Voice</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
+  <div class="desc">Whisper/Deepgram passthrough. Live or batch.</div>
+  <div class="perms"><span class="pill green" style="font-size:9.5px;">read</span><span class="pill green" style="font-size:9.5px;">low severity</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">12</div></div><div class="stat"><div class="lbl">P95</div><div class="val">8.2s</div></div></div>
+  <div class="actions"><button class="btn sm">Open</button><button class="btn sm">Test</button></div>
+</div>
+
+<div class="skill" style="opacity:0.55;">
+  <div class="header"><div class="ic">🔔</div><div class="nm">Page On-Call</div><span class="pill gray" style="font-size:10px;"><span class="dot"></span>not configured</span></div>
+  <div class="desc">PagerDuty/OpsGenie escalation. Add credentials + roster to enable.</div>
+  <div class="perms"><span class="pill gray" style="font-size:9.5px;">configure first</span></div>
+  <div class="stats"><div class="stat"><div class="lbl">Calls/24h</div><div class="val">—</div></div><div class="stat"><div class="lbl">P95</div><div class="val">—</div></div></div>
+  <div class="actions"><button class="btn sm primary">Configure</button></div>
+</div>
+
+</div>
+</div>
+
+<div class="section">
+<h2>Skill discovery contract</h2>
+<div style="font-size:12.5px;color:var(--t-2);line-height:1.7;">
+Each skill exposes <code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">describe()</code> returning {input_schema, output_schema, severity, scopes, cost_estimate}. The Gateway caches the descriptor for 5 minutes and refuses calls whose payload doesn't validate against <code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">input_schema</code>. Severity drives Bridge Session enforcement, not the skill itself — a skill cannot "ask nicely" past the gate.
+</div>
+</div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('OpenClaw+ · Skills'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('OpenClaw+ Skills.html'));
+</script></body></html>

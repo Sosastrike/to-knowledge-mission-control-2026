@@ -165,6 +165,18 @@ Additional local validation for this patch:
 | `tsc --noEmit` | PASS |
 | `next build --webpack` | PASS |
 
+Production validation after deploying this patch:
+
+| Check | Result |
+|---|---|
+| Production HEAD | `585da50` |
+| Production restart after patch | PASS, PID `3248542`, start timestamp `Fri May 8 08:24:02 2026` |
+| `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337` | PASS, 52 live endpoints checked, 1 allowed skipped |
+| `POST /api/bridge/brain-sync/build-wiki/run-now` without Bridge Session | PASS, 423 |
+| Build-Wiki blocker | `active_bridge_session_required_for_buildwiki_run_now` |
+| Approval created without Bridge Session | no |
+| `GET /login` | 200 |
+
 ## Remaining Honest Blockers
 
 | Blocker | Status |

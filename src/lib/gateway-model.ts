@@ -870,7 +870,7 @@ export function createGatewayRegistryFromAgentNetwork(
         lastSeen: generatedAt,
       }),
     ),
-    ...hierarchy.retired.map((agent) =>
+    ...(hierarchy.retired as ReadonlyArray<{ id: string; name: string; status: string }>).map((agent) =>
       createGatewayNode({
         id: agent.id,
         label: agent.name,
@@ -1041,7 +1041,6 @@ export function createGatewayRegistryFromAgentNetwork(
         pi_can_recommend: true,
         mini_agents_are_subordinate_workers: true,
         openclaw_plus_worker_runtime: true,
-        tony_retired_archive_only: true,
         space_agent_is_commander: false,
         commander_replacement: false,
         execution_enabled: false,
@@ -1493,22 +1492,6 @@ export const GATEWAY_ROLE_MATRIX: readonly GatewayRoleMatrixEntry[] = [
     archived: false,
     policy_tags: ['runtime_skills_engine', 'paperclip_supervised_runtime', 'bridge_session_required_for_side_effects'],
     owner_visible_summary: 'OpenClaw+ remains the Runtime / Skills Engine and executes work only after Gateway/Paperclip policy routing allows it.',
-  },
-  {
-    id: 'tony_legacy',
-    label: 'Tony Legacy',
-    role: 'retired_archive_only',
-    authority: 'Historical archive only; no active commander, owner-facing, approval, or routing authority.',
-    reports_to: [],
-    supervises: [],
-    execution_mode: 'archive_only',
-    can_recommend: false,
-    can_design: false,
-    commander: false,
-    active: false,
-    archived: true,
-    policy_tags: ['tony_retired_archive_only', 'no_active_authority'],
-    owner_visible_summary: 'Tony remains historical archive only and must not appear as active authority.',
   },
 ]
 

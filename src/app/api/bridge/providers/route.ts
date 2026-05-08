@@ -39,23 +39,10 @@ type BridgeProvider = {
   [key: string]: unknown
 }
 
-function retireTonyProvider(provider: BridgeProvider): BridgeProvider {
+function stripLegacyControllerProvider(provider: BridgeProvider): BridgeProvider | null {
   const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
-  if (id !== 'tony') return provider
-  return {
-    ...provider,
-    id: 'tony_legacy',
-    name: 'Tony Legacy',
-    category: 'agent',
-    state: 'retired',
-    status: 'retired',
-    hidden: true,
-    detail: {
-      ...(typeof provider.detail === 'object' && provider.detail ? provider.detail as Record<string, unknown> : {}),
-      notes: 'Tony is retired/archived. Agent Zero is the active ecosystem commander; ClaudeClaw may remain only as legacy transport/backend until fully decommissioned.',
-    },
-    next_action: 'Use Agent Zero as commander. Show Tony only in archived diagnostics when explicitly requested.',
-  }
+  if (id === 'tony' || id === 'tony_legacy' || id === 'tony_v2') return null
+  return provider
 }
 
 function sanitizeHermesProvider(provider: BridgeProvider): BridgeProvider {
@@ -81,7 +68,7 @@ function sanitizeHermesProvider(provider: BridgeProvider): BridgeProvider {
 
 function isArchivedProvider(provider: BridgeProvider): boolean {
   const id = String(provider.id || provider.name || '').toLowerCase().replace(/\s+/g, '_')
-  return provider.hidden === true || id === 'tony' || id === 'tony_legacy'
+  return provider.hidden === true || id === 'legacy_deleted_controller'
 }
 
 function visibleProviders(providers: BridgeProvider[], includeLegacy: boolean): BridgeProvider[] {
@@ -91,7 +78,8 @@ function visibleProviders(providers: BridgeProvider[], includeLegacy: boolean): 
 function mergeAgentZeroProvider(providers: BridgeProvider[], agentZero: AgentZeroEcosystemAgentRecord, includeLegacy = false): BridgeProvider[] {
   const normalizedProviders = providers
     .filter((provider) => String(provider.id || '').toLowerCase() !== 'agent_zero')
-    .map(retireTonyProvider)
+    .map(stripLegacyControllerProvider)
+    .filter((provider): provider is BridgeProvider => provider !== null)
     .map(sanitizeHermesProvider)
   return visibleProviders([
     ...normalizedProviders,
@@ -115,21 +103,6 @@ function summarizeProviders(providers: BridgeProvider[]) {
 function fallbackProviders(error: string, agentZero: AgentZeroEcosystemAgentRecord, includeLegacy = false) {
   const now = Date.now()
   const providers = mergeAgentZeroProvider([
-    {
-      id: 'tony_legacy',
-      name: 'Tony Legacy',
-      category: 'agent',
-      state: 'retired',
-      last_checked: now,
-      detail: {
-        endpoint: CLAUDECLAW_BRIDGE_PROVIDERS_URL,
-        credential_name: 'DASHBOARD_TOKEN',
-        credential_present: Boolean(readDashboardToken()),
-        notes: 'Tony is retired/archived. ClaudeClaw provider proxy is legacy transport/status only and does not make Tony commander.',
-        error,
-      },
-      next_action: 'Use Agent Zero as active commander; keep Tony visible only as legacy/archived diagnostics.',
-    },
     {
       id: 'hermes',
       name: 'Hermes / Hermit',

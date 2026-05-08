@@ -45,8 +45,8 @@ export const HERMES_BRAIN_CANONICAL_HIERARCHY = {
     { id: 'buildwiki', name: 'Build-Wiki / Farmer', role: 'knowledge sync / farmer system' },
   ],
   retired: {
-    id: 'tony_legacy',
-    role: 'archived / historical only',
+    id: 'legacy_deleted_controller',
+    role: 'historical records hidden from active system',
     active_brain_center: false,
   },
 } as const

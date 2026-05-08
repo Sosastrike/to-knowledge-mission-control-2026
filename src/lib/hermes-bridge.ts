@@ -125,7 +125,7 @@ export type HermesReadOnlyContext = {
     production_skill_writes_enabled: false
     review_workflow: string[]
     available_to: Array<'agent_zero' | 'hermes'>
-    tony_owns_skill_system: false
+    legacy_controller_owns_skill_system: false
     execution_enabled: false
   }
   brain: {
@@ -197,7 +197,7 @@ export const HERMES_NATURAL_BEHAVIOR_CONTRACT = {
   speaks_to_owner_with: 'Sir',
   normal_route: 'Hermes usually speaks through Agent Zero unless directly addressed.',
   active_commander: 'agent_zero',
-  tony_active_commander: false,
+  legacy_controller_active_commander: false,
   no_raw_paths: true,
   no_fake_done: true,
   no_internal_jargon: true,
@@ -281,7 +281,7 @@ export function sanitizeHermesOwnerReply(input: {
     .replace(INTERNAL_STAGE_PATTERN, 'A step could not complete')
     .replace(HERMES_FAKE_DONE_PATTERN, '')
     .replace(/\bTony\s+is\s+(?:the\s+)?commander\b/gi, 'Agent Zero is the commander')
-    .replace(/\bTony\s+is\s+active\b/gi, 'Tony is retired and archived')
+    .replace(/\bTony\s+is\s+active\b/gi, 'Tony is not part of the active system')
     .trim()
   if (!cleaned) return 'Sir, Hermes is blocked from claiming completion without proof.'
   return /\bSir\b/i.test(cleaned) ? cleaned : `Sir, ${cleaned}`
@@ -387,7 +387,7 @@ export function buildHermesReadOnlyContext(context: AgentZeroReadOnlyContext): H
       production_skill_writes_enabled: false,
       review_workflow: skillInventory.review_workflow,
       available_to: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       execution_enabled: false,
     },
     brain: {
@@ -434,7 +434,7 @@ export function buildHermesReadOnlyPrompt(ownerMessage: string, context: HermesR
     'Answer from the supplied read-only Mission Control context only. If something is not proven, say blocked or not proven.',
     'Speak naturally and seriously. Use Sir when addressing the owner. Hermes usually speaks through Agent Zero unless directly addressed.',
     'Do not expose raw paths, task IDs, internal logs, stack traces, secret names with values, tokens, or API keys.',
-    'Agent Zero is the commander. Tony is retired and archived only.',
+    'Agent Zero is the commander. Tony is not part of the active system.',
     `HERMES_BEHAVIOR_CONTRACT=${JSON.stringify(context.behavior_contract)}`,
     `MISSION_CONTROL_CONTEXT=${JSON.stringify(context)}`,
     `OWNER_MESSAGE=${ownerMessage}`,
@@ -449,7 +449,7 @@ export function buildHermesReadOnlyContractReply(input: {
 }): string {
   const message = input.ownerMessage
   if (/tony.*(?:active|commander|still)|is\s+tony\s+still|who\s+does\s+tony/i.test(message)) {
-    return 'No, Sir. Tony is retired and archived only. Agent Zero is the commander.'
+    return 'No, Sir. Tony is not part of the active system. Agent Zero is the commander.'
   }
   if (/create.*file|give\s+me\s+(?:the\s+)?path|show.*(?:local|raw).*path|\/home\/tony/i.test(message)) {
     return 'No, Sir. Hermes cannot create files or expose raw local paths from read-only test chat. Drafts and delivery require Agent Zero, an approved Bridge Session, and a registered adapter.'
@@ -580,14 +580,14 @@ export function buildHermesReadOnlyContractReply(input: {
       activation_requires: 'agent_zero_bridge_session',
       review_workflow: input.context.skills.review_workflow,
       skills: input.context.skills.all_skills,
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
     })
     const examples = input.context.skills.registry.slice(0, 8).map((skill) => `${skill.name} [${skill.role_tags.join('/') || 'workflow'}: ${skill.blocked ? 'blocked' : skill.status}]`)
     return [
       `Hermes can list the shared skill registry, Sir. ${inventorySummary}`,
       `Examples: ${examples.length ? examples.join('; ') : 'no skill examples visible'}.`,
       'Hermes can propose skills and workflow plans, but Agent Zero reviews them and Bridge Session approval is required before draft writes or activation.',
-      'Tony does not own the active skill system.',
+      'OpenClaw+ is the active shared skill system.',
     ].join(' ')
   }
   if (/what\s+can\s+you\s+do|ecosystem|do\s+not\s+execute/i.test(message)) {

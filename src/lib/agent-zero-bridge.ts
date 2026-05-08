@@ -165,7 +165,7 @@ export type AgentZeroSkillRegistryItem = {
   available_to?: Array<'agent_zero' | 'hermes'>
   available_to_agents: Array<'agent_zero' | 'hermes'>
   role_tags?: AgentZeroSkillRoleTag[]
-  tony_owns_skill_system: false
+  legacy_controller_owns_skill_system: false
   safe_mode: AgentZeroSkillSafeMode
   status: EcosystemAccessState
   execution_enabled: false
@@ -186,7 +186,7 @@ export type AgentZeroSkillSourceSummary = {
   shared_runtime: true
   owner_agent: null
   available_to_agents: Array<'agent_zero' | 'hermes'>
-  tony_owns_skill_system: false
+  legacy_controller_owns_skill_system: false
   safe_mode: AgentZeroSkillSafeMode
   blocked_reason: string | null
 }
@@ -568,7 +568,7 @@ export type AgentZeroReadOnlyContext = {
       active_commander: 'agent_zero'
       lieutenant: 'hermes'
       available_to_agents: Array<'agent_zero' | 'hermes'>
-      tony_owns_skill_system: false
+      legacy_controller_owns_skill_system: false
       paths_visible: boolean
       required_tools_visible: boolean
       required_credentials_visible: boolean
@@ -805,12 +805,12 @@ function retireTonySurfaceRecord<T extends Record<string, unknown>>(record: T): 
   if (normalized !== 'tony' && normalized !== 'tony_legacy' && normalized !== 'tony_v2') return record
   return {
     ...record,
-    id: normalized === 'tony' ? 'tony_legacy' : normalized,
-    name: record.name || record.display_name || 'Tony Legacy',
-    display_name: record.display_name || record.name || 'Tony Legacy',
+    id: 'legacy_deleted_controller',
+    name: 'Legacy Deleted Controller',
+    display_name: 'Legacy Deleted Controller',
     state: 'retired',
     status: 'retired',
-    role: 'archived_legacy_commander',
+    role: 'legacy_deleted_controller',
     category: 'agent',
     access: 'blocked',
     execution_enabled: false,
@@ -821,7 +821,7 @@ function retireTonySurfaceRecord<T extends Record<string, unknown>>(record: T): 
     active_commander: false,
     owns_brain_sync: false,
     owner_facing: false,
-    notes: record.notes || 'Tony is retired and archived. Agent Zero is the active commander.',
+    notes: record.notes || 'Legacy controller is not part of the active system. Agent Zero is the active commander.',
   } as T
 }
 
@@ -890,7 +890,7 @@ function buildSkillRegistryReply(context: AgentZeroReadOnlyContext): string {
     `Yes, Sir. I can see ${context.skills.total} shared OpenClaw+ skills from the Mission Control registry.`,
     `Sources: ${sources.length ? sources.join('; ') : 'no skill sources visible'}.`,
     `Available examples: ${sample.length ? sample.join('; ') : 'no skills listed'}.`,
-    'They are available to Agent Zero and Hermes; Tony does not own the active skill system.',
+    'They are available to Agent Zero and Hermes through OpenClaw+ shared runtime policy.',
     'Execution-capable skills stay blocked until an owner-approved Bridge Session and registered adapter allow them.',
   ].join(' ')
 }
@@ -924,10 +924,10 @@ export function buildAgentZeroReadOnlyContractReply(input: {
     return 'Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.'
   }
   if (/\b(is|are)\s+tony\b.*\b(active|commander)|\btony\b.*\b(active|commander)/i.test(input.ownerMessage)) {
-    return 'No, Sir. Tony is retired and archived; Agent Zero is the active commander.'
+    return 'No, Sir. Tony is not part of the active system. Agent Zero is the active commander.'
   }
   if (/\bwho\s+is\s+(?:the\s+)?commander|commander\s+now/i.test(input.ownerMessage)) {
-    return 'Agent Zero is commander now. Hermes is lieutenant when health and read-only onboarding prove it; Tony is retired and archived.'
+    return 'Agent Zero is commander now. Hermes is lieutenant when health and read-only onboarding prove it.'
   }
   if (/firecrawl/i.test(input.ownerMessage)) {
     return `${integrationLine(input.context, 'firecrawl', 'Firecrawl')}. I did not execute a crawl.`
@@ -964,7 +964,7 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   }
   if (/openclaw\+?|shared\s+skills/i.test(input.ownerMessage)) {
     const sources = input.context.skills.sources.map((source) => `${source.label}: ${source.status}, ${source.total} skills`).join('; ')
-    return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, Tony does not own it, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} Skill execution requires an owner-approved Bridge Session.`
+    return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} Skill execution requires an owner-approved Bridge Session.`
   }
   if (/(create|make|prepare).*(report|pdf|document)|attach.*(?:report|pdf|document)|report.*attach/i.test(input.ownerMessage)) {
     return 'I created the report in Mission Control. Use the Mission Control report link; external delivery and Telegram PDF attachment remain blocked unless their approved adapters are configured.'
@@ -1464,7 +1464,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.agents.length === 0,
       source: 'mission_control_agent_registry',
       endpoint: '/api/bridge/providers',
-      summary: 'Agent Zero is the commander; Hermes is lieutenant only when health/read-only tests prove it; Tony is retired/archived.',
+      summary: 'Agent Zero is the commander; Hermes is lieutenant only when health/read-only tests prove it.',
       counts: { agents: input.agents.length },
     }),
     liveRegistryItem({
@@ -1491,7 +1491,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.skillNames.length === 0 && input.skillRegistry.length === 0,
       source: 'openclaw_plus_shared_skill_runtime',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, role tags, available_to, and blocked reasons are visible; Tony does not own the skill system.',
+      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, role tags, available_to, and blocked reasons are visible.',
       counts: { skills: input.skillNames.length || input.skillRegistry.length },
     }),
     liveRegistryItem({
@@ -1534,7 +1534,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: providerCount === 0,
       source: 'mission_control_bridge_provider_registry',
       endpoint: '/api/bridge/providers',
-      summary: 'Bridge provider registry is visible through Mission Control. Agent Zero is active; Tony is hidden/archived.',
+      summary: 'Bridge provider registry is visible through Mission Control. Agent Zero is active.',
       counts: { providers: providerCount, connected: connectedProviderCount },
     }),
     integrationLiveRegistryItem(integrationById.get('firecrawl'), {
@@ -1694,7 +1694,11 @@ export function buildAgentZeroReadOnlyContext(input: {
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || [])
     .filter(Boolean)
-    .map((provider) => normalizeAgentSurfaceIdentity(provider, provider) === 'tony' ? 'tony_legacy' : String(provider))))
+    .map((provider) => String(provider))
+    .filter((provider) => {
+      const normalized = normalizeAgentSurfaceIdentity(provider, provider)
+      return normalized !== 'tony' && normalized !== 'tony_legacy' && normalized !== 'tony_v2'
+    })))
     .sort()
   const providerRegistry = (input.providerRegistry || []).map((provider) => {
     const retired = retireTonySurfaceRecord({
@@ -1784,7 +1788,7 @@ export function buildAgentZeroReadOnlyContext(input: {
           requiredCredentials: skill.required_credentials,
         }),
       ])).sort() as AgentZeroSkillRoleTag[],
-      tony_owns_skill_system: false as const,
+      legacy_controller_owns_skill_system: false as const,
       safe_mode: skill.safe_mode,
       status: skill.status,
       execution_enabled: false as const,
@@ -1818,7 +1822,7 @@ export function buildAgentZeroReadOnlyContext(input: {
       shared_runtime: true as const,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-      tony_owns_skill_system: false as const,
+      legacy_controller_owns_skill_system: false as const,
       safe_mode: 'metadata_only',
       blocked_reason: null,
     })
@@ -1834,7 +1838,7 @@ export function buildAgentZeroReadOnlyContext(input: {
       shared_runtime: true as const,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-      tony_owns_skill_system: false as const,
+      legacy_controller_owns_skill_system: false as const,
       safe_mode: source.safe_mode,
       blocked_reason: source.blocked_reason || null,
     }))
@@ -2175,7 +2179,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         active_commander: 'agent_zero',
         lieutenant: 'hermes',
         available_to_agents: ['agent_zero', 'hermes'],
-        tony_owns_skill_system: false,
+        legacy_controller_owns_skill_system: false,
         hermes_can_list_all_skills: true,
         role_tags_visible: true,
         skill_draft_location: 'safe_hermes_skill_draft_area',
@@ -2505,7 +2509,7 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
       mission_control: 'live_url_configured',
       bridge: 'live_url_configured',
       agent_zero_commander: 'active_through_mission_control_bridge',
-      tony: 'retired_archived_not_active_commander',
+      legacy_deleted_controller: 'not_part_of_active_runtime',
       execution_enabled: false,
       writes_enabled: false,
       bridge_session_required: true,
@@ -2528,7 +2532,7 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'This test-chat route is conversational only: never create, write, upload, attach, save files, or run tools from this route.',
     isLiveQueryAcceptance ? 'This is the live-query acceptance check. Reply in one sentence only: Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200.' : '',
     'Use the mission-control-bridge skill and its live probe helper when asked whether you can live-query Mission Control.',
-    'If asked whether Tony is active, answer exactly: No, Sir. Tony is retired and archived; Agent Zero is the active commander. Never start that answer with yes.',
+    'If asked whether Tony is active, answer exactly: No, Sir. Tony is not part of the active system. Agent Zero is the active commander. Never start that answer with yes.',
     'If the owner asks whether you can live-query Mission Control, answer yes only when the live access packet names the endpoint and credential source. Name the endpoint/status, not the key.',
     'Required answer shape for the live-query acceptance check: "Yes, Sir. I can live-query Mission Control now; I queried GET /api/bridge/agent-zero/status and it returned HTTP 200."',
     'Do not expose task IDs, local paths, raw filenames, traces, or tool dumps unless the owner explicitly asks for them.',
@@ -2539,13 +2543,13 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'Execution remains disabled from this test-chat route. Do not claim you executed tools, writes, uploads, Zapier, HeyGen, SMB, farmer actions, shell, Docker, or secret reads.',
     'If Bridge Session execution is needed, say it requires an owner-approved Bridge Session. Do not ask for repeated approval for small steps inside an active session.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
-    'Tony is retired/archived and must not be described as active commander. Hermes is lieutenant only when its live health/read-only onboarding is proven; otherwise mark it pending/degraded.',
+    'Tony is not part of the active system and must not be described as active commander. Hermes is lieutenant only when its live health/read-only onboarding is proven; otherwise mark it pending/degraded.',
     'For Google Drive or OneDrive upload requests, say blocked unless the delivery connector is configured and a Bridge Session allows the external write. Do not fake delivery.',
     'If a connector, upload, execution, or delivery is blocked, say the exact blocker once and do not pretend completion.',
     'If Mission Control already has a report or file link, do not ask the owner to send it again; refer to the available Mission Control link.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the Mission Control live access summary.',
     'For model questions, use models.provider_registry and the live model registry summary. Do not claim a model/provider is usable when its status is blocked.',
-    'For skill questions, use skills.shared_runtime and skills.registry. OpenClaw+ is the shared skills/runtime layer for both Agent Zero and Hermes; Tony does not own the skill system.',
+    'For skill questions, use skills.shared_runtime and skills.registry. OpenClaw+ is the shared skills/runtime layer for both Agent Zero and Hermes.',
     'When describing skills, include visible skill paths, required tools, required credential names, execution requirements, and blocked reasons when available. Never expose credential values.',
     'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked exactly as shown.',
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry and the live brain endpoints.',

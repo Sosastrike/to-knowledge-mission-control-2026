@@ -22,7 +22,7 @@ describe('OpenClaw+ shared skill runtime', () => {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: 'metadata_only',
       status: 'visible',
       execution_enabled: false,
@@ -41,7 +41,7 @@ describe('OpenClaw+ shared skill runtime', () => {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: 'metadata_only',
       blocked_reason: null,
     }
@@ -56,7 +56,7 @@ describe('OpenClaw+ shared skill runtime', () => {
       runtime_layer: 'OpenClaw+',
       active_commander: 'agent_zero',
       lieutenant: 'hermes',
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       paths_visible: true,
       required_tools_visible: true,
       required_credentials_visible: true,
@@ -66,7 +66,7 @@ describe('OpenClaw+ shared skill runtime', () => {
     expect(context.skills.shared_runtime.available_to_agents).toEqual(['agent_zero', 'hermes'])
     expect(context.skills.sources[0]).toMatchObject({
       root_path: '/home/tony/.openclaw/skills',
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
     })
     expect(context.skills.registry[0]).toMatchObject({
       id: 'openclaw_plus:report-builder',
@@ -81,7 +81,7 @@ describe('OpenClaw+ shared skill runtime', () => {
       owner_agent: null,
       available_to: ['agent_zero', 'hermes'],
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       status: 'visible',
       execution_enabled: false,
       writes_enabled: false,
@@ -108,7 +108,7 @@ describe('OpenClaw+ shared skill runtime', () => {
         shared_runtime: true,
         owner_agent: null,
         available_to_agents: ['agent_zero'],
-        tony_owns_skill_system: false,
+        legacy_controller_owns_skill_system: false,
         safe_mode: 'metadata_only',
         status: 'visible',
         execution_enabled: false,
@@ -129,7 +129,7 @@ describe('OpenClaw+ shared skill runtime', () => {
       blocked_reason: 'credential:AGENTMAIL_API_KEY:missing',
       execution_enabled: false,
       writes_enabled: false,
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
     })
     expect(context.skills.shared_runtime.bridge_session_required_for_execution).toBe(true)
     expect(context.skills.shared_runtime.skill_review_workflow).toContain('Hermes proposes')

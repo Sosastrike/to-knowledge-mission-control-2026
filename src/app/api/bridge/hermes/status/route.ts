@@ -287,7 +287,7 @@ export async function GET(request: NextRequest) {
         activation_requires: 'agent_zero_bridge_session',
         agent_zero_reviews_before_activation: true,
       },
-      note: 'Hermes and Agent Zero see the same OpenClaw+ skill registry. Tony is retired and does not own the skill system.',
+      note: 'Hermes and Agent Zero see the same OpenClaw+ skill registry under the active Gateway runtime chain.',
     },
     paperclip_workforce: {
       visible_to_hermes: true,

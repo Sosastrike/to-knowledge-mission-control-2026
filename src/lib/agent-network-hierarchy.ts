@@ -52,11 +52,6 @@ export const CANONICAL_AGENT_TIER_OF: Record<string, string> = {
   claudeclaw: 'runtime',
   bridge_mcp: 'system',
   brain_systems: 'system',
-  tony: 'archive',
-  tony_legacy: 'archive',
-  'tony-legacy': 'archive',
-  tony_v2: 'archive',
-  'tony-v2': 'archive',
 }
 
 export const CANONICAL_AGENT_NETWORK_SEED_IDS = new Set([
@@ -69,11 +64,6 @@ export const CANONICAL_AGENT_NETWORK_SEED_IDS = new Set([
   'claudeclaw',
   'bridge_mcp',
   'brain_systems',
-  'tony',
-  'tony_legacy',
-  'tony-legacy',
-  'tony_v2',
-  'tony-v2',
 ])
 
 export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
@@ -110,7 +100,7 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     name: 'OpenClaw+ / ClaudeClaw',
     role: 'Shared runtime, skills, adapters, reports, and governance layer',
     owner_agent: 'ecosystem',
-    tony_owns_skill_system: false,
+    legacy_controller_owns_skill_system: false,
   },
   systems: [
     { id: 'bridge_mcp', name: 'Bridge/MCP', role: 'Tools, models, and integrations access layer' },
@@ -120,10 +110,7 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     { id: 'graphify', name: 'Graphify', role: 'Graph system' },
     { id: 'buildwiki', name: 'Build-Wiki / Farmer', role: 'Scoped worker/docs sync service under OpenClaw+' },
   ],
-  retired: [
-    { id: 'tony_legacy', name: 'Tony legacy', role: 'legacy_archived', status: 'legacy_archived' as AgentNetworkStatusState, hidden_by_default: true, execution_enabled: false },
-    { id: 'tony_v2', name: 'Tony v2', role: 'legacy_archived', status: 'legacy_archived' as AgentNetworkStatusState, hidden_by_default: true, execution_enabled: false },
-  ],
+  retired: [],
   edges: [
     { from: 'owner', to: 'agent_zero', relation: 'commands' },
     { from: 'agent_zero', to: 'hermes', relation: 'supported_by' },
@@ -141,7 +128,7 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
   skill_policy: {
     owner_agent: 'ecosystem',
     available_to: ['agent_zero', 'hermes'],
-    tony_owns_skill_system: false,
+    legacy_controller_owns_skill_system: false,
   },
 } as const
 
@@ -164,7 +151,7 @@ export function isCanonicalAgentNetworkSeedId(id: string | null | undefined): bo
 
 export function isActiveTonyHierarchyId(id: string | null | undefined): boolean {
   const normalized = normalizeAgentNetworkId(id)
-  return ['tony', 'tony_legacy', 'tony_v2'].includes(normalized)
+  return normalized === 'legacy_deleted_controller'
 }
 
 export function getHermesHierarchyStatus(input: HermesHierarchyStatusInput = {}): {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildTonyReportCreationContract,
+  buildReportCreationContract,
   computeNextRunAt,
   normalizeExecutiveReportInput,
   reviewExecutiveReportsPlan,
@@ -46,7 +46,7 @@ describe('Executive Reports / Scheduled Reports', () => {
   })
 
   it('exposes Agent Zero report creation through the same canonical API contract', () => {
-    const contract = buildTonyReportCreationContract({
+    const contract = buildReportCreationContract({
       report_type: 'approval_audit',
       assigned_agent: 'Agent Zero',
       schedule_text: 'daily at 5pm',

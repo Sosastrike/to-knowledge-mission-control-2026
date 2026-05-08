@@ -25,7 +25,7 @@ type McpServer = {
   tool_count?: number | null
   last_tested?: string | null
   error?: string | null
-  visible_to?: { tony: boolean; sub_agents: boolean }
+  visible_to?: { owner: boolean; sub_agents: boolean }
 }
 
 const MCP_CACHE_TTL_MS = 30_000
@@ -147,7 +147,7 @@ async function loadServersUncached(): Promise<McpServer[]> {
       : server.status === 'needs_auth'
         ? 'authentication_required'
         : null,
-    visible_to: { tony: true, sub_agents: false },
+    visible_to: { owner: true, sub_agents: false },
   }))
 }
 

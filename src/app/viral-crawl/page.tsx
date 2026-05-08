@@ -205,7 +205,7 @@ export default function ViralCrawlPage() {
 {`# Full form
 node <OpenClaw+ video-to-brain wrapper> \\
      "<URL or local path>" \\
-     <agent: tony|researcher|pacman|loom|growth|builder|forge> \\
+     <agent: agent_zero|researcher|pacman|loom|growth|builder|forge> \\
      <purpose: summarize|learn_skill|competitor_research|...> \\
      [--start MM:SS] [--end MM:SS] [--no-whisper]`}</pre>
           <p className="mt-2 text-xs text-zinc-500">{vi.nextAction}</p>
@@ -220,7 +220,7 @@ node <OpenClaw+ video-to-brain wrapper> \\
 
         <div className="mt-4 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
           <Bullet label="Granted agents">
-            tony · researcher · pacman · loom · growth · builder · forge
+            agent_zero · researcher · pacman · loom · growth · builder · forge
           </Bullet>
           <Bullet label="Status surfaces">
             <code className="font-mono">/api/viral-crawl/video/status</code> · DB <code className="font-mono">agent_skills.watch_video</code>

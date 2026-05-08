@@ -109,7 +109,7 @@ export type GatewayMiniAgentOperatingSystem = {
     mini_agents_present: boolean
     openclaw_plus_present: boolean
     openclaw_plus_retained: true
-    tony_active_authority: false
+    legacy_deleted_controller_active_authority: false
     space_agent_commander_authority: false
   }
   execution_enabled: false
@@ -236,9 +236,6 @@ const RESERVED_AGENT_NAMES = new Set([
   'gateway',
   'hermes',
   'pi',
-  'tony',
-  'tony legacy',
-  'tony v2',
 ])
 const FORBIDDEN_SCOPE_PATTERN = /(?:root\s+shell|raw[_\s-]*shell|docker[_\s-]*socket|direct[_\s-]*secret|read[_\s-]*secrets?|print[_\s-]*secrets?|\.env|auth\.json|unrestricted|bypass\s+gateway|external[_\s-]*write|zapier[_\s-]*write|heygen[_\s-]*generation|smb[_\s-]*mount|mount\s+smb)/i
 
@@ -285,7 +282,7 @@ export function buildGatewayMiniAgentOperatingSystem(registry: GatewayRegistry):
       mini_agents_present: nodeIds.has('mini_agents'),
       openclaw_plus_present: nodeIds.has('openclaw_plus'),
       openclaw_plus_retained: true,
-      tony_active_authority: false,
+      legacy_deleted_controller_active_authority: false,
       space_agent_commander_authority: false,
     },
     execution_enabled: false,

@@ -84,7 +84,7 @@ function fakeEcosystemContext() {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: 'metadata_only',
       status: 'visible',
       execution_enabled: false,
@@ -407,7 +407,7 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.mission_control.routes).toContain('/api/bridge/hermes/test-chat')
     expect(context.behavior_contract).toEqual(HERMES_NATURAL_BEHAVIOR_CONTRACT)
     expect(context.behavior_contract.active_commander).toBe('agent_zero')
-    expect(context.behavior_contract.tony_active_commander).toBe(false)
+    expect(context.behavior_contract.legacy_controller_active_commander).toBe(false)
     expect(context.agents.agent_zero.role).toBe('commander')
     expect(context.agents.hermes.role).toBe('lieutenant / skill and workflow specialist')
     expect(context.skills.runtime_layer).toBe('OpenClaw+')
@@ -536,9 +536,9 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(context.skills.all_skills.length).toBeGreaterThan(0)
     expect(context.skills.registry[0].available_to).toContain('hermes')
     expect(context.skills.registry[0].role_tags.length).toBeGreaterThan(0)
-    expect(inventory.tony_owns_skill_system).toBe(false)
+    expect(inventory.legacy_controller_owns_skill_system).toBe(false)
     expect(result.response_text).toContain('Hermes can list the shared skill registry')
-    expect(result.response_text).toContain('Tony does not own the active skill system')
+    expect(result.response_text).toContain('OpenClaw+ is the active shared skill system')
     expect(result.execution_enabled).toBe(false)
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
   })

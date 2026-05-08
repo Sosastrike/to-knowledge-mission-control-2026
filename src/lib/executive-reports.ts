@@ -82,8 +82,6 @@ const DEFAULT_SCHEDULES: Record<ExecutiveReportType, string> = {
 }
 
 const AGENT_ALIASES: Record<string, string> = {
-  tony: 'Tony Legacy',
-  'tony legacy': 'Tony Legacy',
   'agent 0': 'Agent Zero',
   agent0: 'Agent Zero',
   agent_zero: 'Agent Zero',
@@ -374,7 +372,7 @@ export function executiveReportsSummary(reports: Array<ReturnType<typeof mapRepo
   }
 }
 
-export function buildTonyReportCreationContract(input: ExecutiveReportInput) {
+export function buildReportCreationContract(input: ExecutiveReportInput) {
   const normalized = normalizeExecutiveReportInput(input)
   const contractHash = createHash('sha256')
     .update(JSON.stringify({
@@ -405,7 +403,7 @@ export function reviewExecutiveReportsPlan() {
     { check: 'no external writes', passed: true, detail: 'CRUD only changes Mission Control report definitions' },
     { check: 'no duplicate report system', passed: true, detail: 'standup archive is kept as history source; scheduled_reports is canonical scheduler UI' },
     { check: 'schedule computable', passed: true, detail: 'natural schedule/cron parser computes next_run_at' },
-    { check: 'agent assignment explicit', passed: true, detail: 'Agent Zero, Tony Legacy, Hermes, or custom agent names are stored' },
+    { check: 'agent assignment explicit', passed: true, detail: 'Agent Zero, Hermes, or custom agent names are stored' },
     { check: 'history visible', passed: true, detail: 'scheduled_report_runs is the canonical history table' },
     { check: 'safe rollback', passed: true, detail: 'soft delete for report definitions; git revert for code' },
   ]

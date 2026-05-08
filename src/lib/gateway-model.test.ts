@@ -61,7 +61,6 @@ describe('canonical Gateway graph model', () => {
     const paperclip = getGatewayRoleMatrixEntry('paperclip')
     const existingAgents = getGatewayRoleMatrixEntry('existing_agents')
     const openClaw = getGatewayRoleMatrixEntry('openclaw_plus')
-    const tony = getGatewayRoleMatrixEntry('tony_legacy')
 
     expect(roleIds).toEqual(expect.arrayContaining([
       'owner',
@@ -74,7 +73,6 @@ describe('canonical Gateway graph model', () => {
       'existing_agents',
       'mini_agents',
       'openclaw_plus',
-      'tony_legacy',
     ]))
     expect(agentZero).toMatchObject({ role: 'commander', commander: true, active: true })
     expect(agentZero?.supervises).toEqual(expect.arrayContaining(['space_agent', 'paperclip', 'hermes', 'pi']))
@@ -127,7 +125,7 @@ describe('canonical Gateway graph model', () => {
     expect(openClaw).toMatchObject({ role: 'runtime_skills_engine', commander: false, active: true })
     expect(openClaw?.reports_to).toEqual(expect.arrayContaining(['paperclip', 'gateway', 'agent_zero']))
     expect(openClaw?.policy_tags).toEqual(expect.arrayContaining(['runtime_skills_engine', 'paperclip_supervised_runtime']))
-    expect(tony).toMatchObject({ role: 'retired_archive_only', commander: false, active: false, archived: true })
+    expect(getGatewayRoleMatrixEntry('tony_legacy')).toBeNull()
   })
 
   it('normalizes tools, models, skills, and integrations into GatewayCapability', () => {
@@ -195,8 +193,6 @@ describe('canonical Gateway graph model', () => {
         'mempalace',
         'graphify',
         'buildwiki',
-        'tony_legacy',
-        'tony_v2',
       ]),
     )
     expect(registry.nodes.filter((node) => node.id === 'agent_zero')).toHaveLength(1)
@@ -400,7 +396,6 @@ describe('canonical Gateway graph model', () => {
         pi_can_recommend: true,
         mini_agents_are_subordinate_workers: true,
         openclaw_plus_worker_runtime: true,
-        tony_retired_archive_only: true,
         space_agent_is_commander: false,
         policy: 'space_agent_not_commander',
       },
@@ -518,18 +513,10 @@ describe('canonical Gateway graph model', () => {
     })
   })
 
-  it('keeps Tony archived and out of active Gateway routes', () => {
+  it('keeps deleted legacy controllers out of active Gateway routes', () => {
     const registry = createGatewayRegistryFromAgentNetwork()
-    const tonyNodes = registry.nodes.filter((node) => node.id.startsWith('tony'))
-    const activeTonyEdges = registry.edges.filter((edge) => edge.source.startsWith('tony') || edge.target.startsWith('tony'))
-
-    expect(tonyNodes).toHaveLength(2)
-    for (const node of tonyNodes) {
-      expect(node.visibility).toBe('archived')
-      expect(node.status).toBe('legacy_archived')
-      expect(node.blockers).toEqual(['legacy_archived'])
-    }
-    expect(activeTonyEdges).toEqual([])
+    const deletedLegacyNodes = registry.nodes.filter((node) => node.id === 'legacy_deleted_controller')
+    expect(deletedLegacyNodes).toHaveLength(0)
   })
 
   it('maps Gateway hierarchy relationships into Gateway edge types', () => {

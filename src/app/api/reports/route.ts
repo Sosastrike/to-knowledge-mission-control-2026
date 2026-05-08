@@ -3,7 +3,7 @@ import { requireRole } from '@/lib/auth'
 import { getDatabase, db_helpers } from '@/lib/db'
 import { mutationLimiter } from '@/lib/rate-limit'
 import {
-  buildTonyReportCreationContract,
+  buildReportCreationContract,
   createExecutiveReport,
   executiveReportsSummary,
   listExecutiveReports,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       report,
-      agent_zero_contract: buildTonyReportCreationContract(body),
+      agent_zero_contract: buildReportCreationContract(body),
       execution_enabled: false,
       next_action: 'Report definition saved. Generation/delivery runners stay locked until separately approved.',
     }, { status: 201, headers: { 'Cache-Control': 'no-store' } })

@@ -35,7 +35,7 @@ type SharedSkillSummary = SkillSummary & {
   available_to: Array<'agent_zero' | 'hermes'>
   available_to_agents: Array<'agent_zero' | 'hermes'>
   owner_agent: null
-  tony_owns_skill_system: false
+  legacy_controller_owns_skill_system: false
   requires_bridge_session: true
   execution_enabled: false
   writes_enabled: false
@@ -223,7 +223,7 @@ function normalizeSharedSkill(skill: SkillSummary): SharedSkillSummary {
     available_to: ['agent_zero', 'hermes'],
     available_to_agents: ['agent_zero', 'hermes'],
     owner_agent: null,
-    tony_owns_skill_system: false,
+    legacy_controller_owns_skill_system: false,
     requires_bridge_session: true,
     execution_enabled: false,
     writes_enabled: false,
@@ -241,7 +241,7 @@ function buildRegistryExtensions(skills: SharedSkillSummary[], roots: SkillRoot[
     active_commander: 'agent_zero',
     lieutenant: 'hermes',
     available_to_agents: ['agent_zero', 'hermes'],
-    tony_owns_skill_system: false,
+    legacy_controller_owns_skill_system: false,
     paths_visible: true,
     required_tools_visible: true,
     required_credentials_visible: true,
@@ -268,7 +268,7 @@ function buildRegistryExtensions(skills: SharedSkillSummary[], roots: SkillRoot[
     execution_enabled: skill.execution_enabled,
     writes_enabled: skill.writes_enabled,
     owner_agent: skill.owner_agent,
-    tony_owns_skill_system: skill.tony_owns_skill_system,
+    legacy_controller_owns_skill_system: skill.legacy_controller_owns_skill_system,
   }))
   const agent = skills
     .filter((skill) => /agent|openclaw|workspace/i.test(skill.source))
@@ -287,7 +287,7 @@ function buildRegistryExtensions(skills: SharedSkillSummary[], roots: SkillRoot[
       execution_enabled: skill.execution_enabled,
       writes_enabled: skill.writes_enabled,
       owner_agent: skill.owner_agent,
-      tony_owns_skill_system: skill.tony_owns_skill_system,
+      legacy_controller_owns_skill_system: skill.legacy_controller_owns_skill_system,
     }))
   const installedNames = new Set(skills.map((skill) => normalizeComparableName(skill.name)))
   const named = NAMED_SKILLS.map((label) => {
@@ -313,7 +313,7 @@ function buildRegistryExtensions(skills: SharedSkillSummary[], roots: SkillRoot[
       execution_enabled: false,
       writes_enabled: false,
       owner_agent: null,
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       next_action: installed ? null : `request_install:${label}`,
     }
   })

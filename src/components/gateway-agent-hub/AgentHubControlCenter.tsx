@@ -134,12 +134,12 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           </article>
           <article className='rounded-lg border border-white/10 bg-white/[0.03] p-5'>
             <h2 className='text-lg font-semibold text-white'>Production Guardrails</h2>
-            <p className='mt-3 text-sm leading-6 text-slate-300'>Buttons and status chips only show live, gated, or blocked behavior. There is no public Playwright MCP exposure, no authenticated browser action without Bridge Session, and no Tony active commander route.</p>
+            <p className='mt-3 text-sm leading-6 text-slate-300'>Buttons and status chips only show live, gated, or blocked behavior. There is no public Playwright MCP exposure and no authenticated browser action without Bridge Session.</p>
             <dl className='mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2'>
               <Fact label='fake done' value='blocked' />
               <Fact label='external writes' value='Bridge Session required' />
               <Fact label='Pi execution' value='disabled' />
-              <Fact label='Tony authority' value='retired/archive only' />
+              <Fact label='commander authority' value='Agent Zero only' />
             </dl>
           </article>
         </section>
@@ -368,7 +368,7 @@ function PolicyPanel() {
         <PolicyLine label='Execution' value='Agent Zero authority plus Gateway policy' />
         <PolicyLine label='Pi' value='advisory only, no writes, no execution' />
         <PolicyLine label='Hermes' value='planning only until hermes_called:true' />
-        <PolicyLine label='Tony' value='retired/archive only' />
+        <PolicyLine label='legacy controllers' value='not part of active runtime' />
       </div>
     </article>
   )

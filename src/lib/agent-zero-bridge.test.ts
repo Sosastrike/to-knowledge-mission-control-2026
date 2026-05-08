@@ -22,7 +22,7 @@ const sharedSkillFields = (name: string, source: string) => ({
   shared_runtime: true as const,
   owner_agent: null,
   available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-  tony_owns_skill_system: false as const,
+  legacy_controller_owns_skill_system: false as const,
 })
 
 const sharedSkillSourceFields = (root: string) => ({
@@ -31,7 +31,7 @@ const sharedSkillSourceFields = (root: string) => ({
   shared_runtime: true as const,
   owner_agent: null,
   available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-  tony_owns_skill_system: false as const,
+  legacy_controller_owns_skill_system: false as const,
 })
 
 describe('Agent Zero read-only bridge connector', () => {
@@ -540,20 +540,10 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/reports')
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/google-drive/status')
     expect(context.mission_control.surfaces).toContain('/api/bridge/agent-zero/onedrive/status')
-    expect(context.bridge.providers).toEqual(['agent_zero', 'tony_legacy', 'zapier'])
+    expect(context.bridge.providers).toEqual(['agent_zero', 'zapier'])
     expect(context.bridge.provider_registry.find((provider) => provider.id === 'agent_zero')?.execution_enabled).toBe(false)
     expect(context.bridge.provider_registry.find((provider) => provider.id === 'tony')).toBeUndefined()
-    expect(context.bridge.provider_registry.find((provider) => provider.id === 'tony_legacy')).toMatchObject({
-      state: 'retired',
-      role: 'archived_legacy_commander',
-      execution_enabled: false,
-      direct_access: false,
-      proxy_access: false,
-      hidden: true,
-      hidden_by_default: true,
-      active_commander: false,
-      owner_facing: false,
-    })
+    expect(context.bridge.provider_registry.find((provider) => provider.id === 'tony_legacy')).toBeUndefined()
     expect(context.bridge.mcp_servers).toEqual(['zapier'])
     expect(context.mcp.servers[0]).toMatchObject({ name: 'zapier', access: 'connected', tool_count: 42 })
     expect(context.mcp.servers[0]).toMatchObject({
@@ -579,16 +569,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(context.mcp.writes_enabled).toBe(false)
     expect(context.agents.items.find((agent) => agent.id === 'agent_zero')?.execution_enabled).toBe(false)
     expect(context.agents.items.find((agent) => agent.id === 'tony')).toBeUndefined()
-    expect(context.agents.items.find((agent) => agent.id === 'tony_legacy')).toMatchObject({
-      status: 'retired',
-      role: 'archived_legacy_commander',
-      execution_enabled: false,
-      direct_access: false,
-      proxy_access: false,
-      hidden: true,
-      hidden_by_default: true,
-      active_commander: false,
-    })
+    expect(context.agents.items.find((agent) => agent.id === 'tony_legacy')).toBeUndefined()
     expect(context.models.providers).toContain('openai')
     expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.status).toBe('connected')
     expect(context.models.provider_registry.find((provider) => provider.id === 'openrouter')?.credential_present).toBe(true)
@@ -814,7 +795,7 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(reply).toContain('shared OpenClaw+ skills')
     expect(reply).toContain('engineering-test')
     expect(reply).toContain('Agent Zero and Hermes')
-    expect(reply).toContain('Tony does not own')
+    expect(reply).toContain('shared runtime policy')
     expect(reply).toContain('Bridge Session')
   })
 
@@ -879,7 +860,7 @@ describe('Agent Zero read-only bridge connector', () => {
       context: buildAgentZeroReadOnlyContext(),
     })
 
-    expect(reply).toBe('No, Sir. Tony is retired and archived; Agent Zero is the active commander.')
+    expect(reply).toBe('No, Sir. Tony is not part of the active system. Agent Zero is the active commander.')
   })
 
 })

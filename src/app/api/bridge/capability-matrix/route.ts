@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       available_mcps: ['MCP inventory via /api/mcp/list', 'MCP tool/schema summaries; execution requires active Bridge Session'],
       provider_routes: ['commander=agent_zero', 'bridge_session_required=true', 'transport=Mission Control / Bridge / registered adapters only'],
       approval_gates: ['Bridge Session for execution', 'external writes', 'model routing changes', 'memory writes', 'governance changes', 'credentials', 'deployments', 'firewall/Caddy/Cloudflare/Docker exposure'],
-      restrictions: ['No raw shell/root/Docker socket', 'No direct secret reads', 'No fake completion', 'No unapproved external writes', 'No raw local paths in owner replies', 'OpenClaw+ skills are shared; Tony does not own the skill system'],
+      restrictions: ['No raw shell/root/Docker socket', 'No direct secret reads', 'No fake completion', 'No unapproved external writes', 'No raw local paths in owner replies', 'OpenClaw+ skills are shared by active runtime controllers only'],
       memory_brain_sync_status: 'live status/read adapters through Mission Control; writes require active Bridge Session and adapter audit',
       harness_event_routing_status: 'Agent Zero commander path is primary; actions must stay adapter-scoped and audited',
       cost_rate_limits: ['Use configured model registry honestly', 'Report blocked providers instead of guessing', 'Do not execute expensive external tools without session scope'],
@@ -248,9 +248,7 @@ export async function GET(request: NextRequest) {
       'production DB migrations',
       'external-user access',
     ],
-    retired_agents: [
-      { id: 'tony_legacy', display_name: 'Tony Legacy', status: 'retired', visible_by_default: false, reason: 'archived rollback/audit only' },
-    ],
+    retired_agents: [],
     summary: {
       agents_total: agents.length,
       executable_agents: agents.filter((agent) => agent.can_execute).length,

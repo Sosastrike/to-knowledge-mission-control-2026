@@ -1218,10 +1218,6 @@ const KNOWN_PROTECTED: Record<string, boolean> = {
   'agent-zero': true,
   main: true,
   hermes: true,
-  tony: true,
-  tony_legacy: true,
-  'tony-legacy': true,
-  tony_v2: true,
   // agent_zero is handled in the External section (it's not in MC's /api/agents)
 }
 
@@ -4670,7 +4666,6 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       const id = String(agent.id || '').toLowerCase()
       const name = String(agent.name || '').toLowerCase()
       if (isCanonicalAgentNetworkSeedId(id) || isActiveTonyHierarchyId(id)) return false
-      if (name === 'tony' || name.includes('tony legacy') || name.includes('tony v2')) return false
       return true
     }),
   ]
@@ -4709,7 +4704,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <strong>Bridge Mode preflight is mandatory.</strong> Every Gateway Node must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the Gateway Flow. If Bridge Mode says approval, credential, or backend work is required, the node must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
-        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and Build-Wiki / Farmer systems. Tony legacy is retired and hidden from active hierarchy.
+        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and Build-Wiki / Farmer systems.
       </div>
 
       <div className={styles.deprecationNotice}>

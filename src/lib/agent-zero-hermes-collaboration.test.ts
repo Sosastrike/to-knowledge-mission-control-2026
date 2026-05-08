@@ -36,7 +36,7 @@ function fakeContext(hermesStatus = 'degraded') {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: 'metadata_only',
       status: 'visible',
       execution_enabled: false,

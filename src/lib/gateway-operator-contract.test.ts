@@ -108,21 +108,18 @@ describe('Gateway operator contract regressions', () => {
     }
   })
 
-  it('keeps Agent Zero commander, Hermes lieutenant, and Tony archived only', () => {
+  it('keeps Agent Zero commander and Hermes lieutenant without legacy controller nodes', () => {
     const hierarchy = createGatewayRegistryFromAgentNetwork({
       generatedAt: '2026-05-05T00:00:00.000Z',
       hermes: { installed: true, reachable: true, authConfigured: true },
     })
     const agentZero = hierarchy.nodes.find((node) => node.id === 'agent_zero')
     const hermes = hierarchy.nodes.find((node) => node.id === 'hermes')
-    const tonyNodes = hierarchy.nodes.filter((node) => node.id.startsWith('tony'))
-    const activeTonyEdges = hierarchy.edges.filter((edge) => edge.source.startsWith('tony') || edge.target.startsWith('tony'))
+    const legacyControllerNodes = hierarchy.nodes.filter((node) => node.id === 'legacy_deleted_controller')
 
     expect(agentZero).toMatchObject({ kind: 'commander', owner: 'owner', visibility: 'owner_visible' })
     expect(hermes).toMatchObject({ kind: 'lieutenant', visibility: 'owner_visible' })
-    expect(tonyNodes.length).toBeGreaterThan(0)
-    expect(tonyNodes.every((node) => node.visibility === 'archived' && node.status === 'legacy_archived')).toBe(true)
-    expect(activeTonyEdges).toEqual([])
+    expect(legacyControllerNodes).toEqual([])
   })
 
   it('keeps OpenClaw+ runtime retained and Build-Wiki Run Now scoped to the approved service', () => {

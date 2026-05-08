@@ -24,17 +24,11 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(hierarchy.edges).toContainEqual({ from: 'agent_zero', to: 'hermes', relation: 'supported_by' })
   })
 
-  it('keeps Tony archived and out of active hierarchy', () => {
+  it('keeps legacy controller IDs out of active hierarchy', () => {
     const hierarchy = CANONICAL_AGENT_NETWORK_HIERARCHY
 
     expect(isTonyActiveInHierarchy(hierarchy)).toBe(false)
-    expect(hierarchy.retired.map((agent) => agent.id)).toEqual(['tony_legacy', 'tony_v2'])
-    for (const retired of hierarchy.retired) {
-      expect(retired.hidden_by_default).toBe(true)
-      expect(retired.execution_enabled).toBe(false)
-      expect(retired.role).toBe('legacy_archived')
-      expect(retired.status).toBe('legacy_archived')
-    }
+    expect(hierarchy.retired).toEqual([])
   })
 
   it('aligns labels for approvals, reports, and shared skill ownership', () => {
@@ -44,7 +38,7 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(hierarchy.labels.report_identity).toContain('Agent Zero commander')
     expect(hierarchy.labels.report_identity).toContain('Hermes lieutenant')
     expect(hierarchy.skill_policy.available_to).toEqual(['agent_zero', 'hermes'])
-    expect(hierarchy.skill_policy.tony_owns_skill_system).toBe(false)
+    expect(hierarchy.skill_policy.legacy_controller_owns_skill_system).toBe(false)
   })
 
   it('shows Hermes capability and execution states without enabling execution', () => {
@@ -79,7 +73,7 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(hermes?.support_edge).toBe('Hermes supports Agent Zero')
     expect(isCanonicalAgentNetworkSeedId('agent-zero')).toBe(true)
     expect(isCanonicalAgentNetworkSeedId('main')).toBe(true)
-    expect(isCanonicalAgentNetworkSeedId('tony_legacy')).toBe(true)
+    expect(isCanonicalAgentNetworkSeedId('tony_legacy')).toBe(false)
   })
 
   it('keeps the tier headings aligned with the canonical hierarchy', () => {

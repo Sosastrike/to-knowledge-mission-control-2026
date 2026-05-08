@@ -67,7 +67,7 @@ const sharedSkillFields = (name: string, source: string) => ({
   shared_runtime: true as const,
   owner_agent: null,
   available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-  tony_owns_skill_system: false as const,
+  legacy_controller_owns_skill_system: false as const,
 })
 
 const sharedSkillSourceFields = (root: string) => ({
@@ -76,7 +76,7 @@ const sharedSkillSourceFields = (root: string) => ({
   shared_runtime: true as const,
   owner_agent: null,
   available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
-  tony_owns_skill_system: false as const,
+  legacy_controller_owns_skill_system: false as const,
 })
 
 const gauntletCount = Number(process.env.AGENT_ZERO_GAUNTLET_COUNT || 10000)

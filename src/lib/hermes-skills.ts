@@ -38,7 +38,7 @@ export type HermesSkillInventory = {
   activation_requires: 'agent_zero_bridge_session'
   review_workflow: string[]
   skills: HermesSkillInventoryItem[]
-  tony_owns_skill_system: false
+  legacy_controller_owns_skill_system: false
 }
 
 export type HermesSkillProposal = {
@@ -134,7 +134,7 @@ export function buildHermesSkillInventory(context: AgentZeroReadOnlyContext): He
     activation_requires: 'agent_zero_bridge_session',
     review_workflow: REVIEW_WORKFLOW,
     skills,
-    tony_owns_skill_system: false,
+    legacy_controller_owns_skill_system: false,
   }
 }
 

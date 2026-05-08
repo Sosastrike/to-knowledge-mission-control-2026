@@ -357,7 +357,7 @@ function scanSkillRoot(input: {
         shared_runtime: true,
         owner_agent: null,
         available_to_agents: ['agent_zero', 'hermes'],
-        tony_owns_skill_system: false,
+        legacy_controller_owns_skill_system: false,
         safe_mode: 'blocked',
         blocked_reason: 'skill_root_missing_or_unreadable',
       }],
@@ -380,7 +380,7 @@ function scanSkillRoot(input: {
         shared_runtime: true,
         owner_agent: null,
         available_to_agents: ['agent_zero', 'hermes'],
-        tony_owns_skill_system: false,
+        legacy_controller_owns_skill_system: false,
         safe_mode: 'blocked',
         blocked_reason: 'skill_root_unreadable',
       }],
@@ -465,7 +465,7 @@ function scanSkillRoot(input: {
       available_to: ['agent_zero', 'hermes'],
       available_to_agents: ['agent_zero', 'hermes'],
       role_tags: inferSkillRoleTags({ name, source: input.source, description, path: skillPath, dependencies: dependencyMetadata.dependencies, requiredTools: dependencyMetadata.required_tools, requiredCredentials: dependencyMetadata.required_credentials }),
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: safeMode,
       status,
       execution_enabled: false,
@@ -488,7 +488,7 @@ function scanSkillRoot(input: {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: items.length > 0 ? 'metadata_only' : 'blocked',
       blocked_reason: items.length > 0 ? null : 'no_skills_discovered',
     }],
@@ -522,7 +522,7 @@ function readDatabaseSkills(): AgentZeroSkillRegistryItem[] {
         available_to: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
         available_to_agents: ['agent_zero', 'hermes'] as Array<'agent_zero' | 'hermes'>,
         role_tags: inferSkillRoleTags({ name: row.name, source: row.source, description: row.description, path: row.path || null }),
-        tony_owns_skill_system: false as const,
+        legacy_controller_owns_skill_system: false as const,
         safe_mode: 'metadata_only' as const,
         status: accessFromVisibility(row.security_status || 'visible'),
         execution_enabled: false as const,
@@ -628,7 +628,7 @@ function readSkillRegistry(): SkillRegistryReadResult {
       shared_runtime: true,
       owner_agent: null,
       available_to_agents: ['agent_zero', 'hermes'],
-      tony_owns_skill_system: false,
+      legacy_controller_owns_skill_system: false,
       safe_mode: 'metadata_only',
       blocked_reason: null,
     })
@@ -2324,7 +2324,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   ]
 
   const ecosystemAgents = providers
-    .filter((provider) => ['agent_zero', 'tony_legacy', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
+    .filter((provider) => ['agent_zero', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
     .map((provider) => ({
       id: String(provider.id || provider.name || ''),
       status: String(provider.state || 'unknown'),

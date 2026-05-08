@@ -15,7 +15,7 @@ export function normalizeRuntimeAgentName(name: string): string {
 }
 
 function agentNameFromUnit(unit: string): string | null {
-  if (unit === 'claudeclaw.service') return 'tony'
+  if (unit === 'claudeclaw.service') return 'agent_zero'
   const match = unit.match(/^claudeclaw-(.+)\.service$/)
   return match?.[1] || null
 }
@@ -40,7 +40,7 @@ function readRuntimePids(): Map<string, number> {
       if (!runtimeCommand.test(args)) continue
 
       const agentMatch = args.match(/--agent(?:=|\s+)([A-Za-z0-9._-]+)/)
-      const runtimeName = agentMatch?.[1] || 'tony'
+      const runtimeName = agentMatch?.[1] || 'agent_zero'
       pids.set(normalizeRuntimeAgentName(runtimeName), pid)
     }
   } catch {
@@ -100,7 +100,7 @@ export function getClaudeClawRuntimeStatusMap(): Map<string, ClaudeClawRuntimeSt
     if (statuses.has(key)) continue
     statuses.set(key, {
       name: key,
-      unit: key === 'tony' ? 'claudeclaw.service' : `claudeclaw-${key}.service`,
+      unit: key === 'agent_zero' ? 'claudeclaw.service' : `claudeclaw-${key}.service`,
       activeState: 'unknown',
       subState: 'process-running',
       running: true,

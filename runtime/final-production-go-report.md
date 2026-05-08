@@ -1,6 +1,6 @@
 # Final Production GO Report
 
-Generated: 2026-05-08T00:34:49Z
+Generated: 2026-05-08T00:49:44Z
 
 ## Final Result
 
@@ -54,6 +54,7 @@ Mission Control / Gateway has strong build and test proof, Playwright MCP is GO 
 | Paperclip routing gauntlet | PASS — 1,000 scenarios / 0 failures |
 | SpaceAgent gauntlet | PASS — required scenario counts and no-secret/no-fake/no-unauthorized-execution gauntlets |
 | Gateway unauthenticated route policy test | PASS |
+| Pi dispatcher focused tests | PASS - 15 tests across dispatcher and mini-agent OS suites |
 
 ## Services
 
@@ -78,10 +79,29 @@ Mission Control / Gateway has strong build and test proof, Playwright MCP is GO 
 | SpaceAgent Browser Automation | Playwright MCP status route exists; owner visual proof still required after restart/auth. |
 | Paperclip bridge routes | Protected; service health works on Tailnet, owner login proof pending. |
 
+## Pi Dispatcher Candidate
+
+Pi was previously visible only as a percentage row. This section is the correction: Pi-mono is part of the Gateway / Agent Hub model as the Dispatcher / Route Optimizer Candidate, but it is not a live commander and it is not allowed to execute work.
+
+| Pi item | Status |
+| --- | --- |
+| Gateway node | present as pi-mono / pi_dispatcher_candidate |
+| Role | Dispatcher / Route Optimizer Candidate |
+| Authority | advisory only, not commander |
+| Execution enabled | false |
+| Writes enabled | false |
+| Production runtime/session proof | not proven |
+| Agent Hub status | pending |
+| Tests | gateway-pi-dispatcher.test.ts 7 passed; gateway-mini-agent-os.test.ts 8 passed |
+| Main blocker | pi_runtime_session_not_proven |
+
+Pi can recommend routes, model choices, agent choices, Hermes handoffs, mini-agent use, and blocked reasons in shadow mode. Pi cannot approve owner commands, execute tools, bypass Gateway, send delivery, run Build-Wiki, mount SMB, or become commander.
+
 ## What Is Live
 
 - Mission Control service is active.
 - Gateway / Agent Hub code builds with the accepted SpaceAgent Browser Automation slice.
+- Pi-mono is present as a pending Dispatcher / Route Optimizer Candidate in the Agent Hub model.
 - Playwright MCP is local-only and read-only on loopback.
 - Agent Zero container is running.
 - Hermes gateway service is active, but live chat is not configured.
@@ -96,6 +116,7 @@ Mission Control / Gateway has strong build and test proof, Playwright MCP is GO 
 - Firecrawl: `firecrawl_credential_required`.
 - YouTube transcript: live request blocked by YouTube from the server environment.
 - Paperclip: owner login/session bridge not proven.
+- Pi: pi_runtime_session_not_proven; shadow dispatcher tests pass, but no live Pi runtime/session is proven.
 - OpenClaw+ doctor: CLI not installed/reachable from non-interactive environment.
 - Telegram PDF attachment: no approved attachment route.
 - AgentMail/Drive/OneDrive: Bridge Session plus connector configuration required.

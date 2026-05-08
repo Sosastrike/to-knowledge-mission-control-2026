@@ -62,7 +62,7 @@ The new `/gateway/status` page shows:
 
 It does not trigger writes, uploads, sends, Zapier, HeyGen, SMB, farmer execution, or connector execution.
 
-## Validation
+## Local Validation
 
 | Check | Result |
 |---|---|
@@ -81,24 +81,80 @@ Focused tests run:
 - `src/lib/space-agent-browser-automation.test.ts`
 - `src/app/gateway-route-alias.test.ts`
 
-## Current Blocker
+## Production Deployment
 
-Production SSH currently requires a fresh Tailscale authorization check. Because of that, this slice can be pushed to the remote branch, but the live production host cannot be pulled/restarted/smoked by Codex until that authorization is restored.
+The production host was one commit behind the pushed branch. That is why the latest button hardening and `/gateway/status` page were not visible in Mission Control before this deployment.
 
-Exact blocker:
+| Item | Result |
+|---|---|
+| Production branch before deployment | `7e79944` |
+| Production branch after deployment | `7d021b6` |
+| Deployment mode | fast-forward pull from `sosastrike/to-knowledge-mc` |
+| Production validation | PASS |
+| Production restart | PASS |
+| Old PID | `3205313` |
+| Old start timestamp | `Fri May 8 07:46:23 2026` |
+| New PID | `3228883` |
+| New start timestamp | `Fri May 8 08:11:30 2026` |
+| Standalone app bind | `127.0.0.1:3337` |
+| Public local service exposure added | no |
+| Playwright MCP bind | `127.0.0.1:8931` |
 
-`tailscale_ssh_reauthorization_required_for_production_restart_and_smoke`
+Production validation on the live host:
 
-## What I Need From Owner If You Want This Live Immediately
+| Check | Result |
+|---|---|
+| `git diff --check` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm test` | PASS, 135 files / 1243 tests |
+| `pnpm run build` | PASS |
+| `GET /login` after restart | PASS |
 
-Approve/complete the Tailscale SSH authorization prompt for the production host, then I can:
+## Production Route Smoke
 
-1. pull the pushed commit on production;
-2. rebuild if needed;
-3. restart Mission Control;
-4. run authenticated route smoke;
-5. run unauthenticated 401/403 smoke;
-6. verify `/gateway/status`, `/gateway/agent-hub`, and the button contract route from production.
+Authenticated API smoke used the existing production API-key auth path. No key value was printed.
+
+| Route | Authenticated result | Unauthenticated result |
+|---|---:|---:|
+| `GET /api/gateway/status` | 200 | 401 |
+| `GET /api/gateway/registry` | 200 | not rerun unauth in this slice |
+| `GET /api/gateway/agent-hub/status` | 200 | 401 |
+| `GET /api/bridge/button-contracts` | 200 | 401 |
+| `GET /api/bridge/agent-zero/status` | 200 | not rerun unauth in this slice |
+| `GET /api/bridge/hermes/status` | 200 | not rerun unauth in this slice |
+| `GET /api/gateway/nodes/pi` | 200 | not rerun unauth in this slice |
+| `GET /api/bridge/pi/status` | 200 | 401 |
+| `GET /api/bridge/playwright-mcp/status` | 200 | not rerun unauth in this slice |
+| `GET /api/gateway/nodes/playwright-mcp` | 200 | not rerun unauth in this slice |
+| `GET /api/gateway/space-agent/browser/status` | 200 | not rerun unauth in this slice |
+| `GET /api/bridge/paperclip/status` | 200 | 401 |
+
+Page smoke used a temporary internal admin session created for HTTP verification and deleted after the check. This proves the deployed UI renders, but it is not claimed as owner-authenticated browser visual proof.
+
+| Page | Result | Proof |
+|---|---:|---|
+| `GET /gateway/status` | 200 | renders Gateway Status and Button Contracts |
+| `GET /gateway/agent-hub` | 200 | renders Agent Zero, Hermes, Pi, SpaceAgent, Paperclip, OpenClaw+, Playwright MCP, Firecrawl, and YouTube |
+| unauthenticated `GET /gateway/status` | 307 | redirects instead of exposing the protected page |
+
+Action smoke:
+
+| Action | Result |
+|---|---|
+| `GET /api/bridge/button-contracts` validation | PASS, 0 missing live routes and 0 invalid states |
+| `POST /api/bridge/agent-zero/test-chat` | PASS, 200 with `agent_zero_called` present |
+| `POST /api/bridge/playwright-mcp/smoke` | PASS, 200 with `ok:true`; local-only endpoint confirmed |
+| `POST /api/bridge/hermes/test-chat` | BLOCKED, 503 with blocker `hermes_safe_live_chat_adapter_not_configured` |
+
+## Remaining Honest Blockers
+
+| Blocker | Status |
+|---|---|
+| Owner-authenticated browser visual proof | still requires the owner's actual browser/session; temporary admin smoke is not a substitute |
+| Hermes live adapter | still blocked until `hermes_called:true` is proven |
+| Firecrawl | still blocked until credential/backend is configured |
+| YouTube Research | still limited until transcript connector is proven |
+| Paperclip owner session bridge | still partial/degraded until owner login/session flow is proven |
 
 ## No-Secrets Confirmation
 
@@ -115,10 +171,12 @@ Approve/complete the Tailscale SSH authorization prompt for the production host,
 
 ## Updated Decision
 
-Gateway / Agent Hub button hardening: **PARTIAL GO**.
+Gateway / Agent Hub button hardening: **GO for the deployed button-contract slice**.
 
-Reason: code-level route contract and local build/test proof passed, but live production restart/smoke is blocked by Tailscale SSH re-authorization.
+Reason: the designer handoff UI is built and live on production, `/gateway/status` now exists, all live/read-only button contracts have route proof, unauthenticated protected API routes reject access, and the safe Playwright MCP smoke passes.
+
+Overall Gateway / Agent Hub remains **PARTIAL GO** until owner-authenticated visual proof is completed in the owner's actual browser.
 
 ## Exact Next Step
 
-After production SSH authorization is restored, deploy this button-hardening patch to the live host and run production smoke.
+Use the owner's authenticated browser session to visually confirm the production Agent Hub cards and action states. No code blocker remains for this slice.

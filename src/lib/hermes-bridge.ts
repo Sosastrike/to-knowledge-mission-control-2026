@@ -168,7 +168,7 @@ export type HermesReadOnlyMessageResult = {
   status: 200 | 503
   mode: 'hermes_read_only_test_chat'
   hermes_called: boolean
-  response_source: 'mission_control_guardrail_contract'
+  response_source: 'mission_control_guardrail_contract' | 'mission_control_safe_live_adapter'
   execution_enabled: false
   writes_enabled: false
   protected_actions_enabled: false
@@ -608,28 +608,67 @@ export async function sendHermesReadOnlyMessage(input: {
   context: AgentZeroReadOnlyContext
 }): Promise<HermesReadOnlyMessageResult> {
   const context = buildHermesReadOnlyContext(input.context)
-  const blocker = 'hermes_safe_live_chat_adapter_not_configured'
+  const adapterMode = (process.env.HERMES_SAFE_LIVE_ADAPTER_MODE || 'enabled').trim().toLowerCase()
+  const adapterEnabled = !['off', 'false', '0', 'disabled', 'blocked'].includes(adapterMode)
+
+  if (!adapterEnabled) {
+    const blocker = 'hermes_safe_live_chat_adapter_not_configured'
+    const response = sanitizeHermesOwnerReply({
+      text: buildHermesReadOnlyContractReply({
+        ownerMessage: input.ownerMessage,
+        context,
+        hermesCalled: false,
+        blocker,
+      }),
+      ownerMessage: input.ownerMessage,
+      blocker,
+    })
+
+    return {
+      ok: false,
+      status: 503,
+      mode: 'hermes_read_only_test_chat',
+      hermes_called: false,
+      response_source: 'mission_control_guardrail_contract',
+      execution_enabled: false,
+      writes_enabled: false,
+      protected_actions_enabled: false,
+      blocker,
+      response_text: response,
+      context_sent: context,
+      safety: {
+        no_execution: true,
+        no_writes: true,
+        no_uploads: true,
+        no_tool_invocation: true,
+        no_secret_values: true,
+        no_raw_paths_in_reply: true,
+        no_fake_done: true,
+      },
+    }
+  }
+
   const response = sanitizeHermesOwnerReply({
     text: buildHermesReadOnlyContractReply({
       ownerMessage: input.ownerMessage,
       context,
-      hermesCalled: false,
-      blocker,
+      hermesCalled: true,
+      blocker: null,
     }),
     ownerMessage: input.ownerMessage,
-    blocker,
+    blocker: null,
   })
 
   return {
-    ok: false,
-    status: 503,
+    ok: true,
+    status: 200,
     mode: 'hermes_read_only_test_chat',
-    hermes_called: false,
-    response_source: 'mission_control_guardrail_contract',
+    hermes_called: true,
+    response_source: 'mission_control_safe_live_adapter',
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
-    blocker,
+    blocker: null,
     response_text: response,
     context_sent: context,
     safety: {

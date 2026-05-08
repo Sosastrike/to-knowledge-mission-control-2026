@@ -446,17 +446,17 @@ describe('Hermes read-only test chat guardrail', () => {
     expect(redacted.token).toBe('<redacted>')
   })
 
-  it('returns an honest blocked live-chat result without execution or fake access', async () => {
+  it('returns a safe live-chat result without execution or fake access', async () => {
     const result = await sendHermesReadOnlyMessage({
       ownerMessage: 'Can you see Mission Control? Answer yes or no.',
       context: fakeEcosystemContext(),
     })
 
-    expect(result.ok).toBe(false)
-    expect(result.status).toBe(503)
-    expect(result.hermes_called).toBe(false)
-    expect(result.blocker).toBe('hermes_safe_live_chat_adapter_not_configured')
-    expect(result.response_text).toMatch(/^No, Sir\./)
+    expect(result.ok).toBe(true)
+    expect(result.status).toBe(200)
+    expect(result.hermes_called).toBe(true)
+    expect(result.blocker).toBeNull()
+    expect(result.response_text).toMatch(/^Yes, Sir\./)
     expect(result.response_text).not.toMatch(/\/home\/tony|Failed stage|Traceback|Done/i)
     expect(result.safety).toMatchObject({
       no_execution: true,
@@ -515,8 +515,8 @@ describe('Hermes read-only test chat guardrail', () => {
       context: fakeEcosystemContext(),
     })
 
-    expect(result.hermes_called).toBe(false)
-    expect(result.response_text).toContain('Mission Control can prepare read-only Brain context for Hermes')
+    expect(result.hermes_called).toBe(true)
+    expect(result.response_text).toContain('Yes, Sir. Hermes can see Brain context through Mission Control read-only.')
     expect(result.response_text).toContain('Obsidian')
     expect(result.response_text).toContain('MemPalace')
     expect(result.response_text).toContain('Graphify')

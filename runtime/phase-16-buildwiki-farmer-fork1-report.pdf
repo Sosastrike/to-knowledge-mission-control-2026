@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2532 >>
+<< /Length 2373 >>
 stream
 BT
 /F1 8.5 Tf
@@ -18,7 +18,7 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(Phase 2 - Owner Browser Visual Proof Report) Tj
+(Phase 16 - Build-Wiki / Farmer Fork 1 Report) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -26,45 +26,41 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex) Tj
+(**PARTIAL GO / GATED.** Build-Wiki / Farmer timer is active under OpenClaw+. Run Now was not) Tj
 0 -11 Td
-(did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is) Tj
-0 -11 Td
-(claimed.) Tj
+(executed because no active Bridge Session was opened for this protected action.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(Required UI Items) Tj
+(Systemd Status) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(| Item | Current status |) Tj
+(| Unit | Result |) Tj
 0 -11 Td
 (| --- | --- |) Tj
 0 -11 Td
-(| Agent Zero card | API/model present; visual proof blocked by owner session |) Tj
+(| opencloud-docs-farmer.timer | active / waiting |) Tj
 0 -11 Td
-(| Hermes card | API/model present; visual proof blocked by owner session |) Tj
+(| Timer next run | Fri 2026-05-08 00:42:35 EDT |) Tj
 0 -11 Td
-(| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner) Tj
+(| Timer last trigger | Thu 2026-05-07 21:37:18 EDT |) Tj
 0 -11 Td
-(session |) Tj
+(| opencloud-docs-farmer.service | inactive / dead, last result success |) Tj
 0 -11 Td
-(| SpaceAgent card | API/model present; visual proof blocked by owner session |) Tj
-0 -11 Td
-(| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session) Tj
-0 -11 Td
-(|) Tj
-0 -11 Td
-(| Fake buttons scan | Contract tests passed; visual scan blocked |) Tj
+(| SMB/Fork 2 mount | none detected |) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(Exact Blocker) Tj
+(Policy) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(owner_authenticated_browser_session_required) Tj
+(Owner-facing architecture remains OpenClaw+ / Build-Wiki / Farmer. The literal legacy service) Tj
+0 -11 Td
+(name is retained only for systemd proof. Run Now requires Bridge Session and exact scoped) Tj
+0 -11 Td
+(command only.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -136,9 +132,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000002825 00000 n 
+0000002666 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2895
+2736
 %%EOF

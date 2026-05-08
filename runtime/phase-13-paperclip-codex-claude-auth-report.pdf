@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2532 >>
+<< /Length 2359 >>
 stream
 BT
 /F1 8.5 Tf
@@ -18,7 +18,7 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(Phase 2 - Owner Browser Visual Proof Report) Tj
+(Phase 13 - Paperclip Codex and Claude Auth Separation Report) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -26,45 +26,45 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex) Tj
+(**PARTIAL / BLOCKED.** Auth sources remain separated. Codex home exists, but Codex CLI and) Tj
 0 -11 Td
-(did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is) Tj
+(Claude CLI were not available in the production shell used for this proof; no Paperclip no-write) Tj
 0 -11 Td
-(claimed.) Tj
-0 -11 Td
-() Tj
-0 -11 Td
-(Required UI Items) Tj
+(model smoke was run.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(| Item | Current status |) Tj
+(Safe Boolean Checks) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Check | Result |) Tj
 0 -11 Td
 (| --- | --- |) Tj
 0 -11 Td
-(| Agent Zero card | API/model present; visual proof blocked by owner session |) Tj
+(| Codex home present | yes |) Tj
 0 -11 Td
-(| Hermes card | API/model present; visual proof blocked by owner session |) Tj
+(| Codex CLI present | no |) Tj
 0 -11 Td
-(| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner) Tj
+(| Claude CLI present | no |) Tj
 0 -11 Td
-(session |) Tj
+(| Anthropic API billing key present | no |) Tj
 0 -11 Td
-(| SpaceAgent card | API/model present; visual proof blocked by owner session |) Tj
+(| Anthropic API billing enabled | no evidence; not enabled by Codex |) Tj
 0 -11 Td
-(| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session) Tj
+(| Tokens printed | no |) Tj
 0 -11 Td
-(|) Tj
-0 -11 Td
-(| Fake buttons scan | Contract tests passed; visual scan blocked |) Tj
+(| Auth files printed | no |) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(Exact Blocker) Tj
+(Blockers) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(owner_authenticated_browser_session_required) Tj
+(- paperclip_codex_cli_not_available_in_proof_shell) Tj
+0 -11 Td
+(- paperclip_claude_code_oauth_not_available_in_proof_shell) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -136,9 +136,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000002825 00000 n 
+0000002652 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2895
+2722
 %%EOF

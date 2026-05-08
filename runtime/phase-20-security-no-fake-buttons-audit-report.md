@@ -1,23 +1,24 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 20 - Security and No-Fake-Buttons Audit Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO.** Contract and security tests pass for route protection, policy decisions, forbidden actions, SpaceAgent panels, Paperclip bridges, Pi panel, and no fake completion behavior. Owner-authenticated visual scan remains blocked.
 
-## Required UI Items
+## Security Evidence
 
-| Item | Current status |
+| Area | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Protected Gateway/Pi/Hermes/Playwright routes | 401 unauthenticated |
+| Security/proof tests | passed |
+| SpaceAgent forbidden actions | passed |
+| Paperclip bridge governance | passed |
+| Mini-agent forbidden actions | passed |
+| No fake Done contracts | passed |
+| Owner visual scan | blocked by owner session |
 
-## Exact Blocker
+## Blocker
 
-owner_authenticated_browser_session_required
+owner_authenticated_browser_session_required for final human-visible UI scan.
 
 ## Standing Governance
 

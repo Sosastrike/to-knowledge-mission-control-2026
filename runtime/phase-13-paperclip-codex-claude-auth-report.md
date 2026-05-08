@@ -1,23 +1,25 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 13 - Paperclip Codex and Claude Auth Separation Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL / BLOCKED.** Auth sources remain separated. Codex home exists, but Codex CLI and Claude CLI were not available in the production shell used for this proof; no Paperclip no-write model smoke was run.
 
-## Required UI Items
+## Safe Boolean Checks
 
-| Item | Current status |
+| Check | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Codex home present | yes |
+| Codex CLI present | no |
+| Claude CLI present | no |
+| Anthropic API billing key present | no |
+| Anthropic API billing enabled | no evidence; not enabled by Codex |
+| Tokens printed | no |
+| Auth files printed | no |
 
-## Exact Blocker
+## Blockers
 
-owner_authenticated_browser_session_required
+- paperclip_codex_cli_not_available_in_proof_shell
+- paperclip_claude_code_oauth_not_available_in_proof_shell
 
 ## Standing Governance
 

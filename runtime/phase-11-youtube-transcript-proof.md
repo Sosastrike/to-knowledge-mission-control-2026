@@ -1,23 +1,25 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 11 - YouTube Transcript Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**LIMITED / PARTIAL.** Public YouTube metadata extraction worked without downloading video, but transcript extraction did not succeed in the current environment.
 
-## Required UI Items
+## Live Check
 
-| Item | Current status |
+| Field | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Public video metadata | true |
+| Title | extracted |
+| Channel | extracted |
+| Publish date | extracted |
+| Description presence | true |
+| Full video download | no |
+| Transcript | false |
+| Transcript error class | FileNotFoundError |
 
-## Exact Blocker
+## Blocker
 
-owner_authenticated_browser_session_required
+youtube_transcript_connector_not_proven
 
 ## Standing Governance
 

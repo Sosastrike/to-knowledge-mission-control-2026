@@ -1,23 +1,23 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 9 - SpaceAgent Live Read-Only Research Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO.** SpaceAgent research packet models and Playwright MCP local-only browser automation are proven. Firecrawl and YouTube transcript remain blocked/limited.
 
-## Required UI Items
+## Evidence
 
-| Item | Current status |
+| Component | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Playwright MCP | GO local-only read-only; bound to 127.0.0.1:8931 |
+| Public exposure | none; local listener only |
+| SpaceAgent research tests | 37 passed |
+| SpaceAgent full gauntlet | passed |
+| Firecrawl | blocked; credential missing |
+| YouTube | metadata proved; transcript connector not proved in current live check |
 
-## Exact Blocker
+## Research Flow
 
-owner_authenticated_browser_session_required
+Owner request to Gateway to Pi recommendation to Agent Zero approval to SpaceAgent is modeled and tested. Live owner-auth visual proof remains blocked by owner session.
 
 ## Standing Governance
 

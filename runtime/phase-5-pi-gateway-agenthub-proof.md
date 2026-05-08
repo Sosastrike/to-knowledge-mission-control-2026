@@ -1,23 +1,27 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 5 - Pi Gateway / Agent Hub Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO / SHADOW.** Gateway and Agent Hub expose Pi truthfully as Pi-mono / Dispatcher Candidate. Owner-auth visual proof still requires an owner session.
 
-## Required UI Items
+## Route Proof
 
-| Item | Current status |
+| Route | Unauthenticated result | Expected |
+|---|---:|---|
+| /api/gateway/nodes/pi | 401 | protected |
+| /api/bridge/pi/status | 401 | protected |
+| /api/gateway/agent-hub/agents/pi-mono | protected by app auth tests | protected |
+| /api/gateway/agent-hub/agents/pi-mono/health | protected by app auth tests | protected |
+
+## Node Truth
+
+| Field | Value |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
-
-## Exact Blocker
-
-owner_authenticated_browser_session_required
+| Role | Dispatcher / Route Optimizer Candidate |
+| Status | shadow / partial |
+| Execution | disabled |
+| Writes | disabled |
+| Agent Hub roster | Paperclip, Agent Zero, Hermes, SpaceAgent, Pi-mono |
 
 ## Standing Governance
 

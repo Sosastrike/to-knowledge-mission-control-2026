@@ -1,93 +1,185 @@
 %PDF-1.4
-%“Œ‹ž ReportLab Generated PDF document (opensource)
 1 0 obj
-<<
-/F1 2 0 R /F2 3 0 R
->>
+<< /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<<
-/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
->>
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
 endobj
 3 0 obj
-<<
-/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
->>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<<
-/Contents 9 0 R /MediaBox [ 0 0 612 792 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
->>
+<< /Length 2937 >>
+stream
+BT
+/F1 8.5 Tf
+38 766 Td
+(Page 1 of 2) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Phase 1 - Mission Control Admin Restart Report) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Result) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(**PARTIAL PASS.** Production Mission Control restarted through the approved process-owner) Tj
+0 -11 Td
+(fallback after the validated build. The service is active with a changed PID and changed) Tj
+0 -11 Td
+(timestamp. Authenticated route smoke remains blocked because no owner/admin browser session or) Tj
+0 -11 Td
+(safe auth token was available to Codex.) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Restart Evidence) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Check | Result |) Tj
+0 -11 Td
+(| --- | --- |) Tj
+0 -11 Td
+(| Previous PID | 2600964 |) Tj
+0 -11 Td
+(| New PID | 2618012 |) Tj
+0 -11 Td
+(| New restart timestamp | Thu 2026-05-07 21:47:03 EDT |) Tj
+0 -11 Td
+(| Service state | active |) Tj
+0 -11 Td
+(| Fresh build completed before final restart | yes |) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Route Smoke) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Route | Unauthenticated result |) Tj
+0 -11 Td
+(| --- | --- |) Tj
+0 -11 Td
+(| /api/gateway/status | 401 |) Tj
+0 -11 Td
+(| /api/gateway/agent-hub/status | 401 |) Tj
+0 -11 Td
+(| /api/gateway/nodes/pi | 401 |) Tj
+0 -11 Td
+(| /api/bridge/pi/status | 401 |) Tj
+0 -11 Td
+(| /api/bridge/hermes/status | 401 |) Tj
+0 -11 Td
+(| /api/bridge/playwright-mcp/status | 401 |) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Blockers) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Blocker | Impact | Next step |) Tj
+0 -11 Td
+(| --- | --- | --- |) Tj
+0 -11 Td
+(| owner_or_operator_authenticated_session_required | Authenticated route smoke cannot be) Tj
+0 -11 Td
+(honestly claimed | Use owner-authenticated browser/session or approved service auth token |) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Standing Governance) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Rule | Result |) Tj
+0 -11 Td
+(| --- | --- |) Tj
+0 -11 Td
+(| Secrets printed | No |) Tj
+0 -11 Td
+(| Auth weakened | No |) Tj
+0 -11 Td
+(| .env changed | No |) Tj
+0 -11 Td
+(| Public local service exposure | No |) Tj
+0 -11 Td
+(| SMB/Fork 2 | Not run |) Tj
+0 -11 Td
+(| Zapier/HeyGen writes | Not run |) Tj
+0 -11 Td
+(| External farmers | Not run |) Tj
+0 -11 Td
+(| Architecture naming | OpenClaw+ used as runtime layer; literal legacy service name retained) Tj
+0 -11 Td
+(only where required |) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(Pi Inclusion) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Field | Current truth |) Tj
+0 -11 Td
+(| --- | --- |) Tj
+0 -11 Td
+(| Role | Dispatcher / Route Optimizer Candidate |) Tj
+0 -11 Td
+(| Authority | Advisory only; Agent Zero remains commander |) Tj
+0 -11 Td
+(| Execution | Disabled |) Tj
+0 -11 Td
+(| Writes | Disabled |) Tj
+0 -11 Td
+(| Baseline from owner | 35% DESIGN / PENDING / SHADOW |) Tj
+0 -11 Td
+(| Current evidence-based status | 72% PARTIAL GO / SHADOW after Gateway route and recommendation) Tj
+0 -11 Td
+(tests |) Tj
+0 -11 Td
+(| Current blocker | Standalone Pi runtime session not proven; in-process Gateway shadow) Tj
+0 -11 Td
+(dispatcher is proven |) Tj
+ET
+endstream
 endobj
 5 0 obj
-<<
-/Contents 10 0 R /MediaBox [ 0 0 612 792 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
->>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<<
-/PageMode /UseNone /Pages 8 0 R /Type /Catalog
->>
+<< /Length 73 >>
+stream
+BT
+/F1 8.5 Tf
+38 766 Td
+(Page 2 of 2) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+() Tj
+ET
+endstream
 endobj
 7 0 obj
-<<
-/Author (\(anonymous\)) /CreationDate (D:20260507205225-04'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260507205225-04'00') /Producer (ReportLab PDF Library - \(opensource\)) 
-  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
->>
-endobj
-8 0 obj
-<<
-/Count 2 /Kids [ 4 0 R 5 0 R ] /Type /Pages
->>
-endobj
-9 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1786
->>
-stream
-Gb!#]gN&cS&:O:SoOHH`@2NlK<Vt]Z2X;qB;.B+%[8kc`7M6:71':RIYMUC=Z4qu=Cf7[;Z9\S_51A=Dh+&<Tj2WSJ#9/2[5$\+rJ3gtXJ73.-pil5I^\E+`e9@>k\>Fs=j-X/5n`9p<B!b,(bQ^oM(h8ChLr:-k2:&PtWZT*9l&#h&p\mO9$h#8_U,7F&Bp/'EL/1M(Pim;8;P*mmrYP&W@ItN>$%9b<4t3jnU^fn;]oOYBW8`L'El'-Q(N3Hn36bSc!MU6?Ut[,Bm-FMd-50kgh,*BGiHSB.$ca.K0WS_=/m4hhME(&^As4iWrR'l$o&\t]:@geG/h^XZo?"b\\\mJ+IBRqEj`,Y6oU9tbm8&!G(-sSEi%Q7];uj+BJq];iGZlY"G\"V(73[eU-&<q2ZV:_33d6%NnWl@q)$n5(UO\=^1ndR^@6rpu:4oqYre`RSHbnC@Lad8D5`fmQJPZ?@a"\'R/L&JjL79Rl>+k+*Nrgfa?GX:q9/<n(i'egi.2OrDZTLsRAlg*Qa;N%=BusH5T5G;X[M7T)D`M>j%@@\<Zb2i,_^W`:)s++7XT^5D/1$7NEn))RdPqT*Y$e-3j:Q7+*3s%6A*BgA'a85R?Sq/ThA&bsGPrN+glaGt2-ok.1qPNaFR'@``l,9$!tLC5,*=fG"Dg_d&Xp]./2$Zf*i@TH-KZFZp\\%^C;ketd0UCd&ba.87o\K=O*Y0r"iY'GaSK&?i1IeR<5U[;of_'H3uTEogXlCg<PXIQ\ZV_%E;%NI;/]&s]Ld'rqp@mqr[-smY%#=V't[r9ip"B>-<OI/]_6]Lj4`dDo=XpC:.#3?+KhU%a-`6kl1Qg?("UbQQ31:$j[Rt1nOW'tn/:Z5\F]HV2AMNT\Q`-^qQ:l]E`PKHJg^EG-rF)82ct62bNPB@-Q&nWT44n+G,A7WN73<snG0MpLKMsA;a15,'DMt8^0G?[DKlZBZ@h28[hfsf@G=hk9j-63=Ub&dW*YPLHR$l*WNQ6qUg[EN.%[iAfSe:TGh.o?j(9"ORSg8>olepBL8;GfA2f80SK5$k@m76I)JO"!\)K$$%JPoJ[LB%^feQNd`0kHL2H(%P2sL0`^.E/#FBBepDjtNE?+D],Xj;$1gB2q0XeWIk`5\+0CkQ>Oh96'rTR]&"ll*(P=[96aKHr/(7Xgn?;P7EQ-WnnMb>Yu[E&51]21*2pZf&?K8(`\_dO;!aQpHa,kUI4i>kO8u2W\_o2>E]g4Z^*,jt&J;Q;Jf%(A54rG[5`nd3tYd4WQRf]r+fn$-FeY3[)E41otaja>1KM4_<97iAdtYoUii^4UQ%o\n7!t;pc\bRSf@<jdKf/ob%oGA_FI>Q0'N^X-cK,e,ECa[<1H9[oIsZ<L<:?HVYY[la6@jNoE">8#p)_d.o-qLH&WEGEDDrJ-S,BV,c<spP];m</0=WcI4?Pp46XK0g-cj._(,JTE750$nC(O)2:/4_Bl7L^j!fIJ^.=O35kVB\:^<T!^+j*.ZO@IkH>^m@6Dp,.`R3&?3PP7j&LVbB)R5NHPY)./WZ3uI'a3cTo&f-o);^erD.Y:3D-DP6QK0Am6,egm=1eC%*t03QZhZC*@k(_WX-bJm?cXOMc`t)jRr4>F1jrY)0V@@1.\UClIKo-981<FkHk@M]&(R$laQ;p)8WE(?Or.qHIrm*&#E6OW&<6qrSAZe_#i`O^:]UiXcueu^WF+$WqI:M&!A-dSOTXkUP%/9@EIdh&d=8q+3aS\FM2FpaS?Ep>>QA]e>,FFiE8QN(_5.?>l4t5M4a>~>endstream
-endobj
-10 0 obj
-<<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 571
->>
-stream
-Gat='_31!I&A@ZMI9[@O?jV\HZKeGiX(Deg:YQaJaiH0Rc4!#<hAP<jQ"u7VV5WD#FMISHoco$eH]m@4C4McTinFU!'T+Iffd)40%R(ZEA!$WU]ZsqLo?G,MMs>HMX,k)=W9IUG^li>XLKGY'VZV,-Og!WW2[+r'->Pk\^t.p^b68dI8/!hK92"C-'bnEU#ecK"s+lm*6K3b,ahn3#:p_k]]p;ieI*9itkATr"abNk8,rk4a6ViaXa`DRq`J&F+gQIjNT[V[o"RE6MnZC4SU_3OCL6IYU1\IA27Xk.blC,)L,1]r#,UgZ9Xj>,4VjGL%hN3+<Y^6flCG'h(WCAKLfKFe'V<'SRVW'q0(j@62<Wr,la0j-s'.M2TdBI.OKrN8pTPuV6>j]q#qu2-`2pR@Zg*AgI4'R[C*(b>%R3u<Y+:M>p+2sT.*NYRmFVqi68QB?FL>*Qn#L8i>A1VI'VIb^bF>66f67[K6S84XgO1$"7F<#,D(b-c_[.\43X+-U5XX\Y2a$qIX\a$$seOe2oC.P+BGqijB1Oo_k!]OA'gQ.q=2U@FJ61>+Ufe4f~>endstream
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 11
+0 8
 0000000000 65535 f 
-0000000061 00000 n 
-0000000102 00000 n 
-0000000209 00000 n 
-0000000321 00000 n 
-0000000514 00000 n 
-0000000708 00000 n 
-0000000776 00000 n 
-0000001056 00000 n 
-0000001121 00000 n 
-0000002998 00000 n 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003236 00000 n 
+0000003362 00000 n 
+0000003485 00000 n 
 trailer
-<<
-/ID 
-[<9d4a58d5f06fca6c318f6327e11787ac><9d4a58d5f06fca6c318f6327e11787ac>]
-% ReportLab generated PDF document -- digest (opensource)
-
-/Info 7 0 R
-/Root 6 0 R
-/Size 11
->>
+<< /Size 8 /Root 1 0 R >>
 startxref
-3660
+3555
 %%EOF

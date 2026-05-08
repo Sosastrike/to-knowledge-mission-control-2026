@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2532 >>
+<< /Length 2443 >>
 stream
 BT
 /F1 8.5 Tf
@@ -18,7 +18,7 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(Phase 2 - Owner Browser Visual Proof Report) Tj
+(Phase 17 - Delivery Connector Proof Report) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -26,45 +26,39 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex) Tj
+(**PARTIAL GO / GATED.** Mission Control report-link delivery is the safe proven path. Telegram,) Tj
 0 -11 Td
-(did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is) Tj
+(AgentMail, Google Drive, and OneDrive remain blocked or Bridge-gated without a live approved) Tj
 0 -11 Td
-(claimed.) Tj
-0 -11 Td
-() Tj
-0 -11 Td
-(Required UI Items) Tj
+(session/connector proof.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(| Item | Current status |) Tj
-0 -11 Td
-(| --- | --- |) Tj
-0 -11 Td
-(| Agent Zero card | API/model present; visual proof blocked by owner session |) Tj
-0 -11 Td
-(| Hermes card | API/model present; visual proof blocked by owner session |) Tj
-0 -11 Td
-(| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner) Tj
-0 -11 Td
-(session |) Tj
-0 -11 Td
-(| SpaceAgent card | API/model present; visual proof blocked by owner session |) Tj
-0 -11 Td
-(| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session) Tj
-0 -11 Td
-(|) Tj
-0 -11 Td
-(| Fake buttons scan | Contract tests passed; visual scan blocked |) Tj
+(Delivery Matrix) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(Exact Blocker) Tj
+(| Delivery path | Status | Blocker or condition |) Tj
+0 -11 Td
+(| --- | --- | --- |) Tj
+0 -11 Td
+(| Mission Control report link | GO | safe local report link path |) Tj
+0 -11 Td
+(| Telegram PDF attachment | blocked | approved Telegram document attachment route not proven |) Tj
+0 -11 Td
+(| AgentMail allowed-domain send | gated | Bridge Session and allow-list proof required |) Tj
+0 -11 Td
+(| Google Drive upload | gated/blocked | connector/session proof required |) Tj
+0 -11 Td
+(| OneDrive upload | gated/blocked | connector/session proof required |) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(owner_authenticated_browser_session_required) Tj
+(Safety) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(No send, upload, external write, or fake delivery claim was executed.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -136,9 +130,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000002825 00000 n 
+0000002736 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2895
+2806
 %%EOF

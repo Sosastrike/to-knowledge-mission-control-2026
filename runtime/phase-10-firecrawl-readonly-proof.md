@@ -1,23 +1,24 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 10 - Firecrawl Read-Only Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**BLOCKED.** Firecrawl credential was not present in shell or Mission Control env files checked as booleans only. No Firecrawl smoke was run.
 
-## Required UI Items
+## Credential Checks
 
-| Item | Current status |
+| Source | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Production shell | no credential |
+| Mission Control .env | no Firecrawl credential |
+| Mission Control .env.local | no Firecrawl credential |
 
-## Exact Blocker
+## Blocker
 
-owner_authenticated_browser_session_required
+firecrawl_credential_required
+
+## Safety
+
+No credential values were printed. No .env files were changed.
 
 ## Standing Governance
 

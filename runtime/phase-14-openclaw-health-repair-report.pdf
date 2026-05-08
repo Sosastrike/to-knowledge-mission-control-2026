@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2532 >>
+<< /Length 2387 >>
 stream
 BT
 /F1 8.5 Tf
@@ -18,7 +18,7 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(Phase 2 - Owner Browser Visual Proof Report) Tj
+(Phase 14 - OpenClaw+ Health Repair Report) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -26,45 +26,45 @@ BT
 0 -11 Td
 () Tj
 0 -11 Td
-(**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex) Tj
+(**PARTIAL GO / HEALTHY IN CURRENT CHECK.** OpenClaw+ status currently reports all systems go,) Tj
 0 -11 Td
-(did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is) Tj
+(ClaudeClaw service is active, and the full OpenClaw+ test/design-lock suite passed. No repair) Tj
 0 -11 Td
-(claimed.) Tj
-0 -11 Td
-() Tj
-0 -11 Td
-(Required UI Items) Tj
+(requiring file changes was performed.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(| Item | Current status |) Tj
+(Current Health) Tj
+0 -11 Td
+() Tj
+0 -11 Td
+(| Check | Result |) Tj
 0 -11 Td
 (| --- | --- |) Tj
 0 -11 Td
-(| Agent Zero card | API/model present; visual proof blocked by owner session |) Tj
+(| Node runtime | healthy |) Tj
 0 -11 Td
-(| Hermes card | API/model present; visual proof blocked by owner session |) Tj
+(| Claude CLI status | healthy in OpenClaw+ status output |) Tj
 0 -11 Td
-(| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner) Tj
+(| Voice STT/TTS | configured, values redacted |) Tj
 0 -11 Td
-(session |) Tj
+(| Service | running |) Tj
 0 -11 Td
-(| SpaceAgent card | API/model present; visual proof blocked by owner session |) Tj
+(| Memory DB | available |) Tj
 0 -11 Td
-(| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session) Tj
+(| Full OpenClaw+ tests | 61 files passed; 1213 passed, 4 skipped |) Tj
 0 -11 Td
-(|) Tj
-0 -11 Td
-(| Fake buttons scan | Contract tests passed; visual scan blocked |) Tj
+(| Design lock verify | passed |) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(Exact Blocker) Tj
+(Safety) Tj
 0 -11 Td
 () Tj
 0 -11 Td
-(owner_authenticated_browser_session_required) Tj
+(No agents, skills, memory, reports, governance, runtime data, credentials, or .env files were) Tj
+0 -11 Td
+(deleted or modified.) Tj
 0 -11 Td
 () Tj
 0 -11 Td
@@ -136,9 +136,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000002825 00000 n 
+0000002680 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2895
+2750
 %%EOF

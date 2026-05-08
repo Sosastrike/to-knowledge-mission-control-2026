@@ -1,23 +1,23 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 6 - Pi Route Recommendation Gauntlet Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PASS for advisory routing.** Pi recommends the right responsible node in a 10-case route matrix and leaves all execution to Gateway policy and Agent Zero.
 
-## Required UI Items
+## Route Matrix
 
-| Item | Current status |
+| Request class | Recommendation |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
-
-## Exact Blocker
-
-owner_authenticated_browser_session_required
+| Web/browser research | SpaceAgent |
+| Firecrawl/search/scrape | SpaceAgent + Firecrawl, blocked when credential missing |
+| YouTube transcript | SpaceAgent + YouTube, limited when connector missing |
+| Workflow/skill design | Hermes |
+| Workforce/task/co-worker | Paperclip |
+| Runtime/skill/mini-agent execution | OpenClaw+ through Gateway / Bridge Session |
+| Report delivery | Delivery adapter, Bridge-gated |
+| Unknown connector | blocked with exact missing capability |
+| Protected action | requires Bridge Session |
+| Owner command | Agent Zero |
 
 ## Standing Governance
 

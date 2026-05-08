@@ -1,23 +1,22 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 16 - Build-Wiki / Farmer Fork 1 Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO / GATED.** Build-Wiki / Farmer timer is active under OpenClaw+. Run Now was not executed because no active Bridge Session was opened for this protected action.
 
-## Required UI Items
+## Systemd Status
 
-| Item | Current status |
+| Unit | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| opencloud-docs-farmer.timer | active / waiting |
+| Timer next run | Fri 2026-05-08 00:42:35 EDT |
+| Timer last trigger | Thu 2026-05-07 21:37:18 EDT |
+| opencloud-docs-farmer.service | inactive / dead, last result success |
+| SMB/Fork 2 mount | none detected |
 
-## Exact Blocker
+## Policy
 
-owner_authenticated_browser_session_required
+Owner-facing architecture remains OpenClaw+ / Build-Wiki / Farmer. The literal legacy service name is retained only for systemd proof. Run Now requires Bridge Session and exact scoped command only.
 
 ## Standing Governance
 

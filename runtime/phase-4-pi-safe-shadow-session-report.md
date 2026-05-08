@@ -1,23 +1,22 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 4 - Pi Safe Shadow Session Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PASS for safe shadow mode.** Pi can answer route recommendation requests through the Gateway dispatcher model without execution or writes.
 
-## Required UI Items
+## Proof
 
-| Item | Current status |
+| Test group | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Pi dispatcher tests | 9 passed |
+| Pi included in Agent Hub tests | 3 passed |
+| Protected route auth test | passed |
+| Execution enabled | false |
+| Write enabled | false |
 
-## Exact Blocker
+## Recommendation Behavior
 
-owner_authenticated_browser_session_required
+Pi recommends only. It does not execute, write, call tools, bypass Gateway, or become commander.
 
 ## Standing Governance
 

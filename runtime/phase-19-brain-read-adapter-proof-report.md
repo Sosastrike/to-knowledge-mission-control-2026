@@ -1,23 +1,23 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 19 - Brain Read Adapter Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO.** Brain system contracts and safe adapter tests pass. Live owner-auth route reads still require authenticated access.
 
-## Required UI Items
+## Proof
 
-| Item | Current status |
+| System | Current proof |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Obsidian | adapter tests passed |
+| MemPalace | adapter tests passed |
+| Graphify | registry/data-layer status modeled |
+| Brain Sync | registry/data-layer status modeled |
+| Build-Wiki / Farmer | timer/service status proved; execution gated |
+| Write actions | blocked unless Bridge Session explicitly allows |
 
-## Exact Blocker
+## Test Evidence
 
-owner_authenticated_browser_session_required
+Brain/data-layer focused suite: 21 tests passed.
 
 ## Standing Governance
 

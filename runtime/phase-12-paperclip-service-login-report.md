@@ -1,23 +1,24 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 12 - Paperclip Service and Owner Login Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO / DEGRADED.** Paperclip health is live in authenticated deployment mode. Owner login/dashboard/roster/task queue visual proof remains blocked by missing owner session bridge.
 
-## Required UI Items
+## Service Proof
 
-| Item | Current status |
+| Check | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Health endpoint | 200 |
+| Health status | ok |
+| Deployment mode | authenticated |
+| Bootstrap status | ready |
+| Public exposure | no public proof; local/Tailnet-only posture preserved |
+| Owner login | blocked by session requirement |
+| Dashboard/roster/task queue | blocked by session requirement |
 
-## Exact Blocker
+## Architecture
 
-owner_authenticated_browser_session_required
+Paperclip remains Workforce Control Plane before OpenClaw+. It does not replace Agent Zero, Hermes, Pi, SpaceAgent, OpenClaw+, or existing agents.
 
 ## Standing Governance
 

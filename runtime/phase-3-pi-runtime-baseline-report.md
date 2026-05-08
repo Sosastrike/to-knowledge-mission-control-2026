@@ -1,23 +1,23 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 3 - Pi Runtime Baseline Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO / SHADOW.** No standalone Pi repository or service was proven in the safe search. Pi is implemented and proven as an in-process Gateway shadow dispatcher in Mission Control.
 
-## Required UI Items
+## Baseline Findings
 
-| Item | Current status |
+| Check | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Standalone Pi repo/path | Not proven |
+| Mission Control Pi dispatcher module | Present |
+| Gateway Agent Hub Pi-mono node | Present |
+| CLI/server/RPC/service mode | No standalone mode proven |
+| Public exposure | None found |
+| Secrets printed | No |
 
-## Exact Blocker
+## Blocker
 
-owner_authenticated_browser_session_required
+pi_runtime_session_not_proven for a standalone/runtime session. The in-process Gateway shadow dispatcher is available and tested.
 
 ## Standing Governance
 

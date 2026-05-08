@@ -1,23 +1,22 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 17 - Delivery Connector Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO / GATED.** Mission Control report-link delivery is the safe proven path. Telegram, AgentMail, Google Drive, and OneDrive remain blocked or Bridge-gated without a live approved session/connector proof.
 
-## Required UI Items
+## Delivery Matrix
 
-| Item | Current status |
-|---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Delivery path | Status | Blocker or condition |
+|---|---|---|
+| Mission Control report link | GO | safe local report link path |
+| Telegram PDF attachment | blocked | approved Telegram document attachment route not proven |
+| AgentMail allowed-domain send | gated | Bridge Session and allow-list proof required |
+| Google Drive upload | gated/blocked | connector/session proof required |
+| OneDrive upload | gated/blocked | connector/session proof required |
 
-## Exact Blocker
+## Safety
 
-owner_authenticated_browser_session_required
+No send, upload, external write, or fake delivery claim was executed.
 
 ## Standing Governance
 

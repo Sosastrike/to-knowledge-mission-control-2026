@@ -1,23 +1,22 @@
-# Phase 2 - Owner Browser Visual Proof Report
+# Phase 18 - Bridge Session Execution Proof Report
 
 ## Result
 
-**BLOCKED / PARTIAL GO.** The production routes and Agent Hub build artifacts exist, but Codex did not have a safe owner-authenticated browser session. Therefore no visual screenshot proof is claimed.
+**PARTIAL GO.** Bridge Session contracts and protected-action policy tests pass. A live execution session was not opened in this run, so no external or protected action execution is claimed.
 
-## Required UI Items
+## Proof
 
-| Item | Current status |
+| Area | Result |
 |---|---|
-| Agent Zero card | API/model present; visual proof blocked by owner session |
-| Hermes card | API/model present; visual proof blocked by owner session |
-| Pi card | API/model present as Dispatcher Candidate / shadow; visual proof blocked by owner session |
-| SpaceAgent card | API/model present; visual proof blocked by owner session |
-| Paperclip card | API/model present as partial/degraded; visual proof blocked by owner session |
-| Fake buttons scan | Contract tests passed; visual scan blocked |
+| Bridge Session tests | passed |
+| Protected actions without session | blocked in tests |
+| External writes without session | blocked in tests |
+| Session expiration behavior | covered by tests |
+| Live scoped execution | not run |
 
-## Exact Blocker
+## Blocker
 
-owner_authenticated_browser_session_required
+active_bridge_session_required for any protected execution proof.
 
 ## Standing Governance
 

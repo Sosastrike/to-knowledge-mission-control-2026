@@ -1,0 +1,185 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2671 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-ui-shell-navigation-fix-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway v3 UI Shell Navigation Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Restore clear in-app navigation so Gateway/Agent Hub feels embedded in Mission Control, not trap) Tj
+0 -12 Td
+(ped.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Added persistent exit controls to Gateway shell:) Tj
+0 -12 Td
+(   - Mission Control Home) Tj
+0 -12 Td
+(   - Dashboard) Tj
+0 -12 Td
+(   - Gateway Overview) Tj
+0 -12 Td
+(   - Agent Hub) Tj
+0 -12 Td
+(2. Added clickable breadcrumb structure in Gateway shell:) Tj
+0 -12 Td
+(   - Mission Control / Gateway / current tab) Tj
+0 -12 Td
+(3. Added equivalent exit/breadcrumb controls directly on:) Tj
+0 -12 Td
+(   - Agent Hub main page) Tj
+0 -12 Td
+(   - Agent Hub Paperclip drill-down page) Tj
+0 -12 Td
+(   - Gateway Status page) Tj
+0 -12 Td
+(   - Gateway SpaceAgent page) Tj
+0 -12 Td
+(4. Kept alias behavior unchanged \(`/agent-network`, `/agents` -> `/gateway/agent-hub`\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/status/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/space-agent/page.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes) Tj
+0 -12 Td
+(- Route targets wired in controls:) Tj
+0 -12 Td
+(  - `/tkmc`) Tj
+0 -12 Td
+(  - `/gateway`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Header-level nav and breadcrumbs are now rendered above the fold on Gateway and Agent Hub surf) Tj
+0 -12 Td
+(aces.) Tj
+0 -12 Td
+(- Exit routes are explicit; browser back button is no longer required as primary navigation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Owner re-test still required for final UI GO call.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` PASS) Tj
+0 -12 Td
+(- `pnpm test` PASS) Tj
+0 -12 Td
+(- `pnpm run build` PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No runtime restart executed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Planned after commit: `git revert <ui_navigation_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentages) Tj
+0 -12 Td
+(- Gateway/Agent Hub navigation lane: increased \(clear exit controls restored\).) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 259 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Overall UI proof remains PARTIAL until owner re-test.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Validate scroll behavior end-to-end on all Gateway routes and finalize owner re-test package.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000002970 00000 n 
+0000003096 00000 n 
+0000003406 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3476
+%%EOF

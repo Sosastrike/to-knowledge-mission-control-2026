@@ -1,0 +1,144 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2563 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-owner-retest-checklist) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway v3 Owner Re-Test Checklist) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Give the owner exact steps to verify the fixed Gateway/Agent Hub UI in production.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Re-Test Steps) Tj
+0 -12 Td
+(1. Log in to Mission Control.) Tj
+0 -12 Td
+(2. Open `/gateway`.) Tj
+0 -12 Td
+(3. Confirm Gateway tab rail is visible:) Tj
+0 -12 Td
+(   - Overview) Tj
+0 -12 Td
+(   - Routes) Tj
+0 -12 Td
+(   - Registry) Tj
+0 -12 Td
+(   - Policies / Bridge) Tj
+0 -12 Td
+(   - Health) Tj
+0 -12 Td
+(   - Dispatcher) Tj
+0 -12 Td
+(   - Token Governor) Tj
+0 -12 Td
+(   - Agent Hub) Tj
+0 -12 Td
+(4. Click **Agent Hub**.) Tj
+0 -12 Td
+(5. Confirm top exit controls are visible above the fold:) Tj
+0 -12 Td
+(   - Mission Control Home) Tj
+0 -12 Td
+(   - Dashboard) Tj
+0 -12 Td
+(   - Gateway Overview) Tj
+0 -12 Td
+(   - Agent Hub) Tj
+0 -12 Td
+(6. Confirm breadcrumb is clickable:) Tj
+0 -12 Td
+(   - Mission Control / Gateway / Agent Hub) Tj
+0 -12 Td
+(7. Scroll down to bottom of Agent Hub page.) Tj
+0 -12 Td
+(8. Scroll back to top.) Tj
+0 -12 Td
+(9. Click **Gateway Overview** and confirm page loads.) Tj
+0 -12 Td
+(10. Click **Mission Control Home** and confirm page loads.) Tj
+0 -12 Td
+(11. Open `/agent-network` and verify it lands on Gateway Agent Hub.) Tj
+0 -12 Td
+(12. Open `/agents` and verify it lands on Gateway Agent Hub.) Tj
+0 -12 Td
+(13. Confirm each alias page still exposes a clear way back to Gateway and Mission Control.) Tj
+0 -12 Td
+(14. Confirm no fake buttons are present.) Tj
+0 -12 Td
+(15. Confirm no raw paths or secrets are shown in UI.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Expected Result) Tj
+0 -12 Td
+(- Navigation is not trapped.) Tj
+0 -12 Td
+(- Scroll behavior is natural.) Tj
+0 -12 Td
+(- Gateway FULL v3 feels embedded in Mission Control shell.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Mapping) Tj
+0 -12 Td
+(- If owner cannot see exits/breadcrumbs: `owner_visual_proof_partial_navigation_layout_defect`) Tj
+0 -12 Td
+(- If owner cannot scroll naturally: `gateway_scroll_layout_trap_persists`) Tj
+0 -12 Td
+(- If alias routes do not land correctly: `gateway_alias_routing_regression`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Checklist does not request tokens or secrets.) Tj
+0 -12 Td
+(- No auth-file actions required.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Owner shares pass/fail notes for each step so final UI decision can be set to GO or remain PAR) Tj
+0 -12 Td
+(TIAL.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002856 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2926
+%%EOF

@@ -1,0 +1,160 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2701 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-scroll-layout-fix-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway v3 Scroll/Layout Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Remove trapped-page behavior and restore natural scrolling on Gateway and Agent Hub routes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Converted Gateway/Agent Hub root containers from `min-h-screen` to `h-full overflow-y-auto` s) Tj
+0 -12 Td
+(o pages scroll inside the app shell.) Tj
+0 -12 Td
+(2. Applied the same pattern to status and space-agent Gateway pages to prevent route-specific sc) Tj
+0 -12 Td
+(roll traps.) Tj
+0 -12 Td
+(3. Kept content structure intact; no fake UI or hidden sections introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/status/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/space-agent/page.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes) Tj
+0 -12 Td
+(- Updated scroll behavior intended for:) Tj
+0 -12 Td
+(  - `/gateway`) Tj
+0 -12 Td
+(  - `/gateway/routes`) Tj
+0 -12 Td
+(  - `/gateway/registry`) Tj
+0 -12 Td
+(  - `/gateway/policies`) Tj
+0 -12 Td
+(  - `/gateway/health`) Tj
+0 -12 Td
+(  - `/gateway/dispatcher`) Tj
+0 -12 Td
+(  - `/gateway/token-governor`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- All modified route roots now explicitly expose vertical scrolling via `overflow-y-auto`.) Tj
+0 -12 Td
+(- Gateway pages remain embedded under Mission Control shell without viewport lock.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Owner confirmation pending on real browser session for final UX acceptance.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` PASS) Tj
+0 -12 Td
+(- `pnpm test` PASS) Tj
+0 -12 Td
+(- `pnpm run build` PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No service restart executed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Planned after commit: `git revert <ui_scroll_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentages) Tj
+0 -12 Td
+(- UI navigation/scroll readiness increased.) Tj
+0 -12 Td
+(- Owner visual proof still PARTIAL GO until owner validates interaction quality.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Perform production smoke + owner re-test checklist execution.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002994 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3064
+%%EOF

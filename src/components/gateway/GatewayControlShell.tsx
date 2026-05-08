@@ -21,6 +21,13 @@ const TABS: Array<{ id: GatewayTabId; label: string; href: string }> = [
   { id: 'agent-hub', label: 'Agent Hub', href: '/gateway/agent-hub' },
 ]
 
+const TOP_NAV_LINKS = [
+  { id: 'mission-control-home', label: 'Mission Control Home', href: '/tkmc' },
+  { id: 'dashboard', label: 'Dashboard', href: '/tkmc' },
+  { id: 'gateway-overview', label: 'Gateway Overview', href: '/gateway' },
+  { id: 'agent-hub', label: 'Agent Hub', href: '/gateway/agent-hub' },
+]
+
 export function GatewayControlShell(input: {
   active: GatewayTabId
   title: string
@@ -28,9 +35,34 @@ export function GatewayControlShell(input: {
   children: ReactNode
   badge?: string
 }) {
+  const activeTab = TABS.find((tab) => tab.id === input.active) || TABS[0]
+
   return (
-    <main className='min-h-screen bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
+    <main className='h-full overflow-y-auto bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
       <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5'>
+        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <nav aria-label='Gateway exits' className='flex flex-wrap gap-2'>
+              {TOP_NAV_LINKS.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <nav aria-label='Breadcrumb' className='text-xs text-slate-300'>
+              <a href='/tkmc' className='font-semibold text-cyan-200 hover:text-cyan-100'>Mission Control</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <a href='/gateway' className='font-semibold text-cyan-200 hover:text-cyan-100'>Gateway</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <span className='font-semibold text-white'>{activeTab.label}</span>
+            </nav>
+          </div>
+        </section>
+
         <header className='border-b border-white/10 pb-5'>
           <p className='text-xs font-semibold uppercase text-cyan-300'>Mission Control / Gateway</p>
           <div className='mt-3 flex flex-wrap items-end justify-between gap-4'>
@@ -89,4 +121,3 @@ export function GatewayFact({ label, value }: { label: string; value: string }) 
     </div>
   )
 }
-

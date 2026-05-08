@@ -1,0 +1,138 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2157 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-owner-visual-proof-partial-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway v3 Owner Visual Proof - Partial) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Reclassify owner visual proof now that `/gateway/agent-hub` is visible in an authenticated owner) Tj
+0 -12 Td
+( browser session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Recorded owner-confirmed visibility of `/gateway/agent-hub`.) Tj
+0 -12 Td
+(2. Reclassified blocker from `owner_authenticated_browser_session_required` to `owner_visual_pro) Tj
+0 -12 Td
+(of_partial_navigation_layout_defect`.) Tj
+0 -12 Td
+(3. Moved Gateway UI track into implementation lane \(navigation/scroll/layout fixes\) instead of r) Tj
+0 -12 Td
+(oute-proof lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- None \(status/report reclassification only\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes) Tj
+0 -12 Td
+(- Owner-confirmed route: `/gateway/agent-hub`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Owner reported authenticated page visibility.) Tj
+0 -12 Td
+(- Owner also reported trapped navigation and scroll defects.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `owner_visual_proof_partial_navigation_layout_defect`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Not applicable in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No restart required for status-only reclassification.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- None in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentages) Tj
+0 -12 Td
+(- Owner visual proof track: `blocked -> partial` \(visibility proven, UX defects open\).) Tj
+0 -12 Td
+(- Gateway/Agent Hub overall: remains PARTIAL GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Apply shell navigation, breadcrumb, and scroll-trap fixes on Gateway/Agent Hub surfaces.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002450 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2520
+%%EOF

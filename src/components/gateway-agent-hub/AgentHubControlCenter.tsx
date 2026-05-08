@@ -20,8 +20,26 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
   const readinessSummary = buildReadinessSummary(status)
 
   return (
-    <main className='min-h-screen bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
+    <main className='h-full overflow-y-auto bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
       <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5'>
+        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <nav aria-label='Agent Hub exits' className='flex flex-wrap gap-2'>
+              <a href='/tkmc' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Mission Control Home</a>
+              <a href='/tkmc' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Dashboard</a>
+              <a href='/gateway' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Gateway Overview</a>
+              <a href='/gateway/agent-hub' className='rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100'>Agent Hub</a>
+            </nav>
+            <nav aria-label='Breadcrumb' className='text-xs text-slate-300'>
+              <a href='/tkmc' className='font-semibold text-cyan-200 hover:text-cyan-100'>Mission Control</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <a href='/gateway' className='font-semibold text-cyan-200 hover:text-cyan-100'>Gateway</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <span className='font-semibold text-white'>Agent Hub</span>
+            </nav>
+          </div>
+        </section>
+
         <header className='border-b border-white/10 pb-5'>
           <p className='text-xs font-semibold uppercase text-cyan-300'>Mission Control / Gateway / Agent Hub</p>
           <div className='mt-3 flex flex-wrap items-end justify-between gap-4'>
@@ -159,8 +177,27 @@ export function AgentHubPaperclipPage({
 }) {
   const agent = detail.agent
   return (
-    <main className='min-h-screen bg-[#070912] px-6 py-8 text-slate-100'>
+    <main className='h-full overflow-y-auto bg-[#070912] px-6 py-8 text-slate-100'>
       <div className='mx-auto flex w-full max-w-6xl flex-col gap-6'>
+        <section className='rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3'>
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <nav aria-label='Paperclip exits' className='flex flex-wrap gap-2'>
+              <a href='/tkmc' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Mission Control Home</a>
+              <a href='/gateway' className='rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Gateway Overview</a>
+              <a href='/gateway/agent-hub' className='rounded-md border border-cyan-300/40 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100'>Agent Hub</a>
+            </nav>
+            <nav aria-label='Breadcrumb' className='text-xs text-slate-300'>
+              <a href='/tkmc' className='font-semibold text-cyan-200 hover:text-cyan-100'>Mission Control</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <a href='/gateway' className='font-semibold text-cyan-200 hover:text-cyan-100'>Gateway</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <a href='/gateway/agent-hub' className='font-semibold text-cyan-200 hover:text-cyan-100'>Agent Hub</a>
+              <span className='px-1.5 text-slate-500'>/</span>
+              <span className='font-semibold text-white'>Paperclip</span>
+            </nav>
+          </div>
+        </section>
+
         <header className='border-b border-white/10 pb-5'>
           <a href='/gateway/agent-hub' className='text-sm font-semibold text-sky-300 hover:text-sky-200'>Agent Hub / Control Center</a>
           <h1 className='mt-3 text-3xl font-semibold text-white'>{agent.name} — {agent.role}</h1>

@@ -1,0 +1,181 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2880 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-v3-agenthub-design-alignment-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway v3 Agent Hub Design Alignment) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Align production `/gateway/agent-hub` with the Designer FULL v3 intent while keeping live produc) Tj
+0 -12 Td
+(tion truth and guardrails.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Kept Agent Hub as a Gateway-first control surface with visible hierarchy.) Tj
+0 -12 Td
+(2. Preserved the production chain order: Agent Zero / Pi / Hermes -> Paperclip -> OpenClaw+.) Tj
+0 -12 Td
+(3. Preserved real runtime status language for:) Tj
+0 -12 Td
+(   - Agent Zero commander) Tj
+0 -12 Td
+(   - Hermes gated/live) Tj
+0 -12 Td
+(   - Pi shadow dispatcher) Tj
+0 -12 Td
+(   - SpaceAgent research specialist) Tj
+0 -12 Td
+(   - Paperclip Workforce Control Plane) Tj
+0 -12 Td
+(   - OpenClaw+ runtime layer) Tj
+0 -12 Td
+(4. Preserved no-fake-button semantics: actions remain live, gated, or blocked with explicit bloc) Tj
+0 -12 Td
+(kers.) Tj
+0 -12 Td
+(5. Kept OpenCloud architecture wording removed from active UI, except literal legacy service nam) Tj
+0 -12 Td
+(e `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+0 -12 Td
+(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Agent Hub keeps the expected architecture chain and runtime role cards.) Tj
+0 -12 Td
+(- Paperclip remains before OpenClaw+ in operating-chain presentation.) Tj
+0 -12 Td
+(- Gateway tabs and owner action panel remain visible and consistent with FULL v3 control-center ) Tj
+0 -12 Td
+(intent.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Final visual acceptance still requires owner re-test on the deployed build.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` PASS) Tj
+0 -12 Td
+(- `pnpm run build` PASS) Tj
+0 -12 Td
+(- `pnpm test` PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No service restart performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Planned after commit: `git revert <ui_fix_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentages) Tj
+0 -12 Td
+(- Gateway/Agent Hub UI alignment: increased to PARTIAL+ readiness.) Tj
+0 -12 Td
+(- Owner visual proof track: remains PARTIAL until owner confirms fixed UI behavior.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 163 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(- Execute production smoke on updated UI routes and provide owner re-test checklist.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003179 00000 n 
+0000003305 00000 n 
+0000003519 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3589
+%%EOF

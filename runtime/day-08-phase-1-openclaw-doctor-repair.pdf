@@ -1,0 +1,209 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3009 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-phase-1-openclaw-doctor-repair) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 Phase 1 — OpenClaw+ Doctor Repair) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Improve OpenClaw+ doctor reachability in Mission Control runtime without weakening security, cha) Tj
+0 -12 Td
+(nging `.env`, or performing destructive host actions.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Performed) Tj
+0 -12 Td
+(1. Implemented resilient OpenClaw+ CLI resolution in runtime command execution:) Tj
+0 -12 Td
+(   - Added fallback binary probe order for OpenClaw+ doctor/runtime commands.) Tj
+0 -12 Td
+(   - Added non-destructive fallback sequence:) Tj
+0 -12 Td
+(     - configured `OPENCLAW_BIN`) Tj
+0 -12 Td
+(     - `CLAWDBOT_BIN` \(if set\)) Tj
+0 -12 Td
+(     - `OPENCLAW_FALLBACK_BIN` \(if set\)) Tj
+0 -12 Td
+(     - `openclaw`) Tj
+0 -12 Td
+(     - `clawdbot`) Tj
+0 -12 Td
+(     - `claudeclaw`) Tj
+0 -12 Td
+(2. Preserved existing state-dir safety behavior:) Tj
+0 -12 Td
+(   - Continued enforcing `OPENCLAW_STATE_DIR` during command execution.) Tj
+0 -12 Td
+(3. Kept auth model unchanged:) Tj
+0 -12 Td
+(   - No role/auth gate changes.) Tj
+0 -12 Td
+(   - No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/command.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes Used) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- Runtime binary probe:) Tj
+0 -12 Td
+(  - `command -v openclaw`) Tj
+0 -12 Td
+(  - `command -v clawdbot`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Test Results) Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Tests: PASS \(`138` files / `1247` tests\)) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Diff check: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Proof / Outcome) Tj
+0 -12 Td
+(- Mission Control now attempts multiple OpenClaw+ binary names before returning runtime-not-reac) Tj
+0 -12 Td
+(hable.) Tj
+0 -12 Td
+(- This reduces false negatives caused by host binary naming differences.) Tj
+0 -12 Td
+(- In the current host runtime, no OpenClaw+ binary is available in PATH, so live doctor executio) Tj
+0 -12 Td
+(n remains blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blockers) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(  - Reason: No reachable OpenClaw+ CLI binary found on host runtime PATH.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Action Package) Tj
+0 -12 Td
+(1. Install or expose one approved OpenClaw+ CLI binary on the runtime host:) Tj
+0 -12 Td
+(   - preferred: `openclaw`) Tj
+0 -12 Td
+(   - supported fallback aliases: `clawdbot` or `claudeclaw`) Tj
+0 -12 Td
+(2. Ensure runtime service PATH includes the installed binary directory.) Tj
+0 -12 Td
+(3. Re-run:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor` \(authenticated admin\)) Tj
+0 -12 Td
+(   - `POST /api/openclaw/doctor` \(authenticated admin, fix pass\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- `git revert <commit_sha_for_this_phase>`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 872 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## No-Secrets / Safety Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No token values printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local service exposure added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage \(Scoped\)) Tj
+0 -12 Td
+(- OpenClaw+ \(doctor reachability lane\): increased in implementation-readiness reliability only.) Tj
+0 -12 Td
+(- OpenClaw+ does **not** move to GO until authenticated live doctor execution succeeds.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 08 Phase 2 \(OpenClaw+ runtime service proof\) and, in parallel, execute non-owner-) Tj
+0 -12 Td
+(dependent connector/runtime proofs while preserving existing owner-gated blockers.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003308 00000 n 
+0000003434 00000 n 
+0000004357 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4427
+%%EOF

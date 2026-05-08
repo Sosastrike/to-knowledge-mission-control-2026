@@ -86,11 +86,39 @@ export function runOpenClaw(args: string[], options: CommandOptions = {}) {
     OPENCLAW_STATE_DIR: config.openclawStateDir,
     ...options.env,
   }
-  return runCommand(config.openclawBin, args, {
-    ...options,
-    env,
-    cwd: options.cwd || config.openclawStateDir || process.cwd()
-  })
+
+  const fallbackBins = [
+    config.openclawBin,
+    process.env.CLAWDBOT_BIN || '',
+    process.env.OPENCLAW_FALLBACK_BIN || '',
+    'openclaw',
+    'clawdbot',
+    'claudeclaw',
+  ].filter(Boolean)
+
+  const attempted = new Set<string>()
+  const tryNext = (index: number): Promise<CommandResult> => {
+    if (index >= fallbackBins.length) {
+      return Promise.reject(new Error('OpenClaw is not installed or not reachable'))
+    }
+
+    const bin = fallbackBins[index]
+    if (attempted.has(bin)) return tryNext(index + 1)
+    attempted.add(bin)
+
+    return runCommand(bin, args, {
+      ...options,
+      env,
+      cwd: options.cwd || config.openclawStateDir || process.cwd()
+    }).catch((error) => {
+      const message = String((error as Error)?.message || '')
+      const isMissingBinary = /spawn .* ENOENT|command not found|not installed|not reachable/i.test(message)
+      if (!isMissingBinary) throw error
+      return tryNext(index + 1)
+    })
+  }
+
+  return tryNext(0)
 }
 
 export function runClawdbot(args: string[], options: CommandOptions = {}) {

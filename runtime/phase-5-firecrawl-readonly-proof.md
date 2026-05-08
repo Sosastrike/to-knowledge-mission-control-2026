@@ -1,48 +1,86 @@
-# Phase 5 — Firecrawl Read-Only Proof
+# Phase 5 - Firecrawl Read-Only Proof
 
-Generated: 2026-05-08T00:24:27Z
+Generated: 2026-05-07T21:00:20-04:00
 
 ## Result
 
-**Status:** BLOCKED
+**BLOCKED / NOT CONNECTED**
 
-Exact blocker: `firecrawl_credential_required`.
+Firecrawl cannot be moved to connected/read-only in this phase. The correct blocker is:
 
-Firecrawl was not moved to connected/read-only because no usable credential source was proven. No Firecrawl scrape, crawl, map, search, or extract call was run.
+`firecrawl_credential_required`
 
-## Credential Source Check
+Mission Control does not have a Firecrawl credential available to its runtime, and the Firecrawl SDK package is not installed in the Mission Control dependency tree. No Firecrawl request was executed.
 
-| Source | Present |
-| --- | --- |
-| Mission Control service environment | false |
-| Mission Control env files | false |
-| Protected secret file source | false |
-| Overall Firecrawl credential | false |
+## Credential and Backend Checks
 
-No Firecrawl credential value was printed or copied into this report.
+| Check | Result |
+|---|---|
+| Shell environment credential present | no |
+| Mission Control repo env credential present | no |
+| Firecrawl-related filename discovered in runtime/config tree | possible filename only; no value inspected or printed |
+| Firecrawl SDK present in Mission Control dependencies | no |
+| Safe read-only Firecrawl smoke | not run |
+| ResearchPacket via Firecrawl | blocked packet behavior only |
 
-## Route Proof
+No secret values were printed, read into output, or committed.
 
-| Route | Auth state | HTTP | Result |
-| --- | --- | ---: | --- |
-| `GET /api/firecrawl/status` | unauthenticated | 401 | Unauthorized |
-| `GET /api/gateway/space-agent/browser/status` | unauthenticated | 401 | Unauthorized |
+## Route Protection Smoke
 
-Authenticated Firecrawl route proof remains pending until an owner/operator session or approved route credential is available.
+Unauthenticated route checks after Mission Control restart:
 
-## Research Packet Decision
+| Route | Result | Meaning |
+|---|---:|---|
+| GET `/api/firecrawl/status` | 401 | protected |
+| GET `/api/gateway/space-agent/research` | 401 | protected |
+| GET `/api/gateway/nodes/space-agent` | 401 | protected |
+| GET `/api/gateway/space-agent/browser/status` | 401 | protected |
 
-No live ResearchPacket was produced because the Firecrawl credential/backend is missing. SpaceAgent can classify Firecrawl work, but cannot claim live Firecrawl access yet.
+Authenticated Firecrawl smoke remains blocked because no owner/operator session and no Firecrawl credential are available in this worker context.
 
-## Guardrails Confirmed
+## Tests
 
-- No credential values were printed.
-- No `.env` file was modified.
-- No external write was executed.
-- No Zapier, HeyGen, SMB/Fork 2, farmer, email, Drive, or OneDrive action occurred.
-- Firecrawl remains blocked in Gateway / Agent Hub until credential and live adapter proof pass.
-- OpenClaw+ naming remains correct.
+| Test | Result |
+|---|---|
+| `src/lib/space-agent-research.test.ts` | 29 passed |
+| `src/lib/space-agent-health.test.ts` | 3 passed |
+| Combined focused tests | 32 passed |
 
-## Phase 5 Decision
+The tests confirm SpaceAgent/Gateway can classify Firecrawl research and return blocked-state packets without claiming fake access.
 
-Phase 5 remains **BLOCKED** with `firecrawl_credential_required`.
+## Gateway / Agent Hub Status
+
+| Surface | Honest State |
+|---|---|
+| SpaceAgent Firecrawl card | blocked |
+| Firecrawl capability | credential required |
+| External writes | disabled |
+| Bridge Session | still required for any future scoped execution |
+| Firecrawl live adapter | not proven |
+
+## Security Confirmation
+
+- No secrets printed.
+- No auth files printed.
+- No `.env` changes.
+- No external writes.
+- No crawler job executed.
+- No Zapier / HeyGen / SMB / farmer action.
+- No fake Firecrawl connected status.
+
+## Updated Percentage
+
+| System | Previous | Updated |
+|---|---:|---:|
+| Firecrawl | blocked | 25% blocked |
+| SpaceAgent | 66% PARTIAL GO | 66% PARTIAL GO |
+
+## Exact Next Step
+
+Owner/admin must provide an approved Firecrawl credential sync path for Mission Control and approve installing/wiring the Firecrawl backend package. After that, rerun a single read-only public-page smoke and return a ResearchPacket.
+
+## Rollback
+
+This phase changed only reports. Rollback command after commit:
+
+`git revert <phase-5-commit>`

@@ -33,7 +33,7 @@ export default async function GatewayOverviewPage() {
             <GatewayFact label='agent zero' value={status.agent_zero.status} />
             <GatewayFact label='hermes' value={status.hermes.status} />
             <GatewayFact label='bridge writes' value={status.safety.bridge_session_required_for_writes ? 'required' : 'not required'} />
-            <GatewayFact label='opencloud fork2 / smb' value={status.buildwiki_openclaw.fork2_state || 'blocked'} />
+            <GatewayFact label='build-wiki fork2 / smb' value={status.buildwiki_openclaw.fork2_state || 'blocked'} />
           </dl>
         </article>
 
@@ -49,4 +49,3 @@ export default async function GatewayOverviewPage() {
     </GatewayControlShell>
   )
 }
-

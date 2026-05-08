@@ -12,7 +12,14 @@ const PRODUCTION_AGENT_HUB = '/gateway/agent-hub'
 
 function locationForPanel(panel: string[] | undefined): string {
   const firstPanel = panel?.[0] || 'mission'
-  if (firstPanel === 'gateway' || firstPanel === 'agents' || firstPanel === 'agent-network') return PRODUCTION_AGENT_HUB
+  if (
+    firstPanel === 'gateway' ||
+    firstPanel === 'gateway-parent' ||
+    firstPanel === 'agents' ||
+    firstPanel === 'agent-network'
+  ) return PRODUCTION_AGENT_HUB
+  if (firstPanel === 'gateways') return '/gateway'
+  if (firstPanel === 'gateway-config') return '/gateway/policies'
   if (firstPanel === 'reports' || firstPanel === 'executive-reports' || firstPanel === 'scheduled-reports') return DESIGNER_BASE + '?page=reports'
   return DESIGNER_BASE + '?page=mission'
 }

@@ -21,6 +21,33 @@ describe('Gateway route aliases', () => {
     expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
   })
 
+  it('routes legacy /gateways to Gateway FULL v3 overview', async () => {
+    const response = await panelGet(new Request('http://localhost/gateways'), {
+      params: Promise.resolve({ panel: ['gateways'] }),
+    })
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('/gateway')
+  })
+
+  it('routes legacy /gateway-config to Gateway FULL v3 policies', async () => {
+    const response = await panelGet(new Request('http://localhost/gateway-config'), {
+      params: Promise.resolve({ panel: ['gateway-config'] }),
+    })
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('/gateway/policies')
+  })
+
+  it('routes Gateway parent panel id to the production Agent Hub', async () => {
+    const response = await panelGet(new Request('http://localhost/gateway-parent'), {
+      params: Promise.resolve({ panel: ['gateway-parent'] }),
+    })
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
+  })
+
   it('keeps the /agents clean route as a Gateway compatibility alias', async () => {
     const response = await agentsGet()
 

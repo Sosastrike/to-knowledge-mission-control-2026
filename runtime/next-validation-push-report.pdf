@@ -1,0 +1,185 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3246 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(next-validation-push-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# NEXT-6 — Validation and Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Validate the NEXT implementation batch and ship isolated commits without `.env` changes, secret ) Tj
+0 -12 Td
+(leaks, fake completion claims, or auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS with explicit live blockers still open.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Commands) Tj
+0 -12 Td
+(1. `git diff --check` — PASS) Tj
+0 -12 Td
+(2. `pnpm run typecheck` — PASS \(after rebuild regenerated `.next/types`\)) Tj
+0 -12 Td
+(3. `pnpm run build` — PASS) Tj
+0 -12 Td
+(4. `pnpm test -- src/lib/paperclip-bridge.test.ts` — PASS) Tj
+0 -12 Td
+(5. `pnpm test -- src/lib/__tests__/scan-credentials.test.ts` — PASS \(`138 files / 1251 tests`\)) Tj
+0 -12 Td
+(6. `node scripts/check-button-contract-routes.mjs` — PASS) Tj
+0 -12 Td
+(7. `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(8. `.env diff check` \(`git diff -- .env .env.local .env.production`\) — clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route Smoke) Tj
+0 -12 Td
+(- Added artifact: `runtime/next-route-smoke-auth-unauth.json`) Tj
+0 -12 Td
+(- Production page protection check:) Tj
+0 -12 Td
+(  - `/gateway`, `/gateway/agent-hub`, `/agent-network`, `/agents` returned `/login` redirects wh) Tj
+0 -12 Td
+(en unauthenticated.) Tj
+0 -12 Td
+(- API smoke with locally read API key against Tailnet runtime returned `401` for both authentica) Tj
+0 -12 Td
+(ted and unauthenticated checks.) Tj
+0 -12 Td
+(- Exact blocker: `mission_control_api_key_not_seeded` \(local runtime DB key does not match activ) Tj
+0 -12 Td
+(e production runtime key context\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(1. `ce943fb` — `feat\(bridge\): update capability matrix and delivery status contracts`) Tj
+0 -12 Td
+(2. `f3cfac5` — `fix\(gateway\): keep exits visible and remove agent-hub scroll trap`) Tj
+0 -12 Td
+(3. `cd81578` — `fix\(paperclip\): add tailnet fallback candidate for bridge health`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Push) Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Remote push: PASS \(`9f95d09..cd81578`\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(1. `git revert cd81578`) Tj
+0 -12 Td
+(2. `git revert f3cfac5`) Tj
+0 -12 Td
+(3. `git revert ce943fb`) Tj
+0 -12 Td
+(4. `git push origin to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmations) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No fake send/upload claims.) Tj
+0 -12 Td
+(- No fake GO/Done claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Honest Blockers) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+(- `mission_control_api_key_not_seeded`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 266 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Owner approval/session lane: approve one scoped Bridge action, then rerun live execution proof a) Tj
+0 -12 Td
+(nd Telegram/Paperclip delivery proofs against the now-shipped code.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003545 00000 n 
+0000003671 00000 n 
+0000003988 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4058
+%%EOF

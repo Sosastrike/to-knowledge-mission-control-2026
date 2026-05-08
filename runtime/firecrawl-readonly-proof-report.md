@@ -32,7 +32,7 @@ Production proof routes:
 | `GET /api/firecrawl/jobs` | 200 | 401 | Jobs route exists and is protected |
 | `POST /api/firecrawl/jobs` | 503 | not run unauthenticated | Live job creation blocked by missing credential |
 | `GET /api/bridge/connector-readiness` | 200 | 401 | Connector readiness route exists and is protected |
-| `GET /api/gateway/nodes/firecrawl` | 404 authenticated | 401 unauthenticated | Direct node alias is not registered |
+| `GET /api/gateway/nodes/firecrawl` | 200 after alias fix | 401 | Direct Firecrawl node alias resolves to the Gateway Firecrawl node |
 | `GET /api/gateway/nodes/integration_firecrawl` | 200 | 401 | Gateway node exists under `integration_firecrawl` |
 | `POST /api/gateway/space-agent/research` | 200 packet-only | not run unauthenticated | SpaceAgent can prepare a Firecrawl-aware ResearchPacket, but does not execute Firecrawl |
 
@@ -93,7 +93,7 @@ Gateway exposes Firecrawl under node id `integration_firecrawl`.
 | Requires Bridge Session | true |
 | Blocked reason | `credential_required` |
 
-This is honest and safe. Gateway is not claiming live Firecrawl access.
+This is honest and safe. Gateway is not claiming live Firecrawl access. I also added the safe alias so `GET /api/gateway/nodes/firecrawl` returns the same blocked Firecrawl node instead of a 404.
 
 ## SpaceAgent ResearchPacket Proof
 
@@ -117,17 +117,21 @@ Interpretation: SpaceAgent can model and return the route/packet, but Firecrawl 
 
 | File | Purpose |
 | --- | --- |
+| `src/lib/gateway-registry-api.ts` | Adds the safe `firecrawl` node-detail alias to `integration_firecrawl` |
+| `src/lib/gateway-registry-api.test.ts` | Verifies the alias returns a blocked, non-executing Firecrawl node |
 | `runtime/firecrawl-readonly-proof-report.md` | Required Firecrawl proof report |
 | `runtime/firecrawl-readonly-proof-report.pdf` | Required PDF report |
 
-No application code, `.env` file, auth file, or credential file was changed.
+No `.env` file, auth file, or credential file was changed.
 
 ## Tests
 
 | Check | Result |
 | --- | --- |
 | `git diff --check` | PASS |
-| Focused Firecrawl/Gateway/SpaceAgent tests | PASS: 4 files, 35 tests |
+| Focused Firecrawl/Gateway/SpaceAgent tests | PASS: 5 files, 37 tests |
+| Typecheck | PASS after Next generated types were rebuilt |
+| Build | PASS |
 | `.env` diff check | PASS: clean |
 | Production authenticated route smoke | PASS for Firecrawl status, jobs, connector readiness, Gateway node, SpaceAgent research |
 | Production unauthenticated route smoke | PASS: protected routes returned 401 |
@@ -138,6 +142,7 @@ Focused tests run:
 - `src/lib/gateway-pi-dispatcher.test.ts`
 - `src/lib/gateway-route-planner.test.ts`
 - `src/lib/gateway-model.test.ts`
+- `src/lib/gateway-registry-api.test.ts`
 
 ## Blockers
 
@@ -149,10 +154,11 @@ Focused tests run:
 
 ## Rollback
 
-No runtime or application behavior was changed. Rollback is report-only:
+Runtime behavior changed only for the safe read-only Gateway node alias. It does not enable Firecrawl execution or writes.
 
-1. Revert the report commit if this report is committed.
-2. No service restart is required for this report-only change.
+1. Revert the Firecrawl alias/report commit.
+2. Restart the Mission Control runtime only if the code rollback is deployed.
+3. Firecrawl will remain blocked either way until the credential/backend prerequisites are actually present.
 
 ## No-Secrets Confirmation
 

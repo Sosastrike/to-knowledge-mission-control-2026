@@ -411,6 +411,12 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('space_agent_firecrawl_extract')).toBe(true)
     expect(capabilities.has('space_agent_firecrawl_interact_browser')).toBe(true)
     expect(registry.capabilities.find((capability) => capability.id === 'integration_firecrawl')?.blockers).toContain('missing_credential')
+    expect(getGatewayNodeDetail(registry, 'firecrawl')?.node).toMatchObject({
+      id: 'integration_firecrawl',
+      status: 'blocked',
+      execution_enabled: false,
+      write_enabled: false,
+    })
     const playwrightMcp = getGatewayNodeDetail(registry, 'playwright-mcp')
     expect(playwrightMcp?.node).toMatchObject({
       id: 'playwright_mcp',

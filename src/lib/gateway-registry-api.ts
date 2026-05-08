@@ -497,7 +497,8 @@ export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewaySta
 
 export function getGatewayNodeDetail(registry: GatewayRegistry, id: string): GatewayNodeDetailPayload | null {
   const normalizedId = gatewayId(id)
-  const node = registry.nodes.find((item) => item.id === normalizedId)
+  const nodeId = GATEWAY_NODE_DETAIL_ALIASES[normalizedId] || normalizedId
+  const node = registry.nodes.find((item) => item.id === nodeId)
   if (!node) return null
   return {
     ok: true,
@@ -509,6 +510,10 @@ export function getGatewayNodeDetail(registry: GatewayRegistry, id: string): Gat
     execution_enabled: false,
     writes_enabled: false,
   }
+}
+
+const GATEWAY_NODE_DETAIL_ALIASES: Record<string, string> = {
+  firecrawl: 'integration_firecrawl',
 }
 
 export function buildGatewayFlowsPayload(registry: GatewayRegistry): GatewayFlowsPayload {

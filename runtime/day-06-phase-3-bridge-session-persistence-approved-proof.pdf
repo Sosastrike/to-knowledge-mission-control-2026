@@ -1,0 +1,257 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2994 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-3-bridge-session-persistence-approved-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 3 — Bridge Session Persistence and Approved Execution Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Bridge Session from persistence-blocked state toward executable scoped approvals by fixing ) Tj
+0 -12 Td
+(storage prerequisites and validating session lifecycle logic.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Persistence schema gap was fixed in code and validated by tests. Live approved execution is stil) Tj
+0 -12 Td
+(l blocked pending owner approval/session activation in runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Broken) Tj
+0 -12 Td
+(Observed blocker chain in runtime:) Tj
+0 -12 Td
+(- `bridge_session_persistence_not_applied`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Root cause found:) Tj
+0 -12 Td
+(- Runtime DB had `bridge_sessions` and `bridge_session_audit_events` tables,) Tj
+0 -12 Td
+(- but was missing:) Tj
+0 -12 Td
+(  - `bridge_approval_requests`) Tj
+0 -12 Td
+(  - `bridge_audit_events`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Without those tables, Bridge Session read/create flows remained blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Completed) Tj
+0 -12 Td
+(Added migration:) Tj
+0 -12 Td
+(- `053_bridge_approval_audit_persistence` in `src/lib/migrations.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Migration creates:) Tj
+0 -12 Td
+(1. `bridge_approval_requests`) Tj
+0 -12 Td
+(2. `bridge_audit_events`) Tj
+0 -12 Td
+(3. indexes for idempotency, state/history lookup, action/audit lookup, and correlation lookups.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This removes the schema-level persistence gap that produced `bridge_session_persistence_not_appl) Tj
+0 -12 Td
+(ied` when migrations are applied on runtime startup.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Executed) Tj
+0 -12 Td
+(1. `pnpm run typecheck` -> PASS) Tj
+0 -12 Td
+(2. `pnpm test src/lib/agent-zero-bridge-session.test.ts src/lib/agent-zero-execution-gateway.tes) Tj
+0 -12 Td
+(t.ts src/lib/approval-queue-state.test.ts` -> PASS) Tj
+0 -12 Td
+(   - 3 files) Tj
+0 -12 Td
+(   - 24 tests) Tj
+0 -12 Td
+(   - 0 failures) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These tests cover:) Tj
+0 -12 Td
+(- session created,) Tj
+0 -12 Td
+(- pending approval reuse,) Tj
+0 -12 Td
+(- approval -> active transition,) Tj
+0 -12 Td
+(- execution/audit gating,) Tj
+0 -12 Td
+(- blocked behavior without active session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Proof Status) Tj
+0 -12 Td
+(Live scoped execution remains blocked in this phase because owner approval/session activation is) Tj
+0 -12 Td
+( not currently available in the active runtime session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No fake execution was claimed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Approval Action Package \(Exact\)) Tj
+0 -12 Td
+(To complete live scoped execution proof:) Tj
+0 -12 Td
+(1. Open Bridge Session in Mission Control.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1968 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(2. Approve one exact-scope action.) Tj
+0 -12 Td
+(3. Run one safe action only \(preferred order\):) Tj
+0 -12 Td
+(   - report-link confirmation,) Tj
+0 -12 Td
+(   - or Telegram report attachment \(if connector/session ready\),) Tj
+0 -12 Td
+(   - or Paperclip dry-run task.) Tj
+0 -12 Td
+(4. Codex will then verify:) Tj
+0 -12 Td
+(   - `accepted_for_execution=true`) Tj
+0 -12 Td
+(   - audit event present) Tj
+0 -12 Td
+(   - session expiration behavior) Tj
+0 -12 Td
+(   - out-of-scope action still blocked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/migrations.ts`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-3-bridge-session-persistence-approved-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-3-bridge-session-persistence-approved-proof.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- No service restart in this phase yet.) Tj
+0 -12 Td
+(- Migration is applied on next runtime start/deploy cycle.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending \(this phase included implementation + test + report only in current working tree\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- `git revert <commit_sha_for_migration_change>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No token values printed.) Tj
+0 -12 Td
+(- No auth files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Bridge Session readiness improved \(schema/persistence lane\),) Tj
+0 -12 Td
+(- but Bridge Session overall remains PARTIAL until one approved scoped execution is live-proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 06 Phase 4 \(Telegram PDF live attachment proof\) and attempt one Bridge-scoped sen) Tj
+0 -12 Td
+(d if owner approval/session is available; otherwise return exact blocker with owner action packa) Tj
+0 -12 Td
+(ge.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003293 00000 n 
+0000003419 00000 n 
+0000005439 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5509
+%%EOF

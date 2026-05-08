@@ -1,0 +1,156 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2658 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-10-security-scan-safe-hardening) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 10 — Security Scan Safe Hardening) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Improve security posture with safe app-level hardening only; document host/admin runbook items e) Tj
+0 -12 Td
+(xplicitly.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Attempted authenticated scan:) Tj
+0 -12 Td
+(   - `GET /api/security-scan`) Tj
+0 -12 Td
+(2. Captured current access blocker.) Tj
+0 -12 Td
+(3. Applied safe app-level persistence hardening that supports audited Bridge workflow correctnes) Tj
+0 -12 Td
+(s:) Tj
+0 -12 Td
+(   - `053_bridge_approval_audit_persistence` migration.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- `GET /api/security-scan` returned `401 Unauthorized` in current runtime auth context.) Tj
+0 -12 Td
+(- No fake score increase claimed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `authenticated_local_smoke_blocked`) Tj
+0 -12 Td
+(- owner/session-auth dependency for protected security-scan route) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe Hardening Applied) Tj
+0 -12 Td
+(- Added Bridge approval/audit table persistence migration and indexes to prevent missing-audit-s) Tj
+0 -12 Td
+(tate runtime drift.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+(- No destructive host modifications.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Host/Admin Runbook \(Still Required\)) Tj
+0 -12 Td
+(Pending authenticated or host-level checks for:) Tj
+0 -12 Td
+(- `hsts_enabled`) Tj
+0 -12 Td
+(- `firewall`) Tj
+0 -12 Td
+(- `open_ports`) Tj
+0 -12 Td
+(- `disk_encryption`) Tj
+0 -12 Td
+(- `linux_core_dumps`) Tj
+0 -12 Td
+(- `linux_mac_framework`) Tj
+0 -12 Td
+(- `linux_tmp_noexec`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/migrations.ts`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-10-security-scan-safe-hardening.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-10-security-scan-safe-hardening.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` -> PASS) Tj
+0 -12 Td
+(- targeted bridge/session test set -> PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Security remains PARTIAL pending authenticated scan score before/after and host-admin action c) Tj
+0 -12 Td
+(ompletion.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Run authenticated `/api/security-scan`, capture baseline score, apply remaining safe app-level f) Tj
+0 -12 Td
+(ixes, rerun score, and publish exact host-admin checklist deltas.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002951 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3021
+%%EOF

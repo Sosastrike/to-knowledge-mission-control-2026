@@ -1,0 +1,132 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2474 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-9-openclaw-doctor-issue-reduction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 9 — OpenClaw+ Doctor Issue Reduction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Reduce OpenClaw+ doctor issue count with safe non-destructive fixes and exact blocker accounting) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL \(no live doctor reduction completed in this phase\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Attempted authenticated doctor route access:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(2. Captured current access blocker.) Tj
+0 -12 Td
+(3. Applied related safe persistence improvement in this Day 06 batch:) Tj
+0 -12 Td
+(   - Bridge approval/audit persistence migration \(`053_bridge_approval_audit_persistence`\) to re) Tj
+0 -12 Td
+(move one downstream session blocker chain affecting OpenClaw+ execution governance lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Doctor route call returned `401 Unauthorized` without authenticated operator/session context.) Tj
+0 -12 Td
+(- No doctor issue-count delta could be safely claimed from runtime in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `authenticated_local_smoke_blocked`) Tj
+0 -12 Td
+(- owner/session-auth dependency for protected doctor route) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safe Fixes Applied \(Non-Destructive\)) Tj
+0 -12 Td
+(- Added missing Bridge approval/audit persistence tables migration to support audited Bridge Ses) Tj
+0 -12 Td
+(sion execution prerequisites.) Tj
+0 -12 Td
+(- No deletions of agents/skills/memory/reports/governance.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/migrations.ts`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-9-openclaw-doctor-issue-reduction.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-9-openclaw-doctor-issue-reduction.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` -> PASS) Tj
+0 -12 Td
+(- targeted bridge/session tests -> PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- OpenClaw+ remains PARTIAL until authenticated doctor count before/after is captured.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Acquire authenticated operator session, run doctor, capture exact issue list/count, apply safe s) Tj
+0 -12 Td
+(ubset fixes, rerun doctor, and record before/after counts.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002767 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2837
+%%EOF

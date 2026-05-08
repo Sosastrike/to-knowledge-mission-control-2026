@@ -1,0 +1,213 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3067 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-2-owner-browser-proof-action-package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 2 — Owner Browser Proof Action Package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Resolve owner-authenticated visual proof or provide exact owner action package without blocking ) Tj
+0 -12 Td
+(campaign execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(owner session required\), with action package prepared.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Attempted) Tj
+0 -12 Td
+(1. Verified the Gateway FULL v3 routes are currently protected and routing to `/login` when unau) Tj
+0 -12 Td
+(thenticated.) Tj
+0 -12 Td
+(2. Confirmed automation environment does not have an owner-authenticated browser session token/c) Tj
+0 -12 Td
+(ookie bound to production.) Tj
+0 -12 Td
+(3. Prepared exact owner action package for immediate unblock.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package \(No Secrets Needed\)) Tj
+0 -12 Td
+(Use an owner-authenticated browser session and perform the following:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### URLs to Open) Tj
+0 -12 Td
+(1. Mission Control login/start:) Tj
+0 -12 Td
+(   - `https://tkmc.knowledge-vs-ai.com/login`) Tj
+0 -12 Td
+(2. Gateway:) Tj
+0 -12 Td
+(   - `https://tkmc.knowledge-vs-ai.com/gateway`) Tj
+0 -12 Td
+(3. Agent Hub:) Tj
+0 -12 Td
+(   - `https://tkmc.knowledge-vs-ai.com/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Tabs/Views to Capture) Tj
+0 -12 Td
+(From Gateway left/tab rail, capture:) Tj
+0 -12 Td
+(1. Overview) Tj
+0 -12 Td
+(2. Routes) Tj
+0 -12 Td
+(3. Registry) Tj
+0 -12 Td
+(4. Policies / Bridge) Tj
+0 -12 Td
+(5. Health) Tj
+0 -12 Td
+(6. Dispatcher) Tj
+0 -12 Td
+(7. Token Governor) Tj
+0 -12 Td
+(8. Agent Hub) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Labels/Objects Expected Visible) Tj
+0 -12 Td
+(1. `Agent Zero` \(Commander\)) Tj
+0 -12 Td
+(2. `Hermes` \(live lieutenant / planning-only\)) Tj
+0 -12 Td
+(3. `Pi` \(shadow dispatcher\)) Tj
+0 -12 Td
+(4. `SpaceAgent` \(Playwright MCP / Firecrawl / YouTube\)) Tj
+0 -12 Td
+(5. `Paperclip` \(before OpenClaw+\)) Tj
+0 -12 Td
+(6. `OpenClaw+`) Tj
+0 -12 Td
+(7. Delivery panel/status area) Tj
+0 -12 Td
+(8. Bridge Session panel/status area) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Quality Checks to Confirm in Screenshots) Tj
+0 -12 Td
+(1. No fake buttons \(every action is live/gated/blocked honestly\).) Tj
+0 -12 Td
+(2. No raw local filesystem paths.) Tj
+0 -12 Td
+(3. No secret/token-like values.) Tj
+0 -12 Td
+(4. No OpenCloud architecture label except legacy literal service naming contexts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Codex Will Verify Immediately After Owner Evidence Is Available) Tj
+0 -12 Td
+(1. Card order and operating chain \(Paperclip before OpenClaw+\).) Tj
+0 -12 Td
+(2. Role labels \(Agent Zero commander, Hermes lieutenant, Pi shadow dispatcher\).) Tj
+0 -12 Td
+(3. SpaceAgent child capability labels \(Playwright MCP, Firecrawl, YouTube\).) Tj
+0 -12 Td
+(4. Delivery and Bridge status honesty \(no fake GO claims\).) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 853 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(5. No secret/path leakage in visible UI text.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-2-owner-browser-proof-action-package.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-2-owner-browser-proof-action-package.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No secret request.) Tj
+0 -12 Td
+(- No token request.) Tj
+0 -12 Td
+(- No credential request.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Owner-browser proof remains blocked pending owner-authenticated visual evidence.) Tj
+0 -12 Td
+(- Overall remains PARTIAL GO \(low 90s\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Continue to Day 06 Phase 3: Bridge Session persistence and one approved scoped execution proof.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003366 00000 n 
+0000003492 00000 n 
+0000004396 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4466
+%%EOF

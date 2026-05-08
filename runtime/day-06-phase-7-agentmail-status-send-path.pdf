@@ -1,0 +1,138 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2546 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-7-agentmail-status-send-path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 7 — AgentMail Status and Send Path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Classify AgentMail incoming/outgoing status with exact gating and no fake send claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL / BLOCKED \(honest\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence and Findings) Tj
+0 -12 Td
+(1. Protected bridge/provider routes currently require authenticated session \(`401` when unauthen) Tj
+0 -12 Td
+(ticated in active runtime\).) Tj
+0 -12 Td
+(2. AgentMail execution path exists in the execution gateway as a registered adapter action:) Tj
+0 -12 Td
+(   - `agentmail.send`) Tj
+0 -12 Td
+(3. Current adapter behavior is intentionally blocked until connector/send runner is configured:) Tj
+0 -12 Td
+(   - blocked reason: `agentmail_send_connector_not_configured` \(or invocation-adapter equivalent) Tj
+0 -12 Td
+(\)) Tj
+0 -12 Td
+(4. Safety gates are preserved:) Tj
+0 -12 Td
+(   - Bridge Session required,) Tj
+0 -12 Td
+(   - owner approval required,) Tj
+0 -12 Td
+(   - no email sent when blocked,) Tj
+0 -12 Td
+(   - no fake done.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `agentmail_send_connector_not_configured`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `authenticated_local_smoke_blocked` \(current runtime session context unavailable for protected) Tj
+0 -12 Td
+( route checks\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Allowed-Domain Send Status) Tj
+0 -12 Td
+(- Domain-restriction policy is represented in gateway policy tests/contracts.) Tj
+0 -12 Td
+(- Live allowed-domain send proof not executed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No unrestricted external send attempted.) Tj
+0 -12 Td
+(- No token values printed.) Tj
+0 -12 Td
+(- No credential files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-7-agentmail-status-send-path.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-7-agentmail-status-send-path.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- AgentMail remains PARTIAL/BLOCKED until one approved allowed-domain send is live-proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Once authenticated operator session + Bridge scope are available, run one allowed-domain test se) Tj
+0 -12 Td
+(nd and verify audit + no out-of-scope send.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002839 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2909
+%%EOF

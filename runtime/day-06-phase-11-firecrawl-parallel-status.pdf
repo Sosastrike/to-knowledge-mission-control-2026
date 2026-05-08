@@ -1,0 +1,122 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1964 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-11-firecrawl-parallel-status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 11 — Firecrawl Parallel Status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Keep Firecrawl in a parallel lane without blocking higher-priority production proofs.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(unchanged, honest\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blockers) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Preserved strict safety constraints:) Tj
+0 -12 Td
+(   - no credential value output,) Tj
+0 -12 Td
+(   - no auth file output,) Tj
+0 -12 Td
+(   - no `.env` edits.) Tj
+0 -12 Td
+(2. Confirmed protected Firecrawl status route remains auth-gated in current runtime context.) Tj
+0 -12 Td
+(3. Kept Firecrawl marked parallel/non-blocking relative to Bridge/Paperclip/Delivery/OpenClaw+ l) Tj
+0 -12 Td
+(anes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Protected status/research routes require authenticated context before live smoke.) Tj
+0 -12 Td
+(- No approved credential/backend pair available in this phase for a legal read-only smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No crawl executed.) Tj
+0 -12 Td
+(- No private page access.) Tj
+0 -12 Td
+(- No login flow bypass.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-11-firecrawl-parallel-status.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-11-firecrawl-parallel-status.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Firecrawl remains **35% BLOCKED**.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(When credential + backend adapter are both available, run exactly one read-only smoke on `https:) Tj
+0 -12 Td
+(//example.com/` and only then update status.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002257 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2327
+%%EOF

@@ -1,0 +1,197 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3270 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-6-drive-onedrive-upload-adapter-path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 6 — Drive / OneDrive Upload Adapter Path) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Google Drive and OneDrive from vague blocked state to exact implemented/gated path with exp) Tj
+0 -12 Td
+(licit blockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PARTIAL PASS \(implementation-path clarity improved; live upload still blocked\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Findings) Tj
+0 -12 Td
+(Both provider routes already exist and are provider-specific:) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Both routes are:) Tj
+0 -12 Td
+(- auth-protected \(`requireRole\('operator'\)`\)) Tj
+0 -12 Td
+(- Bridge-session-intended) Tj
+0 -12 Td
+(- currently hard-blocked by adapter readiness logic) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Code-Level Proof) Tj
+0 -12 Td
+(1. Provider route separation is correctly implemented \(no Drive/OneDrive mixing\).) Tj
+0 -12 Td
+(2. Delivery modules explicitly return blocked results with exact reasons:) Tj
+0 -12 Td
+(   - Google Drive: `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(   - OneDrive: `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(3. Both modules enforce:) Tj
+0 -12 Td
+(   - `accepted_for_execution=false`) Tj
+0 -12 Td
+(   - `bridge_session_required=true`) Tj
+0 -12 Td
+(   - `owner_approval_required=true`) Tj
+0 -12 Td
+(   - `no_fake_done=true`) Tj
+0 -12 Td
+(   - `no_tokens_exposed=true`) Tj
+0 -12 Td
+(4. No raw local path is returned by these adapters in blocked mode.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Why Live Upload Is Not GO Yet) Tj
+0 -12 Td
+(- Upload connector flags are still intentionally false in current delivery adapters.) Tj
+0 -12 Td
+(- OAuth/connector execution runner is not yet configured for verified upload.) Tj
+0 -12 Td
+(- Bridge Session approved execution proof is still pending.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Action Package \(when adapters are switched to live mode\)) Tj
+0 -12 Td
+(1. Complete provider auth in approved environment \(no token sharing in chat\).) Tj
+0 -12 Td
+(2. Open scoped Bridge Session for one upload action only.) Tj
+0 -12 Td
+(3. Provide target folder name for each provider separately.) Tj
+0 -12 Td
+(4. Codex verifies:) Tj
+0 -12 Td
+(   - upload success response,) Tj
+0 -12 Td
+(   - safe share link,) Tj
+0 -12 Td
+(   - audit event,) Tj
+0 -12 Td
+(   - out-of-scope action rejection.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-6-drive-onedrive-upload-adapter-path.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-6-drive-onedrive-upload-adapter-path.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Existing delivery adapter unit tests remain in place.) Tj
+0 -12 Td
+(- Day 06 targeted suite already passed for Bridge session/execution lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 529 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No OAuth token values printed.) Tj
+0 -12 Td
+(- No credential files printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Delivery path clarity improved; provider upload remains BLOCKED/GATED until real upload proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 06 Phase 7 \(AgentMail status/send path\) and classify incoming/outgoing with exact) Tj
+0 -12 Td
+( Bridge and domain-gate behavior.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003569 00000 n 
+0000003695 00000 n 
+0000004275 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4345
+%%EOF

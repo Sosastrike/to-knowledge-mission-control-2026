@@ -1,0 +1,158 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3018 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-4-telegram-pdf-live-attachment-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 4 — Telegram PDF Live Attachment Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Telegram report delivery from implemented/gated to live attachment proof when Bridge Sessio) Tj
+0 -12 Td
+(n and connector conditions are satisfied.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(GATED / BLOCKED \(honest, no fake send\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Attempted Telegram bridge route access on active runtime:) Tj
+0 -12 Td
+(   - `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(   - `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(2. Confirmed route protection behavior.) Tj
+0 -12 Td
+(3. Did not attempt any unsafe bypass.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Evidence) Tj
+0 -12 Td
+(- Both route calls returned `401 Unauthorized` without owner/session auth context:) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/telegram/status` -> `401`) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/telegram/upload-report` -> `401`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Interpretation) Tj
+0 -12 Td
+(- Adapter routes exist \(from Day 05 implementation\),) Tj
+0 -12 Td
+(- but live attachment proof cannot be completed in this phase because authenticated scoped execu) Tj
+0 -12 Td
+(tion is not yet available.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- `mission_control_api_key_not_seeded` \(authenticated local smoke lane currently unavailable\)) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- if connector/session remains absent at runtime after auth is restored: `telegram_report_delive) Tj
+0 -12 Td
+(ry_adapter_not_configured` \(verify on next authenticated check\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No bot token printed.) Tj
+0 -12 Td
+(- No raw local path exposed.) Tj
+0 -12 Td
+(- No fake delivery claim.) Tj
+0 -12 Td
+(- No external write occurred.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-4-telegram-pdf-live-attachment-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-4-telegram-pdf-live-attachment-proof.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime active on local-only bind.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending \(phase report only in working tree at this point\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation in this phase\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Telegram delivery remains PARTIAL \(implemented/gated\), not GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(After Bridge Session persistence migration is deployed and authenticated operator access is avai) Tj
+0 -12 Td
+(lable, run one scoped owner-approved Telegram report attachment and verify audit + expiration ga) Tj
+0 -12 Td
+(tes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000003311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+3381
+%%EOF

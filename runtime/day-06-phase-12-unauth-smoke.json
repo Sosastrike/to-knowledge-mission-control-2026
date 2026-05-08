@@ -1,0 +1,97 @@
+{
+  "checked_at": "2026-05-08T16:28:31.110Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "unauthenticated",
+  "results": [
+    {
+      "route": "/api/gateway/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/gateway/registry",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/gateway/agent-hub/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/agent-zero/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/hermes/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/pi/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/playwright-mcp/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/paperclip/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/api/gateway/space-agent/browser/status",
+      "status": 401,
+      "location": null
+    },
+    {
+      "route": "/gateway",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/routes",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/registry",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/policies",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/health",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/dispatcher",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/token-governor",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "status": 307,
+      "location": "/login"
+    },
+    {
+      "route": "/designer-mission-control/design/gateway/index.html",
+      "status": 307,
+      "location": "/login"
+    }
+  ]
+}

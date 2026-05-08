@@ -1,0 +1,189 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3128 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-5-paperclip-owner-session-bridge) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 5 — Paperclip Owner Session Bridge) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Move Paperclip from health-only visibility to owner-authenticated read-only dashboard/roster/tas) Tj
+0 -12 Td
+(k proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(BLOCKED \(owner session required\), with exact action package prepared.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Truth) Tj
+0 -12 Td
+(- Paperclip bridge/status wiring exists in Mission Control.) Tj
+0 -12 Td
+(- Previous verified state \(Day 05\): health endpoint reachable; companies/agents/issues remained ) Tj
+0 -12 Td
+(auth/session blocked.) Tj
+0 -12 Td
+(- Paperclip cannot be marked GO without owner session + read-only data proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime and Access Constraints in This Phase) Tj
+0 -12 Td
+(- Current active runtime auth context for protected Paperclip bridge routes is not available fro) Tj
+0 -12 Td
+(m automation \(`401` on protected routes without owner/session auth\).) Tj
+0 -12 Td
+(- No auth bypass was attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Paperclip Owner Action Package \(No Secrets Needed\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### URL / Access Target) Tj
+0 -12 Td
+(- Local/Tailnet Paperclip target expected by bridge policy:) Tj
+0 -12 Td
+(  - Local default: `http://127.0.0.1:3100`) Tj
+0 -12 Td
+(  - If Tailnet route is configured, use the approved Tailnet URL shown in your environment.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Owner Steps) Tj
+0 -12 Td
+(1. Open Paperclip URL in owner-authenticated session.) Tj
+0 -12 Td
+(2. Complete owner login.) Tj
+0 -12 Td
+(3. Open:) Tj
+0 -12 Td
+(   - company dashboard,) Tj
+0 -12 Td
+(   - agent roster,) Tj
+0 -12 Td
+(   - task queue.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### What Codex Will Verify Immediately After Owner Session Exists) Tj
+0 -12 Td
+(1. `GET /api/bridge/paperclip/status` -> health + mode consistency.) Tj
+0 -12 Td
+(2. `GET /api/bridge/paperclip/companies` -> no longer session-blocked.) Tj
+0 -12 Td
+(3. `GET /api/bridge/paperclip/agents` -> no longer session-blocked.) Tj
+0 -12 Td
+(4. `GET /api/bridge/paperclip/issues` -> no longer session-blocked.) Tj
+0 -12 Td
+(5. Paperclip remains positioned before OpenClaw+ in operator chain.) Tj
+0 -12 Td
+(6. Writes remain blocked unless Bridge Session + adapter scope are active.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No secret/token request.) Tj
+0 -12 Td
+(- No auth file request.) Tj
+0 -12 Td
+(- No public exposure enabled.) Tj
+0 -12 Td
+(- No writes executed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-5-paperclip-owner-session-bridge.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-5-paperclip-owner-session-bridge.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- Pending \(phase report only in working tree at this point\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation in this phase\).) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 354 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Paperclip remains PARTIAL until owner login and live data route proof are completed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 06 Phase 6 \(Drive/OneDrive adapter path\) while waiting for owner Paperclip sessio) Tj
+0 -12 Td
+(n unblock.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003427 00000 n 
+0000003553 00000 n 
+0000003958 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4028
+%%EOF

@@ -1,0 +1,265 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3829 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-production-progress-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Production Progress Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+(Day 06 advanced from blocker classification into concrete implementation work with a shipped Bri) Tj
+0 -12 Td
+(dge persistence fix, fresh validation gates, and authenticated production smokes on local runtim) Tj
+0 -12 Td
+(e.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current status remains **PARTIAL GO \(low 90s\)**.) Tj
+0 -12 Td
+(No 100% claim.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase Outcomes) Tj
+0 -12 Td
+(1. Phase 1 \(Day 05 verification closeout\): PASS) Tj
+0 -12 Td
+(   Day 05 commit lineage and protected Gateway v3 routes verified.) Tj
+0 -12 Td
+(2. Phase 2 \(owner browser proof\): BLOCKED + action package) Tj
+0 -12 Td
+(   `owner_authenticated_browser_session_required`.) Tj
+0 -12 Td
+(3. Phase 3 \(Bridge persistence + approved path\): PARTIAL PASS) Tj
+0 -12 Td
+(   Implemented migration fix for missing approval/audit tables; live approved execution still pe) Tj
+0 -12 Td
+(nding owner approval/session.) Tj
+0 -12 Td
+(4. Phase 4 \(Telegram live attachment\): GATED/BLOCKED) Tj
+0 -12 Td
+(   Adapter route exists; no fake send; still session/approval-gated.) Tj
+0 -12 Td
+(5. Phase 5 \(Paperclip owner session\): BLOCKED + action package) Tj
+0 -12 Td
+(   `paperclip_owner_session_required`.) Tj
+0 -12 Td
+(6. Phase 6 \(Drive/OneDrive path\): PARTIAL PASS) Tj
+0 -12 Td
+(   Provider-specific routes confirmed; exact connector blockers preserved.) Tj
+0 -12 Td
+(7. Phase 7 \(AgentMail path\): PARTIAL/BLOCKED) Tj
+0 -12 Td
+(   Adapter path exists; send remains connector/session-gated.) Tj
+0 -12 Td
+(8. Phase 8 \(YouTube retry\): LIMITED/BLOCKED) Tj
+0 -12 Td
+(   Transcript proof still not promoted.) Tj
+0 -12 Td
+(9. Phase 9 \(OpenClaw+ doctor\): PARTIAL) Tj
+0 -12 Td
+(   Route reachable only with auth; issue-reduction live pass pending.) Tj
+0 -12 Td
+(10. Phase 10 \(security hardening\): PARTIAL) Tj
+0 -12 Td
+(   Authenticated security scan now available in local runtime; score still needs improvement loo) Tj
+0 -12 Td
+(p.) Tj
+0 -12 Td
+(11. Phase 11 \(Firecrawl parallel\): BLOCKED \(unchanged\)) Tj
+0 -12 Td
+(   `firecrawl_credential_required`, `firecrawl_backend_adapter_not_configured`.) Tj
+0 -12 Td
+(12. Phase 12 \(validation + ship\): PASS WITH KNOWN BLOCKERS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Changes Completed) Tj
+0 -12 Td
+(- Added migration `053_bridge_approval_audit_persistence` in [migrations.ts]\(/Users/sosastrike/D) Tj
+0 -12 Td
+(ocuments/to-knowledge-mission-control-2026/src/lib/migrations.ts\) to create:) Tj
+0 -12 Td
+(  - `bridge_approval_requests`) Tj
+0 -12 Td
+(  - `bridge_audit_events`) Tj
+0 -12 Td
+(  - related indexes for idempotency/state/audit lookup.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation Gates) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS \(after cleaning stale standalone folder contention\)) Tj
+0 -12 Td
+(- `pnpm test`: PASS \(`138` files / `1247` tests\)) Tj
+0 -12 Td
+(- protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- `.env` diff check: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Smoke Evidence) Tj
+0 -12 Td
+(- Runtime restarted locally \(`127.0.0.1:3337`\) after source change.) Tj
+0 -12 Td
+(- Authenticated smoke now works with runtime API key context:) Tj
+0 -12 Td
+(  - evidence: `runtime/day-06-phase-12-auth-smoke.json`) Tj
+0 -12 Td
+(  - key routes returning `200`: Gateway, Agent Hub status, Agent Zero, Hermes, Pi, Bridge Sessio) Tj
+0 -12 Td
+(n, Telegram status, YouTube status, Security scan.) Tj
+0 -12 Td
+(- Unauthenticated smoke preserved:) Tj
+0 -12 Td
+(  - evidence: `runtime/day-06-phase-12-unauth-smoke.json`) Tj
+0 -12 Td
+(  - protected routes correctly `401` or redirect to `/login`.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2394 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Key Remaining Blockers) Tj
+0 -12 Td
+(- `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(- `paperclip_owner_session_required`) Tj
+0 -12 Td
+(- `active_bridge_session_required`) Tj
+0 -12 Td
+(- `owner_approval_pending`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+(- `youtube_transcript_connector_not_proven`) Tj
+0 -12 Td
+(- `google_drive_upload_connector_not_configured`) Tj
+0 -12 Td
+(- `onedrive_upload_connector_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety / Hard Rules Check) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No token values printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No new public exposure for Mission Control runtime.) Tj
+0 -12 Td
+(- No fake Done claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Produced \(Day 06 so far\)) Tj
+0 -12 Td
+(- `runtime/day-06-phase-1-...` through `runtime/day-06-phase-11-...` \(md/pdf\)) Tj
+0 -12 Td
+(- `runtime/day-06-phase-12-auth-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-12-unauth-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-06-production-progress-report.md`) Tj
+0 -12 Td
+(- `runtime/day-06-production-progress-report.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage Guidance) Tj
+0 -12 Td
+(- Bridge Session: can increase for persistence fix, but not GO without one approved scoped actio) Tj
+0 -12 Td
+(n execution + audit.) Tj
+0 -12 Td
+(- Telegram: can increase for route readiness, but not GO without real attachment send.) Tj
+0 -12 Td
+(- Paperclip: remains PARTIAL until owner login/data routes are proven.) Tj
+0 -12 Td
+(- Firecrawl: remains 35% BLOCKED.) Tj
+0 -12 Td
+(- YouTube: remains LIMITED until transcript-backed live proof.) Tj
+0 -12 Td
+(- Overall: low 90s PARTIAL GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits and Rollback) Tj
+0 -12 Td
+(- Pending push for this Day 06 batch in working tree.) Tj
+0 -12 Td
+(- Planned rollback command after push:) Tj
+0 -12 Td
+(  - `git revert <day06_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Run Day 07 continuation with priority on owner-session unblock execution: owner browser proof, P) Tj
+0 -12 Td
+(aperclip owner login proof, and one approved Bridge-scoped live action \(Telegram or Paperclip dr) Tj
+0 -12 Td
+(y-run\) using the now-fixed persistence layer.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004128 00000 n 
+0000004254 00000 n 
+0000006700 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6770
+%%EOF

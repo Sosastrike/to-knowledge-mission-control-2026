@@ -1,0 +1,82 @@
+{
+  "checked_at": "2026-05-08T16:28:12.498Z",
+  "base": "http://127.0.0.1:3337",
+  "mode": "authenticated",
+  "results": [
+    {
+      "route": "/api/gateway/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_status_read_only\",\"generated_at\":\"2026-05-08T16:28:08.489Z\",\"status\":\"degraded\",\"execution_enabled\":false,\"writes"
+    },
+    {
+      "route": "/api/gateway/registry",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_registry_read_only\",\"registry\":{\"version\":\"gateway_registry_v1\",\"generated_at\":\"2026-05-08T16:28:09.160Z\",\"nodes\""
+    },
+    {
+      "route": "/api/gateway/agent-hub/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"gateway_agent_hub_status_read_only\",\"generated_at\":\"2026-05-08T16:28:09.800Z\",\"title\":\"Agent Hub / Control Center\",\"sourc"
+    },
+    {
+      "route": "/api/bridge/agent-zero/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_commander_status_bridge_session_execution\",\"generated_at\":\"2026-05-08T16:28:10.520Z\",\"agent\":{\"id\":\"agent_zero"
+    },
+    {
+      "route": "/api/bridge/hermes/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"hermes_lieutenant_status_read_only\",\"generated_at\":\"2026-05-08T16:28:11.350Z\",\"health\":\"unreachable\",\"version\":null,\"reac"
+    },
+    {
+      "route": "/api/bridge/pi/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"pi_dispatcher_shadow_status\",\"generated_at\":\"2026-05-08T16:28:12.081Z\",\"node_id\":\"pi\",\"agent_hub_id\":\"pi-mono\",\"canonical"
+    },
+    {
+      "route": "/api/bridge/playwright-mcp/status",
+      "status": 503,
+      "preview": "{\"ok\":false,\"mode\":\"playwright_mcp_status\",\"status\":\"blocked\",\"service_name\":\"playwright-mcp.service\",\"endpoint\":\"localhost:8931/mcp\",\"servi"
+    },
+    {
+      "route": "/api/bridge/paperclip/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"paperclip_status_read_only\",\"generated_at\":\"2026-05-08T16:28:12.099Z\",\"health\":\"degraded\",\"reachable\":false,\"configured\":"
+    },
+    {
+      "route": "/api/gateway/space-agent/browser/status",
+      "status": 503,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_browser_automation_truth\",\"agent_id\":\"space_agent\",\"generated_at\":\"2026-05-08T16:28:12.108Z\",\"architecture_ru"
+    },
+    {
+      "route": "/api/bridge/agent-zero/bridge-session",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_session_status\",\"generated_at\":\"2026-05-08T16:28:12.142Z\",\"runtime\":{\"reachable\":true,\"health_ok\":true,"
+    },
+    {
+      "route": "/api/bridge/agent-zero/execute",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"agent_zero_bridge_execution_gateway_registry\",\"generated_at\":\"2026-05-08T16:28:12.146Z\",\"bridge_session_required\":true,\"e"
+    },
+    {
+      "route": "/api/bridge/agent-zero/telegram/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"provider\":\"telegram\",\"mode\":\"agent_zero_telegram_delivery_adapter\",\"status\":\"blocked\",\"connector_configured\":false,\"execution_en"
+    },
+    {
+      "route": "/api/gateway/space-agent/youtube/status",
+      "status": 200,
+      "preview": "{\"ok\":true,\"mode\":\"space_agent_youtube_connector_status\",\"status\":\"limited\",\"metadata_enabled\":true,\"transcript_connector_proven\":false,\"blo"
+    },
+    {
+      "route": "/api/openclaw/doctor",
+      "status": 400,
+      "preview": "{\"error\":\"OpenClaw is not installed or not reachable\"}"
+    },
+    {
+      "route": "/api/security-scan",
+      "status": 200,
+      "preview": "{\"overall\":\"needs-attention\",\"score\":63,\"timestamp\":1778257692497,\"categories\":{\"credentials\":{\"score\":50,\"checks\":[{\"id\":\"auth_pass\",\"name\""
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3157 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-phase-1-day05-production-verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 Phase 1 — Day 05 Production Verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Confirm Day 05 shipped state remains stable before new implementation work.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(PASS.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions Executed) Tj
+0 -12 Td
+(1. Verified required commits are present on production branch tip lineage:) Tj
+0 -12 Td
+(   - `ec9c891`) Tj
+0 -12 Td
+(   - `b209cb1`) Tj
+0 -12 Td
+(2. Confirmed runtime listener status.) Tj
+0 -12 Td
+(3. Confirmed Gateway FULL v3 routes remain protected and served.) Tj
+0 -12 Td
+(4. Confirmed designer static Gateway entrypoint is served/protected.) Tj
+0 -12 Td
+(5. Checked runtime bind interface for local-only scope on Mission Control runtime.) Tj
+0 -12 Td
+(6. Checked `.env` diff status.) Tj
+0 -12 Td
+(7. Checked runtime logs for secret-shaped value leakage.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands and Route Proof) Tj
+0 -12 Td
+(- Commit lineage checks:) Tj
+0 -12 Td
+(  - `git merge-base --is-ancestor ec9c891 origin/to-knowledge-mc` -> `0`) Tj
+0 -12 Td
+(  - `git merge-base --is-ancestor b209cb1 origin/to-knowledge-mc` -> `0`) Tj
+0 -12 Td
+(  - `origin/to-knowledge-mc` HEAD: `f6ed3db`) Tj
+0 -12 Td
+(- Runtime active:) Tj
+0 -12 Td
+(  - `lsof -nP -iTCP:3337 -sTCP:LISTEN` -> node listening on `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Login route:) Tj
+0 -12 Td
+(  - `GET /login` -> `200`) Tj
+0 -12 Td
+(- Protected route checks \(all expected auth protection\):) Tj
+0 -12 Td
+(  - `/gateway` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/routes` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/registry` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/policies` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/health` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/dispatcher` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/token-governor` -> `307 /login`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub` -> `307 /login`) Tj
+0 -12 Td
+(  - `/designer-mission-control/design/gateway/index.html` -> `307 /login`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No New Exposure Check) Tj
+0 -12 Td
+(- Mission Control runtime remains local-only \(`127.0.0.1:3337`\).) Tj
+0 -12 Td
+(- No new public bind was introduced for Mission Control in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## .env / Secret Hygiene) Tj
+0 -12 Td
+(- `.env` diff check: clean \(no staged/unstaged `.env*` changes\).) Tj
+0 -12 Td
+(- Log scan:) Tj
+0 -12 Td
+(  - no token/API key values printed,) Tj
+0 -12 Td
+(  - no private key material,) Tj
+0 -12 Td
+(  - no secret-shaped values observed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `runtime/day-06-phase-1-day05-production-verification.md`) Tj
+0 -12 Td
+(- `runtime/day-06-phase-1-day05-production-verification.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(- Not rerun in this phase \(Day 05 validation already passed typecheck/build/tests\).) Tj
+0 -12 Td
+(- This phase is production-state verification only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Services) Tj
+0 -12 Td
+(- Mission Control runtime at `127.0.0.1:3337`: active.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 719 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- None for Phase 1.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+(- No source commit in this phase yet \(reporting phase\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(- Not applicable \(no source mutation in this phase\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- Confirmed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Percentage) Tj
+0 -12 Td
+(- Overall remains low 90s PARTIAL GO \(no 100% claim\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Proceed to Day 06 Phase 2 owner-authenticated browser proof retry; if session unavailable, publi) Tj
+0 -12 Td
+(sh exact owner action package and continue to Phase 3.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003456 00000 n 
+0000003582 00000 n 
+0000004352 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4422
+%%EOF

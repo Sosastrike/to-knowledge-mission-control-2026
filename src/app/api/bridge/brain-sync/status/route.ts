@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
 import { HERMES_BRAIN_CANONICAL_HIERARCHY } from '@/lib/hermes-brain-sync'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -245,7 +246,7 @@ export async function GET(request: NextRequest) {
       .filter((blocker): blocker is string => Boolean(blocker))
       .map((blocker) => ({ system: system.id, blocker })))
 
-  return NextResponse.json({
+  const payload = {
     ok: true,
     mode: 'brain_sync_readonly_status',
     generated_at: new Date().toISOString(),
@@ -287,5 +288,7 @@ export async function GET(request: NextRequest) {
       mempalace_writes_enabled: false,
       external_connector_writes_enabled: false,
     },
-  }, { headers: { 'Cache-Control': 'no-store' } })
+  }
+
+  return NextResponse.json(sanitizeBridgeProviderPayload(payload), { headers: { 'Cache-Control': 'no-store' } })
 }

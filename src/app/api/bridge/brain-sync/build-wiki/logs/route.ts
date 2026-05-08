@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 import { clampLineRequest, readFarmerLogTail } from '@/lib/build-wiki-logs'
 
 export const runtime = 'nodejs'
@@ -45,13 +46,13 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(
-    {
+    sanitizeBridgeProviderPayload({
       ok: true,
       mode: 'build_wiki_log_read_only',
       generated_at: new Date().toISOString(),
       requested_lines: lines,
       ...tail,
-    },
+    }),
     { headers: { 'Cache-Control': 'no-store' } },
   )
 }

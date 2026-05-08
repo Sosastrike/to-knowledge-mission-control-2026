@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 import {
   FileMeta,
   RAW_DIR,
@@ -87,5 +88,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json(response, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json(sanitizeBridgeProviderPayload(response), { headers: { 'Cache-Control': 'no-store' } })
 }

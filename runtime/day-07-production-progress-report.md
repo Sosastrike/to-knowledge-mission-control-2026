@@ -84,11 +84,12 @@ No 100% claim.
 - No public local service exposure added.
 
 ## Commits / Push
-- Day 07 artifacts commit: **pending in this step** (to be captured immediately after commit/push).
+- Day 07 artifacts commit: `25e5e87`
+- Pushed branch: `to-knowledge-mc` (`ed7b11c..25e5e87`)
 
 ## Rollback
-- After Day 07 commit is created, rollback command will be:
-  - `git revert <day07_commit_sha>`
+- Day 07 rollback command:
+  - `git revert 25e5e87`
 
 ## Updated Percentage (Honest)
 - Bridge Session: improved persistence confidence, still not GO without approved execution.

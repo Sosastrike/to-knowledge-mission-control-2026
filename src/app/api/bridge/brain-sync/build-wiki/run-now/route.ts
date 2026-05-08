@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { readLatestAgentZeroBridgeSession } from '@/lib/agent-zero-bridge-session'
 import { fetchClaudeClawJson } from '@/lib/claudeclaw-telegram-approvals'
 import {
+  BUILDWIKI_ACTION_RUN_NOW,
   BUILDWIKI_TARGET_SERVICE,
 } from '@/lib/build-wiki-run-now'
 import { readLatestTelegramBuildWikiRunNowApproval } from '@/lib/build-wiki-telegram-run-now'
@@ -103,6 +105,31 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
+  const bridgeSession = readLatestAgentZeroBridgeSession({
+    workspaceId: auth.user.workspace_id || 1,
+    tenantId: auth.user.tenant_id || 1,
+    sync: true,
+  }).session
+  const allowedTools = new Set(bridgeSession.allowed_tools || [])
+
+  if (!bridgeSession.execution_enabled || !allowedTools.has(BUILDWIKI_ACTION_RUN_NOW)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        mode: 'buildwiki_run_now_bridge_session_required',
+        bridge_session_required: true,
+        required_scope: BUILDWIKI_ACTION_RUN_NOW,
+        approval_request_created: false,
+        execution_enabled: false,
+        accepted_for_execution: false,
+        writes_enabled: false,
+        target_service: BUILDWIKI_TARGET_SERVICE,
+        blocked_reason: 'active_bridge_session_required_for_buildwiki_run_now',
+        next_action: 'Open and approve an Agent Zero Bridge Session with buildwiki.run_now scope before creating the owner-channel Run Now approval request.',
+      },
+      { status: 423, headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
 
   try {
     const upstream = await fetchClaudeClawJson<TelegramApprovalCreatePayload>(

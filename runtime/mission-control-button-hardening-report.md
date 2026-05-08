@@ -146,6 +146,25 @@ Action smoke:
 | `POST /api/bridge/playwright-mcp/smoke` | PASS, 200 with `ok:true`; local-only endpoint confirmed |
 | `POST /api/bridge/hermes/test-chat` | BLOCKED, 503 with blocker `hermes_safe_live_chat_adapter_not_configured` |
 
+## Additional Live Button Probe Finding
+
+After the first production smoke, I ran the broader live button-contract probe. It found one real safety gap:
+
+| Finding | Resolution |
+|---|---|
+| `POST /api/bridge/brain-sync/build-wiki/run-now` could create an owner-channel approval request with operator authentication only. It did not start `opencloud-docs-farmer.service`, but it was still too permissive for the current hard rule that Build-Wiki/Farmer actions require an active scoped Bridge Session. | Patched the route so it now returns `423` with blocker `active_bridge_session_required_for_buildwiki_run_now` unless an active Agent Zero Bridge Session includes `buildwiki.run_now`. Added a regression test proving the route does not call the Telegram approval upstream when the Bridge Session is missing. |
+
+Additional local validation for this patch:
+
+| Check | Result |
+|---|---|
+| `src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts` | PASS |
+| `src/lib/button-contracts-route.test.ts` | PASS |
+| `src/lib/gateway-agent-hub.test.ts` | PASS |
+| `node scripts/check-button-contract-routes.mjs` | PASS, 53 API endpoints checked, 0 missing route files |
+| `tsc --noEmit` | PASS |
+| `next build --webpack` | PASS |
+
 ## Remaining Honest Blockers
 
 | Blocker | Status |

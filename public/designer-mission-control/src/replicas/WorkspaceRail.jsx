@@ -28,7 +28,7 @@ function WorkspaceRail({ page, onPage }) {
           <button
             key={p.id}
             className={`ws-rail-btn ${active ? 'active' : ''}`}
-            onClick={()=>onPage(p.id)}
+            onClick={()=>{ if (p.id === 'gateway') { window.location.href = '/gateway/agent-hub'; return; } onPage(p.id); }}
             title={p.label}
             aria-current={active ? 'page' : undefined}
           >

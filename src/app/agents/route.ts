@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const GATEWAY_URL = '/designer-mission-control/Mission%20Control.html?page=gateway'
+const GATEWAY_URL = '/gateway/agent-hub'
 
 function redirectToGateway(): NextResponse {
   return new NextResponse(null, {

@@ -1,0 +1,248 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 2975 >>
+stream
+BT
+/F1 8 Tf
+40 770 Td
+10 TL
+(day-1-phase-006-telegram-route-audit) Tj T*
+() Tj T*
+(Day 1 Phase 006 - Telegram Owner Route Audit) Tj T*
+() Tj T*
+(Generated: 2026-05-07T22:52:00-04:00) Tj T*
+() Tj T*
+(Objective) Tj T*
+() Tj T*
+(Execute Day 1 production completion work without fake GO claims, without secrets, and with Pi) Tj T*
+(included.) Tj T*
+() Tj T*
+(Result) Tj T*
+() Tj T*
+(PARTIAL GO. Active Telegram process is the OpenClaw+/ClaudeClaw runtime. Startup logs show) Tj T*
+(activeCommander agent-zero. Bot username/display name still references the legacy-name bot, which) Tj T*
+(requires external BotFather rename if desired. No credential value was printed.) Tj T*
+() Tj T*
+(Updated Percentage) Tj T*
+() Tj T*
+(Telegram Commander Route 76% PARTIAL GO.) Tj T*
+() Tj T*
+(Systems) Tj T*
+() Tj T*
+(System Day 1 Percent Decision Evidence / Blocker) Tj T*
+(--- ---: --- ---) Tj T*
+(Agent Zero 94% PARTIAL GO Test-chat returned agentzerocalled:true after restart; owner-origin) Tj T*
+(Telegram prompt remains pending.) Tj T*
+(Hermes 42% NO-GO live Service active, status route works, test-chat returns) Tj T*
+(hermessafelivechatadapternotconfigured.) Tj T*
+(Pi Dispatcher 72% PARTIAL GO / SHADOW Gateway/API node works, Agent Hub includes Pi, execution and) Tj T*
+(writes disabled, standalone runtime not proven.) Tj T*
+(Gateway / Agent Hub 89% PARTIAL GO Production restarted, route smoke passes, temp-admin visual) Tj T*
+(proof passes; owner browser session still blocked.) Tj T*
+(SpaceAgent 82% PARTIAL GO Playwright MCP connected local-only; Firecrawl credential missing;) Tj T*
+(YouTube connector limited.) Tj T*
+(Playwright MCP 92% GO local-only read-only Status route works, public read-only smoke passed,) Tj T*
+(local/auth targets remain Bridge-gated.) Tj T*
+(Firecrawl 35% BLOCKED firecrawlcredentialrequired.) Tj T*
+(YouTube Research 70% PARTIAL / LIMITED Transcript/metadata path not fully proven through live) Tj T*
+(Gateway route in Day 1.) Tj T*
+(Paperclip 62% PARTIAL / DEGRADED Bridge status reachable, sandbox health known from prior proof,) Tj T*
+(owner login/session not proven.) Tj T*
+(OpenClaw+ 86% PARTIAL GO Service active and validation previously passed; doctor/CLI repair) Tj T*
+(remains Day 6 work.) Tj T*
+(Mini-Agent OS 76% PARTIAL / GATED Contract tests pass, activation requires Bridge Session.) Tj T*
+(Build-Wiki / Farmer 72% PARTIAL / GATED Timer active; literal legacy service) Tj T*
+(opencloud-docs-farmer.service remains inactive until approved Run Now.) Tj T*
+(Brain Systems 70% PARTIAL Read/status routes smoke; writes gated.) Tj T*
+(Bridge / MCP / Tools 74% PARTIAL / GATED Discovery routes smoke; execution requires Bridge) Tj T*
+(Session.) Tj T*
+(Delivery Connectors 50% PARTIAL / GATED Report routes work; Google Drive and OneDrive upload) Tj T*
+(statuses blocked.) Tj T*
+(Telegram Commander Route 76% PARTIAL GO Code/startup show Agent Zero commander route; bot display) Tj T*
+(still legacy-name; owner live prompt pending.) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3318 >>
+stream
+BT
+/F1 8 Tf
+40 770 Td
+10 TL
+(Overall Ecosystem 90% PARTIAL GO Day 1 strengthened restart, smoke, UI, Agent Zero, and Telegram) Tj T*
+(evidence; blockers remain.) Tj T*
+() Tj T*
+(Active Blockers) Tj T*
+() Tj T*
+(Blocker Affects Exact next step) Tj T*
+(--- --- ---) Tj T*
+(ownerauthenticatedbrowsersessionrequired True owner UI proof Owner/admin browser session must be) Tj T*
+(available for visual proof.) Tj T*
+(ownertelegramlivepromptrequired Telegram GO decision Owner must send the required Telegram prompts) Tj T*
+(to prove the owner-origin route.) Tj T*
+(telegrambotfatherrenamerequired Bot display name Rename externally if the owner wants the visible) Tj T*
+(bot name changed.) Tj T*
+(hermessafelivechatadapternotconfigured Hermes live, Agent Zero to Hermes live handoff Implement a) Tj T*
+(real no-tool/no-write Hermes adapter.) Tj T*
+(firecrawlcredentialrequired Firecrawl read-only proof Add credential through approved secret) Tj T*
+(storage.) Tj T*
+(youtubetranscriptconnectornotproven YouTube research Prove transcript/metadata route without video) Tj T*
+(download or bypass.) Tj T*
+(paperclipownersessionrequired Paperclip dashboard/task flow Owner login/session bridge is needed.) Tj T*
+(activebridgesessionrequired External writes, Build-Wiki Run Now, mini-agent activation Open a) Tj T*
+(scoped Bridge Session for one approved action.) Tj T*
+(cspinlinescriptwarning UI/CSP hygiene Fix inline script warning without broad CSP weakening.) Tj T*
+() Tj T*
+(Files Changed) Tj T*
+() Tj T*
+(Report artifacts and browser evidence only for Day 1. No production source code was changed in) Tj T*
+(this phase.) Tj T*
+() Tj T*
+(Commands / Routes Used) Tj T*
+() Tj T*
+(- Mission Control controlled restart fallback because direct sudo restart required unavailable) Tj T*
+(interactive admin auth.) Tj T*
+(- Temporary admin session smoke was created and destroyed for protected route proof; credential) Tj T*
+(value was never printed.) Tj T*
+(- Browser proof used a temporary admin session, not owner session.) Tj T*
+() Tj T*
+(Route Authenticated Unauthenticated Notes) Tj T*
+(--- ---: ---: ---) Tj T*
+(GET /api/gateway/status 200 401 Gateway status reachable; degraded because blockers remain.) Tj T*
+(GET /api/gateway/registry 200 401 Registry reachable.) Tj T*
+(GET /api/gateway/agent-hub/status 200 401 Agent Hub API reachable.) Tj T*
+(GET /api/bridge/agent-zero/status 200 401 Agent Zero status reachable.) Tj T*
+(POST /api/bridge/agent-zero/test-chat 200 Not run agentzerocalled:true; execution disabled.) Tj T*
+(GET /api/bridge/hermes/status 200 401 Hermes status reachable.) Tj T*
+(POST /api/bridge/hermes/test-chat 503 Not run Honest blocker:) Tj T*
+(hermessafelivechatadapternotconfigured.) Tj T*
+(GET /api/gateway/nodes/pi 200 401 Pi node visible.) Tj T*
+(GET /api/bridge/pi/status 200 401 Pi shadow status visible; execution disabled.) Tj T*
+(GET /api/gateway/space-agent/browser/status 200 401 SpaceAgent browser status visible.) Tj T*
+(GET /api/bridge/playwright-mcp/status 200 401 Connected local-only; public exposure false.) Tj T*
+(POST /api/bridge/playwright-mcp/smoke 200 Not run Public read-only smoke passed.) Tj T*
+(GET /api/bridge/paperclip/status 200 401 Paperclip bridge reachable; auth/session blocker remains.) Tj T*
+(GET /api/bridge/brain-sync/status 200 401 Brain Sync visible.) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2822 >>
+stream
+BT
+/F1 8 Tf
+40 770 Td
+10 TL
+(GET /api/bridge/brain-sync/build-wiki/status 200 401 Build-Wiki/Farmer status visible.) Tj T*
+(GET /api/bridge/providers 200 401 Bridge providers visible.) Tj T*
+(GET /api/mcp 200 401 MCP discovery protected.) Tj T*
+(GET /api/bridge/agent-zero/reports 200 401 Report delivery listing protected.) Tj T*
+(GET /api/bridge/agent-zero/google-drive/status 200 401 Blocked:) Tj T*
+(googledriveuploadconnectornotconfigured.) Tj T*
+(GET /api/bridge/agent-zero/onedrive/status 200 401 Blocked: onedriveuploadconnectornotconfigured.) Tj T*
+() Tj T*
+(Services) Tj T*
+() Tj T*
+(Service State Day 1 proof) Tj T*
+(--- --- ---) Tj T*
+(mission-control.service active/running Restarted after build; PID 2697257; timestamp Thu) Tj T*
+(2026-05-07 22:50:50 EDT.) Tj T*
+(claudeclaw.service active/running OpenClaw+/Telegram runtime active.) Tj T*
+(hermes-gateway.service active/running Status route works; live adapter still blocked.) Tj T*
+(playwright-mcp.service active/running Local-only Playwright MCP status route works.) Tj T*
+(opencloud-docs-farmer.timer active/waiting Literal legacy service timer active under Build-Wiki /) Tj T*
+(Farmer.) Tj T*
+(opencloud-docs-farmer.service inactive/dead Run Now not executed without Bridge Session.) Tj T*
+() Tj T*
+(Test Results) Tj T*
+() Tj T*
+(- Mission Control typecheck: PASS.) Tj T*
+(- Mission Control build: PASS.) Tj T*
+(- Mission Control tests: PASS, 133 files and 1239 tests.) Tj T*
+(- Post-build restart: PASS.) Tj T*
+(- Post-build protected route smoke: PASS.) Tj T*
+(- No .env diff: clean.) Tj T*
+() Tj T*
+(Proof) Tj T*
+() Tj T*
+(- Mission Control PID changed twice during Day 1 restart gates; final PID is 2697257.) Tj T*
+(- Agent Zero test-chat returned agentzerocalled:true.) Tj T*
+(- Hermes test-chat returned 503 with hermessafelivechatadapternotconfigured.) Tj T*
+(- Pi status route returned shadow and execution disabled.) Tj T*
+(- Playwright MCP status returned connected with public exposure false; read-only public smoke) Tj T*
+(passed.) Tj T*
+(- Agent Hub temporary-admin screenshot evidence:) Tj T*
+(runtime/day-1-phase-004-agenthub-temp-admin-browser-proof.png.) Tj T*
+() Tj T*
+(Rollback) Tj T*
+() Tj T*
+(No source-code rollback is required for Day 1 report-only artifacts. Revert the Day 1 report) Tj T*
+(commit after it is created if the reports need to be removed. Existing accepted code rollback) Tj T*
+(remains separate.) Tj T*
+() Tj T*
+(No-Secrets Confirmation) Tj T*
+() Tj T*
+(No secrets, auth file contents, API key values, credential values, passwords, or environment) Tj T*
+(values were printed or committed. No .env file was modified. No SMB/Fork 2, Zapier write, HeyGen) Tj T*
+(generation, external farmer, Docker socket exposure, raw root shell, direct secret read, or broad) Tj T*
+(connector execution occurred.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 179 >>
+stream
+BT
+/F1 8 Tf
+40 770 Td
+10 TL
+(Exact Next Step) Tj T*
+() Tj T*
+(Owner sends live Telegram prompts to prove owner-origin answers; rename bot externally if desired.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000144 00000 n 
+0000000214 00000 n 
+0000003241 00000 n 
+0000003367 00000 n 
+0000006737 00000 n 
+0000006863 00000 n 
+0000009737 00000 n 
+0000009863 00000 n 
+0000010094 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+10222
+%%EOF

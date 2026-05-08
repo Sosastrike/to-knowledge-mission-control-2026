@@ -1,43 +1,89 @@
-# Phase 3 — Hermes Live Adapter Report
+# Phase 3 - Hermes Live Adapter Report
 
-Generated: 2026-05-08T00:16:19Z
+Generated: 2026-05-07T20:58:20-04:00
 
 ## Result
 
-**Status:** BLOCKED / SAFE 503
+**PARTIAL / BLOCKED**
 
-Exact blocker: `hermes_safe_live_chat_adapter_not_configured`. Mission Control did not fake `hermes_called:true`.
+Hermes service is active and Mission Control has protected Hermes routes, but a safe production live-chat adapter is still not configured. The correct blocker remains:
 
-## Service Proof
+`hermes_safe_live_chat_adapter_not_configured`
+
+Mission Control must not return `hermes_called:true` until a real no-tool, no-write Hermes call path is proven.
+
+## Production Service Evidence
 
 | Check | Result |
-| --- | --- |
-| `hermes-gateway.service` active | `active` |
-| MainPID | `1796446` |
-| ActiveEnterTimestamp | `Thu 2026-05-07 15:59:46 EDT` |
-| Service command | Hermes gateway service is running; local executable paths are omitted from the owner-facing report. |
+|---|---|
+| `hermes-gateway.service` | active |
+| MainPID | 1796446 |
+| ActiveEnterTimestamp | Thu 2026-05-07 15:59:46 EDT |
+| Local API listener discovered | none proven for Hermes live chat |
+| Gateway process mode | messaging/gateway polling service |
+| Public Hermes UI exposure | not proven / not exposed by this phase |
 
-## Route Proof
+## Mission Control Route Evidence
 
-| Route | Auth | HTTP | Key result |
-| --- | --- | ---: | --- |
-| `GET /api/bridge/hermes/status` | yes | 200 | ok=True, mode=hermes_lieutenant_status_read_only, health=healthy, reachable=True, auth_configured=True, blocker=None, execution_enabled=False |
-| `POST /api/bridge/hermes/test-chat` | yes | 503 | ok=False, mode=hermes_read_only_test_chat, status=503, hermes_called=False, blocker=hermes_safe_live_chat_adapter_not_configured, execution_enabled=False, writes_enabled=False |
-| `GET /api/bridge/hermes/status` | no | 401 | error=Unauthorized |
-| `POST /api/bridge/hermes/test-chat` | no | 401 | error=Unauthorized |
+| Route | Unauthenticated Result | Meaning |
+|---|---:|---|
+| GET `/api/bridge/hermes/status` | 401 | protected |
+| GET `/api/bridge/hermes/test-chat` | 401 | protected |
+| POST `/api/bridge/hermes/test-chat` | 401 | protected |
 
-## Adapter Decision
+Authenticated route proof is still blocked by missing owner/operator session material in this worker context. No auth bypass was attempted.
 
-No safe Hermes no-tool/no-write live adapter is currently proven. The available CLI one-shot pattern is not used as a substitute because it can load tools or bypass approval semantics. The correct behavior is to keep POST `/api/bridge/hermes/test-chat` blocked with `hermes_called:false`.
+## Adapter Safety Review
 
-## Guardrails Confirmed
+The Hermes CLI/runtime was inspected for a possible adapter path.
 
-- No provider one-shot execution was run.
-- No external write was run.
-- No raw shell, Docker socket, direct secret read, Zapier write, HeyGen generation, SMB/Fork 2, or farmer execution occurred.
-- Unauthenticated protected routes return 401.
-- OpenClaw+ naming remains correct.
+Findings:
 
-## Phase 3 Decision
+- Hermes CLI has a one-shot mode, but it explicitly bypasses approval behavior and can load tools, so it is not safe for Mission Control live adapter use.
+- Hermes chat/runtime can be configured with no toolsets, but the runtime still initializes agent session/log machinery and is not a proven no-write adapter.
+- The agent runtime creates a session-log directory and has session persistence code paths. That violates the current no-write requirement for the live adapter.
+- No local Hermes HTTP chat API was discovered.
 
-Phase 3 remains **BLOCKED** until a safe Hermes adapter returns `hermes_called:true` without enabling tools, writes, shell, Docker, provider-side execution, or secret access.
+Therefore Mission Control should continue returning the safe 503 blocker for authenticated POST until a dedicated safe adapter exists.
+
+## Tests
+
+| Test | Result |
+|---|---|
+| `src/lib/hermes-bridge.test.ts` | 20 passed |
+| `src/lib/gateway-security-proof.test.ts` | 4 passed |
+| Combined focused tests | 24 passed |
+
+## Security Confirmation
+
+- No secrets printed.
+- No auth files printed.
+- No `.env` changes.
+- No external writes.
+- No Zapier / HeyGen / SMB / farmer execution.
+- No shell, Docker socket, or direct secret access granted to Hermes.
+- No fake `hermes_called:true` claim.
+
+## Status Update
+
+| System | Previous | Updated |
+|---|---:|---:|
+| Hermes | 42% NO-GO live | 42% NO-GO live |
+
+Hermes remains visible as lieutenant / skill-workflow specialist, but live Hermes chat is not proven.
+
+## Exact Next Step
+
+Build a dedicated Hermes adapter that:
+
+1. Accepts redacted Mission Control read-only context.
+2. Uses a no-tool/no-write call path.
+3. Does not create session logs or files.
+4. Does not expose local UI publicly.
+5. Returns a real response before setting `hermes_called:true`.
+
+## Rollback
+
+This phase changed only reports. Rollback command after commit:
+
+`git revert <phase-3-commit>`

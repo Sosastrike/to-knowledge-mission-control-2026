@@ -1,169 +1,181 @@
 %PDF-1.4
+%‚„œ”
 1 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+<< /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Length 3374 >>
-stream
-BT
-/F1 9 Tf
-12 TL
-1 0 0 1 36 770 Tm (# Owner Morning Handoff) Tj
-1 0 0 1 36 755 Tm () Tj
-1 0 0 1 36 740 Tm (Generated: 2026-05-07T22:34:00-04:00) Tj
-1 0 0 1 36 725 Tm () Tj
-1 0 0 1 36 710 Tm (## Final Status) Tj
-1 0 0 1 36 695 Tm () Tj
-1 0 0 1 36 680 Tm (**90% PARTIAL GO, not 100%.**) Tj
-1 0 0 1 36 665 Tm () Tj
-1 0 0 1 36 650 Tm (## What Is Live Now) Tj
-1 0 0 1 36 635 Tm () Tj
-1 0 0 1 36 620 Tm (- Mission Control production service is active after controlled systemd respawn restart.) Tj
-1 0 0 1 36 605 Tm (- Gateway / Agent Hub APIs respond under temporary admin smoke and reject unauthenticated access.) Tj
-1 0 0 1 36 590 Tm (- Agent Hub UI renders under temporary admin smoke with Agent Zero, Hermes, Pi, SpaceAgent,) Tj
-1 0 0 1 36 575 Tm (Paperclip, Playwright MCP, Firecrawl, YouTube, and OpenClaw+.) Tj
-1 0 0 1 36 560 Tm (- Agent Zero test-chat returns agent_zero_called:true.) Tj
-1 0 0 1 36 545 Tm (- Pi is visible as Dispatcher / Route Optimizer Candidate in shadow mode.) Tj
-1 0 0 1 36 530 Tm (- Playwright MCP is local-only read-only GO for public-page browser automation.) Tj
-1 0 0 1 36 515 Tm (- Paperclip Tailnet-local health endpoint returns OK.) Tj
-1 0 0 1 36 500 Tm (- Build-Wiki / Farmer timer is active; Run Now remains Bridge-gated.) Tj
-1 0 0 1 36 485 Tm (- Telegram route code is cut over toward Agent Zero; Tony is not active commander in the code) Tj
-1 0 0 1 36 470 Tm (path.) Tj
-1 0 0 1 36 455 Tm () Tj
-1 0 0 1 36 440 Tm (## What Blocks 100%) Tj
-1 0 0 1 36 425 Tm () Tj
-1 0 0 1 36 410 Tm (| Blocker | Affects | Owner / next action |) Tj
-1 0 0 1 36 395 Tm (| --- | --- | --- |) Tj
-1 0 0 1 36 380 Tm (| owner_authenticated_browser_session_required | Owner visual proof and owner-origin route proof |) Tj
-1 0 0 1 36 365 Tm (Owner/admin browser session or approved test auth channel. |) Tj
-1 0 0 1 36 350 Tm (| hermes_safe_live_chat_adapter_not_configured | Hermes live and Agent Zero to Hermes live) Tj
-1 0 0 1 36 335 Tm (collaboration | Build a real no-tool/no-write Hermes chat adapter or safe local API bridge. |) Tj
-1 0 0 1 36 320 Tm (| firecrawl_credential_required | Firecrawl read-only proof | Add credential through approved) Tj
-1 0 0 1 36 305 Tm (secret storage, then run read-only smoke. |) Tj
-1 0 0 1 36 290 Tm (| youtube_transcript_connector_not_proven | YouTube Gateway route proof | Prove transcript) Tj
-1 0 0 1 36 275 Tm (connector through SpaceAgent route without downloading video. |) Tj
-1 0 0 1 36 260 Tm (| paperclip_owner_session_required | Paperclip dashboard, roster, task queue | Owner login/session) Tj
-1 0 0 1 36 245 Tm (bridge for Paperclip local/Tailnet UI. |) Tj
-1 0 0 1 36 230 Tm (| active_bridge_session_required | External writes, Build-Wiki Run Now, mini-agent activation |) Tj
-1 0 0 1 36 215 Tm (Open scoped Bridge Session for a single approved action. |) Tj
-1 0 0 1 36 200 Tm (| telegram_botfather_rename_required | Telegram display name | Owner must rename the bot through) Tj
-1 0 0 1 36 185 Tm (BotFather if desired. |) Tj
-1 0 0 1 36 170 Tm (| owner_telegram_live_prompt_required | Telegram GO decision | Owner sends required live Telegram) Tj
-1 0 0 1 36 155 Tm (prompts and verifies Agent Zero answers. |) Tj
-1 0 0 1 36 140 Tm (| standalone_pi_runtime_session_not_proven | Pi full GO | Install/prove standalone Pi runtime if) Tj
-1 0 0 1 36 125 Tm (owner wants Pi beyond Mission Control shadow dispatcher. |) Tj
-ET
-endstream
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 4 0 obj
-<< /Length 3722 >>
+<< /Length 2966 >>
 stream
 BT
-/F1 9 Tf
-12 TL
-1 0 0 1 36 770 Tm (| csp_inline_script_warning | UI/CSP hygiene | Investigate and fix a remaining inline-script CSP) Tj
-1 0 0 1 36 755 Tm (warning without weakening CSP. |) Tj
-1 0 0 1 36 740 Tm () Tj
-1 0 0 1 36 725 Tm (## Key URLs / Paths) Tj
-1 0 0 1 36 710 Tm () Tj
-1 0 0 1 36 695 Tm (- Mission Control: https://tkmc.knowledge-vs-ai.com) Tj
-1 0 0 1 36 680 Tm (- Agent Hub path: /gateway/agent-hub) Tj
-1 0 0 1 36 665 Tm (- Paperclip Tailnet URL: http://100.116.35.95:3100) Tj
-1 0 0 1 36 650 Tm (- Final report: runtime/final-production-go-report.md and .pdf) Tj
-1 0 0 1 36 635 Tm () Tj
-1 0 0 1 36 620 Tm (## System Table) Tj
-1 0 0 1 36 605 Tm () Tj
-1 0 0 1 36 590 Tm (| System | Percent | Decision | Truth / Blocker |) Tj
-1 0 0 1 36 575 Tm (| --- | --- | --- | --- |) Tj
-1 0 0 1 36 560 Tm (| Agent Zero | 93% | PARTIAL GO | Authenticated temporary production smoke returned) Tj
-1 0 0 1 36 545 Tm (agent_zero_called:true; owner Telegram/live prompt still needs owner-origin proof. |) Tj
-1 0 0 1 36 530 Tm (| Hermes | 42% | NO-GO live | Service active and status route reachable; test-chat returns) Tj
-1 0 0 1 36 515 Tm (hermes_safe_live_chat_adapter_not_configured. |) Tj
-1 0 0 1 36 500 Tm (| Pi Dispatcher | 72% | PARTIAL GO / SHADOW | Gateway in-process shadow dispatcher is reachable;) Tj
-1 0 0 1 36 485 Tm (standalone Pi runtime session is not proven; execution and writes disabled. |) Tj
-1 0 0 1 36 470 Tm (| Gateway / Agent Hub | 88% | PARTIAL GO | Production restarted; route/API and temporary-admin) Tj
-1 0 0 1 36 455 Tm (visual smoke pass; owner-authenticated browser session proof remains blocked. |) Tj
-1 0 0 1 36 440 Tm (| SpaceAgent | 82% | PARTIAL GO | Browser automation panel visible; Playwright MCP GO local-only) Tj
-1 0 0 1 36 425 Tm (read-only; Firecrawl blocked; YouTube limited. |) Tj
-1 0 0 1 36 410 Tm (| Playwright MCP | 92% | GO local-only read-only | Service active on localhost-only bind;) Tj
-1 0 0 1 36 395 Tm (public-page smoke passed; local/authenticated targets remain Bridge-gated. |) Tj
-1 0 0 1 36 380 Tm (| Firecrawl | 35% | BLOCKED | firecrawl_credential_required. |) Tj
-1 0 0 1 36 365 Tm (| YouTube Research | 70% | PARTIAL / LIMITED | Packet/connector model exists and prior transcript) Tj
-1 0 0 1 36 350 Tm (probe passed; dedicated live Gateway route proof remains limited. |) Tj
-1 0 0 1 36 335 Tm (| Paperclip | 62% | PARTIAL / DEGRADED | Tailnet-local health endpoint OK; owner login/session) Tj
-1 0 0 1 36 320 Tm (bridge and task UI proof not complete. |) Tj
-1 0 0 1 36 305 Tm (| OpenClaw+ | 86% | PARTIAL GO | ClaudeClaw/OpenClaw+ build, tests, design-lock pass; OpenClaw CLI) Tj
-1 0 0 1 36 290 Tm (not in shell PATH; owner-auth UI route proof partial. |) Tj
-1 0 0 1 36 275 Tm (| Mini-Agent OS | 76% | PARTIAL / GATED | Schemas, policy tests, and gauntlets pass; activation) Tj
-1 0 0 1 36 260 Tm (requires Bridge Session. |) Tj
-1 0 0 1 36 245 Tm (| Build-Wiki / Farmer | 72% | PARTIAL / GATED | Timer active; literal legacy service) Tj
-1 0 0 1 36 230 Tm (opencloud-docs-farmer.service inactive until scoped Run Now approval. |) Tj
-1 0 0 1 36 215 Tm (| Brain Systems | 70% | PARTIAL | Read/status contracts present; writes require Bridge Session; no) Tj
-1 0 0 1 36 200 Tm (memory dump performed. |) Tj
-1 0 0 1 36 185 Tm (| Bridge / MCP / Tools | 74% | PARTIAL / GATED | Discovery contracts pass; execution disabled) Tj
-1 0 0 1 36 170 Tm (without scoped Bridge Session. |) Tj
-1 0 0 1 36 155 Tm (| Models / Providers | 68% | PARTIAL | Provider status surfaces exist; account-specific CLI/API) Tj
-1 0 0 1 36 140 Tm (billing proof remains mixed. |) Tj
-1 0 0 1 36 125 Tm (| Delivery Connectors | 50% | PARTIAL / GATED | Mission Control report links work; Telegram) Tj
+/F1 8 Tf
+40 770 Td
+10 TL
+(owner-morning-handoff) Tj T*
+() Tj T*
+(Owner Morning Handoff) Tj T*
+() Tj T*
+(Generated: 2026-05-07T22:34:00-04:00) Tj T*
+() Tj T*
+(Final Status) Tj T*
+() Tj T*
+(90% PARTIAL GO, not 100%.) Tj T*
+() Tj T*
+(What Is Live Now) Tj T*
+() Tj T*
+(- Mission Control production service is active after controlled systemd respawn restart.) Tj T*
+(- Gateway / Agent Hub APIs respond under temporary admin smoke and reject unauthenticated access.) Tj T*
+(- Agent Hub UI renders under temporary admin smoke with Agent Zero, Hermes, Pi, SpaceAgent,) Tj T*
+(Paperclip, Playwright MCP, Firecrawl, YouTube, and OpenClaw+.) Tj T*
+(- Agent Zero test-chat returns agentzerocalled:true.) Tj T*
+(- Pi is visible as Dispatcher / Route Optimizer Candidate in shadow mode.) Tj T*
+(- Playwright MCP is local-only read-only GO for public-page browser automation.) Tj T*
+(- Paperclip Tailnet-local health endpoint returns OK.) Tj T*
+(- Build-Wiki / Farmer timer is active; Run Now remains Bridge-gated.) Tj T*
+(- Telegram route code is cut over toward Agent Zero; Tony is not active commander in the code) Tj T*
+(path.) Tj T*
+() Tj T*
+(What Blocks 100%) Tj T*
+() Tj T*
+(Blocker Affects Owner / next action) Tj T*
+(--- --- ---) Tj T*
+(ownerauthenticatedbrowsersessionrequired Owner visual proof and owner-origin route proof) Tj T*
+(Owner/admin browser session or approved test auth channel.) Tj T*
+(hermessafelivechatadapternotconfigured Hermes live and Agent Zero to Hermes live collaboration) Tj T*
+(Build a real no-tool/no-write Hermes chat adapter or safe local API bridge.) Tj T*
+(firecrawlcredentialrequired Firecrawl read-only proof Add credential through approved secret) Tj T*
+(storage, then run read-only smoke.) Tj T*
+(youtubetranscriptconnectornotproven YouTube Gateway route proof Prove transcript connector through) Tj T*
+(SpaceAgent route without downloading video.) Tj T*
+(paperclipownersessionrequired Paperclip dashboard, roster, task queue Owner login/session bridge) Tj T*
+(for Paperclip local/Tailnet UI.) Tj T*
+(activebridgesessionrequired External writes, Build-Wiki Run Now, mini-agent activation Open scoped) Tj T*
+(Bridge Session for a single approved action.) Tj T*
+(telegrambotfatherrenamerequired Telegram display name Owner must rename the bot through BotFather) Tj T*
+(if desired.) Tj T*
+(ownertelegramlivepromptrequired Telegram GO decision Owner sends required live Telegram prompts) Tj T*
+(and verifies Agent Zero answers.) Tj T*
+(standalonepiruntimesessionnotproven Pi full GO Install/prove standalone Pi runtime if owner wants) Tj T*
+(Pi beyond Mission Control shadow dispatcher.) Tj T*
+(cspinlinescriptwarning UI/CSP hygiene Investigate and fix a remaining inline-script CSP warning) Tj T*
+(without weakening CSP.) Tj T*
+() Tj T*
+(Key URLs / Paths) Tj T*
+() Tj T*
+(- Mission Control: https://tkmc.knowledge-vs-ai.com) Tj T*
+(- Agent Hub path: /gateway/agent-hub) Tj T*
+(- Paperclip Tailnet URL: http://100.116.35.95:3100) Tj T*
 ET
 endstream
 endobj
 5 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
 endobj
 6 0 obj
-<< /Length 1301 >>
+<< /Length 3474 >>
 stream
 BT
-/F1 9 Tf
-12 TL
-1 0 0 1 36 770 Tm (attachment, AgentMail send, Drive and OneDrive remain gated/blocked. |) Tj
-1 0 0 1 36 755 Tm (| Bridge Session | 55% | PARTIAL / GATED | Policy and tables exist; no live scoped external-write) Tj
-1 0 0 1 36 740 Tm (session opened in this pass. |) Tj
-1 0 0 1 36 725 Tm (| Telegram Commander Route | 75% | PARTIAL GO | Runtime route configured for Agent Zero; bot) Tj
-1 0 0 1 36 710 Tm (display still Tony and owner-origin prompt proof remains pending. |) Tj
-1 0 0 1 36 695 Tm (| Overall Ecosystem | 90% | PARTIAL GO | Core build/restart/API/UI smoke improved; hard live) Tj
-1 0 0 1 36 680 Tm (blockers prevent 100%. |) Tj
-1 0 0 1 36 665 Tm () Tj
-1 0 0 1 36 650 Tm (## No-Secrets Confirmation) Tj
-1 0 0 1 36 635 Tm () Tj
-1 0 0 1 36 620 Tm (No secrets, token values, auth file contents, API key values, passwords, or environment values) Tj
-1 0 0 1 36 605 Tm (were printed or committed. No .env file was modified.) Tj
-1 0 0 1 36 590 Tm () Tj
-1 0 0 1 36 575 Tm (## Rollback Note) Tj
-1 0 0 1 36 560 Tm () Tj
-1 0 0 1 36 545 Tm (Use the rollback commands in the final report. For the current report-only commit, revert that) Tj
-1 0 0 1 36 530 Tm (commit after it is created. For Telegram code cutover, revert 2cb557f if rollback is required.) Tj
-1 0 0 1 36 515 Tm () Tj
+/F1 8 Tf
+40 770 Td
+10 TL
+(- Final report: runtime/final-production-go-report.md and .pdf) Tj T*
+() Tj T*
+(System Table) Tj T*
+() Tj T*
+(System Percent Decision Truth / Blocker) Tj T*
+(--- --- --- ---) Tj T*
+(Agent Zero 93% PARTIAL GO Authenticated temporary production smoke returned agentzerocalled:true;) Tj T*
+(owner Telegram/live prompt still needs owner-origin proof.) Tj T*
+(Hermes 42% NO-GO live Service active and status route reachable; test-chat returns) Tj T*
+(hermessafelivechatadapternotconfigured.) Tj T*
+(Pi Dispatcher 72% PARTIAL GO / SHADOW Gateway in-process shadow dispatcher is reachable;) Tj T*
+(standalone Pi runtime session is not proven; execution and writes disabled.) Tj T*
+(Gateway / Agent Hub 88% PARTIAL GO Production restarted; route/API and temporary-admin visual) Tj T*
+(smoke pass; owner-authenticated browser session proof remains blocked.) Tj T*
+(SpaceAgent 82% PARTIAL GO Browser automation panel visible; Playwright MCP GO local-only) Tj T*
+(read-only; Firecrawl blocked; YouTube limited.) Tj T*
+(Playwright MCP 92% GO local-only read-only Service active on localhost-only bind; public-page) Tj T*
+(smoke passed; local/authenticated targets remain Bridge-gated.) Tj T*
+(Firecrawl 35% BLOCKED firecrawlcredentialrequired.) Tj T*
+(YouTube Research 70% PARTIAL / LIMITED Packet/connector model exists and prior transcript probe) Tj T*
+(passed; dedicated live Gateway route proof remains limited.) Tj T*
+(Paperclip 62% PARTIAL / DEGRADED Tailnet-local health endpoint OK; owner login/session bridge and) Tj T*
+(task UI proof not complete.) Tj T*
+(OpenClaw+ 86% PARTIAL GO ClaudeClaw/OpenClaw+ build, tests, design-lock pass; OpenClaw CLI not in) Tj T*
+(shell PATH; owner-auth UI route proof partial.) Tj T*
+(Mini-Agent OS 76% PARTIAL / GATED Schemas, policy tests, and gauntlets pass; activation requires) Tj T*
+(Bridge Session.) Tj T*
+(Build-Wiki / Farmer 72% PARTIAL / GATED Timer active; literal legacy service) Tj T*
+(opencloud-docs-farmer.service inactive until scoped Run Now approval.) Tj T*
+(Brain Systems 70% PARTIAL Read/status contracts present; writes require Bridge Session; no memory) Tj T*
+(dump performed.) Tj T*
+(Bridge / MCP / Tools 74% PARTIAL / GATED Discovery contracts pass; execution disabled without) Tj T*
+(scoped Bridge Session.) Tj T*
+(Models / Providers 68% PARTIAL Provider status surfaces exist; account-specific CLI/API billing) Tj T*
+(proof remains mixed.) Tj T*
+(Delivery Connectors 50% PARTIAL / GATED Mission Control report links work; Telegram attachment,) Tj T*
+(AgentMail send, Drive and OneDrive remain gated/blocked.) Tj T*
+(Bridge Session 55% PARTIAL / GATED Policy and tables exist; no live scoped external-write session) Tj T*
+(opened in this pass.) Tj T*
+(Telegram Commander Route 75% PARTIAL GO Runtime route configured for Agent Zero; bot display still) Tj T*
+(Tony and owner-origin prompt proof remains pending.) Tj T*
+(Overall Ecosystem 90% PARTIAL GO Core build/restart/API/UI smoke improved; hard live blockers) Tj T*
+(prevent 100%.) Tj T*
+() Tj T*
+(No-Secrets Confirmation) Tj T*
+() Tj T*
+(No secrets, token values, auth file contents, API key values, passwords, or environment values) Tj T*
+(were printed or committed. No .env file was modified.) Tj T*
+() Tj T*
+(Rollback Note) Tj T*
+() Tj T*
+(Use the rollback commands in the final report. For the current report-only commit, revert 173e443.) Tj T*
+(For Telegram code cutover, revert 2cb557f if rollback is required.) Tj T*
+() Tj T*
 ET
 endstream
 endobj
 7 0 obj
-<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
 endobj
 8 0 obj
-<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+<< /Length 173 >>
+stream
+BT
+/F1 8 Tf
+40 770 Td
+10 TL
+(Commit Proof) Tj T*
+() Tj T*
+(Report commit: 173e443) Tj T*
+(Branch: to-knowledge-mc) Tj T*
+(Push result: verified on remote.) Tj T*
+() Tj T*
+ET
+endstream
 endobj
 9 0 obj
-<< /Type /Catalog /Pages 8 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
 endobj
 xref
 0 10
-0000000000 65535 f
-0000000009 00000 n
-0000000079 00000 n
-0000003505 00000 n
-0000003631 00000 n
-0000007405 00000 n
-0000007531 00000 n
-0000008884 00000 n
-0000009010 00000 n
-0000009079 00000 n
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000137 00000 n 
+0000000207 00000 n 
+0000003225 00000 n 
+0000003351 00000 n 
+0000006877 00000 n 
+0000007003 00000 n 
+0000007227 00000 n 
 trailer
-<< /Size 10 /Root 9 0 R >>
+<< /Size 10 /Root 1 0 R >>
 startxref
-9128
+7353
 %%EOF

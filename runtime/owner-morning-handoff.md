@@ -70,4 +70,10 @@ No secrets, token values, auth file contents, API key values, passwords, or envi
 
 ## Rollback Note
 
-Use the rollback commands in the final report. For the current report-only commit, revert that commit after it is created. For Telegram code cutover, revert 2cb557f if rollback is required.
+Use the rollback commands in the final report. For the current report-only commit, revert 173e443. For Telegram code cutover, revert 2cb557f if rollback is required.
+
+## Commit Proof
+
+Report commit: 173e443
+Branch: to-knowledge-mc
+Push result: verified on remote.

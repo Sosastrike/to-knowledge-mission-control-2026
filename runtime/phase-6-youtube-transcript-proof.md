@@ -1,46 +1,49 @@
 # Phase 6 — YouTube Transcript Connector Proof
 
-Generated: 2026-05-07T23:16:17Z
+Generated: 2026-05-08T00:25:59Z
 
 ## Result
 
-**Status:** LIMITED / BLOCKED
+**Status:** LIMITED / REQUEST BLOCKED
 
-YouTube Research remains limited with `youtube_transcript_connector_not_proven`. No fake transcript claims were made.
+Exact blocker: `youtube_transcript_request_blocked_by_youtube`.
 
-## Capability Signals
+The server has a transcript-capable Python package, but the live transcript fetch against a public YouTube video did not produce a transcript packet. No full video was downloaded, no login boundary was bypassed, and no cookie/proxy workaround was used.
+
+## Connector Check
 
 | Check | Result |
 | --- | --- |
-| YouTube card status | `limited_pending` |
-| YouTube card tone | `yellow` |
-| YouTube card blocker | `youtube_transcript_connector_not_proven` |
-| `yt-dlp` installed in report shell | `True` |
-| package dependency hint present | `False` |
-| transcript-backed source proven | `False` |
-| full video downloaded | `false` |
+| `youtube_transcript_api` package present | true |
+| `yt-dlp` available for metadata-only checks | true |
+| Public test video | public YouTube video with expected captions |
+| Transcript attempt status | blocked |
+| Transcript error type | RequestBlocked |
+| Transcript segment count | 0 |
+| Full video downloaded | false |
+| Login/cookie/proxy workaround used | false |
 
-## Route Proof
+## Mission Control / SpaceAgent Route State
 
-| Route | Auth | HTTP | Key result |
+| Route | Auth state | HTTP | Result |
 | --- | --- | ---: | --- |
-| `GET /api/gateway/space-agent/browser/status` | yes | 200 | ok=True, mode=space_agent_browser_automation_truth, execution_enabled=False, writes_enabled=False |
-| `POST /api/gateway/space-agent/research` | yes | 423 | ok=False, mode=space_agent_research_packet_planning, blocked_reason=copyrighted_video_download_blocked_by_default, execution_enabled=False, writes_enabled=False |
-| `POST /api/gateway/space-agent/research` | no | 401 | error=Unauthorized |
+| `GET /api/gateway/space-agent/browser/status` | unauthenticated | 401 | Unauthorized |
 
-## Evidence Decision
+Authenticated YouTube route proof remains pending until an owner/operator session or approved route credential is available.
 
-The production route can classify YouTube research, but a dedicated live transcript connector is not proven. The system must keep YouTube yellow/limited until a transcript adapter returns real source/evidence rows.
+## Packet Decision
+
+No transcript-backed YouTubeResearchPacket was produced. The correct SpaceAgent state remains limited until a production Gateway route can fetch metadata/transcript safely and return transcript-backed claims without downloading video or bypassing restrictions.
 
 ## Guardrails Confirmed
 
-- No full video download was attempted.
-- No login, age restriction, region restriction, copyright, or paywall bypass was attempted.
+- No full YouTube video was downloaded.
+- No age restriction, region restriction, login wall, copyright control, or paywall was bypassed.
+- No owner cookies or browser profile were used.
 - No external write was executed.
-- No .env change was made.
-- No fake transcript analysis was claimed.
+- No secrets, auth files, raw paths, or task IDs were printed.
 - OpenClaw+ naming remains correct.
 
-## Exact Next Step
+## Phase 6 Decision
 
-Add or configure a production YouTube transcript adapter that returns title, channel, publish date, description, transcript availability, transcript-backed claims, and timestamps for public videos. Until then the correct Gateway status is `limited / transcript_connector_not_proven`.
+Phase 6 remains **LIMITED / BLOCKED** with `youtube_transcript_request_blocked_by_youtube`.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-context'
 import { getAgentZeroApiKeyState, probeAgentZeroRuntime } from '@/lib/agent-zero-bridge'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     buildAgentZeroEcosystemContext(),
   ])
 
-  return NextResponse.json({
+  const payload = sanitizeBridgeProviderPayload({
     ok: true,
     mode: 'agent_zero_ecosystem_context_read_only',
     generated_at: new Date().toISOString(),
@@ -41,5 +42,7 @@ export async function GET(request: NextRequest) {
       secrets_returned: false,
     },
     next_action: 'Use /api/bridge/agent-zero/test-chat to send this read-only ecosystem context to Agent Zero. Use /api/bridge/agent-zero/bridge-session for the locked execution contract; no execution is enabled here.',
-  }, { headers: { 'Cache-Control': 'no-store' } })
+  })
+
+  return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } })
 }

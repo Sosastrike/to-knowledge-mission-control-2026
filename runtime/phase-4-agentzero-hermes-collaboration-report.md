@@ -1,52 +1,86 @@
-# Phase 4 — Agent Zero to Hermes Collaboration Report
+# Phase 4 - Agent Zero to Hermes Collaboration Report
 
-Generated: 2026-05-08T00:22:51Z
+Generated: 2026-05-07T20:59:10-04:00
 
 ## Result
 
-**Status:** PARTIAL / ROUTE AUTH BLOCKED
+**PARTIAL / BLOCKED FOR LIVE PRODUCTION**
 
-The Agent Zero to Hermes planning-only collaboration contract test passed, but production route execution was not completed because no owner/operator authenticated session is available to this non-interactive worker. Mission Control correctly rejects unauthenticated handoff attempts.
+The Agent Zero to Hermes planning-only collaboration protocol is implemented and tested, but live production collaboration cannot be marked GO because Phase 3 confirmed Hermes live chat remains blocked by:
 
-## Collaboration Contract Proof
+`hermes_safe_live_chat_adapter_not_configured`
+
+No execution, file write, delivery action, external connector action, SMB, Zapier, HeyGen, or farmer action occurred.
+
+## Contract Proof
 
 | Check | Result |
-| --- | --- |
-| Test suite | `src/lib/agent-zero-hermes-collaboration.test.ts` |
-| Test result | 8 passed / 0 failed |
-| Handoff mode | `agent_zero_hermes_collaboration_protocol` |
-| Hermes response type | plan/spec/recommendation only |
-| Execution enabled | false |
-| Writes enabled | false |
-| Loop guard covered | yes |
-| Timeout guard covered | yes |
-| Owner-safe output covered | yes |
+|---|---|
+| Agent Zero remains commander | pass |
+| Hermes remains lieutenant / skill-workflow specialist | pass |
+| Hermes planning-only response contract | pass |
+| No execution by Hermes | pass |
+| No writes by Hermes | pass |
+| Loop guard | pass |
+| Timeout guard | pass |
+| Blocked unsafe handoff | pass |
+| Raw IDs hidden from owner-facing reply | pass |
+| Audit event shape | pass |
 
-## Production Route Auth Proof
+Focused test result:
 
-| Route | Auth | HTTP | Result |
-| --- | --- | ---: | --- |
-| `GET /api/bridge/agent-zero/hermes-handoff` | no | 401 | Unauthorized |
-| `POST /api/bridge/agent-zero/hermes-handoff` | no | 401 | Unauthorized |
+| Test | Result |
+|---|---|
+| `src/lib/agent-zero-hermes-collaboration.test.ts` | 8 passed |
 
-## Live Handoff Decision
+## Production Route Protection
 
-The production handoff route is present and protected. A live authenticated handoff still requires an owner/operator session or approved route credential. Because Phase 3 confirmed the independent Hermes live adapter is still blocked, this phase cannot be marked GO.
+Unauthenticated smoke after Mission Control restart:
 
-## Guardrails Confirmed
+| Route | Result | Meaning |
+|---|---:|---|
+| POST `/api/bridge/agent-zero/hermes-handoff` | 401 | protected |
+| POST `/api/bridge/agent-zero/test-chat` | 401 | protected |
+| POST `/api/bridge/hermes/test-chat` | 401 | protected |
 
-- No external write was executed.
-- No file write was performed by Agent Zero or Hermes.
-- No Bridge Session was opened.
-- No Telegram, AgentMail, Drive, OneDrive, Zapier, HeyGen, SMB/Fork 2, or farmer action occurred.
-- No raw paths, tokens, auth files, or internal task IDs were included in owner-facing proof.
-- OpenClaw+ naming remains the runtime/skills/agents layer.
+Authenticated live production collaboration remains blocked because this worker context has no owner/operator session material and Hermes has no safe live adapter yet. No auth bypass was attempted.
 
-## Exact Blockers
+## Collaboration State
 
-- `owner_operator_authenticated_route_session_required` for production POST route proof.
-- `hermes_safe_live_chat_adapter_not_configured` for independent Hermes live chat.
+| Item | State |
+|---|---|
+| Agent Zero handoff API | implemented and protected |
+| Hermes planning model | contract-backed only |
+| `hermes_called:true` live proof | not proven |
+| Gateway audit shape | implemented in tests |
+| Execution mode | disabled |
+| Writes mode | disabled |
+| Bridge Session required for activation | yes |
 
-## Phase 4 Decision
+## Security Confirmation
 
-Phase 4 remains **PARTIAL GO** at the contract/test level and **BLOCKED** for live production handoff until Hermes live chat and owner/operator authenticated route execution are both proven.
+- No secrets printed.
+- No auth files printed.
+- No `.env` changes.
+- No fake Hermes live-call claim.
+- No raw owner-facing local paths were introduced.
+- No external writes or connector actions occurred.
+- Agent Zero remains final commander in the collaboration contract.
+
+## Updated Percentages
+
+| System | Status | Percentage |
+|---|---|---:|
+| Agent Zero collaboration contract | PARTIAL GO | 90% |
+| Hermes live collaboration | NO-GO live | 42% |
+| Agent Zero to Hermes collaboration overall | PARTIAL | 55% |
+
+## Exact Next Step
+
+Complete the safe Hermes no-tool/no-write live adapter, then re-run the handoff route with owner/operator authentication. Only after a real Hermes response is returned may Mission Control set `hermes_called:true` for collaboration.
+
+## Rollback
+
+This phase changed only reports. Rollback command after commit:
+
+`git revert <phase-4-commit>`

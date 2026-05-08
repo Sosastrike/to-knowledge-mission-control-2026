@@ -3,10 +3,10 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R] /Count 5 >>
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] /Count 6 >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
 << /Length 2523 >>
@@ -127,10 +127,10 @@ ET
 endstream
 endobj
 5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 2889 >>
+<< /Length 2774 >>
 stream
 BT
 /F1 9 Tf
@@ -142,7 +142,9 @@ T*
 T*
 (|---|---|) Tj
 T*
-(| `handoff 2` | Agent Hub Playwright MCP v2 assets copied and reconciled. |) Tj
+(| `handoff 2` | Agent Hub Playwright MCP v2 integration assets copied, reconciled, wired into the live) Tj
+T*
+(SpaceAgent Browser Automation surface, and production-smoked. |) Tj
 T*
 (| `handoff` | Paperclip v1 final assets copied and reconciled. |) Tj
 T*
@@ -155,6 +157,113 @@ T*
 (design archive. The sprint index had legacy runtime labels in the designer package, so those labels) Tj
 T*
 (were corrected to OpenClaw+ before committing.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(HANDOFF 2 INTEGRATION PROOF) Tj
+T*
+() Tj
+T*
+(`handoff 2` is treated as the SpaceAgent Browser Automation integration handoff. The production UI) Tj
+T*
+(and routes now reflect the integration truth rather than the stale gray/mock design state.) Tj
+T*
+() Tj
+T*
+(| Integration Item | Production Result |) Tj
+T*
+(|---|---|) Tj
+T*
+(| SpaceAgent role | Browser / Firecrawl / YouTube Research Specialist |) Tj
+T*
+(| Playwright MCP | connected local-only |) Tj
+T*
+(| Playwright MCP endpoint display | localhost only |) Tj
+T*
+(| Firecrawl | blocked until `firecrawl_credential_required` clears |) Tj
+T*
+(| YouTube Research | limited until `youtube_transcript_connector_not_proven` clears |) Tj
+T*
+(| Safe button: Check Playwright MCP status | live route |) Tj
+T*
+(| Safe button: Open last browser evidence packet | live route |) Tj
+T*
+(| Safe button: Run Mission Control UI smoke | live route |) Tj
+T*
+(| Start browser session | Bridge Session gated |) Tj
+T*
+(| Interactive browser action | Bridge Session gated |) Tj
+T*
+(| Authenticated browsing | Bridge Session gated |) Tj
+T*
+(| Submit form | Bridge Session gated |) Tj
+T*
+(| Upload file | Bridge Session gated |) Tj
+T*
+() Tj
+T*
+(Production route proof after push:) Tj
+T*
+() Tj
+T*
+(| Route | Authenticated Result | Unauthenticated Result |) Tj
+T*
+(|---|---:|---:|) Tj
+T*
+(| `GET /api/bridge/playwright-mcp/status` | 200 | 401 |) Tj
+T*
+(| `GET /api/gateway/nodes/playwright-mcp` | 200 | 401 |) Tj
+T*
+(| `GET /api/gateway/space-agent/browser/status` | 200 | 401 |) Tj
+T*
+(| `GET /api/gateway/space-agent/playwright-mcp/evidence` | 200 | 401 |) Tj
+T*
+() Tj
+T*
+(Production page proof:) Tj
+T*
+() Tj
+T*
+(| UI Text / Data | Present |) Tj
+T*
+(|---|---:|) Tj
+T*
+(| Check Playwright MCP status | yes |) Tj
+T*
+(| Open last browser evidence packet | yes |) Tj
+T*
+(| Run Mission Control UI smoke | yes |) Tj
+T*
+(| Start browser session | yes, gated |) Tj
+T*
+(| Interactive browser action | yes, gated |) Tj
+T*
+(| Authenticated browsing | yes, gated |) Tj
+T*
+(| Submit form | yes, gated |) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2904 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
+(| Upload file | yes, gated |) Tj
+T*
+(| Firecrawl | yes |) Tj
+T*
+(| YouTube Research | yes |) Tj
+T*
+(| localhost-only Playwright endpoint | yes |) Tj
 T*
 () Tj
 T*
@@ -244,19 +353,6 @@ T*
 T*
 (| Playwright MCP | connected_local_only | Local-only read-only browser automation. Endpoint stays) Tj
 T*
-ET
-endstream
-endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
-endobj
-8 0 obj
-<< /Length 2287 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (localhost-only. |) Tj
 T*
 (| Firecrawl | blocked | Blocker: `firecrawl_credential_required`. |) Tj
@@ -269,6 +365,19 @@ T*
 T*
 (| OpenClaw+ | partial | Runtime / skills / agents / mini-agent execution layer. Doctor health remains a) Tj
 T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2042 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 (separate phase. |) Tj
 T*
 () Tj
@@ -365,19 +474,6 @@ T*
 T*
 (| Operating Chain visible | yes |) Tj
 T*
-ET
-endstream
-endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
-endobj
-10 0 obj
-<< /Length 2009 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (| Owner Actions visible | yes |) Tj
 T*
 (| Agent Zero visible | yes |) Tj
@@ -390,6 +486,19 @@ T*
 T*
 (| Paperclip visible | yes |) Tj
 T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 2056 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 (| SpaceAgent Browser Automation visible | yes |) Tj
 T*
 (| Playwright MCP visible | yes |) Tj
@@ -486,19 +595,6 @@ T*
 T*
 (- `youtube_transcript_connector_not_proven` until a transcript connector is proven.) Tj
 T*
-ET
-endstream
-endobj
-11 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
-endobj
-12 0 obj
-<< /Length 1648 >>
-stream
-BT
-/F1 9 Tf
-50 748 Td
-12 TL
 (- Paperclip service/login/task queue proof is still pending.) Tj
 T*
 (- OpenClaw+ doctor health still needs completion.) Tj
@@ -511,6 +607,19 @@ T*
 T*
 (ROLLBACK) Tj
 T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 15 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 1384 >>
+stream
+BT
+/F1 9 Tf
+50 748 Td
+12 TL
 () Tj
 T*
 (Rollback should revert the production commit for this slice and restart Mission Control through the) Tj
@@ -564,27 +673,29 @@ T*
 ET
 endstream
 endobj
-13 0 obj
+15 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 14
+0 16
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000140 00000 n 
-0000000267 00000 n 
-0000002842 00000 n 
-0000002969 00000 n 
-0000005910 00000 n 
-0000006037 00000 n 
-0000008376 00000 n 
-0000008504 00000 n 
-0000010566 00000 n 
-0000010695 00000 n 
-0000012396 00000 n 
+0000000147 00000 n 
+0000000274 00000 n 
+0000002849 00000 n 
+0000002976 00000 n 
+0000005802 00000 n 
+0000005929 00000 n 
+0000008885 00000 n 
+0000009013 00000 n 
+0000011108 00000 n 
+0000011237 00000 n 
+0000013346 00000 n 
+0000013475 00000 n 
+0000014912 00000 n 
 trailer
-<< /Size 14 /Root 1 0 R >>
+<< /Size 16 /Root 1 0 R >>
 startxref
-12467
+14983
 %%EOF

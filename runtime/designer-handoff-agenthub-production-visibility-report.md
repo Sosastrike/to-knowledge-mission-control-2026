@@ -39,10 +39,55 @@ Two owner-provided handoff folders were checked from the already-mounted Persona
 
 | Handoff | Result |
 |---|---|
-| `handoff 2` | Agent Hub Playwright MCP v2 assets copied and reconciled. |
+| `handoff 2` | Agent Hub Playwright MCP v2 integration assets copied, reconciled, wired into the live SpaceAgent Browser Automation surface, and production-smoked. |
 | `handoff` | Paperclip v1 final assets copied and reconciled. |
 
 The first Paperclip handoff contained two archive files that were not in the first production commit for this slice: `README.md` and `index.html`. Those files have now been added under the Paperclip design archive. The sprint index had legacy runtime labels in the designer package, so those labels were corrected to OpenClaw+ before committing.
+
+## Handoff 2 Integration Proof
+
+`handoff 2` is treated as the SpaceAgent Browser Automation integration handoff. The production UI and routes now reflect the integration truth rather than the stale gray/mock design state.
+
+| Integration Item | Production Result |
+|---|---|
+| SpaceAgent role | Browser / Firecrawl / YouTube Research Specialist |
+| Playwright MCP | connected local-only |
+| Playwright MCP endpoint display | localhost only |
+| Firecrawl | blocked until `firecrawl_credential_required` clears |
+| YouTube Research | limited until `youtube_transcript_connector_not_proven` clears |
+| Safe button: Check Playwright MCP status | live route |
+| Safe button: Open last browser evidence packet | live route |
+| Safe button: Run Mission Control UI smoke | live route |
+| Start browser session | Bridge Session gated |
+| Interactive browser action | Bridge Session gated |
+| Authenticated browsing | Bridge Session gated |
+| Submit form | Bridge Session gated |
+| Upload file | Bridge Session gated |
+
+Production route proof after push:
+
+| Route | Authenticated Result | Unauthenticated Result |
+|---|---:|---:|
+| `GET /api/bridge/playwright-mcp/status` | 200 | 401 |
+| `GET /api/gateway/nodes/playwright-mcp` | 200 | 401 |
+| `GET /api/gateway/space-agent/browser/status` | 200 | 401 |
+| `GET /api/gateway/space-agent/playwright-mcp/evidence` | 200 | 401 |
+
+Production page proof:
+
+| UI Text / Data | Present |
+|---|---:|
+| Check Playwright MCP status | yes |
+| Open last browser evidence packet | yes |
+| Run Mission Control UI smoke | yes |
+| Start browser session | yes, gated |
+| Interactive browser action | yes, gated |
+| Authenticated browsing | yes, gated |
+| Submit form | yes, gated |
+| Upload file | yes, gated |
+| Firecrawl | yes |
+| YouTube Research | yes |
+| localhost-only Playwright endpoint | yes |
 
 ## Files Changed
 

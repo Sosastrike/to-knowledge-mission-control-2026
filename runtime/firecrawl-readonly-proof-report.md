@@ -20,6 +20,18 @@ Firecrawl is still blocked for Mission Control. The production routes and Gatewa
 
 Do not mark Firecrawl GO. A live read-only smoke did not pass because the credential/backend prerequisites are missing from Mission Control.
 
+## Production Deploy Proof
+
+The Firecrawl node alias fix was built and deployed to production from commit `89aa845`.
+
+| Check | Result |
+| --- | --- |
+| Previous Next listener PID | 3293141 |
+| New Next listener PID | 3317749 |
+| Login route after restart | HTTP 200 |
+| Deployed HEAD | `89aa845` |
+| Public local service exposure | no new exposure; Next remains on local loopback with existing Tailnet proxy |
+
 ## Commands And Routes Used
 
 Commands were run in a way that printed booleans and status only. No credential values, auth files, API keys, or token values were printed.
@@ -32,7 +44,7 @@ Production proof routes:
 | `GET /api/firecrawl/jobs` | 200 | 401 | Jobs route exists and is protected |
 | `POST /api/firecrawl/jobs` | 503 | not run unauthenticated | Live job creation blocked by missing credential |
 | `GET /api/bridge/connector-readiness` | 200 | 401 | Connector readiness route exists and is protected |
-| `GET /api/gateway/nodes/firecrawl` | 200 after alias fix | 401 | Direct Firecrawl node alias resolves to the Gateway Firecrawl node |
+| `GET /api/gateway/nodes/firecrawl` | 200 | 401 | Direct Firecrawl node alias resolves to the Gateway Firecrawl node |
 | `GET /api/gateway/nodes/integration_firecrawl` | 200 | 401 | Gateway node exists under `integration_firecrawl` |
 | `POST /api/gateway/space-agent/research` | 200 packet-only | not run unauthenticated | SpaceAgent can prepare a Firecrawl-aware ResearchPacket, but does not execute Firecrawl |
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createGatewayCapability, createGatewayRegistryFromAgentNetwork } from './gateway-model'
-import { recommendPiGatewayRoute } from './gateway-pi-dispatcher'
+import { buildPiDispatcherStatusPayload, recommendPiGatewayRoute } from './gateway-pi-dispatcher'
 
 const baseRegistry = createGatewayRegistryFromAgentNetwork({
   generatedAt: '2026-05-05T12:00:00.000Z',
@@ -17,6 +17,33 @@ const registry = {
 }
 
 describe('Pi shadow dispatcher', () => {
+  it('reports Pi as advisory-only shadow status without execution or writes', () => {
+    const status = buildPiDispatcherStatusPayload(registry, '2026-05-05T12:00:00.000Z')
+
+    expect(status).toMatchObject({
+      mode: 'pi_dispatcher_shadow_status',
+      canonical_gateway_node: 'pi_dispatcher',
+      role: 'Dispatcher / Route Optimizer Candidate',
+      authority: 'advisory_only',
+      status: 'shadow',
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      tools_enabled: false,
+      commander: false,
+      replaces_agent_zero: false,
+      runtime: {
+        installed: false,
+        reachable: false,
+        mode: 'mission_control_in_process_shadow',
+        public_exposure: false,
+        blocker: 'pi_runtime_session_not_proven',
+      },
+    })
+    expect(status.safe_probe.mode).toBe('pi_dispatcher_shadow_recommendation')
+    expect(JSON.stringify(status)).not.toMatch(/\/home\/tony|auth\.json|sk-[A-Za-z0-9]/i)
+  })
+
   it('recommends routes without executing and keeps Agent Zero as commander', () => {
     const recommendation = recommendPiGatewayRoute(registry, { ownerRequest: 'Who is the commander now?' })
 
@@ -112,5 +139,28 @@ describe('Pi shadow dispatcher', () => {
     expect(mini.recommended_agent).toBe('mini_agent')
     expect(mini.recommended_mini_agent_type).toBe('research')
     expect(mini.selected_route.target).toBe('mini_agents')
+  })
+
+  it('proves the required Pi production shadow route matrix without execution', () => {
+    const cases = [
+      ['Read this website and summarize it', 'space_agent', null],
+      ['Use Firecrawl to scrape this public page', 'space_agent', 'firecrawl_credential_required'],
+      ['Extract the transcript from this public YouTube video', 'space_agent', null],
+      ['Design a workflow skill for email triage', 'hermes', null],
+      ['Create a workforce task and assign a co-worker', 'paperclip', 'paperclip_task_write_requires_bridge_session'],
+      ['Execute a mini-agent skill through OpenClaw runtime', 'openclaw_plus', 'openclaw_runtime_execution_requires_bridge_session'],
+      ['Deliver this report to Google Drive', 'delivery_adapter', 'delivery_adapter_requires_bridge_session_and_configured_connector'],
+      ['Use UnknownCRM to update a record', 'blocked', 'unknown_connector_not_registered'],
+    ] as const
+
+    for (const [ownerRequest, target, blocker] of cases) {
+      const recommendation = recommendPiGatewayRoute(registry, { ownerRequest })
+      expect(recommendation.selected_route.target).toBe(target)
+      expect(recommendation.blocked_reason).toBe(blocker)
+      expect(recommendation.execution_enabled).toBe(false)
+      expect(recommendation.writes_enabled).toBe(false)
+      expect(recommendation.selected_route.via).toContain('gateway')
+      expect(recommendation.owner_visible_summary).not.toMatch(/done/i)
+    }
   })
 })

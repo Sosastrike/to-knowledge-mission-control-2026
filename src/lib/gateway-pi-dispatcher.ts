@@ -17,7 +17,7 @@ export type PiDispatcherRecommendation = {
     target: string
     via: string[]
   }
-  recommended_agent: 'agent_zero' | 'hermes' | 'space_agent' | 'mini_agent' | null
+  recommended_agent: 'agent_zero' | 'hermes' | 'space_agent' | 'mini_agent' | 'paperclip' | 'openclaw_plus' | 'delivery_adapter' | null
   recommended_model: string | null
   recommended_mini_agent_type: 'research' | 'report' | 'qa' | 'workflow' | 'coding' | null
   policy_result: 'allowed' | 'blocked' | 'requires_session' | 'missing_credential'
@@ -28,6 +28,52 @@ export type PiDispatcherRecommendation = {
   execution_enabled: false
   writes_enabled: false
   audit_required: true
+  no_secrets_exposed: true
+  owner_visible_summary: string
+}
+
+export type PiDispatcherStatusPayload = {
+  ok: true
+  mode: 'pi_dispatcher_shadow_status'
+  generated_at: string
+  node_id: 'pi'
+  agent_hub_id: 'pi-mono'
+  canonical_gateway_node: 'pi_dispatcher'
+  role: 'Dispatcher / Route Optimizer Candidate'
+  authority: 'advisory_only'
+  status: 'shadow'
+  runtime: {
+    installed: false
+    reachable: false
+    mode: 'mission_control_in_process_shadow'
+    service_mode: false
+    cli_mode: false
+    rpc_mode: false
+    sdk_mode: true
+    public_exposure: false
+    blocker: 'pi_runtime_session_not_proven'
+  }
+  capabilities: {
+    route_recommendations: true
+    model_recommendations: true
+    agent_recommendations: true
+    mini_agent_recommendations: true
+    policy_explanation: true
+  }
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  tools_enabled: false
+  can_bypass_gateway: false
+  commander: false
+  replaces_agent_zero: false
+  replaces_hermes: false
+  replaces_paperclip: false
+  replaces_spaceagent: false
+  replaces_openclaw_plus: false
+  supervisors: ['gateway', 'agent_zero']
+  blockers: string[]
+  safe_probe: PiDispatcherRecommendation
   no_secrets_exposed: true
   owner_visible_summary: string
 }
@@ -100,25 +146,29 @@ export function recommendPiGatewayRoute(
   }
 
   const plan = planGatewayRoute(registry, { ownerRequest, source: input.requester || 'owner', generatedAt })
+  const override = specializedRouteOverride(registry, ownerRequest, plan.classification)
   const operationType = classifyOperation(ownerRequest, plan.classification)
   const model = selectModelRecommendation(registry, ownerRequest)
   const miniAgentType = recommendMiniAgentType(ownerRequest)
-  const recommendedAgent = recommendAgent(plan.classification, ownerRequest, miniAgentType)
-  const target = recommendedAgent === 'mini_agent'
+  const recommendedAgent = override?.recommendedAgent || recommendAgent(plan.classification, ownerRequest, miniAgentType)
+  const target = override?.target || (recommendedAgent === 'mini_agent'
     ? 'mini_agents'
     : recommendedAgent === 'space_agent'
       ? 'space_agent'
       : recommendedAgent === 'hermes'
         ? 'hermes'
-        : plan.dispatch_target
-  const via = recommendedAgent === 'mini_agent'
+        : plan.dispatch_target)
+  const via = override?.via || (recommendedAgent === 'mini_agent'
     ? ['owner', 'gateway', 'agent_zero', 'gateway', 'mini_agents']
     : recommendedAgent === 'space_agent'
       ? ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent']
-      : plan.route_via
+      : plan.route_via)
+  const policyResult = override?.policyResult || plan.route_decision
+  const blockedReason = override?.blockedReason ?? plan.blocker
+  const routeBlocked = Boolean(blockedReason) || policyResult === 'blocked' || policyResult === 'missing_credential' || policyResult === 'requires_session'
 
   return {
-    ok: !plan.blocked,
+    ok: !routeBlocked,
     mode: 'pi_dispatcher_shadow_recommendation',
     generated_at: generatedAt,
     shadow_mode: true,
@@ -134,18 +184,70 @@ export function recommendPiGatewayRoute(
     recommended_agent: recommendedAgent,
     recommended_model: model,
     recommended_mini_agent_type: miniAgentType,
-    policy_result: plan.route_decision,
-    blocked_reason: plan.blocker,
+    policy_result: policyResult,
+    blocked_reason: blockedReason,
     confidence: confidenceFor(plan.classification, plan.blocked),
-    rationale: rationaleFor({ classification: plan.classification, ownerRequest, recommendedAgent, model, miniAgentType, blockedReason: plan.blocker }),
-    fallback_route: plan.blocked ? 'agent_zero_manual_review' : null,
+    rationale: override?.rationale || rationaleFor({ classification: plan.classification, ownerRequest, recommendedAgent, model, miniAgentType, blockedReason }),
+    fallback_route: routeBlocked ? 'agent_zero_manual_review' : null,
     execution_enabled: false,
     writes_enabled: false,
     audit_required: true,
     no_secrets_exposed: true,
-    owner_visible_summary: plan.blocked
-      ? `Pi recommends blocking this route: ${plan.blocker}.`
+    owner_visible_summary: routeBlocked
+      ? `Pi recommends blocking or gating this route: ${blockedReason || policyResult}.`
       : `Pi recommends ${target} in shadow mode; Agent Zero remains commander.`,
+  }
+}
+
+export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, generatedAt = registry.generated_at): PiDispatcherStatusPayload {
+  return {
+    ok: true,
+    mode: 'pi_dispatcher_shadow_status',
+    generated_at: generatedAt,
+    node_id: 'pi',
+    agent_hub_id: 'pi-mono',
+    canonical_gateway_node: 'pi_dispatcher',
+    role: 'Dispatcher / Route Optimizer Candidate',
+    authority: 'advisory_only',
+    status: 'shadow',
+    runtime: {
+      installed: false,
+      reachable: false,
+      mode: 'mission_control_in_process_shadow',
+      service_mode: false,
+      cli_mode: false,
+      rpc_mode: false,
+      sdk_mode: true,
+      public_exposure: false,
+      blocker: 'pi_runtime_session_not_proven',
+    },
+    capabilities: {
+      route_recommendations: true,
+      model_recommendations: true,
+      agent_recommendations: true,
+      mini_agent_recommendations: true,
+      policy_explanation: true,
+    },
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    tools_enabled: false,
+    can_bypass_gateway: false,
+    commander: false,
+    replaces_agent_zero: false,
+    replaces_hermes: false,
+    replaces_paperclip: false,
+    replaces_spaceagent: false,
+    replaces_openclaw_plus: false,
+    supervisors: ['gateway', 'agent_zero'],
+    blockers: ['pi_runtime_session_not_proven'],
+    safe_probe: recommendPiGatewayRoute(registry, {
+      ownerRequest: 'Given this owner request, which route would you recommend?',
+      requester: 'gateway',
+      generatedAt,
+    }),
+    no_secrets_exposed: true,
+    owner_visible_summary: 'Pi is available only as a Mission Control in-process shadow dispatcher. It recommends routes but cannot execute, write, call tools, or replace Agent Zero.',
   }
 }
 
@@ -207,6 +309,82 @@ function recommendAgent(
   return 'agent_zero'
 }
 
+function specializedRouteOverride(
+  registry: GatewayRegistry,
+  ownerRequest: string,
+  classification: GatewayRouteClassification,
+): {
+  target: string
+  via: string[]
+  recommendedAgent: PiDispatcherRecommendation['recommended_agent']
+  policyResult: PiDispatcherRecommendation['policy_result']
+  blockedReason: string | null
+  rationale: string
+} | null {
+  const text = ownerRequest.toLowerCase()
+
+  if (classification === 'research' && /youtube|you tube|transcript|video/.test(text)) {
+    return {
+      target: 'space_agent',
+      via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'],
+      recommendedAgent: 'space_agent',
+      policyResult: 'allowed',
+      blockedReason: null,
+      rationale: 'Pi recommends Space Agent plus the YouTube metadata/transcript connector for public video research; no full video download.',
+    }
+  }
+
+  if (/fire\s*crawl|firecrawl|scrape|crawl|map|extract/.test(text)) {
+    const firecrawl = registry.capabilities.find((capability) => capability.id.startsWith('space_agent.firecrawl.'))
+    const blocker = firecrawl?.blockers?.[0] || (firecrawl?.status === 'blocked' ? 'firecrawl_credential_required' : null) || (!firecrawl ? 'firecrawl_credential_required' : null)
+    return {
+      target: 'space_agent',
+      via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'space_agent'],
+      recommendedAgent: 'space_agent',
+      policyResult: blocker ? 'missing_credential' : 'allowed',
+      blockedReason: blocker,
+      rationale: blocker
+        ? `Pi recommends Space Agent plus Firecrawl, but Gateway must block Firecrawl until ${blocker} is resolved.`
+        : 'Pi recommends Space Agent plus Firecrawl for read-only scrape/crawl/map/extract research.',
+    }
+  }
+
+  if (/workforce|paperclip|co-?worker|task queue|daily work|heartbeat|budget|work product/.test(text)) {
+    return {
+      target: 'paperclip',
+      via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'paperclip'],
+      recommendedAgent: 'paperclip',
+      policyResult: 'requires_session',
+      blockedReason: 'paperclip_task_write_requires_bridge_session',
+      rationale: 'Pi recommends Paperclip for workforce/task/co-worker orchestration, with Agent Zero final approval and Gateway policy gating.',
+    }
+  }
+
+  if (/openclaw|runtime|mini-agent execution|execute.*mini-agent|run.*mini-agent|activate.*mini-agent|execute.*skill|run.*skill/.test(text)) {
+    return {
+      target: 'openclaw_plus',
+      via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'paperclip', 'openclaw_plus'],
+      recommendedAgent: 'openclaw_plus',
+      policyResult: 'requires_session',
+      blockedReason: 'openclaw_runtime_execution_requires_bridge_session',
+      rationale: 'Pi recommends OpenClaw+ through Gateway, Agent Zero, Paperclip, and a scoped Bridge Session for runtime/skill/mini-agent execution.',
+    }
+  }
+
+  if (/deliver|delivery|telegram|agentmail|google drive|onedrive|one drive|upload|attach/.test(text)) {
+    return {
+      target: 'delivery_adapter',
+      via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'delivery_adapter'],
+      recommendedAgent: 'delivery_adapter',
+      policyResult: 'requires_session',
+      blockedReason: 'delivery_adapter_requires_bridge_session_and_configured_connector',
+      rationale: 'Pi recommends the Gateway delivery adapter path, with sends/uploads gated by Bridge Session and connector proof.',
+    }
+  }
+
+  return null
+}
+
 function recommendMiniAgentType(ownerRequest: string): PiDispatcherRecommendation['recommended_mini_agent_type'] {
   const text = ownerRequest.toLowerCase()
   if (/research|investigate|summarize|search the web|web search|search web|read website|read page|browser|browse|webpage|web page|website|article|youtube|you tube|video|firecrawl|fire crawl|crawl|scrape|map|screenshot|screen shot|page state|agents? (?:normally )?(?:cannot|can't) access|cannot access (?:this |the )?(?:site|video)/.test(text)) return 'research'
@@ -251,6 +429,9 @@ function rationaleFor(input: {
   if (input.blockedReason) return `Gateway policy blocks the route because ${input.blockedReason}.`
   if (input.recommendedAgent === 'hermes') return 'Workflow and skill design should route to Hermes through Agent Zero.'
   if (input.recommendedAgent === 'space_agent') return 'Web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research should route through Pi recommendation and Agent Zero approval to Space Agent.'
+  if (input.recommendedAgent === 'paperclip') return 'Workforce, co-worker, task queue, heartbeat, budget, and work product requests should route to Paperclip through Agent Zero and Gateway policy.'
+  if (input.recommendedAgent === 'openclaw_plus') return 'Runtime, skill, mini-agent, tool, and report execution requests should route through Paperclip to OpenClaw+ only after Bridge Session approval.'
+  if (input.recommendedAgent === 'delivery_adapter') return 'Report delivery requests should route to the Gateway delivery adapter and remain gated until the connector and Bridge Session are proven.'
   if (input.recommendedAgent === 'mini_agent') return `A scoped ${input.miniAgentType || 'mini-agent'} can handle the small task under Agent Zero supervision.`
   if (input.classification === 'model' && input.model) return `Pi recommends model route ${input.model} while keeping execution disabled in shadow mode.`
   return 'Owner commands route to Agent Zero by default.'

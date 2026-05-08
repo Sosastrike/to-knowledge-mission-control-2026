@@ -31,7 +31,13 @@ describe('Gateway Agent Hub', () => {
     expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({ role: 'Lieutenant / Skill + Workflow Builder', status: 'gated', called_true_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
-    expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({ role: 'Dispatcher / Route Optimizer Candidate', status: 'pending' })
+    expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
+      role: 'Dispatcher / Route Optimizer Candidate',
+      status: 'read_only',
+      routes: {
+        bridge_status: '/api/bridge/pi/status',
+      },
+    })
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {
       expect(agent.interface.auth_required).toBe(true)

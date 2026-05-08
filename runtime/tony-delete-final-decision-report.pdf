@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 3372 >>
+<< /Length 3434 >>
 stream
 BT
 /F1 10 Tf
@@ -35,6 +35,10 @@ BT
 (- `owner_authenticated_browser_session_required`) Tj
 0 -12 Td
 (- `mission_control_api_key_not_seeded` for this runner's authenticated production probe path) Tj
+0 -12 Td
+(- `owner_approval_pending` / `active_bridge_session_required` for one live approved execution pr) Tj
+0 -12 Td
+(oof) Tj
 0 -12 Td
 (- optional branding cleanup if Telegram bot display name still carries old Tony branding \(`owner) Tj
 0 -12 Td
@@ -137,10 +141,6 @@ BT
 (- Build: PASS) Tj
 0 -12 Td
 (- Tests: PASS \(`138` files / `1250` tests\)) Tj
-0 -12 Td
-(- Protected-file invariant scan: PASS) Tj
-0 -12 Td
-() Tj
 ET
 endstream
 endobj
@@ -148,11 +148,15 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 1138 >>
+<< /Length 1478 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
 (## 11\) Gauntlet Result) Tj
 0 -12 Td
 (- Agent Zero gauntlet \(10,000 scenarios\): PASS) Tj
@@ -165,21 +169,25 @@ BT
 0 -12 Td
 (- Not restarted in this report snapshot.) Tj
 0 -12 Td
-(- Restart/deploy required after commit push for production proof closeout.) Tj
+(- Code/report batch has been pushed; owner-session-based production visual/live-action confirmat) Tj
+0 -12 Td
+(ion remains the gating item.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## 13\) Commits Pushed) Tj
 0 -12 Td
-(- Pending in this report snapshot.) Tj
+(- `43e9405` — `refactor\(runtime\): remove Tony from active controller, UI, and routing surfaces`) Tj
+0 -12 Td
+(- `de5c0f4` — `docs\(runtime\): add Tony deletion phase reports and final decision package`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## 14\) Rollback Commands) Tj
 0 -12 Td
-(- Planned post-commit rollback:) Tj
+(- `git revert de5c0f4`) Tj
 0 -12 Td
-(  - `git revert <tony_delete_commit_sha>`) Tj
+(- `git revert 43e9405`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -199,7 +207,9 @@ BT
 0 -12 Td
 ( batch.) Tj
 0 -12 Td
-(- Final GO is pending owner/session-gated production confirmations and commit/deploy closeout.) Tj
+(- Final GO is pending owner/session-gated production confirmations \(owner-authenticated visual p) Tj
+0 -12 Td
+(roof + one approved scoped execution proof\).) Tj
 0 -12 Td
 () Tj
 ET
@@ -215,11 +225,11 @@ xref
 0000000058 00000 n 
 0000000121 00000 n 
 0000000247 00000 n 
-0000003671 00000 n 
-0000003797 00000 n 
-0000004987 00000 n 
+0000003733 00000 n 
+0000003859 00000 n 
+0000005389 00000 n 
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-5057
+5459
 %%EOF

@@ -4,7 +4,7 @@
 Deploy Tony active-removal changes and verify production behavior.
 
 ## Status
-PARTIAL (validation complete; commit/push/deploy step pending in this report snapshot).
+PARTIAL (local validation + commit/push complete; production owner-auth/live-approval proofs still blocked by session/approval availability).
 
 ## Actions Executed
 - Completed local validation gates:
@@ -14,10 +14,11 @@ PARTIAL (validation complete; commit/push/deploy step pending in this report sna
   - protected-file invariant pass
   - `.env` diff clean
 - Ran production route rendering smoke script against live URL.
+- Pushed Tony deletion batch to `origin/to-knowledge-mc`.
 
 ## Production Smoke Result
 - Auth-gated pages and aliases behaved as protected (`/login` redirect or `401`) on unauthenticated paths.
-- API-key authenticated smoke for some Bridge endpoints remained `401`, indicating key/session mismatch in this environment.
+- API-key authenticated smoke for some Bridge endpoints remained `401`, indicating key/session mismatch in this environment (`mission_control_api_key_not_seeded` in this runner context).
 
 ## Blockers
 - `owner_authenticated_browser_session_required`
@@ -25,13 +26,15 @@ PARTIAL (validation complete; commit/push/deploy step pending in this report sna
 - `mission_control_api_key_not_seeded` (for authenticated live route checks from this runner context)
 
 ## Services
-- No restart executed in this phase snapshot.
+- No Mission Control restart executed in this phase snapshot because this batch focused on Tony removal code/report deployment and non-destructive verification.
 
 ## Commits
-- Pending (to be completed at end of this execution batch).
+- `43e9405` — `refactor(runtime): remove Tony from active controller, UI, and routing surfaces`
+- `de5c0f4` — `docs(runtime): add Tony deletion phase reports and final decision package`
 
 ## Rollback
-- Planned rollback command after commit: `git revert <commit_sha>`
+- `git revert de5c0f4`
+- `git revert 43e9405`
 
 ## No-Secrets Confirmation
 - No secrets printed.
@@ -39,7 +42,7 @@ PARTIAL (validation complete; commit/push/deploy step pending in this report sna
 - No auth weakening.
 
 ## Updated Percentage
-- Tony deletion lane: 92% (awaiting deploy + owner-side visual/routing confirmations).
+- Tony deletion lane: 95% (active code/runtime surfaces updated and pushed; remaining owner-auth/live-approval proofs pending).
 
 ## Exact Next Step
-- Commit/push this Tony deletion batch, then perform production restart/smoke on the deployed revision.
+- Validate owner-authenticated Gateway/Agent Hub visual confirmation and owner-approved Bridge/Telegram live action proof on the deployed revision.

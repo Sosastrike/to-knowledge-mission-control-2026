@@ -92,7 +92,7 @@ PARTIAL GO, 94%. Not 100%.
 - Mission Control code: bc17959
 - Mission Control Day 9 reports: b929e01
 - OpenClaw+ code: e98e4f6
-- Day 10 final report artifact commit: pending until this report pack is pushed.
+- Day 10 final report artifact commit: 7e3526c (initial final report packet); follow-up hash-correction commit, if present, is recorded in the in-thread owner message and remote HEAD verification.
 
 ## Blockers
 - owner_authenticated_browser_session_required: owner-authenticated UI screenshot/browser proof still unavailable to Codex.
@@ -111,7 +111,7 @@ PARTIAL GO, 94%. Not 100%.
 - Mission Control code rollback: git revert bc17959
 - Mission Control Day 9 report rollback: git revert b929e01
 - OpenClaw+ code rollback: git revert e98e4f6
-- Day 10 report rollback: git revert the Day 10 report artifact commit after it is created.
+- Day 10 report rollback: git revert 7e3526c; also revert the final hash-correction commit if present.
 
 ## No-Secrets Confirmation
 No tokens, API keys, passwords, auth files, environment variable values, or secret-shaped values are included. No environment files were modified. Artifact scans checked Markdown and PDF text layers for raw local paths, secret-shaped values, and stale architecture naming.

@@ -163,7 +163,7 @@ export default function ViralCrawlPage() {
             <div className="text-xs uppercase tracking-wider text-zinc-500">Whisper config</div>
             <div className="mt-1 flex items-center justify-between">
               <span className="truncate font-mono text-xs text-zinc-300">
-                ~/.config/watch/.env{vi.watchEnvMode ? ` (${vi.watchEnvMode})` : ''}
+                Protected runtime config{vi.watchEnvMode ? ` (${vi.watchEnvMode})` : ''}
               </span>
               <YesNo ok={vi.watchEnvPresent} />
             </div>
@@ -203,7 +203,7 @@ export default function ViralCrawlPage() {
           <pre className="mt-2 overflow-x-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">{vi.command_template}</pre>
           <pre className="mt-2 overflow-x-auto rounded bg-zinc-950 p-3 text-xs text-zinc-400">
 {`# Full form
-node /home/tony/claudeclaw/scripts/claude-video-to-brain.mjs \\
+node <OpenClaw+ video-to-brain wrapper> \\
      "<URL or local path>" \\
      <agent: tony|researcher|pacman|loom|growth|builder|forge> \\
      <purpose: summarize|learn_skill|competitor_research|...> \\

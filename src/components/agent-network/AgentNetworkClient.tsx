@@ -2862,7 +2862,7 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
       <p className={styles.providerNotes}>Next run: {farmer?.next_run_at || 'unknown'} · Last run: {farmer?.last_run_at || 'unknown'} · Result: {farmer?.last_result || 'unknown'}{farmer?.last_exit_status != null ? ` (${farmer.last_exit_status})` : ''}</p>
       {farmer?.last_error && <p className={styles.providerAction}>Last farmer warning/error: {farmer.last_error}</p>}
       <p className={styles.providerNotes}>Sources: {payload.active_sources?.length ?? farmer?.sources_count ?? 0} active · {payload.available_source_expansions?.length ?? 0} available local additions</p>
-      <p className={styles.providerNotes}>Destination: {destination.obsidian_path || '/home/tony/obsidian-vault/08-Wiki/OpenCloud/'}</p>
+      <p className={styles.providerNotes}>Destination: {destination.obsidian_path ? 'Configured Build-Wiki knowledge destination' : 'OpenClaw+ / Build-Wiki knowledge destination'}</p>
       <ul className={styles.connectorList}>
         <li><span>Run Now<br /><small>Creates Agent Zero owner-channel approval only; dispatch stays exact-scope.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Pause / Resume<br /><small>Timer-only control; no service rewrite from this card.</small></span><strong>{timerControl?.offered_action ? `${timerControl.offered_action}: ${controls[`${timerControl.offered_action}_sync`] || 'OWNER_APPROVAL_REQUIRED'}` : 'not applicable'}</strong></li>

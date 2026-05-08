@@ -635,7 +635,7 @@ function HermesSetup({ onClose, onComplete }: { onClose: () => void; onComplete:
                 className="w-full h-9 rounded border border-border/30 bg-surface-1 px-2.5 text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-primary/30 font-mono"
               />
               <p className="text-[10px] text-muted-foreground/30 mt-0.5">
-                Saved to ~/.hermes/.env
+                Saved to protected Hermes runtime config
               </p>
             </div>
           )}

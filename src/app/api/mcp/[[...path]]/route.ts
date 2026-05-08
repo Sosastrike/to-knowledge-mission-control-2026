@@ -11,6 +11,7 @@ import {
   routePath,
 } from '@/lib/designer-module-api'
 import { getMcpServerTools } from '@/lib/mcp-server-tool-schemas'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -73,6 +74,10 @@ function parseClaudeMcpList(stdout: string): McpServer[] {
   return servers
 }
 
+function redactedMcpConfigSource(candidate: string): string {
+  return candidate.includes('/.config/') ? 'claude-config-mcp-config' : 'claude-user-mcp-config'
+}
+
 async function readMcpConfigFile(): Promise<McpServer[]> {
   const candidates = [
     homePath('.claude', 'mcp.json'),
@@ -88,7 +93,7 @@ async function readMcpConfigFile(): Promise<McpServer[]> {
         name,
         transport: cfg.command ? 'stdio' : cfg.url ? 'http' : 'unknown',
         status: 'unknown',
-        source: candidate,
+        source: redactedMcpConfigSource(candidate),
       })
     }
   }
@@ -213,7 +218,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
       servers,
       authoritative_route: '/api/mcp/list',
       compatibility_routes: ['/api/mcp/status', '/api/mcp/servers'],
-      sources_checked: ['claude-cli', '~/.claude/mcp.json', '~/.config/claude/mcp.json'],
+      sources_checked: ['claude-cli', 'claude-user-mcp-config', 'claude-config-mcp-config'],
       discovery: lastDiscovery,
       note: servers.length ? null : 'no_mcp_servers_detected',
     })
@@ -222,12 +227,12 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   const parts = path.split('/').filter(Boolean)
   if (parts[0] === 'servers' && parts[1] && parts[2] === 'tools') {
     const result = await getMcpServerTools(parts[1])
-    return NextResponse.json({
+    return NextResponse.json(sanitizeBridgeProviderPayload({
       ...result,
       endpoint: `/api/mcp/servers/${parts[1]}/tools`,
       route_state: result.ok ? 'read_only_live_schema_passthrough' : 'read_only_schema_passthrough_unavailable',
       note: result.ok ? 'Read-only MCP tools/list only. No MCP tool was invoked.' : result.next_action,
-    }, { status: result.ok ? 200 : 503 })
+    }), { status: result.ok ? 200 : 503 })
   }
 
   if (parts[0] === 'servers' && parts[1] && parts[2] === 'resources') {

@@ -297,9 +297,9 @@ export async function getZapierToolBridge(query?: string | null): Promise<Zapier
     query: query || null,
     source,
     sources_checked: [
-      zapierMcpUrl() ? 'Mission Control ZAPIER_MCP_URL/ZAPIER_MCP_SERVER tools/list' : 'Mission Control MCP env not present',
-      existsSync(ZAPIER_TOOLS_TXT) ? ZAPIER_TOOLS_TXT : `${ZAPIER_TOOLS_TXT} missing`,
-      existsSync(ZAPIER_PROVIDERS_JSON) ? ZAPIER_PROVIDERS_JSON : `${ZAPIER_PROVIDERS_JSON} missing`,
+      zapierMcpUrl() ? 'mission_control_zapier_mcp_env_present' : 'mission_control_zapier_mcp_env_missing',
+      existsSync(ZAPIER_TOOLS_TXT) ? 'cached_zapier_tools_snapshot_present' : 'cached_zapier_tools_snapshot_missing',
+      existsSync(ZAPIER_PROVIDERS_JSON) ? 'cached_zapier_provider_snapshot_present' : 'cached_zapier_provider_snapshot_missing',
     ],
     last_checked_at: new Date().toISOString(),
     execution_enabled: false,

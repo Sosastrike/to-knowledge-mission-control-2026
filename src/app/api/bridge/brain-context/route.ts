@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -44,8 +45,10 @@ export async function GET(request: NextRequest) {
     12000,
   )
 
+  const sanitizedPayload = sanitizeBridgeProviderPayload(upstream.payload)
+
   return NextResponse.json({
-    ...upstream.payload,
+    ...sanitizedPayload,
     ok: upstream.ok && Boolean((upstream.payload as BrainContextPayload).ok),
     mode: 'mission_control_shared_brain_context_proxy',
     upstream_status: upstream.status,

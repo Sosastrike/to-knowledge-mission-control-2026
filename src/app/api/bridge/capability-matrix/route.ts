@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import { requireRole } from '@/lib/auth'
 import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-context'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -199,7 +200,7 @@ export async function GET(request: NextRequest) {
     { id: 'skills', state: 'READ_ONLY', mode: 'ClaudeClaw agent skill inventory plus search/list only', endpoint: '/api/skills/tool-skills', writes_enabled: false },
   ]
 
-  return NextResponse.json({
+  const payload = {
     ok: true,
     mode: 'bridge_mode_read_only_mvp',
     generated_at: new Date().toISOString(),
@@ -258,5 +259,7 @@ export async function GET(request: NextRequest) {
       connector_writes_enabled: 0,
       protected_actions_locked: true,
     },
-  }, { headers: { 'Cache-Control': 'no-store' } })
+  }
+
+  return NextResponse.json(sanitizeBridgeProviderPayload(payload), { headers: { 'Cache-Control': 'no-store' } })
 }

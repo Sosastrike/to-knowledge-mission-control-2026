@@ -499,7 +499,7 @@ export async function GET(request: NextRequest) {
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([id, meta]) => ({ id, label: meta.label })),
     opAvailable,
-    envPath: getEnvPath(),
+    envPath: getEnvPath() ? '<redacted-path>' : null,
   })
 }
 

@@ -599,7 +599,7 @@ export async function requestAgentZeroHermesCollaboration(input: AgentZeroHermes
       action: 'agent_zero.hermes_handoff',
       raw_ids_stored_in_audit_only: true,
     },
-    owner_reply: safeOwnerText(`Mission Control prepared the Hermes ${taskType.replace(/_/g, ' ')} contract plan for Agent Zero review. Live Hermes runtime is still blocked until the safe adapter is proven. No execution occurred.`, prompt),
+    owner_reply: safeOwnerText(`Mission Control prepared the Hermes ${taskType.replace(/_/g, ' ')} contract draft for Agent Zero review. Live Hermes runtime is still blocked until the safe adapter is proven. No execution occurred.`, prompt),
     blocked_reason: plan.blockers[0] || 'hermes_safe_live_chat_adapter_not_configured',
   }
 }

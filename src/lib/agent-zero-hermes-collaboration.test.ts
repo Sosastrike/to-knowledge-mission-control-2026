@@ -111,7 +111,7 @@ describe('Agent Zero to Hermes collaboration protocol', () => {
     expect(result.execution_enabled).toBe(false)
     expect(result.writes_enabled).toBe(false)
     expect(result.raw_ids_exposed_to_owner).toBe(false)
-    expect(result.owner_reply).toContain('Hermes skill design contract plan')
+    expect(result.owner_reply).toContain('Hermes skill design contract draft')
     expect(result.owner_reply).not.toMatch(/azht_|hermes_[a-f0-9]|\/home\/tony|Done|Failed stage|Traceback/i)
     expect(audit.events).toHaveLength(1)
     expect(audit.events[0].detail).toMatchObject({

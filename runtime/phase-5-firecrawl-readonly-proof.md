@@ -1,46 +1,48 @@
 # Phase 5 — Firecrawl Read-Only Proof
 
-Generated: 2026-05-07T23:15:28Z
+Generated: 2026-05-08T00:24:27Z
 
 ## Result
 
 **Status:** BLOCKED
 
-Firecrawl remains blocked with `firecrawl_credential_required` or an unproven live adapter. No Firecrawl scrape/crawl/extract execution was claimed.
+Exact blocker: `firecrawl_credential_required`.
 
-## Credential and Status Signals
+Firecrawl was not moved to connected/read-only because no usable credential source was proven. No Firecrawl scrape, crawl, map, search, or extract call was run.
 
-| Check | Result |
+## Credential Source Check
+
+| Source | Present |
 | --- | --- |
-| status payload `ok` | `True` |
-| status payload `status` | `credential_required` |
-| status payload `key_present` | `False` |
-| status payload `sdk_loaded` | `False` |
-| report process `FIRECRAWL_API_KEY` present | `False` |
-| credential value printed | `false` |
+| Mission Control service environment | false |
+| Mission Control env files | false |
+| Protected secret file source | false |
+| Overall Firecrawl credential | false |
+
+No Firecrawl credential value was printed or copied into this report.
 
 ## Route Proof
 
-| Route | Auth | HTTP | Key result |
+| Route | Auth state | HTTP | Result |
 | --- | --- | ---: | --- |
-| `GET /api/firecrawl/status` | yes | 200 | ok=True, status=credential_required, key_present=False |
-| `GET /api/gateway/space-agent/browser/status` | yes | 200 | ok=True, mode=space_agent_browser_automation_truth, execution_enabled=False, writes_enabled=False |
-| `POST /api/gateway/space-agent/research` | yes | 200 | ok=True, mode=space_agent_research_packet_planning, blocked_reason=firecrawl_missing_credential_research_packet_can_still_use_browser_or_web_fallback_if_available, execution_enabled=False, writes_enabled=False |
-| `GET /api/firecrawl/status` | no | 401 | error=Unauthorized |
+| `GET /api/firecrawl/status` | unauthenticated | 401 | Unauthorized |
+| `GET /api/gateway/space-agent/browser/status` | unauthenticated | 401 | Unauthorized |
 
-## ResearchPacket Decision
+Authenticated Firecrawl route proof remains pending until an owner/operator session or approved route credential is available.
 
-No live Firecrawl ResearchPacket was produced. SpaceAgent can classify the request, but Firecrawl stays blocked until the credential/backend is configured and a read-only smoke passes.
+## Research Packet Decision
+
+No live ResearchPacket was produced because the Firecrawl credential/backend is missing. SpaceAgent can classify Firecrawl work, but cannot claim live Firecrawl access yet.
 
 ## Guardrails Confirmed
 
-- No Firecrawl credential value was printed.
-- No .env file was modified.
+- No credential values were printed.
+- No `.env` file was modified.
 - No external write was executed.
-- No Zapier write, HeyGen generation, SMB/Fork 2, farmer execution, upload, or email send occurred.
-- Gateway / Agent Hub must keep Firecrawl red or blocked until credential and adapter proof pass.
+- No Zapier, HeyGen, SMB/Fork 2, farmer, email, Drive, or OneDrive action occurred.
+- Firecrawl remains blocked in Gateway / Agent Hub until credential and live adapter proof pass.
 - OpenClaw+ naming remains correct.
 
-## Exact Next Step
+## Phase 5 Decision
 
-Configure Firecrawl through an approved protected secret source, restart Mission Control through admin authorization so the runtime can read it, then rerun a read-only public-page smoke. Do not paste the key into chat or commit it.
+Phase 5 remains **BLOCKED** with `firecrawl_credential_required`.

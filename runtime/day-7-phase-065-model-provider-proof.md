@@ -47,8 +47,8 @@ PARTIAL GO. Anthropic, OpenAI, NVIDIA, Gemini, and Ollama are visible/configured
 - Build-Wiki / Farmer legacy timer: active; literal unit name opencloud-docs-farmer.timer.
 
 ## Commits And Rollback
-- Commit: 796daf1.
-- Rollback command after commit: git revert 796daf1.
+- Commit: 115b274.
+- Rollback command after commit: git revert 115b274.
 
 ## Updated Percentage Snapshot
 - Agent Zero: 94% PARTIAL GO.

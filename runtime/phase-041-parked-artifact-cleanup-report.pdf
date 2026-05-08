@@ -1,0 +1,249 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2777 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+1 0 0 1 36 770 Tm (# Phase 041 - PARKED ARTIFACT CLEANUP) Tj
+1 0 0 1 36 755 Tm () Tj
+1 0 0 1 36 740 Tm (Generated: 2026-05-07T22:34:00-04:00) Tj
+1 0 0 1 36 725 Tm () Tj
+1 0 0 1 36 710 Tm (## Objective) Tj
+1 0 0 1 36 695 Tm () Tj
+1 0 0 1 36 680 Tm (Execute Phase 041 of the Mission Control / Gateway completion campaign and report production truth) Tj
+1 0 0 1 36 665 Tm (without fake 100% claims.) Tj
+1 0 0 1 36 650 Tm () Tj
+1 0 0 1 36 635 Tm (## Result) Tj
+1 0 0 1 36 620 Tm () Tj
+1 0 0 1 36 605 Tm (**PASS / NO DELETE.**) Tj
+1 0 0 1 36 590 Tm () Tj
+1 0 0 1 36 575 Tm (## Proof Summary) Tj
+1 0 0 1 36 560 Tm () Tj
+1 0 0 1 36 545 Tm (Dirty trees classified; no uncertain files deleted.) Tj
+1 0 0 1 36 530 Tm () Tj
+1 0 0 1 36 515 Tm (## Commands / Routes Used) Tj
+1 0 0 1 36 500 Tm () Tj
+1 0 0 1 36 485 Tm (- systemd status/restart checks using the controlled systemd respawn fallback where restart was) Tj
+1 0 0 1 36 470 Tm (required.) Tj
+1 0 0 1 36 455 Tm (- Temporary admin session route smoke was created and destroyed inside the smoke script; no token) Tj
+1 0 0 1 36 440 Tm (was printed.) Tj
+1 0 0 1 36 425 Tm (- Unauthenticated route smoke confirmed protected APIs return 401.) Tj
+1 0 0 1 36 410 Tm (- Browser visual smoke used a temporary admin session and captured a safe Agent Hub screenshot.) Tj
+1 0 0 1 36 395 Tm (- Test suites were run in Mission Control and ClaudeClaw/OpenClaw+.) Tj
+1 0 0 1 36 380 Tm () Tj
+1 0 0 1 36 365 Tm (## Production Proof / Blockers) Tj
+1 0 0 1 36 350 Tm () Tj
+1 0 0 1 36 335 Tm (Dirty trees classified; no uncertain files deleted.) Tj
+1 0 0 1 36 320 Tm () Tj
+1 0 0 1 36 305 Tm (## Current System Percentages) Tj
+1 0 0 1 36 290 Tm () Tj
+1 0 0 1 36 275 Tm (| System | Percent | Decision | Truth / Blocker |) Tj
+1 0 0 1 36 260 Tm (| --- | --- | --- | --- |) Tj
+1 0 0 1 36 245 Tm (| Agent Zero | 93% | PARTIAL GO | Authenticated temporary production smoke returned) Tj
+1 0 0 1 36 230 Tm (agent_zero_called:true; owner Telegram/live prompt still needs owner-origin proof. |) Tj
+1 0 0 1 36 215 Tm (| Hermes | 42% | NO-GO live | Service active and status route reachable; test-chat returns) Tj
+1 0 0 1 36 200 Tm (hermes_safe_live_chat_adapter_not_configured. |) Tj
+1 0 0 1 36 185 Tm (| Pi Dispatcher | 72% | PARTIAL GO / SHADOW | Gateway in-process shadow dispatcher is reachable;) Tj
+1 0 0 1 36 170 Tm (standalone Pi runtime session is not proven; execution and writes disabled. |) Tj
+1 0 0 1 36 155 Tm (| Gateway / Agent Hub | 88% | PARTIAL GO | Production restarted; route/API and temporary-admin) Tj
+1 0 0 1 36 140 Tm (visual smoke pass; owner-authenticated browser session proof remains blocked. |) Tj
+1 0 0 1 36 125 Tm (| SpaceAgent | 82% | PARTIAL GO | Browser automation panel visible; Playwright MCP GO local-only) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 3954 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+1 0 0 1 36 770 Tm (read-only; Firecrawl blocked; YouTube limited. |) Tj
+1 0 0 1 36 755 Tm (| Playwright MCP | 92% | GO local-only read-only | Service active on localhost-only bind;) Tj
+1 0 0 1 36 740 Tm (public-page smoke passed; local/authenticated targets remain Bridge-gated. |) Tj
+1 0 0 1 36 725 Tm (| Firecrawl | 35% | BLOCKED | firecrawl_credential_required. |) Tj
+1 0 0 1 36 710 Tm (| YouTube Research | 70% | PARTIAL / LIMITED | Packet/connector model exists and prior transcript) Tj
+1 0 0 1 36 695 Tm (probe passed; dedicated live Gateway route proof remains limited. |) Tj
+1 0 0 1 36 680 Tm (| Paperclip | 62% | PARTIAL / DEGRADED | Tailnet-local health endpoint OK; owner login/session) Tj
+1 0 0 1 36 665 Tm (bridge and task UI proof not complete. |) Tj
+1 0 0 1 36 650 Tm (| OpenClaw+ | 86% | PARTIAL GO | ClaudeClaw/OpenClaw+ build, tests, design-lock pass; OpenClaw CLI) Tj
+1 0 0 1 36 635 Tm (not in shell PATH; owner-auth UI route proof partial. |) Tj
+1 0 0 1 36 620 Tm (| Mini-Agent OS | 76% | PARTIAL / GATED | Schemas, policy tests, and gauntlets pass; activation) Tj
+1 0 0 1 36 605 Tm (requires Bridge Session. |) Tj
+1 0 0 1 36 590 Tm (| Build-Wiki / Farmer | 72% | PARTIAL / GATED | Timer active; literal legacy service) Tj
+1 0 0 1 36 575 Tm (opencloud-docs-farmer.service inactive until scoped Run Now approval. |) Tj
+1 0 0 1 36 560 Tm (| Brain Systems | 70% | PARTIAL | Read/status contracts present; writes require Bridge Session; no) Tj
+1 0 0 1 36 545 Tm (memory dump performed. |) Tj
+1 0 0 1 36 530 Tm (| Bridge / MCP / Tools | 74% | PARTIAL / GATED | Discovery contracts pass; execution disabled) Tj
+1 0 0 1 36 515 Tm (without scoped Bridge Session. |) Tj
+1 0 0 1 36 500 Tm (| Models / Providers | 68% | PARTIAL | Provider status surfaces exist; account-specific CLI/API) Tj
+1 0 0 1 36 485 Tm (billing proof remains mixed. |) Tj
+1 0 0 1 36 470 Tm (| Delivery Connectors | 50% | PARTIAL / GATED | Mission Control report links work; Telegram) Tj
+1 0 0 1 36 455 Tm (attachment, AgentMail send, Drive and OneDrive remain gated/blocked. |) Tj
+1 0 0 1 36 440 Tm (| Bridge Session | 55% | PARTIAL / GATED | Policy and tables exist; no live scoped external-write) Tj
+1 0 0 1 36 425 Tm (session opened in this pass. |) Tj
+1 0 0 1 36 410 Tm (| Telegram Commander Route | 75% | PARTIAL GO | Runtime route configured for Agent Zero; bot) Tj
+1 0 0 1 36 395 Tm (display still Tony and owner-origin prompt proof remains pending. |) Tj
+1 0 0 1 36 380 Tm (| Overall Ecosystem | 90% | PARTIAL GO | Core build/restart/API/UI smoke improved; hard live) Tj
+1 0 0 1 36 365 Tm (blockers prevent 100%. |) Tj
+1 0 0 1 36 350 Tm () Tj
+1 0 0 1 36 335 Tm (## Active Blockers) Tj
+1 0 0 1 36 320 Tm () Tj
+1 0 0 1 36 305 Tm (| Blocker | Affects | Exact next action |) Tj
+1 0 0 1 36 290 Tm (| --- | --- | --- |) Tj
+1 0 0 1 36 275 Tm (| owner_authenticated_browser_session_required | Owner visual proof and owner-origin route proof |) Tj
+1 0 0 1 36 260 Tm (Owner/admin browser session or approved test auth channel. |) Tj
+1 0 0 1 36 245 Tm (| hermes_safe_live_chat_adapter_not_configured | Hermes live and Agent Zero to Hermes live) Tj
+1 0 0 1 36 230 Tm (collaboration | Build a real no-tool/no-write Hermes chat adapter or safe local API bridge. |) Tj
+1 0 0 1 36 215 Tm (| firecrawl_credential_required | Firecrawl read-only proof | Add credential through approved) Tj
+1 0 0 1 36 200 Tm (secret storage, then run read-only smoke. |) Tj
+1 0 0 1 36 185 Tm (| youtube_transcript_connector_not_proven | YouTube Gateway route proof | Prove transcript) Tj
+1 0 0 1 36 170 Tm (connector through SpaceAgent route without downloading video. |) Tj
+1 0 0 1 36 155 Tm (| paperclip_owner_session_required | Paperclip dashboard, roster, task queue | Owner login/session) Tj
+1 0 0 1 36 140 Tm (bridge for Paperclip local/Tailnet UI. |) Tj
+1 0 0 1 36 125 Tm (| active_bridge_session_required | External writes, Build-Wiki Run Now, mini-agent activation |) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3597 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+1 0 0 1 36 770 Tm (Open scoped Bridge Session for a single approved action. |) Tj
+1 0 0 1 36 755 Tm (| telegram_botfather_rename_required | Telegram display name | Owner must rename the bot through) Tj
+1 0 0 1 36 740 Tm (BotFather if desired. |) Tj
+1 0 0 1 36 725 Tm (| owner_telegram_live_prompt_required | Telegram GO decision | Owner sends required live Telegram) Tj
+1 0 0 1 36 710 Tm (prompts and verifies Agent Zero answers. |) Tj
+1 0 0 1 36 695 Tm (| standalone_pi_runtime_session_not_proven | Pi full GO | Install/prove standalone Pi runtime if) Tj
+1 0 0 1 36 680 Tm (owner wants Pi beyond Mission Control shadow dispatcher. |) Tj
+1 0 0 1 36 665 Tm (| csp_inline_script_warning | UI/CSP hygiene | Investigate and fix a remaining inline-script CSP) Tj
+1 0 0 1 36 650 Tm (warning without weakening CSP. |) Tj
+1 0 0 1 36 635 Tm () Tj
+1 0 0 1 36 620 Tm (## Route Proof) Tj
+1 0 0 1 36 605 Tm () Tj
+1 0 0 1 36 590 Tm (| Route | Result | Proof |) Tj
+1 0 0 1 36 575 Tm (| --- | --- | --- |) Tj
+1 0 0 1 36 560 Tm (| GET /api/gateway/status | 200 temp-admin / 401 unauth | status degraded; no execution/writes |) Tj
+1 0 0 1 36 545 Tm (| GET /api/gateway/registry | 200 temp-admin / 401 unauth | registry reachable |) Tj
+1 0 0 1 36 530 Tm (| GET /api/gateway/agent-hub/status | 200 temp-admin / 401 unauth | Agent Hub API reachable |) Tj
+1 0 0 1 36 515 Tm (| GET /api/bridge/agent-zero/status | 200 temp-admin / 401 unauth | Agent Zero status reachable |) Tj
+1 0 0 1 36 500 Tm (| POST /api/bridge/agent-zero/test-chat | 200 temp-admin | agent_zero_called:true |) Tj
+1 0 0 1 36 485 Tm (| GET /api/bridge/hermes/status | 200 temp-admin / 401 unauth | Hermes status reachable |) Tj
+1 0 0 1 36 470 Tm (| POST /api/bridge/hermes/test-chat | 503 temp-admin | hermes_called:false; safe blocker |) Tj
+1 0 0 1 36 455 Tm (| GET /api/bridge/playwright-mcp/status | 200 temp-admin / 401 unauth | connected local-only;) Tj
+1 0 0 1 36 440 Tm (public_exposure:false |) Tj
+1 0 0 1 36 425 Tm (| POST /api/bridge/playwright-mcp/smoke | 200 for public page; 423 for local/auth target |) Tj
+1 0 0 1 36 410 Tm (read-only public smoke passed; local/auth target gated |) Tj
+1 0 0 1 36 395 Tm (| GET /api/gateway/nodes/playwright-mcp | 200 temp-admin / 401 unauth | node reachable |) Tj
+1 0 0 1 36 380 Tm (| GET /api/gateway/nodes/pi | 200 temp-admin / 401 unauth | Pi node reachable |) Tj
+1 0 0 1 36 365 Tm (| GET /api/bridge/pi/status | 200 temp-admin / 401 unauth | status shadow; writes/execution) Tj
+1 0 0 1 36 350 Tm (disabled |) Tj
+1 0 0 1 36 335 Tm (| GET /api/bridge/paperclip/status | 200 temp-admin / 401 unauth | Tailnet service health OK; auth) Tj
+1 0 0 1 36 320 Tm (blocker remains |) Tj
+1 0 0 1 36 305 Tm (| GET /api/gateway/space-agent/browser/status | 200 temp-admin / 401 unauth | browser automation) Tj
+1 0 0 1 36 290 Tm (status reachable |) Tj
+1 0 0 1 36 275 Tm () Tj
+1 0 0 1 36 260 Tm (## Service Proof) Tj
+1 0 0 1 36 245 Tm () Tj
+1 0 0 1 36 230 Tm (| Service | State | Proof |) Tj
+1 0 0 1 36 215 Tm (| --- | --- | --- |) Tj
+1 0 0 1 36 200 Tm (| mission-control.service | active | PID 2668538; restarted via controlled systemd respawn) Tj
+1 0 0 1 36 185 Tm (fallback at 2026-05-07 22:32:51 EDT. |) Tj
+1 0 0 1 36 170 Tm (| claudeclaw.service | active | Telegram/OpenClaw+ runtime active after Agent Zero cutover. |) Tj
+1 0 0 1 36 155 Tm (| hermes-gateway.service | active | Local Hermes gateway process active; Mission Control live) Tj
+1 0 0 1 36 140 Tm (adapter still safe-blocked. |) Tj
+1 0 0 1 36 125 Tm (| playwright-mcp.service | active | Bound only to localhost port 8931. |) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2475 >>
+stream
+BT
+/F1 9 Tf
+12 TL
+1 0 0 1 36 770 Tm (| Paperclip sandbox | active | Tailnet-local health returns OK; public exposure not added. |) Tj
+1 0 0 1 36 755 Tm (| Build-Wiki / Farmer timer | active/waiting | Run Now remains scoped to literal legacy service) Tj
+1 0 0 1 36 740 Tm (name and requires Bridge Session. |) Tj
+1 0 0 1 36 725 Tm (| Build-Wiki / Farmer service | inactive | No run-now action executed in this pass. |) Tj
+1 0 0 1 36 710 Tm () Tj
+1 0 0 1 36 695 Tm (## Test Results) Tj
+1 0 0 1 36 680 Tm () Tj
+1 0 0 1 36 665 Tm (| Suite | Result |) Tj
+1 0 0 1 36 650 Tm (| --- | --- |) Tj
+1 0 0 1 36 635 Tm (| Mission Control typecheck | PASS |) Tj
+1 0 0 1 36 620 Tm (| Mission Control build | PASS |) Tj
+1 0 0 1 36 605 Tm (| Mission Control tests | PASS: 133 files, 1239 tests |) Tj
+1 0 0 1 36 590 Tm (| ClaudeClaw/OpenClaw+ typecheck | PASS |) Tj
+1 0 0 1 36 575 Tm (| ClaudeClaw/OpenClaw+ build | PASS |) Tj
+1 0 0 1 36 560 Tm (| ClaudeClaw/OpenClaw+ tests | PASS: 61 files, 1215 passed, 4 skipped |) Tj
+1 0 0 1 36 545 Tm (| ClaudeClaw/OpenClaw+ design-lock | PASS |) Tj
+1 0 0 1 36 530 Tm (| Agent Zero 10,000 deterministic gauntlet | PASS from Mission Control test suite |) Tj
+1 0 0 1 36 515 Tm (| Paperclip 1,000 routing gauntlet | PASS from Mission Control test suite |) Tj
+1 0 0 1 36 500 Tm (| SpaceAgent gauntlets | PASS from Mission Control test suite |) Tj
+1 0 0 1 36 485 Tm () Tj
+1 0 0 1 36 470 Tm (## Files Changed) Tj
+1 0 0 1 36 455 Tm () Tj
+1 0 0 1 36 440 Tm (- Report artifacts only in this phase unless final commit summary says otherwise.) Tj
+1 0 0 1 36 425 Tm () Tj
+1 0 0 1 36 410 Tm (## Rollback) Tj
+1 0 0 1 36 395 Tm () Tj
+1 0 0 1 36 380 Tm (- Revert the final report commit for report-only artifacts. For Telegram code cutover: revert) Tj
+1 0 0 1 36 365 Tm (commit 2cb557f in ClaudeClaw/OpenClaw+.) Tj
+1 0 0 1 36 350 Tm () Tj
+1 0 0 1 36 335 Tm (## No-Secrets Confirmation) Tj
+1 0 0 1 36 320 Tm () Tj
+1 0 0 1 36 305 Tm (No secret values, API keys, auth file contents, token values, password values, or environment) Tj
+1 0 0 1 36 290 Tm (values were printed or committed. No .env file was modified. No SMB/Fork 2, Zapier write, HeyGen) Tj
+1 0 0 1 36 275 Tm (generation, external farmer, Docker socket exposure, raw root shell, or broad connector execution) Tj
+1 0 0 1 36 260 Tm (occurred.) Tj
+1 0 0 1 36 245 Tm () Tj
+1 0 0 1 36 230 Tm (## Exact Next Step) Tj
+1 0 0 1 36 215 Tm () Tj
+1 0 0 1 36 200 Tm (Continue to the next phase.) Tj
+1 0 0 1 36 185 Tm () Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R] /Count 4 >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f
+0000000009 00000 n
+0000000079 00000 n
+0000002908 00000 n
+0000003035 00000 n
+0000007041 00000 n
+0000007168 00000 n
+0000010817 00000 n
+0000010944 00000 n
+0000013471 00000 n
+0000013598 00000 n
+0000013674 00000 n
+trailer
+<< /Size 12 /Root 11 0 R >>
+startxref
+13725
+%%EOF

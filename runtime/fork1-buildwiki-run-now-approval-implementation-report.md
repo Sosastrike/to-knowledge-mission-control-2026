@@ -66,8 +66,9 @@ Status: IMPLEMENTED (scoped), pending owner approval for live dispatch proof
 - No connector broadening.
 
 ## Commit / Push
-- Pending at time of report writing; will be appended after commit/push.
+- Commit: `498c6ed`
+- Branch: `to-knowledge-mc`
+- Push: `origin/to-knowledge-mc` ✅
 
 ## Rollback Command
-- Will be recorded as:
-  - `git revert <commit_sha>`
+- `git revert 498c6ed`

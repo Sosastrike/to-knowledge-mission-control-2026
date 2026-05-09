@@ -148,7 +148,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 630 >>
+<< /Length 626 >>
 stream
 BT
 /F1 10 Tf
@@ -173,15 +173,17 @@ BT
 0 -12 Td
 (## Commit / Push) Tj
 0 -12 Td
-(- Pending at time of report writing; will be appended after commit/push.) Tj
+(- Commit: `498c6ed`) Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Push: `origin/to-knowledge-mc` ✅) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Rollback Command) Tj
 0 -12 Td
-(- Will be recorded as:) Tj
-0 -12 Td
-(  - `git revert <commit_sha>`) Tj
+(- `git revert 498c6ed`) Tj
 0 -12 Td
 () Tj
 ET
@@ -199,9 +201,9 @@ xref
 0000000247 00000 n 
 0000003983 00000 n 
 0000004109 00000 n 
-0000004790 00000 n 
+0000004786 00000 n 
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-4860
+4856
 %%EOF

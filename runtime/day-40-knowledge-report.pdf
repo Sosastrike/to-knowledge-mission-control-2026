@@ -1,0 +1,418 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2651 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-40-knowledge-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 40 - Knowledge Report 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Brain / Knowledge Report) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE PASS WITH SERVICE_DOWN BLOCKERS) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Source commit: `27b92df`) Tj
+0 -12 Td
+(Push result: pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Produce a safe owner-facing Knowledge Report from the canonical Brain Sync status surface. The r) Tj
+0 -12 Td
+(eport must show indexed, not-indexed, blocked, disabled, and last-sync truth without raw local p) Tj
+0 -12 Td
+(aths, credentials, private record dumps, or fake indexed claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing truth source:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/status`) Tj
+0 -12 Td
+(- Local read-only adapters surfaced there:) Tj
+0 -12 Td
+(  - Obsidian) Tj
+0 -12 Td
+(  - MemPalace) Tj
+0 -12 Td
+(  - Build-Wiki / Farmer approval and run history) Tj
+0 -12 Td
+(  - Graphify as blocked/not connected when no adapter is visible) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing report surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/reports`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(- Existing Agent Zero report delivery remains separate from Brain/Knowledge source status.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gap found:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- There was no dedicated Knowledge Report contract for source buckets:) Tj
+0 -12 Td
+(  - indexed) Tj
+0 -12 Td
+(  - not indexed) Tj
+0 -12 Td
+(  - blocked) Tj
+0 -12 Td
+(  - disabled) Tj
+0 -12 Td
+(  - last sync) Tj
+0 -12 Td
+(- There was no safe Markdown report form for owner handoff.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented Backend/API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/knowledge-report.ts`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The new route:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Requires authenticated viewer access.) Tj
+0 -12 Td
+(- Reuses the Brain Sync status route as the canonical source.) Tj
+0 -12 Td
+(- Returns JSON by default.) Tj
+0 -12 Td
+(- Returns Markdown with `?format=markdown`.) Tj
+0 -12 Td
+(- Uses safe Mission Control links:) Tj
+0 -12 Td
+(  - `/gateway/brain`) Tj
+0 -12 Td
+(  - `/gateway/bridge-session`) Tj
+0 -12 Td
+(  - `/api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+(- Does not expose raw local paths.) Tj
+0 -12 Td
+(- Does not expose secrets.) Tj
+0 -12 Td
+(- Does not enable memory writes.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2582 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Does not execute Build-Wiki/Farmer.) Tj
+0 -12 Td
+(- Does not create a second vault.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Button Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a read-only button contract:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Label: `Knowledge report`) Tj
+0 -12 Td
+(- Endpoint: `/api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+(- State: `READ_ONLY`) Tj
+0 -12 Td
+(- Fake success allowed: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new visible fake button was added. The route exists and returns a real report.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- PID after restart: `64454`) Tj
+0 -12 Td
+(- Runtime HEAD: `27b92df`) Tj
+0 -12 Td
+(- Public exposure added: no) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Route smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` - 200) Tj
+0 -12 Td
+(- unauthenticated `/api/bridge/brain-sync/knowledge-report` - 401) Tj
+0 -12 Td
+(- authenticated `/api/bridge/brain-sync/knowledge-report` - 200) Tj
+0 -12 Td
+(- authenticated `/api/bridge/brain-sync/knowledge-report?format=markdown` - 200, `text/markdown`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live Knowledge Report summary:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Total sources: 6) Tj
+0 -12 Td
+(- Indexed: 0) Tj
+0 -12 Td
+(- Not indexed: 3) Tj
+0 -12 Td
+(- Blocked: 3) Tj
+0 -12 Td
+(- Disabled: 0) Tj
+0 -12 Td
+(- Last sync: none visible) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current blockers:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `graphify_not_available`) Tj
+0 -12 Td
+(- `mempalace_not_visible`) Tj
+0 -12 Td
+(- `obsidian_vault_missing_or_unreadable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Safety proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `raw_local_paths_exposed=false`) Tj
+0 -12 Td
+(- `memory_writes_enabled=false`) Tj
+0 -12 Td
+(- `external_writes_enabled=false`) Tj
+0 -12 Td
+(- `bridge_session_required_for_writes=true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-40-knowledge-report-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test src/lib/knowledge-report.test.ts` - red before implementation, then pass) Tj
+0 -12 Td
+(- `pnpm test src/app/api/bridge/brain-sync/knowledge-report/route.test.ts` - red before route im) Tj
+0 -12 Td
+(plementation, then pass) Tj
+0 -12 Td
+(- `pnpm test src/lib/knowledge-report.test.ts src/app/api/bridge/brain-sync/knowledge-report/rou) Tj
+0 -12 Td
+(te.test.ts src/app/api/bridge/brain-sync/status/route.test.ts src/lib/button-contracts-route.tes) Tj
+0 -12 Td
+(t.ts` - PASS, 4 files / 8 tests) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2105 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `node scripts/check-button-contract-routes.mjs` - PASS, new endpoint resolved) Tj
+0 -12 Td
+(- `git diff --check` - PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` - PASS) Tj
+0 -12 Td
+(- `pnpm run build` - PASS; `/api/bridge/brain-sync/knowledge-report` appears in the production r) Tj
+0 -12 Td
+(oute list) Tj
+0 -12 Td
+(- `pnpm test` - PASS, 161 files / 1334 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` - PASS) Tj
+0 -12 Td
+(- `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337` - PASS, knowledge r) Tj
+0 -12 Td
+(eport route returned 200) Tj
+0 -12 Td
+(- staged secret scan - PASS) Tj
+0 -12 Td
+(- `.env` diff check - clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control was restarted because Day 40 added runtime API source.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No public bind was added; runtime remains local-only on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The report generator is complete, but the live source data still has current blocked sources:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Graphify adapter not available.) Tj
+0 -12 Td
+(- MemPalace not visible.) Tj
+0 -12 Td
+(- Obsidian vault missing or unreadable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These are truthful source blockers, not report-generator blockers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 27b92df) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No raw local paths in the report output.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Build-Wiki/Farmer execution.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 41 - Brain Security Sweep automatically starts after the report commit is pushed.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002956 00000 n 
+0000003082 00000 n 
+0000005716 00000 n 
+0000005842 00000 n 
+0000007999 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8069
+%%EOF

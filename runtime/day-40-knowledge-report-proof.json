@@ -1,0 +1,59 @@
+{
+  "day": 40,
+  "lane": "knowledge-report",
+  "status": "developer_side_pass_with_service_down_blockers",
+  "blocker_class": "SERVICE_DOWN",
+  "source_commit": "27b92df",
+  "push": {
+    "remote": "origin",
+    "branch": "to-knowledge-mc",
+    "ok": true
+  },
+  "runtime": {
+    "bind": "127.0.0.1:3337",
+    "pid": 64454,
+    "head": "27b92df",
+    "restarted": true,
+    "public_exposure_added": false
+  },
+  "route_proof": {
+    "login": 200,
+    "knowledge_report_unauthenticated": 401,
+    "knowledge_report_authenticated": 200,
+    "knowledge_report_markdown": 200
+  },
+  "knowledge_report_summary": {
+    "total_sources": 6,
+    "indexed": 0,
+    "not_indexed": 3,
+    "blocked": 3,
+    "disabled": 0,
+    "last_sync_at": null
+  },
+  "blockers": [
+    "graphify_not_available",
+    "mempalace_not_visible",
+    "obsidian_vault_missing_or_unreadable"
+  ],
+  "safety": {
+    "raw_local_paths_exposed": false,
+    "memory_writes_enabled": false,
+    "external_writes_enabled": false,
+    "bridge_session_required_for_writes": true,
+    "secrets_printed": false,
+    "env_changed": false,
+    "auth_weakened": false
+  },
+  "validation": {
+    "git_diff_check": true,
+    "typecheck": true,
+    "build": true,
+    "tests": "161 files / 1334 tests passed",
+    "button_contract_routes": true,
+    "button_contract_live_status": true,
+    "protected_file_invariants": true,
+    "staged_secret_scan": true,
+    "env_diff_clean": true
+  },
+  "rollback": "git revert 27b92df"
+}

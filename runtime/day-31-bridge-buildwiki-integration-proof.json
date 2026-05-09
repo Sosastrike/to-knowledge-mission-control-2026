@@ -1,0 +1,43 @@
+{
+  "schema": "day31_bridge_buildwiki_integration_proof_v1",
+  "generated_at": "2026-05-09T20:33:35.813Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "login_status": 200,
+  "unauthenticated_post_status": 401,
+  "read_before_status": 200,
+  "read_before_ui_state": "denied",
+  "authenticated_post_status": 201,
+  "post_mode": "run_now_approval_requested_no_execution",
+  "approval_request_created": true,
+  "reused_existing": false,
+  "approval_id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+  "approval_state": "pending",
+  "required_scope": "buildwiki.run_now",
+  "target_service": "opencloud-docs-farmer.service",
+  "execution_enabled": false,
+  "accepted_for_execution": false,
+  "writes_enabled": false,
+  "ui_state_after": "pending_approval",
+  "dispatch_route_present": true,
+  "approval_route_present": true,
+  "audit_report_status": 200,
+  "audit_row_found": true,
+  "audit_row": {
+    "connector": "skill.build_wiki",
+    "action": "buildwiki.run_now",
+    "target_key": "opencloud-docs-farmer.service",
+    "approval_state": "pending",
+    "latest_run_state": null,
+    "audit_outcomes": [
+      "approval_requested"
+    ]
+  },
+  "systemd_timer_is_active_status": "systemctl_command_not_found_in_local_runtime",
+  "systemd_service_is_active_status": "systemctl_command_not_found_in_local_runtime",
+  "service_dispatch_skipped": true,
+  "service_dispatch_skip_reason": "runtime proof stops at approval request because owner approval/live dispatch was already separately scoped and service may be host-gated; tests cover approved dispatch path with exact command",
+  "unsafe_output_detected": false,
+  "secret_values_printed": false,
+  "blocker_classification": "SERVICE_DOWN",
+  "exact_blocker": "systemctl_command_not_found_in_local_runtime"
+}

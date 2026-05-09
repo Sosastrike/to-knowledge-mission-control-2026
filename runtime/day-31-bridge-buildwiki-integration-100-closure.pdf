@@ -1,0 +1,410 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3314 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-31-bridge-buildwiki-integration-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 31 — Bridge + Build-Wiki Integration 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Bridge + Build-Wiki/Farmer Run Now integration) Tj
+0 -12 Td
+(Status: CLOSED WITH SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker classification: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: `systemctl_command_not_found_in_local_runtime`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The Build-Wiki/Farmer Run Now path is wired behind Bridge approval:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Owner/operator request creates an approval request for `buildwiki.run_now`.) Tj
+0 -12 Td
+(- The request is scoped only to `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+(- The request does not execute immediately.) Tj
+0 -12 Td
+(- The approval route auto-dispatches only exact Build-Wiki Run Now approvals.) Tj
+0 -12 Td
+(- The dispatch helper runs only:) Tj
+0 -12 Td
+(  - `systemctl --user start opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- Out-of-scope approvals do not dispatch.) Tj
+0 -12 Td
+(- Dispatch writes a connector run row and audit event when the service command is attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new source change was needed in this day because the implementation source was already presen) Tj
+0 -12 Td
+(t on the current branch and verified fresh during this closeout.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 31 report/proof artifacts:) Tj
+0 -12 Td
+(- `runtime/day-31-bridge-buildwiki-integration-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-31-bridge-buildwiki-integration-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-31-bridge-buildwiki-integration-100-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Relevant source already in lineage:) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/run-now/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/[id]/approve/route.ts`) Tj
+0 -12 Td
+(- `src/lib/build-wiki-run-now.ts`) Tj
+0 -12 Td
+(- `src/lib/build-wiki-run-now-dispatch.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Primary source commit:) Tj
+0 -12 Td
+(- `39fc228` — `feat\(bridge\): dispatch buildwiki run now after approval`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new endpoint changed in Day 31.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verified endpoints:) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch`) Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests/[id]/approve`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Expected behavior:) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now` creates a pending `buildwiki.run_now` approva) Tj
+0 -12 Td
+(l.) Tj
+0 -12 Td
+(- It returns a dispatch route and approval route.) Tj
+0 -12 Td
+(- It sets `execution_enabled: false`.) Tj
+0 -12 Td
+(- It sets `accepted_for_execution: false`.) Tj
+0 -12 Td
+(- It sets `writes_enabled: false`.) Tj
+0 -12 Td
+(- The service is not started until the owner approval route resolves the request.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2927 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(The UI can truthfully show the Run Now flow:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Request run) Tj
+0 -12 Td
+(- Approval pending) Tj
+0 -12 Td
+(- Approved) Tj
+0 -12 Td
+(- Run dispatched / completed) Tj
+0 -12 Td
+(- Failed with exact blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No fake Run Now completion is enabled.) Tj
+0 -12 Td
+(No pause/resume/add-source/external-farmer/SMB controls were wired in this day.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local Mission Control standalone runtime:) Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- `/login`: `200`) Tj
+0 -12 Td
+(- Unauthenticated `POST /api/bridge/brain-sync/build-wiki/run-now`: `401`) Tj
+0 -12 Td
+(- Authenticated `GET /api/bridge/brain-sync/build-wiki/run-now`: `200`) Tj
+0 -12 Td
+(- Authenticated `POST /api/bridge/brain-sync/build-wiki/run-now`: `201`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live Run Now approval request:) Tj
+0 -12 Td
+(- approval id: `apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3`) Tj
+0 -12 Td
+(- approval state: `pending`) Tj
+0 -12 Td
+(- required scope: `buildwiki.run_now`) Tj
+0 -12 Td
+(- target service: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- execution enabled: `false`) Tj
+0 -12 Td
+(- accepted for execution: `false`) Tj
+0 -12 Td
+(- writes enabled: `false`) Tj
+0 -12 Td
+(- dispatch route present: `true`) Tj
+0 -12 Td
+(- approval route present: `true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Persistence proof:) Tj
+0 -12 Td
+(- approval row found: `true`) Tj
+0 -12 Td
+(- audit row found: `true`) Tj
+0 -12 Td
+(- audit outcome: `approval_requested`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime service proof:) Tj
+0 -12 Td
+(- `systemctl` is not available in the local runtime shell.) Tj
+0 -12 Td
+(- Timer status: `systemctl_command_not_found_in_local_runtime`) Tj
+0 -12 Td
+(- Service status: `systemctl_command_not_found_in_local_runtime`) Tj
+0 -12 Td
+(- Live service dispatch was not performed in this environment.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+(- `runtime/day-31-bridge-buildwiki-integration-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test 'src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts' 'src/app/api/bridg) Tj
+0 -12 Td
+(e/brain-sync/build-wiki/run-now/[id]/dispatch/route.test.ts' 'src/app/api/bridge/approval-reques) Tj
+0 -12 Td
+(ts/[id]/approve/route.test.ts'`) Tj
+0 -12 Td
+(  - PASS: 3 files / 8 tests) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh full-source validation from the current source lineage before this proof/report commit:) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(  - PASS: 156 files / 1324 tests) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- Staged secret/raw-path scan) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1519 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - PASS) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(  - PASS, no `.env` changes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No SMB / Fork 2 / external farmers.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No connector broad execution.) Tj
+0 -12 Td
+(- No fake Run Now success.) Tj
+0 -12 Td
+(- No service command was executed before approval.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+(- `39fc228` — `feat\(bridge\): dispatch buildwiki run now after approval`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 31 report commit:) Tj
+0 -12 Td
+(- this report artifact commit) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push:) Tj
+0 -12 Td
+(- pending report commit and push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 39fc228) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day31_report_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 32 — Bridge Final Closeout starts automatically after this report is committed and pushed.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003619 00000 n 
+0000003745 00000 n 
+0000006724 00000 n 
+0000006850 00000 n 
+0000008421 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8491
+%%EOF

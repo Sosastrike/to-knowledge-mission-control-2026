@@ -1,0 +1,156 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T17:44:32.594Z",
+  "base_url": "http://127.0.0.1:3337",
+  "bind": "127.0.0.1:3337",
+  "runtime_pid": 92606,
+  "page_authentication": "local proof session cookie present, value redacted; not owner visual proof",
+  "api_authentication": "x-api-key present, value redacted",
+  "canonical_statuses": [
+    "LIVE",
+    "READY",
+    "OWNER_GATED",
+    "CREDENTIAL_GATED",
+    "SERVICE_DOWN",
+    "BLOCKED",
+    "DISABLED"
+  ],
+  "route_smoke": {
+    "login": {
+      "path": "/login",
+      "status": 200,
+      "location": null,
+      "ok": true
+    },
+    "unauthGateway": {
+      "path": "/gateway",
+      "status": 307,
+      "location": "/login",
+      "ok": false
+    },
+    "unauthAgentHub": {
+      "path": "/gateway/agent-hub",
+      "status": 307,
+      "location": "/login",
+      "ok": false
+    },
+    "unauthStatus": {
+      "path": "/api/gateway/agent-hub/status",
+      "status": 401,
+      "ok": false
+    },
+    "authedGateway": {
+      "path": "/gateway",
+      "status": 200,
+      "location": null,
+      "ok": true
+    },
+    "authedAgentHub": {
+      "path": "/gateway/agent-hub",
+      "status": 200,
+      "location": null,
+      "ok": true
+    }
+  },
+  "agent_hub_status": {
+    "status": 200,
+    "allowed_owner_statuses": [
+      "LIVE",
+      "READY",
+      "OWNER_GATED",
+      "CREDENTIAL_GATED",
+      "SERVICE_DOWN",
+      "BLOCKED",
+      "DISABLED"
+    ],
+    "owner_status_summary": {
+      "LIVE": 0,
+      "READY": 3,
+      "OWNER_GATED": 2,
+      "CREDENTIAL_GATED": 0,
+      "SERVICE_DOWN": 1,
+      "BLOCKED": 0,
+      "DISABLED": 0
+    },
+    "agents": [
+      {
+        "id": "paperclip",
+        "legacy_status": "pending",
+        "owner_status": "OWNER_GATED",
+        "tone": "yellow",
+        "blocker_class": "OWNER_GATED",
+        "reason": "production_install_blocked_by_dependency_audit",
+        "can_execute": false
+      },
+      {
+        "id": "agent-zero",
+        "legacy_status": "partial_go",
+        "owner_status": "READY",
+        "tone": "blue",
+        "blocker_class": "NONE",
+        "reason": "agent_zero_full_go_requires_downstream_route_completion",
+        "can_execute": false
+      },
+      {
+        "id": "hermes",
+        "legacy_status": "gated",
+        "owner_status": "OWNER_GATED",
+        "tone": "yellow",
+        "blocker_class": "OWNER_GATED",
+        "reason": "hermes_degraded_or_pending_live_proof",
+        "can_execute": false
+      },
+      {
+        "id": "spaceagent",
+        "legacy_status": "read_only",
+        "owner_status": "READY",
+        "tone": "blue",
+        "blocker_class": "NONE",
+        "reason": "firecrawl_credential_required",
+        "can_execute": false
+      },
+      {
+        "id": "pi-mono",
+        "legacy_status": "read_only",
+        "owner_status": "READY",
+        "tone": "blue",
+        "blocker_class": "NONE",
+        "reason": "Mission Control in-process shadow dispatcher is live for advisory route recommendations; execution and writes remain disabled",
+        "can_execute": false
+      },
+      {
+        "id": "openclaw-plus",
+        "legacy_status": "blocked",
+        "owner_status": "SERVICE_DOWN",
+        "tone": "red",
+        "blocker_class": "SERVICE_DOWN",
+        "reason": "openclaw_doctor_runtime_not_reachable",
+        "can_execute": false
+      }
+    ]
+  },
+  "button_contracts": {
+    "status": 200,
+    "allowed_owner_statuses": [
+      "LIVE",
+      "READY",
+      "OWNER_GATED",
+      "CREDENTIAL_GATED",
+      "SERVICE_DOWN",
+      "BLOCKED",
+      "DISABLED"
+    ],
+    "owner_status_summary": {
+      "LIVE": 33,
+      "DISABLED": 7,
+      "OWNER_GATED": 12,
+      "CREDENTIAL_GATED": 9,
+      "SERVICE_DOWN": 6,
+      "READY": 5
+    },
+    "no_fake_success": true,
+    "protected_execution_enabled": false,
+    "buttons_total": 72
+  },
+  "failures": []
+}

@@ -1,0 +1,438 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2962 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-01-agent-zero-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 01 - Agent Zero 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Agent Zero) Tj
+0 -12 Td
+(Status: CREDENTIAL_GATED developer-side closure) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 01 is closed on the developer side, but it is not a live GO claim. Agent Zero now has explic) Tj
+0 -12 Td
+(it HTTP health detection, canonical closure status, and a safe proof packet on the authenticated) Tj
+0 -12 Td
+( status route. The local runtime proof shows Agent Zero health is reachable and Docker is not re) Tj
+0 -12 Td
+(quired, but authenticated Agent Zero external API chat remains gated by missing Agent Zero API a) Tj
+0 -12 Td
+(uth in this local runtime context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Replaced single hardcoded health assumption with an HTTP health endpoint probe sequence:) Tj
+0 -12 Td
+(  - `AGENT_ZERO_HEALTH_URL` when configured.) Tj
+0 -12 Td
+(  - `AGENT_ZERO_HEALTH_PATHS` when configured.) Tj
+0 -12 Td
+(  - `/api/health`.) Tj
+0 -12 Td
+(  - `/health`.) Tj
+0 -12 Td
+(  - `/api/status`.) Tj
+0 -12 Td
+(- Made the probe contract explicit:) Tj
+0 -12 Td
+(  - `probe_strategy: http_health_endpoints`.) Tj
+0 -12 Td
+(  - `docker_required: false`.) Tj
+0 -12 Td
+(  - `docker_status: not_checked`.) Tj
+0 -12 Td
+(  - `checked_endpoints`.) Tj
+0 -12 Td
+(  - `selected_endpoint`.) Tj
+0 -12 Td
+(- Added Agent Zero canonical closure status:) Tj
+0 -12 Td
+(  - `LIVE`.) Tj
+0 -12 Td
+(  - `CREDENTIAL_GATED`.) Tj
+0 -12 Td
+(  - `SERVICE_DOWN`.) Tj
+0 -12 Td
+(  - `BLOCKED`.) Tj
+0 -12 Td
+(- Added an Agent Zero proof packet:) Tj
+0 -12 Td
+(  - timestamp.) Tj
+0 -12 Td
+(  - runtime commit.) Tj
+0 -12 Td
+(  - route/service checked.) Tj
+0 -12 Td
+(  - result.) Tj
+0 -12 Td
+(  - blocker.) Tj
+0 -12 Td
+(  - blocker class.) Tj
+0 -12 Td
+(  - audit pointer.) Tj
+0 -12 Td
+(  - rollback command.) Tj
+0 -12 Td
+(  - no-secrets and no-raw-path flags.) Tj
+0 -12 Td
+(- Updated `/api/bridge/agent-zero/status` to return Day 01 closure metadata.) Tj
+0 -12 Td
+(- Updated the bridge providers fallback record to keep the same canonical proof shape when Agent) Tj
+0 -12 Td
+( Zero status probing fails.) Tj
+0 -12 Td
+(- Updated the general health check route to use configured Agent Zero base URL plus `/api/health) Tj
+0 -12 Td
+(` instead of hardcoding a page URL.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-zero-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-bridge.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/status/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/providers/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/health-check/route.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/status`) Tj
+0 -12 Td
+(  - Adds `agent.canonical_status`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3121 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - Adds `agent.blocker_class`.) Tj
+0 -12 Td
+(  - Adds `runtime.detection_strategy`.) Tj
+0 -12 Td
+(  - Adds `runtime.checked_endpoints`.) Tj
+0 -12 Td
+(  - Adds `runtime.selected_endpoint`.) Tj
+0 -12 Td
+(  - Adds `runtime.docker_required=false`.) Tj
+0 -12 Td
+(  - Adds `closure.proof_packet`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/providers`) Tj
+0 -12 Td
+(  - Fallback Agent Zero record now preserves canonical status and proof packet fields.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/health-check`) Tj
+0 -12 Td
+(  - Agent Zero service check now uses the configured Agent Zero base URL and `/api/health`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub still shows Agent Zero in the production roster from Gateway registry truth. No UI red) Tj
+0 -12 Td
+(esign was performed. No fake buttons were added. Agent Hub status route remained live and return) Tj
+0 -12 Td
+(ed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `agents_total: 5`) Tj
+0 -12 Td
+(- Agent Zero visible) Tj
+0 -12 Td
+(- `mock_data_used: false`) Tj
+0 -12 Td
+(- `raw_paths_exposed: false`) Tj
+0 -12 Td
+(- `secrets_exposed: false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local standalone smoke was run on `127.0.0.1:3337` only. No public local exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated route smoke used a temporary local process-level API key. No `.env` file was modif) Tj
+0 -12 Td
+(ied.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login`: HTTP 200.) Tj
+0 -12 Td
+(- Unauthenticated `GET /api/bridge/agent-zero/status`: HTTP 401.) Tj
+0 -12 Td
+(- Authenticated `GET /api/bridge/agent-zero/status`: HTTP 200.) Tj
+0 -12 Td
+(- Agent Zero status route result:) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - `canonical_status: CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - `blocker_class: CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - `health: true`) Tj
+0 -12 Td
+(  - `docker_required: false`) Tj
+0 -12 Td
+(  - `closure: CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - `mission_control_auth_weakened: false`) Tj
+0 -12 Td
+(- Authenticated `GET /api/gateway/agent-hub/status`: HTTP 200.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The temporary local standalone server PID was `94309`; it was stopped after smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS.) Tj
+0 -12 Td
+(- `pnpm run build`: PASS.) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 138 files / 1255 tests.) Tj
+0 -12 Td
+(- Focused Agent Zero tests: PASS, 16 tests.) Tj
+0 -12 Td
+(- Focused Agent Hub tests: PASS, 3 tests.) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS.) Tj
+0 -12 Td
+(- Staged secret scan: PASS, no matches.) Tj
+0 -12 Td
+(- `.env` diff check: PASS, no `.env` changes staged or present in git status.) Tj
+0 -12 Td
+(- Connector action contract check with a temporary local Mission Control key: PASS.) Tj
+0 -12 Td
+(- Bridge capability matrix live check with a temporary local Mission Control key: PASS.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Non-blocking unrelated contract script findings:) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2592 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- `node scripts/check-button-contract-live-status.mjs` reached the local server but still report) Tj
+0 -12 Td
+(s existing non-Agent-Zero blockers:) Tj
+0 -12 Td
+(  - Build-Wiki logs sample returns `farmer_log_not_found`.) Tj
+0 -12 Td
+(  - Build-Wiki Run Now sample returns `approval_persistence_not_applied`.) Tj
+0 -12 Td
+(  - Brain Sync status returns `claudeclaw_dashboard_token_missing`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These are not Day 01 Agent Zero health/proof regressions. They remain assigned to later Bridge/B) Tj
+0 -12 Td
+(uild-Wiki/Brain work packages.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Deploy) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Production restart was not performed during this Day 01 code commit. The source change affects M) Tj
+0 -12 Td
+(ission Control, so production should be rebuilt/restarted after push when applying the Day 01 co) Tj
+0 -12 Td
+(mmit to the production runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local standalone build and route smoke completed successfully on localhost only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This report and its PDF are the Day 01 proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-01-agent-zero-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-01-agent-zero-100-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker: `agent_zero_external_api_key_missing`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Classification: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Meaning: Mission Control can reach Agent Zero health over HTTP and no Docker runtime is required) Tj
+0 -12 Td
+(, but this local runtime cannot complete Agent Zero authenticated external API chat until an app) Tj
+0 -12 Td
+(roved Agent Zero API key source is available to the Mission Control process.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 0dd1ebf8893c4f000d4ed2ed02978e5f422a610a) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-01-report-commit-sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit: `0dd1ebf8893c4f000d4ed2ed02978e5f422a610a`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report commit: pending) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result: pending) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 02 starts automatically after this report commit and push: Hermes 100% closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003267 00000 n 
+0000003393 00000 n 
+0000006566 00000 n 
+0000006692 00000 n 
+0000009336 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+9406
+%%EOF

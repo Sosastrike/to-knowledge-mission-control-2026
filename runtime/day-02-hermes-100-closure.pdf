@@ -1,0 +1,382 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3005 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-02-hermes-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 02 — Hermes 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED WITH SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker classification: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 02 closed the developer-side Hermes lane without claiming GO. Mission Control now exposes a ) Tj
+0 -12 Td
+(canonical Hermes closure status and proof packet on the authenticated Hermes status route.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Hermes read-only Mission Control test-chat is guarded and can return `hermes_called:true` throug) Tj
+0 -12 Td
+(h the safe no-tool/no-write adapter. However, the host runtime still does not expose a reachable) Tj
+0 -12 Td
+( Hermes CLI/gateway/auth runtime, so the lane remains `SERVICE_DOWN` until an approved Hermes ru) Tj
+0 -12 Td
+(ntime binary/gateway is installed or exposed to the Mission Control service user.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added canonical Hermes closure status mapping:) Tj
+0 -12 Td
+(  - `LIVE`) Tj
+0 -12 Td
+(  - `READY`) Tj
+0 -12 Td
+(  - `OWNER_GATED`) Tj
+0 -12 Td
+(  - `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - `SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `BLOCKED`) Tj
+0 -12 Td
+(  - `DISABLED`) Tj
+0 -12 Td
+(- Added a Hermes proof packet with timestamp, checked route/service, result, blocker, blocker cl) Tj
+0 -12 Td
+(ass, audit pointer, rollback command, and explicit no-secret/no-raw-path fields.) Tj
+0 -12 Td
+(- Updated `/api/bridge/hermes/status` to return:) Tj
+0 -12 Td
+(  - `canonical_status`) Tj
+0 -12 Td
+(  - `blocker_class`) Tj
+0 -12 Td
+(  - `live_chat_status`) Tj
+0 -12 Td
+(  - `proof_packet`) Tj
+0 -12 Td
+(- Tightened Hermes install detection so an approved absolute binary path detected by the route c) Tj
+0 -12 Td
+(ounts as installed, while no detected binary remains `SERVICE_DOWN`.) Tj
+0 -12 Td
+(- Added tests for the Hermes canonical closure mapper.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/hermes-bridge.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/hermes/status/route.ts`) Tj
+0 -12 Td
+(- `src/lib/hermes-bridge.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/hermes/status`) Tj
+0 -12 Td
+(  - Authenticated route now returns canonical closure status and proof packet.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No external-write route was enabled.) Tj
+0 -12 Td
+(No Bridge execution path was opened.) Tj
+0 -12 Td
+(No public local exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local production-style standalone server was run on `127.0.0.1:3337` with a temporary runtime AP) Tj
+0 -12 Td
+(I key.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/hermes/status` returned `401`.) Tj
+0 -12 Td
+(- `/login` returned `200`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2800 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Authenticated proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/hermes/status` returned `200`.) Tj
+0 -12 Td
+(- Hermes status response:) Tj
+0 -12 Td
+(  - `canonical_status=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker_class=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `live_chat_status=blocked`) Tj
+0 -12 Td
+(  - `health=unreachable`) Tj
+0 -12 Td
+(  - `reachable=false`) Tj
+0 -12 Td
+(  - `auth_configured=false`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `blocker=hermes_not_installed`) Tj
+0 -12 Td
+(- `POST /api/bridge/hermes/test-chat` returned `200`.) Tj
+0 -12 Td
+(- Safe test-chat response:) Tj
+0 -12 Td
+(  - `hermes_called=true`) Tj
+0 -12 Td
+(  - `response_source=mission_control_safe_live_adapter`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `writes_enabled=false`) Tj
+0 -12 Td
+(  - `blocker=null`) Tj
+0 -12 Td
+(  - Answer confirmed Agent Zero is commander and Hermes is lieutenant without executing anything) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status` returned `200`.) Tj
+0 -12 Td
+(- Agent Hub Hermes state remained gated:) Tj
+0 -12 Td
+(  - `status=gated`) Tj
+0 -12 Td
+(  - `blocked_reason=hermes_degraded_or_pending_live_proof`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `write_enabled=false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime host checks:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `command -v hermes`: no binary found.) Tj
+0 -12 Td
+(- `command -v hermes-agent`: no binary found.) Tj
+0 -12 Td
+(- `command -v hermes-gateway`: no binary found.) Tj
+0 -12 Td
+(- `systemctl --user is-active hermes-gateway.service`: no active service result in this local co) Tj
+0 -12 Td
+(ntext.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test src/lib/hermes-bridge.test.ts`: PASS, 21 tests) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 138 files / 1256 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No tool execution enabled.) Tj
+0 -12 Td
+(- No fake sent/uploaded/done behavior.) Tj
+0 -12 Td
+(- Tony is not active commander.) Tj
+0 -12 Td
+(- Agent Zero remains commander.) Tj
+0 -12 Td
+(- Hermes remains read-only/no-write unless a future Bridge Session explicitly gates a registered) Tj
+0 -12 Td
+( protected action.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1274 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Blocker: `hermes_not_installed`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Classification: `SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Required owner/admin/runtime action:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Install or expose an approved Hermes runtime binary and gateway service to the Mission Control r) Tj
+0 -12 Td
+(untime service user. After installation, rerun:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/hermes/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/hermes/test-chat`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Hermes cannot be marked GO until the runtime/gateway is reachable and the live status route no l) Tj
+0 -12 Td
+(onger reports `SERVICE_DOWN`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `5f04bd2b9ec3f471128a15674c4c4a3d4238c58d`) Tj
+0 -12 Td
+(- Message: `feat\(hermes\): add closure status proof packet`) Tj
+0 -12 Td
+(- Push: `origin/to-knowledge-mc` updated successfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 5f04bd2b9ec3f471128a15674c4c4a3d4238c58d) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 03 — Pi 100% Closure has started automatically.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003310 00000 n 
+0000003436 00000 n 
+0000006288 00000 n 
+0000006414 00000 n 
+0000007740 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7810
+%%EOF

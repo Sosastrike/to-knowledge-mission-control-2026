@@ -27,6 +27,7 @@ Prepare deploy + owner retest package for Gateway FULL v3 UI correction.
 ## Current Status
 - Gateway owner visual lane: **PARTIAL GO**
 - Reason: owner must confirm fixed production UI after deploy/restart.
+- Fix commit pushed: `dcb8636` (`fix(gateway): remove fullscreen scroll trap and add explicit shell exits`)
 
 ## Remaining Blocker
 - `gateway_ui_design_fidelity_scroll_defect` remains open until owner confirms:
@@ -34,6 +35,12 @@ Prepare deploy + owner retest package for Gateway FULL v3 UI correction.
   - not trapped in Agent Hub
   - clear exits back to Mission Control and Gateway Overview
   - design fidelity acceptable in authenticated production view
+
+## Runtime Rollout Note
+- Local standalone deploy script run was attempted and reached successful build/start, but failed final CSS verification probe with:
+  - `error: no css asset found in rendered login HTML`
+- This is a rollout-path issue, not a code-validation failure. Local code validation and tests passed before push.
+- Production deploy/restart still required on the active runtime lane.
 
 ## No-Secrets Confirmation
 - No secrets printed.

@@ -23,6 +23,7 @@ import {
   transitionPaperclipCoWorkerLifecycle,
   validatePaperclipCoWorkerGatewayPolicy,
   buildPaperclipSpaceAgentResearchTaskPayload,
+  buildPaperclipClosureSummary,
   buildPaperclipStatusPayload,
   buildPaperclipTestTaskPayload,
   listPaperclipAgents,
@@ -61,6 +62,8 @@ describe('Paperclip bridge payloads', () => {
     expect(payload).toMatchObject({
       mode: 'paperclip_status_read_only',
       health: 'degraded',
+      canonical_status: 'SERVICE_DOWN',
+      blocker_class: 'SERVICE_DOWN',
       reachable: false,
       configured: false,
       ui_link: 'http://127.0.0.1:3100',
@@ -74,6 +77,16 @@ describe('Paperclip bridge payloads', () => {
       blocker: 'paperclip_sandbox_service_not_running',
       execution_enabled: false,
       writes_enabled: false,
+      proof_packet: expect.objectContaining({
+        lane: 'Paperclip',
+        result: 'SERVICE_DOWN',
+        blocker: 'paperclip_sandbox_service_not_running',
+        blocker_class: 'SERVICE_DOWN',
+        service_local_or_tailnet_only: true,
+        execution_enabled: false,
+        writes_enabled: false,
+        public_exposure: false,
+      }),
       no_secrets_exposed: true,
       raw_paths_exposed: false,
     })
@@ -170,6 +183,8 @@ describe('Paperclip bridge payloads', () => {
 
     expect(status).toMatchObject({
       health: 'connected',
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
       reachable: true,
       configured: true,
       ui_link: 'http://127.0.0.1:3100',
@@ -206,6 +221,45 @@ describe('Paperclip bridge payloads', () => {
       assignee_agent: 'assigned',
     })
     expectOwnerSafe({ status, companies, agents, issues })
+  })
+
+  it('classifies Paperclip closure states without exposing secrets or paths', () => {
+    const live = buildPaperclipClosureSummary({
+      generatedAt: GENERATED_AT,
+      reachable: true,
+      configured: true,
+      blocker: null,
+    })
+    const ownerGated = buildPaperclipClosureSummary({
+      generatedAt: GENERATED_AT,
+      reachable: true,
+      configured: false,
+      blocker: 'paperclip_auth_required_or_not_configured',
+    })
+    const blocked = buildPaperclipClosureSummary({
+      generatedAt: GENERATED_AT,
+      reachable: false,
+      configured: false,
+      blocker: 'paperclip_endpoint_not_local_or_tailnet',
+    })
+
+    expect(live).toMatchObject({
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
+      blocker: null,
+      proof_packet: { lane: 'Paperclip', result: 'LIVE', audit_pointer: '/api/bridge/paperclip/status' },
+    })
+    expect(ownerGated).toMatchObject({
+      canonical_status: 'OWNER_GATED',
+      blocker_class: 'OWNER_GATED',
+      blocker: 'paperclip_auth_required_or_not_configured',
+    })
+    expect(blocked).toMatchObject({
+      canonical_status: 'BLOCKED',
+      blocker_class: 'BLOCKED',
+      blocker: 'paperclip_endpoint_not_local_or_tailnet',
+    })
+    expect(JSON.stringify([live, ownerGated, blocked])).not.toMatch(/sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|auth\.json|\/home\/tony/i)
   })
 
   it('defines a Paperclip CoWorkerAgent with supervisor, budget, TTL, tools, expiration, and audit trail', () => {

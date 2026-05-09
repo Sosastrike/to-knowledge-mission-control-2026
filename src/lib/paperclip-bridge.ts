@@ -5,14 +5,43 @@ import {
   type SpaceAgentResearchCompletion,
   type SpaceAgentResponsibleAgent,
 } from './space-agent-research'
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 
 export type PaperclipBridgeStatus = 'connected' | 'degraded' | 'blocked'
+
+export type PaperclipClosureProofPacket = {
+  lane: 'Paperclip'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  service_local_or_tailnet_only: true
+  execution_enabled: false
+  writes_enabled: false
+  secrets_exposed: false
+  raw_paths_exposed: false
+  public_exposure: false
+}
+
+export type PaperclipClosureSummary = {
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  blocker: string | null
+  proof_packet: PaperclipClosureProofPacket
+}
 
 export type PaperclipSafeStatusPayload = {
   ok: true
   mode: 'paperclip_status_read_only'
   generated_at: string
   health: PaperclipBridgeStatus
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
   reachable: boolean
   configured: boolean
   endpoint: string
@@ -58,6 +87,7 @@ export type PaperclipSafeStatusPayload = {
   protected_actions_enabled: false
   no_secrets_exposed: true
   raw_paths_exposed: false
+  proof_packet: PaperclipClosureProofPacket
 }
 
 export type PaperclipInventoryPayload<T> = {
@@ -1444,6 +1474,90 @@ export function resolvePaperclipEndpoint(rawValue?: string | null): PaperclipEnd
   }
 }
 
+function classifyPaperclipClosure(input: {
+  reachable: boolean
+  configured: boolean
+  blocker: string | null
+}): {
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+  blocker: string | null
+} {
+  const blocker = input.blocker || null
+  if (!blocker && input.reachable && input.configured) {
+    return { canonicalStatus: 'LIVE', blockerClass: 'NONE', blocker: null }
+  }
+  if (!blocker && input.reachable) {
+    return { canonicalStatus: 'READY', blockerClass: 'NONE', blocker: null }
+  }
+
+  const normalizedBlocker = blocker || (input.reachable ? 'paperclip_not_configured' : 'paperclip_sandbox_service_not_running')
+  if (/(credential|token|api[_-]?key|oauth|secret)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'CREDENTIAL_GATED', blockerClass: 'CREDENTIAL_GATED', blocker: normalizedBlocker }
+  }
+  if (/(auth|login|owner[_-]?session)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'OWNER_GATED', blockerClass: 'OWNER_GATED', blocker: normalizedBlocker }
+  }
+  if (/(not[_-]?running|not[_-]?reachable|service|sandbox|upstream|http[_-]?\d+|connection|timeout|refused)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'SERVICE_DOWN', blockerClass: 'SERVICE_DOWN', blocker: normalizedBlocker }
+  }
+  if (/(disabled|not[_-]?configured|adapter|endpoint[_-]?not[_-]?local|endpoint[_-]?invalid|public)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker: normalizedBlocker }
+  }
+  return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker: normalizedBlocker }
+}
+
+export function buildPaperclipClosureSummary(input: {
+  generatedAt: string
+  reachable: boolean
+  configured: boolean
+  blocker: string | null
+  routeOrServiceChecked?: string | null
+  runtimeCommit?: string | null
+  rollbackCommand?: string
+}): PaperclipClosureSummary {
+  const classified = classifyPaperclipClosure(input)
+  return {
+    canonical_status: classified.canonicalStatus,
+    blocker_class: classified.blockerClass,
+    blocker: classified.blocker,
+    proof_packet: {
+      lane: 'Paperclip',
+      timestamp: input.generatedAt,
+      runtime_commit: input.runtimeCommit || null,
+      route_or_service_checked: input.routeOrServiceChecked || '/api/bridge/paperclip/status',
+      result: classified.canonicalStatus,
+      blocker: classified.blocker,
+      blocker_class: classified.blockerClass,
+      audit_pointer: classified.blockerClass === 'NONE' ? '/api/bridge/paperclip/status' : null,
+      safe_log_pointer: null,
+      rollback_command: input.rollbackCommand || 'git revert <day-04-paperclip-commit>',
+      service_local_or_tailnet_only: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+      public_exposure: false,
+    },
+  }
+}
+
+function attachPaperclipClosure(payload: PaperclipSafeStatusPayload): PaperclipSafeStatusPayload {
+  const closure = buildPaperclipClosureSummary({
+    generatedAt: payload.generated_at,
+    reachable: payload.reachable,
+    configured: payload.configured,
+    blocker: payload.blocker,
+    routeOrServiceChecked: payload.status_endpoint,
+  })
+  return {
+    ...payload,
+    canonical_status: closure.canonical_status,
+    blocker_class: closure.blocker_class,
+    proof_packet: closure.proof_packet,
+  }
+}
+
 export function createPaperclipCoWorkerAgentDefinition(input: PaperclipCoWorkerAgentInput): PaperclipCoWorkerAgentDefinitionResult {
   const generatedAt = input.generatedAt
   const name = sanitizeOwnerText(input.name || 'Paperclip co-worker agent').slice(0, 120) || 'Paperclip co-worker agent'
@@ -1680,19 +1794,19 @@ export async function buildPaperclipStatusPayload(input: {
   const endpoint = await resolveReachablePaperclipEndpoint(input)
   const baseStatus = basePayload(input.generatedAt, endpoint.ownerVisible, endpoint.uiLink)
   if (endpoint.blocker) {
-    return {
+    return attachPaperclipClosure({
       ...baseStatus,
       service: serviceAccessForEndpoint(endpoint.ownerVisible),
       health: 'degraded',
       reachable: endpoint.blocker === 'paperclip_auth_required_or_not_configured',
       configured: false,
       blocker: endpoint.blocker,
-    }
+    })
   }
 
   const summary = summarizeHealthPayload(endpoint.healthPayload)
   const workforce = await summarizeWorkforceState({ baseUrl: endpoint.baseUrl, fetchImpl: input.fetchImpl })
-  return {
+  return attachPaperclipClosure({
     ...baseStatus,
     service: serviceAccessForEndpoint(endpoint.ownerVisible),
     health: workforce.blocker ? 'degraded' : 'connected',
@@ -1701,7 +1815,7 @@ export async function buildPaperclipStatusPayload(input: {
     upstream: summary,
     workforce_summary: workforce.summary,
     blocker: workforce.blocker,
-  }
+  })
 }
 
 export async function listPaperclipCompanies(input: {
@@ -3355,11 +3469,19 @@ async function fetchPaperclipJson(path: string, input: { baseUrl: string; fetchI
 }
 
 function basePayload(generatedAt: string, endpoint: string, uiLink: string | null): PaperclipSafeStatusPayload {
+  const closure = buildPaperclipClosureSummary({
+    generatedAt,
+    reachable: false,
+    configured: false,
+    blocker: 'paperclip_status_not_checked',
+  })
   return {
     ok: true,
     mode: 'paperclip_status_read_only',
     generated_at: generatedAt,
     health: 'degraded',
+    canonical_status: closure.canonical_status,
+    blocker_class: closure.blocker_class,
     reachable: false,
     configured: false,
     endpoint,
@@ -3405,6 +3527,7 @@ function basePayload(generatedAt: string, endpoint: string, uiLink: string | nul
     protected_actions_enabled: false,
     no_secrets_exposed: true,
     raw_paths_exposed: false,
+    proof_packet: closure.proof_packet,
   }
 }
 

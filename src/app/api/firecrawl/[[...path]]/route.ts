@@ -60,10 +60,23 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
     if (!['crawl', 'scrape'].includes(type)) errors.push('type must be crawl|scrape')
     if (!url) errors.push('url is required')
     if (errors.length) return NextResponse.json({ ok: false, errors }, { status: 400 })
+    const status = getFirecrawlStatus()
     if (!hasEnv('FIRECRAWL_API_KEY')) {
-      return credentialRequired('firecrawl', ['FIRECRAWL_API_KEY'], { received: { type, url } })
+      return credentialRequired('firecrawl', ['FIRECRAWL_API_KEY'], {
+        received: { type, url },
+        canonical_status: status.canonical_status,
+        blocker_class: status.blocker_class,
+        blocked_reason: status.blocked_reason,
+        blockers: status.blockers,
+        proof_packet: status.proof_packet,
+      })
     }
     return backendRequired({
+      canonical_status: status.canonical_status,
+      blocker_class: status.blocker_class,
+      blocked_reason: status.blocked_reason,
+      blockers: status.blockers,
+      proof_packet: status.proof_packet,
       received: {
         type,
         url,

@@ -1,7 +1,38 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 
 export type FirecrawlUiState = 'CREDENTIAL_REQUIRED' | 'BACKEND_REQUIRED' | 'LIVE'
+
+export type FirecrawlProofPacket = {
+  lane: 'SpaceAgent Firecrawl'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  blockers: string[]
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  credential_present: boolean
+  backend_adapter_present: boolean
+  read_only_smoke_allowed: boolean
+  write_execution_enabled: false
+  broad_crawl_enabled: false
+  public_exposure: false
+  secrets_exposed: false
+  raw_paths_exposed: false
+}
+
+export type FirecrawlClosureSummary = {
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  blocked_reason: string | null
+  blockers: string[]
+  proof_packet: FirecrawlProofPacket
+}
 
 export function hasFirecrawlEnvName(path: string, name = 'FIRECRAWL_API_KEY'): boolean {
   try {
@@ -17,9 +48,63 @@ export function firecrawlSdkLoaded(root = process.cwd()): boolean {
   return existsSync(join(root, 'node_modules', '@mendable', 'firecrawl-js', 'package.json'))
 }
 
+export function buildFirecrawlClosureSummary(input: {
+  keyPresent: boolean
+  sdkLoaded: boolean
+  timestamp?: string
+  runtimeCommit?: string | null
+  routeOrServiceChecked?: string
+  rollbackCommand?: string
+}): FirecrawlClosureSummary {
+  const blockers = [
+    !input.keyPresent ? 'firecrawl_credential_required' : null,
+    !input.sdkLoaded ? 'firecrawl_backend_adapter_not_configured' : null,
+  ].filter((blocker): blocker is string => Boolean(blocker))
+  const canonicalStatus: MissionControlCanonicalStatus = blockers.length === 0
+    ? 'READY'
+    : !input.keyPresent
+      ? 'CREDENTIAL_GATED'
+      : 'SERVICE_DOWN'
+  const blockerClass: MissionControlClosureBlockerClass = blockers.length === 0
+    ? 'NONE'
+    : !input.keyPresent
+      ? 'CREDENTIAL_GATED'
+      : 'SERVICE_DOWN'
+  const blockedReason = blockers[0] || null
+
+  return {
+    canonical_status: canonicalStatus,
+    blocker_class: blockerClass,
+    blocked_reason: blockedReason,
+    blockers,
+    proof_packet: {
+      lane: 'SpaceAgent Firecrawl',
+      timestamp: input.timestamp || new Date().toISOString(),
+      runtime_commit: input.runtimeCommit || null,
+      route_or_service_checked: input.routeOrServiceChecked || '/api/firecrawl/status',
+      result: canonicalStatus,
+      blocker: blockedReason,
+      blocker_class: blockerClass,
+      blockers,
+      audit_pointer: blockers.length === 0 ? '/api/firecrawl/status' : null,
+      safe_log_pointer: null,
+      rollback_command: input.rollbackCommand || 'git revert <day-08-spaceagent-firecrawl-commit>',
+      credential_present: input.keyPresent,
+      backend_adapter_present: input.sdkLoaded,
+      read_only_smoke_allowed: blockers.length === 0,
+      write_execution_enabled: false,
+      broad_crawl_enabled: false,
+      public_exposure: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
+  }
+}
+
 export function getFirecrawlStatus(root = process.cwd()) {
   const keyPresent = Boolean((process.env.FIRECRAWL_API_KEY || '').trim())
   const sdkLoaded = firecrawlSdkLoaded(root)
+  const closure = buildFirecrawlClosureSummary({ keyPresent, sdkLoaded })
   const missionControlEnvPresent =
     hasFirecrawlEnvName('/home/tony/mission-control/.env') ||
     hasFirecrawlEnvName('/home/tony/mission-control/.env.local')
@@ -42,6 +127,11 @@ export function getFirecrawlStatus(root = process.cwd()) {
     ok: true,
     status,
     state,
+    canonical_status: closure.canonical_status,
+    blocker_class: closure.blocker_class,
+    blocked_reason: closure.blocked_reason,
+    blockers: closure.blockers,
+    proof_packet: closure.proof_packet,
     keyPresent,
     sdkLoaded,
     key_present: keyPresent,

@@ -204,6 +204,26 @@ function safeSystemctl(args: string[]): string {
   }
 }
 
+function getSystemctlAvailability(): {
+  systemctl_available: boolean
+  blocker: string | null
+} {
+  try {
+    execFileSync('systemctl', ['--version'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 1500,
+      maxBuffer: 16 * 1024,
+    })
+    return { systemctl_available: true, blocker: null }
+  } catch {
+    return {
+      systemctl_available: false,
+      blocker: 'systemctl_command_not_found_in_local_runtime',
+    }
+  }
+}
+
 function parseSystemctlShow(text: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const line of text.split('\n')) {
@@ -350,6 +370,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth
 
   const { row, meta, agentSkill } = readRegistry()
+  const systemctlAvailability = getSystemctlAvailability()
   const timer = getTimerStatus()
   const counts = await countDestination()
   const lastError = await readLastError()
@@ -430,6 +451,22 @@ export async function GET(request: NextRequest) {
           service_sub_state: timer.service_sub_state,
         }
       : null,
+    service_probe: {
+      systemctl_available: systemctlAvailability.systemctl_available,
+      blocker: systemctlAvailability.blocker,
+      service_unit: SERVICE_UNIT,
+      timer_unit: TIMER_UNIT,
+      timer_active: timer.timer_active,
+      timer_unit_file_state: timer.timer_unit_file_state,
+      service_active_state: timer.service_active_state,
+      service_sub_state: timer.service_sub_state,
+      last_result: timer.last_result,
+      last_exit_status: timer.last_exit_status,
+      next_run_at: timer.next_run_at,
+      last_run_at: timer.last_run_at,
+      last_run_started_at: timer.last_run_started_at,
+      last_run_exited_at: timer.last_run_exited_at,
+    },
     destination: {
       obsidian_path: ownerSafeLocalRef(VAULT_BASE, 'configured_buildwiki_destination'),
       raw_count: counts.raw || meta.raw_files_count || 0,

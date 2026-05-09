@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2649 >>
+<< /Length 3813 >>
 stream
 BT
 /F1 10 Tf
@@ -18,133 +18,228 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(# NEXT-4 — Gateway UI Shell Navigation Fix) Tj
+(# NEXT-4 — Gateway UI Shell Navigation + Design Fidelity Fix) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Objective) Tj
 0 -12 Td
-(Keep Gateway owner visual proof moving from PARTIAL toward GO by fixing navigation/scroll shell ) Tj
+(Fix the owner-reported Gateway UI defect by enforcing the accepted FULL v3 design contract exact) Tj
 0 -12 Td
-(defects.) Tj
+(ly, while keeping production truth and no-fake status behavior.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Result) Tj
 0 -12 Td
-(PARTIAL+ \(navigation and scroll hardening implemented; owner re-test still required for GO\).) Tj
+(PARTIAL GO \(implementation complete; owner re-test still required before GO\).) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Implemented) Tj
+(## Actions Completed) Tj
 0 -12 Td
-(1. Added visible top exits on Gateway/Agent Hub surfaces:) Tj
+(1. Replaced custom Gateway React page surfaces with direct FULL v3 mock mounting \(no redesign la) Tj
 0 -12 Td
-(   - Mission Control Home) Tj
+(yer\).) Tj
 0 -12 Td
-(   - Dashboard) Tj
+(2. Wired these production routes directly to the designer HTML contract:) Tj
 0 -12 Td
-(   - Gateway Overview) Tj
+(   - `/gateway` → `Gateway Overview.html`) Tj
 0 -12 Td
-(   - Agent Hub) Tj
+(   - `/gateway/routes` → `Gateway Routes.html`) Tj
 0 -12 Td
-(2. Added clickable breadcrumb:) Tj
+(   - `/gateway/registry` → `Gateway Registry.html`) Tj
 0 -12 Td
-(   - Mission Control / Gateway / Agent Hub) Tj
+(   - `/gateway/policies` → `Gateway Policies.html`) Tj
 0 -12 Td
-(3. Hardened scroll behavior for long Gateway/Agent Hub pages and added bottom padding so content) Tj
+(   - `/gateway/health` → `Gateway Health.html`) Tj
 0 -12 Td
-( below-the-fold stays reachable.) Tj
+(   - `/gateway/dispatcher` → `Dispatcher.html`) Tj
 0 -12 Td
-(4. Added sticky top shell controls on Gateway + Agent Hub + Paperclip drill-down:) Tj
+(   - `/gateway/token-governor` → `Token Governor.html`) Tj
 0 -12 Td
-(   - exits remain visible while scrolling,) Tj
+(   - `/gateway/agent-hub` → `Agent Hub.html`) Tj
 0 -12 Td
-(   - breadcrumb remains clickable above the fold,) Tj
+(   - `/gateway/agent-hub/paperclip` → `Paperclip.html`) Tj
 0 -12 Td
-(   - owner no longer depends on browser back to escape the page.) Tj
+(   - `/gateway/bridge-session` → `Bridge Session Flow.html`) Tj
 0 -12 Td
-(4. Preserved aliases:) Tj
+(   - `/gateway/node-detail` → `Gateway Node Detail.html`) Tj
 0 -12 Td
-(   - `/agent-network`) Tj
+(   - `/gateway/mobile-tablet` → `Gateway Mobile Tablet.html`) Tj
 0 -12 Td
-(   - `/agents`) Tj
+(3. Kept route compatibility behavior intact \(`/agents`, `/agent-network`, `/gateway-parent`, `/g) Tj
 0 -12 Td
-(5. Kept no-fake-button contract behavior.) Tj
+(ateways`, `/gateway-config` are unchanged in existing redirect logic\).) Tj
 0 -12 Td
-() Tj
+(4. Replaced static mock-only Agent Hub data behavior with live hydration in `shared/agent-data.j) Tj
 0 -12 Td
-(## Commit) Tj
+(s`:) Tj
 0 -12 Td
-(- pending in current workstream batch \(includes additional sticky-shell + scroll hardening\)) Tj
+(   - reads `/api/gateway/agent-hub/status` using authenticated same-origin request,) Tj
 0 -12 Td
-() Tj
+(   - maps live agent state to locked grammar \(`green/yellow/blue/red/gray`\),) Tj
 0 -12 Td
-(## Files \(UI Fix Batch\)) Tj
+(   - maps live SpaceAgent Browser Automation status/cards/buttons,) Tj
 0 -12 Td
-(- `src/components/gateway/GatewayControlShell.tsx`) Tj
+(   - falls back to existing mock arrays if live API is unavailable.) Tj
 0 -12 Td
-(- `src/components/gateway-agent-hub/AgentHubControlCenter.tsx`) Tj
+(5. Preserved rendering code and CSS token contract in the designer pages \(no class renames, no t) Tj
 0 -12 Td
-() Tj
-0 -12 Td
-(## Validation Snapshot) Tj
-0 -12 Td
-(- typecheck PASS) Tj
-0 -12 Td
-(- build PASS) Tj
-0 -12 Td
-(- tests PASS \(`138` files / `1250` tests\)) Tj
-0 -12 Td
-(- button-contract route scan PASS) Tj
-0 -12 Td
-(- protected-file invariant scan PASS) Tj
+(oken overrides\).) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Blocker to GO) Tj
+(## Commands Run) Tj
 0 -12 Td
-(- Owner must confirm fixed UX in authenticated browser re-test:) Tj
+(- `git diff --check`) Tj
 0 -12 Td
-(  - exits visible) Tj
+(- `pnpm run typecheck`) Tj
 0 -12 Td
-(  - breadcrumb clickable) Tj
+(- `pnpm run build`) Tj
 0 -12 Td
-(  - scroll natural \(no trap\)) Tj
+(- `pnpm test`) Tj
 0 -12 Td
-(  - no trap behavior) Tj
+() Tj
+0 -12 Td
+(## Validation Proof) Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Tests: PASS \(`138` files / `1251` tests\)) Tj
+0 -12 Td
+(- Local protected-route smoke \(unauthenticated\): PASS \(`307 -> /login` for `/gateway`, `/gateway) Tj
+0 -12 Td
+(/agent-hub`, `/gateway/routes`, `/gateway/bridge-session`, `/agent-network`, `/agents`\)) Tj
+0 -12 Td
+(- Gateway routes present in build output:) Tj
+0 -12 Td
+(  - `/gateway`, `/gateway/routes`, `/gateway/registry`, `/gateway/policies`, `/gateway/health`, ) Tj
+0 -12 Td
+(`/gateway/dispatcher`, `/gateway/token-governor`, `/gateway/agent-hub`, `/gateway/agent-hub/pape) Tj
+0 -12 Td
+(rclip`) Tj
+0 -12 Td
+(  - plus added: `/gateway/bridge-session`, `/gateway/node-detail`, `/gateway/mobile-tablet`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Files Changed) Tj
 0 -12 Td
-(- `runtime/next-gateway-ui-shell-navigation-fix.md`) Tj
+(- `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
 0 -12 Td
-(- `runtime/next-gateway-ui-shell-navigation-fix.pdf`) Tj
+(- `src/app/gateway/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/routes/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/registry/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/policies/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/health/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/dispatcher/page.tsx`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1834 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `src/app/gateway/token-governor/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/agent-hub/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/agent-hub/paperclip/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/bridge-session/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/node-detail/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/mobile-tablet/page.tsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/agent-data.js`) Tj
+0 -12 Td
+(- `runtime/next-gateway-ui-shell-navigation-fix.md`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Next Step) Tj
+(## Security / Safety Checks) Tj
 0 -12 Td
-(Collect owner re-test confirmation and then promote this UI lane from PARTIAL to GO.) Tj
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No new public local exposure introduced.) Tj
+0 -12 Td
+(- No secrets/token values printed.) Tj
+0 -12 Td
+(- No fake live/send/upload claims introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+(- Owner confirmation still required to upgrade from PARTIAL GO to GO:) Tj
+0 -12 Td
+(  - owner must confirm the authenticated `/gateway` and `/gateway/agent-hub` now visually match ) Tj
+0 -12 Td
+(FULL v3 side-by-side expectation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Rollback) Tj
+0 -12 Td
+(- Commit: pending \(current workstream batch not committed yet\).) Tj
+0 -12 Td
+(- Planned rollback command after commit:) Tj
+0 -12 Td
+(  - `git revert <gateway_design_fidelity_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Updated Lane Status) Tj
+0 -12 Td
+(- Gateway owner visual lane:) Tj
+0 -12 Td
+(  - from: `owner_visual_proof_partial_navigation_layout_defect`) Tj
+0 -12 Td
+(  - to: `owner_visual_proof_partial_pending_owner_retest_on_fidelity_fix`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Next Step) Tj
+0 -12 Td
+(Deploy this batch and run owner authenticated re-test checklist against `/gateway` and `/gateway) Tj
+0 -12 Td
+(/agent-hub` for final GO/partial decision.) Tj
 0 -12 Td
 () Tj
 ET
 endstream
 endobj
-5 0 obj
+7 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 6
+0 8
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000115 00000 n 
-0000000241 00000 n 
-0000002942 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004112 00000 n 
+0000004238 00000 n 
+0000006124 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<< /Size 8 /Root 1 0 R >>
 startxref
-3012
+6194
 %%EOF

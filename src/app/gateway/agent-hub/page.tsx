@@ -1,18 +1,7 @@
-import { AgentHubControlCenter } from '@/components/gateway-agent-hub/AgentHubControlCenter'
-import { attachSpaceAgentBrowserAutomationStatus, buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
-import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
-import { buildSpaceAgentBrowserAutomationPayload } from '@/lib/space-agent-browser-automation'
-import { getPlaywrightMcpStatus } from '@/lib/playwright-mcp'
+import { DesignerGatewayMockFrame } from '@/components/gateway/DesignerGatewayMockFrame'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AgentHubPage() {
-  const registry = await loadGatewayRegistry()
-  const generatedAt = new Date().toISOString()
-  const playwrightMcp = await getPlaywrightMcpStatus()
-  const status = attachSpaceAgentBrowserAutomationStatus(
-    buildAgentHubStatusPayload(registry),
-    buildSpaceAgentBrowserAutomationPayload({ generatedAt, playwrightMcp }),
-  )
-  return <AgentHubControlCenter status={status} />
+  return <DesignerGatewayMockFrame title='Gateway Agent Hub / Control Center' page='Agent Hub.html' />
 }

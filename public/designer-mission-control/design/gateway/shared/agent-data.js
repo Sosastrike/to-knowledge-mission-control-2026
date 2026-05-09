@@ -411,6 +411,156 @@ window.AGENTS = (function () {
     return getComputedStyle(document.documentElement).getPropertyValue('--st-' + status).trim() || '#6b7280';
   }
 
+  function liveAgentIdToDesignId(id) {
+    if (id === 'spaceagent') return 'space-agent';
+    return id;
+  }
+
+  function liveAgentStatusToDesignStatus(status) {
+    const map = {
+      partial_go: 'green',
+      gated: 'yellow',
+      read_only: 'blue',
+      blocked: 'red',
+      pending: 'gray',
+    };
+    return map[status] || 'gray';
+  }
+
+  function liveCardToDesignStatus(card) {
+    if (card && card.tone) return card.tone;
+    const map = {
+      connected_local_only: 'green',
+      limited_pending: 'yellow',
+      blocked: 'red',
+    };
+    return map[card && card.status] || 'gray';
+  }
+
+  function findToolById(list, id) {
+    return list.find((tool) => tool.id === id) || null;
+  }
+
+  function fetchLiveAgentHubStatus() {
+    try {
+      const request = new XMLHttpRequest();
+      request.open('GET', '/api/gateway/agent-hub/status', false);
+      request.setRequestHeader('Accept', 'application/json');
+      request.send(null);
+      if (request.status < 200 || request.status >= 300) return null;
+      const parsed = JSON.parse(request.responseText || '{}');
+      return parsed && parsed.ok ? parsed : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function applyLiveAgentHubStatus(payload) {
+    if (!payload || !Array.isArray(payload.agents)) return;
+
+    payload.agents.forEach((liveAgent) => {
+      const designId = liveAgentIdToDesignId(liveAgent.id);
+      const designAgent = byId(designId);
+      if (!designAgent) return;
+
+      const mappedStatus = liveAgentStatusToDesignStatus(liveAgent.status);
+      designAgent.status = mappedStatus;
+      designAgent.role = liveAgent.role || designAgent.role;
+      designAgent.tagline = liveAgent.interface?.owner_access || designAgent.tagline;
+      designAgent.summary = liveAgent.production_truth || designAgent.summary;
+      designAgent.R = Boolean(liveAgent.read_enabled);
+      designAgent.W = Boolean(liveAgent.write_enabled);
+      designAgent.X = Boolean(liveAgent.execution_enabled);
+      designAgent.bridge = Boolean(liveAgent.requires_bridge_session);
+      designAgent.localhost = liveAgent.interface?.tailnet_url || liveAgent.interface?.local_ui_url || designAgent.localhost;
+      designAgent.auth = liveAgent.interface?.auth_required ? 'mission control session' : designAgent.auth;
+      designAgent.caps = Array.isArray(liveAgent.capabilities) && liveAgent.capabilities.length > 0
+        ? liveAgent.capabilities
+        : designAgent.caps;
+
+      const blocker = liveAgent.blocked_reason || (Array.isArray(liveAgent.blockers) && liveAgent.blockers[0]) || null;
+      designAgent.blocked_reason = mappedStatus === 'red' ? blocker : null;
+      designAgent.gated_reason = mappedStatus !== 'green' && mappedStatus !== 'red'
+        ? blocker || liveAgent.production_truth || null
+        : null;
+    });
+
+    const paperclipAgent = byId('paperclip');
+    if (paperclipAgent) {
+      paperclip.auth.tailnet.state = paperclipAgent.status === 'green' ? 'ok' : 'pending';
+      paperclip.auth.tailnet.detail = paperclipAgent.gated_reason || paperclipAgent.blocked_reason || paperclip.auth.tailnet.detail;
+    }
+
+    if (payload.space_agent_browser_automation) {
+      const liveAutomation = payload.space_agent_browser_automation;
+      const model = browserAutomation['space-agent'];
+      model.note = liveAutomation.architecture_rule || model.note;
+
+      const cardById = {};
+      (liveAutomation.cards || []).forEach((card) => {
+        cardById[card.id] = card;
+      });
+
+      const firecrawlCard = cardById.firecrawl || null;
+      const playwrightCard = cardById.playwright_mcp || null;
+      const youtubeCard = cardById.youtube_research || null;
+
+      const firecrawl = findToolById(model.primary_tools, 'firecrawl');
+      const playwright = findToolById(model.primary_tools, 'playwright-mcp');
+      const youtube = findToolById(model.primary_tools, 'youtube-research');
+
+      if (firecrawl && firecrawlCard) {
+        firecrawl.status = liveCardToDesignStatus(firecrawlCard);
+        firecrawl.installed = Boolean(firecrawlCard.installed);
+        firecrawl.endpoint = firecrawlCard.service_endpoint || firecrawl.endpoint;
+        firecrawl.requires_bridge = Boolean(firecrawlCard.bridge_required_for_interactive);
+        firecrawl.gated_reason = firecrawlCard.summary || firecrawl.gated_reason;
+        firecrawl.blocked_reason = firecrawlCard.blocker || null;
+      }
+
+      if (playwright && playwrightCard) {
+        playwright.status = liveCardToDesignStatus(playwrightCard);
+        playwright.installed = Boolean(playwrightCard.installed);
+        playwright.endpoint = playwrightCard.mcp_endpoint || playwrightCard.service_endpoint || playwright.endpoint;
+        playwright.browser_mode = playwrightCard.browser_mode || playwright.browser_mode;
+        playwright.requires_bridge = Boolean(playwrightCard.bridge_required_for_interactive);
+        playwright.gated_reason = playwrightCard.summary || playwright.gated_reason;
+        playwright.blocked_reason = playwrightCard.blocker || null;
+      }
+
+      if (youtube && youtubeCard) {
+        youtube.status = liveCardToDesignStatus(youtubeCard);
+        youtube.installed = Boolean(youtubeCard.installed);
+        youtube.endpoint = youtubeCard.service_endpoint || youtube.endpoint;
+        youtube.requires_bridge = Boolean(youtubeCard.bridge_required_for_interactive);
+        youtube.gated_reason = youtubeCard.summary || youtube.gated_reason;
+        youtube.blocked_reason = youtubeCard.blocker || null;
+      }
+
+      if (Array.isArray(liveAutomation.safe_read_only_buttons)) {
+        model.safe_actions = liveAutomation.safe_read_only_buttons.map((button) => ({
+          id: button.id,
+          label: button.label,
+          danger: 'low',
+          bridge: Boolean(button.bridge_session_required),
+        }));
+      }
+
+      if (Array.isArray(liveAutomation.gated_buttons)) {
+        model.gated_actions = liveAutomation.gated_buttons.map((button) => ({
+          id: button.id,
+          label: button.label,
+          danger: 'high',
+          bridge: true,
+          kind: button.state === 'requires_bridge_session' ? 'gated' : 'owner-approval',
+        }));
+      }
+    }
+  }
+
+  const livePayload = fetchLiveAgentHubStatus();
+  if (livePayload) applyLiveAgentHubStatus(livePayload);
+
   return {
     agents,
     gatewayLog,

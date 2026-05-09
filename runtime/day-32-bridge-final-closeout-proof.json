@@ -1,0 +1,126 @@
+{
+  "schema": "day32_bridge_final_closeout_proof_v1",
+  "generated_at": "2026-05-09T20:38:54.323Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "login_status": 200,
+  "unauthenticated_queue_status": 401,
+  "queue_before_status": 200,
+  "pending_create_status": 201,
+  "denied_status": 200,
+  "approve_create_status": 201,
+  "approved_status": 200,
+  "approved_no_execution": {
+    "accepted_for_execution": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "buildwiki_run_now_dispatch": null
+  },
+  "buildwiki_approve_status": 502,
+  "buildwiki_dispatch": {
+    "mode": "run_now_dispatched_failed",
+    "run_state": "failed",
+    "target_service": "opencloud-docs-farmer.service",
+    "accepted_for_execution": true,
+    "execution_enabled": true,
+    "blocked_reason": "buildwiki_run_now_systemctl_failed",
+    "systemctl_exit_code": null
+  },
+  "audit_report_status": 200,
+  "queue_after_status": 200,
+  "approvals": [
+    {
+      "id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "approval_state": "approved"
+    },
+    {
+      "id": "apr_18e815e8-d790-4d1e-bcbf-f22c57832c07",
+      "connector": "day32.bridge.final",
+      "action": "day32.pending_then_denied",
+      "target_key": "day32-deny-1778359134121",
+      "approval_state": "denied"
+    },
+    {
+      "id": "apr_fb7e10fd-f9fc-4b66-b6af-2d3ebb9fe0f9",
+      "connector": "day32.bridge.final",
+      "action": "day32.approve_no_execution",
+      "target_key": "day32-approve-1778359134121",
+      "approval_state": "approved"
+    }
+  ],
+  "audit_outcomes": [
+    {
+      "approval_request_id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+      "outcome": "approval_requested",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service"
+    },
+    {
+      "approval_request_id": "apr_18e815e8-d790-4d1e-bcbf-f22c57832c07",
+      "outcome": "approval_requested",
+      "connector": "day32.bridge.final",
+      "action": "day32.pending_then_denied",
+      "target_key": "day32-deny-1778359134121"
+    },
+    {
+      "approval_request_id": "apr_18e815e8-d790-4d1e-bcbf-f22c57832c07",
+      "outcome": "denied",
+      "connector": "day32.bridge.final",
+      "action": "day32.pending_then_denied",
+      "target_key": "day32-deny-1778359134121"
+    },
+    {
+      "approval_request_id": "apr_fb7e10fd-f9fc-4b66-b6af-2d3ebb9fe0f9",
+      "outcome": "approval_requested",
+      "connector": "day32.bridge.final",
+      "action": "day32.approve_no_execution",
+      "target_key": "day32-approve-1778359134121"
+    },
+    {
+      "approval_request_id": "apr_fb7e10fd-f9fc-4b66-b6af-2d3ebb9fe0f9",
+      "outcome": "approved",
+      "connector": "day32.bridge.final",
+      "action": "day32.approve_no_execution",
+      "target_key": "day32-approve-1778359134121"
+    },
+    {
+      "approval_request_id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+      "outcome": "approved",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service"
+    },
+    {
+      "approval_request_id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+      "outcome": "failed",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service"
+    }
+  ],
+  "connector_runs": [
+    {
+      "approval_request_id": "apr_92b091fb-5818-4344-9cb3-a1694dc2d1a3",
+      "run_state": "failed",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service"
+    }
+  ],
+  "lifecycle_coverage": {
+    "pending_created": true,
+    "denied": true,
+    "approved_without_execution": true,
+    "scoped_execution_attempted_after_approval": true,
+    "failed_execution_recorded": true,
+    "completed_execution_covered_by_tests": true,
+    "audit_rows_written": true
+  },
+  "blocker_classification": "SERVICE_DOWN",
+  "exact_blocker": "buildwiki_run_now_systemctl_failed",
+  "unsafe_output_detected": false,
+  "secret_values_printed": false
+}

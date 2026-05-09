@@ -107,13 +107,12 @@ stop_existing_server() {
     return
   fi
 
-  declare -A seen=()
-  for pid in "${candidate_pids[@]}"; do
+  while IFS= read -r pid; do
     [[ -z "$pid" ]] && continue
-    [[ -n "${seen[$pid]:-}" ]] && continue
-    seen[$pid]=1
     stop_pid "$pid" "standalone server"
-  done
+  done < <(
+    printf '%s\n' "${candidate_pids[@]}" | awk '/^[0-9]+$/ { seen[$0] = 1 } END { for (pid in seen) print pid }'
+  )
 
   for _ in $(seq 1 10); do
     if [[ -z "$(list_listener_pids | head -n1)" ]]; then
@@ -219,9 +218,22 @@ for _ in $(seq 1 20); do
 done
 
 login_html="$(curl -fsS "http://$VERIFY_HOST:$PORT/login")"
-css_path="$(printf '%s\n' "$login_html" | sed -n 's|.*\(/_next/static/chunks/[^"]*\.css\).*|\1|p' | sed -n '1p')"
-if [[ -z "${css_path:-}" ]]; then
-  echo "error: no css asset found in rendered login HTML" >&2
+asset_path="$(
+  printf '%s\n' "$login_html" \
+    | grep -oE '/_next/static/[^"]+\.css' \
+    | head -n1 \
+    || true
+)"
+if [[ -z "${asset_path:-}" ]]; then
+  asset_path="$(
+    printf '%s\n' "$login_html" \
+      | grep -oE '/_next/static/[^"]+\.js' \
+      | head -n1 \
+      || true
+  )"
+fi
+if [[ -z "${asset_path:-}" ]]; then
+  echo "error: no _next static asset found in rendered login HTML" >&2
   exit 1
 fi
 
@@ -235,17 +247,26 @@ if [[ "$listener_pid" != "$new_pid" ]]; then
   exit 1
 fi
 
-css_disk_path="$PROJECT_ROOT/.next/standalone/.next${css_path#/_next}"
-if [[ ! -f "$css_disk_path" ]]; then
-  echo "error: rendered css asset missing on disk: $css_disk_path" >&2
+asset_disk_path="$PROJECT_ROOT/.next/standalone/.next${asset_path#/_next}"
+if [[ ! -f "$asset_disk_path" ]]; then
+  echo "error: rendered static asset missing on disk: $asset_disk_path" >&2
   exit 1
 fi
 
-content_type="$(curl -fsSI "http://$VERIFY_HOST:$PORT$css_path" | awk 'BEGIN{IGNORECASE=1} /^content-type:/ {print $2}' | tr -d '\r')"
-if [[ "${content_type:-}" != text/css* ]]; then
-  echo "error: css asset served with unexpected content-type: ${content_type:-missing}" >&2
+content_type="$(
+  curl -fsSI "http://$VERIFY_HOST:$PORT$asset_path" \
+    | awk '{ key = tolower($1); if (key == "content-type:") { print $2 } }' \
+    | tr -d '\r'
+)"
+if [[ "$asset_path" == *.css ]]; then
+  expected_type="text/css"
+else
+  expected_type="text/javascript"
+fi
+if [[ "${content_type:-}" != "$expected_type"* ]]; then
+  echo "error: static asset served with unexpected content-type: ${content_type:-missing} (expected $expected_type*)" >&2
   exit 1
 fi
 
 echo "==> deployed commit $(git rev-parse --short HEAD)"
-echo "    pid=$new_pid port=$PORT css=$css_path"
+echo "    pid=$new_pid port=$PORT asset=$asset_path"

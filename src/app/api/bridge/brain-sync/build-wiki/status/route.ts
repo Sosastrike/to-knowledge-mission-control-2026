@@ -10,6 +10,7 @@ import {
   pickPublicApprovalView,
   pickPublicRunView,
   readLatestRunNow,
+  readRunNowHistory,
 } from '@/lib/build-wiki-run-now'
 import { readLatestTelegramBuildWikiRunNowApproval } from '@/lib/build-wiki-telegram-run-now'
 import {
@@ -494,6 +495,7 @@ export async function GET(request: NextRequest) {
     },
     run_now: (() => {
       const latest = readLatestRunNow()
+      const history = readRunNowHistory(10)
       const ui = deriveRunNowUiState(latest.approval, latest.run)
       const canonical = telegramRunNow || {
         persistence_ready: latest.persistence_ready,
@@ -511,6 +513,8 @@ export async function GET(request: NextRequest) {
         is_terminal: canonical.is_terminal,
         approval: canonical.approval,
         run: canonical.run,
+        history: history.history,
+        history_count: history.history.length,
         linked_task: canonical.linked_task,
         approval_channel: 'Mission Control owner approval API',
         web_approval_enabled: true,

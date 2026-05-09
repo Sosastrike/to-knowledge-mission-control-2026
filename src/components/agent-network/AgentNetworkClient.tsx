@@ -682,6 +682,29 @@ interface BuildWikiStatusPayload {
     target_service?: string
     approval?: { id?: string; approval_state?: string } | null
     run?: { run_state?: string; run_exit_code?: number | null } | null
+    history_count?: number
+    history?: Array<{
+      ui_state?: string
+      result_label?: string
+      approval?: {
+        connector?: string
+        action?: string
+        target_key?: string
+        approval_state?: string
+        created_at?: string
+        resolved_at?: string | null
+        risk_level?: string
+      } | null
+      run?: {
+        run_state?: string
+        started_at?: string | null
+        finished_at?: string | null
+      } | null
+      audit_events?: Array<{
+        outcome?: string
+        created_at?: string
+      }>
+    }>
   }
   timer_control?: {
     ui_state?: string
@@ -2837,6 +2860,7 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
   const runNow = payload.run_now
   const timerControl = payload.timer_control
   const addSource = payload.add_source
+  const runNowHistory = runNow?.history || []
 
   return (
     <div className={styles.providerCard}>
@@ -2866,6 +2890,31 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
         <li><span>Latest files/logs<br /><small>Read-only browser visibility, secret-scanned.</small></span><strong>READ_ONLY</strong></li>
       </ul>
       <p className={styles.providerNotes}>Run state: {runNow?.ui_state || 'idle'} · Timer-control state: {timerControl?.ui_state || 'idle'} · Add-source state: {addSource?.ui_state || 'idle'}</p>
+      {runNowHistory.length > 0 && (
+        <>
+          <p className={styles.providerNotes}>
+            Run Now audit history: {runNow?.history_count ?? runNowHistory.length} request{(runNow?.history_count ?? runNowHistory.length) === 1 ? '' : 's'} tracked.
+          </p>
+          <ul className={styles.connectorList}>
+            {runNowHistory.slice(0, 4).map((item, index) => (
+              <li key={`${item.approval?.created_at || 'run-now-history'}-${index}`}>
+                <span>
+                  {item.approval?.action || 'buildwiki.run_now'} · {item.result_label || item.ui_state || 'unknown'}
+                  <br />
+                  <small>
+                    approval: {item.approval?.approval_state || 'unknown'} · run: {item.run?.run_state || 'not dispatched'} · audit events: {item.audit_events?.length || 0}
+                  </small>
+                  <br />
+                  <small>
+                    requested: {item.approval?.created_at || 'unknown'}{item.run?.finished_at ? ` · finished: ${item.run.finished_at}` : ''}
+                  </small>
+                </span>
+                <strong>{item.ui_state || item.approval?.approval_state || 'unknown'}</strong>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <p className={styles.providerNotes}>Invariants: no .env writes, no Zapier writes, no Agent Zero routing changes, no external farmer enablement.</p>
     </div>
   )

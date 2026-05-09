@@ -227,4 +227,81 @@ describe('Build-Wiki Run Now route', () => {
       protected_category: 'tooling',
     })
   })
+
+  it('returns the Run Now approval, dispatch, and audit history without raw paths or secrets', async () => {
+    const created = await POST(request({ reason: 'history probe' }))
+    const createdPayload = await created.json()
+    const approvalId = createdPayload.approval_id
+
+    const db = new Database(mocks.dbPath)
+    db.prepare(
+      `UPDATE bridge_approval_requests
+          SET approval_state = 'approved',
+              resolved_at = '2026-05-09T12:00:00.000Z',
+              resolved_by = 'owner',
+              resolved_by_user_id = 1,
+              resolution_reason = 'approved exact scoped test'
+        WHERE id = ?`,
+    ).run(approvalId)
+    db.prepare(
+      `INSERT INTO bridge_connector_runs (
+         id, workspace_id, tenant_id, connector, action, target, target_key,
+         approval_request_id, audit_event_id, run_state, risk_level, input_hash,
+         rollback_ref, started_at, finished_at, correlation_id
+       ) VALUES (
+         'run_history', 1, 1, 'skill.build_wiki', 'buildwiki.run_now',
+         'opencloud-docs-farmer.service', 'opencloud-docs-farmer.service',
+         ?, 'audit_failed', 'failed', 'low', 'inputhash',
+         'systemctl --user stop opencloud-docs-farmer.service',
+         '2026-05-09T12:01:00.000Z', '2026-05-09T12:01:04.000Z', 'corr_history'
+       )`,
+    ).run(approvalId)
+    db.prepare(
+      `INSERT INTO bridge_audit_events (
+         id, workspace_id, tenant_id, approval_request_id, actor, actor_user_id,
+         connector, action, target, target_key, outcome, payload_hash,
+         metadata_json, correlation_id
+       ) VALUES (
+         'audit_failed', 1, 1, ?, 'owner', 1, 'skill.build_wiki',
+         'buildwiki.run_now', 'opencloud-docs-farmer.service',
+         'opencloud-docs-farmer.service', 'failed', 'payloadhash',
+         '{"stderr_tail_present":true}', 'corr_history'
+       )`,
+    ).run(approvalId)
+    db.close()
+
+    const response = await GET(getRequest())
+    const payload = await response.json()
+    const serialized = JSON.stringify(payload)
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      ok: true,
+      mode: 'run_now_read_only',
+      ui_state: 'failed',
+      history_count: 1,
+      execution_enabled: false,
+      accepted_for_execution: false,
+    })
+    expect(payload.history[0]).toMatchObject({
+      ui_state: 'failed',
+      result_label: 'service_down',
+      approval: {
+        id: approvalId,
+        action: 'buildwiki.run_now',
+        target_key: 'opencloud-docs-farmer.service',
+        approval_state: 'approved',
+      },
+      run: {
+        id: 'run_history',
+        run_state: 'failed',
+        rollback_ref: 'systemctl --user stop opencloud-docs-farmer.service',
+      },
+    })
+    expect(payload.history[0].audit_events.map((event: { outcome: string }) => event.outcome)).toEqual([
+      'approval_requested',
+      'failed',
+    ])
+    expect(serialized).not.toMatch(/\/home\/|\/Users\/|sk-[A-Za-z0-9]{20,}|Bearer\s+/)
+  })
 })

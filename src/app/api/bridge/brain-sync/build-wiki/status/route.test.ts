@@ -69,6 +69,10 @@ describe('Build-Wiki status route service probe', () => {
       single_vault: true,
       run_now_dispatch_scope: 'opencloud-docs-farmer.service',
     })
+    expect(payload.run_now).toMatchObject({
+      history: [],
+      history_count: 0,
+    })
     expect(JSON.stringify(payload)).not.toMatch(/\/home\/|\/Users\/|sk-[A-Za-z0-9]{20,}|Bearer\s+/)
   })
 })

@@ -71,6 +71,20 @@ export type ConnectorRunRow = {
   correlation_id: string
 }
 
+export type BuildWikiRunNowAuditEventRow = {
+  id: string
+  approval_request_id: string | null
+  actor: string
+  actor_user_id: number | null
+  connector: string
+  action: string
+  target: string | null
+  target_key: string
+  outcome: string
+  correlation_id: string
+  created_at: string
+}
+
 export type BuildWikiRunNowRequester = {
   userId: number | null
   username: string
@@ -354,6 +368,110 @@ export function readLatestRunNow(): {
   }
 }
 
+export function readRunNowHistory(limit = 10): {
+  persistence_ready: boolean
+  history: Array<{
+    approval: ReturnType<typeof pickPublicApprovalView>
+    run: ReturnType<typeof pickPublicRunView>
+    audit_events: ReturnType<typeof pickPublicRunNowAuditEventView>[]
+    ui_state: ReturnType<typeof deriveRunNowUiState>['ui_state']
+    is_terminal: boolean
+    result_label: string
+  }>
+} {
+  let db: Database.Database | null = null
+  try {
+    db = new Database(config.dbPath, { readonly: true, fileMustExist: true })
+    if (!approvalPersistenceReady(db)) {
+      return { persistence_ready: false, history: [] }
+    }
+
+    const safeLimit = Math.min(Math.max(Math.trunc(limit) || 10, 1), 25)
+    const approvals = db
+      .prepare(
+        `SELECT id, workspace_id, tenant_id, connector, action, target, target_key,
+                requester, requester_user_id, risk_level, approval_state,
+                protected_category, reason, required_approver, expires_at,
+                resolved_at, resolved_by, resolved_by_user_id, resolution_reason,
+                correlation_id, idempotency_key, created_at
+           FROM bridge_approval_requests
+          WHERE connector = ? AND action = ? AND target_key = ?
+          ORDER BY created_at DESC
+          LIMIT ?`,
+      )
+      .all(
+        BUILDWIKI_CONNECTOR,
+        BUILDWIKI_ACTION_RUN_NOW,
+        BUILDWIKI_TARGET_KEY,
+        safeLimit,
+      ) as ApprovalRow[]
+
+    if (approvals.length === 0) {
+      return { persistence_ready: true, history: [] }
+    }
+
+    const approvalIds = approvals.map((approval) => approval.id)
+    const placeholders = approvalIds.map(() => '?').join(',')
+    const runs = db
+      .prepare(
+        `SELECT id, approval_request_id, audit_event_id, run_state, started_at,
+                finished_at, output_hash, rollback_ref, correlation_id
+           FROM bridge_connector_runs
+          WHERE approval_request_id IN (${placeholders})
+          ORDER BY created_at DESC`,
+      )
+      .all(...approvalIds) as ConnectorRunRow[]
+    const auditEvents = db
+      .prepare(
+        `SELECT id, approval_request_id, actor, actor_user_id, connector, action,
+                target, target_key, outcome, correlation_id, created_at
+           FROM bridge_audit_events
+          WHERE approval_request_id IN (${placeholders})
+          ORDER BY created_at ASC`,
+      )
+      .all(...approvalIds) as BuildWikiRunNowAuditEventRow[]
+
+    const latestRunByApproval = new Map<string, ConnectorRunRow>()
+    for (const run of runs) {
+      if (!latestRunByApproval.has(run.approval_request_id)) {
+        latestRunByApproval.set(run.approval_request_id, run)
+      }
+    }
+
+    const auditEventsByApproval = new Map<string, BuildWikiRunNowAuditEventRow[]>()
+    for (const event of auditEvents) {
+      if (!event.approval_request_id) continue
+      const current = auditEventsByApproval.get(event.approval_request_id) || []
+      current.push(event)
+      auditEventsByApproval.set(event.approval_request_id, current)
+    }
+
+    return {
+      persistence_ready: true,
+      history: approvals.map((approval) => {
+        const run = latestRunByApproval.get(approval.id) || null
+        const ui = deriveRunNowUiState(approval, run)
+        return {
+          approval: pickPublicApprovalView(approval),
+          run: pickPublicRunView(run),
+          audit_events: (auditEventsByApproval.get(approval.id) || []).map(pickPublicRunNowAuditEventView),
+          ui_state: ui.ui_state,
+          is_terminal: ui.is_terminal,
+          result_label: runNowResultLabel(ui.ui_state, run),
+        }
+      }),
+    }
+  } catch {
+    return { persistence_ready: false, history: [] }
+  } finally {
+    try {
+      db?.close()
+    } catch {
+      /* noop */
+    }
+  }
+}
+
 /**
  * Maps the (approval_state, run_state) pair into a single UI-facing state.
  *   idle              — no run-now request yet, or the latest one is fully resolved
@@ -406,6 +524,10 @@ export function pickPublicApprovalView(approval: ApprovalRow | null) {
   if (!approval) return null
   return {
     id: approval.id,
+    connector: approval.connector,
+    action: approval.action,
+    target: approval.target,
+    target_key: approval.target_key,
     approval_state: approval.approval_state,
     requester: approval.requester,
     risk_level: approval.risk_level,
@@ -421,9 +543,49 @@ export function pickPublicApprovalView(approval: ApprovalRow | null) {
   }
 }
 
+export function pickPublicRunNowAuditEventView(event: BuildWikiRunNowAuditEventRow) {
+  return {
+    id: event.id,
+    actor: event.actor,
+    connector: event.connector,
+    action: event.action,
+    target: event.target,
+    target_key: event.target_key,
+    outcome: event.outcome,
+    correlation_id: event.correlation_id,
+    created_at: event.created_at,
+  }
+}
+
 function stableJson(value: unknown): string {
   if (!value || typeof value !== 'object') return '{}'
   return JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort())
+}
+
+function runNowResultLabel(
+  uiState: ReturnType<typeof deriveRunNowUiState>['ui_state'],
+  run: ConnectorRunRow | null,
+): string {
+  if (run?.run_state === 'completed' || run?.run_state === 'success') return 'run dispatched / completed'
+  if (run?.run_state === 'failed' || run?.run_state === 'error') return 'service_down'
+  switch (uiState) {
+    case 'pending_approval':
+      return 'approval pending'
+    case 'approved':
+      return 'approved / dispatch available'
+    case 'dispatching':
+      return 'run dispatched'
+    case 'denied':
+      return 'approval denied'
+    case 'expired':
+      return 'approval expired'
+    case 'completed':
+      return 'run dispatched / completed'
+    case 'failed':
+      return 'service_down'
+    default:
+      return 'request run'
+  }
 }
 
 export function pickPublicRunView(run: ConnectorRunRow | null) {

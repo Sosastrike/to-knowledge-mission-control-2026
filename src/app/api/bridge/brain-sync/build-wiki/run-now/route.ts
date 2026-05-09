@@ -10,6 +10,7 @@ import {
   pickPublicApprovalView,
   pickPublicRunView,
   readLatestRunNow,
+  readRunNowHistory,
 } from '@/lib/build-wiki-run-now'
 
 export const runtime = 'nodejs'
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
 
   const latest = readLatestRunNow()
   const ui = deriveRunNowUiState(latest.approval, latest.run)
+  const history = readRunNowHistory(10)
 
   return NextResponse.json(
     {
@@ -52,6 +54,8 @@ export async function GET(request: NextRequest) {
       is_terminal: ui.is_terminal,
       approval: pickPublicApprovalView(latest.approval),
       run: pickPublicRunView(latest.run),
+      history: history.history,
+      history_count: history.history.length,
       execution_enabled: false,
       accepted_for_execution: false,
       next_action: latest.persistence_ready

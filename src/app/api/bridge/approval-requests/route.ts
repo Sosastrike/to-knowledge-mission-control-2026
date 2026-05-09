@@ -13,6 +13,7 @@ import {
   type BridgeAuditLifecycleRow,
   type BridgeConnectorRunLifecycleRow,
 } from '@/lib/bridge-approval-lifecycle'
+import { buildBridgeApprovalUiState } from '@/lib/bridge-approval-ui-state'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -151,6 +152,7 @@ function readApprovalQueue() {
       return {
         persistence_ready: false,
         approvals: [] as ApprovalRow[],
+        approval_ui_state: buildBridgeApprovalUiState({ models: [] }),
         active_approvals: [] as ApprovalRow[],
         history_approvals: [] as ApprovalRow[],
         active_queue_visible: false,
@@ -179,6 +181,10 @@ function readApprovalQueue() {
       latestRun: latestRuns.get(approval.id) || null,
       latestAudit: latestAudits.get(approval.id) || null,
     }))
+    const approvalUiState = buildBridgeApprovalUiState({
+      models: approvalRequestModels,
+      generatedAt,
+    })
     const summary = summarizeApprovalQueue(approvals, generatedAt)
     const { activeApprovals, historyApprovals } = splitApprovalQueue(approvals, generatedAt)
     const activeIds = new Set(activeApprovals.map((row) => row.id))
@@ -186,6 +192,7 @@ function readApprovalQueue() {
     return {
       persistence_ready: true,
       approvals,
+      approval_ui_state: approvalUiState,
       approval_request_models: approvalRequestModels,
       active_approvals: activeApprovals,
       history_approvals: historyApprovals,
@@ -199,6 +206,7 @@ function readApprovalQueue() {
     return {
       persistence_ready: false,
       approvals: [] as ApprovalRow[],
+      approval_ui_state: buildBridgeApprovalUiState({ models: [] }),
       approval_request_models: [],
       active_approvals: [] as ApprovalRow[],
       history_approvals: [] as ApprovalRow[],
@@ -401,6 +409,7 @@ export async function GET(request: NextRequest) {
     active_approval_models: queue.active_approval_models || [],
     history_approval_models: queue.history_approval_models || [],
     approval_request_models: queue.approval_request_models || [],
+    approval_ui_state: queue.approval_ui_state,
     summary: queue.summary,
     error: queue.error,
     ui_placeholder: {
@@ -545,6 +554,9 @@ export async function POST(request: NextRequest) {
     const approval = readBridgeApprovalRequest(db, created.id)
     const latestAudit = readLatestAuditEvents(db, [created.id]).get(created.id) || null
     const approvalRequestModel = approval ? mapBridgeApprovalRequestModel({ approval, latestAudit }) : null
+    const approvalRequestUi = approvalRequestModel
+      ? buildBridgeApprovalUiState({ models: [approvalRequestModel] }).pending[0] || null
+      : null
 
     return NextResponse.json({
       ok: true,
@@ -558,6 +570,7 @@ export async function POST(request: NextRequest) {
       accepted_for_execution: false,
       no_connector_writes_enabled: true,
       approval_request_model: approvalRequestModel,
+      approval_request_ui: approvalRequestUi,
       next_action: 'Owner must approve this request before any protected action can execute. Execution runners remain disabled.',
     }, { status: created.reused ? 200 : 201 })
   } catch (error) {

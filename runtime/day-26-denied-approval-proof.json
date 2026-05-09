@@ -1,0 +1,92 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T19:48:19.959Z",
+  "base_url": "http://127.0.0.1:3337",
+  "action_scope": {
+    "action": "buildwiki.run_now",
+    "target_service": "opencloud-docs-farmer.service",
+    "fork": "Fork 1 only"
+  },
+  "create_response": {
+    "status": 201,
+    "mode": "run_now_approval_requested_no_execution",
+    "approval_id": "apr_60a7825c-5ac3-4560-b9c7-cb6867720037",
+    "accepted_for_execution": false,
+    "execution_enabled": false
+  },
+  "deny_response": {
+    "status": 200,
+    "ok": true,
+    "mode": "approval_request_denied_no_execution",
+    "approval_state": "denied",
+    "decision": "denied",
+    "accepted_for_execution": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "audit_event_id_present": true,
+    "next_action": "Approval is denied. The protected action must not execute."
+  },
+  "approve_after_deny": {
+    "status": 409,
+    "ok": false,
+    "mode": "approval_request_approve_blocked",
+    "blocked_reason": "approval_request_already_resolved",
+    "accepted_for_execution": false,
+    "execution_enabled": false,
+    "buildwiki_dispatch_present": false
+  },
+  "dispatch_after_deny": {
+    "status": 409,
+    "ok": false,
+    "mode": "run_now_dispatch_blocked",
+    "blocked_reason": "approval_state_not_approved",
+    "accepted_for_execution": false,
+    "execution_enabled": false
+  },
+  "read_response": {
+    "status": 200,
+    "ok": true,
+    "ui_state": "denied",
+    "approval_state": "denied",
+    "run_present": false
+  },
+  "status_route": {
+    "status": 200,
+    "ok": true,
+    "run_now_ui_state": "denied"
+  },
+  "unauthenticated_deny": {
+    "status": 401,
+    "ok": true
+  },
+  "persistence_rows": {
+    "approval": {
+      "id": "apr_60a7825c-5ac3-4560-b9c7-cb6867720037",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "approval_state": "denied",
+      "resolved": 1,
+      "resolution_reason": "Day 26 proof owner denial; protected action must not execute."
+    },
+    "run_count": 0,
+    "audit_outcomes": [
+      {
+        "outcome": "approval_requested",
+        "connector": "skill.build_wiki",
+        "action": "buildwiki.run_now",
+        "target_key": "opencloud-docs-farmer.service"
+      },
+      {
+        "outcome": "denied",
+        "connector": "skill.build_wiki",
+        "action": "buildwiki.run_now",
+        "target_key": "opencloud-docs-farmer.service"
+      }
+    ]
+  },
+  "blocker_class": "NONE",
+  "no_secret_values_printed": true,
+  "no_env_changes": true,
+  "rollback": "No execution rollback required. Data-only proof rows may be inspected by approval id apr_60a7825c-5ac3-4560-b9c7-cb6867720037. Code rollback for Day25 remains git revert 39fc228."
+}

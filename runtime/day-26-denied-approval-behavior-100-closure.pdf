@@ -1,0 +1,408 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2718 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-26-denied-approval-behavior-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 26 - Denied Approval Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: CLOSED) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+(Code change: none) Tj
+0 -12 Td
+(Report commit: pending) Tj
+0 -12 Td
+(Rollback: no execution rollback required; report-only rollback is `git revert <day26_report_comm) Tj
+0 -12 Td
+(it_sha>`) Tj
+0 -12 Td
+(Next day started: Day 27 - Failed Execution Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 26 is closed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Denied Bridge approvals are proven to remain non-executing. The live proof created one exact Bui) Tj
+0 -12 Td
+(ld-Wiki Run Now approval request, denied it, verified a denial audit row, verified zero connecto) Tj
+0 -12 Td
+(r run rows, then confirmed later approve and dispatch attempts were blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing denial implementation:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests/{id}/deny`) Tj
+0 -12 Td
+(- `src/lib/bridge-approval-lifecycle.ts`) Tj
+0 -12 Td
+(- `src/lib/bridge-approval-ui-state.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/route.ts`) Tj
+0 -12 Td
+(- `src/lib/build-wiki-run-now.ts`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing tests covering the denial surface:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/bridge-approval-lifecycle.test.ts`) Tj
+0 -12 Td
+(- `src/lib/bridge-approval-ui-state.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/[id]/approve/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No source change was required for this day. The implementation already had the required denial r) Tj
+0 -12 Td
+(oute, lifecycle state, UI state mapping, and dispatch guard. This day produced live proof and a ) Tj
+0 -12 Td
+(report artifact.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`runtime/day-26-denied-approval-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Approval id:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`apr_60a7825c-5ac3-4560-b9c7-cb6867720037`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact scope:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- connector: `skill.build_wiki`) Tj
+0 -12 Td
+(- action: `buildwiki.run_now`) Tj
+0 -12 Td
+(- target key: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- fork: Fork 1 only) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Create response:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 201) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2306 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- mode: `run_now_approval_requested_no_execution`) Tj
+0 -12 Td
+(- accepted for execution: false) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Deny response:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 200) Tj
+0 -12 Td
+(- mode: `approval_request_denied_no_execution`) Tj
+0 -12 Td
+(- approval state: `denied`) Tj
+0 -12 Td
+(- decision: `denied`) Tj
+0 -12 Td
+(- accepted for execution: false) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- denial audit event present: true) Tj
+0 -12 Td
+(- next action: `Approval is denied. The protected action must not execute.`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Non-Execution Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime database proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- approval state: `denied`) Tj
+0 -12 Td
+(- resolved: true) Tj
+0 -12 Td
+(- connector run count for denied approval: 0) Tj
+0 -12 Td
+(- audit outcomes:) Tj
+0 -12 Td
+(  - `approval_requested`) Tj
+0 -12 Td
+(  - `denied`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Post-denial approve attempt:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 409) Tj
+0 -12 Td
+(- mode: `approval_request_approve_blocked`) Tj
+0 -12 Td
+(- blocked reason: `approval_request_already_resolved`) Tj
+0 -12 Td
+(- accepted for execution: false) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- Build-Wiki dispatch present: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Post-denial dispatch attempt:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 409) Tj
+0 -12 Td
+(- mode: `run_now_dispatch_blocked`) Tj
+0 -12 Td
+(- blocked reason: `approval_state_not_approved`) Tj
+0 -12 Td
+(- accepted for execution: false) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated denial attempt:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 401) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / API State) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Read route after denial:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 200) Tj
+0 -12 Td
+(- UI state: `denied`) Tj
+0 -12 Td
+(- approval state: `denied`) Tj
+0 -12 Td
+(- run present: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status route after denial:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 200) Tj
+0 -12 Td
+(- Run Now UI state: `denied`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This means the UI can show a denied terminal state without pretending an execution happened.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1789 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh checks run for Day 26:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: pass) Tj
+0 -12 Td
+(- `pnpm run typecheck`: pass) Tj
+0 -12 Td
+(- focused tests: pass, 4 files / 11 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: pass) Tj
+0 -12 Td
+(- live denied approval proof: pass) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Build and full test suite were already run for the current source commit during Day 25. Day 26 c) Tj
+0 -12 Td
+(hanged no source files.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public exposure added.) Tj
+0 -12 Td
+(- No connector execution occurred.) Tj
+0 -12 Td
+(- No service command was run for the denied approval.) Tj
+0 -12 Td
+(- No SMB.) Tj
+0 -12 Td
+(- No Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No fake Done or fake success.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Added) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-26-denied-approval-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-26-denied-approval-behavior-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-26-denied-approval-behavior-100-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(None for denied approval behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Day 27 Start) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 27 - Failed Execution Behavior begins next.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Goal:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Prove failed execution records a safe failure state, safe error metadata, no secret output, and ) Tj
+0 -12 Td
+(clear owner-facing retry/rollback guidance.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003023 00000 n 
+0000003149 00000 n 
+0000005507 00000 n 
+0000005633 00000 n 
+0000007474 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7544
+%%EOF

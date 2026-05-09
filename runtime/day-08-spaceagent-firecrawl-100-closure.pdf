@@ -1,0 +1,444 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2791 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-spaceagent-firecrawl-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 - SpaceAgent Firecrawl 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: SpaceAgent Firecrawl readiness / read-only smoke gate) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED - CREDENTIAL_GATED) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED) Tj
+0 -12 Td
+(Primary blocker: firecrawl_credential_required) Tj
+0 -12 Td
+(Secondary blocker: firecrawl_backend_adapter_not_configured) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 08 is closed for developer-side implementation because Firecrawl now exposes a canonical pro) Tj
+0 -12 Td
+(of packet, exact blockers, safe blocked job behavior, and tests. It is not GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live Firecrawl smoke was not run because both prerequisites are missing:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- FIRECRAWL_API_KEY is not present in the Mission Control runtime.) Tj
+0 -12 Td
+(- @mendable/firecrawl-js is not installed/wired as a backend adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added Firecrawl canonical closure status fields:) Tj
+0 -12 Td
+(  - canonical_status) Tj
+0 -12 Td
+(  - blocker_class) Tj
+0 -12 Td
+(  - blocked_reason) Tj
+0 -12 Td
+(  - blockers) Tj
+0 -12 Td
+(  - proof_packet) Tj
+0 -12 Td
+(- Added Firecrawl proof packet fields:) Tj
+0 -12 Td
+(  - credential_present) Tj
+0 -12 Td
+(  - backend_adapter_present) Tj
+0 -12 Td
+(  - read_only_smoke_allowed) Tj
+0 -12 Td
+(  - write_execution_enabled) Tj
+0 -12 Td
+(  - broad_crawl_enabled) Tj
+0 -12 Td
+(  - public_exposure) Tj
+0 -12 Td
+(  - secrets_exposed) Tj
+0 -12 Td
+(  - raw_paths_exposed) Tj
+0 -12 Td
+(- Updated POST /api/firecrawl/jobs blocked responses to include the same canonical proof fields.) Tj
+0 -12 Td
+(- Added tests for:) Tj
+0 -12 Td
+(  - missing credential + missing backend,) Tj
+0 -12 Td
+(  - credential present but backend missing,) Tj
+0 -12 Td
+(  - credential + backend present readiness,) Tj
+0 -12 Td
+(  - standalone closure packet generation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/firecrawl-status.ts) Tj
+0 -12 Td
+(- src/lib/firecrawl-status.test.ts) Tj
+0 -12 Td
+(- src/app/api/firecrawl/[[...path]]/route.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Checked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- GET /api/firecrawl/status) Tj
+0 -12 Td
+(- POST /api/firecrawl/jobs) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No UI layout changes were made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway, Agent Hub, and SpaceAgent surfaces can now consume a canonical Firecrawl proof packet i) Tj
+0 -12 Td
+(nstead of treating the route as executable.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2661 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime inventory:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- FIRECRAWL_API_KEY present: false) Tj
+0 -12 Td
+(- @mendable/firecrawl-js backend adapter present: false) Tj
+0 -12 Td
+(- Read-only smoke allowed: false) Tj
+0 -12 Td
+(- Write execution enabled: false) Tj
+0 -12 Td
+(- Broad crawl enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Loopback-only standalone Mission Control smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Host bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- Runtime PID: 18459) Tj
+0 -12 Td
+(- /login: 200) Tj
+0 -12 Td
+(- Unauthenticated GET /api/firecrawl/status: 401) Tj
+0 -12 Td
+(- Authenticated GET /api/firecrawl/status: 200) Tj
+0 -12 Td
+(- Authenticated POST /api/firecrawl/jobs: 503) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated status result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: credential_required) Tj
+0 -12 Td
+(- state: CREDENTIAL_REQUIRED) Tj
+0 -12 Td
+(- canonical_status: CREDENTIAL_GATED) Tj
+0 -12 Td
+(- blocker_class: CREDENTIAL_GATED) Tj
+0 -12 Td
+(- blocked_reason: firecrawl_credential_required) Tj
+0 -12 Td
+(- blockers:) Tj
+0 -12 Td
+(  - firecrawl_credential_required) Tj
+0 -12 Td
+(  - firecrawl_backend_adapter_not_configured) Tj
+0 -12 Td
+(- key_present: false) Tj
+0 -12 Td
+(- sdk_loaded: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated read-only smoke request result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Request: scrape https://example.com/) Tj
+0 -12 Td
+(- Result: refused before execution) Tj
+0 -12 Td
+(- HTTP status: 503) Tj
+0 -12 Td
+(- credential_required: true) Tj
+0 -12 Td
+(- read_only_smoke_allowed: false) Tj
+0 -12 Td
+(- write_execution_enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No crawl was run. No private page, login, broad crawl, or write was attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pnpm test src/lib/firecrawl-status.test.ts src/lib/space-agent-browser-automation.test.ts src/) Tj
+0 -12 Td
+(lib/space-agent-health.test.ts src/lib/gateway-pi-dispatcher.test.ts) Tj
+0 -12 Td
+(- pnpm run typecheck) Tj
+0 -12 Td
+(- git diff --check) Tj
+0 -12 Td
+(- pnpm run build) Tj
+0 -12 Td
+(- pnpm test) Tj
+0 -12 Td
+(- node scripts/check-protected-file-invariants.mjs) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- .env diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Validation result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused Firecrawl tests passed.) Tj
+0 -12 Td
+(- Typecheck passed.) Tj
+0 -12 Td
+(- Build passed.) Tj
+0 -12 Td
+(- Full test suite passed: 140 files / 1266 tests.) Tj
+0 -12 Td
+(- Protected-file invariant scan passed.) Tj
+0 -12 Td
+(- Staged secret scan found no secret-like staged values.) Tj
+0 -12 Td
+(- .env diff was clean.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2422 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The runtime smoke proved Firecrawl readiness is blocked honestly before any external crawl:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- credential missing,) Tj
+0 -12 Td
+(- backend adapter not configured,) Tj
+0 -12 Td
+(- read-only smoke disallowed,) Tj
+0 -12 Td
+(- writes disabled,) Tj
+0 -12 Td
+(- broad crawl disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. firecrawl_credential_required) Tj
+0 -12 Td
+(2. firecrawl_backend_adapter_not_configured) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Required owner/admin or runtime action:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Provide FIRECRAWL_API_KEY through the approved secret manager only.) Tj
+0 -12 Td
+(2. Install/wire the approved Firecrawl backend adapter package.) Tj
+0 -12 Td
+(3. Restart Mission Control if required for the service environment to see the credential.) Tj
+0 -12 Td
+(4. Re-run:) Tj
+0 -12 Td
+(   - GET /api/firecrawl/status) Tj
+0 -12 Td
+(   - POST /api/firecrawl/jobs with type=scrape and url=https://example.com/) Tj
+0 -12 Td
+(5. Promote only after one read-only example.com smoke succeeds.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No broad crawl.) Tj
+0 -12 Td
+(- No private page.) Tj
+0 -12 Td
+(- No login.) Tj
+0 -12 Td
+(- No write.) Tj
+0 -12 Td
+(- No fake Firecrawl success.) Tj
+0 -12 Td
+(- No raw local paths exposed in owner-facing output.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- 70b3bb11b44224f934e93c4361569ad9af265868) Tj
+0 -12 Td
+(- Message: feat\(space-agent\): add firecrawl closure proof) Tj
+0 -12 Td
+(- Push result: pushed to origin/to-knowledge-mc) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 70b3bb11b44224f934e93c4361569ad9af265868) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 09 - Telegram owner command lane 100% Closure is automatically started after this Day 08 clo) Tj
+0 -12 Td
+(seout.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003096 00000 n 
+0000003222 00000 n 
+0000005935 00000 n 
+0000006061 00000 n 
+0000008535 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8605
+%%EOF

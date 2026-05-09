@@ -1,0 +1,182 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T21:46:55.047Z",
+  "day": 37,
+  "lane": "Brain Status Page",
+  "source_commit": "5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46",
+  "origin_commit": "5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46",
+  "deployed_commit": "5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46",
+  "runtime": {
+    "bind": "127.0.0.1:3337",
+    "pid": "50544",
+    "service_public_exposure": false
+  },
+  "routes": {
+    "login": {
+      "status": 200
+    },
+    "unauthenticated_brain_status": {
+      "status": 401,
+      "location": null
+    },
+    "authenticated_brain_status": {
+      "status": 200
+    },
+    "button_contracts": {
+      "status": 200
+    },
+    "unauthenticated_gateway_brain": {
+      "status": 307,
+      "location": "/login"
+    },
+    "authenticated_gateway_brain": {
+      "status": 307,
+      "location": "/login"
+    }
+  },
+  "brain_status": {
+    "upstream": {
+      "claudeclaw_dashboard_token_configured": false,
+      "status": "CREDENTIAL_GATED",
+      "blocker": "claudeclaw_dashboard_token_missing",
+      "fallback": "mission_control_local_readonly_adapters"
+    },
+    "summary": {
+      "total": 6,
+      "read_only": 3,
+      "not_connected": 2,
+      "needs_owner_setup": 1
+    },
+    "local_readonly_status_available": true,
+    "systems": [
+      {
+        "id": "brain_sync",
+        "visible": true,
+        "read_enabled": true,
+        "write_enabled": false,
+        "owner_status": "READY",
+        "blocked_reason": null
+      },
+      {
+        "id": "obsidian",
+        "visible": false,
+        "read_enabled": false,
+        "write_enabled": false,
+        "owner_status": "SERVICE_DOWN",
+        "blocked_reason": "obsidian is not connected to the read-only Brain Sync status layer."
+      },
+      {
+        "id": "mempalace",
+        "visible": false,
+        "read_enabled": false,
+        "write_enabled": false,
+        "owner_status": "SERVICE_DOWN",
+        "blocked_reason": "mempalace is not connected to the read-only Brain Sync status layer."
+      },
+      {
+        "id": "graphify",
+        "visible": true,
+        "read_enabled": true,
+        "write_enabled": false,
+        "owner_status": "READY",
+        "blocked_reason": null
+      },
+      {
+        "id": "buildwiki",
+        "visible": true,
+        "read_enabled": true,
+        "write_enabled": false,
+        "owner_status": "READY",
+        "blocked_reason": null
+      }
+    ],
+    "sources": [
+      {
+        "source": "agent_zero_brain",
+        "status": "read_only",
+        "count": 0,
+        "writes_enabled": false,
+        "owner_status": "READY",
+        "last_known_sync_at": null
+      },
+      {
+        "source": "brain_sync",
+        "status": "read_only",
+        "count": 0,
+        "writes_enabled": false,
+        "owner_status": "READY",
+        "last_known_sync_at": null
+      },
+      {
+        "source": "mempalace",
+        "status": "not_connected",
+        "count": 0,
+        "writes_enabled": false,
+        "owner_status": "SERVICE_DOWN",
+        "last_known_sync_at": null
+      },
+      {
+        "source": "obsidian",
+        "status": "not_connected",
+        "count": 0,
+        "writes_enabled": false,
+        "owner_status": "SERVICE_DOWN",
+        "last_known_sync_at": null
+      },
+      {
+        "source": "graphify",
+        "status": "needs_owner_setup",
+        "count": null,
+        "writes_enabled": false,
+        "owner_status": "BLOCKED",
+        "last_known_sync_at": null
+      },
+      {
+        "source": "buildwiki",
+        "status": "read_only",
+        "count": 5,
+        "writes_enabled": false,
+        "owner_status": "READY",
+        "last_known_sync_at": "2026-05-09T20:33:35.797Z"
+      }
+    ],
+    "writes_enabled": false
+  },
+  "button_contract": {
+    "label": "Brain Sync source status",
+    "endpoint": "/api/bridge/brain-sync/status",
+    "state": "READ_ONLY",
+    "owner_status": "LIVE",
+    "execution_enabled": true,
+    "fake_success_allowed": false
+  },
+  "blocker_class": "CREDENTIAL_GATED",
+  "blocker": "claudeclaw_dashboard_token_missing",
+  "checks": {
+    "head_matches_origin": true,
+    "login_200": true,
+    "unauth_brain_protected": true,
+    "auth_brain_200": true,
+    "brain_ok_true": true,
+    "upstream_status_present": true,
+    "local_readonly_status_field": true,
+    "obsidian_source_present": true,
+    "mempalace_source_present": true,
+    "buildwiki_source_present": true,
+    "buildwiki_system_visible": true,
+    "writes_disabled": true,
+    "button_contract_read_only": true,
+    "gateway_brain_route_accessible_or_protected": true,
+    "no_brain_secret_shape": true,
+    "no_brain_raw_path_shape": true,
+    "no_button_secret_shape": true,
+    "no_public_exposure": true
+  },
+  "safety": {
+    "no_env_change": true,
+    "no_secret_output": true,
+    "no_public_exposure": true,
+    "no_memory_writes_enabled": true,
+    "no_raw_path_output": true
+  }
+}

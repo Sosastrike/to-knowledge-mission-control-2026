@@ -1,0 +1,463 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3004 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-37-brain-status-page) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 37 — Brain Status Page) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Brain / Build-Wiki / Farmer) Tj
+0 -12 Td
+(Status: CLOSED AS CREDENTIAL_GATED) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0–10 Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Repo: Mission Control workspace) Tj
+0 -12 Td
+(- No `.env` edits planned or required.) Tj
+0 -12 Td
+(- No secret values are printed or written.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No Brain writes enabled.) Tj
+0 -12 Td
+(- No Build-Wiki execution added.) Tj
+0 -12 Td
+(- No SMB/Fork 2/external farmer/second vault path added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 10–20 Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Existing Routes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/rebuild`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/obsidian`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/mempalace`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/logs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Existing Local Adapters) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Obsidian read-only adapter:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-obsidian-adapter.ts`) Tj
+0 -12 Td
+(  - Status, search, read, summarize.) Tj
+0 -12 Td
+(  - Writes exist as Bridge-gated adapter methods only and are not enabled by Day 37.) Tj
+0 -12 Td
+(- MemPalace read-only adapter:) Tj
+0 -12 Td
+(  - `src/lib/agent-zero-mempalace-adapter.ts`) Tj
+0 -12 Td
+(  - Status and safe summaries.) Tj
+0 -12 Td
+(  - Raw private dumps disabled.) Tj
+0 -12 Td
+(- Build-Wiki / Farmer status:) Tj
+0 -12 Td
+(  - `src/app/api/bridge/brain-sync/build-wiki/status/route.ts`) Tj
+0 -12 Td
+(  - Run Now approvals and audit history already exposed read-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Defect Found) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`GET /api/bridge/brain-sync/status` returned 503 when the ClaudeClaw dashboard connection was ab) Tj
+0 -12 Td
+(sent, even though Mission Control had enough local read-only adapters to report truthful Brain s) Tj
+0 -12 Td
+(tatus.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### Required Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Keep the upstream ClaudeClaw connection as enrichment, but do not let its absence hide local rea) Tj
+0 -12 Td
+(d-only Brain status. The endpoint should return:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Obsidian status and index count when visible.) Tj
+0 -12 Td
+(- MemPalace status and safe count/index fields when visible.) Tj
+0 -12 Td
+(- Build-Wiki / Farmer approval/run history visibility.) Tj
+0 -12 Td
+(- Graphify as blocked/not connected when no adapter is visible.) Tj
+0 -12 Td
+(- All Brain writes disabled.) Tj
+0 -12 Td
+(- Owner-facing status descriptors for each Brain source/system.) Tj
+0 -12 Td
+(- No raw local paths.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3191 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No secret-shaped output.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20–45 Implementation Direction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Add local fallback to `GET /api/bridge/brain-sync/status`.) Tj
+0 -12 Td
+(- Add regression tests for the missing-upstream path.) Tj
+0 -12 Td
+(- Update button contracts so Brain Sync source status is read-only/live instead of credential-re) Tj
+0 -12 Td
+(quired.) Tj
+0 -12 Td
+(- Mount the accepted designer Brain Systems page at `/gateway/brain`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Completion Gate) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 37 can close only after:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused tests pass.) Tj
+0 -12 Td
+(- Full validation passes.) Tj
+0 -12 Td
+(- Runtime proof shows authenticated Brain status returns local read-only source/system truth.) Tj
+0 -12 Td
+(- Report/PDF are generated.) Tj
+0 -12 Td
+(- Source and report commits are pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20–45 Implemented Backend/API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/status` no longer hard-fails when the ClaudeClaw dashboard connect) Tj
+0 -12 Td
+(ion is absent.) Tj
+0 -12 Td
+(- The route still records the upstream blocker:) Tj
+0 -12 Td
+(  - `claudeclaw_dashboard_token_missing`) Tj
+0 -12 Td
+(- The route now returns local read-only Brain status from:) Tj
+0 -12 Td
+(  - Obsidian adapter) Tj
+0 -12 Td
+(  - MemPalace adapter) Tj
+0 -12 Td
+(  - Build-Wiki / Farmer approval/run history) Tj
+0 -12 Td
+(- Graphify remains honestly blocked/not connected unless its adapter appears.) Tj
+0 -12 Td
+(- Brain writes remain disabled:) Tj
+0 -12 Td
+(  - `production_memory_writes_enabled=false`) Tj
+0 -12 Td
+(  - `protected_memory_changes_enabled=false`) Tj
+0 -12 Td
+(  - `shared_brain_writes_enabled=false`) Tj
+0 -12 Td
+(  - `mempalace_writes_enabled=false`) Tj
+0 -12 Td
+(  - `external_connector_writes_enabled=false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 45–65 Implemented UI/Status Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added `/gateway/brain` and mounted the accepted designer `Brain Systems.html` page.) Tj
+0 -12 Td
+(- Updated button contracts so Brain Sync source status is `READ_ONLY` instead of `CREDENTIAL_REQ) Tj
+0 -12 Td
+(UIRED`.) Tj
+0 -12 Td
+(- Kept the route read-only; no write button, rebuild action, or protected Brain mutation was ena) Tj
+0 -12 Td
+(bled.) Tj
+0 -12 Td
+(- Owner-facing status descriptors are included on Brain sources and Brain systems.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/status/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/status/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/button-contracts/route.ts`) Tj
+0 -12 Td
+(- `src/lib/button-contracts-route.test.ts`) Tj
+0 -12 Td
+(- `src/app/gateway/brain/page.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test src/app/api/bridge/brain-sync/status/route.test.ts src/lib/button-contracts-route.t) Tj
+0 -12 Td
+(est.ts`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2310 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `pnpm test`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full test result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Test files: 158 passed) Tj
+0 -12 Td
+(- Tests: 1328 passed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-37-brain-status-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- PID after restart: `50544`) Tj
+0 -12 Td
+(- Deployed/source commit: `5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verified:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` returned 200.) Tj
+0 -12 Td
+(- Unauthenticated `GET /api/bridge/brain-sync/status` returned a protected response.) Tj
+0 -12 Td
+(- Authenticated `GET /api/bridge/brain-sync/status` returned 200.) Tj
+0 -12 Td
+(- Brain status returned `ok=true`.) Tj
+0 -12 Td
+(- Obsidian, MemPalace, and Build-Wiki source entries are present.) Tj
+0 -12 Td
+(- Build-Wiki system is visible read-only.) Tj
+0 -12 Td
+(- Brain writes are disabled.) Tj
+0 -12 Td
+(- Brain Sync button contract is `READ_ONLY`.) Tj
+0 -12 Td
+(- `/gateway/brain` is reachable/protected as a Gateway page.) Tj
+0 -12 Td
+(- No secret-shaped values in the Brain status payload.) Tj
+0 -12 Td
+(- No raw local paths in the Brain status payload.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(origin/to-knowledge-mc contains 5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 5dd8b5369ac57d9a629e70fd1d17fcc1fe520f46) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(CREDENTIAL_GATED: claudeclaw_dashboard_token_missing) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This blocker now affects upstream ClaudeClaw enrichment only. It no longer blocks local Mission ) Tj
+0 -12 Td
+(Control Brain status visibility.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 107 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Day 38 — Obsidian / Local Knowledge is next.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000003316 00000 n 
+0000003443 00000 n 
+0000006686 00000 n 
+0000006813 00000 n 
+0000009175 00000 n 
+0000009303 00000 n 
+0000009462 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+9533
+%%EOF

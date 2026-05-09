@@ -1,0 +1,207 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3684 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(fork1-buildwiki-run-now-approval-implementation-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Fork 1 — Build-Wiki Run Now Approval Flow \(Scoped\)) Tj
+0 -12 Td
+(Date: 2026-05-09  ) Tj
+0 -12 Td
+(Status: IMPLEMENTED \(scoped\), pending owner approval for live dispatch proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope Executed) Tj
+0 -12 Td
+(- Wired only the **Run Now** approval flow for Build-Wiki / Farmer Sync.) Tj
+0 -12 Td
+(- Kept strict scope to:) Tj
+0 -12 Td
+(  - `action = buildwiki.run_now`) Tj
+0 -12 Td
+(  - `target_service = opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- Did **not** wire pause/resume/add source/external farmer/SMB or other connectors in this hop.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(1. `/Users/sosastrike/Documents/to-knowledge-mission-control-2026/src/components/agent-network/A) Tj
+0 -12 Td
+(gentNetworkClient.tsx`) Tj
+0 -12 Td
+(2. `/Users/sosastrike/Documents/to-knowledge-mission-control-2026/src/app/api/bridge/brain-sync/) Tj
+0 -12 Td
+(build-wiki/run-now/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Endpoint Added) Tj
+0 -12 Td
+(- No new endpoint was added in this hop.) Tj
+0 -12 Td
+(- Reused existing scoped route:) Tj
+0 -12 Td
+(  - `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- Existing dispatch route remains the execution surface:) Tj
+0 -12 Td
+(  - `POST /api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior \(Updated\)) Tj
+0 -12 Td
+(- Build-Wiki Run Now card now shows explicit progress state:) Tj
+0 -12 Td
+(  - `Request run` → `Approval pending` → `Run dispatched / completed`) Tj
+0 -12 Td
+(- State labels now reflect backend `ui_state` truthfully:) Tj
+0 -12 Td
+(  - `pending_approval`, `approved/dispatching`, `completed`, `failed`, `denied`, `expired`) Tj
+0 -12 Td
+(- No fake completion states were introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Approval Request Behavior) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`:) Tj
+0 -12 Td
+(  - Requires active Bridge Session with `buildwiki.run_now` scope.) Tj
+0 -12 Td
+(  - Creates owner-channel approval request.) Tj
+0 -12 Td
+(  - Does **not** execute immediately.) Tj
+0 -12 Td
+(  - Returns `ui_state: pending_approval` and execution remains disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Audit Behavior) Tj
+0 -12 Td
+(- Existing dispatch route preserves audit-path contract:) Tj
+0 -12 Td
+(  - Dispatch writes `bridge_connector_runs` and `bridge_audit_events`.) Tj
+0 -12 Td
+(  - Target service remains hard-guarded to `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Verification Results) Tj
+0 -12 Td
+(1. `pnpm run typecheck` ✅) Tj
+0 -12 Td
+(2. `pnpm run build` ✅) Tj
+0 -12 Td
+(3. `pnpm run test` ✅ \(138 files / 1252 tests\)) Tj
+0 -12 Td
+(4. Targeted Run Now route tests ✅) Tj
+0 -12 Td
+(   - blocked without scoped Bridge Session) Tj
+0 -12 Td
+(   - success creates scoped owner approval request and keeps execution disabled) Tj
+0 -12 Td
+(5. `git diff --check` ✅) Tj
+0 -12 Td
+(6. `node scripts/check-protected-file-invariants.mjs` ✅) Tj
+0 -12 Td
+(7. Route smoke script launched with local server:) Tj
+0 -12 Td
+(   - Auth-gated routes rendered correctly for unauthenticated access \(307/401 expected\)) Tj
+0 -12 Td
+(   - API-key-protected checks were blocked locally with 401 in this environment) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service/Timer Verification) Tj
+0 -12 Td
+(- Local workstation runtime does not provide `systemctl` \(`command not found`\), so direct local ) Tj
+0 -12 Td
+(verification of:) Tj
+0 -12 Td
+(  - `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(  - `opencloud-docs-farmer.timer`) Tj
+0 -12 Td
+(  is blocked in this environment.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 630 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Live dispatch and service/timer verification must run on the Linux runtime host where systemd ) Tj
+0 -12 Td
+(is present.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Secrets / Safety) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+(- No secret/token output.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No connector broadening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+(- Pending at time of report writing; will be appended after commit/push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+(- Will be recorded as:) Tj
+0 -12 Td
+(  - `git revert <commit_sha>`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003983 00000 n 
+0000004109 00000 n 
+0000004790 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4860
+%%EOF

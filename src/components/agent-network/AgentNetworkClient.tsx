@@ -2881,21 +2881,60 @@ function BuildWikiRunNowCard({
   onRequest: () => void
 }) {
   const busy = state === 'sending'
+  const flowState = (() => {
+    if (state === 'sending') return 'requesting'
+    if (state === 'error' || result?.error) return 'error'
+    if (result?.ui_state === 'pending_approval') return 'approval_pending'
+    if (result?.ui_state === 'approved' || result?.ui_state === 'dispatching') return 'run_dispatched'
+    if (result?.ui_state === 'completed') return 'completed'
+    if (result?.ui_state === 'failed') return 'failed'
+    if (result?.ui_state === 'denied') return 'denied'
+    if (result?.ui_state === 'expired') return 'expired'
+    if (state === 'sent') return 'approval_pending'
+    return 'idle'
+  })()
+
+  const flowLabel = (() => {
+    switch (flowState) {
+      case 'requesting':
+        return 'Requesting approval'
+      case 'approval_pending':
+        return 'Approval pending'
+      case 'run_dispatched':
+        return 'Run dispatched'
+      case 'completed':
+        return 'Run completed'
+      case 'failed':
+        return 'Run failed'
+      case 'denied':
+        return 'Approval denied'
+      case 'expired':
+        return 'Approval expired'
+      case 'error':
+        return 'Request error'
+      default:
+        return 'OWNER_APPROVAL_REQUIRED'
+    }
+  })()
+
   return (
     <div className={styles.providerCard}>
       <div className={styles.providerHead}>
         <div className={styles.providerTitleWrap}>
-          <StatusDot status={state === 'error' ? 'degraded' : 'active'} />
+          <StatusDot status={flowState === 'error' || flowState === 'failed' ? 'degraded' : 'active'} />
           <strong className={styles.providerName}>Build-Wiki / Farmer Sync</strong>
         </div>
-        <span className={styles.providerState}>{state === 'sent' ? 'Telegram sent' : 'OWNER_APPROVAL_REQUIRED'}</span>
+        <span className={styles.providerState}>{flowLabel}</span>
       </div>
       <div className={styles.providerMeta}>
         <span>action: buildwiki.run_now</span>
         <span>scope: opencloud-docs-farmer.service only</span>
         <span>approval: Agent Zero → owner channel</span>
-        <span>execution: after button approval only</span>
+        <span>execution: owner approval required</span>
       </div>
+      <p className={styles.providerNotes}>
+        Flow: Request run → Approval pending → Run dispatched / completed.
+      </p>
       <p className={styles.providerNotes}>
         This creates a structured Telegram approval request. Mission Control does not approve directly and does not start the farmer by itself.
       </p>

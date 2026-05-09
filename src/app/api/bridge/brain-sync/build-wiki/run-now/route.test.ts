@@ -75,4 +75,58 @@ describe('Build-Wiki Run Now route', () => {
     })
     expect(mocks.fetchClaudeClawJson).not.toHaveBeenCalled()
   })
+
+  it('creates a scoped owner approval request and keeps execution disabled', async () => {
+    mocks.readLatestAgentZeroBridgeSession.mockReturnValue({
+      session: {
+        status: 'active',
+        session_id: 'bs_test_123',
+        execution_enabled: true,
+        allowed_tools: ['buildwiki.run_now'],
+      },
+    })
+    mocks.fetchClaudeClawJson.mockResolvedValue({
+      ok: true,
+      status: 201,
+      payload: {
+        ok: true,
+        approval_request_created: true,
+        duplicate_prompt_prevented: false,
+        approval: {
+          id: 'bw_approval_1',
+          title: 'Build-Wiki Run Now',
+          requesting_agent: 'Agent Zero',
+          action: 'buildwiki.run_now',
+          scope: 'opencloud-docs-farmer.service',
+          risk_level: 'low',
+          status: 'pending',
+          expires_at: 1760000000,
+          telegram_message_id: 4567,
+        },
+      },
+    })
+
+    const response = await POST(request({ reason: 'owner requested one run now' }))
+    const payload = await response.json()
+
+    expect(response.status).toBe(201)
+    expect(payload).toMatchObject({
+      ok: true,
+      mode: 'telegram_run_now_request_sent_no_execution',
+      approval_request_created: true,
+      approval_id: 'bw_approval_1',
+      approval_state: 'pending',
+      target_service: 'opencloud-docs-farmer.service',
+      execution_enabled: false,
+      accepted_for_execution: false,
+      ui_state: 'pending_approval',
+    })
+    expect(mocks.fetchClaudeClawJson).toHaveBeenCalledWith(
+      '/api/telegram-approvals/buildwiki/run-now',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+      12000,
+    )
+  })
 })

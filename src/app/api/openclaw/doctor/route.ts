@@ -1,3 +1,4 @@
+import { userInfo } from 'node:os'
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { runOpenClaw } from '@/lib/command'
@@ -5,7 +6,11 @@ import { config } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { archiveOrphanTranscriptsForStateDir } from '@/lib/openclaw-doctor-fix'
-import { parseOpenClawDoctorOutput } from '@/lib/openclaw-doctor'
+import {
+  buildOpenClawDoctorMissingPayload,
+  parseOpenClawDoctorOutput,
+  withOpenClawDoctorClosure,
+} from '@/lib/openclaw-doctor'
 import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
 
 function getCommandDetail(error: unknown): { detail: string; code: number | null } {
@@ -26,6 +31,14 @@ function isMissingOpenClaw(detail: string): boolean {
   return /enoent|not installed|not reachable|command not found/i.test(detail)
 }
 
+function runtimeServiceUser(): string | null {
+  try {
+    return userInfo().username || null
+  } catch {
+    return process.env.USER || null
+  }
+}
+
 export async function GET(request: Request) {
   const auth = requireRole(request, 'admin')
   if ('error' in auth) {
@@ -34,19 +47,27 @@ export async function GET(request: Request) {
 
   try {
     const result = await runOpenClaw(['doctor'], { timeoutMs: 15000 })
-    return NextResponse.json(sanitizeBridgeProviderPayload(parseOpenClawDoctorOutput(`${result.stdout}\n${result.stderr}`, result.code ?? 0, {
+    const status = parseOpenClawDoctorOutput(`${result.stdout}\n${result.stderr}`, result.code ?? 0, {
       stateDir: config.openclawStateDir,
+    })
+    return NextResponse.json(sanitizeBridgeProviderPayload(withOpenClawDoctorClosure(status, {
+      serviceUser: runtimeServiceUser(),
     })), {
       headers: { 'Cache-Control': 'no-store' },
     })
   } catch (error) {
     const { detail, code } = getCommandDetail(error)
     if (isMissingOpenClaw(detail)) {
-      return NextResponse.json({ error: 'OpenClaw is not installed or not reachable' }, { status: 400 })
+      return NextResponse.json(sanitizeBridgeProviderPayload(buildOpenClawDoctorMissingPayload({
+        serviceUser: runtimeServiceUser(),
+      })), { status: 400 })
     }
 
-    return NextResponse.json(sanitizeBridgeProviderPayload(parseOpenClawDoctorOutput(detail, code ?? 1, {
+    const status = parseOpenClawDoctorOutput(detail, code ?? 1, {
       stateDir: config.openclawStateDir,
+    })
+    return NextResponse.json(sanitizeBridgeProviderPayload(withOpenClawDoctorClosure(status, {
+      serviceUser: runtimeServiceUser(),
     })), {
       headers: { 'Cache-Control': 'no-store' },
     })
@@ -104,12 +125,16 @@ export async function POST(request: Request) {
       success: true,
       output: `${fixResult.stdout}\n${fixResult.stderr}`.trim(),
       progress,
-      status,
+      status: withOpenClawDoctorClosure(status, {
+        serviceUser: runtimeServiceUser(),
+      }),
     }))
   } catch (error) {
     const { detail, code } = getCommandDetail(error)
     if (isMissingOpenClaw(detail)) {
-      return NextResponse.json({ error: 'OpenClaw is not installed or not reachable' }, { status: 400 })
+      return NextResponse.json(sanitizeBridgeProviderPayload(buildOpenClawDoctorMissingPayload({
+        serviceUser: runtimeServiceUser(),
+      })), { status: 400 })
     }
 
     logger.error({ err: error }, 'OpenClaw doctor fix failed')
@@ -118,8 +143,10 @@ export async function POST(request: Request) {
       sanitizeBridgeProviderPayload({
         error: 'OpenClaw doctor fix failed',
         detail,
-        status: parseOpenClawDoctorOutput(detail, code ?? 1, {
+        status: withOpenClawDoctorClosure(parseOpenClawDoctorOutput(detail, code ?? 1, {
           stateDir: config.openclawStateDir,
+        }), {
+          serviceUser: runtimeServiceUser(),
         }),
       }),
       { status: 500 }

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { parseOpenClawDoctorOutput } from '@/lib/openclaw-doctor'
+import {
+  buildOpenClawDoctorClosureSummary,
+  buildOpenClawDoctorMissingPayload,
+  parseOpenClawDoctorOutput,
+  withOpenClawDoctorClosure,
+} from '@/lib/openclaw-doctor'
 
 describe('parseOpenClawDoctorOutput', () => {
   it('marks warning output as fixable and extracts bullet issues', () => {
@@ -145,5 +150,50 @@ Run "openclaw doctor --fix" to apply changes.
     expect(result.issues).toEqual([
       'Channel "public" has no auth configured.',
     ])
+  })
+
+  it('adds canonical closure proof for healthy, issue, and missing runtime states', () => {
+    const healthy = withOpenClawDoctorClosure(parseOpenClawDoctorOutput('OK: configuration valid', 0), {
+      timestamp: '2026-05-09T00:00:00.000Z',
+      serviceUser: 'sosastrike',
+    })
+    const issue = buildOpenClawDoctorClosureSummary({
+      timestamp: '2026-05-09T00:00:00.000Z',
+      status: parseOpenClawDoctorOutput('Config warnings\n- tools.exec.safeBins missing profile\nRun: openclaw doctor --fix', 0),
+    })
+    const missing = buildOpenClawDoctorMissingPayload({
+      timestamp: '2026-05-09T00:00:00.000Z',
+      serviceUser: 'sosastrike',
+    })
+
+    expect(healthy).toMatchObject({
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
+      blocker: null,
+      proof_packet: {
+        lane: 'OpenClaw+',
+        result: 'LIVE',
+        audit_pointer: '/api/openclaw/doctor',
+        service_user: 'sosastrike',
+        execution_enabled: false,
+        destructive_repair_enabled: false,
+      },
+    })
+    expect(issue).toMatchObject({
+      canonical_status: 'BLOCKED',
+      blocker_class: 'BLOCKED',
+      blocker: 'tools.exec.safeBins missing profile',
+    })
+    expect(missing).toMatchObject({
+      error: 'OpenClaw is not installed or not reachable',
+      canonical_status: 'SERVICE_DOWN',
+      blocker_class: 'SERVICE_DOWN',
+      blocker: 'openclaw_doctor_runtime_not_reachable',
+      execution_enabled: false,
+      writes_enabled: false,
+      no_secrets_exposed: true,
+      raw_paths_exposed: false,
+    })
+    expect(JSON.stringify([healthy, issue, missing])).not.toMatch(/sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|auth\.json|\/home\/tony/i)
   })
 })

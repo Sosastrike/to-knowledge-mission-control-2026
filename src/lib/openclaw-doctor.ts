@@ -1,5 +1,7 @@
 import path from 'node:path'
 
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
+
 export type OpenClawDoctorLevel = 'healthy' | 'warning' | 'error'
 export type OpenClawDoctorCategory = 'config' | 'state' | 'security' | 'general'
 
@@ -11,6 +13,41 @@ export interface OpenClawDoctorStatus {
   issues: string[]
   canFix: boolean
   raw: string
+}
+
+export type OpenClawDoctorProofPacket = {
+  lane: 'OpenClaw+'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  service_user: string | null
+  execution_enabled: false
+  writes_enabled: false
+  destructive_repair_enabled: false
+  secrets_exposed: false
+  raw_paths_exposed: false
+}
+
+export type OpenClawDoctorClosureSummary = {
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  blocker: string | null
+  proof_packet: OpenClawDoctorProofPacket
+}
+
+export type OpenClawDoctorMissingPayload = OpenClawDoctorClosureSummary & {
+  error: 'OpenClaw is not installed or not reachable'
+  execution_enabled: false
+  writes_enabled: false
+  destructive_repair_enabled: false
+  no_secrets_exposed: true
+  raw_paths_exposed: false
 }
 
 function normalizeLine(line: string): string {
@@ -177,5 +214,123 @@ export function parseOpenClawDoctorOutput(
     issues,
     canFix,
     raw,
+  }
+}
+
+function classifyOpenClawDoctorClosure(input: {
+  status?: OpenClawDoctorStatus | null
+  blocker?: string | null
+}): {
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+  blocker: string | null
+} {
+  const blocker = input.blocker || null
+  if (blocker) {
+    if (/(credential|token|api[_-]?key|oauth|secret)/i.test(blocker)) {
+      return { canonicalStatus: 'CREDENTIAL_GATED', blockerClass: 'CREDENTIAL_GATED', blocker }
+    }
+    if (/(not[_-]?installed|not[_-]?reachable|runtime|binary|path|enoent|command|service|timeout)/i.test(blocker)) {
+      return { canonicalStatus: 'SERVICE_DOWN', blockerClass: 'SERVICE_DOWN', blocker }
+    }
+    if (/(disabled|not[_-]?configured|adapter|blocked)/i.test(blocker)) {
+      return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker }
+    }
+    return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker }
+  }
+
+  const status = input.status
+  if (!status) {
+    return {
+      canonicalStatus: 'SERVICE_DOWN',
+      blockerClass: 'SERVICE_DOWN',
+      blocker: 'openclaw_doctor_runtime_not_reachable',
+    }
+  }
+  if (status.healthy) {
+    return { canonicalStatus: 'LIVE', blockerClass: 'NONE', blocker: null }
+  }
+  return {
+    canonicalStatus: 'BLOCKED',
+    blockerClass: 'BLOCKED',
+    blocker: status.issues[0] || 'openclaw_doctor_issues_detected',
+  }
+}
+
+export function buildOpenClawDoctorClosureSummary(input: {
+  status?: OpenClawDoctorStatus | null
+  blocker?: string | null
+  timestamp?: string
+  runtimeCommit?: string | null
+  routeOrServiceChecked?: string | null
+  serviceUser?: string | null
+  rollbackCommand?: string
+}): OpenClawDoctorClosureSummary {
+  const classified = classifyOpenClawDoctorClosure({
+    status: input.status || null,
+    blocker: input.blocker || null,
+  })
+
+  return {
+    canonical_status: classified.canonicalStatus,
+    blocker_class: classified.blockerClass,
+    blocker: classified.blocker,
+    proof_packet: {
+      lane: 'OpenClaw+',
+      timestamp: input.timestamp || new Date().toISOString(),
+      runtime_commit: input.runtimeCommit || null,
+      route_or_service_checked: input.routeOrServiceChecked || '/api/openclaw/doctor',
+      result: classified.canonicalStatus,
+      blocker: classified.blocker,
+      blocker_class: classified.blockerClass,
+      audit_pointer: classified.blockerClass === 'NONE' ? '/api/openclaw/doctor' : null,
+      safe_log_pointer: null,
+      rollback_command: input.rollbackCommand || 'git revert <day-05-openclaw-commit>',
+      service_user: input.serviceUser || null,
+      execution_enabled: false,
+      writes_enabled: false,
+      destructive_repair_enabled: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
+  }
+}
+
+export function withOpenClawDoctorClosure(
+  status: OpenClawDoctorStatus,
+  input: {
+    timestamp?: string
+    runtimeCommit?: string | null
+    routeOrServiceChecked?: string | null
+    serviceUser?: string | null
+    rollbackCommand?: string
+  } = {}
+): OpenClawDoctorStatus & OpenClawDoctorClosureSummary {
+  const closure = buildOpenClawDoctorClosureSummary({ ...input, status })
+  return {
+    ...status,
+    ...closure,
+  }
+}
+
+export function buildOpenClawDoctorMissingPayload(input: {
+  timestamp?: string
+  runtimeCommit?: string | null
+  routeOrServiceChecked?: string | null
+  serviceUser?: string | null
+  rollbackCommand?: string
+} = {}): OpenClawDoctorMissingPayload {
+  const closure = buildOpenClawDoctorClosureSummary({
+    ...input,
+    blocker: 'openclaw_doctor_runtime_not_reachable',
+  })
+  return {
+    error: 'OpenClaw is not installed or not reachable',
+    ...closure,
+    execution_enabled: false,
+    writes_enabled: false,
+    destructive_repair_enabled: false,
+    no_secrets_exposed: true,
+    raw_paths_exposed: false,
   }
 }

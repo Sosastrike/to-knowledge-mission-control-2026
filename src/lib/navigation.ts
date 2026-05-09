@@ -5,8 +5,30 @@ import { startTransition, useCallback, useEffect } from 'react'
 import { startNavigationTiming } from '@/lib/navigation-metrics'
 import { useMissionControl } from '@/store'
 
+const PANEL_ROUTE_OVERRIDES: Record<string, string> = {
+  overview: '/tkmc',
+  mission: '/tkmc',
+  dashboard: '/tkmc',
+  gateway: '/gateway',
+  'gateway-parent': '/gateway/agent-hub',
+  gateways: '/gateway',
+  'gateway-config': '/gateway/policies',
+  agents: '/gateway/agent-hub',
+  'agent-network': '/gateway/agent-hub',
+  settings: '/settings/tkmc',
+  security: '/settings/tkmc/security',
+  users: '/settings/tkmc/users',
+  audit: '/settings/tkmc/audit',
+  alerts: '/settings/tkmc/alerts',
+  channels: '/settings/tkmc/channels',
+  integrations: '/settings/tkmc/integrations',
+  skills: '/settings/tkmc/skills',
+  models: '/settings/tkmc/models',
+  roles: '/settings/tkmc/roles',
+}
+
 export function panelHref(panel: string): string {
-  return panel === 'overview' ? '/' : `/${panel}`
+  return PANEL_ROUTE_OVERRIDES[panel] ?? `/${panel}`
 }
 
 const PREFETCHED_ROUTES = new Set<string>()
@@ -48,7 +70,7 @@ export function useNavigateToPanel() {
       setChatPanelOpen(false)
     }
     startTransition(() => {
-      router.push(href, { scroll: false })
+      router.push(href, { scroll: true })
     })
   }, [pathname, router, setActiveTab, setChatPanelOpen])
 }

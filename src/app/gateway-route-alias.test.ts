@@ -3,6 +3,24 @@ import { GET as panelGet } from './[[...panel]]/route'
 import { GET as agentsGet } from './agents/route'
 
 describe('Gateway route aliases', () => {
+  it('routes root Mission Control entry to the active TKMC home', async () => {
+    const response = await panelGet(new Request('http://localhost/'), {
+      params: Promise.resolve({}),
+    })
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('/tkmc')
+  })
+
+  it('routes overview panel id to the active TKMC home', async () => {
+    const response = await panelGet(new Request('http://localhost/overview'), {
+      params: Promise.resolve({ panel: ['overview'] }),
+    })
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('Location')).toBe('/tkmc')
+  })
+
   it('routes the legacy /agent-network route to the production Agent Hub', async () => {
     const response = await panelGet(new Request('http://localhost/agent-network'), {
       params: Promise.resolve({ panel: ['agent-network'] }),

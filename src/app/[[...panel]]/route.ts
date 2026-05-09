@@ -8,10 +8,12 @@ type RouteContext = {
 }
 
 const DESIGNER_BASE = '/designer-mission-control/Mission%20Control.html'
+const MISSION_CONTROL_HOME = '/tkmc'
 const PRODUCTION_AGENT_HUB = '/gateway/agent-hub'
 
 function locationForPanel(panel: string[] | undefined): string {
   const firstPanel = panel?.[0] || 'mission'
+  if (firstPanel === 'mission' || firstPanel === 'overview' || firstPanel === 'dashboard') return MISSION_CONTROL_HOME
   if (
     firstPanel === 'gateway' ||
     firstPanel === 'gateway-parent' ||
@@ -21,7 +23,7 @@ function locationForPanel(panel: string[] | undefined): string {
   if (firstPanel === 'gateways') return '/gateway'
   if (firstPanel === 'gateway-config') return '/gateway/policies'
   if (firstPanel === 'reports' || firstPanel === 'executive-reports' || firstPanel === 'scheduled-reports') return DESIGNER_BASE + '?page=reports'
-  return DESIGNER_BASE + '?page=mission'
+  return MISSION_CONTROL_HOME
 }
 
 function redirectToLocation(location: string): NextResponse {

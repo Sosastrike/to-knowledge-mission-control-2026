@@ -1,8 +1,8 @@
 /* ============================================================
-   Gateway shared mock data — used by every page.
+   Gateway shared data — used by every page.
    Defines: nodes (registry), edges (routes), bridge sessions,
    audit rows, lanes, status grammar.
-   No backend calls. Pure JS literal.
+   Hydrates from read-only Gateway APIs when Mission Control auth is present.
    ============================================================ */
 
 window.GATEWAY = (function () {
@@ -110,6 +110,143 @@ window.GATEWAY = (function () {
     { id: 'oc.fork1',       name: 'Fork 1 — Local Docs', role: 'fork',  status: 'green',  R: 1, W: 1, X: 1, bridge: 1, summary: 'Local docs farmer.' },
     { id: 'oc.fork2',       name: 'Fork 2 — SMB',   role: 'fork',         status: 'red',    R: 0, W: 0, X: 0, bridge: 0, summary: 'SMB share farmer.', blocked_reason: 'SMB connector unavailable / SMB mount not proven.' },
   ];
+
+  function liveStatusToDesignStatus(status) {
+    const map = {
+      connected: 'green',
+      execution_enabled: 'green',
+      write_enabled: 'green',
+      read_only: 'blue',
+      degraded: 'yellow',
+      blocked: 'red',
+      missing: 'gray',
+      legacy_archived: 'gray',
+    };
+    return map[String(status || '').toLowerCase()] || 'gray';
+  }
+
+  const LIVE_NODE_TO_DESIGN_NODE = {
+    owner: 'input.owner',
+    gateway: 'gateway.core',
+    agent_zero: 'agent.zero',
+    hermes: 'agent.hermes',
+    brain_sync: 'brain.sync',
+    obsidian: 'brain.obsidian',
+    mempalace: 'brain.mempalace',
+    graphify: 'brain.graphify',
+    buildwiki: 'brain.buildwiki',
+    model_openrouter: 'model.openrouter',
+    model_openai: 'model.openai',
+    model_claude_anthropic: 'model.claude',
+    model_ollama: 'model.ollama',
+    model_nvidia: 'model.nvidia',
+    model_groq: 'model.groq',
+    model_gemini: 'model.gemini',
+    openclaw_plus: 'model.openclawplus',
+    mini_agents: 'model.miniagents',
+    integration_firecrawl: 'int.firecrawl',
+    integration_agentmail: 'int.agentmail',
+    integration_google_drive: 'int.gdrive',
+    integration_onedrive: 'int.onedrive',
+    integration_zapier: 'int.zapier',
+    integration_heygen: 'int.heygen',
+    integration_n8n: 'int.n8n',
+    mcp_gateway: 'int.mcp',
+    mcp_tools: 'int.tools',
+    events: 'input.event',
+  };
+
+  function fetchJsonSync(path) {
+    try {
+      const request = new XMLHttpRequest();
+      request.open('GET', path, false);
+      request.setRequestHeader('Accept', 'application/json');
+      request.send(null);
+      if (request.status < 200 || request.status >= 300) return null;
+      const parsed = JSON.parse(request.responseText || '{}');
+      return parsed && parsed.ok ? parsed : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function firstBlocker(liveNode) {
+    if (liveNode.blocked_reason) return liveNode.blocked_reason;
+    if (liveNode.last_error) return liveNode.last_error;
+    if (liveNode.health && liveNode.health.summary) return liveNode.health.summary;
+    if (Array.isArray(liveNode.blockers) && liveNode.blockers.length > 0) return liveNode.blockers[0];
+    return null;
+  }
+
+  function applyLiveGatewayNodes(payload) {
+    if (!payload || !Array.isArray(payload.nodes)) return;
+
+    payload.nodes.forEach((liveNode) => {
+      const designId = LIVE_NODE_TO_DESIGN_NODE[liveNode.id];
+      if (!designId) return;
+      const designNode = NODES.find((node) => node.id === designId);
+      if (!designNode) return;
+
+      const mappedStatus = liveStatusToDesignStatus(liveNode.status);
+      const blocker = firstBlocker(liveNode);
+
+      designNode.status = mappedStatus;
+      designNode.connected = liveNode.connected ? 1 : 0;
+      designNode.configured = liveNode.configured ? 1 : 0;
+      designNode.R = liveNode.read_enabled ? 1 : 0;
+      designNode.W = liveNode.write_enabled ? 1 : 0;
+      designNode.X = liveNode.execution_enabled ? 1 : 0;
+      designNode.bridge = liveNode.requires_bridge_session ? 1 : designNode.bridge;
+      designNode.summary = (liveNode.health && liveNode.health.summary) || blocker || designNode.summary;
+      designNode.lastSuccess = liveNode.last_success || (liveNode.health && liveNode.health.last_seen) || designNode.lastSuccess;
+      designNode.last_checked_at = (liveNode.health && liveNode.health.last_seen) || designNode.last_checked_at;
+      designNode.blocked_reason = mappedStatus === 'green' ? null : blocker;
+    });
+  }
+
+  function applyLiveGatewayStatus(payload) {
+    if (!payload || !payload.buildwiki_openclaw) return;
+
+    const buildwiki = payload.buildwiki_openclaw;
+    const buildwikiNode = NODES.find((node) => node.id === 'brain.buildwiki');
+    if (buildwikiNode) {
+      buildwikiNode.status = buildwiki.owner_approval_required ? 'yellow' : liveStatusToDesignStatus(buildwiki.openclaw_status);
+      buildwikiNode.summary = `Documentation knowledge base. Run Now scoped to ${buildwiki.run_now_target_service || 'opencloud-docs-farmer.service'} only.`;
+      buildwikiNode.blocked_reason = buildwiki.owner_approval_required
+        ? 'Owner approval required for buildwiki.run_now.'
+        : (Array.isArray(buildwiki.blockers) && buildwiki.blockers[0]) || null;
+      buildwikiNode.bridge = 1;
+      buildwikiNode.X = buildwiki.farmer_execution_enabled ? 1 : 0;
+      buildwikiNode.lastSuccess = buildwiki.last_run_status || buildwikiNode.lastSuccess;
+    }
+
+    const openclawNode = NODES.find((node) => node.id === 'model.openclawplus');
+    if (openclawNode) {
+      openclawNode.status = liveStatusToDesignStatus(buildwiki.openclaw_status);
+      openclawNode.summary = 'OpenClaw+ runtime / skills / mini-agent execution layer. Protected execution remains Bridge-gated.';
+      openclawNode.blocked_reason = (Array.isArray(buildwiki.blockers) && buildwiki.blockers[0]) || openclawNode.blocked_reason || null;
+    }
+
+    const children = {
+      'oc.buildwiki': buildwiki.owner_approval_required ? 'yellow' : liveStatusToDesignStatus(buildwiki.openclaw_status),
+      'oc.farmer': buildwiki.service_active || buildwiki.timer_active ? 'green' : 'yellow',
+      'oc.skills': liveStatusToDesignStatus(buildwiki.openclaw_status),
+      'oc.tools': liveStatusToDesignStatus(buildwiki.openclaw_status),
+      'oc.fork1': buildwiki.fork1_state === 'blocked' ? 'red' : 'green',
+      'oc.fork2': 'red',
+    };
+    OPENCLOUD_CHILDREN.forEach((child) => {
+      if (children[child.id]) child.status = children[child.id];
+      if (child.id === 'oc.buildwiki') child.summary = `Run Now scope: ${buildwiki.run_now_target_service || 'opencloud-docs-farmer.service'} only.`;
+      if (child.id === 'oc.fork2') child.blocked_reason = buildwiki.fork2_blocker || child.blocked_reason;
+    });
+  }
+
+  const liveGatewayNodes = fetchJsonSync('/api/gateway/nodes');
+  if (liveGatewayNodes) applyLiveGatewayNodes(liveGatewayNodes);
+
+  const liveGatewayStatus = fetchJsonSync('/api/gateway/status');
+  if (liveGatewayStatus) applyLiveGatewayStatus(liveGatewayStatus);
 
   // ---------- Edges (routes) ----------
   const EDGES = [

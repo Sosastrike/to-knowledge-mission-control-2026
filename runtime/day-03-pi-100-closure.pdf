@@ -1,0 +1,422 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3051 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-03-pi-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 03 — Pi 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker classification: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 03 closed Pi as a live in-process Mission Control shadow dispatcher. Pi is not an executor, ) Tj
+0 -12 Td
+(not a commander, and not a write-capable agent. Its role is now explicit and proven: advisory ro) Tj
+0 -12 Td
+(ute optimization and policy-aware recommendations through Gateway, with Agent Zero remaining com) Tj
+0 -12 Td
+(mander.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pi now has an authenticated recommendation route, a canonical proof packet, an owner-visible aud) Tj
+0 -12 Td
+(it event for each recommendation, and Agent Hub truth updated from “pending runtime not proven” ) Tj
+0 -12 Td
+(to “read-only advisory dispatcher.”) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added canonical Pi status fields:) Tj
+0 -12 Td
+(  - `canonical_status=LIVE`) Tj
+0 -12 Td
+(  - `blocker_class=NONE`) Tj
+0 -12 Td
+(  - `proof_packet`) Tj
+0 -12 Td
+(  - `advisory_result_proven=true`) Tj
+0 -12 Td
+(- Added authenticated recommendation support to `POST /api/bridge/pi/status`.) Tj
+0 -12 Td
+(- Added safe recommendation audit event output:) Tj
+0 -12 Td
+(  - `pi.dispatcher.recommendation.generated`) Tj
+0 -12 Td
+(- Updated Agent Hub so Pi appears as:) Tj
+0 -12 Td
+(  - `status=read_only`) Tj
+0 -12 Td
+(  - `live_interface_proven=true`) Tj
+0 -12 Td
+(  - `blocked_reason=null`) Tj
+0 -12 Td
+(- Removed stale Pi blocker labels that made the proven in-process dispatcher look unavailable.) Tj
+0 -12 Td
+(- Added/updated tests proving Pi cannot execute, write, bypass Gateway, or replace Agent Zero.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/pi/status/route.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-model.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/pi/status`) Tj
+0 -12 Td
+(  - Returns canonical live shadow-dispatcher status and proof packet.) Tj
+0 -12 Td
+(- `POST /api/bridge/pi/status`) Tj
+0 -12 Td
+(  - Accepts an `owner_request`.) Tj
+0 -12 Td
+(  - Returns a read-only Pi route recommendation.) Tj
+0 -12 Td
+(  - Returns a safe audit event object.) Tj
+0 -12 Td
+(  - Does not execute tools, write data, or call external services.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local production-style standalone server was run on `127.0.0.1:3337` with a temporary runtime AP) Tj
+0 -12 Td
+(I key.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/pi/status` returned `401`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2658 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `/login` returned `200`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated status proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/pi/status` returned `200`.) Tj
+0 -12 Td
+(- Pi status:) Tj
+0 -12 Td
+(  - `canonical_status=LIVE`) Tj
+0 -12 Td
+(  - `blocker_class=NONE`) Tj
+0 -12 Td
+(  - `status=shadow_live`) Tj
+0 -12 Td
+(  - `runtime.mode=mission_control_in_process_shadow`) Tj
+0 -12 Td
+(  - `runtime.sdk_mode=true`) Tj
+0 -12 Td
+(  - `runtime.public_exposure=false`) Tj
+0 -12 Td
+(  - `runtime.blocker=advisory_only_no_execution_authority`) Tj
+0 -12 Td
+(  - `advisory_result_proven=true`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `writes_enabled=false`) Tj
+0 -12 Td
+(  - `proof_packet.result=LIVE`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated recommendation proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Web research request:) Tj
+0 -12 Td
+(  - target `space_agent`) Tj
+0 -12 Td
+(  - policy `allowed`) Tj
+0 -12 Td
+(- Firecrawl request:) Tj
+0 -12 Td
+(  - target `space_agent`) Tj
+0 -12 Td
+(  - policy `missing_credential`) Tj
+0 -12 Td
+(  - blocker `firecrawl_credential_required`) Tj
+0 -12 Td
+(- YouTube request:) Tj
+0 -12 Td
+(  - target `space_agent`) Tj
+0 -12 Td
+(  - policy `allowed`) Tj
+0 -12 Td
+(- Workflow design request:) Tj
+0 -12 Td
+(  - target `hermes`) Tj
+0 -12 Td
+(  - blocker `hermes_degraded_or_pending_live_proof`) Tj
+0 -12 Td
+(- Workforce task request:) Tj
+0 -12 Td
+(  - target `paperclip`) Tj
+0 -12 Td
+(  - blocker `paperclip_task_write_requires_bridge_session`) Tj
+0 -12 Td
+(- OpenClaw+ runtime execution request:) Tj
+0 -12 Td
+(  - target `openclaw_plus`) Tj
+0 -12 Td
+(  - blocker `openclaw_runtime_execution_requires_bridge_session`) Tj
+0 -12 Td
+(- Delivery request:) Tj
+0 -12 Td
+(  - target `delivery_adapter`) Tj
+0 -12 Td
+(  - blocker `delivery_adapter_requires_bridge_session_and_configured_connector`) Tj
+0 -12 Td
+(- Unknown connector request:) Tj
+0 -12 Td
+(  - target `blocked`) Tj
+0 -12 Td
+(  - blocker `unknown_connector_not_registered`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every recommendation returned:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `execution_enabled=false`) Tj
+0 -12 Td
+(- `writes_enabled=false`) Tj
+0 -12 Td
+(- `audit_event=pi.dispatcher.recommendation.generated`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status` returned `200`.) Tj
+0 -12 Td
+(- Pi card data:) Tj
+0 -12 Td
+(  - `status=read_only`) Tj
+0 -12 Td
+(  - `blocked_reason=null`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `write_enabled=false`) Tj
+0 -12 Td
+(  - `live_interface_proven=true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Validation) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2165 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test src/lib/gateway-pi-dispatcher.test.ts src/lib/gateway-agent-hub.test.ts src/lib/gat) Tj
+0 -12 Td
+(eway-model.test.ts src/lib/gateway-route-auth.test.ts`: PASS, 22 tests) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 138 files / 1256 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No tool execution enabled.) Tj
+0 -12 Td
+(- No fake done.) Tj
+0 -12 Td
+(- No fake sent/uploaded.) Tj
+0 -12 Td
+(- Agent Zero remains commander.) Tj
+0 -12 Td
+(- Pi remains advisory only.) Tj
+0 -12 Td
+(- Paperclip remains before OpenClaw+ in the operating chain.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No developer-side blocker remains for Pi’s defined role.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Important limitation:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pi has no execution authority by design.) Tj
+0 -12 Td
+(- Pi cannot write, call tools, bypass Gateway, or replace Agent Zero.) Tj
+0 -12 Td
+(- Protected actions still require Agent Zero/Gateway plus Bridge Session scope and registered ad) Tj
+0 -12 Td
+(apters.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `ca84d50a3094946df04c0afbec3040460443cc48`) Tj
+0 -12 Td
+(- Message: `feat\(pi\): prove shadow dispatcher recommendations`) Tj
+0 -12 Td
+(- Push: `origin/to-knowledge-mc` updated successfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert ca84d50a3094946df04c0afbec3040460443cc48) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 04 — Paperclip 100% Closure has started automatically.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003356 00000 n 
+0000003482 00000 n 
+0000006192 00000 n 
+0000006318 00000 n 
+0000008535 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8605
+%%EOF

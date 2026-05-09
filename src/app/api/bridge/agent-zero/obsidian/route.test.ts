@@ -98,4 +98,20 @@ describe('Agent Zero Obsidian route', () => {
     expect(body.adapter_scope.write_enabled).toBe(false)
     expect(body.adapter_scope.direct_filesystem_exposed).toBe(false)
   })
+
+  it('classifies unsupported actions as BLOCKED instead of service down', async () => {
+    const route = await import('./route')
+    const response = await route.GET(new NextRequest('http://localhost/api/bridge/agent-zero/obsidian?action=delete'))
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toBe('unsupported_obsidian_adapter_action')
+    expect(body.owner_status).toMatchObject({
+      status: 'BLOCKED',
+      blocker_class: 'BLOCKED',
+      can_read: false,
+      can_write: false,
+      can_execute: false,
+    })
+  })
 })

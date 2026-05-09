@@ -19,8 +19,11 @@ function noStore(response: NextResponse) {
 }
 
 function describeObsidianOwnerStatus(status: Pick<AgentZeroObsidianStatus, 'ok' | 'status' | 'blockers'>) {
+  const serviceDown = status.blockers.some((blocker) =>
+    /obsidian_(?:vault_missing_or_unreadable|status_probe_failed)/.test(blocker),
+  )
   return describeOwnerFacingStatus({
-    rawStatus: status.ok ? 'read_only' : 'service_down',
+    rawStatus: status.ok ? 'read_only' : serviceDown ? 'service_down' : 'blocked',
     blockers: status.blockers,
     connected: status.ok,
     readEnabled: status.ok,

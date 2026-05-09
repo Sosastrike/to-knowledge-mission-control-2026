@@ -1,0 +1,111 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T23:10:00.571Z",
+  "runtime_commit": "bbca4f8af11d315f4a1e56848e11ae9c2471b972",
+  "source_commit": "9f6d8c5d6e2a906302a85378d6de3b151bbc77a4",
+  "runtime_pid": 72421,
+  "base": "http://127.0.0.1:3337",
+  "route_results": [
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/status",
+      "status": 200,
+      "ok": true,
+      "bytes": 23066,
+      "violations": []
+    },
+    {
+      "path": "/api/bridge/brain-sync/knowledge-report",
+      "status": 200,
+      "ok": true,
+      "bytes": 3205,
+      "violations": []
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/run-now",
+      "status": 200,
+      "ok": true,
+      "bytes": 19055,
+      "violations": []
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/files?type=all&limit=5",
+      "status": 200,
+      "ok": true,
+      "bytes": 265,
+      "violations": []
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/logs?lines=20",
+      "status": 404,
+      "ok": false,
+      "bytes": 76,
+      "violations": []
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/run-now",
+      "status": 201,
+      "ok": true,
+      "bytes": 867,
+      "violations": []
+    }
+  ],
+  "run_now_approval": {
+    "ok": true,
+    "approval_id": "apr_5f8fd696-5469-4569-bacf-653efde203c5",
+    "approval_state": "pending",
+    "action": "buildwiki.run_now",
+    "target_key": "opencloud-docs-farmer.service",
+    "audit_outcome": "approval_requested",
+    "connector_runs_created": 0,
+    "scope": {
+      "action": "buildwiki.run_now",
+      "target_service": "opencloud-docs-farmer.service",
+      "command": [
+        "systemctl",
+        "--user",
+        "start",
+        "opencloud-docs-farmer.service"
+      ],
+      "fork": "fork_1_only",
+      "no_smb": true,
+      "no_fork_2": true,
+      "no_external_farmers": true,
+      "no_second_vault": true,
+      "no_immediate_execution": true
+    }
+  },
+  "service_status": {
+    "systemctl_available": false,
+    "blocker": "systemctl_command_not_found_in_local_runtime",
+    "route_service_probe": {
+      "systemctl_available": false,
+      "blocker": "systemctl_command_not_found_in_local_runtime",
+      "service_unit": "opencloud-docs-farmer.service",
+      "timer_unit": "opencloud-docs-farmer.timer",
+      "timer_active": false,
+      "timer_unit_file_state": "unknown",
+      "service_active_state": "unknown",
+      "service_sub_state": "unknown",
+      "last_result": "unknown",
+      "last_exit_status": null,
+      "next_run_at": null,
+      "last_run_at": null,
+      "last_run_started_at": null,
+      "last_run_exited_at": null
+    }
+  },
+  "blockers": [
+    "SERVICE_DOWN:systemctl_command_not_found_in_local_runtime"
+  ],
+  "safety": {
+    "response_bodies_printed": false,
+    "api_key_printed": false,
+    "no_env_changes": true,
+    "no_secrets": true,
+    "no_smb": true,
+    "no_fork_2": true,
+    "no_external_farmers": true,
+    "no_second_vault": true,
+    "no_dispatch_executed": true
+  }
+}

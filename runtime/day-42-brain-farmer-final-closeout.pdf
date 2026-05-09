@@ -1,0 +1,477 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3111 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-42-brain-farmer-final-closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 42 — Brain / Farmer Final Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL PASS) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: `systemctl_command_not_found_in_local_runtime`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Brain / Build-Wiki / Farmer final closeout for the Day 33-41 workstream.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verify the Brain / Farmer lane after the Run Now approval path, service-status endpoint, audit t) Tj
+0 -12 Td
+(rail, rollback guidance, Brain status, knowledge report, governance guardrails, and security swe) Tj
+0 -12 Td
+(ep work. Close developer-side implementation where possible and record exact runtime blockers wi) Tj
+0 -12 Td
+(thout faking service proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reviewed active Brain / Farmer surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/logs`) Tj
+0 -12 Td
+(- Bridge approval persistence tables) Tj
+0 -12 Td
+(- Bridge audit persistence tables) Tj
+0 -12 Td
+(- Build-Wiki Run Now approval scope) Tj
+0 -12 Td
+(- Farmer service/timer probe behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented In This Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new source changes were required after the Day 41 security fix. The Day 42 closeout validates) Tj
+0 -12 Td
+( the already implemented Brain / Farmer path and records the remaining service-manager blocker h) Tj
+0 -12 Td
+(onestly.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Confirmed developer-side behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Run Now creates a scoped Bridge approval request for `buildwiki.run_now`.) Tj
+0 -12 Td
+(- Run Now does not execute immediately.) Tj
+0 -12 Td
+(- The approval target is scoped only to `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+(- The dispatch command remains exactly `systemctl --user start opencloud-docs-farmer.service` af) Tj
+0 -12 Td
+(ter owner approval.) Tj
+0 -12 Td
+(- Approval/audit rows persist.) Tj
+0 -12 Td
+(- No connector run is created before approval/dispatch.) Tj
+0 -12 Td
+(- No SMB, Fork 2, external farmer, or second vault path is enabled.) Tj
+0 -12 Td
+(- Brain / Farmer API responses do not expose raw host paths or secret-shaped values in the check) Tj
+0 -12 Td
+(ed routes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No source files changed in Day 42.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report/proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-42-brain-farmer-final-closeout.md`) Tj
+0 -12 Td
+(- `runtime/day-42-brain-farmer-final-closeout.pdf`) Tj
+0 -12 Td
+(- `runtime/day-42-brain-farmer-final-closeout-proof.json`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2980 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No routes changed in Day 42.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Routes verified:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files?type=all&limit=5`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/logs?lines=20`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Owner-Facing Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner-facing Brain / Farmer state remains truthful:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Run Now means request owner approval, not immediate execution.) Tj
+0 -12 Td
+(- Pending approval is visible through the Bridge approval model.) Tj
+0 -12 Td
+(- Dispatch/completion are not claimed until the approved dispatch actually occurs.) Tj
+0 -12 Td
+(- Service/timer status cannot be called live in this runtime because the local service manager c) Tj
+0 -12 Td
+(ommand is unavailable.) Tj
+0 -12 Td
+(- The exact blocker is `SERVICE_DOWN:systemctl_command_not_found_in_local_runtime`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof used Mission Control on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime PID: `72421`) Tj
+0 -12 Td
+(- Runtime source commit: `9f6d8c5d6e2a906302a85378d6de3b151bbc77a4`) Tj
+0 -12 Td
+(- Current branch head during proof: `bbca4f8af11d315f4a1e56848e11ae9c2471b972`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Farmer service/timer proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `systemctl` is not available in the local runtime shell.) Tj
+0 -12 Td
+(- Farmer service active state: unknown.) Tj
+0 -12 Td
+(- Farmer timer active state: unknown.) Tj
+0 -12 Td
+(- Live start/dispatch was not attempted.) Tj
+0 -12 Td
+(- No Build-Wiki/Farmer execution occurred.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-42-brain-farmer-final-closeout-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Routes checked: 6) Tj
+0 -12 Td
+(- Approval request created/reused: PASS) Tj
+0 -12 Td
+(- Approval state: `pending`) Tj
+0 -12 Td
+(- Approval action: `buildwiki.run_now`) Tj
+0 -12 Td
+(- Approval target: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- Audit outcome: `approval_requested`) Tj
+0 -12 Td
+(- Connector runs created before approval: 0) Tj
+0 -12 Td
+(- Response leak violations: 0) Tj
+0 -12 Td
+(- Service blocker: `SERVICE_DOWN:systemctl_command_not_found_in_local_runtime`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The proof used authenticated runtime API access with a non-secret placeholder session cookie for) Tj
+0 -12 Td
+( the proxy prefilter. No credential value was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2671 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS — 163 files / 1336 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(During validation, stale generated build artifacts under `.next/standalone 2` and `.next/cache 2) Tj
+0 -12 Td
+(` were removed. These were generated artifacts only, not source or owner data.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The local runtime cannot prove or dispatch the Farmer service because `systemctl` is unavailab) Tj
+0 -12 Td
+(le in this runtime context.) Tj
+0 -12 Td
+(- The implementation is ready for the Linux user-service runtime where `systemctl --user start o) Tj
+0 -12 Td
+(pencloud-docs-farmer.service` is available.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action if service proof is required on this host:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Run Mission Control/Farmer proof in a runtime with `systemctl --user`.) Tj
+0 -12 Td
+(- Confirm the runtime service user can inspect/start `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+(- Confirm `opencloud-docs-farmer.timer` if timer proof is required.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit already deployed for the last code change in this lane:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `9f6d8c5` — `fix\(brain\): redact build wiki file paths`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 42 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Recorded after this report is committed and pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback source change from this Brain/Farmer lane:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 9f6d8c5) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback Day 42 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day42_report_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No raw host path leaks found in checked Brain / Farmer responses.) Tj
+0 -12 Td
+(- No memory or governance changes.) Tj
+0 -12 Td
+(- No Build-Wiki execution.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+(- No fake service/timer proof.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 449 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Closeout Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 42 developer-side closeout is complete with a `SERVICE_DOWN` blocker for live Linux user-ser) Tj
+0 -12 Td
+(vice proof. The lane does not get a fake GO. The next lane is Day 43 — MCP Server Registry.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 43 — MCP Server Registry is the active next lane.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000003423 00000 n 
+0000003550 00000 n 
+0000006582 00000 n 
+0000006709 00000 n 
+0000009432 00000 n 
+0000009560 00000 n 
+0000010061 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+10132
+%%EOF

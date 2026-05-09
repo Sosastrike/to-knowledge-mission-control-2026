@@ -1,0 +1,416 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3048 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-07-spaceagent-youtube-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 07 - SpaceAgent YouTube 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: SpaceAgent YouTube transcript / metadata research) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED - SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Primary blocker: youtube_transcript_connector_not_installed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 07 is closed for developer-side implementation because the YouTube route now reports a canon) Tj
+0 -12 Td
+(ical proof packet, preserves metadata-only fallback, and refuses to fake transcript-backed claim) Tj
+0 -12 Td
+(s when the transcript connector is unavailable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This lane is not GO. The runtime Python context does not have `youtube_transcript_api` installed) Tj
+0 -12 Td
+(, so live transcript extraction is not proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a canonical SpaceAgent YouTube transcript connector status model.) Tj
+0 -12 Td
+(- Added a proof packet for the YouTube lane with:) Tj
+0 -12 Td
+(  - runtime result,) Tj
+0 -12 Td
+(  - blocker,) Tj
+0 -12 Td
+(  - blocker class,) Tj
+0 -12 Td
+(  - connector identity,) Tj
+0 -12 Td
+(  - no full-video download,) Tj
+0 -12 Td
+(  - no login bypass,) Tj
+0 -12 Td
+(  - no secrets,) Tj
+0 -12 Td
+(  - no raw paths.) Tj
+0 -12 Td
+(- Replaced the vague `youtube_transcript_connector_not_proven` status at the route level with th) Tj
+0 -12 Td
+(e exact blocker:) Tj
+0 -12 Td
+(  - youtube_transcript_connector_not_installed) Tj
+0 -12 Td
+(- Preserved legacy blocker compatibility for existing UI/registry references.) Tj
+0 -12 Td
+(- Exposed connector status through:) Tj
+0 -12 Td
+(  - GET /api/gateway/space-agent/youtube/status) Tj
+0 -12 Td
+(  - POST /api/gateway/space-agent/youtube/research) Tj
+0 -12 Td
+(- Kept metadata research available without pretending transcript proof exists.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/space-agent-youtube-runtime.ts) Tj
+0 -12 Td
+(- src/lib/space-agent-youtube-connector.ts) Tj
+0 -12 Td
+(- src/lib/space-agent-youtube-connector.test.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/space-agent/youtube/status/route.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/space-agent/youtube/research/route.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Checked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- GET /api/gateway/space-agent/youtube/status) Tj
+0 -12 Td
+(- POST /api/gateway/space-agent/youtube/research) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No layout/UI redesign was performed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway and SpaceAgent surfaces can now consume a truthful YouTube connector status instead of t) Tj
+0 -12 Td
+(reating a route as live transcript proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime dependency inventory:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2809 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- python3: present) Tj
+0 -12 Td
+(- youtube_transcript_api: not installed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Loopback-only standalone Mission Control smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Host bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- Runtime PID: 16194) Tj
+0 -12 Td
+(- /login: 200) Tj
+0 -12 Td
+(- Unauthenticated GET /api/gateway/space-agent/youtube/status: 401) Tj
+0 -12 Td
+(- Authenticated GET /api/gateway/space-agent/youtube/status: 200) Tj
+0 -12 Td
+(- Authenticated POST /api/gateway/space-agent/youtube/research: 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated status result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: limited) Tj
+0 -12 Td
+(- canonical_status: SERVICE_DOWN) Tj
+0 -12 Td
+(- blocker_class: SERVICE_DOWN) Tj
+0 -12 Td
+(- blocked_reason: youtube_transcript_connector_not_installed) Tj
+0 -12 Td
+(- transcript_connector_proven: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated research result using public YouTube URL:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- title: Rick Astley - Never Gonna Give You Up \(Official Video\) \(4K Remaster\)) Tj
+0 -12 Td
+(- channel: Rick Astley) Tj
+0 -12 Td
+(- publish date: unavailable from oEmbed) Tj
+0 -12 Td
+(- transcript_status: missing) Tj
+0 -12 Td
+(- transcript_segments: 0) Tj
+0 -12 Td
+(- key_claims: 0) Tj
+0 -12 Td
+(- full_video_download_allowed: false) Tj
+0 -12 Td
+(- blocked_reason: youtube_transcript_connector_not_installed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No full video was downloaded. No login, age, region, copyright, or paywall bypass was attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pnpm test src/lib/space-agent-youtube-connector.test.ts src/lib/space-agent-youtube-scenarios.) Tj
+0 -12 Td
+(test.ts src/lib/space-agent-health.test.ts) Tj
+0 -12 Td
+(- pnpm run typecheck) Tj
+0 -12 Td
+(- git diff --check) Tj
+0 -12 Td
+(- pnpm run build) Tj
+0 -12 Td
+(- pnpm test) Tj
+0 -12 Td
+(- node scripts/check-protected-file-invariants.mjs) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- .env diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Validation result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused SpaceAgent YouTube tests passed.) Tj
+0 -12 Td
+(- Typecheck passed.) Tj
+0 -12 Td
+(- Build passed.) Tj
+0 -12 Td
+(- Full test suite passed: 139 files / 1262 tests.) Tj
+0 -12 Td
+(- Protected-file invariant scan passed.) Tj
+0 -12 Td
+(- Staged secret scan found no secret-like staged values.) Tj
+0 -12 Td
+(- .env diff was clean.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The route smoke proved:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- YouTube metadata can be resolved from a public video through the safe metadata path.) Tj
+0 -12 Td
+(- Transcript-backed claims are not generated when the connector dependency is missing.) Tj
+0 -12 Td
+(- The exact runtime blocker is returned.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1969 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(youtube_transcript_connector_not_installed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Required owner/admin or runtime action:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Install the approved transcript connector into the Mission Control runtime Python context:) Tj
+0 -12 Td
+(   - youtube_transcript_api) Tj
+0 -12 Td
+(2. Restart Mission Control if the runtime service does not see the dependency.) Tj
+0 -12 Td
+(3. Re-run:) Tj
+0 -12 Td
+(   - GET /api/gateway/space-agent/youtube/status) Tj
+0 -12 Td
+(   - POST /api/gateway/space-agent/youtube/research) Tj
+0 -12 Td
+(4. Promote only after transcript-backed segments and claims are returned for a public transcript) Tj
+0 -12 Td
+(-enabled video.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No full video download.) Tj
+0 -12 Td
+(- No login/copyright/paywall bypass.) Tj
+0 -12 Td
+(- No fake transcript proof.) Tj
+0 -12 Td
+(- No raw local paths exposed in owner-facing output.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- 9b6f3218045bfa9eacfdcd9275cfccd6d23cd6f3) Tj
+0 -12 Td
+(- Message: feat\(space-agent\): add youtube transcript closure proof) Tj
+0 -12 Td
+(- Push result: pushed to origin/to-knowledge-mc) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 9b6f3218045bfa9eacfdcd9275cfccd6d23cd6f3) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 08 - SpaceAgent Firecrawl 100% Closure is automatically started after this Day 07 closeout.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003353 00000 n 
+0000003479 00000 n 
+0000006340 00000 n 
+0000006466 00000 n 
+0000008487 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8557
+%%EOF

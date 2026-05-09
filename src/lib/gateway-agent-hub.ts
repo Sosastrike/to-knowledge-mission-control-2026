@@ -7,7 +7,7 @@ import {
 } from './gateway-registry-api'
 import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from './gateway-model'
 
-export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'spaceagent' | 'pi-mono'
+export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'spaceagent' | 'pi-mono' | 'openclaw-plus'
 
 export type AgentHubAgentState = 'partial_go' | 'gated' | 'pending' | 'blocked' | 'read_only'
 
@@ -96,6 +96,7 @@ export type AgentHubStatusPayload = {
     pi_mono: 'live_shadow_dispatcher_advisory_only'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
+    openclaw_plus: 'service_down_until_openclaw_cli_reachable'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
   }
@@ -324,6 +325,23 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     bridgeStatusRoute: '/api/bridge/pi/status',
     extraBlockers: [],
   },
+  {
+    id: 'openclaw-plus',
+    registryNodeId: 'openclaw_plus',
+    name: 'OpenClaw+',
+    role: 'Runtime / Skills / Mini-Agent Execution Layer',
+    layer: 'runtime_skills_agents_mini_agent_execution_layer',
+    productionTruth: 'SERVICE_DOWN until an approved OpenClaw+ CLI/runtime binary is installed or exposed to the Mission Control runtime service user and the doctor route returns a real health payload',
+    status: 'blocked',
+    liveInterfaceProven: false,
+    calledTrueProven: false,
+    interfaceSummary: 'Runtime / skills / mini-agent execution layer remains visible but blocked until OpenClaw+ doctor runtime is reachable',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'service_gated',
+    bridgeStatusRoute: '/api/openclaw/doctor',
+    extraBlockers: ['openclaw_doctor_runtime_not_reachable'],
+  },
 ]
 
 const SUPPORTING_RUNTIME_NODE_IDS = [
@@ -348,6 +366,7 @@ export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null 
   if (normalized === 'hermes') return 'hermes'
   if (normalized === 'space-agent' || normalized === 'spaceagent') return 'spaceagent'
   if (normalized === 'pi' || normalized === 'pi-mono' || normalized === 'pimono') return 'pi-mono'
+  if (normalized === 'openclaw' || normalized === 'openclaw+' || normalized === 'openclaw-plus' || normalized === 'openclawplus') return 'openclaw-plus'
   return null
 }
 
@@ -374,6 +393,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       pi_mono: 'live_shadow_dispatcher_advisory_only',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
+      openclaw_plus: 'service_down_until_openclaw_cli_reachable',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
     },
@@ -563,7 +583,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       ...(node?.blocked_reason ? [node.blocked_reason] : []),
       ...(registryNode?.blockers || []),
     ]
-    const preferDefinitionBlocker = definition.id === 'pi-mono' || definition.id === 'spaceagent'
+    const preferDefinitionBlocker = definition.id === 'pi-mono' || definition.id === 'spaceagent' || definition.id === 'openclaw-plus'
     const blockers = ownerSafeList(preferDefinitionBlocker
       ? [...definition.extraBlockers, ...observedBlockers]
       : [...observedBlockers, ...definition.extraBlockers])

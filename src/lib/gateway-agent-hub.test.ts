@@ -26,7 +26,8 @@ describe('Gateway Agent Hub', () => {
       secrets_exposed: false,
       raw_paths_exposed: false,
     })
-    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
+    expect(payload.agents_total).toBe(6)
     expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
     expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({ role: 'Lieutenant / Skill + Workflow Builder', status: 'gated', called_true_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
@@ -40,6 +41,15 @@ describe('Gateway Agent Hub', () => {
       },
     })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBeNull()
+    expect(payload.agents.find((agent) => agent.id === 'openclaw-plus')).toMatchObject({
+      name: 'OpenClaw+',
+      role: 'Runtime / Skills / Mini-Agent Execution Layer',
+      status: 'blocked',
+      blocked_reason: 'openclaw_doctor_runtime_not_reachable',
+      routes: {
+        bridge_status: '/api/openclaw/doctor',
+      },
+    })
     expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {
@@ -55,8 +65,10 @@ describe('Gateway Agent Hub', () => {
     const paperclip = getAgentHubAgentPayload(registry, 'paperclip')
     const routes = buildAgentHubAgentRoutesPayload(registry, 'paperclip')
     const status = buildAgentHubStatusPayload(registry)
+    const agentIds = status.agents.map((agent) => agent.id)
 
     expect(paperclip?.agent.layer).toBe('workforce_and_task_orchestration_before_openclaw_runtime')
+    expect(agentIds.indexOf('paperclip')).toBeLessThan(agentIds.indexOf('openclaw-plus'))
     expect(routes?.registered_flows.some((flow) => flow.selected_route.hops.join('>') === 'agent_zero>gateway>paperclip>openclaw_plus')).toBe(true)
     expect(status.supporting_runtime_systems.some((system) => system.id === 'buildwiki')).toBe(true)
     expect(status.buildwiki_run_now).toMatchObject({
@@ -78,6 +90,7 @@ describe('Gateway Agent Hub', () => {
 
     expect(normalizeAgentHubAgentId('pi')).toBe('pi-mono')
     expect(normalizeAgentHubAgentId('space_agent')).toBe('spaceagent')
+    expect(normalizeAgentHubAgentId('OpenClaw+')).toBe('openclaw-plus')
     expect(health).toMatchObject({ agent_id: 'pi-mono', execution_enabled: false, writes_enabled: false })
     expect(routes?.registered_flows.length).toBeGreaterThan(0)
     expect(audit?.audit_events.length).toBeGreaterThan(0)

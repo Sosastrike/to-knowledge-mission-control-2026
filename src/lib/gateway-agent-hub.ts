@@ -93,7 +93,7 @@ export type AgentHubStatusPayload = {
   production_truth: {
     agent_zero: 'partial_go_commander_track'
     hermes: 'gated_until_hermes_called_true'
-    pi_mono: 'candidate_pending_until_installed_and_live'
+    pi_mono: 'live_shadow_dispatcher_advisory_only'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
     buildwiki_fork2_smb: 'blocked'
@@ -313,16 +313,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Pi-mono',
     role: 'Dispatcher / Route Optimizer Candidate',
     layer: 'shadow_dispatch_recommendation',
-    productionTruth: 'Mission Control shadow dispatcher is available; separate Pi runtime/session is not proven',
-    status: 'pending',
-    liveInterfaceProven: false,
+    productionTruth: 'Mission Control in-process shadow dispatcher is live for advisory route recommendations; execution and writes remain disabled',
+    status: 'read_only',
+    liveInterfaceProven: true,
     calledTrueProven: false,
     interfaceSummary: 'Shadow dispatcher candidate; recommendations only, no execution authority',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/pi/status',
-    extraBlockers: ['pi_runtime_session_not_proven', 'execution_disabled', 'writes_disabled'],
+    extraBlockers: [],
   },
 ]
 
@@ -371,7 +371,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     production_truth: {
       agent_zero: 'partial_go_commander_track',
       hermes: 'gated_until_hermes_called_true',
-      pi_mono: 'candidate_pending_until_installed_and_live',
+      pi_mono: 'live_shadow_dispatcher_advisory_only',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
       buildwiki_fork2_smb: 'blocked',

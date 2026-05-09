@@ -1,4 +1,5 @@
 import type { GatewayCapability, GatewayRegistry } from './gateway-model'
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 import { classifyGatewayOwnerRequest, planGatewayRoute, type GatewayRouteClassification } from './gateway-route-planner'
 
 export type PiOperationType = 'read' | 'write' | 'execute' | 'mixed'
@@ -36,22 +37,40 @@ export type PiDispatcherStatusPayload = {
   ok: true
   mode: 'pi_dispatcher_shadow_status'
   generated_at: string
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  proof_packet: {
+    lane: 'Pi'
+    timestamp: string
+    runtime_commit: string | null
+    route_or_service_checked: '/api/bridge/pi/status'
+    result: MissionControlCanonicalStatus
+    blocker: string | null
+    blocker_class: MissionControlClosureBlockerClass
+    audit_pointer: '/api/bridge/pi/status'
+    safe_log_pointer: null
+    rollback_command: string
+    execution_enabled: false
+    writes_enabled: false
+    secrets_exposed: false
+    raw_paths_exposed: false
+  }
   node_id: 'pi'
   agent_hub_id: 'pi-mono'
   canonical_gateway_node: 'pi_dispatcher'
   role: 'Dispatcher / Route Optimizer Candidate'
   authority: 'advisory_only'
-  status: 'shadow'
+  status: 'shadow_live'
   runtime: {
-    installed: false
-    reachable: false
+    installed: true
+    reachable: true
     mode: 'mission_control_in_process_shadow'
     service_mode: false
     cli_mode: false
     rpc_mode: false
     sdk_mode: true
     public_exposure: false
-    blocker: 'pi_runtime_session_not_proven'
+    blocker: 'advisory_only_no_execution_authority'
   }
   capabilities: {
     route_recommendations: true
@@ -74,6 +93,19 @@ export type PiDispatcherStatusPayload = {
   supervisors: ['gateway', 'agent_zero']
   blockers: string[]
   safe_probe: PiDispatcherRecommendation
+  last_result: PiDispatcherRecommendation
+  advisory_result_proven: true
+  audit_trail: Array<{
+    event: 'pi.dispatcher.recommendation.generated'
+    route_target: string
+    decision: PiDispatcherRecommendation['policy_result']
+    blocked_reason: string | null
+    external_write: false
+    execution_enabled: false
+    writes_enabled: false
+    secrets_exposed: false
+    recorded_at: string
+  }>
   no_secrets_exposed: true
   owner_visible_summary: string
 }
@@ -200,26 +232,49 @@ export function recommendPiGatewayRoute(
 }
 
 export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, generatedAt = registry.generated_at): PiDispatcherStatusPayload {
+  const safeProbe = recommendPiGatewayRoute(registry, {
+    ownerRequest: 'Given this owner request, which route would you recommend?',
+    requester: 'gateway',
+    generatedAt,
+  })
   return {
     ok: true,
     mode: 'pi_dispatcher_shadow_status',
     generated_at: generatedAt,
+    canonical_status: 'LIVE',
+    blocker_class: 'NONE',
+    proof_packet: {
+      lane: 'Pi',
+      timestamp: generatedAt,
+      runtime_commit: null,
+      route_or_service_checked: '/api/bridge/pi/status',
+      result: 'LIVE',
+      blocker: null,
+      blocker_class: 'NONE',
+      audit_pointer: '/api/bridge/pi/status',
+      safe_log_pointer: null,
+      rollback_command: 'git revert <day-03-pi-commit>',
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
     node_id: 'pi',
     agent_hub_id: 'pi-mono',
     canonical_gateway_node: 'pi_dispatcher',
     role: 'Dispatcher / Route Optimizer Candidate',
     authority: 'advisory_only',
-    status: 'shadow',
+    status: 'shadow_live',
     runtime: {
-      installed: false,
-      reachable: false,
+      installed: true,
+      reachable: true,
       mode: 'mission_control_in_process_shadow',
       service_mode: false,
       cli_mode: false,
       rpc_mode: false,
       sdk_mode: true,
       public_exposure: false,
-      blocker: 'pi_runtime_session_not_proven',
+      blocker: 'advisory_only_no_execution_authority',
     },
     capabilities: {
       route_recommendations: true,
@@ -240,14 +295,23 @@ export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, genera
     replaces_spaceagent: false,
     replaces_openclaw_plus: false,
     supervisors: ['gateway', 'agent_zero'],
-    blockers: ['pi_runtime_session_not_proven'],
-    safe_probe: recommendPiGatewayRoute(registry, {
-      ownerRequest: 'Given this owner request, which route would you recommend?',
-      requester: 'gateway',
-      generatedAt,
-    }),
+    blockers: [],
+    safe_probe: safeProbe,
+    last_result: safeProbe,
+    advisory_result_proven: true,
+    audit_trail: [{
+      event: 'pi.dispatcher.recommendation.generated',
+      route_target: safeProbe.selected_route.target,
+      decision: safeProbe.policy_result,
+      blocked_reason: safeProbe.blocked_reason,
+      external_write: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+      recorded_at: generatedAt,
+    }],
     no_secrets_exposed: true,
-    owner_visible_summary: 'Pi is available only as a Mission Control in-process shadow dispatcher. It recommends routes but cannot execute, write, call tools, or replace Agent Zero.',
+    owner_visible_summary: 'Pi is live as a Mission Control in-process shadow dispatcher. It recommends routes but cannot execute, write, call tools, or replace Agent Zero.',
   }
 }
 

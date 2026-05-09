@@ -22,10 +22,12 @@ describe('Pi shadow dispatcher', () => {
 
     expect(status).toMatchObject({
       mode: 'pi_dispatcher_shadow_status',
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
       canonical_gateway_node: 'pi_dispatcher',
       role: 'Dispatcher / Route Optimizer Candidate',
       authority: 'advisory_only',
-      status: 'shadow',
+      status: 'shadow_live',
       execution_enabled: false,
       writes_enabled: false,
       external_writes_enabled: false,
@@ -33,14 +35,30 @@ describe('Pi shadow dispatcher', () => {
       commander: false,
       replaces_agent_zero: false,
       runtime: {
-        installed: false,
-        reachable: false,
+        installed: true,
+        reachable: true,
         mode: 'mission_control_in_process_shadow',
         public_exposure: false,
-        blocker: 'pi_runtime_session_not_proven',
+        blocker: 'advisory_only_no_execution_authority',
       },
     })
     expect(status.safe_probe.mode).toBe('pi_dispatcher_shadow_recommendation')
+    expect(status.last_result).toEqual(status.safe_probe)
+    expect(status.advisory_result_proven).toBe(true)
+    expect(status.audit_trail[0]).toMatchObject({
+      event: 'pi.dispatcher.recommendation.generated',
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+    })
+    expect(status.proof_packet).toMatchObject({
+      lane: 'Pi',
+      result: 'LIVE',
+      blocker_class: 'NONE',
+      audit_pointer: '/api/bridge/pi/status',
+      execution_enabled: false,
+      writes_enabled: false,
+    })
     expect(JSON.stringify(status)).not.toMatch(/\/home\/tony|auth\.json|sk-[A-Za-z0-9]/i)
   })
 

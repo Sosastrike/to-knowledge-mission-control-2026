@@ -33,12 +33,13 @@ describe('Gateway Agent Hub', () => {
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
-      status: 'pending',
+      status: 'read_only',
+      live_interface_proven: true,
       routes: {
         bridge_status: '/api/bridge/pi/status',
       },
     })
-    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBe('pi_runtime_session_not_proven')
+    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBeNull()
     expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {

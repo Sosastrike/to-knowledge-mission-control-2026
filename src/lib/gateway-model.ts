@@ -589,7 +589,7 @@ export function createGatewayRegistryFromAgentNetwork(
       owner: 'ecosystem',
       visibility: 'owner_visible',
       capabilities: ['Gateway dispatch candidate', 'route optimization', 'tool-use advice', 'mini-agent supervision proposals'],
-      blockers: ['dispatcher_candidate_not_authoritative'],
+      blockers: [],
       lastSeen: generatedAt,
     }),
     createGatewayNode({
@@ -964,7 +964,7 @@ export function createGatewayRegistryFromAgentNetwork(
       source_node: 'pi',
       available_to: ['agent_zero', 'hermes'],
       execution_requirements: ['agent_zero_command_authority_required', 'bridge_session_required_for_activation'],
-      blockers: ['dispatcher_candidate_not_authoritative'],
+      blockers: [],
     }),
     createGatewayCapability({
       id: 'openclaw_plus.worker_runtime',

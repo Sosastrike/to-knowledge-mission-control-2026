@@ -1,0 +1,297 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2955 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-38-obsidian-local-knowledge) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 38 - Obsidian / Local Knowledge 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED WITH SERVICE_DOWN BLOCKER) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Obsidian / local knowledge read adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added canonical `owner_status` to `GET /api/bridge/agent-zero/obsidian`.) Tj
+0 -12 Td
+(- The Obsidian adapter now reports:) Tj
+0 -12 Td
+(  - `SERVICE_DOWN` when the configured vault is missing or unreadable.) Tj
+0 -12 Td
+(  - `READY` when the vault is visible for safe read-only work.) Tj
+0 -12 Td
+(  - `BLOCKED` for invalid or unsupported adapter actions.) Tj
+0 -12 Td
+(- Added no-fake-button contracts for Obsidian read-only controls and Bridge-gated write actions.) Tj
+0 -12 Td
+(- Removed owner-facing copy that incorrectly implied the Brain / Obsidian vault was live or sync) Tj
+0 -12 Td
+(ing.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/obsidian/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/obsidian/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/button-contracts/route.ts`) Tj
+0 -12 Td
+(- `src/lib/button-contracts-route.test.ts`) Tj
+0 -12 Td
+(- `src/app/viral-crawl/page.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/obsidian`) Tj
+0 -12 Td
+(  - Status/search/read/summarize responses now include `owner_status`.) Tj
+0 -12 Td
+(  - Vault missing/unreadable remains a truthful blocker, not a success claim.) Tj
+0 -12 Td
+(- `GET /api/bridge/button-contracts`) Tj
+0 -12 Td
+(  - Adds Obsidian adapter status/search/read/summarize as read-only controls.) Tj
+0 -12 Td
+(  - Adds Obsidian write actions as owner approval / Bridge Session gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Obsidian status is no longer presented as implicitly live.) Tj
+0 -12 Td
+(- Video Intelligence copy now says Obsidian writes remain blocked until the queue/UI surface and) Tj
+0 -12 Td
+( Bridge approval path are approved.) Tj
+0 -12 Td
+(- Obsidian writes are represented as approval-gated actions, not live buttons.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime restarted after source commits.) Tj
+0 -12 Td
+(- Runtime PID: `57095`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Runtime HEAD: `1ae5260`) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-38-obsidian-local-knowledge-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live route results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Check | Result |) Tj
+0 -12 Td
+(| --- | --- |) Tj
+0 -12 Td
+(| `/login` | 200 |) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2820 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(| unauthenticated `/api/bridge/agent-zero/obsidian` | 401 |) Tj
+0 -12 Td
+(| authenticated Obsidian status | 200, `owner_status=SERVICE_DOWN` |) Tj
+0 -12 Td
+(| authenticated Obsidian search | 400, `owner_status=SERVICE_DOWN` |) Tj
+0 -12 Td
+(| authenticated Obsidian read missing | 404, `owner_status=SERVICE_DOWN` |) Tj
+0 -12 Td
+(| unsupported Obsidian action | 400, `owner_status=BLOCKED` |) Tj
+0 -12 Td
+(| authenticated Brain Sync status | 200 |) Tj
+0 -12 Td
+(| authenticated button contracts | 200 |) Tj
+0 -12 Td
+(| unauthenticated `/gateway/brain` | 307 to `/login` |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact scan:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Raw path visible: false) Tj
+0 -12 Td
+(- Secret-shaped value visible: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` - passed) Tj
+0 -12 Td
+(- `pnpm run typecheck` - passed) Tj
+0 -12 Td
+(- `pnpm run build` - passed) Tj
+0 -12 Td
+(- `pnpm test` - passed, 159 files / 1331 tests) Tj
+0 -12 Td
+(- `node scripts/check-button-contract-routes.mjs` - passed) Tj
+0 -12 Td
+(- `node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337` - passed, 54 endpoi) Tj
+0 -12 Td
+(nts checked, 1 allowed skip) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` - passed) Tj
+0 -12 Td
+(- Staged secret scan - passed, 0 matches) Tj
+0 -12 Td
+(- `.env` staged diff check - clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`SERVICE_DOWN: obsidian_vault_missing_or_unreadable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The configured Obsidian vault is not visible/readable from the Mission Control runtime context. ) Tj
+0 -12 Td
+(Developer-side behavior is complete: the route, UI copy, button contracts, tests, and proof harn) Tj
+0 -12 Td
+(ess now report the blocker honestly without exposing raw paths.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source commit: `9ef9964` - `fix\(brain\): report obsidian local knowledge blockers`) Tj
+0 -12 Td
+(- Source follow-up: `1ae5260` - `fix\(brain\): classify obsidian action blockers`) Tj
+0 -12 Td
+(- Push result: pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 1ae5260 9ef9964) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No fake Obsidian live status.) Tj
+0 -12 Td
+(- No raw local paths in proof artifact.) Tj
+0 -12 Td
+(- No Obsidian writes enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 39 - Memory / Governance Guardrails has automatically started.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003254 00000 n 
+0000003380 00000 n 
+0000006252 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6322
+%%EOF

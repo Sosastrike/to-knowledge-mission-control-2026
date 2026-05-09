@@ -163,13 +163,24 @@ describe('Build-Wiki Run Now route', () => {
     expect(payload.approval_route).toContain('/api/bridge/approval-requests/')
 
     const db = new Database(mocks.dbPath, { readonly: true })
-    const approval = db.prepare('SELECT action, target_key, approval_state FROM bridge_approval_requests LIMIT 1').get() as any
+    const approval = db.prepare('SELECT action, target_key, approval_state, approval_scope_json FROM bridge_approval_requests LIMIT 1').get() as any
     const audit = db.prepare('SELECT outcome, action, target_key FROM bridge_audit_events LIMIT 1').get() as any
     db.close()
-    expect(approval).toEqual({
+    expect(approval).toMatchObject({
       action: 'buildwiki.run_now',
       target_key: 'opencloud-docs-farmer.service',
       approval_state: 'pending',
+    })
+    expect(JSON.parse(approval.approval_scope_json)).toMatchObject({
+      action: 'buildwiki.run_now',
+      target_service: 'opencloud-docs-farmer.service',
+      command: ['systemctl', '--user', 'start', 'opencloud-docs-farmer.service'],
+      fork: 'fork_1_only',
+      no_smb: true,
+      no_fork_2: true,
+      no_external_farmers: true,
+      no_second_vault: true,
+      no_immediate_execution: true,
     })
     expect(audit).toEqual({
       outcome: 'approval_requested',

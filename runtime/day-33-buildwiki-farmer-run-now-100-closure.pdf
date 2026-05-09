@@ -1,0 +1,374 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3084 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-33-buildwiki-farmer-run-now-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 33 — Build-Wiki / Farmer Run Now 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Build-Wiki/Farmer Run Now) Tj
+0 -12 Td
+(Status: CLOSED WITH SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker classification: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: `buildwiki_run_now_systemctl_failed`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a regression assertion that the persisted Run Now approval scope is exact and locked:) Tj
+0 -12 Td
+(  - action: `buildwiki.run_now`) Tj
+0 -12 Td
+(  - target service: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(  - command: `systemctl --user start opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(  - Fork 1 only) Tj
+0 -12 Td
+(  - no SMB) Tj
+0 -12 Td
+(  - no Fork 2) Tj
+0 -12 Td
+(  - no external farmers) Tj
+0 -12 Td
+(  - no second vault) Tj
+0 -12 Td
+(  - no immediate execution) Tj
+0 -12 Td
+(- Verified the existing Run Now implementation remains approval-first:) Tj
+0 -12 Td
+(  - Request run creates approval.) Tj
+0 -12 Td
+(  - Approval pending is visible.) Tj
+0 -12 Td
+(  - Owner approval dispatches only the exact service command.) Tj
+0 -12 Td
+(  - Failed service dispatch records failed run state and audit.) Tj
+0 -12 Td
+(  - UI/status surfaces show failed rather than fake completion.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-33-buildwiki-farmer-run-now-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-33-buildwiki-farmer-run-now-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-33-buildwiki-farmer-run-now-100-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now/[id]`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests/[id]/approve`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner-facing Build-Wiki/Farmer Run Now state is truthful:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `run_now.ui_state`: `failed`) Tj
+0 -12 Td
+(- `run_now.run_state`: `failed`) Tj
+0 -12 Td
+(- `run_now.approval_state`: `approved`) Tj
+0 -12 Td
+(- dispatch surface: `approval_route_exact_scope_dispatch`) Tj
+0 -12 Td
+(- target service: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- controls:) Tj
+0 -12 Td
+(  - Run Now: `OWNER_APPROVAL_REQUIRED`) Tj
+0 -12 Td
+(  - Pause sync: not wired in this hop) Tj
+0 -12 Td
+(  - Resume sync: owner approval required) Tj
+0 -12 Td
+(  - Add local source: owner approval required) Tj
+0 -12 Td
+(  - External farmer: credential required) Tj
+0 -12 Td
+(  - Logs/raw/wiki views: read-only) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No fake Run Now success is shown.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2804 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Service / Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local Mission Control standalone runtime:) Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- `/login`: `200`) Tj
+0 -12 Td
+(- unauthenticated Build-Wiki status route: `401`) Tj
+0 -12 Td
+(- authenticated Build-Wiki status route: `200`) Tj
+0 -12 Td
+(- authenticated Run Now read route: `200`) Tj
+0 -12 Td
+(- authenticated Run Now id route: `200`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Run Now proof:) Tj
+0 -12 Td
+(- target service: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- UI state: `failed`) Tj
+0 -12 Td
+(- run state: `failed`) Tj
+0 -12 Td
+(- no SMB/Fork 2 enabled: `true`) Tj
+0 -12 Td
+(- exact scope proven by Day 32 dispatch proof: `true`) Tj
+0 -12 Td
+(- failed run recorded by Day 32 dispatch proof: `true`) Tj
+0 -12 Td
+(- successful dispatch covered by test: `true`) Tj
+0 -12 Td
+(- unsafe output detected: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+(- `runtime/day-33-buildwiki-farmer-run-now-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test 'src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts'`) Tj
+0 -12 Td
+(  - PASS: 1 file / 3 tests) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(  - PASS: 156 files / 1324 tests) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(  - PASS) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(  - PASS, no `.env` changes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`SERVICE_DOWN`: the exact `opencloud-docs-farmer.service` command cannot complete in this runtim) Tj
+0 -12 Td
+(e.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The app-side Run Now lane is closed because:) Tj
+0 -12 Td
+(- request creation is implemented and tested) Tj
+0 -12 Td
+(- approval-first behavior is implemented and tested) Tj
+0 -12 Td
+(- exact service scope is implemented and tested) Tj
+0 -12 Td
+(- no-SMB/Fork 2/external-farmer constraints are asserted) Tj
+0 -12 Td
+(- failed dispatch/audit is proven live) Tj
+0 -12 Td
+(- success dispatch is covered by test) Tj
+0 -12 Td
+(- UI/status surfaces show the failure truthfully) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action to move from service-down to live success:) Tj
+0 -12 Td
+(- Run the proof on the runtime host where `systemctl --user start opencloud-docs-farmer.service`) Tj
+0 -12 Td
+( is available to the Mission Control service user.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 948 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No SMB / Fork 2 / external farmers.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No broad connector execution.) Tj
+0 -12 Td
+(- No fake Run Now success.) Tj
+0 -12 Td
+(- No raw local paths exposed in proof/report artifacts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 33 source/report commit:) Tj
+0 -12 Td
+(- this commit) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push:) Tj
+0 -12 Td
+(- pending commit and push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source/report rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day33_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 34 — Farmer Service Status 100% Closure starts automatically after this report is committed ) Tj
+0 -12 Td
+(and pushed.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003389 00000 n 
+0000003515 00000 n 
+0000006371 00000 n 
+0000006497 00000 n 
+0000007496 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7566
+%%EOF

@@ -1,0 +1,46 @@
+{
+  "schema": "day33_buildwiki_farmer_run_now_proof_v1",
+  "generated_at": "2026-05-09T20:45:24.284Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "login_status": 200,
+  "unauthenticated_status_route_status": 401,
+  "status_route_status": 200,
+  "run_now_read_status": 200,
+  "run_now_id_status": 200,
+  "target_service": "opencloud-docs-farmer.service",
+  "status_controls": {
+    "run_now": "OWNER_APPROVAL_REQUIRED",
+    "pause_sync": "NOT_APPLICABLE_TIMER_INACTIVE",
+    "resume_sync": "OWNER_APPROVAL_REQUIRED",
+    "add_local_source": "OWNER_APPROVAL_REQUIRED",
+    "enable_external_farmer": "CREDENTIAL_REQUIRED",
+    "view_logs": "READ_ONLY",
+    "view_latest_raw": "READ_ONLY",
+    "view_latest_wiki": "READ_ONLY"
+  },
+  "run_now_status": {
+    "ui_state": "failed",
+    "is_terminal": true,
+    "approval_state": "approved",
+    "run_state": "failed",
+    "dispatch_surface": "approval_route_exact_scope_dispatch",
+    "web_approval_enabled": true
+  },
+  "farmer_status": null,
+  "notices": {
+    "no_execution_enabled": true,
+    "no_secret_exposure": true,
+    "no_env_writes": true,
+    "no_agent_zero_routing_change": true,
+    "no_zapier_writes": true,
+    "single_vault": true,
+    "run_now_dispatch_scope": "opencloud-docs-farmer.service"
+  },
+  "no_smb_or_fork2_enabled": true,
+  "service_down_blocker": "buildwiki_run_now_systemctl_failed",
+  "exact_scope_proven_by_day32": true,
+  "failed_run_recorded_by_day32": true,
+  "successful_dispatch_covered_by_test": true,
+  "unsafe_output_detected": false,
+  "secret_values_printed": false
+}

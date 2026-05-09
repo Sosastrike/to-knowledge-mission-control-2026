@@ -72,7 +72,6 @@ export type McpServerToolsResult = {
 
 const CREDENTIALS_PATH = path.join(homedir(), '.claude', '.credentials.json')
 const CLAUDE_JSON_PATH = path.join(homedir(), '.claude.json')
-const PROJECT_CWD = '/home/tony/claudeclaw'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -125,8 +124,9 @@ function readClaudeMcpServers(): Record<string, McpServer> {
 
     addServers(raw?.mcpServers)
     const projects = isRecord(raw?.projects) ? raw.projects : {}
-    addServers(isRecord(projects['/home/tony']) ? projects['/home/tony'].mcpServers : null)
-    addServers(isRecord(projects[PROJECT_CWD]) ? projects[PROJECT_CWD].mcpServers : null)
+    for (const project of Object.values(projects)) {
+      addServers(isRecord(project) ? project.mcpServers : null)
+    }
 
     return merged
   } catch {

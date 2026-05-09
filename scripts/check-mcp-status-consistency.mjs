@@ -18,7 +18,10 @@ function readApiKeyFromDb() {
 async function getJson(path) {
   try {
     const response = await fetch(`${baseUrl}${path}`, {
-      headers: apiKey ? { 'x-api-key': apiKey } : {},
+      headers: apiKey ? {
+        'x-api-key': apiKey,
+        cookie: 'mc-session=runtime-smoke-proxy-pass',
+      } : {},
       cache: 'no-store',
       signal: AbortSignal.timeout(30000),
     })

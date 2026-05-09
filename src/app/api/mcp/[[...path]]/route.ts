@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { execFile } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import {
   NODE24_BIN,
   authJson,
@@ -12,33 +13,21 @@ import {
 } from '@/lib/designer-module-api'
 import { getMcpServerTools } from '@/lib/mcp-server-tool-schemas'
 import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
+import {
+  buildMcpServerRegistryPayload,
+  type McpDiscoverySummary,
+  type McpServerRegistryInput,
+} from '@/lib/mcp-server-registry'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-type McpServer = {
-  name: string
-  transport: string
-  status: string
-  source: string
-  auth?: string
-  tool_count?: number | null
-  last_tested?: string | null
-  error?: string | null
-  visible_to?: { owner: boolean; sub_agents: boolean }
-}
+type McpServer = McpServerRegistryInput
 
 const MCP_CACHE_TTL_MS = 30_000
 let cachedServers: { loadedAt: number; servers: McpServer[] } | null = null
 let loadingServers: Promise<McpServer[]> | null = null
-let lastDiscovery: {
-  cli_ok: boolean
-  cli_stdout_length: number
-  cli_stderr_length: number
-  cli_error: string | null
-  fallback_used: boolean
-  config_servers_found: number
-} | null = null
+let lastDiscovery: McpDiscoverySummary = null
 
 function parseClaudeMcpList(stdout: string): McpServer[] {
   const servers: McpServer[] = []
@@ -75,26 +64,46 @@ function parseClaudeMcpList(stdout: string): McpServer[] {
 }
 
 function redactedMcpConfigSource(candidate: string): string {
+  if (candidate.endsWith('.claude.json')) return 'claude-json-mcp-config'
   return candidate.includes('/.config/') ? 'claude-config-mcp-config' : 'claude-user-mcp-config'
+}
+
+function addMcpConfigServers(
+  out: McpServer[],
+  servers: unknown,
+  source: string,
+) {
+  if (!servers || typeof servers !== 'object' || Array.isArray(servers)) return
+  for (const [name, cfg] of Object.entries(servers as Record<string, { command?: string; url?: string }>)) {
+    out.push({
+      name,
+      transport: cfg.command ? 'stdio' : cfg.url ? 'http' : 'unknown',
+      status: 'unknown',
+      source,
+    })
+  }
 }
 
 async function readMcpConfigFile(): Promise<McpServer[]> {
   const candidates = [
     homePath('.claude', 'mcp.json'),
     homePath('.config', 'claude', 'mcp.json'),
+    homePath('.claude.json'),
   ]
   const out: McpServer[] = []
   for (const candidate of candidates) {
-    const json = await readJsonIfPresent(candidate) as { mcpServers?: Record<string, { command?: string; url?: string }>; servers?: Record<string, { command?: string; url?: string }> } | null
-    const servers = json?.mcpServers || json?.servers
-    if (!servers) continue
-    for (const [name, cfg] of Object.entries(servers)) {
-      out.push({
-        name,
-        transport: cfg.command ? 'stdio' : cfg.url ? 'http' : 'unknown',
-        status: 'unknown',
-        source: redactedMcpConfigSource(candidate),
-      })
+    const json = await readJsonIfPresent(candidate) as {
+      mcpServers?: Record<string, { command?: string; url?: string }>
+      servers?: Record<string, { command?: string; url?: string }>
+      projects?: Record<string, { mcpServers?: Record<string, { command?: string; url?: string }> }>
+    } | null
+    if (!json) continue
+    const source = redactedMcpConfigSource(candidate)
+    addMcpConfigServers(out, json.mcpServers || json.servers, source)
+    if (json.projects && typeof json.projects === 'object') {
+      for (const project of Object.values(json.projects)) {
+        addMcpConfigServers(out, project?.mcpServers, source)
+      }
     }
   }
   return out
@@ -151,18 +160,51 @@ async function loadServersUncached(): Promise<McpServer[]> {
   }))
 }
 
+function runtimeCwd() {
+  return process.env.MISSION_CONTROL_ROOT || process.cwd()
+}
+
+function runtimePath() {
+  const entries = [
+    process.env.CLAUDE_BIN_DIR,
+    NODE24_BIN,
+    process.env.PATH || '',
+  ].filter(Boolean)
+  return entries.join(':')
+}
+
+function candidateClaudeCommands() {
+  const candidates = [
+    process.env.CLAUDE_BIN,
+    `${NODE24_BIN}/claude`,
+    'claude',
+  ].filter((candidate): candidate is string => Boolean(candidate))
+
+  return Array.from(new Set(candidates))
+}
+
 function execFileText(command: string, args: string[], timeout: number, shellFallback = false) {
   return new Promise<{ ok: boolean; stdout: string; stderr: string; error?: string; fallback_used: boolean }>((resolve) => {
+    if (command.includes('/') && !existsSync(command)) {
+      resolve({
+        ok: false,
+        stdout: '',
+        stderr: '',
+        error: `command_not_found: ${command}`,
+        fallback_used: shellFallback,
+      })
+      return
+    }
+
     execFile(
       command,
       args,
       {
-        cwd: '/home/tony/mission-control',
+        cwd: runtimeCwd(),
         timeout,
         env: {
           ...process.env,
-          HOME: process.env.HOME || '/home/tony',
-          PATH: `${NODE24_BIN}:${process.env.PATH || ''}`,
+          PATH: runtimePath(),
         },
       },
       (error, stdout, stderr) => {
@@ -179,27 +221,17 @@ function execFileText(command: string, args: string[], timeout: number, shellFal
 }
 
 async function readClaudeMcpList() {
-  const direct = await execFileText(`${NODE24_BIN}/claude`, ['mcp', 'list'], 20000)
-  if (direct.stdout.trim()) return direct
+  let lastResult: Awaited<ReturnType<typeof execFileText>> | null = null
+  for (const command of candidateClaudeCommands()) {
+    const result = await execFileText(command, ['mcp', 'list'], 20000)
+    lastResult = result
+    if (result.stdout.trim()) return result
+  }
 
   // Some production shells initialize Claude plugin paths differently. This is
   // still read-only; it lists MCP servers and never invokes tools.
-  const fallback = await execFileText('/bin/bash', ['-lc', `PATH=${NODE24_BIN}:$PATH claude mcp list`], 25000, true)
-  return fallback.stdout.trim() ? fallback : direct
-}
-
-function tally(servers: McpServer[]) {
-  return servers.reduce(
-    (acc, server) => {
-      acc.total += 1
-      if (server.status === 'connected' || server.status === 'ok') acc.healthy += 1
-      else if (server.status === 'degraded' || server.status === 'needs_auth') acc.degraded += 1
-      else if (server.status === 'failed') acc.failed += 1
-      else acc.unknown += 1
-      return acc
-    },
-    { total: 0, healthy: 0, degraded: 0, failed: 0, unknown: 0 },
-  )
+  const fallback = await execFileText('/bin/bash', ['-lc', 'claude mcp list'], 25000, true)
+  return fallback.stdout.trim() ? fallback : (lastResult || fallback)
 }
 
 export async function GET(request: NextRequest, { params }: { params: CatchAllParams }) {
@@ -208,18 +240,39 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
 
   const path = routePath((await params).path)
   const servers = await loadServers()
-  const summary = tally(servers)
-  if (!path || path === 'status') return NextResponse.json({ ok: true, ...summary })
+  const registry = buildMcpServerRegistryPayload({ servers, discovery: lastDiscovery })
+  const summary = registry.summary
+  if (!path || path === 'status') {
+    return NextResponse.json({
+      ok: true,
+      ...summary,
+      canonical_status: registry.canonical_status,
+      blocker_class: registry.blocker_class,
+      blocker: registry.blocker,
+      allowed_owner_statuses: registry.allowed_owner_statuses,
+      execution_enabled: false,
+      writes_enabled: false,
+      no_tool_invocation: true,
+    })
+  }
   if (path === 'list' || path === 'servers') {
     return NextResponse.json({
       ok: true,
       ...summary,
       summary,
-      servers,
+      servers: registry.servers,
+      canonical_status: registry.canonical_status,
+      blocker_class: registry.blocker_class,
+      blocker: registry.blocker,
+      owner_status_summary: registry.owner_status_summary,
+      allowed_owner_statuses: registry.allowed_owner_statuses,
+      execution_enabled: false,
+      writes_enabled: false,
+      no_tool_invocation: true,
       authoritative_route: '/api/mcp/list',
       compatibility_routes: ['/api/mcp/status', '/api/mcp/servers'],
-      sources_checked: ['claude-cli', 'claude-user-mcp-config', 'claude-config-mcp-config'],
-      discovery: lastDiscovery,
+      sources_checked: ['claude-cli', 'claude-user-mcp-config', 'claude-config-mcp-config', 'claude-json-mcp-config'],
+      discovery: registry.discovery,
       note: servers.length ? null : 'no_mcp_servers_detected',
     })
   }

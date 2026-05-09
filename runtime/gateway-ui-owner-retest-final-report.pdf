@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2907 >>
+<< /Length 3078 >>
 stream
 BT
 /F1 10 Tf
@@ -18,25 +18,39 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(# Gateway UI Owner Retest Final Report \(Pending Owner Confirmation\)) Tj
+(# Gateway UI Owner Retest Final Report \(Awaiting Owner Confirmation\)) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Objective) Tj
 0 -12 Td
-(Prepare deploy + owner retest package for Gateway FULL v3 UI correction.) Tj
+(Deploy the Gateway FULL v3 UI shell fixes and prepare owner re-test for final visual decision.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Delivered Fixes) Tj
+(## Implemented) Tj
 0 -12 Td
-(1. Scroll-trap removal in Gateway mock mount wrapper.) Tj
+(1. Fixed mock shell row sizing mismatch in `shared/tokens.css`:) Tj
 0 -12 Td
-(2. Explicit exits added \(Mission Control Home, Gateway Overview, Agent Hub\).) Tj
+(   - `.gw-shell` now explicitly models topbar + tab rail + content row.) Tj
 0 -12 Td
-(3. Clickable breadcrumb added.) Tj
+(2. Simplified route mount wrapper to avoid extra iframe-shell drift:) Tj
 0 -12 Td
-(4. FULL v3 designer mock mounting preserved.) Tj
+(   - `/src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+(3. Kept FULL v3 mounted HTML route structure intact.) Tj
+0 -12 Td
+(4. Added/kept owner-safe copy cleanup on mounted pages \(no active Tony/OpenCloud wording in acti) Tj
+0 -12 Td
+(ve surfaces\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit Lineage) Tj
+0 -12 Td
+(- `46d386a` — `fix\(gateway-ui\): remove scroll traps and align mounted designer surfaces`) Tj
+0 -12 Td
+(- `8093307` — `fix\(deploy\): make standalone probe portable across macOS bash/sed/awk`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -48,67 +62,77 @@ BT
 0 -12 Td
 (- `pnpm run build` passed.) Tj
 0 -12 Td
-(- `pnpm test` passed \(138 files / 1251 tests\).) Tj
+(- `pnpm test` passed \(`138 files / 1251 tests`\).) Tj
 0 -12 Td
-(- Unauthenticated smoke still protected:) Tj
+(- Protected-file invariant scan passed.) Tj
 0 -12 Td
-(  - `/gateway`) Tj
-0 -12 Td
-(  - `/gateway/agent-hub`) Tj
-0 -12 Td
-(  - `/gateway/agent-hub/paperclip`) Tj
-0 -12 Td
-(  - `/gateway/dispatcher`) Tj
-0 -12 Td
-(  - `/gateway/token-governor`) Tj
-0 -12 Td
-(  - `/agent-network`) Tj
-0 -12 Td
-(  - `/agents`) Tj
-0 -12 Td
-(  \(all redirect to `/login` when unauthenticated\).) Tj
+(- `.env` diff remains clean.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Current Status) Tj
+(## Deployment) Tj
+0 -12 Td
+(- Standalone deploy script now completes successfully with committed head:) Tj
+0 -12 Td
+(  - deployed commit: `8093307`) Tj
+0 -12 Td
+(  - probe asset verified from `/login` render) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Auth-Protection Smoke \(Unauthenticated\)) Tj
+0 -12 Td
+(All listed routes return `307 -> /login` as expected:) Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+(- `/gateway/routes`) Tj
+0 -12 Td
+(- `/gateway/registry`) Tj
+0 -12 Td
+(- `/gateway/policies`) Tj
+0 -12 Td
+(- `/gateway/health`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`) Tj
+0 -12 Td
+(- `/gateway/node-detail`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet`) Tj
+0 -12 Td
+(- `/agent-network`) Tj
+0 -12 Td
+(- `/agents`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Decision) Tj
 0 -12 Td
 (- Gateway owner visual lane: **PARTIAL GO**) Tj
 0 -12 Td
-(- Reason: owner must confirm fixed production UI after deploy/restart.) Tj
-0 -12 Td
-(- Fix commit pushed: `dcb8636` \(`fix\(gateway\): remove fullscreen scroll trap and add explicit sh) Tj
-0 -12 Td
-(ell exits`\)) Tj
+(- Reason: owner-authenticated re-test still required for final GO.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Remaining Blocker) Tj
+(## Active Blocker) Tj
 0 -12 Td
 (- `gateway_ui_design_fidelity_scroll_defect` remains open until owner confirms:) Tj
 0 -12 Td
-(  - normal scroll behavior) Tj
+(  1. normal scroll behavior in `/gateway/agent-hub`) Tj
 0 -12 Td
-(  - not trapped in Agent Hub) Tj
+(  2. no trapped/blank-frame feel) Tj
 0 -12 Td
-(  - clear exits back to Mission Control and Gateway Overview) Tj
+(  3. exits/navigation feel correct in authenticated runtime) Tj
 0 -12 Td
-(  - design fidelity acceptable in authenticated production view) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(## Runtime Rollout Note) Tj
-0 -12 Td
-(- Local standalone deploy script run was attempted and reached successful build/start, but faile) Tj
-0 -12 Td
-(d final CSS verification probe with:) Tj
-0 -12 Td
-(  - `error: no css asset found in rendered login HTML`) Tj
-0 -12 Td
-(- This is a rollout-path issue, not a code-validation failure. Local code validation and tests p) Tj
-0 -12 Td
-(assed before push.) Tj
-0 -12 Td
-(- Production deploy/restart still required on the active runtime lane.) Tj
+(  4. FULL v3 visual fidelity is acceptable) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -116,39 +140,56 @@ BT
 0 -12 Td
 (- No secrets printed.) Tj
 0 -12 Td
+(- No auth files printed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 385 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (- No `.env` changes.) Tj
 0 -12 Td
 (- No auth weakening.) Tj
-0 -12 Td
-(- No public local service exposure introduced.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Next Step) Tj
 0 -12 Td
-(1. Commit + push this UI fix.) Tj
+(Owner re-test in authenticated production browser using:) Tj
 0 -12 Td
-(2. Deploy/restart production runtime.) Tj
+(- `/gateway`) Tj
 0 -12 Td
-(3. Owner runs retest checklist and confirms visual acceptance.) Tj
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/agent-network` and `/agents` alias paths.) Tj
 0 -12 Td
 () Tj
 ET
 endstream
 endobj
-5 0 obj
+7 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 6
+0 8
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000115 00000 n 
-0000000241 00000 n 
-0000003200 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003377 00000 n 
+0000003503 00000 n 
+0000003939 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<< /Size 8 /Root 1 0 R >>
 startxref
-3270
+4009
 %%EOF

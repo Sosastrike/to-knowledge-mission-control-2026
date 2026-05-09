@@ -1,0 +1,102 @@
+{
+  "generated_at": "2026-05-09T16:34:43.004Z",
+  "base_origin_redacted": "http://[redacted-host]",
+  "routes": [
+    {
+      "path": "/",
+      "expected_auth": "public",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.006Z"
+    },
+    {
+      "path": "/gateway",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.039Z"
+    },
+    {
+      "path": "/gateway/overview",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.040Z"
+    },
+    {
+      "path": "/gateway/agent-hub",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.040Z"
+    },
+    {
+      "path": "/gateway/dispatcher",
+      "expected_auth": "operator",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.040Z"
+    },
+    {
+      "path": "/gateway/token-governor",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.041Z"
+    },
+    {
+      "path": "/gateway/bridge-session",
+      "expected_auth": "operator",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.041Z"
+    },
+    {
+      "path": "/agent-network",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.041Z"
+    },
+    {
+      "path": "/agents",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.041Z"
+    },
+    {
+      "path": "/api/gateway/status",
+      "expected_auth": "viewer",
+      "actual_http_status": null,
+      "redirect_target": null,
+      "status_label": "SERVICE_DOWN",
+      "failure_reason": "fetch failed",
+      "last_checked_at": "2026-05-09T16:34:43.042Z"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "by_status": {
+      "SERVICE_DOWN": 10
+    }
+  }
+}

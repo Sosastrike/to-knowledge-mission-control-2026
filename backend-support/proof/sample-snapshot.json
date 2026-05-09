@@ -1,0 +1,64 @@
+{
+  "overall_status": "BLOCKED",
+  "generated_at": "2026-05-09T16:34:56.129Z",
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "external_writes_enabled": false,
+  "safety_status": "READ_ONLY",
+  "agents": [
+    {
+      "id": "agent_zero",
+      "label": "Agent Zero",
+      "status": "READ_ONLY",
+      "blocker": null,
+      "next_action": null,
+      "last_seen": null
+    }
+  ],
+  "providers": [],
+  "tools": [],
+  "connectors": [
+    {
+      "id": "firecrawl",
+      "label": "FireCrawl",
+      "status": "CREDENTIAL_GATED",
+      "blocker": "FIRECRAWL_API_KEY missing in /home/[redacted]",
+      "next_action": "Owner adds key",
+      "last_seen": null
+    }
+  ],
+  "bridge": {
+    "status": "BLOCKED",
+    "approval_persistence_ready": false,
+    "audit_chain_ready": false,
+    "runner_available": false,
+    "blocker": null,
+    "next_action": null
+  },
+  "buildwiki_farmer": {
+    "status": "READ_ONLY",
+    "service_name": "opencloud-docs-farmer.service",
+    "service_running": null,
+    "timer_active": null,
+    "approval_state": null,
+    "ui_state": "idle",
+    "last_run_finished_at": null,
+    "last_run_exit_code": null,
+    "blocker": null,
+    "next_action": null,
+    "run_now_requires_owner_approval": true
+  },
+  "blockers": [
+    {
+      "kind": "CREDENTIAL_GATED",
+      "owner_message": "FIRECRAWL_API_KEY missing in /home/[redacted]",
+      "technical_detail": "FIRECRAWL_API_KEY missing in /home/[redacted]",
+      "next_action": "Owner adds key",
+      "codex_can_fix": false,
+      "owner_action_required": true
+    }
+  ],
+  "next_actions": [
+    "Owner adds key"
+  ]
+}

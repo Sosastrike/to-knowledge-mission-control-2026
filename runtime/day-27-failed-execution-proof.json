@@ -1,0 +1,99 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T19:51:33.385Z",
+  "base_url": "http://127.0.0.1:3337",
+  "action_scope": {
+    "action": "buildwiki.run_now",
+    "target_service": "opencloud-docs-farmer.service",
+    "fork": "Fork 1 only"
+  },
+  "create_response": {
+    "status": 201,
+    "mode": "run_now_approval_requested_no_execution",
+    "accepted_for_execution": false,
+    "execution_enabled": false
+  },
+  "failed_execution_response": {
+    "status": 502,
+    "ok": false,
+    "mode": "approval_request_approved_buildwiki_run_now_dispatched_failed",
+    "accepted_for_execution": true,
+    "execution_enabled": true,
+    "blocked_reason": "buildwiki_run_now_systemctl_failed",
+    "dispatch_mode": "run_now_dispatched_failed",
+    "run_state": "failed",
+    "target_service": "opencloud-docs-farmer.service",
+    "next_action": "Check the local service/timer status before retrying."
+  },
+  "ui_state": {
+    "run_now_read_status": 200,
+    "run_now_ui_state": "failed",
+    "status_route_status": 200,
+    "status_route_ui_state": "failed"
+  },
+  "persistence_rows": {
+    "approval": {
+      "id": "apr_6bfec882-a5aa-423a-957d-aeabb9f449ee",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "approval_state": "approved",
+      "resolved": 1
+    },
+    "run": {
+      "id": "run_3d13e892-6e9e-4c18-8085-4ba6ef549160",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "run_state": "failed",
+      "input_hash": "82104a10aec7916543e2978fa34eee3509041355a026cd3ae74761c8f74b348e",
+      "output_hash": null,
+      "rollback_ref": "systemctl --user stop opencloud-docs-farmer.service",
+      "started_at": "2026-05-09T19:51:33.201Z",
+      "finished_at": "2026-05-09T19:51:33.202Z",
+      "has_audit": 1
+    },
+    "audit": {
+      "id": "audit_5f86c254-1158-4d97-bfba-039b1081dad7",
+      "outcome": "failed",
+      "connector": "skill.build_wiki",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "metadata_json": "{\"source\":\"mission-control\",\"dispatch_endpoint\":\"/api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch\",\"target_service\":\"opencloud-docs-farmer.service\",\"execution_enabled\":true,\"accepted_for_execution\":true,\"run_id\":\"run_3d13e892-6e9e-4c18-8085-4ba6ef549160\",\"systemctl_exit_code\":null,\"systemctl_signal\":null,\"stderr_tail_present\":false,\"finished_at\":\"2026-05-09T19:51:33.202Z\"}",
+      "rollback_ref": null
+    },
+    "audit_outcomes": [
+      {
+        "outcome": "approval_requested"
+      },
+      {
+        "outcome": "approved"
+      },
+      {
+        "outcome": "failed"
+      }
+    ]
+  },
+  "safe_failure_metadata": {
+    "audit_metadata_keys": [
+      "accepted_for_execution",
+      "dispatch_endpoint",
+      "execution_enabled",
+      "finished_at",
+      "run_id",
+      "source",
+      "stderr_tail_present",
+      "systemctl_exit_code",
+      "systemctl_signal",
+      "target_service"
+    ],
+    "unsafe_output_detected": false,
+    "output_hash_present": false,
+    "rollback_ref": "systemctl --user stop opencloud-docs-farmer.service"
+  },
+  "blocker_class": "SERVICE_DOWN",
+  "blocker": "opencloud_docs_farmer_service_not_started_in_local_runtime",
+  "no_secret_values_printed": true,
+  "no_env_changes": true,
+  "rollback": "No successful execution rollback required. Failed run run_3d13e892-6e9e-4c18-8085-4ba6ef549160 is audit-only; code rollback for execution path remains git revert 39fc228."
+}

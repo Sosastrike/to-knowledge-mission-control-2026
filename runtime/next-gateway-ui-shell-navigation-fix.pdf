@@ -148,7 +148,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 1834 >>
+<< /Length 1939 >>
 stream
 BT
 /F1 10 Tf
@@ -197,11 +197,13 @@ BT
 0 -12 Td
 (## Commit / Rollback) Tj
 0 -12 Td
-(- Commit: pending \(current workstream batch not committed yet\).) Tj
+(- Commit: `e14f205` \(`fix\(gateway\): mount full v3 designer pages with live agent hub wiring`\)) Tj
 0 -12 Td
-(- Planned rollback command after commit:) Tj
+(- Push: `origin/to-knowledge-mc` updated to include `e14f205`) Tj
 0 -12 Td
-(  - `git revert <gateway_design_fidelity_commit_sha>`) Tj
+(- Rollback command:) Tj
+0 -12 Td
+(  - `git revert e14f205`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -217,9 +219,9 @@ BT
 0 -12 Td
 (## Exact Next Step) Tj
 0 -12 Td
-(Deploy this batch and run owner authenticated re-test checklist against `/gateway` and `/gateway) Tj
+(Restart/redeploy Mission Control runtime with commit `e14f205`, then run owner authenticated re-) Tj
 0 -12 Td
-(/agent-hub` for final GO/partial decision.) Tj
+(test checklist against `/gateway` and `/gateway/agent-hub` for final GO/partial decision.) Tj
 0 -12 Td
 () Tj
 ET
@@ -237,9 +239,9 @@ xref
 0000000247 00000 n 
 0000004112 00000 n 
 0000004238 00000 n 
-0000006124 00000 n 
+0000006229 00000 n 
 trailer
 << /Size 8 /Root 1 0 R >>
 startxref
-6194
+6299
 %%EOF

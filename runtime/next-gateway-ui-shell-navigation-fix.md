@@ -73,9 +73,10 @@ PARTIAL GO (implementation complete; owner re-test still required before GO).
   - owner must confirm the authenticated `/gateway` and `/gateway/agent-hub` now visually match FULL v3 side-by-side expectation.
 
 ## Commit / Rollback
-- Commit: pending (current workstream batch not committed yet).
-- Planned rollback command after commit:
-  - `git revert <gateway_design_fidelity_commit_sha>`
+- Commit: `e14f205` (`fix(gateway): mount full v3 designer pages with live agent hub wiring`)
+- Push: `origin/to-knowledge-mc` updated to include `e14f205`
+- Rollback command:
+  - `git revert e14f205`
 
 ## Updated Lane Status
 - Gateway owner visual lane:
@@ -83,4 +84,4 @@ PARTIAL GO (implementation complete; owner re-test still required before GO).
   - to: `owner_visual_proof_partial_pending_owner_retest_on_fidelity_fix`
 
 ## Exact Next Step
-Deploy this batch and run owner authenticated re-test checklist against `/gateway` and `/gateway/agent-hub` for final GO/partial decision.
+Restart/redeploy Mission Control runtime with commit `e14f205`, then run owner authenticated re-test checklist against `/gateway` and `/gateway/agent-hub` for final GO/partial decision.

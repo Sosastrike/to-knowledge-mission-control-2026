@@ -54,13 +54,13 @@ window.AGENTS = (function () {
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/agent-zero',
       repo_grounding: 'pending',
-      caps: ['plan', 'delegate', 'execute', 'tony memory R/O', 'multi-tool'],
+      caps: ['plan', 'delegate', 'execute', 'legacy memory R/O', 'multi-tool'],
       models: ['claude-sonnet-4', 'gpt-5', 'openrouter:auto'],
-      tools: ['gateway-router', 'plan-composer', 'memory:tony', 'memory:obsidian', 'memory:mempalace'],
+      tools: ['gateway-router', 'plan-composer', 'memory:legacy', 'memory:obsidian', 'memory:mempalace'],
       blocked_reason: null,
       gated_reason: null,
       pulse: { req_per_min: 14.2, p95_ms: 940, error_rate: 0.012 },
-      summary: 'Commander. Plans, delegates, executes. Inherits Tony memory read-only.'
+      summary: 'Commander. Plans, delegates, executes. Inherits legacy memory read-only.'
     },
 
     {
@@ -147,7 +147,7 @@ window.AGENTS = (function () {
       { ts: '14:15:22', req: 'req_8c41a8fa', op: 'plan',         engine: 'claude-sonnet-4',   ms: 1140, result: 'ok',     bridge: false },
       { ts: '14:14:44', req: 'req_8c41a8ee', op: 'tool:mempalace.read', engine: '—',          ms: 220,  result: 'ok',     bridge: false },
       { ts: '14:13:11', req: 'req_8c41a8d0', op: 'plan',         engine: 'openrouter:auto',   ms: 1390, result: 'ok',     bridge: false },
-      { ts: '14:12:38', req: 'req_8c41a8c4', op: 'tool:tony.read', engine: '—',               ms: 60,   result: 'ok',     bridge: false },
+      { ts: '14:12:38', req: 'req_8c41a8c4', op: 'tool:legacy.read', engine: '—',             ms: 60,   result: 'ok',     bridge: false },
       { ts: '14:11:07', req: 'req_8c41a8b1', op: 'plan',         engine: 'claude-sonnet-4',   ms: 980,  result: 'ok',     bridge: false }
     ],
     'hermes': [
@@ -173,7 +173,7 @@ window.AGENTS = (function () {
       { ts: '14:18:02.620', tool: 'obsidian.read', target: 'vault/inbox/q3-marketing-ops.md', ms: 110, result: 'ok' },
       { ts: '14:17:31.122', tool: 'wiki.read',     target: 'reports/q3-marketing-ops',         ms: 88,  result: 'ok' },
       { ts: '14:14:44.503', tool: 'mempalace.read',target: 'episodic/2026-05-06',              ms: 220, result: 'ok' },
-      { ts: '14:12:38.118', tool: 'tony.read',     target: 'archive/2024-q4',                  ms: 60,  result: 'ok' },
+      { ts: '14:12:38.118', tool: 'legacy.read',   target: 'archive/2024-q4',                  ms: 60,  result: 'ok' },
       { ts: '14:08:01.044', tool: 'gateway.engine.ledger', target: 'engines/all',              ms: 12,  result: 'ok' }
     ],
     'hermes': [
@@ -210,7 +210,7 @@ window.AGENTS = (function () {
   const memorySummary = {
     'agent-zero': {
       working_set: ['Q3 marketing ops report', 'Gateway design sprint accepted', 'Hermes proof pending'],
-      tony_inherited: '237 episodes (R/O)',
+      legacy_inherited: '237 episodes (R/O)',
       mempalace: '1,402 nodes',
       obsidian_pinned: ['vault/projects/q3-marketing-ops.md']
     },
@@ -261,7 +261,7 @@ window.AGENTS = (function () {
 
   /* -- Connections graph (out-edges per agent) -------------- */
   const connections = {
-    'agent-zero':  [{to:'gateway',type:'router'}, {to:'hermes',type:'delegate'}, {to:'paperclip',type:'workforce'}, {to:'tony',type:'memory:R'}, {to:'obsidian',type:'memory:RW'}, {to:'mempalace',type:'memory:RW'}],
+    'agent-zero':  [{to:'gateway',type:'router'}, {to:'hermes',type:'delegate'}, {to:'paperclip',type:'workforce'}, {to:'legacy-memory',type:'memory:R'}, {to:'obsidian',type:'memory:RW'}, {to:'mempalace',type:'memory:RW'}],
     'hermes':      [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'skill-registry',type:'memory:RW'}],
     'paperclip':   [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'agent-zero',type:'reports-up'}, {to:'workforce-ledger',type:'memory:RW'}],
     'space-agent': [{to:'gateway',type:'router'}, {to:'firecrawl',type:'tool'}, {to:'youtube',type:'tool'}],

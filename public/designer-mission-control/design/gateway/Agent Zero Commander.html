@@ -46,7 +46,7 @@
     <div class="section">
       <h2>Authority & Scope</h2>
       <div style="font-size:12.5px;color:var(--t-2);line-height:1.65;">
-        Agent Zero holds <strong>commander_role = primary</strong>. Tony is retired (read-only memory inheritance). Hermes is the active lieutenant for delegated reads/writes within scope. All execution requests from Agent Zero pass through the 9-step Gateway gate — no shortcuts, no shadow paths.
+        Agent Zero holds <strong>commander_role = primary</strong>. Legacy memory remains read-only and provenance-tagged. Hermes is the active lieutenant for delegated reads/writes within scope. All execution requests from Agent Zero pass through the 9-step Gateway gate — no shortcuts, no shadow paths.
       </div>
     </div>
 
@@ -57,26 +57,26 @@
       <div class="tool-row"><div class="nm">📧 AgentMail send</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>W · bridge</span></div>
       <div class="tool-row"><div class="nm">📁 Google Drive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
       <div class="tool-row"><div class="nm">☁️ OneDrive</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
-      <div class="tool-row"><div class="nm">🔧 OpenCloud · Build-Wiki</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>X · bridge</span></div>
-      <div class="tool-row"><div class="nm">🔧 OpenCloud · Farmer</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/X</span></div>
-      <div class="tool-row"><div class="nm">🚫 OpenCloud · Fork 2 (SMB)</div><span class="pill red" style="font-size:10px;"><span class="dot"></span>blocked</span></div>
+      <div class="tool-row"><div class="nm">🔧 OpenClaw+ Workers · Build-Wiki</div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>X · bridge</span></div>
+      <div class="tool-row"><div class="nm">🔧 OpenClaw+ Workers · Farmer</div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/X</span></div>
+      <div class="tool-row"><div class="nm">🚫 OpenClaw+ Workers · Fork 2 (SMB)</div><span class="pill red" style="font-size:10px;"><span class="dot"></span>blocked</span></div>
     </div>
 
     <div class="section">
       <h2>Delegates</h2>
       <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:#fbbf24;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1500;">H</span><span><strong>Hermes</strong> · lieutenant<br><span style="color:var(--t-4);font-size:10.5px;">read-bias · gated writes</span></span><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>gated</span><button class="btn sm">open</button></div>
-      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">OC</span><span><strong>Build-Wiki worker</strong> · workflow runner<br><span style="color:var(--t-4);font-size:10.5px;">OpenCloud n8n</span></span><span class="pill purple" style="font-size:10px;"><span class="dot"></span>workflow</span><button class="btn sm">open</button></div>
-      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">OC</span><span><strong>Farmer worker</strong> · automation<br><span style="color:var(--t-4);font-size:10.5px;">OpenCloud n8n</span></span><span class="pill green" style="font-size:10px;"><span class="dot"></span>active</span><button class="btn sm">open</button></div>
-      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--t-5);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1a1a;">T</span><span><strong>Tony</strong> · retired commander<br><span style="color:var(--t-4);font-size:10.5px;">memory inheritance only · read-only</span></span><span class="pill gray" style="font-size:10px;"><span class="dot"></span>retired</span><button class="btn sm">memory</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">WR</span><span><strong>Build-Wiki worker</strong> · workflow runner<br><span style="color:var(--t-4);font-size:10.5px;">OpenClaw+ worker runtime</span></span><span class="pill purple" style="font-size:10px;"><span class="dot"></span>workflow</span><button class="btn sm">open</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--st-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">WR</span><span><strong>Farmer worker</strong> · automation<br><span style="color:var(--t-4);font-size:10.5px;">OpenClaw+ worker runtime</span></span><span class="pill green" style="font-size:10px;"><span class="dot"></span>active</span><button class="btn sm">open</button></div>
+      <div class="delegate-row"><span style="width:24px;height:24px;border-radius:50%;background:var(--t-5);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1a1a;">L</span><span><strong>Legacy memory</strong> · inherited records<br><span style="color:var(--t-4);font-size:10.5px;">memory inheritance only · read-only</span></span><span class="pill gray" style="font-size:10px;"><span class="dot"></span>inherited</span><button class="btn sm">memory</button></div>
     </div>
   </div>
 
   <div>
     <div class="section">
       <h2>Memory · with provenance</h2>
-      <div style="color:var(--t-4);font-size:11px;margin-bottom:10px;">Inherited memory shows source. Tony entries are read-only and tagged.</div>
-      <div class="mem-prov readonly"><span style="font-size:14px;">📘</span><span style="flex:1;"><strong>Project SOPs</strong> · 142 docs</span><span class="src">src: tony-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
-      <div class="mem-prov readonly"><span style="font-size:14px;">📒</span><span style="flex:1;"><strong>Customer history</strong> · 38 threads</span><span class="src">src: tony-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
+      <div style="color:var(--t-4);font-size:11px;margin-bottom:10px;">Inherited memory shows source. Legacy entries are read-only and tagged.</div>
+      <div class="mem-prov readonly"><span style="font-size:14px;">📘</span><span style="flex:1;"><strong>Project SOPs</strong> · 142 docs</span><span class="src">src: legacy-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
+      <div class="mem-prov readonly"><span style="font-size:14px;">📒</span><span style="flex:1;"><strong>Customer history</strong> · 38 threads</span><span class="src">src: legacy-memory</span><span class="pill blue" style="font-size:10px;"><span class="dot"></span>read-only</span></div>
       <div class="mem-prov" style="border-left:3px solid var(--st-green);"><span style="font-size:14px;">📔</span><span style="flex:1;"><strong>Active session notes</strong> · 12 entries</span><span class="src">src: agent-zero</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span></div>
       <div class="mem-prov" style="border-left:3px solid var(--st-green);"><span style="font-size:14px;">📕</span><span style="flex:1;"><strong>Wiki index</strong> · 3,142 entries</span><span class="src">src: brain</span><span class="pill green" style="font-size:10px;"><span class="dot"></span>R</span></div>
     </div>
@@ -90,7 +90,7 @@
         <div class="line"><span class="ts">14:22:14</span>execute oc.buildwiki.run · bridge required · prompt</div>
         <div class="line"><span class="ts">14:21:50</span>read gdrive · folder=projects/ · 24 items · 142ms</div>
         <div class="line"><span class="ts">14:21:30</span>read brain.session_notes → 8 entries · 31ms</div>
-        <div class="line"><span class="ts">14:20:12</span>denied tony.write · denied_node_blocked (retired)</div>
+        <div class="line"><span class="ts">14:20:12</span>denied legacy.write · denied_node_blocked (read-only)</div>
       </div>
     </div>
 

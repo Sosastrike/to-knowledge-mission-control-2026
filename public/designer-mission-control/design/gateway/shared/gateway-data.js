@@ -41,9 +41,9 @@ window.GATEWAY = (function () {
     /* ===== NEAR CENTER ===== */
     { id: 'agent.zero', name: 'Agent Zero', type: 'agent', lane: 'near_center',
       status: 'purple', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1,
-      summary: 'Commander. Routes owner intent to specialists, tools, models, and workers via the Gateway. Inherits Tony memory (read-only).',
+      summary: 'Commander. Routes owner intent to specialists, tools, models, and workers via the Gateway. Inherits legacy memory (read-only provenance).',
       role: 'Commander',
-      memory_inherited_from: 'tony',
+      memory_inherited_from: 'legacy',
       lastSuccess: '2m ago', cacheAge: '8s' },
 
     { id: 'agent.hermes', name: 'Hermes', type: 'agent', lane: 'near_center',
@@ -81,7 +81,7 @@ window.GATEWAY = (function () {
     { id: 'model.groq',       name: 'Groq',        type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'High-speed inference.', lastSuccess: '12m ago' },
     { id: 'model.openclawplus', name: 'OpenClaw+', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Shared skills/adapters/reports/governance runtime.', lastSuccess: '2m ago', role: 'Runtime engine' },
     { id: 'model.miniagents', name: 'Mini-agents', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Sandboxed mini-agent runner (MiroFish).', lastSuccess: '15s ago', role: 'Runtime engine' },
-    { id: 'oc.parent',        name: 'OpenCloud Workers', type: 'opencloud', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Worker engine parent. Children: Build-Wiki, Farmer, Skills, Tools, Forks 1 & 2.', lastSuccess: 'live', role: 'Runtime engine' },
+    { id: 'oc.parent',        name: 'OpenClaw+ Workers', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Worker engine parent. Children: Build-Wiki, Farmer, Skills, Tools, Forks 1 & 2.', lastSuccess: 'live', role: 'Runtime engine' },
 
     /* ===== RIGHT — INTEGRATIONS / APIs / TOOLS ===== */
     { id: 'int.apis',         name: 'External APIs',     type: 'api',     lane: 'right_integration', status: 'green',  connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Registered external API surface.', lastSuccess: '40s ago' },
@@ -100,12 +100,12 @@ window.GATEWAY = (function () {
     { id: 'int.external',     name: 'External Systems',  type: 'api',     lane: 'right_integration', status: 'gray',   connected: 0, configured: 0, R: 0, W: 0, X: 0, bridge: 0, summary: 'Reserved — third-party SaaS to onboard.', blocked_reason: 'Per-system onboarding required.' },
   ];
 
-  // ---------- OpenCloud children (rendered under oc.parent) ----------
+  // ---------- Worker runtime children (rendered under oc.parent) ----------
   const OPENCLOUD_CHILDREN = [
     { id: 'oc.buildwiki',   name: 'Build-Wiki',     role: 'docs_builder', status: 'green',  R: 1, W: 1, X: 1, bridge: 1, summary: 'Run Now scope: opencloud-docs-farmer.service only.' },
     { id: 'oc.farmer',      name: 'Farmer Sync',    role: 'farmer',       status: 'green',  R: 1, W: 1, X: 1, bridge: 1, summary: 'Continuous knowledge ingest farmer.' },
-    { id: 'oc.skills',      name: 'OpenCloud Skills', role: 'skills_host', status: 'green', R: 1, W: 1, X: 1, bridge: 1, summary: 'Skills hosted on OpenCloud workers.' },
-    { id: 'oc.tools',       name: 'OpenCloud Tools', role: 'tools_host',  status: 'green', R: 1, W: 1, X: 1, bridge: 1, summary: 'Tools hosted on OpenCloud workers.' },
+    { id: 'oc.skills',      name: 'OpenClaw+ Skills', role: 'skills_host', status: 'green', R: 1, W: 1, X: 1, bridge: 1, summary: 'Skills hosted on OpenClaw+ workers.' },
+    { id: 'oc.tools',       name: 'OpenClaw+ Tools', role: 'tools_host',  status: 'green', R: 1, W: 1, X: 1, bridge: 1, summary: 'Tools hosted on OpenClaw+ workers.' },
     { id: 'oc.runtime',     name: 'Agent Runtime',  role: 'agent_runtime', status: 'gray', R: 0, W: 0, X: 0, bridge: 0, summary: 'Future — agent runtime hosting.', blocked_reason: 'Reserved for future cutover.' },
     { id: 'oc.fork1',       name: 'Fork 1 — Local Docs', role: 'fork',  status: 'green',  R: 1, W: 1, X: 1, bridge: 1, summary: 'Local docs farmer.' },
     { id: 'oc.fork2',       name: 'Fork 2 — SMB',   role: 'fork',         status: 'red',    R: 0, W: 0, X: 0, bridge: 0, summary: 'SMB share farmer.', blocked_reason: 'SMB connector unavailable / SMB mount not proven.' },
@@ -151,7 +151,7 @@ window.GATEWAY = (function () {
     { from: 'agent.zero', to: 'int.reports',   relation: 'writes_to' },
     { from: 'agent.hermes', to: 'int.tools',   relation: 'routes_through' },
 
-    // Commanders → OpenCloud workers
+    // Commanders → worker runtime
     { from: 'agent.zero',   to: 'oc.parent',         relation: 'delegates_to' },
     { from: 'agent.hermes', to: 'oc.parent',         relation: 'delegates_to' },
     { from: 'agent.zero',   to: 'model.openclawplus', relation: 'routes_through' },
@@ -167,7 +167,7 @@ window.GATEWAY = (function () {
       expires_at: '14:32 today',
       remaining_minutes: 24,
       device_fingerprint: 'macbook-pro-luis-7f3a',
-      scope: ['delivery_channel', 'opencloud_worker', 'brain_system'],
+      scope: ['delivery_channel', 'runtime_worker', 'brain_system'],
       allowed_tools: ['agentmail.send', 'gdrive.upload', 'onedrive.upload', 'oc.buildwiki.run', 'brain.write'],
       duration_minutes: 30,
       extended: false,
@@ -192,12 +192,12 @@ window.GATEWAY = (function () {
     { id: 'p.discovery.gate',        name: 'Discovery before execute',                    scope: 'all node types',                                       severity: 'high', state: 'enforced' },
     { id: 'p.rbac.passthrough',      name: 'Existing-permission enforcement',             scope: 'every execute',                                        severity: 'high', state: 'enforced' },
     { id: 'p.runnow.scope',          name: 'Build-Wiki Run Now scope',                    scope: 'opencloud-docs-farmer.service only',                   severity: 'high', state: 'enforced' },
-    { id: 'p.tony.readonly',         name: 'Tony memory read-only',                       scope: 'all /api/legacy/tony/*',                               severity: 'high', state: 'enforced' },
+    { id: 'p.legacy.readonly',       name: 'Legacy inherited memory read-only',           scope: 'all /api/legacy/*',                                    severity: 'high', state: 'enforced' },
     { id: 'p.fork2.blocked',         name: 'Fork 2 / SMB blocked',                        scope: 'oc.fork2',                                             severity: 'high', state: 'enforced' },
     { id: 'p.hermes.gated',          name: 'Hermes gated until live chat proven',         scope: 'agent.hermes write/execute',                          severity: 'med',  state: 'enforced' },
     { id: 'p.creds.never_expose',    name: 'Credentials never echoed to UI/logs',         scope: 'all credentials',                                      severity: 'high', state: 'enforced' },
     { id: 'p.audit.append_only',     name: 'gateway_audit append-only + chain hash',      scope: 'audit table',                                          severity: 'high', state: 'enforced' },
-    { id: 'p.legacy.flag',           name: 'Legacy Tony routes behind admin flag',        scope: 'LEGACY_TONY_ROUTES_ENABLED',                           severity: 'high', state: 'flag-off' },
+    { id: 'p.legacy.flag',           name: 'Legacy routes behind admin flag',             scope: 'LEGACY_ROUTES_ENABLED',                                severity: 'high', state: 'flag-off' },
   ];
 
   // ---------- Health ----------

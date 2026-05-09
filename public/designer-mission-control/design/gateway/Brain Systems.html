@@ -30,7 +30,7 @@
   <div class="badge">🧠</div>
   <div>
     <h1>Brain Systems <span class="pill green" style="margin-left:8px;"><span class="dot"></span>operational</span></h1>
-    <div class="role">All Brain reads/writes go through the Gateway. Tony Memory is read-only and tagged for inheritance — Agent Zero indexes it with provenance, never re-writing.</div>
+    <div class="role">All Brain reads/writes go through the Gateway. Legacy inherited memory is read-only and tagged for provenance — Agent Zero indexes it without re-writing source records.</div>
     <div class="meta"><span>vector store: pgvector</span><span>indexes: 8</span><span>last reindex: 47m ago</span></div>
   </div>
   <div><button class="btn primary">Open Brain</button></div>
@@ -39,7 +39,7 @@
 <div class="callout">
   <div style="font-size:20px;">ℹ</div>
   <div style="font-size:12.5px;line-height:1.6;">
-    <strong>Memory inheritance.</strong> When Tony was retired, his memory tables were preserved verbatim and remarked <code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">read_only=1, inherited_by=agent-zero</code>. Agent Zero re-indexes them with provenance fields (<code style="font-family:var(--ff-mono);font-size:11px;">source_agent</code>, <code style="font-family:var(--ff-mono);font-size:11px;">source_ts</code>) so any retrieval explains where the knowledge came from. No write paths exist on Tony Memory; the Gateway returns <code style="font-family:var(--ff-mono);font-size:11px;">denied_node_blocked</code> on attempts.
+    <strong>Memory inheritance.</strong> Legacy memory tables were preserved verbatim and remarked <code style="font-family:var(--ff-mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;">read_only=1, inherited_by=agent-zero</code>. Agent Zero re-indexes them with provenance fields (<code style="font-family:var(--ff-mono);font-size:11px;">source_agent</code>, <code style="font-family:var(--ff-mono);font-size:11px;">source_ts</code>) so any retrieval explains where the knowledge came from. No write paths exist on inherited memory; the Gateway returns <code style="font-family:var(--ff-mono);font-size:11px;">denied_node_blocked</code> on attempts.
   </div>
 </div>
 
@@ -51,7 +51,7 @@
       <div class="system-row"><div class="ic">📔</div><div><div class="nm">Session notes</div><div class="desc">Per-session conversation memory · 8,419 entries</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span><button class="btn sm">open</button></div>
       <div class="system-row"><div class="ic">🗂</div><div><div class="nm">Decisions log</div><div class="desc">Decisions + rationale · append-only · 412 entries</div></div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>append</span><button class="btn sm">open</button></div>
       <div class="system-row"><div class="ic">📒</div><div><div class="nm">Project docs</div><div class="desc">Project-scoped semantic store · 1,288 docs</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span><button class="btn sm">open</button></div>
-      <div class="system-row"><div class="ic">📘</div><div><div class="nm">Tony Memory <span class="pill blue" style="font-size:9.5px;margin-left:4px;"><span class="dot"></span>read-only</span></div><div class="desc">Inherited from retired Tony · 142 docs + 38 threads</div></div><span class="pill blue" style="font-size:10px;"><span class="dot"></span>R</span><button class="btn sm">open</button></div>
+      <div class="system-row"><div class="ic">📘</div><div><div class="nm">Inherited Memory <span class="pill blue" style="font-size:9.5px;margin-left:4px;"><span class="dot"></span>read-only</span></div><div class="desc">Inherited legacy records · 142 docs + 38 threads</div></div><span class="pill blue" style="font-size:10px;"><span class="dot"></span>R</span><button class="btn sm">open</button></div>
       <div class="system-row"><div class="ic">📊</div><div><div class="nm">Cost ledger</div><div class="desc">Per-call cost rows · append-only · 41,920 entries</div></div><span class="pill yellow" style="font-size:10px;"><span class="dot"></span>append</span><button class="btn sm">open</button></div>
       <div class="system-row"><div class="ic">🪵</div><div><div class="nm">Audit trail</div><div class="desc">Gateway audit · append-only · 89,217 entries</div></div><span class="pill blue" style="font-size:10px;"><span class="dot"></span>R</span><button class="btn sm">open</button></div>
       <div class="system-row"><div class="ic">🧬</div><div><div class="nm">Embeddings cache</div><div class="desc">pgvector · 21,341 vectors · 1536-dim</div></div><span class="pill green" style="font-size:10px;"><span class="dot"></span>R/W</span><button class="btn sm">open</button></div>
@@ -62,11 +62,11 @@
     <div class="section">
       <h2>Provenance examples (how Agent Zero retrieves)</h2>
       <div class="prov-card readonly">
-        <div><strong>"Project Halo SOP v2"</strong><div class="src">src: tony-memory · 2024-11-12 · read-only</div></div>
+        <div><strong>"Project Halo SOP v2"</strong><div class="src">src: legacy-memory · 2024-11-12 · read-only</div></div>
         <span class="pill blue" style="font-size:10px;"><span class="dot"></span>inherited</span>
       </div>
       <div class="prov-card readonly">
-        <div><strong>"Customer thread #4112"</strong><div class="src">src: tony-memory · 2025-01-08 · read-only</div></div>
+        <div><strong>"Customer thread #4112"</strong><div class="src">src: legacy-memory · 2025-01-08 · read-only</div></div>
         <span class="pill blue" style="font-size:10px;"><span class="dot"></span>inherited</span>
       </div>
       <div class="prov-card rw">
@@ -88,14 +88,14 @@
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">
         <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Reads</div><div style="font-size:18px;font-weight:600;color:var(--st-green);">2,184</div></div>
         <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Writes</div><div style="font-size:18px;font-weight:600;color:var(--st-yellow);">189</div></div>
-        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Tony reads</div><div style="font-size:18px;font-weight:600;color:var(--st-blue);">412</div></div>
+        <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Inherited reads</div><div style="font-size:18px;font-weight:600;color:var(--st-blue);">412</div></div>
         <div><div style="color:var(--t-4);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Denied W</div><div style="font-size:18px;font-weight:600;color:var(--st-red);">3</div></div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line-2);font-family:var(--ff-mono);font-size:11px;color:var(--t-3);">
-        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:24:08</span> read tony-memory · "halo sop" · 4 results</div>
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:24:08</span> read legacy-memory · "halo sop" · 4 results</div>
         <div style="padding:3px 0;"><span style="color:var(--t-5);">14:23:51</span> append session_notes · 142 chars</div>
         <div style="padding:3px 0;"><span style="color:var(--t-5);">14:21:30</span> read wiki_index · "bridge session" · 12 results</div>
-        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:18:11</span> <span style="color:var(--st-red);">denied</span> tony-memory.write · denied_node_blocked</div>
+        <div style="padding:3px 0;"><span style="color:var(--t-5);">14:18:11</span> <span style="color:var(--st-red);">denied</span> legacy-memory.write · denied_node_blocked</div>
       </div>
     </div>
   </div>

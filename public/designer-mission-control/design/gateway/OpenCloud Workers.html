@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"/><title>OpenCloud · Workers</title>
+<html lang="en"><head><meta charset="utf-8"/><title>OpenClaw+ · Workers</title>
 <link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
 <style>
 .oc-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
@@ -39,11 +39,11 @@
 <div class="oc-hero">
   <div class="badge">OC</div>
   <div>
-    <h1>OpenCloud · Workers <span class="pill purple" style="margin-left:8px;"><span class="dot"></span>workflow runner</span></h1>
-    <div class="role">n8n-style workflow runner. The Gateway routes only via the parent OpenCloud node, never directly to a worker — children inherit RBAC from the parent and discovery happens through it.</div>
+    <h1>OpenClaw+ · Workers <span class="pill purple" style="margin-left:8px;"><span class="dot"></span>workflow runner</span></h1>
+    <div class="role">n8n-style workflow runner. The Gateway routes only via the parent runtime node, never directly to a worker — children inherit RBAC from the parent and discovery happens through it.</div>
     <div class="meta"><span>parent: opencloud</span><span>children: 4</span><span>discovery TTL: 5m</span><span>last refresh: 2m ago</span></div>
   </div>
-  <div><button class="btn primary">Open OpenCloud UI</button></div>
+  <div><button class="btn primary">Open Worker UI</button></div>
 </div>
 
 <div class="tree">
@@ -51,7 +51,7 @@
   <div class="parent-row">
     <div class="ic">☁️</div>
     <div>
-      <strong>OpenCloud</strong> <span class="pill green" style="font-size:10px;margin-left:6px;"><span class="dot"></span>parent · operational</span>
+      <strong>OpenClaw+ Workers</strong> <span class="pill green" style="font-size:10px;margin-left:6px;"><span class="dot"></span>parent · operational</span>
       <div class="desc">Workflow host. RBAC + discovery owned here. Workers are addressed as <code>opencloud/&lt;worker&gt;</code> through the Gateway.</div>
     </div>
     <div><button class="btn sm">↻ refresh</button></div>
@@ -118,6 +118,6 @@
 </main></div>
 <script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
 <script>
-document.getElementById('topbar-mount').replaceWith(GW.topbar('OpenCloud · Workers'));
+document.getElementById('topbar-mount').replaceWith(GW.topbar('OpenClaw+ · Workers'));
 document.getElementById('pagenav-mount').replaceWith(GW.pagenav('OpenCloud Workers.html'));
 </script></body></html>

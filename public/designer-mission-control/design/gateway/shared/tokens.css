@@ -114,7 +114,7 @@ button {
 .gw-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 56px 1fr;
+  grid-template-rows: 56px 44px minmax(0, 1fr);
 }
 
 .gw-topbar {
@@ -156,6 +156,14 @@ button {
   display: flex;
   gap: var(--s-2);
   align-items: center;
+}
+.gw-topbar .crumbs a {
+  color: var(--t-3);
+  text-decoration: none;
+}
+.gw-topbar .crumbs a:hover {
+  color: var(--t-1);
+  text-decoration: none;
 }
 .gw-topbar .crumbs .here { color: var(--t-1); }
 .gw-topbar .crumbs .sep { color: var(--t-5); }

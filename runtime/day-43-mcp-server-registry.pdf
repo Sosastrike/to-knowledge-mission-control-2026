@@ -1,0 +1,521 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2610 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-43-mcp-server-registry) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 43 — MCP Server Registry) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL PASS) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: `claude_mcp_discovery_unavailable: spawn claude ENOENT`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(MCP server registry, status contract, and read-only discovery surface.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Create and prove a canonical MCP server registry that exposes server status, capabilities, owner) Tj
+0 -12 Td
+(-facing blocker classification, and safe read-only tool-schema routes without invoking MCP tools) Tj
+0 -12 Td
+( or enabling writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reviewed active MCP surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/mcp/status`) Tj
+0 -12 Td
+(- `GET /api/mcp/list`) Tj
+0 -12 Td
+(- `GET /api/mcp/servers`) Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/tools`) Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/resources`) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/test`) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/enable`) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/disable`) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/reauth`) Tj
+0 -12 Td
+(- `scripts/check-mcp-status-consistency.mjs`) Tj
+0 -12 Td
+(- MCP tool schema helper) Tj
+0 -12 Td
+(- Owner-facing status contract in `src/lib/owner-status.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a canonical MCP registry contract:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- New registry helper maps every MCP server to the locked owner-facing status vocabulary:) Tj
+0 -12 Td
+(  - `LIVE`) Tj
+0 -12 Td
+(  - `READY`) Tj
+0 -12 Td
+(  - `OWNER_GATED`) Tj
+0 -12 Td
+(  - `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - `SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `BLOCKED`) Tj
+0 -12 Td
+(  - `DISABLED`) Tj
+0 -12 Td
+(- Server records now include:) Tj
+0 -12 Td
+(  - `id`) Tj
+0 -12 Td
+(  - `canonical_status`) Tj
+0 -12 Td
+(  - `blocker_class`) Tj
+0 -12 Td
+(  - `blocker`) Tj
+0 -12 Td
+(  - `owner_status`) Tj
+0 -12 Td
+(  - `read_enabled`) Tj
+0 -12 Td
+(  - `execution_enabled:false`) Tj
+0 -12 Td
+(  - `writes_enabled:false`) Tj
+0 -12 Td
+(  - `bridge_session_required:true`) Tj
+0 -12 Td
+(  - `approval_required_for_writes:true`) Tj
+0 -12 Td
+(  - `tools_endpoint`) Tj
+0 -12 Td
+(  - `resources_endpoint`) Tj
+0 -12 Td
+(  - capability list) Tj
+0 -12 Td
+(- `/api/mcp/status` now returns canonical status, blocker class, allowed statuses, and explicit ) Tj
+0 -12 Td
+(no-execution/no-write fields.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3093 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `/api/mcp/servers` now returns the canonical registry records and status summary.) Tj
+0 -12 Td
+(- MCP config discovery now checks:) Tj
+0 -12 Td
+(  - Claude CLI) Tj
+0 -12 Td
+(  - Claude user MCP config) Tj
+0 -12 Td
+(  - Claude config MCP config) Tj
+0 -12 Td
+(  - Claude JSON project MCP config) Tj
+0 -12 Td
+(- MCP tool schema discovery now reads all project-level `.claude.json` MCP server entries rather) Tj
+0 -12 Td
+( than one stale project path.) Tj
+0 -12 Td
+(- MCP status consistency smoke now supplies the same non-secret placeholder session cookie used ) Tj
+0 -12 Td
+(by runtime API smoke, so the proxy does not reject valid API-key checks before route authorizati) Tj
+0 -12 Td
+(on.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/mcp-server-registry.ts`) Tj
+0 -12 Td
+(- `src/lib/mcp-server-registry.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/mcp/[[...path]]/route.ts`) Tj
+0 -12 Td
+(- `src/lib/mcp-server-tool-schemas.ts`) Tj
+0 -12 Td
+(- `scripts/check-mcp-status-consistency.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/mcp/status`) Tj
+0 -12 Td
+(- `GET /api/mcp/list`) Tj
+0 -12 Td
+(- `GET /api/mcp/servers`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing route behavior preserved:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/tools` remains read-only schema discovery only.) Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/resources` remains blocked as not wired.) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/test` remains status-only.) Tj
+0 -12 Td
+(- `POST /api/mcp/servers/:id/enable|disable|reauth` remains owner-approval required.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Owner-Facing Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(MCP server inventory now has one truthful status contract for downstream Mission Control, Gatewa) Tj
+0 -12 Td
+(y, Agent Hub, connector panels, and reports.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current runtime truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- MCP registry route is reachable after auth.) Tj
+0 -12 Td
+(- No MCP servers are visible in the current local runtime.) Tj
+0 -12 Td
+(- MCP CLI discovery is unavailable on this host: `spawn claude ENOENT`.) Tj
+0 -12 Td
+(- MCP execution is disabled.) Tj
+0 -12 Td
+(- MCP writes are disabled.) Tj
+0 -12 Td
+(- No MCP tool invocation occurred.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control was rebuilt and restarted after the source change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source commit: `5ce6191`) Tj
+0 -12 Td
+(- Runtime PID after restart: `78864`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Public exposure: none; listener remains local-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime route proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Unauthenticated `GET /api/mcp/status`: 401) Tj
+0 -12 Td
+(- Authenticated `GET /api/mcp/status`: 200) Tj
+0 -12 Td
+(- Authenticated `GET /api/mcp/servers`: 200) Tj
+0 -12 Td
+(- `/api/mcp/status` canonical status: `SERVICE_DOWN`) Tj
+0 -12 Td
+(- `/api/mcp/servers` canonical status: `SERVICE_DOWN`) Tj
+0 -12 Td
+(- Server count: 0) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2730 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Sources checked include `claude-json-mcp-config`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-43-mcp-server-registry-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The proof artifact records only summarized response fields. No API key, token, auth file, or raw) Tj
+0 -12 Td
+( response body was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS — 164 files / 1339 tests) Tj
+0 -12 Td
+(- `pnpm test src/lib/mcp-server-registry.test.ts`: PASS) Tj
+0 -12 Td
+(- `pnpm test src/lib/owner-status.test.ts`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `ALLOW_EMPTY_MCP_SERVERS=1 node scripts/check-mcp-status-consistency.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(`: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS after avoiding secret-shaped synthetic test literals) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The current runtime cannot discover live MCP servers because the `claude` CLI is not reachable) Tj
+0 -12 Td
+( from this host/runtime shell and no MCP servers are configured in the checked config sources.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Developer-side closure is complete:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Canonical registry contract exists.) Tj
+0 -12 Td
+(- Safe route behavior exists.) Tj
+0 -12 Td
+(- Empty/unavailable state is truthful.) Tj
+0 -12 Td
+(- Tests and runtime proof pass.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action if live MCP inventory is required on this host:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Install or expose the approved `claude` CLI to the Mission Control runtime PATH, or configure ) Tj
+0 -12 Td
+(`CLAUDE_BIN`.) Tj
+0 -12 Td
+(- Configure the desired MCP servers in Claude MCP config or `.claude.json`.) Tj
+0 -12 Td
+(- Restart Mission Control if the service environment changes.) Tj
+0 -12 Td
+(- Re-run authenticated `GET /api/mcp/servers`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `5ce6191` — `feat\(mcp\): add canonical server registry contract`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `origin/to-knowledge-mc`: pushed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 43 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Recorded after this report is committed and pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback source change:) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1114 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 5ce6191) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback Day 43 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day43_report_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No MCP tool invocation.) Tj
+0 -12 Td
+(- No MCP writes enabled.) Tj
+0 -12 Td
+(- No raw local paths in runtime proof.) Tj
+0 -12 Td
+(- No fake MCP server visibility.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closeout Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 43 is developer-side complete with a truthful `SERVICE_DOWN` blocker for live MCP server dis) Tj
+0 -12 Td
+(covery in this runtime. The next lane is Day 44 — MCP Tool Discovery.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 44 — MCP Tool Discovery is the active next lane.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000002922 00000 n 
+0000003049 00000 n 
+0000006194 00000 n 
+0000006321 00000 n 
+0000009103 00000 n 
+0000009231 00000 n 
+0000010398 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+10469
+%%EOF

@@ -1,0 +1,121 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T23:28:43.676Z",
+  "runtime_commit": "5ce619197d2bfae7819c879b97aed80830af9430",
+  "runtime_pid": 78864,
+  "base": "http://127.0.0.1:3337",
+  "checks": [
+    {
+      "path": "/api/mcp/status",
+      "auth": false,
+      "status": 401,
+      "ok": true
+    },
+    {
+      "path": "/api/mcp/status",
+      "auth": true,
+      "status": 200,
+      "body": {
+        "ok": true,
+        "total": 0,
+        "healthy": 0,
+        "degraded": 0,
+        "failed": 0,
+        "unknown": 0,
+        "canonical_status": "SERVICE_DOWN",
+        "blocker_class": "SERVICE_DOWN",
+        "blocker": "claude_mcp_discovery_unavailable: spawn claude ENOENT",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "no_tool_invocation": true,
+        "allowed_owner_statuses": [
+          "LIVE",
+          "READY",
+          "OWNER_GATED",
+          "CREDENTIAL_GATED",
+          "SERVICE_DOWN",
+          "BLOCKED",
+          "DISABLED"
+        ],
+        "sources_checked": null,
+        "note": null,
+        "discovery": null
+      },
+      "violations": []
+    },
+    {
+      "path": "/api/mcp/servers",
+      "auth": true,
+      "status": 200,
+      "body": {
+        "ok": true,
+        "total": 0,
+        "healthy": 0,
+        "degraded": 0,
+        "failed": 0,
+        "unknown": 0,
+        "canonical_status": "SERVICE_DOWN",
+        "blocker_class": "SERVICE_DOWN",
+        "blocker": "claude_mcp_discovery_unavailable: spawn claude ENOENT",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "no_tool_invocation": true,
+        "allowed_owner_statuses": [
+          "LIVE",
+          "READY",
+          "OWNER_GATED",
+          "CREDENTIAL_GATED",
+          "SERVICE_DOWN",
+          "BLOCKED",
+          "DISABLED"
+        ],
+        "sources_checked": [
+          "claude-cli",
+          "claude-user-mcp-config",
+          "claude-config-mcp-config",
+          "claude-json-mcp-config"
+        ],
+        "note": "no_mcp_servers_detected",
+        "discovery": {
+          "cli_ok": false,
+          "fallback_used": false,
+          "config_servers_found": 0,
+          "cli_error": "spawn claude ENOENT"
+        },
+        "servers": []
+      },
+      "violations": []
+    }
+  ],
+  "consistency": {
+    "ok": true,
+    "base_url": "http://127.0.0.1:3337",
+    "counts": {
+      "total": 0,
+      "healthy": 0,
+      "degraded": 0,
+      "failed": 0,
+      "unknown": 0
+    },
+    "server_list_count": 0,
+    "sources_checked": [
+      "claude-cli",
+      "claude-user-mcp-config",
+      "claude-config-mcp-config",
+      "claude-json-mcp-config"
+    ],
+    "note": "no_mcp_servers_detected"
+  },
+  "public_exposure": {
+    "bind": "node 78864 sosastrike 127.0.0.1:3337",
+    "local_only": true
+  },
+  "blocker": "SERVICE_DOWN:claude_mcp_discovery_unavailable: spawn claude ENOENT",
+  "safety": {
+    "response_bodies_printed": false,
+    "api_key_printed": false,
+    "no_tool_invocation": true,
+    "execution_enabled": false,
+    "writes_enabled": false
+  }
+}

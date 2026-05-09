@@ -1,4 +1,8 @@
-import type { AgentZeroReadOnlyContext } from '@/lib/agent-zero-bridge'
+import type {
+  AgentZeroReadOnlyContext,
+  MissionControlCanonicalStatus,
+  MissionControlClosureBlockerClass,
+} from '@/lib/agent-zero-bridge'
 import { sanitizeAgentZeroOwnerReply } from '@/lib/agent-zero-bridge'
 import {
   HERMES_BRAIN_CANONICAL_HIERARCHY,
@@ -186,6 +190,29 @@ export type HermesReadOnlyMessageResult = {
   }
 }
 
+export type HermesClosureSummary = {
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  blocker: string | null
+  live_chat_status: 'proven' | 'ready_not_checked' | 'blocked'
+  proof_packet: {
+    lane: 'Hermes'
+    timestamp: string
+    runtime_commit: string | null
+    route_or_service_checked: string
+    result: MissionControlCanonicalStatus
+    blocker: string | null
+    blocker_class: MissionControlClosureBlockerClass
+    audit_pointer: string | null
+    safe_log_pointer: string | null
+    rollback_command: string
+    execution_enabled: false
+    writes_enabled: false
+    secrets_exposed: false
+    raw_paths_exposed: false
+  }
+}
+
 const SECRET_VALUE_PATTERN =
   /(sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi
 const RAW_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders|\/a0\/(?:usr|tmp|var))[^\s`'"\])}]*/gi
@@ -235,6 +262,73 @@ export function classifyHermesStatus(input: {
     writes_enabled: false,
     blocker,
     values_exposed: false,
+  }
+}
+
+function classifyHermesBlocker(blocker: string | null): {
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+} {
+  if (!blocker) {
+    return { canonicalStatus: 'READY', blockerClass: 'NONE' }
+  }
+  if (/(auth|credential|token|api[_-]?key|oauth|dashboard[_-]?token)/i.test(blocker)) {
+    return { canonicalStatus: 'CREDENTIAL_GATED', blockerClass: 'CREDENTIAL_GATED' }
+  }
+  if (/(not[_-]?installed|unreachable|service|gateway|dns|connection|timeout|runtime)/i.test(blocker)) {
+    return { canonicalStatus: 'SERVICE_DOWN', blockerClass: 'SERVICE_DOWN' }
+  }
+  if (/(disabled|not[_-]?configured|adapter|not[_-]?proven)/i.test(blocker)) {
+    return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED' }
+  }
+  return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED' }
+}
+
+export function buildHermesClosureSummary(input: {
+  status: HermesStatusSummary
+  liveChatProven?: boolean
+  timestamp?: string
+  runtimeCommit?: string | null
+  routeOrServiceChecked?: string | null
+  rollbackCommand?: string
+}): HermesClosureSummary {
+  const classified = classifyHermesBlocker(input.status.blocker)
+  const liveChatStatus = input.liveChatProven
+    ? 'proven'
+    : input.status.blocker
+      ? 'blocked'
+      : 'ready_not_checked'
+  const canonicalStatus = input.liveChatProven && classified.blockerClass === 'NONE'
+    ? 'LIVE'
+    : classified.canonicalStatus
+  const blockerClass = input.liveChatProven && classified.blockerClass === 'NONE'
+    ? 'NONE'
+    : classified.blockerClass
+  const blocker = input.liveChatProven && classified.blockerClass === 'NONE'
+    ? null
+    : input.status.blocker
+
+  return {
+    canonical_status: canonicalStatus,
+    blocker_class: blockerClass,
+    blocker,
+    live_chat_status: liveChatStatus,
+    proof_packet: {
+      lane: 'Hermes',
+      timestamp: input.timestamp || new Date().toISOString(),
+      runtime_commit: input.runtimeCommit || null,
+      route_or_service_checked: input.routeOrServiceChecked || '/api/bridge/hermes/status',
+      result: canonicalStatus,
+      blocker,
+      blocker_class: blockerClass,
+      audit_pointer: input.liveChatProven ? '/api/bridge/hermes/test-chat' : null,
+      safe_log_pointer: null,
+      rollback_command: input.rollbackCommand || 'git revert <day-02-hermes-commit>',
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
   }
 }
 

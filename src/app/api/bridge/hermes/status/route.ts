@@ -9,7 +9,7 @@ import { buildAgentZeroEcosystemContext } from '@/lib/agent-zero-ecosystem-conte
 import { isHermesInstalled, isHermesGatewayRunning, scanHermesSessions } from '@/lib/hermes-sessions'
 import { getHermesTasks } from '@/lib/hermes-tasks'
 import { getHermesMemory } from '@/lib/hermes-memory'
-import { classifyHermesStatus, redactSecretsDeep } from '@/lib/hermes-bridge'
+import { buildHermesClosureSummary, classifyHermesStatus, redactSecretsDeep } from '@/lib/hermes-bridge'
 import { buildHermesSkillInventory } from '@/lib/hermes-skills'
 
 export const runtime = 'nodejs'
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
   ])
 
   const provider = providerStatus.provider
-  const installed = isHermesInstalled()
+  const installed = Boolean(binary.path) || isHermesInstalled()
   const sandboxHomes = findSandboxHomes()
   const activeSessions = installed ? scanHermesSessions(25).filter((session) => session.isActive).length : 0
   const cronJobCount = installed ? getHermesTasks().cronJobs.length : 0
@@ -203,12 +203,24 @@ export async function GET(request: NextRequest) {
     authConfigured: authStatus.auth_configured,
     providerWarning,
   })
+  const checkedAt = new Date().toISOString()
+  const closure = buildHermesClosureSummary({
+    status: statusSummary,
+    liveChatProven: false,
+    timestamp: checkedAt,
+    runtimeCommit: null,
+    routeOrServiceChecked: gatewayRunning ? 'hermes-gateway.service' : '/api/bridge/hermes/status',
+  })
   const hermesSkillInventory = buildHermesSkillInventory(ecosystemContext)
 
   return NextResponse.json(redactSecretsDeep({
     ok: true,
     mode: 'hermes_lieutenant_status_read_only',
-    generated_at: new Date().toISOString(),
+    generated_at: checkedAt,
+    canonical_status: closure.canonical_status,
+    blocker_class: closure.blocker_class,
+    live_chat_status: closure.live_chat_status,
+    proof_packet: closure.proof_packet,
     health: statusSummary.health,
     version: statusSummary.version,
     reachable: statusSummary.reachable,

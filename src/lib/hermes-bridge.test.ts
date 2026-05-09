@@ -7,6 +7,7 @@ import {
 } from '@/lib/hermes-brain-sync'
 import {
   HERMES_NATURAL_BEHAVIOR_CONTRACT,
+  buildHermesClosureSummary,
   buildHermesReadOnlyContext,
   classifyHermesStatus,
   redactSecretsDeep,
@@ -397,6 +398,49 @@ describe('Hermes bridge status classification', () => {
     expect(status.health).toBe('degraded')
     expect(status.blocker).toBe('chat_adapter_not_proven')
     expect(status.values_exposed).toBe(false)
+  })
+
+  it('maps Hermes closure states into the canonical Mission Control status contract', () => {
+    const ready = buildHermesClosureSummary({
+      status: classifyHermesStatus({ installed: true, reachable: true, authConfigured: true }),
+      timestamp: '2026-05-09T00:00:00.000Z',
+    })
+    const live = buildHermesClosureSummary({
+      status: classifyHermesStatus({ installed: true, reachable: true, authConfigured: true }),
+      liveChatProven: true,
+      timestamp: '2026-05-09T00:00:00.000Z',
+    })
+    const credentialGated = buildHermesClosureSummary({
+      status: classifyHermesStatus({ installed: true, reachable: true, authConfigured: false }),
+      timestamp: '2026-05-09T00:00:00.000Z',
+    })
+    const serviceDown = buildHermesClosureSummary({
+      status: classifyHermesStatus({ installed: true, reachable: false, authConfigured: true }),
+      timestamp: '2026-05-09T00:00:00.000Z',
+    })
+
+    expect(ready).toMatchObject({
+      canonical_status: 'READY',
+      blocker_class: 'NONE',
+      live_chat_status: 'ready_not_checked',
+    })
+    expect(live).toMatchObject({
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
+      live_chat_status: 'proven',
+    })
+    expect(credentialGated).toMatchObject({
+      canonical_status: 'CREDENTIAL_GATED',
+      blocker_class: 'CREDENTIAL_GATED',
+      blocker: 'hermes_auth_not_configured',
+    })
+    expect(serviceDown).toMatchObject({
+      canonical_status: 'SERVICE_DOWN',
+      blocker_class: 'SERVICE_DOWN',
+      blocker: 'hermes_gateway_unreachable',
+    })
+    expect(JSON.stringify(live.proof_packet)).not.toMatch(/sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|password\s*[:=]|token\s*[:=]/i)
+    expect(live.proof_packet.audit_pointer).toBe('/api/bridge/hermes/test-chat')
   })
 })
 

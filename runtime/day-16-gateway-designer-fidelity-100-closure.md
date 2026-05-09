@@ -1,0 +1,229 @@
+# Day 16 - Gateway Designer Fidelity 100% Closure
+
+Date: 2026-05-09
+Branch: to-knowledge-mc
+Lane: Gateway Designer Fidelity
+Status: DEVELOPER-SIDE CLOSED
+Blocker class: OWNER_GATED for authenticated owner visual confirmation
+Code commit under proof: 25f577e
+Report base commit: 3124248
+Code rollback: git revert 25f577e
+
+## Scope
+
+Day 16 verifies whether the production Gateway FULL v3 routes are using the accepted designer mock contract instead of a custom React reinterpretation.
+
+The decision from Day 15 remains in force: Mission Control mounts the existing FULL v3 designer HTML files directly inside protected Gateway routes. The designer files remain the visual contract. No custom redesign, token override, class rename, or Tailwind port was performed in this lane.
+
+This is not owner visual GO. The developer-side proof passes, but authenticated owner retest is still required before the Gateway owner visual lane can move beyond PARTIAL GO.
+
+## Inventory Findings
+
+Designer contract files checked:
+
+- public/designer-mission-control/design/gateway/Gateway Overview.html
+- public/designer-mission-control/design/gateway/Gateway Routes.html
+- public/designer-mission-control/design/gateway/Gateway Registry.html
+- public/designer-mission-control/design/gateway/Gateway Policies.html
+- public/designer-mission-control/design/gateway/Gateway Health.html
+- public/designer-mission-control/design/gateway/Dispatcher.html
+- public/designer-mission-control/design/gateway/Token Governor.html
+- public/designer-mission-control/design/gateway/Agent Hub.html
+- public/designer-mission-control/design/gateway/Paperclip.html
+- public/designer-mission-control/design/gateway/Bridge Session Flow.html
+- public/designer-mission-control/design/gateway/Gateway Node Detail.html
+- public/designer-mission-control/design/gateway/Gateway Mobile Tablet.html
+- public/designer-mission-control/design/gateway/shared/tokens.css
+- public/designer-mission-control/design/gateway/shared/render.js
+
+Production routes checked:
+
+- `/gateway`
+- `/gateway/routes`
+- `/gateway/registry`
+- `/gateway/policies`
+- `/gateway/health`
+- `/gateway/dispatcher`
+- `/gateway/token-governor`
+- `/gateway/agent-hub`
+- `/gateway/agent-hub/paperclip`
+- `/gateway/bridge-session`
+- `/gateway/node-detail`
+- `/gateway/mobile-tablet`
+
+Gateway frame and route files already corrected in Day 15:
+
+- src/components/gateway/DesignerGatewayMockFrame.tsx
+- src/proxy.ts
+- src/proxy.test.ts
+- src/lib/gateway-native-frame-decision.test.ts
+
+## Why The Owner Saw A Mismatch Earlier
+
+The accepted diagnosis remains:
+
+- `src/components/gateway/DesignerGatewayMockFrame.tsx` previously used a fixed viewport wrapper pattern that clipped the mounted FULL v3 page.
+- The designer asset path was also frame-blocked by security headers before Day 15:
+  - `X-Frame-Options: DENY`
+  - CSP `frame-ancestors 'none'`
+- The iframe height sync could miss already-loaded frames and leave the page stuck at the default iframe height.
+
+Effect: the owner saw the right route, but the designer mock was trapped inside the Mission Control mount. It looked like a static picture or a wrong implementation even though the designer asset existed in the repo.
+
+Day 15 fixed the implementation path by allowing same-origin designer assets to be framed by Gateway, preserving app-page frame denial, and syncing iframe height from the loaded designer document. Day 16 verifies the direct-mock fidelity after that fix.
+
+## Fidelity Proof
+
+Proof runtime:
+
+- Base URL: http://127.0.0.1:3337
+- Bind: 127.0.0.1 only
+- Runtime proof process from Day 15: screen-backed local process
+- Proof viewport: 1480x900
+- Auth method: local proof cookie only, no owner secrets
+- Designer comparison method: open mounted route, locate iframe source, open direct designer asset, compare normalized body text and document heights.
+
+Mounted routes and expected direct designer files:
+
+- `/gateway` -> `Gateway Overview.html`
+- `/gateway/routes` -> `Gateway Routes.html`
+- `/gateway/registry` -> `Gateway Registry.html`
+- `/gateway/policies` -> `Gateway Policies.html`
+- `/gateway/health` -> `Gateway Health.html`
+- `/gateway/dispatcher` -> `Dispatcher.html`
+- `/gateway/token-governor` -> `Token Governor.html`
+- `/gateway/agent-hub` -> `Agent Hub.html`
+- `/gateway/agent-hub/paperclip` -> `Paperclip.html`
+- `/gateway/bridge-session` -> `Bridge Session Flow.html`
+- `/gateway/node-detail` -> `Gateway Node Detail.html`
+- `/gateway/mobile-tablet` -> `Gateway Mobile Tablet.html`
+
+Result:
+
+- 12 of 12 routes mounted the intended designer HTML file.
+- 11 of 12 mounted route body hashes matched the direct designer asset body hash exactly in the live harness.
+- `/gateway` used the correct `Gateway Overview.html` source and matched structurally, but one comparison had volatile designer-script text differences:
+  - mounted: `load 58%`
+  - direct: `load 44%`
+  - mounted: `execute->agentmail`
+  - direct: `execute->firecrawl`
+- This Overview difference is generated by the designer mock's live/ticker behavior, not by a production React reinterpretation.
+
+Long-page scroll proof:
+
+- `/gateway/agent-hub`
+  - source: `Agent Hub.html`
+  - iframe document height: 29556
+  - mounted page body scroll height: 29611
+  - result: scrollable, not clipped to one viewport
+- `/gateway/agent-hub/paperclip`
+  - source: `Paperclip.html`
+  - iframe document height: 38036
+  - mounted page body scroll height: 37973
+  - result: scrollable, not clipped to one viewport
+- `/gateway/dispatcher`
+  - source: `Dispatcher.html`
+  - iframe document height: 13590
+  - mounted page body scroll height: 13600
+  - result: scrollable, not clipped to one viewport
+
+The intentional difference from opening a designer file by itself is the Mission Control exit wrapper above the iframe. It exists because the owner explicitly required visible exits back to Mission Control Home, Gateway Overview, and Agent Hub.
+
+## UI Behavior
+
+Preserved behavior:
+
+- FULL v3 designer files are mounted directly.
+- `shared/tokens.css` remains the color, spacing, and font source.
+- Shared designer classes remain untouched.
+- Gateway routes remain protected by Mission Control auth.
+- Mission Control Home, Gateway Overview, and Agent Hub exits remain visible above the mounted designer page.
+- Long designer pages scroll through the parent Mission Control page instead of being clipped inside a fixed viewport.
+
+No designer fidelity source files were changed on Day 16.
+
+## Route Smoke
+
+Smoke base: http://127.0.0.1:3337
+
+Unauthenticated route behavior:
+
+- `/login`: 200
+- `/gateway`: 307 to `/login`
+- `/gateway/agent-hub`: 307 to `/login`
+- `/gateway/agent-hub/paperclip`: 307 to `/login`
+- `/gateway/dispatcher`: 307 to `/login`
+- `/gateway/token-governor`: 307 to `/login`
+- `/gateway/bridge-session`: 307 to `/login`
+- `/agents`: 307 to `/login`
+- `/agent-network`: 307 to `/login`
+
+Protected action invariant:
+
+- scripts/check-protected-actions-locked.mjs against http://127.0.0.1:3337
+- ok: true
+- checked: 11
+- protected writes and executions remain locked.
+
+## Tests Run
+
+- git diff --check
+  - passed
+- pnpm run typecheck
+  - passed
+- pnpm run build
+  - passed
+- pnpm test
+  - 147 files passed
+  - 1296 tests passed
+- node scripts/check-protected-file-invariants.mjs
+  - ok: true
+- .env diff check
+  - clean
+
+## Safety Confirmation
+
+- No `.env` changes.
+- No secrets printed.
+- No auth weakening.
+- No public local exposure added.
+- No fake owner visual proof.
+- No fake GO.
+- No fake buttons added.
+- No designer mock redesign.
+- No Gateway FULL v3 token/class changes.
+- No parked artifacts staged.
+- No SMB/Fork 2.
+- No Zapier writes.
+- No HeyGen generation.
+- No external farmers.
+
+## Remaining Blocker
+
+Blocker: owner_authenticated_gateway_fidelity_retest_required
+
+Classification: OWNER_GATED
+
+Owner retest needed:
+
+- Log in to Mission Control.
+- Open `/gateway`.
+- Open `/gateway/agent-hub`.
+- Confirm the FULL v3 mounted UI is visible.
+- Confirm scroll works naturally.
+- Confirm Mission Control Home, Gateway Overview, and Agent Hub exits are visible and usable.
+- Confirm the page feels like the accepted designer mock, with the added Mission Control exit wrapper.
+
+## Closeout Ledger
+
+- Day number and lane: Day 16 - Gateway Designer Fidelity
+- Status: DEVELOPER-SIDE CLOSED
+- Blocker classification: OWNER_GATED
+- Code commit under proof: 25f577e
+- Report base commit: 3124248
+- Push result: pending for this report
+- Deployed/proof commit: 25f577e
+- Runtime proof: local-only standalone proof on 127.0.0.1:3337
+- Code rollback command: git revert 25f577e
+- Report rollback command: git revert <day16_report_commit_sha>
+- Next day automatically started: Day 17 - Gateway Overview 100% Closure

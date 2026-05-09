@@ -1,0 +1,503 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2558 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-44-mcp-tool-discovery) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 44 — MCP Tool Discovery) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL PASS) Tj
+0 -12 Td
+(Blocker class: BLOCKED) Tj
+0 -12 Td
+(Exact blocker: `mcp_server_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(MCP per-server tool/schema discovery.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Ensure MCP tool discovery is real when a server is configured and reachable, truthful when unava) Tj
+0 -12 Td
+(ilable, and never presents zero-tool or unavailable discovery as connected/live. Tool invocation) Tj
+0 -12 Td
+( and writes must remain disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reviewed active tool discovery surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/tools`) Tj
+0 -12 Td
+(- `src/lib/mcp-server-tool-schemas.ts`) Tj
+0 -12 Td
+(- `src/lib/zapier-tool-bridge.ts`) Tj
+0 -12 Td
+(- Agent Zero ecosystem context MCP tool summaries) Tj
+0 -12 Td
+(- Gateway / connector readiness references to MCP tools) Tj
+0 -12 Td
+(- MCP button contracts for Refresh, Test server, and Enable/Disable/Reauth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing protected behavior retained:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Tool discovery route is authenticated.) Tj
+0 -12 Td
+(- Tools/list is read-only.) Tj
+0 -12 Td
+(- No MCP tool is invoked.) Tj
+0 -12 Td
+(- Mutating MCP config actions require owner approval.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added canonical owner-facing status fields to MCP tool discovery results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `canonical_status`) Tj
+0 -12 Td
+(- `blocker_class`) Tj
+0 -12 Td
+(- `owner_status`) Tj
+0 -12 Td
+(- `read_enabled`) Tj
+0 -12 Td
+(- `bridge_session_required:true`) Tj
+0 -12 Td
+(- `approval_required_for_writes:true`) Tj
+0 -12 Td
+(- `allowed_owner_statuses`) Tj
+0 -12 Td
+(- `read_tools_total`) Tj
+0 -12 Td
+(- `write_tools_total`) Tj
+0 -12 Td
+(- `unknown_tools_total`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Tool discovery now classifies:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Live read-only schemas as `READY`.) Tj
+0 -12 Td
+(- Missing OAuth/auth as `CREDENTIAL_GATED`.) Tj
+0 -12 Td
+(- Failed tools/list calls as `SERVICE_DOWN`.) Tj
+0 -12 Td
+(- Missing or unsupported server config as `BLOCKED`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every discovered tool still includes:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `write_classification`) Tj
+0 -12 Td
+(- `approval_required`) Tj
+0 -12 Td
+(- `execution_enabled:false`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2630 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `writes_enabled:false`) Tj
+0 -12 Td
+(- schema availability and required fields) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/mcp-server-tool-schemas.ts`) Tj
+0 -12 Td
+(- `src/lib/mcp-server-tool-schemas.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/mcp/servers/:id/tools`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No execution route was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Owner-Facing Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Downstream Mission Control/Gateway/Agent Hub/connector surfaces can now distinguish:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Tool schemas visible and read-only.) Tj
+0 -12 Td
+(- Tool discovery blocked because the server is not configured.) Tj
+0 -12 Td
+(- Tool discovery credential-gated.) Tj
+0 -12 Td
+(- Tool discovery service-down.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This prevents a zero-tool or unavailable MCP tools response from being shown as connected/live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control was rebuilt and restarted after the source change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source commit: `827221a`) Tj
+0 -12 Td
+(- Runtime PID after restart: `81357`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Public exposure: none; listener remains local-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime tool discovery proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Unauthenticated `GET /api/mcp/servers/sample/tools`: 401) Tj
+0 -12 Td
+(- Authenticated `GET /api/mcp/servers/sample/tools`: 503) Tj
+0 -12 Td
+(- Tool route canonical status: `BLOCKED`) Tj
+0 -12 Td
+(- Tool route blocker class: `BLOCKED`) Tj
+0 -12 Td
+(- Tool route error: `mcp_server_not_configured`) Tj
+0 -12 Td
+(- Tool count: 0) Tj
+0 -12 Td
+(- Read tools: 0) Tj
+0 -12 Td
+(- Write tools: 0) Tj
+0 -12 Td
+(- Unknown tools: 0) Tj
+0 -12 Td
+(- No tool invocation: true) Tj
+0 -12 Td
+(- Execution enabled: false) Tj
+0 -12 Td
+(- Writes enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Registry context during proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Authenticated `GET /api/mcp/servers`: 200) Tj
+0 -12 Td
+(- MCP server count: 0) Tj
+0 -12 Td
+(- Registry canonical status: `SERVICE_DOWN`) Tj
+0 -12 Td
+(- Registry blocker class: `SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-44-mcp-tool-discovery-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The proof artifact contains summarized response fields only. No API key, token, auth file, raw t) Tj
+0 -12 Td
+(ool response, or secret value was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2534 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS — 165 files / 1342 tests) Tj
+0 -12 Td
+(- `pnpm test src/lib/mcp-server-tool-schemas.test.ts`: PASS) Tj
+0 -12 Td
+(- `pnpm test src/lib/mcp-server-registry.test.ts`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`BLOCKED`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The current runtime has no configured MCP server named `sample`, so per-server tool discovery ) Tj
+0 -12 Td
+(correctly returns `mcp_server_not_configured`.) Tj
+0 -12 Td
+(- The broader MCP registry remains `SERVICE_DOWN` because the local runtime cannot discover Clau) Tj
+0 -12 Td
+(de MCP servers and no configured MCP servers are visible.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Developer-side closure is complete:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Tool discovery result contract exists.) Tj
+0 -12 Td
+(- Tool schemas remain read-only.) Tj
+0 -12 Td
+(- Unavailable/zero-tool states are truthful.) Tj
+0 -12 Td
+(- Tests and runtime proof pass.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action for live tool discovery:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Configure at least one approved MCP server in Claude MCP config or `.claude.json`.) Tj
+0 -12 Td
+(- Ensure the Mission Control runtime can discover it.) Tj
+0 -12 Td
+(- If the server is HTTP and authenticated, ensure a non-expired approved OAuth/session path exis) Tj
+0 -12 Td
+(ts.) Tj
+0 -12 Td
+(- Re-run authenticated `GET /api/mcp/servers/<server>/tools`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `827221a` — `feat\(mcp\): add tool discovery status contract`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `origin/to-knowledge-mc`: pushed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 44 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Recorded after this report is committed and pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback source change:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 827221a) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback Day 44 report/proof commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day44_report_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 912 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No MCP tool invocation.) Tj
+0 -12 Td
+(- No MCP writes enabled.) Tj
+0 -12 Td
+(- No fake connected/live tool state.) Tj
+0 -12 Td
+(- No raw local paths in runtime proof.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closeout Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 44 is developer-side complete with a truthful `BLOCKED` route-level blocker for missing conf) Tj
+0 -12 Td
+(igured MCP server and a broader `SERVICE_DOWN` registry blocker from Day 43. The next lane is Da) Tj
+0 -12 Td
+(y 45 — MCP UI Page.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 45 — MCP UI Page is the active next lane.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000002870 00000 n 
+0000002997 00000 n 
+0000005679 00000 n 
+0000005806 00000 n 
+0000008392 00000 n 
+0000008520 00000 n 
+0000009484 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+9555
+%%EOF

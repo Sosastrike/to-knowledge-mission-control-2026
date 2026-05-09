@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T23:35:36.865Z",
+  "runtime_commit": "827221a91ccf2026e6c9a929912f85bbc5caa6ff",
+  "runtime_pid": 81357,
+  "base": "http://127.0.0.1:3337",
+  "checks": [
+    {
+      "path": "/api/mcp/servers/sample/tools",
+      "auth": false,
+      "status": 401,
+      "ok": true
+    },
+    {
+      "path": "/api/mcp/servers/sample/tools",
+      "auth": true,
+      "status": 503,
+      "body": {
+        "ok": false,
+        "status": "unavailable",
+        "canonical_status": "BLOCKED",
+        "blocker_class": "BLOCKED",
+        "error": "mcp_server_not_configured",
+        "blocker": "MCP server sample is not present in the Claude MCP configuration.",
+        "tools_total": 0,
+        "read_tools_total": 0,
+        "write_tools_total": 0,
+        "unknown_tools_total": 0,
+        "read_enabled": false,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "no_tool_invocation": true,
+        "bridge_session_required": true,
+        "approval_required_for_writes": true,
+        "allowed_owner_statuses": [
+          "LIVE",
+          "READY",
+          "OWNER_GATED",
+          "CREDENTIAL_GATED",
+          "SERVICE_DOWN",
+          "BLOCKED",
+          "DISABLED"
+        ],
+        "route_state": "read_only_schema_passthrough_unavailable",
+        "note": "Connect or resync the MCP server in Claude Code, then retry this read-only route."
+      },
+      "violations": []
+    },
+    {
+      "path": "/api/mcp/servers",
+      "auth": true,
+      "status": 200,
+      "body": {
+        "total": 0,
+        "canonical_status": "SERVICE_DOWN",
+        "blocker_class": "SERVICE_DOWN"
+      },
+      "violations": []
+    }
+  ],
+  "public_exposure": {
+    "bind": "node 81357 sosastrike 127.0.0.1:3337",
+    "local_only": true
+  },
+  "blocker": "BLOCKED:MCP server sample is not present in the Claude MCP configuration.",
+  "safety": {
+    "response_bodies_printed": false,
+    "api_key_printed": false,
+    "no_tool_invocation": true,
+    "execution_enabled": false,
+    "writes_enabled": false
+  }
+}

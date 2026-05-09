@@ -1,0 +1,59 @@
+{
+  "schema": "day34_farmer_service_status_proof_v1",
+  "generated_at": "2026-05-09T20:55:26.957Z",
+  "source_commit": "0d0803b",
+  "runtime_pid": 39222,
+  "base_origin": "http://127.0.0.1:3337",
+  "login_status": 200,
+  "unauthenticated_status_route_status": 401,
+  "authenticated_status_route_status": 200,
+  "service_probe": {
+    "systemctl_available": false,
+    "blocker": "systemctl_command_not_found_in_local_runtime",
+    "service_unit": "opencloud-docs-farmer.service",
+    "timer_unit": "opencloud-docs-farmer.timer",
+    "timer_active": false,
+    "timer_unit_file_state": "unknown",
+    "service_active_state": "unknown",
+    "service_sub_state": "unknown",
+    "last_result": "unknown",
+    "last_exit_status": null,
+    "next_run_at": null,
+    "last_run_at": null,
+    "last_run_started_at": null,
+    "last_run_exited_at": null
+  },
+  "active_farmer_present": false,
+  "controls": {
+    "run_now": "OWNER_APPROVAL_REQUIRED",
+    "pause_sync": "NOT_APPLICABLE_TIMER_INACTIVE",
+    "resume_sync": "OWNER_APPROVAL_REQUIRED",
+    "add_local_source": "OWNER_APPROVAL_REQUIRED",
+    "enable_external_farmer": "CREDENTIAL_REQUIRED",
+    "view_logs": "READ_ONLY",
+    "view_latest_raw": "READ_ONLY",
+    "view_latest_wiki": "READ_ONLY"
+  },
+  "run_now": {
+    "target_service": "opencloud-docs-farmer.service",
+    "ui_state": "failed",
+    "is_terminal": true,
+    "approval_state": "approved",
+    "run_state": "failed",
+    "dispatch_surface": "approval_route_exact_scope_dispatch"
+  },
+  "notices": {
+    "no_execution_enabled": true,
+    "no_secret_exposure": true,
+    "no_env_writes": true,
+    "no_agent_zero_routing_change": true,
+    "no_zapier_writes": true,
+    "single_vault": true,
+    "run_now_dispatch_scope": "opencloud-docs-farmer.service"
+  },
+  "no_raw_paths_or_secrets": true,
+  "unsafe_output_detected": false,
+  "exact_blocker": "systemctl_command_not_found_in_local_runtime",
+  "blocker_classification": "SERVICE_DOWN",
+  "secret_values_printed": false
+}

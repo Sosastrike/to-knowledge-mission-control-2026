@@ -1,0 +1,424 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2951 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-05-openclaw-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 05 — OpenClaw+ 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker classification: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Executive Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 05 closed the developer-side OpenClaw+ runtime/doctor gate with authenticated route proof an) Tj
+0 -12 Td
+(d a canonical closure payload. OpenClaw+ remains the runtime / skills / agents / mini-agent exec) Tj
+0 -12 Td
+(ution layer, but it is not GO because no executable OpenClaw+ CLI binary is reachable from the M) Tj
+0 -12 Td
+(ission Control runtime context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current blocker:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No destructive repair was run. No agents, skills, memory, reports, governance, credentials, or r) Tj
+0 -12 Td
+(untime data were deleted or modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added canonical OpenClaw+ doctor closure fields:) Tj
+0 -12 Td
+(  - `canonical_status`) Tj
+0 -12 Td
+(  - `blocker_class`) Tj
+0 -12 Td
+(  - `blocker`) Tj
+0 -12 Td
+(  - `proof_packet`) Tj
+0 -12 Td
+(- Added closure helpers:) Tj
+0 -12 Td
+(  - `buildOpenClawDoctorClosureSummary\(\)`) Tj
+0 -12 Td
+(  - `withOpenClawDoctorClosure\(\)`) Tj
+0 -12 Td
+(  - `buildOpenClawDoctorMissingPayload\(\)`) Tj
+0 -12 Td
+(- Updated `GET /api/openclaw/doctor` so missing CLI/runtime responses return:) Tj
+0 -12 Td
+(  - `canonical_status=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker_class=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker=openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(- Updated `POST /api/openclaw/doctor` missing-runtime behavior the same way.) Tj
+0 -12 Td
+(- Added route tests proving missing CLI returns the canonical closure payload and unauthenticate) Tj
+0 -12 Td
+(d requests stop before OpenClaw+ invocation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/openclaw-doctor.ts`) Tj
+0 -12 Td
+(- `src/app/api/openclaw/doctor/route.ts`) Tj
+0 -12 Td
+(- `src/lib/__tests__/openclaw-doctor.test.ts`) Tj
+0 -12 Td
+(- `src/lib/__tests__/openclaw-doctor-route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(  - Authenticated admin route.) Tj
+0 -12 Td
+(  - Returns canonical closure proof on success, warning/error output, or missing runtime.) Tj
+0 -12 Td
+(- `POST /api/openclaw/doctor`) Tj
+0 -12 Td
+(  - Authenticated admin route.) Tj
+0 -12 Td
+(  - Still safe-gated by runtime availability.) Tj
+0 -12 Td
+(  - Missing runtime returns canonical `SERVICE_DOWN`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime inventory:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime user: `sosastrike`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2992 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `command -v openclaw`: not found.) Tj
+0 -12 Td
+(- `command -v clawdbot`: not found.) Tj
+0 -12 Td
+(- `command -v claudeclaw`: not found.) Tj
+0 -12 Td
+(- Approved local bin search did not find executable `openclaw`, `clawdbot`, or `claudeclaw`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Standalone Mission Control smoke was run bound to `127.0.0.1:3337` only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` returned `200`.) Tj
+0 -12 Td
+(- `GET /api/openclaw/doctor` returned `401`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/openclaw/doctor` returned `400`.) Tj
+0 -12 Td
+(- Payload included:) Tj
+0 -12 Td
+(  - `error=OpenClaw is not installed or not reachable`) Tj
+0 -12 Td
+(  - `canonical_status=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker_class=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker=openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(  - `proof_packet.result=SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `proof_packet.blocker=openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(  - `proof_packet.service_user=sosastrike`) Tj
+0 -12 Td
+(  - `execution_enabled=false`) Tj
+0 -12 Td
+(  - `writes_enabled=false`) Tj
+0 -12 Td
+(  - `destructive_repair_enabled=false`) Tj
+0 -12 Td
+(  - `no_secrets_exposed=true`) Tj
+0 -12 Td
+(  - `raw_paths_exposed=false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated safe-fix proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/openclaw/doctor` returned `400`.) Tj
+0 -12 Td
+(- Same canonical `SERVICE_DOWN` blocker payload was returned.) Tj
+0 -12 Td
+(- No doctor fix, session cleanup, or orphan archival ran because the CLI binary is unavailable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No UI layout was changed in this day.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner-facing truth remains:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- OpenClaw+ is the runtime / skills / mini-agent execution layer.) Tj
+0 -12 Td
+(- OpenClaw+ doctor is authenticated and route-reachable.) Tj
+0 -12 Td
+(- OpenClaw+ doctor cannot execute until an approved CLI binary is installed or exposed to the Mi) Tj
+0 -12 Td
+(ssion Control runtime service user.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test src/lib/__tests__/openclaw-doctor.test.ts src/lib/__tests__/openclaw-doctor-route.t) Tj
+0 -12 Td
+(est.ts src/lib/__tests__/openclaw-doctor-fix.test.ts src/lib/__tests__/openclaw-gateway.test.ts`) Tj
+0 -12 Td
+(: PASS, 16 tests) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 139 files / 1260 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2077 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No destructive repair attempted.) Tj
+0 -12 Td
+(- No agents deleted.) Tj
+0 -12 Td
+(- No skills deleted.) Tj
+0 -12 Td
+(- No memory deleted.) Tj
+0 -12 Td
+(- No reports deleted.) Tj
+0 -12 Td
+(- No governance modified.) Tj
+0 -12 Td
+(- No fake doctor success.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current blocker:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Required owner/admin runtime action:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Install or expose one approved CLI binary:) Tj
+0 -12 Td
+(   - preferred: `openclaw`) Tj
+0 -12 Td
+(   - accepted fallbacks: `clawdbot`, `claudeclaw`) Tj
+0 -12 Td
+(2. Ensure the Mission Control runtime service user can execute the binary.) Tj
+0 -12 Td
+(3. Put the binary on PATH, or configure an approved absolute path through the service manager:) Tj
+0 -12 Td
+(   - `OPENCLAW_BIN`) Tj
+0 -12 Td
+(   - `CLAWDBOT_BIN`) Tj
+0 -12 Td
+(   - `OPENCLAW_FALLBACK_BIN`) Tj
+0 -12 Td
+(4. Restart Mission Control if service-manager configuration changes.) Tj
+0 -12 Td
+(5. Re-run:) Tj
+0 -12 Td
+(   - `GET /api/openclaw/doctor`) Tj
+0 -12 Td
+(   - `POST /api/openclaw/doctor` only after GET returns a real doctor payload.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `61c5eda`) Tj
+0 -12 Td
+(- Full hash: `61c5eda4dbca8f456739c018057edc549a0fa9b3`) Tj
+0 -12 Td
+(- Message: `feat\(openclaw\): add doctor closure proof packet`) Tj
+0 -12 Td
+(- Push: `origin/to-knowledge-mc` updated successfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 61c5eda4dbca8f456739c018057edc549a0fa9b3) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 06 — SpaceAgent Playwright 100% Closure has started automatically.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003256 00000 n 
+0000003382 00000 n 
+0000006426 00000 n 
+0000006552 00000 n 
+0000008681 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8751
+%%EOF

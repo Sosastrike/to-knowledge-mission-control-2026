@@ -3,10 +3,12 @@ import { requireRole } from '@/lib/auth'
 import { readLimiter } from '@/lib/rate-limit'
 import {
   getAgentZeroObsidianStatus,
+  type AgentZeroObsidianStatus,
   readAgentZeroObsidianNote,
   searchAgentZeroObsidianNotes,
   summarizeAgentZeroObsidianNote,
 } from '@/lib/agent-zero-obsidian-adapter'
+import { describeOwnerFacingStatus } from '@/lib/owner-status'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,6 +16,18 @@ export const dynamic = 'force-dynamic'
 function noStore(response: NextResponse) {
   response.headers.set('Cache-Control', 'no-store')
   return response
+}
+
+function describeObsidianOwnerStatus(status: Pick<AgentZeroObsidianStatus, 'ok' | 'status' | 'blockers'>) {
+  return describeOwnerFacingStatus({
+    rawStatus: status.ok ? 'read_only' : 'service_down',
+    blockers: status.blockers,
+    connected: status.ok,
+    readEnabled: status.ok,
+    writeEnabled: false,
+    executionEnabled: false,
+    preferReadyWhenReadable: true,
+  })
 }
 
 export async function GET(request: NextRequest) {
@@ -28,8 +42,10 @@ export async function GET(request: NextRequest) {
   const limit = Number(url.searchParams.get('limit') || '5')
 
   if (action === 'status') {
+    const status = getAgentZeroObsidianStatus()
     return noStore(NextResponse.json({
-      ...getAgentZeroObsidianStatus(),
+      ...status,
+      owner_status: describeObsidianOwnerStatus(status),
       adapter_scope: {
         list_vault_status: true,
         search_notes: true,
@@ -60,6 +76,11 @@ export async function GET(request: NextRequest) {
       mode: 'agent_zero_obsidian_read_only_adapter',
       action: 'search',
       status: result.status,
+      owner_status: describeObsidianOwnerStatus({
+        ok: result.ok,
+        status: result.status,
+        blockers: result.blockers,
+      }),
       query: result.query,
       results: result.results,
       read_only: true,
@@ -78,6 +99,7 @@ export async function GET(request: NextRequest) {
     return noStore(NextResponse.json({
       ...result,
       action: 'read',
+      owner_status: describeObsidianOwnerStatus(result),
     }, { status: result.ok ? 200 : 404 }))
   }
 
@@ -89,13 +111,20 @@ export async function GET(request: NextRequest) {
     return noStore(NextResponse.json({
       ...result,
       action: 'summarize',
+      owner_status: describeObsidianOwnerStatus(result),
     }, { status: result.ok ? 200 : 404 }))
   }
 
+  const blockers = ['unsupported_obsidian_adapter_action']
   return noStore(NextResponse.json({
     ok: false,
     mode: 'agent_zero_obsidian_read_only_adapter',
-    error: 'unsupported_obsidian_adapter_action',
+    error: blockers[0],
+    owner_status: describeObsidianOwnerStatus({
+      ok: false,
+      status: 'blocked',
+      blockers,
+    }),
     allowed_actions: ['status', 'search', 'read', 'summarize'],
     read_only: true,
     write_enabled: false,

@@ -108,7 +108,7 @@ export default function ViralCrawlPage() {
             <code className="font-mono text-amber-300">@mendable/firecrawl-js</code> SDK. {fc.nextAction}
           </p>
           <p className="mt-2 text-2xs text-zinc-500">
-            This is a FireCrawl-only blocker. The Brain / Obsidian vault is live and unrelated.
+            This is a FireCrawl-only blocker. Brain / Obsidian status is reported separately by the read-only adapter.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function ViralCrawlPage() {
               <em className="text-zinc-500">Not for web pages.</em>
             </p>
             <p className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-300">
-              <strong>Video Intelligence is installed and syncing to Obsidian.</strong> UI execution is not enabled yet — use the CLI command below until the queue/UI surface is approved (deferred Phase F).
+              <strong>Video Intelligence status is read-only.</strong> UI execution and Obsidian writes stay blocked until the queue/UI surface and Bridge approval path are approved.
             </p>
           </div>
         </div>

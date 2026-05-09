@@ -103,6 +103,29 @@ describe('Mission Control button contracts', () => {
         blocker_class: 'OWNER_GATED',
       },
     })
+
+    const obsidianStatus = payload.buttons.find((button) => button.label === 'Obsidian adapter status')
+    expect(obsidianStatus).toMatchObject({
+      endpoint: '/api/bridge/agent-zero/obsidian',
+      state: 'READ_ONLY',
+      execution_enabled: true,
+      fake_success_allowed: false,
+    })
+
+    const obsidianWrites = payload.buttons.find((button) => button.label === 'Obsidian note write actions')
+    expect(obsidianWrites).toMatchObject({
+      endpoint: '/api/bridge/agent-zero/execute',
+      state: 'OWNER_APPROVAL_REQUIRED',
+      approval_required: true,
+      audit_required: true,
+      execution_enabled: false,
+      fake_success_allowed: false,
+      owner_status: {
+        status: 'OWNER_GATED',
+        tone: 'yellow',
+        blocker_class: 'OWNER_GATED',
+      },
+    })
   })
 })
 

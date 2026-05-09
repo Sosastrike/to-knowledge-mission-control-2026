@@ -662,7 +662,9 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     window.open(route, '_blank', 'noopener');
   });
 
-  render('overview');
+  const initialTab = (window.location.hash || '').replace(/^#/, '');
+  if (initialTab && A.byId(initialTab)) selectTab(initialTab);
+  else render('overview');
 })();
 </script>
 </body>

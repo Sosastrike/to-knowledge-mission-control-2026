@@ -44,6 +44,20 @@ describe('Gateway native frame architecture decision', () => {
     expect(frame).toContain("href='/tkmc'")
     expect(frame).toContain("href='/gateway'")
     expect(frame).toContain("href='/gateway/agent-hub'")
+    expect(frame).toContain('fragment?: string')
+    expect(frame).toContain('encodeURIComponent(fragment)')
+  })
+
+  it('routes Agent Hub agent detail pages into the accepted Agent Hub designer detail tabs', () => {
+    const route = readSource('src/app/gateway/agent-hub/[id]/page.tsx')
+
+    expect(route).toContain("page='Agent Hub.html'")
+    expect(route).toContain('fragment={fragment}')
+    expect(route).toContain("'agent-zero': 'agent-zero'")
+    expect(route).toContain("'space-agent': 'space-agent'")
+    expect(route).toContain("'pi-mono': 'pi-mono'")
+    expect(route).toContain("'openclaw-plus': 'openclaw-plus'")
+    expect(route).toContain('notFound()')
   })
 
   it('serves designer assets with same-origin frame headers instead of blocking the Gateway frame', () => {

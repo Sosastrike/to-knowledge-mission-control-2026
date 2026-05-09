@@ -114,6 +114,8 @@ describe('Gateway Agent Hub designer data hydration', () => {
     expect(agentHubHtml).toContain('Protected command dispatch requires a scoped Bridge Session')
     expect(agentHubHtml).toContain('Localhost or Tailnet UI is not proven')
     expect(agentHubHtml).toContain('OpenClaw+ <span class="role">Runtime / skills</span>')
+    expect(agentHubHtml).toContain('window.location.hash')
+    expect(agentHubHtml).toContain("selectTab(initialTab)")
     expect(agentHubHtml).not.toContain('Design only — no production calls')
   })
 })

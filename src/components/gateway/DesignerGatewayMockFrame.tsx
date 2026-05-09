@@ -6,17 +6,19 @@ import { useEffect, useMemo, useRef } from 'react'
 type DesignerGatewayMockFrameProps = {
   page: string
   title: string
+  fragment?: string
 }
 
 const BASE_PATH = '/designer-mission-control/design/gateway/'
 
-function toMockUrl(page: string): string {
-  return BASE_PATH + encodeURIComponent(page)
+function toMockUrl(page: string, fragment?: string): string {
+  const hash = fragment ? `#${encodeURIComponent(fragment)}` : ''
+  return BASE_PATH + encodeURIComponent(page) + hash
 }
 
-export function DesignerGatewayMockFrame({ page, title }: DesignerGatewayMockFrameProps) {
+export function DesignerGatewayMockFrame({ page, title, fragment }: DesignerGatewayMockFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
-  const frameSrc = useMemo(() => toMockUrl(page), [page])
+  const frameSrc = useMemo(() => toMockUrl(page, fragment), [page, fragment])
 
   useEffect(() => {
     const iframe = iframeRef.current

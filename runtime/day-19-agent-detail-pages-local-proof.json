@@ -1,0 +1,483 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T17:14:09.567Z",
+  "base_url": "http://127.0.0.1:3337",
+  "viewport": {
+    "width": 1480,
+    "height": 900
+  },
+  "routes_checked": [
+    "/gateway/agent-hub/agent-zero",
+    "/gateway/agent-hub/hermes",
+    "/gateway/agent-hub/space-agent",
+    "/gateway/agent-hub/pi-mono",
+    "/gateway/agent-hub/openclaw-plus"
+  ],
+  "results": [
+    {
+      "route": "/gateway/agent-hub/agent-zero",
+      "fragment": "agent-zero",
+      "expected_status": "CONNECTED",
+      "ok": true,
+      "frame_url": "http://127.0.0.1:3337/designer-mission-control/design/gateway/Agent%20Hub.html#agent-zero",
+      "hash": "#agent-zero",
+      "activeTab": "Agent Zero Commander",
+      "detailTitle": "Agent Zero",
+      "hasDesignOnlyNotice": false,
+      "hasOpenCloudArchitecture": false,
+      "visible_text_excerpt": "Gateway design\n›\nNucleus\n›\nAgent Hub\n/gateway/agents\nA\nAgent Hub · Control Center\n\nOne place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.\n\n6 agents ·\n1 green · 1 yellow · 2 blue · 1 red · 1 gray\nBridge ·\nnot active\nOverview\n6",
+      "detail_body_excerpt": "Localhost\n            \n        \n          http://localhost:50001\n          Hybrid embed available. Click Preview UI to render the agent's localhost UI in this pane, or Open in new tab to launch full-screen with native auth.\n          \n            Preview UI\n            Open in new tab\n          \n        \n            \n            \n          \n          \n            Tools · models · capabilities\n            \n              caps · commandlive-querybridge-session\n              models · claude-sonnet-4",
+      "button_sample": [
+        {
+          "text": "Overview 6 agents",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Paperclip Workforce Control Plane",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Agent Zero Commander",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Hermes Lieutenant",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "SpaceAgent Browser/Firecrawl/YouTube",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Pi-mono Dispatcher candidate",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "OpenClaw+ Runtime / skills",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open localhost",
+          "disabled": true,
+          "reason": "Localhost or Tailnet UI is not proven in Mission Control yet."
+        },
+        {
+          "text": "Send command",
+          "disabled": true,
+          "reason": "Protected command dispatch requires a scoped Bridge Session and registered adapter."
+        },
+        {
+          "text": "Pause queue",
+          "disabled": true,
+          "reason": "Queue mutation requires a scoped Bridge Session and service adapter proof."
+        },
+        {
+          "text": "Bridge Session",
+          "disabled": true,
+          "reason": "Open or approve Bridge Session from the dedicated Bridge Session flow."
+        },
+        {
+          "text": "Restart",
+          "disabled": true,
+          "reason": "Restart is disabled here; owner approval plus service-specific adapter proof required."
+        },
+        {
+          "text": "Audit",
+          "disabled": false,
+          "reason": "Open protected Agent Hub audit payload."
+        },
+        {
+          "text": "Preview UI",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open in new tab",
+          "disabled": false,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "route": "/gateway/agent-hub/hermes",
+      "fragment": "hermes",
+      "expected_status": "GATED",
+      "ok": true,
+      "frame_url": "http://127.0.0.1:3337/designer-mission-control/design/gateway/Agent%20Hub.html#hermes",
+      "hash": "#hermes",
+      "activeTab": "Hermes Lieutenant",
+      "detailTitle": "Hermes",
+      "hasDesignOnlyNotice": false,
+      "hasOpenCloudArchitecture": false,
+      "visible_text_excerpt": "Gateway design\n›\nNucleus\n›\nAgent Hub\n/gateway/agents\nA\nAgent Hub · Control Center\n\nOne place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.\n\n6 agents ·\n1 green · 1 yellow · 2 blue · 1 red · 1 gray\nBridge ·\nnot active\nOverview\n6",
+      "detail_body_excerpt": "Localhost\n            \n        \n          http://localhost:7042\n          Hybrid embed available. Click Preview UI to render the agent's localhost UI in this pane, or Open in new tab to launch full-screen with native auth.\n          \n            Preview UI\n            Open in new tab\n          \n        \n            ⚠ hermes_degraded_or_pending_live_proof\n            \n          \n          \n            Tools · models · capabilities\n            \n              caps · skillsworkflow planningautomatio",
+      "button_sample": [
+        {
+          "text": "Overview 6 agents",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Paperclip Workforce Control Plane",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Agent Zero Commander",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Hermes Lieutenant",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "SpaceAgent Browser/Firecrawl/YouTube",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Pi-mono Dispatcher candidate",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "OpenClaw+ Runtime / skills",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open localhost",
+          "disabled": true,
+          "reason": "Localhost or Tailnet UI is not proven in Mission Control yet."
+        },
+        {
+          "text": "Send command",
+          "disabled": true,
+          "reason": "Protected command dispatch requires a scoped Bridge Session and registered adapter."
+        },
+        {
+          "text": "Pause queue",
+          "disabled": true,
+          "reason": "Queue mutation requires a scoped Bridge Session and service adapter proof."
+        },
+        {
+          "text": "Bridge Session",
+          "disabled": true,
+          "reason": "Open or approve Bridge Session from the dedicated Bridge Session flow."
+        },
+        {
+          "text": "Restart",
+          "disabled": true,
+          "reason": "Restart is disabled here; owner approval plus service-specific adapter proof required."
+        },
+        {
+          "text": "Audit",
+          "disabled": false,
+          "reason": "Open protected Agent Hub audit payload."
+        },
+        {
+          "text": "Preview UI",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open in new tab",
+          "disabled": false,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "route": "/gateway/agent-hub/space-agent",
+      "fragment": "space-agent",
+      "expected_status": "READ-ONLY",
+      "ok": true,
+      "frame_url": "http://127.0.0.1:3337/designer-mission-control/design/gateway/Agent%20Hub.html#space-agent",
+      "hash": "#space-agent",
+      "activeTab": "SpaceAgent Browser/Firecrawl/YouTube",
+      "detailTitle": "SpaceAgent",
+      "hasDesignOnlyNotice": false,
+      "hasOpenCloudArchitecture": false,
+      "visible_text_excerpt": "Gateway design\n›\nNucleus\n›\nAgent Hub\n/gateway/agents\nA\nAgent Hub · Control Center\n\nOne place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.\n\n6 agents ·\n1 green · 1 yellow · 2 blue · 1 red · 1 gray\nBridge ·\nnot active\nOverview\n6",
+      "detail_body_excerpt": "Localhost\n            \n        \n          http://localhost:8765\n          Iframe not safe (cross-origin or auth in URL). Use Open in new tab — Mission Control will not bypass the agent's own auth.\n          \n            Open in new tab\n            Status only\n          \n        \n            ⚠ firecrawl_credential_required\n            \n          \n          \n            Tools · models · capabilities\n            \n              caps · browser_web_youtube_researchbrowser researchwebpage and article i",
+      "button_sample": [
+        {
+          "text": "Overview 6 agents",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Paperclip Workforce Control Plane",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Agent Zero Commander",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Hermes Lieutenant",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "SpaceAgent Browser/Firecrawl/YouTube",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Pi-mono Dispatcher candidate",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "OpenClaw+ Runtime / skills",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open localhost",
+          "disabled": true,
+          "reason": "Localhost or Tailnet UI is not proven in Mission Control yet."
+        },
+        {
+          "text": "Send command",
+          "disabled": true,
+          "reason": "Protected command dispatch requires a scoped Bridge Session and registered adapter."
+        },
+        {
+          "text": "Pause queue",
+          "disabled": true,
+          "reason": "Queue mutation requires a scoped Bridge Session and service adapter proof."
+        },
+        {
+          "text": "Bridge Session",
+          "disabled": true,
+          "reason": "Open or approve Bridge Session from the dedicated Bridge Session flow."
+        },
+        {
+          "text": "Restart",
+          "disabled": true,
+          "reason": "Restart is disabled here; owner approval plus service-specific adapter proof required."
+        },
+        {
+          "text": "Audit",
+          "disabled": false,
+          "reason": "Open protected Agent Hub audit payload."
+        },
+        {
+          "text": "Open in new tab",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Status only",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Check Playwright MCP status",
+          "disabled": false,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "route": "/gateway/agent-hub/pi-mono",
+      "fragment": "pi-mono",
+      "expected_status": "READ-ONLY",
+      "ok": true,
+      "frame_url": "http://127.0.0.1:3337/designer-mission-control/design/gateway/Agent%20Hub.html#pi-mono",
+      "hash": "#pi-mono",
+      "activeTab": "Pi-mono Dispatcher candidate",
+      "detailTitle": "Pi-mono",
+      "hasDesignOnlyNotice": false,
+      "hasOpenCloudArchitecture": false,
+      "visible_text_excerpt": "Gateway design\n›\nNucleus\n›\nAgent Hub\n/gateway/agents\nA\nAgent Hub · Control Center\n\nOne place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.\n\n6 agents ·\n1 green · 1 yellow · 2 blue · 1 red · 1 gray\nBridge ·\nnot active\nOverview\n6",
+      "detail_body_excerpt": "Localhost\n            \n        \n          http://localhost:5174\n          Hybrid embed available. Click Preview UI to render the agent's localhost UI in this pane, or Open in new tab to launch full-screen with native auth.\n          \n            Preview UI\n            Open in new tab\n          \n        \n            ⚠ Mission Control in-process shadow dispatcher is live for advisory route recommendations; execution and writes remain disabled\n            \n          \n          \n            Tools · ",
+      "button_sample": [
+        {
+          "text": "Overview 6 agents",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Paperclip Workforce Control Plane",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Agent Zero Commander",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Hermes Lieutenant",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "SpaceAgent Browser/Firecrawl/YouTube",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Pi-mono Dispatcher candidate",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "OpenClaw+ Runtime / skills",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open localhost",
+          "disabled": true,
+          "reason": "Localhost or Tailnet UI is not proven in Mission Control yet."
+        },
+        {
+          "text": "Send command",
+          "disabled": true,
+          "reason": "Protected command dispatch requires a scoped Bridge Session and registered adapter."
+        },
+        {
+          "text": "Pause queue",
+          "disabled": true,
+          "reason": "Queue mutation requires a scoped Bridge Session and service adapter proof."
+        },
+        {
+          "text": "Bridge Session",
+          "disabled": true,
+          "reason": "Open or approve Bridge Session from the dedicated Bridge Session flow."
+        },
+        {
+          "text": "Restart",
+          "disabled": true,
+          "reason": "Restart is disabled here; owner approval plus service-specific adapter proof required."
+        },
+        {
+          "text": "Audit",
+          "disabled": false,
+          "reason": "Open protected Agent Hub audit payload."
+        },
+        {
+          "text": "Preview UI",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open in new tab",
+          "disabled": false,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "route": "/gateway/agent-hub/openclaw-plus",
+      "fragment": "openclaw-plus",
+      "expected_status": "BLOCKED",
+      "ok": true,
+      "frame_url": "http://127.0.0.1:3337/designer-mission-control/design/gateway/Agent%20Hub.html#openclaw-plus",
+      "hash": "#openclaw-plus",
+      "activeTab": "OpenClaw+ Runtime / skills",
+      "detailTitle": "OpenClaw+",
+      "hasDesignOnlyNotice": false,
+      "hasOpenCloudArchitecture": false,
+      "visible_text_excerpt": "Gateway design\n›\nNucleus\n›\nAgent Hub\n/gateway/agents\nA\nAgent Hub · Control Center\n\nOne place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.\n\n6 agents ·\n1 green · 1 yellow · 2 blue · 1 red · 1 gray\nBridge ·\nnot active\nOverview\n6",
+      "detail_body_excerpt": "Localhost\n            \n        \n          service gated\n          Iframe not safe (cross-origin or auth in URL). Use Open in new tab — Mission Control will not bypass the agent's own auth.\n          \n            Open in new tab\n            Status only\n          \n        \n            \n            ⚠ openclaw_doctor_runtime_not_reachable\n          \n          \n            Tools · models · capabilities\n            \n              caps · agentsskillsfunctionsreportsapprovalsTelegram/voice routingruntim",
+      "button_sample": [
+        {
+          "text": "Overview 6 agents",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Paperclip Workforce Control Plane",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Agent Zero Commander",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Hermes Lieutenant",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "SpaceAgent Browser/Firecrawl/YouTube",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Pi-mono Dispatcher candidate",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "OpenClaw+ Runtime / skills",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Open localhost",
+          "disabled": true,
+          "reason": "Localhost or Tailnet UI is not proven in Mission Control yet."
+        },
+        {
+          "text": "Send command",
+          "disabled": true,
+          "reason": "Protected command dispatch requires a scoped Bridge Session and registered adapter."
+        },
+        {
+          "text": "Pause queue",
+          "disabled": true,
+          "reason": "Queue mutation requires a scoped Bridge Session and service adapter proof."
+        },
+        {
+          "text": "Bridge Session",
+          "disabled": true,
+          "reason": "Open or approve Bridge Session from the dedicated Bridge Session flow."
+        },
+        {
+          "text": "Restart",
+          "disabled": true,
+          "reason": "Restart is disabled here; owner approval plus service-specific adapter proof required."
+        },
+        {
+          "text": "Audit",
+          "disabled": false,
+          "reason": "Open protected Agent Hub audit payload."
+        },
+        {
+          "text": "Open in new tab",
+          "disabled": false,
+          "reason": ""
+        },
+        {
+          "text": "Status only",
+          "disabled": false,
+          "reason": ""
+        }
+      ]
+    }
+  ],
+  "safety": {
+    "no_design_only_notice": true,
+    "no_opencloud_architecture_label": true,
+    "no_raw_local_paths_observed": true
+  }
+}

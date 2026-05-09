@@ -1,0 +1,481 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2656 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-19-agent-detail-pages-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 19 - Agent Detail Pages 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09T17:14:30Z) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent detail pages for the Gateway Agent Hub.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 19 is developer-side closed with truthful owner gating. The routed detail pages are implemen) Tj
+0 -12 Td
+(ted, tested, pushed, deployed into the local-only proof runtime, and browser-rendered. Final own) Tj
+0 -12 Td
+(er-authenticated visual acceptance remains owner gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added routed Agent Hub detail pages:) Tj
+0 -12 Td
+(  - /gateway/agent-hub/agent-zero) Tj
+0 -12 Td
+(  - /gateway/agent-hub/hermes) Tj
+0 -12 Td
+(  - /gateway/agent-hub/space-agent) Tj
+0 -12 Td
+(  - /gateway/agent-hub/pi-mono) Tj
+0 -12 Td
+(  - /gateway/agent-hub/openclaw-plus) Tj
+0 -12 Td
+(- Preserved the accepted FULL v3 designer mock mount.) Tj
+0 -12 Td
+(- Added fragment support to the designer frame so detail routes open the corresponding accepted ) Tj
+0 -12 Td
+(Agent Hub tab/detail panel.) Tj
+0 -12 Td
+(- Added hash bootstrap in Agent Hub.html so a direct route loads the matching detail view instea) Tj
+0 -12 Td
+(d of dropping the owner on the overview.) Tj
+0 -12 Td
+(- Kept the existing /gateway/agent-hub/paperclip route intact.) Tj
+0 -12 Td
+(- Added regression checks for the dynamic detail route and hash bootstrapping.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/components/gateway/DesignerGatewayMockFrame.tsx) Tj
+0 -12 Td
+(- src/app/gateway/agent-hub/[id]/page.tsx) Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/Agent Hub.html) Tj
+0 -12 Td
+(- src/lib/gateway-native-frame-decision.test.ts) Tj
+0 -12 Td
+(- src/lib/gateway-agent-hub-designer-data.test.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New protected route:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /gateway/agent-hub/[id]) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Supported detail IDs:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- agent-zero) Tj
+0 -12 Td
+(- hermes) Tj
+0 -12 Td
+(- paperclip) Tj
+0 -12 Td
+(- spaceagent) Tj
+0 -12 Td
+(- space-agent) Tj
+0 -12 Td
+(- pi) Tj
+0 -12 Td
+(- pi-mono) Tj
+0 -12 Td
+(- openclaw) Tj
+0 -12 Td
+(- openclaw+) Tj
+0 -12 Td
+(- openclaw-plus) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unknown IDs return Next notFound\(\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Zero route opens the Agent Zero detail tab.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3026 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Hermes route opens the Hermes detail tab.) Tj
+0 -12 Td
+(- SpaceAgent route opens the SpaceAgent detail tab.) Tj
+0 -12 Td
+(- Pi route opens the Pi-mono detail tab.) Tj
+0 -12 Td
+(- OpenClaw+ route opens the OpenClaw+ detail tab.) Tj
+0 -12 Td
+(- Buttons remain truthful:) Tj
+0 -12 Td
+(  - local UI buttons are disabled where localhost/Tailnet proof is not available.) Tj
+0 -12 Td
+(  - protected command buttons are Bridge Session gated.) Tj
+0 -12 Td
+(  - audit/route buttons point to protected Mission Control routes.) Tj
+0 -12 Td
+(- No fake execution was added.) Tj
+0 -12 Td
+(- No custom React redesign was added.) Tj
+0 -12 Td
+(- No OpenCloud architecture label was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service And Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Code commit pushed: 20a981fa48f5a41c05971b0a7c3d14af93d5fc9e) Tj
+0 -12 Td
+(- origin/to-knowledge-mc includes: 20a981fa48f5a41c05971b0a7c3d14af93d5fc9e) Tj
+0 -12 Td
+(- Deploy script rebuilt standalone bundle for commit 20a981f.) Tj
+0 -12 Td
+(- Deploy script reported PID 81018 on 127.0.0.1:3337, then the child process exited after readin) Tj
+0 -12 Td
+(ess.) Tj
+0 -12 Td
+(- Local-only screen-backed proof runtime restored:) Tj
+0 -12 Td
+(  - screen: mc-day19-agent-details) Tj
+0 -12 Td
+(  - PID: 81158) Tj
+0 -12 Td
+(  - bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- /login returned 200 on the restored proof runtime.) Tj
+0 -12 Td
+(- No new public exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --cached --check: pass) Tj
+0 -12 Td
+(- staged secret scan: pass) Tj
+0 -12 Td
+(- .env diff check: clean) Tj
+0 -12 Td
+(- pnpm run typecheck: pass) Tj
+0 -12 Td
+(- pnpm run build: pass) Tj
+0 -12 Td
+(- pnpm test: pass, 149 files / 1302 tests) Tj
+0 -12 Td
+(- node scripts/check-protected-file-invariants.mjs: pass) Tj
+0 -12 Td
+(- MISSION_CONTROL_API_KEY=[redacted smoke key] node scripts/check-protected-actions-locked.mjs h) Tj
+0 -12 Td
+(ttp://127.0.0.1:3337: pass, 11 checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /gateway/agent-hub/agent-zero -> 307 /login) Tj
+0 -12 Td
+(- /gateway/agent-hub/hermes -> 307 /login) Tj
+0 -12 Td
+(- /gateway/agent-hub/space-agent -> 307 /login) Tj
+0 -12 Td
+(- /gateway/agent-hub/pi-mono -> 307 /login) Tj
+0 -12 Td
+(- /gateway/agent-hub/openclaw-plus -> 307 /login) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated local proof context:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /gateway/agent-hub/agent-zero -> 200) Tj
+0 -12 Td
+(- /gateway/agent-hub/hermes -> 200) Tj
+0 -12 Td
+(- /gateway/agent-hub/space-agent -> 200) Tj
+0 -12 Td
+(- /gateway/agent-hub/pi-mono -> 200) Tj
+0 -12 Td
+(- /gateway/agent-hub/openclaw-plus -> 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Detail API Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated API probes returned 200 for detail, health, routes, and audit across:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- agent-zero) Tj
+0 -12 Td
+(- hermes) Tj
+0 -12 Td
+(- space-agent) Tj
+0 -12 Td
+(- pi-mono) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2934 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- openclaw-plus) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed truthful states:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Zero: partial_go; health blocker agent_zero_full_go_requires_downstream_route_completion) Tj
+0 -12 Td
+(- Hermes: gated; health blocker hermes_degraded_or_pending_live_proof) Tj
+0 -12 Td
+(- SpaceAgent: read_only; health blocker firecrawl_credential_required) Tj
+0 -12 Td
+(- Pi-mono: read_only) Tj
+0 -12 Td
+(- OpenClaw+: blocked; health blocker openclaw_doctor_runtime_not_reachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Browser Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-19-agent-detail-pages-local-proof.json) Tj
+0 -12 Td
+(- runtime/day-19-agent-detail-pages-local-proof.png) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Browser proof used Chromium at 1480x900 against http://127.0.0.1:3337 with local authenticated p) Tj
+0 -12 Td
+(roof context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verified:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /gateway/agent-hub/agent-zero loaded Agent Hub.html#agent-zero and displayed Agent Zero CONNEC) Tj
+0 -12 Td
+(TED.) Tj
+0 -12 Td
+(- /gateway/agent-hub/hermes loaded Agent Hub.html#hermes and displayed Hermes GATED.) Tj
+0 -12 Td
+(- /gateway/agent-hub/space-agent loaded Agent Hub.html#space-agent and displayed SpaceAgent READ) Tj
+0 -12 Td
+(-ONLY.) Tj
+0 -12 Td
+(- /gateway/agent-hub/pi-mono loaded Agent Hub.html#pi-mono and displayed Pi-mono READ-ONLY.) Tj
+0 -12 Td
+(- /gateway/agent-hub/openclaw-plus loaded Agent Hub.html#openclaw-plus and displayed OpenClaw+ B) Tj
+0 -12 Td
+(LOCKED with openclaw_doctor_runtime_not_reachable.) Tj
+0 -12 Td
+(- No "Design only - no production calls" notice was present.) Tj
+0 -12 Td
+(- No OpenCloud architecture label was present.) Tj
+0 -12 Td
+(- No raw filesystem path was observed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+(- No connector write.) Tj
+0 -12 Td
+(- No Zapier write.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No HeyGen.) Tj
+0 -12 Td
+(- No external farmer.) Tj
+0 -12 Td
+(- No new public local exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker: owner_authenticated_agent_detail_pages_retest_required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class: OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason: developer-side implementation and proof are complete, but final acceptance requires the ) Tj
+0 -12 Td
+(owner to view the deployed authenticated UI and confirm the detail routes match expectations in ) Tj
+0 -12 Td
+(the real browser session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit And Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit: 20a981fa48f5a41c05971b0a7c3d14af93d5fc9e) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result: pushed to origin/to-knowledge-mc.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 372 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Report commit: pending.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 20a981fa48f5a41c05971b0a7c3d14af93d5fc9e) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 20 - No-Fake-Button Sweep has automatically started.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000002968 00000 n 
+0000003095 00000 n 
+0000006173 00000 n 
+0000006300 00000 n 
+0000009286 00000 n 
+0000009414 00000 n 
+0000009838 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+9909
+%%EOF

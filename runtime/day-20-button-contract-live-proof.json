@@ -1,0 +1,431 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "endpoints_checked": 52,
+  "skipped": 1,
+  "live_contract_checked": true,
+  "accepted_statuses": "401/403/405 are acceptable for auth-gated or POST-only routes; 404/5xx are failures.",
+  "results": [
+    {
+      "endpoint": "/api/agent-zero/request",
+      "url": "http://127.0.0.1:3337/api/agent-zero/request",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/agents",
+      "url": "http://127.0.0.1:3337/api/agents",
+      "method": "POST",
+      "status": 400,
+      "response_state": "Name and role are required",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/auth/sso-readiness",
+      "url": "http://127.0.0.1:3337/api/auth/sso-readiness",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/agent-zero/hermes-handoff",
+      "url": "http://127.0.0.1:3337/api/bridge/agent-zero/hermes-handoff",
+      "method": "POST",
+      "status": 400,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/agent-zero/status",
+      "url": "http://127.0.0.1:3337/api/bridge/agent-zero/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/approval-readiness",
+      "url": "http://127.0.0.1:3337/api/bridge/approval-readiness",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/approval-requests",
+      "url": "http://127.0.0.1:3337/api/bridge/approval-requests",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/approval-requests/:id/approve",
+      "url": "http://127.0.0.1:3337/api/bridge/approval-requests/sample/approve",
+      "method": "POST",
+      "status": 404,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/approval-requests/:id/deny",
+      "url": "http://127.0.0.1:3337/api/bridge/approval-requests/sample/deny",
+      "method": "POST",
+      "status": 404,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/files",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/files",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/files/:type/:name",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/files/:type/:name",
+      "method": "GET",
+      "status": 400,
+      "response_state": "invalid_type",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/logs",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/logs",
+      "method": "GET",
+      "status": 404,
+      "response_state": "farmer_log_not_found",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/run-now",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/run-now",
+      "method": "POST",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/run-now/:id",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/run-now/sample",
+      "method": "GET",
+      "status": 404,
+      "response_state": "approval_request_not_found",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/status",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/build-wiki/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/rebuild",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/rebuild",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/status",
+      "url": "http://127.0.0.1:3337/api/bridge/brain-sync/status",
+      "method": "GET",
+      "status": 503,
+      "response_state": "claudeclaw_dashboard_token_missing",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/capability-matrix",
+      "url": "http://127.0.0.1:3337/api/bridge/capability-matrix",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/connector-readiness",
+      "url": "http://127.0.0.1:3337/api/bridge/connector-readiness",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/costs",
+      "url": "http://127.0.0.1:3337/api/bridge/costs",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/execution-cycle",
+      "url": "http://127.0.0.1:3337/api/bridge/execution-cycle",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/executive-report-preview",
+      "url": "http://127.0.0.1:3337/api/bridge/executive-report-preview",
+      "method": "POST",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/harness/status",
+      "url": "http://127.0.0.1:3337/api/bridge/harness/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/hermes/status",
+      "url": "http://127.0.0.1:3337/api/bridge/hermes/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/owner-gates",
+      "url": "http://127.0.0.1:3337/api/bridge/owner-gates",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/preflight",
+      "url": "http://127.0.0.1:3337/api/bridge/preflight",
+      "method": "POST",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/providers",
+      "url": "http://127.0.0.1:3337/api/bridge/providers",
+      "method": "GET",
+      "status": 200,
+      "response_state": "claudeclaw_dashboard_token_missing",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/telegram-approval-preview",
+      "url": "http://127.0.0.1:3337/api/bridge/telegram-approval-preview",
+      "method": "POST",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/zapier/status",
+      "url": "http://127.0.0.1:3337/api/bridge/zapier/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/zapier/tools",
+      "url": "http://127.0.0.1:3337/api/bridge/zapier/tools",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/bridge/zapier/tools/search",
+      "url": "http://127.0.0.1:3337/api/bridge/zapier/tools/search",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/firecrawl/drafts",
+      "url": "http://127.0.0.1:3337/api/firecrawl/drafts",
+      "method": "POST",
+      "status": 503,
+      "response_state": "not_wired_yet",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/firecrawl/jobs",
+      "url": "http://127.0.0.1:3337/api/firecrawl/jobs",
+      "method": "POST",
+      "status": 503,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/mcp/servers",
+      "url": "http://127.0.0.1:3337/api/mcp/servers",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/mcp/servers/:id/:action",
+      "url": "http://127.0.0.1:3337/api/mcp/servers/sample/disable",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/mcp/servers/:id/test",
+      "url": "http://127.0.0.1:3337/api/mcp/servers/sample/test",
+      "method": "POST",
+      "status": 404,
+      "response_state": "server_not_found",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/n8n/test",
+      "url": "http://127.0.0.1:3337/api/n8n/test",
+      "method": "POST",
+      "status": 503,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/n8n/workflows",
+      "url": "http://127.0.0.1:3337/api/n8n/workflows",
+      "method": "GET",
+      "status": 503,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/n8n/workflows/:id/:action",
+      "url": "http://127.0.0.1:3337/api/n8n/workflows/sample/activate",
+      "method": "POST",
+      "status": 503,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/notifications/stream",
+      "skipped": true,
+      "reason": "allowed_missing"
+    },
+    {
+      "endpoint": "/api/sessions",
+      "url": "http://127.0.0.1:3337/api/sessions",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/sessions/:id/control",
+      "url": "http://127.0.0.1:3337/api/sessions/sample/control",
+      "method": "POST",
+      "status": 400,
+      "response_state": "Invalid action. Must be: monitor, pause, terminate",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/skills",
+      "url": "http://127.0.0.1:3337/api/skills",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/skills/:id/:action",
+      "url": "http://127.0.0.1:3337/api/skills/sample/enable",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/skills/:id/test",
+      "url": "http://127.0.0.1:3337/api/skills/sample/test",
+      "method": "POST",
+      "status": 503,
+      "response_state": "not_wired_yet",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/skills/finder/search",
+      "url": "http://127.0.0.1:3337/api/skills/finder/search",
+      "method": "POST",
+      "status": 400,
+      "response_state": "query required",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/skills/tool-skills",
+      "url": "http://127.0.0.1:3337/api/skills/tool-skills",
+      "method": "GET",
+      "status": 200,
+      "response_state": "READ_ONLY",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/tasks",
+      "url": "http://127.0.0.1:3337/api/tasks",
+      "method": "GET",
+      "status": 200,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/tasks/:id",
+      "url": "http://127.0.0.1:3337/api/tasks/sample",
+      "method": "PUT",
+      "status": 400,
+      "response_state": "Validation failed",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/viral-crawl/video/request-run",
+      "url": "http://127.0.0.1:3337/api/viral-crawl/video/request-run",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/viral-crawl/video/status",
+      "url": "http://127.0.0.1:3337/api/viral-crawl/video/status",
+      "method": "GET",
+      "status": 200,
+      "response_state": "READ_ONLY",
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/zapier/request-write-approval",
+      "url": "http://127.0.0.1:3337/api/zapier/request-write-approval",
+      "method": "POST",
+      "status": 423,
+      "response_state": null,
+      "approval_request_created": false
+    },
+    {
+      "endpoint": "/api/zapier/revoke-write-approval",
+      "url": "http://127.0.0.1:3337/api/zapier/revoke-write-approval",
+      "method": "POST",
+      "status": 503,
+      "response_state": "not_wired_yet",
+      "approval_request_created": false
+    }
+  ]
+}

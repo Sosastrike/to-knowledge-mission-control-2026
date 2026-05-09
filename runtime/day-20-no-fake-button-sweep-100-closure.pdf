@@ -1,0 +1,428 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2839 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-20-no-fake-button-sweep-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 20 - No-Fake-Button Sweep 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09T17:26:27Z) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control / Gateway / Agent Hub visible control contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 20 is developer-side closed. The no-fake-button contract is tightened, tested, pushed, deplo) Tj
+0 -12 Td
+(yed into the local-only proof runtime, and live-checked against the production server.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Tightened the canonical button contract for current runtime truth.) Tj
+0 -12 Td
+(- Reclassified Brain Sync source status from READ_ONLY to CREDENTIAL_REQUIRED when CLAUDECLAW_DA) Tj
+0 -12 Td
+(SHBOARD_TOKEN is absent.) Tj
+0 -12 Td
+(- Reclassified Build-Wiki farmer logs from READ_ONLY to BACKEND_REQUIRED when the farmer service) Tj
+0 -12 Td
+( has not produced a log yet.) Tj
+0 -12 Td
+(- Updated the live button-contract checker so approval-request creation is allowed only for OWNE) Tj
+0 -12 Td
+(R_APPROVAL_REQUIRED controls when:) Tj
+0 -12 Td
+(  - execution_enabled is not true) Tj
+0 -12 Td
+(  - writes_enabled is not true) Tj
+0 -12 Td
+(  - accepted_for_execution is not true) Tj
+0 -12 Td
+(- Added idempotency to the Build-Wiki Run Now live probe so repeated checks do not create fresh ) Tj
+0 -12 Td
+(approval spam.) Tj
+0 -12 Td
+(- Kept Build-Wiki Run Now scoped only to approval request creation. No service dispatch occurred) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+(- Added regression coverage for Day 20 runtime blockers and approval-only actions.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/app/api/bridge/button-contracts/route.ts) Tj
+0 -12 Td
+(- scripts/check-button-contract-live-status.mjs) Tj
+0 -12 Td
+(- src/lib/button-contracts-route.test.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes And Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /api/bridge/button-contracts) Tj
+0 -12 Td
+(  - Button count: 72) Tj
+0 -12 Td
+(  - LIVE: 14) Tj
+0 -12 Td
+(  - READ_ONLY: 31) Tj
+0 -12 Td
+(  - BACKEND_REQUIRED: 6) Tj
+0 -12 Td
+(  - CREDENTIAL_REQUIRED: 5) Tj
+0 -12 Td
+(  - OWNER_APPROVAL_REQUIRED: 14) Tj
+0 -12 Td
+(  - DISABLED: 2) Tj
+0 -12 Td
+(  - no_fake_success: true) Tj
+0 -12 Td
+(  - protected_execution_enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No external write route was enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every button in the canonical contract remains one of:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- LIVE) Tj
+0 -12 Td
+(- READ_ONLY) Tj
+0 -12 Td
+(- BACKEND_REQUIRED) Tj
+0 -12 Td
+(- CREDENTIAL_REQUIRED) Tj
+0 -12 Td
+(- OWNER_APPROVAL_REQUIRED) Tj
+0 -12 Td
+(- DISABLED) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3026 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Blocked/gated actions render with disabled/gated behavior. The contract continues to require:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- fake_success_allowed: false) Tj
+0 -12 Td
+(- protected_execution_enabled: false) Tj
+0 -12 Td
+(- should_render_as_disabled for blocked states) Tj
+0 -12 Td
+(- audit_required when approval_required is true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service And Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Code commit pushed: 7a29b77aead4396067ccc84b7e789654db187678) Tj
+0 -12 Td
+(- origin/to-knowledge-mc includes: 7a29b77aead4396067ccc84b7e789654db187678) Tj
+0 -12 Td
+(- Deploy script rebuilt standalone bundle for commit 7a29b77.) Tj
+0 -12 Td
+(- Deploy script reported PID 87606 on 127.0.0.1:3337, then the child process exited after readin) Tj
+0 -12 Td
+(ess.) Tj
+0 -12 Td
+(- Local-only screen-backed proof runtime restored:) Tj
+0 -12 Td
+(  - screen: mc-day20-no-fake-buttons) Tj
+0 -12 Td
+(  - PID: 87746) Tj
+0 -12 Td
+(  - bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- /login returned 200 on the restored proof runtime.) Tj
+0 -12 Td
+(- No new public exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --check: pass) Tj
+0 -12 Td
+(- pnpm test src/lib/button-contracts-route.test.ts: pass, 3 tests) Tj
+0 -12 Td
+(- node scripts/check-button-contract-routes.mjs: pass) Tj
+0 -12 Td
+(- pnpm run typecheck: pass) Tj
+0 -12 Td
+(- pnpm run build: pass) Tj
+0 -12 Td
+(- pnpm test: pass, 149 files / 1303 tests) Tj
+0 -12 Td
+(- node scripts/check-protected-file-invariants.mjs: pass) Tj
+0 -12 Td
+(- staged secret scan before code commit: pass) Tj
+0 -12 Td
+(- .env diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-20-button-contract-static-proof.json) Tj
+0 -12 Td
+(- runtime/day-20-button-contract-live-proof.json) Tj
+0 -12 Td
+(- runtime/day-20-button-contract-summary.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337: pass) Tj
+0 -12 Td
+(- endpoints checked: 52) Tj
+0 -12 Td
+(- skipped allowed missing endpoint: 1) Tj
+0 -12 Td
+(- live contract checked: true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Protected action lock proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- scripts/check-protected-actions-locked.mjs http://127.0.0.1:3337: pass, 11 checks) Tj
+0 -12 Td
+(- execution_enabled remained false across protected probes.) Tj
+0 -12 Td
+(- writes_enabled remained false across protected probes.) Tj
+0 -12 Td
+(- Approval request creation occurred only through the owner-approved approval queue path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Route smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- unauth /gateway -> 307 /login) Tj
+0 -12 Td
+(- auth /gateway -> 200) Tj
+0 -12 Td
+(- unauth /gateway/agent-hub -> 307 /login) Tj
+0 -12 Td
+(- auth /gateway/agent-hub -> 200) Tj
+0 -12 Td
+(- unauth /gateway/bridge-session -> 307 /login) Tj
+0 -12 Td
+(- auth /gateway/bridge-session -> 200) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2276 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- unauth /api/bridge/button-contracts -> 401) Tj
+0 -12 Td
+(- auth /api/bridge/button-contracts -> 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Honest Blockers Captured By The Contract) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Brain Sync source status: CREDENTIAL_REQUIRED because CLAUDECLAW_DASHBOARD_TOKEN is absent in ) Tj
+0 -12 Td
+(the proof runtime.) Tj
+0 -12 Td
+(- Build-Wiki farmer logs: BACKEND_REQUIRED because the farmer service has not produced a readabl) Tj
+0 -12 Td
+(e log yet.) Tj
+0 -12 Td
+(- Build-Wiki Run Now: OWNER_APPROVAL_REQUIRED; creates approval request only and does not dispat) Tj
+0 -12 Td
+(ch opencloud-docs-farmer.service until owner approval.) Tj
+0 -12 Td
+(- Firecrawl jobs: CREDENTIAL_REQUIRED.) Tj
+0 -12 Td
+(- n8n controls: CREDENTIAL_REQUIRED.) Tj
+0 -12 Td
+(- External writes and protected actions: OWNER_APPROVAL_REQUIRED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+(- No external connector write.) Tj
+0 -12 Td
+(- No Zapier write.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmer.) Tj
+0 -12 Td
+(- No new public local exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker: none for Day 20 developer-side closure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner-facing visual confirmation remains part of later authenticated visual proof and UX final p) Tj
+0 -12 Td
+(ass lanes, not a Day 20 developer blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit And Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit: 7a29b77aead4396067ccc84b7e789654db187678) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result: pushed to origin/to-knowledge-mc.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report commit: pending.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 7a29b77aead4396067ccc84b7e789654db187678) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 21 - Owner-Facing Status Language has automatically started.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003144 00000 n 
+0000003270 00000 n 
+0000006348 00000 n 
+0000006474 00000 n 
+0000008802 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8872
+%%EOF

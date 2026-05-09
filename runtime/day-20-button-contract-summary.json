@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "total": 72,
+  "by_state": {
+    "LIVE": 14,
+    "DISABLED": 2,
+    "OWNER_APPROVAL_REQUIRED": 14,
+    "CREDENTIAL_REQUIRED": 5,
+    "READ_ONLY": 31,
+    "BACKEND_REQUIRED": 6
+  },
+  "protected_actions": 15,
+  "blocked_buttons": 25,
+  "executable_now": 39,
+  "no_fake_success": true,
+  "protected_execution_enabled": false
+}

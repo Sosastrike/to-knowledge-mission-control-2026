@@ -4,8 +4,7 @@
 
 - **Branch:** `cloudcode/backend-support-gateway-status` (created off
   `claude/fervent-montalcini-62fba8` inside this worktree)
-- **Latest commit:** *to be filled by the commit step* — see `git log -1`
-  on this branch after `git commit`.
+- **Latest commit:** `491fe09` — `feat(backend-support): add CloudCode Mission Control / Gateway truth helpers`
 - **Pushed:** No. Per the rules, this branch is not pushed automatically.
   Codex / Luis decides when to push and merge.
 - **Files Codex was actively editing — left untouched:**

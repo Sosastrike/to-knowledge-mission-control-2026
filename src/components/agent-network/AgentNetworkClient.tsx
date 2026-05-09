@@ -719,6 +719,17 @@ interface BuildWikiStatusPayload {
     approval?: { id?: string; approval_state?: string } | null
     run?: { run_state?: string; run_exit_code?: number | null } | null
   }
+  rollback_disable?: {
+    read_only?: boolean
+    execution_enabled?: boolean
+    writes_enabled?: boolean
+    disable_controls_enabled?: boolean
+    rollback_ref?: string
+    service_unit?: string
+    timer_unit?: string
+    owner_admin_runbook?: string[]
+    next_action?: string
+  }
   notices?: Record<string, unknown>
 }
 
@@ -2860,6 +2871,7 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
   const runNow = payload.run_now
   const timerControl = payload.timer_control
   const addSource = payload.add_source
+  const rollbackDisable = payload.rollback_disable
   const runNowHistory = runNow?.history || []
 
   return (
@@ -2887,9 +2899,27 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
         <li><span>Run Now<br /><small>Creates exact-scope owner approval; approval dispatches the farmer only.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Pause / Resume<br /><small>Timer-only control; no service rewrite from this card.</small></span><strong>{timerControl?.offered_action ? `${timerControl.offered_action}: ${controls[`${timerControl.offered_action}_sync`] || 'OWNER_APPROVAL_REQUIRED'}` : 'not applicable'}</strong></li>
         <li><span>Add Local Source<br /><small>Approval-driven source-list change; SMB/external farmers stay disabled.</small></span><strong>{controls.add_local_source || addSource?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
+        <li><span>Rollback / Disable<br /><small>Read-only owner/admin runbook; no disable execution from this card.</small></span><strong>{rollbackDisable?.disable_controls_enabled === false ? 'RUNBOOK_ONLY' : 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Latest files/logs<br /><small>Read-only browser visibility, secret-scanned.</small></span><strong>READ_ONLY</strong></li>
       </ul>
       <p className={styles.providerNotes}>Run state: {runNow?.ui_state || 'idle'} · Timer-control state: {timerControl?.ui_state || 'idle'} · Add-source state: {addSource?.ui_state || 'idle'}</p>
+      {rollbackDisable && (
+        <>
+          <p className={styles.providerNotes}>
+            Rollback / disable: {rollbackDisable.rollback_ref || 'oneshot stop only'} · controls: {rollbackDisable.disable_controls_enabled ? 'enabled' : 'runbook only'}
+          </p>
+          {Array.isArray(rollbackDisable.owner_admin_runbook) && rollbackDisable.owner_admin_runbook.length > 0 && (
+            <ul className={styles.connectorList}>
+              {rollbackDisable.owner_admin_runbook.slice(0, 3).map((step) => (
+                <li key={step}>
+                  <span>{step}<br /><small>Owner/admin host action only; Mission Control does not execute this from the status card.</small></span>
+                  <strong>OWNER_ACTION</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
       {runNowHistory.length > 0 && (
         <>
           <p className={styles.providerNotes}>

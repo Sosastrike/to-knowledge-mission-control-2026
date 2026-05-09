@@ -73,6 +73,20 @@ describe('Build-Wiki status route service probe', () => {
       history: [],
       history_count: 0,
     })
+    expect(payload.rollback_disable).toMatchObject({
+      read_only: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      disable_controls_enabled: false,
+      rollback_ref: 'systemctl --user stop opencloud-docs-farmer.service (oneshot exits on completion; no manual rollback usually needed)',
+      service_unit: 'opencloud-docs-farmer.service',
+      timer_unit: 'opencloud-docs-farmer.timer',
+    })
+    expect(payload.rollback_disable.owner_admin_runbook).toEqual([
+      'systemctl --user stop opencloud-docs-farmer.service',
+      'systemctl --user disable --now opencloud-docs-farmer.timer',
+      'systemctl --user status opencloud-docs-farmer.service opencloud-docs-farmer.timer',
+    ])
     expect(JSON.stringify(payload)).not.toMatch(/\/home\/|\/Users\/|sk-[A-Za-z0-9]{20,}|Bearer\s+/)
   })
 })

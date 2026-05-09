@@ -6,6 +6,7 @@ import Database from 'better-sqlite3'
 import { authJson } from '@/lib/designer-module-api'
 import {
   BUILDWIKI_TARGET_SERVICE,
+  BUILDWIKI_ROLLBACK_REF,
   deriveRunNowUiState,
   pickPublicApprovalView,
   pickPublicRunView,
@@ -568,6 +569,26 @@ export async function GET(request: NextRequest) {
         },
       }
     })(),
+    rollback_disable: {
+      read_only: true,
+      execution_enabled: false,
+      writes_enabled: false,
+      disable_controls_enabled: false,
+      bridge_session_required_for_future_disable_control: true,
+      rollback_ref: BUILDWIKI_ROLLBACK_REF,
+      service_unit: SERVICE_UNIT,
+      timer_unit: TIMER_UNIT,
+      owner_admin_runbook: [
+        `systemctl --user stop ${SERVICE_UNIT}`,
+        `systemctl --user disable --now ${TIMER_UNIT}`,
+        `systemctl --user status ${SERVICE_UNIT} ${TIMER_UNIT}`,
+      ],
+      verification: {
+        expected_service_active_state_after_stop: 'inactive',
+        expected_timer_active_after_disable: false,
+      },
+      next_action: 'Owner/admin can use this runbook on the runtime host if the farmer must be stopped or disabled. Mission Control does not execute disable controls from this read-only status surface.',
+    },
     notices: {
       no_execution_enabled: true,
       no_secret_exposure: true,

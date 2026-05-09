@@ -1,0 +1,108 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1604 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-exit-navigation-fix-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Exit Navigation Fix Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Ensure owners are not trapped in Agent Hub and can always navigate out without browser back.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(Added explicit navigation controls above the mounted mock frame:) Tj
+0 -12 Td
+(1. `Mission Control Home` -> `/tkmc`) Tj
+0 -12 Td
+(2. `Gateway Overview` -> `/gateway`) Tj
+0 -12 Td
+(3. `Agent Hub` -> `/gateway/agent-hub`) Tj
+0 -12 Td
+(4. Clickable breadcrumb:) Tj
+0 -12 Td
+(   - `Mission Control / Gateway / <Current Page>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## File Changed) Tj
+0 -12 Td
+(- `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Behavior Outcome) Tj
+0 -12 Td
+(- Exit controls are visible above the fold.) Tj
+0 -12 Td
+(- Controls are route-based and do not depend on browser back navigation.) Tj
+0 -12 Td
+(- Alias entry points \(`/agent-network`, `/agents`\) still land on Gateway Agent Hub route path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+(- No fake action buttons introduced.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No raw local path surfaced in UI text.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- Owner confirmation still required in production browser session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Deploy + owner retest:) Tj
+0 -12 Td
+(- open `/gateway/agent-hub`) Tj
+0 -12 Td
+(- verify scroll) Tj
+0 -12 Td
+(- verify exit controls work as expected.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001897 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1967
+%%EOF

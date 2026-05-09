@@ -1,0 +1,114 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2084 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-scroll-defect-reproduction-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Scroll Defect Reproduction Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Reproduce and identify the exact scroll/container defect reported by owner on `/gateway/agent-hu) Tj
+0 -12 Td
+(b`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Reviewed active Gateway route components and wrapper stack.) Tj
+0 -12 Td
+(2. Inspected Gateway mount component and page wrappers.) Tj
+0 -12 Td
+(3. Checked for scroll-trap patterns \(`h-screen`, `overflow-hidden`, fixed viewport locking\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commands / Routes) Tj
+0 -12 Td
+(- `sed -n '1,260p' src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+(- `sed -n '1,220p' src/app/gateway/agent-hub/page.tsx`) Tj
+0 -12 Td
+(- `rg -n "overflow-hidden|h-screen|100vh|position:\\\\s*fixed" src/app src/components`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Defect Source) Tj
+0 -12 Td
+(- File: `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+(- Offending wrapper: `<main className='h-screen w-full overflow-hidden ...'>`) Tj
+0 -12 Td
+(- Effect: hard viewport lock around iframe mount, causing trapped-scroll behavior in owner flow.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Wrapper was fixed-height \(`h-screen`\) and clipping \(`overflow-hidden`\).) Tj
+0 -12 Td
+(- Owner symptom \("stuck/static/trapped frame"\) matches this lock pattern in production-style she) Tj
+0 -12 Td
+(ll.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker / Status) Tj
+0 -12 Td
+(- Status updated: `owner_visual_proof_partial_navigation_layout_defect`) Tj
+0 -12 Td
+(- Gateway owner visual lane remains PARTIAL GO pending owner retest after deployment.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth file contents printed.) Tj
+0 -12 Td
+(- No `.env` changes made.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Apply scroll-trap removal + visible exit navigation and redeploy for owner retest.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002377 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2447
+%%EOF

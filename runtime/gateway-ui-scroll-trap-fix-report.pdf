@@ -1,0 +1,120 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1850 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-scroll-trap-fix-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Scroll Trap Fix Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Remove the Gateway Agent Hub scroll trap while keeping FULL v3 mock mounting intact.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Updated `DesignerGatewayMockFrame` to remove viewport clipping lock.) Tj
+0 -12 Td
+(2. Switched mount layout to a flex column with scrollable content region.) Tj
+0 -12 Td
+(3. Kept designer HTML pages as mounted source \(no mock-token rewrite\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation Summary) Tj
+0 -12 Td
+(- Replaced:) Tj
+0 -12 Td
+(  - `h-screen overflow-hidden`) Tj
+0 -12 Td
+(- With:) Tj
+0 -12 Td
+(  - `flex h-full min-h-0 flex-col`) Tj
+0 -12 Td
+(  - frame container `flex-1 min-h-0 overflow-y-auto`) Tj
+0 -12 Td
+(  - iframe `scrolling='yes'` + explicit minimum display height) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(- Local validation passed:) Tj
+0 -12 Td
+(  - `git diff --check`) Tj
+0 -12 Td
+(  - `pnpm run typecheck`) Tj
+0 -12 Td
+(  - `pnpm run build`) Tj
+0 -12 Td
+(  - `pnpm test` \(138 files / 1251 tests\)) Tj
+0 -12 Td
+(- Protected route smoke still returns login redirect for unauthenticated access on Gateway surfa) Tj
+0 -12 Td
+(ces.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- Owner-authenticated visual confirmation still required after deploy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Deploy the UI fix, then run owner visual retest on `/gateway` and `/gateway/agent-hub`.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002143 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2213
+%%EOF

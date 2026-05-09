@@ -1,0 +1,134 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2253 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-owner-retest-final-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Owner Retest Final Report \(Pending Owner Confirmation\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Prepare deploy + owner retest package for Gateway FULL v3 UI correction.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Delivered Fixes) Tj
+0 -12 Td
+(1. Scroll-trap removal in Gateway mock mount wrapper.) Tj
+0 -12 Td
+(2. Explicit exits added \(Mission Control Home, Gateway Overview, Agent Hub\).) Tj
+0 -12 Td
+(3. Clickable breadcrumb added.) Tj
+0 -12 Td
+(4. FULL v3 designer mock mounting preserved.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+(- `git diff --check` passed.) Tj
+0 -12 Td
+(- `pnpm run typecheck` passed.) Tj
+0 -12 Td
+(- `pnpm run build` passed.) Tj
+0 -12 Td
+(- `pnpm test` passed \(138 files / 1251 tests\).) Tj
+0 -12 Td
+(- Unauthenticated smoke still protected:) Tj
+0 -12 Td
+(  - `/gateway`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub`) Tj
+0 -12 Td
+(  - `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(  - `/gateway/dispatcher`) Tj
+0 -12 Td
+(  - `/gateway/token-governor`) Tj
+0 -12 Td
+(  - `/agent-network`) Tj
+0 -12 Td
+(  - `/agents`) Tj
+0 -12 Td
+(  \(all redirect to `/login` when unauthenticated\).) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Status) Tj
+0 -12 Td
+(- Gateway owner visual lane: **PARTIAL GO**) Tj
+0 -12 Td
+(- Reason: owner must confirm fixed production UI after deploy/restart.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+(- `gateway_ui_design_fidelity_scroll_defect` remains open until owner confirms:) Tj
+0 -12 Td
+(  - normal scroll behavior) Tj
+0 -12 Td
+(  - not trapped in Agent Hub) Tj
+0 -12 Td
+(  - clear exits back to Mission Control and Gateway Overview) Tj
+0 -12 Td
+(  - design fidelity acceptable in authenticated production view) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local service exposure introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(1. Commit + push this UI fix.) Tj
+0 -12 Td
+(2. Deploy/restart production runtime.) Tj
+0 -12 Td
+(3. Owner runs retest checklist and confirms visual acceptance.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002546 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2616
+%%EOF

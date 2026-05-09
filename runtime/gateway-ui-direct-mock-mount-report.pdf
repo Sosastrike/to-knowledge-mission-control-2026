@@ -1,0 +1,114 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1958 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-direct-mock-mount-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Direct Mock Mount Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Confirm direct FULL v3 mock mounting remains the active rendering path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route-to-Mock Mapping) Tj
+0 -12 Td
+(- `/gateway` -> `Gateway Overview.html`) Tj
+0 -12 Td
+(- `/gateway/agent-hub` -> `Agent Hub.html`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` -> `Paperclip.html`) Tj
+0 -12 Td
+(- `/gateway/routes` -> `Gateway Routes.html`) Tj
+0 -12 Td
+(- `/gateway/registry` -> `Gateway Registry.html`) Tj
+0 -12 Td
+(- `/gateway/policies` -> `Gateway Policies.html`) Tj
+0 -12 Td
+(- `/gateway/health` -> `Gateway Health.html`) Tj
+0 -12 Td
+(- `/gateway/dispatcher` -> `Dispatcher.html`) Tj
+0 -12 Td
+(- `/gateway/token-governor` -> `Token Governor.html`) Tj
+0 -12 Td
+(- `/gateway/bridge-session` -> `Bridge Session Flow.html`) Tj
+0 -12 Td
+(- `/gateway/node-detail` -> `Gateway Node Detail.html`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet` -> `Gateway Mobile Tablet.html`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Mount Mechanism) Tj
+0 -12 Td
+(- Component: `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+(- Source URL base: `/designer-mission-control/design/gateway/`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Hydration Note) Tj
+0 -12 Td
+(- Agent Hub shared data path still supports live status hydration flow through existing status e) Tj
+0 -12 Td
+(ndpoint wiring.) Tj
+0 -12 Td
+(- No fake "connected" status added where backend proof is missing.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- Owner visual retest pending after deploy/restart.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secret values printed.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Deploy current commit and ask owner to validate mounted FULL v3 pages in authenticated session.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002251 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2321
+%%EOF

@@ -1,0 +1,106 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1706 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-pixel-fidelity-fix-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Pixel Fidelity Fix Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Restore FULL v3 fidelity by preserving designer HTML as the rendered source and avoiding custom ) Tj
+0 -12 Td
+(reinterpretation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Actions) Tj
+0 -12 Td
+(1. Verified Gateway routes remain mounted to designer files under:) Tj
+0 -12 Td
+(   - `public/designer-mission-control/design/gateway/*.html`) Tj
+0 -12 Td
+(2. Kept `shared/tokens.css` and shared class grammar untouched.) Tj
+0 -12 Td
+(3. Limited code change to shell-level mounting behavior \(scroll/navigation wrapper\), not mock re) Tj
+0 -12 Td
+(ndering internals.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Fidelity Rules Preserved) Tj
+0 -12 Td
+(- Status grammar remains: `green/yellow/blue/red/gray`.) Tj
+0 -12 Td
+(- Shared tokens remain source of spacing/color/font.) Tj
+0 -12 Td
+(- Designer page rendering remains HTML-first through mounted mock route surface.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Truth Guard) Tj
+0 -12 Td
+(- No fake "live" promotion introduced.) Tj
+0 -12 Td
+(- Existing blocked/gated states remain unchanged unless proven by live backend proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker) Tj
+0 -12 Td
+(- Owner side-by-side visual acceptance still required after deployment.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## No-Secrets Confirmation) Tj
+0 -12 Td
+(- No secrets exposed.) Tj
+0 -12 Td
+(- No auth changes.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+(Deploy and run owner side-by-side check at 1480px; treat any drift as defect until owner confirm) Tj
+0 -12 Td
+(s.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001999 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2069
+%%EOF

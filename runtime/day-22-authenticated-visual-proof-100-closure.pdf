@@ -1,0 +1,372 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2607 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-22-authenticated-visual-proof-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 22 — Authenticated Visual Proof 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: CLOSED developer-side / OWNER_GATED for true owner visual proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated Visual Proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a safe authenticated visual proof harness for Mission Control protected pages.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The harness:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Probes protected routes without authentication and records whether they redirect/deny as expec) Tj
+0 -12 Td
+(ted.) Tj
+0 -12 Td
+(- Captures screenshots only when a session cookie is explicitly provided through runtime environ) Tj
+0 -12 Td
+(ment.) Tj
+0 -12 Td
+(- Never writes the provided session cookie value to disk.) Tj
+0 -12 Td
+(- Distinguishes local proof smoke from true owner visual proof.) Tj
+0 -12 Td
+(- Marks true owner visual proof as `OWNER_GATED` unless the session is explicitly owner-confirme) Tj
+0 -12 Td
+(d.) Tj
+0 -12 Td
+(- Scans its own proof packet for raw local paths and secret-shaped values.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `scripts/capture-auth-visual-proof.mjs`) Tj
+0 -12 Td
+(- `src/lib/authenticated-visual-proof.ts`) Tj
+0 -12 Td
+(- `src/lib/authenticated-visual-proof.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Covered) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Default protected visual proof targets:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/tkmc`) Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No owner-facing UI was changed in this lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The new harness supports authenticated screenshot proof for the current Mission Control / Gatewa) Tj
+0 -12 Td
+(y surfaces without relying on legacy screenshot scripts or hardcoded login credentials.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control proof runtime was rebuilt and restarted locally on:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- New PID: `97123`) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No public exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-22-authenticated-visual-proof-harness.json`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3079 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - owner session available: false) Tj
+0 -12 Td
+(  - owner visual proof claimed: false) Tj
+0 -12 Td
+(  - blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+(  - blocker: `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+(  - unauthenticated protected route probes: 5/5 protected) Tj
+0 -12 Td
+(  - raw path scan: passed) Tj
+0 -12 Td
+(  - secret shape scan: passed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke.json`) Tj
+0 -12 Td
+(  - local proof session available: true) Tj
+0 -12 Td
+(  - owner visual proof claimed: false) Tj
+0 -12 Td
+(  - authenticated route loads: 5/5 returned 200) Tj
+0 -12 Td
+(  - screenshots: 5) Tj
+0 -12 Td
+(  - raw path scan: passed) Tj
+0 -12 Td
+(  - secret shape scan: passed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke/tkmc.png`) Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke/gateway.png`) Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke/gateway-agent-hub.png`) Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke/gateway-bridge-session.png`) Tj
+0 -12 Td
+(- `runtime/day-22-local-session-visual-smoke/gateway-agent-hub-paperclip.png`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The local-session smoke proves the harness works against the current local runtime. It is not cl) Tj
+0 -12 Td
+(aimed as owner visual proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- RED check:) Tj
+0 -12 Td
+(  - `pnpm test src/lib/authenticated-visual-proof.test.ts`) Tj
+0 -12 Td
+(  - initial failure confirmed missing module.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused green check:) Tj
+0 -12 Td
+(  - `pnpm test src/lib/authenticated-visual-proof.test.ts`) Tj
+0 -12 Td
+(  - 1 file / 4 tests passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Validation:) Tj
+0 -12 Td
+(  - `git diff --check`: passed) Tj
+0 -12 Td
+(  - `pnpm run typecheck`: passed) Tj
+0 -12 Td
+(  - `pnpm run build`: passed) Tj
+0 -12 Td
+(  - `pnpm test`: passed, 151 files / 1310 tests) Tj
+0 -12 Td
+(  - `node scripts/check-protected-file-invariants.mjs`: passed) Tj
+0 -12 Td
+(  - staged secret scan: passed) Tj
+0 -12 Td
+(  - `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source changed, so the local Mission Control proof runtime was restarted after build.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Previous proof server screen: `mc-day21-owner-status`) Tj
+0 -12 Td
+(- New proof server screen: `mc-day22-auth-visual-proof`) Tj
+0 -12 Td
+(- New runtime PID: `97123`) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- Unauthenticated protected route probes: 5/5 protected) Tj
+0 -12 Td
+(- Local-session authenticated page loads: 5/5 returned 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Production owner visual proof still requires the owner's actual authenticated browser/session an) Tj
+0 -12 Td
+(d must not be marked GO from local proof smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification: `OWNER_GATED`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 990 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(What is needed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Owner opens or provides a safe owner-authenticated Mission Control browser/session.) Tj
+0 -12 Td
+(- Run the harness in owner-confirmed mode without printing/storing the session value.) Tj
+0 -12 Td
+(- Capture the required protected page evidence and confirm no secrets/raw paths/fake buttons.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert fbacaf8) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `fbacaf8` — `feat\(runtime\): add authenticated visual proof harness`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 23 — Approval Request Model starts automatically.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002912 00000 n 
+0000003038 00000 n 
+0000006169 00000 n 
+0000006295 00000 n 
+0000007336 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7406
+%%EOF

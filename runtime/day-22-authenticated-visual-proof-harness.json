@@ -1,0 +1,61 @@
+{
+  "schema": "authenticated_visual_proof_v1",
+  "generated_at": "2026-05-09T18:00:27.476Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "routes": [
+    "/tkmc",
+    "/gateway",
+    "/gateway/agent-hub",
+    "/gateway/bridge-session",
+    "/gateway/agent-hub/paperclip"
+  ],
+  "cookie_name": "mc-session",
+  "cookie_value_stored": false,
+  "session_kind": "none",
+  "owner_session_available": false,
+  "owner_visual_proof_claimed": false,
+  "blocker_class": "OWNER_GATED",
+  "blocker": "owner_authenticated_browser_session_required",
+  "capture_mode": "owner-session-required",
+  "screenshots": [],
+  "authenticated_results": [],
+  "unauthenticated_probes": [
+    {
+      "route": "/tkmc",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/bridge-session",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub/paperclip",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    }
+  ],
+  "safety": {
+    "no_secret_values_written": true,
+    "no_env_changes": true,
+    "no_public_exposure_added": true,
+    "raw_path_scan": "passed",
+    "secret_shape_scan": "passed"
+  }
+}

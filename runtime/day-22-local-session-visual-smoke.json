@@ -1,0 +1,123 @@
+{
+  "schema": "authenticated_visual_proof_v1",
+  "generated_at": "2026-05-09T18:00:27.476Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "routes": [
+    "/tkmc",
+    "/gateway",
+    "/gateway/agent-hub",
+    "/gateway/bridge-session",
+    "/gateway/agent-hub/paperclip"
+  ],
+  "cookie_name": "mc-session",
+  "cookie_value_stored": false,
+  "session_kind": "local-proof",
+  "owner_session_available": true,
+  "owner_visual_proof_claimed": false,
+  "blocker_class": "NONE",
+  "blocker": null,
+  "capture_mode": "provided-session-capture",
+  "screenshots": [
+    "runtime/day-22-local-session-visual-smoke/tkmc.png",
+    "runtime/day-22-local-session-visual-smoke/gateway.png",
+    "runtime/day-22-local-session-visual-smoke/gateway-agent-hub.png",
+    "runtime/day-22-local-session-visual-smoke/gateway-bridge-session.png",
+    "runtime/day-22-local-session-visual-smoke/gateway-agent-hub-paperclip.png"
+  ],
+  "authenticated_results": [
+    {
+      "route": "/tkmc",
+      "final_url": "http://127.0.0.1:3337/tkmc",
+      "http_status": 200,
+      "title": "Mission Control — AI Agent Orchestration Dashboard",
+      "elapsed_ms": 722,
+      "screenshot": "runtime/day-22-local-session-visual-smoke/tkmc.png",
+      "text_sample": "Mission Control\n\nPriority surface — glance first, drill down for depth.\n\nEdit Dashboard\nAgent Status\nOpen →\n0\n/ 0 online\nLive Meetings\nOpen →\nNo active meetings\n\nClick to open meeting room\n\nTask Summary\nOpen →\n0\nInbox\n0\nIn Progress\n0\nDone\n0\nFailed\nMission Control Quick Actions\n➕\nNew Task\n🤖\nAssign Agent\n📅\nView Schedule\n💬\nSend Message\nSystem Health\nOpen →\nGateway\nunknown\nMission Control\nhealthy\nUptime\n20.2063095\nScheduled Tasks\nOpen →\n\nNo scheduled tasks",
+      "raw_path_detected": false,
+      "secret_shape_detected": false
+    },
+    {
+      "route": "/gateway",
+      "final_url": "http://127.0.0.1:3337/gateway",
+      "http_status": 200,
+      "title": "Mission Control — AI Agent Orchestration Dashboard",
+      "elapsed_ms": 833,
+      "screenshot": "runtime/day-22-local-session-visual-smoke/gateway.png",
+      "text_sample": "Mission Control Home\n/\nGateway Overview\n/\nAgent Hub\nGateway Overview",
+      "raw_path_detected": false,
+      "secret_shape_detected": false
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "final_url": "http://127.0.0.1:3337/gateway/agent-hub",
+      "http_status": 200,
+      "title": "Mission Control — AI Agent Orchestration Dashboard",
+      "elapsed_ms": 804,
+      "screenshot": "runtime/day-22-local-session-visual-smoke/gateway-agent-hub.png",
+      "text_sample": "Mission Control Home\n/\nGateway Overview\n/\nAgent Hub\nGateway Agent Hub / Control Center",
+      "raw_path_detected": false,
+      "secret_shape_detected": false
+    },
+    {
+      "route": "/gateway/bridge-session",
+      "final_url": "http://127.0.0.1:3337/gateway/bridge-session",
+      "http_status": 200,
+      "title": "Mission Control — AI Agent Orchestration Dashboard",
+      "elapsed_ms": 771,
+      "screenshot": "runtime/day-22-local-session-visual-smoke/gateway-bridge-session.png",
+      "text_sample": "Mission Control Home\n/\nGateway Overview\n/\nAgent Hub\nGateway Bridge Session Flow",
+      "raw_path_detected": false,
+      "secret_shape_detected": false
+    },
+    {
+      "route": "/gateway/agent-hub/paperclip",
+      "final_url": "http://127.0.0.1:3337/gateway/agent-hub/paperclip",
+      "http_status": 200,
+      "title": "Mission Control — AI Agent Orchestration Dashboard",
+      "elapsed_ms": 816,
+      "screenshot": "runtime/day-22-local-session-visual-smoke/gateway-agent-hub-paperclip.png",
+      "text_sample": "Mission Control Home\n/\nGateway Overview\n/\nAgent Hub\nGateway Agent Hub / Paperclip",
+      "raw_path_detected": false,
+      "secret_shape_detected": false
+    }
+  ],
+  "unauthenticated_probes": [
+    {
+      "route": "/tkmc",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/bridge-session",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/agent-hub/paperclip",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    }
+  ],
+  "safety": {
+    "no_secret_values_written": true,
+    "no_env_changes": true,
+    "no_public_exposure_added": true,
+    "raw_path_scan": "passed",
+    "secret_shape_scan": "passed"
+  }
+}

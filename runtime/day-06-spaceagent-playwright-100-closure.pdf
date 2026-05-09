@@ -1,0 +1,352 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3218 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-06-spaceagent-playwright-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 06 - SpaceAgent Playwright 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: SpaceAgent Playwright MCP) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED - SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Primary blocker: playwright_mcp_service_unreachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 06 is closed for developer-side implementation because the Mission Control routes, status co) Tj
+0 -12 Td
+(ntract, proof packet, tests, and runtime smoke now report the Playwright MCP state truthfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This lane is not GO. The Playwright MCP service is not reachable from the Mission Control runtim) Tj
+0 -12 Td
+(e context on 127.0.0.1:8931, so no live browser execution proof was claimed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a canonical SpaceAgent Playwright MCP closure proof packet.) Tj
+0 -12 Td
+(- Added canonical status classification for Playwright MCP:) Tj
+0 -12 Td
+(  - LIVE when the service is reachable and required tools are present.) Tj
+0 -12 Td
+(  - SERVICE_DOWN when the local MCP service is unreachable.) Tj
+0 -12 Td
+(  - BLOCKED when required tools are missing or unsupported.) Tj
+0 -12 Td
+(  - CREDENTIAL_GATED when a credential-like blocker appears.) Tj
+0 -12 Td
+(- Preserved read-only/local-only safety flags.) Tj
+0 -12 Td
+(- Preserved no-write/no-execution defaults in the proof packet.) Tj
+0 -12 Td
+(- Added test coverage for LIVE, SERVICE_DOWN, and BLOCKED classification.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/playwright-mcp.ts) Tj
+0 -12 Td
+(- src/lib/space-agent-browser-automation.test.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Checked) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- GET /api/bridge/playwright-mcp/status) Tj
+0 -12 Td
+(- GET /api/bridge/space-agent/playwright-mcp/status) Tj
+0 -12 Td
+(- POST /api/bridge/playwright-mcp/smoke) Tj
+0 -12 Td
+(- POST /api/gateway/space-agent/playwright-mcp/evidence) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No UI layout changes were made in this lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(SpaceAgent/Gateway surfaces can now consume a canonical Playwright MCP status and proof packet i) Tj
+0 -12 Td
+(nstead of inferring readiness from route existence.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof was performed on loopback-only standalone Mission Control:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Host bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- Runtime PID: 13373) Tj
+0 -12 Td
+(- /login: 200) Tj
+0 -12 Td
+(- Unauthenticated GET /api/bridge/playwright-mcp/status: 401) Tj
+0 -12 Td
+(- Authenticated GET /api/bridge/playwright-mcp/status: 503) Tj
+0 -12 Td
+(- Authenticated GET /api/bridge/space-agent/playwright-mcp/status: 503) Tj
+0 -12 Td
+(- Authenticated POST /api/bridge/playwright-mcp/smoke: 503) Tj
+0 -12 Td
+(- Authenticated POST /api/gateway/space-agent/playwright-mcp/evidence: 503) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime result:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2753 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- canonical_status: SERVICE_DOWN) Tj
+0 -12 Td
+(- blocker_class: SERVICE_DOWN) Tj
+0 -12 Td
+(- blocker: playwright_mcp_service_unreachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No public exposure was added. The standalone smoke used loopback only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pnpm test src/lib/space-agent-browser-automation.test.ts src/lib/space-agent-health.test.ts sr) Tj
+0 -12 Td
+(c/lib/space-agent-routes.test.ts src/lib/space-agent-browser-scenarios.test.ts src/lib/space-age) Tj
+0 -12 Td
+(nt-end-to-end-research-flow.test.ts) Tj
+0 -12 Td
+(- pnpm run typecheck) Tj
+0 -12 Td
+(- git diff --check) Tj
+0 -12 Td
+(- pnpm run build) Tj
+0 -12 Td
+(- pnpm test) Tj
+0 -12 Td
+(- node scripts/check-protected-file-invariants.mjs) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- .env diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Validation result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused SpaceAgent / Playwright tests passed.) Tj
+0 -12 Td
+(- Typecheck passed.) Tj
+0 -12 Td
+(- Build passed.) Tj
+0 -12 Td
+(- Full test suite passed: 139 files / 1261 tests.) Tj
+0 -12 Td
+(- Protected-file invariant scan passed.) Tj
+0 -12 Td
+(- Staged secret scan found no secret-like staged values.) Tj
+0 -12 Td
+(- .env diff was clean.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The route smoke showed the correct protected behavior and truthful SERVICE_DOWN response for the) Tj
+0 -12 Td
+( Playwright MCP service. No fake browser proof or fake execution was claimed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(playwright_mcp_service_unreachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Required owner/admin or runtime action:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Install/start the approved Playwright MCP service on the Mission Control host.) Tj
+0 -12 Td
+(2. Ensure the Mission Control runtime can reach it at 127.0.0.1:8931/mcp.) Tj
+0 -12 Td
+(3. Re-run:) Tj
+0 -12 Td
+(   - GET /api/bridge/playwright-mcp/status) Tj
+0 -12 Td
+(   - POST /api/bridge/playwright-mcp/smoke) Tj
+0 -12 Td
+(   - POST /api/gateway/space-agent/playwright-mcp/evidence) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No fake browser execution proof.) Tj
+0 -12 Td
+(- No raw local paths exposed in owner-facing output.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- 576646ccbc330c37a7b8e03cd6388db9c5067d48) Tj
+0 -12 Td
+(- Message: feat\(space-agent\): add playwright mcp closure proof packet) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 582 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Push result: pushed to origin/to-knowledge-mc) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pending at report creation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 576646ccbc330c37a7b8e03cd6388db9c5067d48) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 07 - SpaceAgent YouTube 100% Closure is automatically started after this Day 06 closeout.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003523 00000 n 
+0000003649 00000 n 
+0000006454 00000 n 
+0000006580 00000 n 
+0000007213 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7283
+%%EOF

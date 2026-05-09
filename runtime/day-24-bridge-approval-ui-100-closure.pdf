@@ -148,7 +148,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 2824 >>
+<< /Length 2979 >>
 stream
 BT
 /F1 10 Tf
@@ -221,6 +221,8 @@ BT
 0 -12 Td
 (- `runtime/day-24-route-rendering-smoke.json`) Tj
 0 -12 Td
+(- `runtime/day-24-bridge-approval-ui-post-restart-smoke.json`) Tj
+0 -12 Td
 () Tj
 0 -12 Td
 (Proof result:) Tj
@@ -231,6 +233,8 @@ BT
 0 -12 Td
 (- 7 route smoke checks passed) Tj
 0 -12 Td
+(- 5 post-restart route checks passed) Tj
+0 -12 Td
 (- approval request created as pending) Tj
 0 -12 Td
 (- approval request denied for cleanup) Tj
@@ -238,6 +242,30 @@ BT
 (- audit events written) Tj
 0 -12 Td
 (- no connector execution row created) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control standalone runtime was restarted after the source change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- local-only bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- new runtime PID: `10819`) Tj
+0 -12 Td
+(- `/login` returned 200 after restart) Tj
+0 -12 Td
+(- `/gateway/bridge-session` stayed protected unauthenticated) Tj
+0 -12 Td
+(- `/gateway/bridge-session` loaded authenticated) Tj
+0 -12 Td
+(- `/api/bridge/approval-requests` returned the live approval queue authenticated) Tj
+0 -12 Td
+(- hydration script loaded after restart) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -252,7 +280,18 @@ BT
 (S) Tj
 0 -12 Td
 (- `pnpm test src/lib/bridge-approval-ui-state.test.ts` — PASS, 2 tests) Tj
-0 -12 Td
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1656 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
 0 -12 Td
 (- `pnpm run typecheck` — PASS) Tj
@@ -280,18 +319,7 @@ BT
 (- No public local exposure added.) Tj
 0 -12 Td
 (- No fake approval success.) Tj
-ET
-endstream
-endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
-endobj
-8 0 obj
-<< /Length 1080 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
+0 -12 Td
 (- No fake execution.) Tj
 0 -12 Td
 (- No connector writes.) Tj
@@ -370,11 +398,11 @@ xref
 0000000253 00000 n 
 0000003307 00000 n 
 0000003433 00000 n 
-0000006309 00000 n 
-0000006435 00000 n 
-0000007567 00000 n 
+0000006464 00000 n 
+0000006590 00000 n 
+0000008298 00000 n 
 trailer
 << /Size 10 /Root 1 0 R >>
 startxref
-7637
+8368
 %%EOF

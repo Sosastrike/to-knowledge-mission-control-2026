@@ -91,15 +91,29 @@ Proof artifacts:
 - `runtime/day-24-bridge-approval-ui-proof.json`
 - `runtime/day-24-bridge-approval-ui-route-smoke.json`
 - `runtime/day-24-route-rendering-smoke.json`
+- `runtime/day-24-bridge-approval-ui-post-restart-smoke.json`
 
 Proof result:
 
 - 21 approval UI lifecycle checks passed
 - 7 route smoke checks passed
+- 5 post-restart route checks passed
 - approval request created as pending
 - approval request denied for cleanup
 - audit events written
 - no connector execution row created
+
+## Deploy / Restart Result
+
+Mission Control standalone runtime was restarted after the source change.
+
+- local-only bind: `127.0.0.1:3337`
+- new runtime PID: `10819`
+- `/login` returned 200 after restart
+- `/gateway/bridge-session` stayed protected unauthenticated
+- `/gateway/bridge-session` loaded authenticated
+- `/api/bridge/approval-requests` returned the live approval queue authenticated
+- hydration script loaded after restart
 
 ## Tests Run
 

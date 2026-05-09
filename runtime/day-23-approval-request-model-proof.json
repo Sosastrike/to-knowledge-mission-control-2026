@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T18:14:13.731Z",
+  "base_url": "http://127.0.0.1:3337",
+  "api_key_printed": false,
+  "no_execution_requested": true,
+  "no_connector_writes_enabled": true,
+  "before": {
+    "status": 200,
+    "mode": "approval_requests_read_only_queue",
+    "approval_queue_connected": true,
+    "model_count": 0
+  },
+  "create": {
+    "status": 201,
+    "mode": "approval_request_created_no_execution",
+    "approval_id": "apr_d0ec74cf-fd68-4d03-a6de-866e4766392c",
+    "approval_state": "pending",
+    "approval_request_created": true,
+    "execution_enabled": false,
+    "accepted_for_execution": false,
+    "model_present": true,
+    "model_request_type": "approval_model.proof",
+    "model_scope_action": "approval_model.proof",
+    "model_owner_required_approver": "owner"
+  },
+  "deny": {
+    "status": 200,
+    "mode": "approval_request_denied_no_execution",
+    "approval_state": "denied",
+    "decision": "denied",
+    "audit_event_id_present": true,
+    "accepted_for_execution": false,
+    "execution_enabled": false,
+    "writes_enabled": false
+  },
+  "after": {
+    "status": 200,
+    "mode": "approval_requests_read_only_queue",
+    "approval_queue_connected": true,
+    "model_count": 1,
+    "proof_model_found": true,
+    "proof_model": {
+      "id": "apr_d0ec74cf-fd68-4d03-a6de-866e4766392c",
+      "request_type": "approval_model.proof",
+      "scope_action": "approval_model.proof",
+      "scope_target_key": "bridge_approval_requests",
+      "owner_requester": "api",
+      "owner_required_approver": "owner",
+      "lifecycle_state": "denied",
+      "denied_at_present": true,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "accepted_for_execution": false,
+      "audit_event_id_present": true,
+      "latest_outcome": "denied"
+    }
+  },
+  "blocker_class": "NONE",
+  "blocker": null
+}

@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T18:15:18.277Z",
+  "route": "/api/bridge/approval-requests",
+  "status": 200,
+  "mode": "approval_requests_read_only_queue",
+  "approval_queue_connected": true,
+  "summary": {
+    "total": 2,
+    "pending": 0,
+    "active_pending": 0,
+    "approved": 0,
+    "denied": 2,
+    "expired": 0,
+    "revoked": 0,
+    "running": 0,
+    "completed": 0,
+    "failed": 0,
+    "history": 2
+  },
+  "model_count": 2,
+  "pending_count": 0,
+  "complete_model_contract_present": true,
+  "no_execution_enabled": true,
+  "no_writes_enabled": true,
+  "proof_model_ids": [
+    {
+      "id": "apr_f27f06fb-a5da-4562-a205-2b9a01f0b35c",
+      "request_type": "protected_action_probe",
+      "state": "denied",
+      "outcome": "denied"
+    },
+    {
+      "id": "apr_d0ec74cf-fd68-4d03-a6de-866e4766392c",
+      "request_type": "approval_model.proof",
+      "state": "denied",
+      "outcome": "denied"
+    }
+  ],
+  "api_key_printed": false
+}

@@ -1,0 +1,104 @@
+{
+  "day": 35,
+  "lane": "Farmer audit trail",
+  "generated_at": "2026-05-09T21:19:09.516Z",
+  "source_commit": "6faf904",
+  "deployed_commit": "6faf904",
+  "base_url": "http://127.0.0.1:3337",
+  "runtime_pid": 43554,
+  "login_status": 200,
+  "unauth_run_now_status": 401,
+  "run_now_status": 200,
+  "run_now_mode": "run_now_read_only",
+  "run_now_history_count": 8,
+  "run_now_history_sample": [
+    {
+      "ui_state": "failed",
+      "result_label": "service_down",
+      "approval_state": "approved",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "run_state": "failed",
+      "audit_event_count": 3,
+      "audit_outcomes": [
+        "approval_requested",
+        "approved",
+        "failed"
+      ]
+    },
+    {
+      "ui_state": "denied",
+      "result_label": "approval denied",
+      "approval_state": "denied",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "run_state": null,
+      "audit_event_count": 2,
+      "audit_outcomes": [
+        "approval_requested",
+        "denied"
+      ]
+    },
+    {
+      "ui_state": "failed",
+      "result_label": "service_down",
+      "approval_state": "approved",
+      "action": "buildwiki.run_now",
+      "target_key": "opencloud-docs-farmer.service",
+      "run_state": "failed",
+      "audit_event_count": 3,
+      "audit_outcomes": [
+        "approval_requested",
+        "approved",
+        "failed"
+      ]
+    }
+  ],
+  "status_route_status": 200,
+  "status_route_history_count": 8,
+  "status_route_service_probe_blocker": "systemctl_command_not_found_in_local_runtime",
+  "audit_report_status": 200,
+  "audit_report_buildwiki_run_now_requests": 8,
+  "audit_report_latest_buildwiki": [
+    {
+      "approval_state": "approved",
+      "run_state": "failed",
+      "accepted_for_execution": true,
+      "audit_event_count": 3,
+      "outcomes": [
+        "failed",
+        "approved",
+        "approval_requested"
+      ]
+    },
+    {
+      "approval_state": "denied",
+      "run_state": null,
+      "accepted_for_execution": false,
+      "audit_event_count": 2,
+      "outcomes": [
+        "denied",
+        "approval_requested"
+      ]
+    },
+    {
+      "approval_state": "approved",
+      "run_state": "failed",
+      "accepted_for_execution": true,
+      "audit_event_count": 3,
+      "outcomes": [
+        "failed",
+        "approved",
+        "approval_requested"
+      ]
+    }
+  ],
+  "no_secret_values_detected": true,
+  "no_raw_paths_detected": true,
+  "no_public_exposure": true,
+  "env_changed": false,
+  "blocker_class": "SERVICE_DOWN",
+  "blocker": "systemctl_command_not_found_in_local_runtime",
+  "rollback": "git revert 6faf904",
+  "ok": true
+}

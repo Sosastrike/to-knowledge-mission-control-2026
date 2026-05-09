@@ -1,0 +1,346 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3105 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-35-farmer-audit-trail-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 35 — Farmer Audit Trail 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Build-Wiki / Farmer audit trail) Tj
+0 -12 Td
+(Status: 100% developer-side closure with SERVICE_DOWN blocker) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: systemctl_command_not_found_in_local_runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a read-only Build-Wiki Run Now history reader over:) Tj
+0 -12 Td
+(  - bridge_approval_requests) Tj
+0 -12 Td
+(  - bridge_connector_runs) Tj
+0 -12 Td
+(  - bridge_audit_events) Tj
+0 -12 Td
+(- Exposed Run Now history through:) Tj
+0 -12 Td
+(  - GET /api/bridge/brain-sync/build-wiki/run-now) Tj
+0 -12 Td
+(  - GET /api/bridge/brain-sync/build-wiki/status) Tj
+0 -12 Td
+(- Updated the Mission Control Build-Wiki card to show recent Run Now audit history:) Tj
+0 -12 Td
+(  - approval state) Tj
+0 -12 Td
+(  - run state) Tj
+0 -12 Td
+(  - result label) Tj
+0 -12 Td
+(  - audit event count) Tj
+0 -12 Td
+(  - request and finish timestamps) Tj
+0 -12 Td
+(- Preserved the exact execution scope:) Tj
+0 -12 Td
+(  - action: buildwiki.run_now) Tj
+0 -12 Td
+(  - target: opencloud-docs-farmer.service) Tj
+0 -12 Td
+(- No new write path was added.) Tj
+0 -12 Td
+(- No SMB, Fork 2, external farmer, Zapier, HeyGen, second vault, or broad connector execution wa) Tj
+0 -12 Td
+(s enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/build-wiki-run-now.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/brain-sync/build-wiki/run-now/route.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/brain-sync/build-wiki/status/route.ts) Tj
+0 -12 Td
+(- src/components/agent-network/AgentNetworkClient.tsx) Tj
+0 -12 Td
+(- src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/brain-sync/build-wiki/status/route.test.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- GET /api/bridge/brain-sync/build-wiki/run-now) Tj
+0 -12 Td
+(  - Now includes history and history_count.) Tj
+0 -12 Td
+(- GET /api/bridge/brain-sync/build-wiki/status) Tj
+0 -12 Td
+(  - Now includes run_now.history and run_now.history_count.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Build-Wiki Live Status now displays recent Run Now audit history when present.) Tj
+0 -12 Td
+(- The Run Now control remains approval-gated.) Tj
+0 -12 Td
+(- The UI does not claim the farmer ran unless the persisted run row shows completion.) Tj
+0 -12 Td
+(- Failed dispatches are shown as service_down, not fake success.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime restarted on 127.0.0.1:3337.) Tj
+0 -12 Td
+(- Final proof PID: 43554.) Tj
+0 -12 Td
+(- Deployed commit: 6faf904.) Tj
+0 -12 Td
+(- Login route returned 200.) Tj
+0 -12 Td
+(- Unauthenticated Run Now route returned 401.) Tj
+0 -12 Td
+(- Authenticated Run Now route returned 200.) Tj
+0 -12 Td
+(- Authenticated Build-Wiki status route returned 200.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2441 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Authenticated approval audit report returned 200.) Tj
+0 -12 Td
+(- Live Run Now history count: 8.) Tj
+0 -12 Td
+(- Live status route Run Now history count: 8.) Tj
+0 -12 Td
+(- Live approval audit report Build-Wiki Run Now request count: 8.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --check: PASS) Tj
+0 -12 Td
+(- pnpm run typecheck: PASS) Tj
+0 -12 Td
+(- pnpm run build: PASS) Tj
+0 -12 Td
+(- pnpm test: PASS) Tj
+0 -12 Td
+(  - 157 files) Tj
+0 -12 Td
+(  - 1326 tests) Tj
+0 -12 Td
+(- Focused tests:) Tj
+0 -12 Td
+(  - src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts: PASS) Tj
+0 -12 Td
+(  - src/app/api/bridge/brain-sync/build-wiki/status/route.test.ts: PASS) Tj
+0 -12 Td
+(- scripts/check-protected-file-invariants.mjs: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- .env diff check: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-35-farmer-audit-trail-proof.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof summary:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- source_commit: 6faf904) Tj
+0 -12 Td
+(- deployed_commit: 6faf904) Tj
+0 -12 Td
+(- runtime_pid: 43554) Tj
+0 -12 Td
+(- run_now_history_count: 8) Tj
+0 -12 Td
+(- status_route_history_count: 8) Tj
+0 -12 Td
+(- audit_report_buildwiki_run_now_requests: 8) Tj
+0 -12 Td
+(- no_secret_values_detected: true) Tj
+0 -12 Td
+(- no_raw_paths_detected: true) Tj
+0 -12 Td
+(- no_public_exposure: true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The app-side audit trail is closed, but the host service dispatch remains blocked because system) Tj
+0 -12 Td
+(ctl is not available from the current local runtime context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- systemctl_command_not_found_in_local_runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This keeps the lane at SERVICE_DOWN until the runtime host exposes user-level systemd/systemctl ) Tj
+0 -12 Td
+(for:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- opencloud-docs-farmer.service) Tj
+0 -12 Td
+(- opencloud-docs-farmer.timer) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git revert 6faf904) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source commit: 6faf904) Tj
+0 -12 Td
+(- Push: origin/to-knowledge-mc updated) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No .env changes.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 564 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No raw local paths exposed in route payload proof.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No fake Run Now success.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 36 — Farmer rollback / disable is starting automatically.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003410 00000 n 
+0000003536 00000 n 
+0000006029 00000 n 
+0000006155 00000 n 
+0000006770 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6840
+%%EOF

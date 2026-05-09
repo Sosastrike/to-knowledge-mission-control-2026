@@ -1,0 +1,672 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 5 /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2741 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-18-agent-hub-ui-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 18 - Agent Hub UI 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: Agent Hub UI) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED for authenticated owner visual confirmation) Tj
+0 -12 Td
+(Code commit: 2e721fe) Tj
+0 -12 Td
+(Code rollback: git revert 2e721fe) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 18 closes the developer-side Agent Hub UI lane by making the mounted FULL v3 Agent Hub show ) Tj
+0 -12 Td
+(the full active production roster and truthful control states.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The visual contract remains the designer file:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/Agent Hub.html) Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/shared/agent-data.js) Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/shared/tokens.css) Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/shared/node-card.css) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The implementation preserves the designer card/grid/tab classes and status grammar. It does not ) Tj
+0 -12 Td
+(replace the page with a custom React interpretation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory Findings) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The protected Agent Hub API already returned the canonical six-agent production roster:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- Pi-mono) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The mounted designer data still had only five cards, so live Agent Hub hydration silently droppe) Tj
+0 -12 Td
+(d `openclaw-plus`. This left the owner-facing Agent Hub incomplete even though `/api/gateway/age) Tj
+0 -12 Td
+(nt-hub/status` had the right backend truth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The mounted Agent Hub also had inert action buttons:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Open localhost) Tj
+0 -12 Td
+(- Send command) Tj
+0 -12 Td
+(- Pause queue) Tj
+0 -12 Td
+(- Bridge Session) Tj
+0 -12 Td
+(- Restart) Tj
+0 -12 Td
+(- Audit) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Those buttons were visually present but not classified as live, gated, or disabled with an exact) Tj
+0 -12 Td
+( reason.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/Agent Hub.html) Tj
+0 -12 Td
+(- public/designer-mission-control/design/gateway/shared/agent-data.js) Tj
+0 -12 Td
+(- src/lib/gateway-agent-hub-designer-data.test.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Changes made:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2878 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Added OpenClaw+ to the designer Agent Hub data roster.) Tj
+0 -12 Td
+(- Kept Paperclip before OpenClaw+.) Tj
+0 -12 Td
+(- Updated Agent Hub static chrome from five agents to six agents.) Tj
+0 -12 Td
+(- Added the OpenClaw+ tab using existing tab/card/glyph styling.) Tj
+0 -12 Td
+(- Added OpenClaw+ fallback state:) Tj
+0 -12 Td
+(  - status: red / blocked) Tj
+0 -12 Td
+(  - blocker: `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+(  - role: Runtime / Skills / Mini-Agent Execution Layer) Tj
+0 -12 Td
+(- Updated live hydration so `/api/gateway/agent-hub/status` can hydrate OpenClaw+ instead of dro) Tj
+0 -12 Td
+(pping it.) Tj
+0 -12 Td
+(- Added audit route metadata from live Agent Hub routes.) Tj
+0 -12 Td
+(- Converted inert action buttons into truthful states:) Tj
+0 -12 Td
+(  - Open localhost is disabled until localhost/Tailnet UI proof exists.) Tj
+0 -12 Td
+(  - Send command is disabled with scoped Bridge Session + adapter requirement.) Tj
+0 -12 Td
+(  - Pause queue is disabled with Bridge Session + service adapter requirement.) Tj
+0 -12 Td
+(  - Bridge Session is disabled here with pointer to the dedicated flow.) Tj
+0 -12 Td
+(  - Restart is disabled here with owner approval + adapter proof requirement.) Tj
+0 -12 Td
+(  - Audit is a live protected route link.) Tj
+0 -12 Td
+(- Removed the false owner-facing phrase `Design only — no production calls`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No `.env`, auth, governance, memory, Tony routing, or connector execution behavior was changed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route And API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new routes were added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Existing protected routes used:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/status`) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/agents/:id/audit`) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/agents/:id/health`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The live Agent Hub API proof returned:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- agents_total: 6) Tj
+0 -12 Td
+(- ids:) Tj
+0 -12 Td
+(  - paperclip) Tj
+0 -12 Td
+(  - agent-zero) Tj
+0 -12 Td
+(  - hermes) Tj
+0 -12 Td
+(  - spaceagent) Tj
+0 -12 Td
+(  - pi-mono) Tj
+0 -12 Td
+(  - openclaw-plus) Tj
+0 -12 Td
+(- OpenClaw+:) Tj
+0 -12 Td
+(  - status: blocked) Tj
+0 -12 Td
+(  - blocked_reason: openclaw_doctor_runtime_not_reachable) Tj
+0 -12 Td
+(  - writes_enabled: false) Tj
+0 -12 Td
+(  - execution_enabled: false) Tj
+0 -12 Td
+(  - requires_bridge_session: true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The mounted Agent Hub now renders six production cards:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- Pi-mono) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed browser proof at 1480x900:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2663 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Summary: `6 agents · 1 green · 1 yellow · 2 blue · 1 red · 1 gray`) Tj
+0 -12 Td
+(- OpenClaw+ tab is visible.) Tj
+0 -12 Td
+(- OpenClaw+ detail opens.) Tj
+0 -12 Td
+(- OpenClaw+ status is `BLOCKED`.) Tj
+0 -12 Td
+(- OpenClaw+ detail includes `openclaw_doctor_runtime_not_reachable`.) Tj
+0 -12 Td
+(- Agent Hub text no longer says `Design only — no production calls`.) Tj
+0 -12 Td
+(- No `OpenCloud architecture` label appears.) Tj
+0 -12 Td
+(- Browser proof scroll height: 5027) Tj
+0 -12 Td
+(- Browser proof client height: 4939) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Button proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Every card has disabled/gated owner controls with exact reason text.) Tj
+0 -12 Td
+(- Each card's Audit button is live through a protected Agent Hub audit route.) Tj
+0 -12 Td
+(- No send, pause, Bridge Session, restart, localhost, or execution button claims fake action rea) Tj
+0 -12 Td
+(diness.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-18-agent-hub-local-proof.json) Tj
+0 -12 Td
+(- runtime/day-18-agent-hub-local-proof.png) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh validation for Day 18:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test src/lib/gateway-agent-hub-designer-data.test.ts`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(  - 1 file) Tj
+0 -12 Td
+(  - 3 tests) Tj
+0 -12 Td
+(- `pnpm test src/lib/gateway-agent-hub.test.ts src/lib/gateway-agent-hub-designer-data.test.ts`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(  - 2 files) Tj
+0 -12 Td
+(  - 6 tests) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(  - included `sync-static-to-standalone`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(  - 149 files) Tj
+0 -12 Td
+(  - 1301 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(  - ok: true) Tj
+0 -12 Td
+(- staged secret scan for code/test files) Tj
+0 -12 Td
+(  - ok: true) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(  - clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Deployment/restart command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`PORT=3337 MC_HOSTNAME=127.0.0.1 VERIFY_HOST=127.0.0.1 LOG_PATH=/tmp/mc-day18-agent-hub.log BRAN) Tj
+0 -12 Td
+(CH=to-knowledge-mc bash scripts/deploy-standalone.sh`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Deploy script result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Previous proof PID stopped: 63786) Tj
+0 -12 Td
+(- Deployed commit reported by script: 2e721fe) Tj
+0 -12 Td
+(- Temporary script PID reported: 73658) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 2868 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Port: 3337) Tj
+0 -12 Td
+(- Static asset probe: `/_next/static/css/0f8dc0fb86554783.css`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Known runtime note:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The standalone child exited after readiness again, matching the known local proof-process beha) Tj
+0 -12 Td
+(vior from prior Gateway closeouts.) Tj
+0 -12 Td
+(- The log showed readiness, auto-generated local runtime credentials, migrations, and scheduler ) Tj
+0 -12 Td
+(initialization without an explicit runtime error.) Tj
+0 -12 Td
+(- A stable screen-backed local-only proof runtime was restored.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current proof runtime:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bind: 127.0.0.1:3337) Tj
+0 -12 Td
+(- PID: 73934) Tj
+0 -12 Td
+(- Screen session: mc-day18-agent-hub) Tj
+0 -12 Td
+(- Runtime commit under proof: 2e721fe) Tj
+0 -12 Td
+(- Public exposure: none added) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Route smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- `/gateway`: 307 to `/login` when unauthenticated) Tj
+0 -12 Td
+(- `/gateway/agent-hub`: 307 to `/login` when unauthenticated) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`: 307 to `/login` when unauthenticated) Tj
+0 -12 Td
+(- `/agents`: 307 to `/login` when unauthenticated) Tj
+0 -12 Td
+(- `/agent-network`: 307 to `/login` when unauthenticated) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Protected action lock:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `MISSION_CONTROL_API_KEY=codex-local-route-smoke-key node scripts/check-protected-actions-lock) Tj
+0 -12 Td
+(ed.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- checked: 11) Tj
+0 -12 Td
+(- protected write/execution actions remain locked or approval-gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Browser render proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Browser: local Google Chrome through bundled Playwright package) Tj
+0 -12 Td
+(- Viewport: 1480x900) Tj
+0 -12 Td
+(- Auth method: local proof session cookie plus local route-smoke API header for same-origin API ) Tj
+0 -12 Td
+(hydration) Tj
+0 -12 Td
+(- Result: Agent Hub rendered six cards and OpenClaw+ detail blocked truthfully.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No fake GO.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No fake buttons left in Agent Hub cards.) Tj
+0 -12 Td
+(- No raw local paths exposed.) Tj
+0 -12 Td
+(- No custom React redesign.) Tj
+0 -12 Td
+(- No designer token or class rename.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No Tony routing, voice, memory, or governance changes.) Tj
+0 -12 Td
+(- No parked artifacts staged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 13 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1644 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Blocker: owner_authenticated_agent_hub_retest_required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Classification: OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner retest needed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Log in to Mission Control.) Tj
+0 -12 Td
+(- Open `/gateway/agent-hub`.) Tj
+0 -12 Td
+(- Confirm six cards are visible:) Tj
+0 -12 Td
+(  - Agent Zero) Tj
+0 -12 Td
+(  - Hermes) Tj
+0 -12 Td
+(  - Pi-mono) Tj
+0 -12 Td
+(  - SpaceAgent) Tj
+0 -12 Td
+(  - Paperclip) Tj
+0 -12 Td
+(  - OpenClaw+) Tj
+0 -12 Td
+(- Confirm OpenClaw+ appears as blocked, not missing or fake-live.) Tj
+0 -12 Td
+(- Confirm buttons are disabled/gated/live-audit with reasons.) Tj
+0 -12 Td
+(- Confirm scroll and Mission Control exits still work.) Tj
+0 -12 Td
+(- Confirm no fake buttons, raw paths, secrets, or OpenCloud architecture label appear.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day number and lane: Day 18 - Agent Hub UI) Tj
+0 -12 Td
+(- Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(- Blocker classification: OWNER_GATED) Tj
+0 -12 Td
+(- Code commit hash: 2e721fe) Tj
+0 -12 Td
+(- Push result: pushed to origin/to-knowledge-mc) Tj
+0 -12 Td
+(- Deployed/proof commit: 2e721fe) Tj
+0 -12 Td
+(- Runtime proof: local-only standalone proof on 127.0.0.1:3337) Tj
+0 -12 Td
+(- Current proof PID: 73934) Tj
+0 -12 Td
+(- Rollback command: git revert 2e721fe) Tj
+0 -12 Td
+(- Proof artifacts:) Tj
+0 -12 Td
+(  - runtime/day-18-agent-hub-local-proof.json) Tj
+0 -12 Td
+(  - runtime/day-18-agent-hub-local-proof.png) Tj
+0 -12 Td
+(- Next day automatically started: Day 19 - Agent Detail Pages 100% Closure) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000140 00000 n 
+0000000267 00000 n 
+0000003060 00000 n 
+0000003187 00000 n 
+0000006117 00000 n 
+0000006244 00000 n 
+0000008959 00000 n 
+0000009087 00000 n 
+0000012008 00000 n 
+0000012137 00000 n 
+0000013834 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+13905
+%%EOF

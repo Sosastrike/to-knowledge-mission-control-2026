@@ -1,0 +1,277 @@
+{
+  "overview": {
+    "title": "AAgent Hub · Control Center",
+    "summary": "6 agents · 1 green · 1 yellow · 2 blue · 1 red · 1 gray",
+    "overviewRole": "6 agents",
+    "cards": [
+      {
+        "name": "Paperclip",
+        "role": "Workforce Control Plane",
+        "status": "NOT INSTALLED",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      },
+      {
+        "name": "Agent Zero",
+        "role": "Commander",
+        "status": "CONNECTED",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      },
+      {
+        "name": "Hermes",
+        "role": "Lieutenant / Skill + Workflow Builder",
+        "status": "GATED",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      },
+      {
+        "name": "SpaceAgent",
+        "role": "Browser / Firecrawl / YouTube Research Specialist",
+        "status": "READ-ONLY",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      },
+      {
+        "name": "Pi-mono",
+        "role": "Dispatcher / Route Optimizer Candidate",
+        "status": "READ-ONLY",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      },
+      {
+        "name": "OpenClaw+",
+        "role": "Runtime / Skills / Mini-Agent Execution Layer",
+        "status": "BLOCKED",
+        "buttons": [
+          {
+            "text": "Open localhost",
+            "disabled": true,
+            "title": "Localhost or Tailnet UI is not proven in Mission Control yet.",
+            "action": null
+          },
+          {
+            "text": "Send command",
+            "disabled": true,
+            "title": "Protected command dispatch requires a scoped Bridge Session and registered adapter.",
+            "action": null
+          },
+          {
+            "text": "Pause queue",
+            "disabled": true,
+            "title": "Queue mutation requires a scoped Bridge Session and service adapter proof.",
+            "action": null
+          },
+          {
+            "text": "Bridge Session",
+            "disabled": true,
+            "title": "Open or approve Bridge Session from the dedicated Bridge Session flow.",
+            "action": null
+          },
+          {
+            "text": "Restart",
+            "disabled": true,
+            "title": "Restart is disabled here; owner approval plus service-specific adapter proof required.",
+            "action": null
+          },
+          {
+            "text": "Audit",
+            "disabled": false,
+            "title": "Open protected Agent Hub audit payload.",
+            "action": "open-route"
+          }
+        ]
+      }
+    ],
+    "scrollHeight": 5027,
+    "clientHeight": 4939,
+    "bodyTextHasDesignOnlyNoProductionCalls": false,
+    "bodyTextHasOpenCloudArchitecture": false
+  },
+  "openclaw": {
+    "activeTab": "OpenClaw+ Runtime / skills",
+    "detailName": "OpenClaw+",
+    "detailStatus": "BLOCKED",
+    "detailBlocker": true
+  }
+}

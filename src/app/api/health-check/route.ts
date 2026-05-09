@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { requireRole } from '@/lib/auth'
 import { getDatabase } from '@/lib/db'
+import { getAgentZeroBaseUrl } from '@/lib/agent-zero-bridge'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -186,7 +187,7 @@ export async function GET(request: NextRequest) {
     ['Mission Control', 'http://127.0.0.1:3337/login'],
     ['ClaudeClaw', 'http://127.0.0.1:3000/'],
     ['OpenClaw Gateway', 'http://127.0.0.1:18789/'],
-    ['Agent Zero', 'http://100.116.35.95:50080/'],
+    ['Agent Zero', `${getAgentZeroBaseUrl()}/api/health`],
   ] as const) {
     const result = await checkUrl(url)
     checks.push({

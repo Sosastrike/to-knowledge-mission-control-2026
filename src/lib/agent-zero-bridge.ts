@@ -35,6 +35,11 @@ export type AgentZeroRuntimeProbe = {
   web_endpoint: string
   health_endpoint: string
   chat_endpoint: string
+  probe_strategy: 'http_health_endpoints'
+  checked_endpoints: string[]
+  selected_endpoint: string | null
+  docker_required: false
+  docker_status: 'not_checked'
   reachable: boolean
   health_ok: boolean
   http_status: number | null
@@ -45,6 +50,38 @@ export type AgentZeroRuntimeProbe = {
 }
 
 export type AgentZeroEcosystemAgentState = 'active' | 'connected' | 'degraded' | 'offline'
+export type MissionControlCanonicalStatus =
+  | 'LIVE'
+  | 'READY'
+  | 'OWNER_GATED'
+  | 'CREDENTIAL_GATED'
+  | 'SERVICE_DOWN'
+  | 'BLOCKED'
+  | 'DISABLED'
+export type MissionControlClosureBlockerClass =
+  | 'NONE'
+  | 'OWNER_GATED'
+  | 'CREDENTIAL_GATED'
+  | 'SERVICE_DOWN'
+  | 'BLOCKED'
+  | 'DISABLED'
+  | 'HARD_RESET_REQUIRED'
+
+export type AgentZeroProofPacket = {
+  lane: 'Agent Zero'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  docker_required: false
+  secrets_exposed: false
+  raw_paths_exposed: false
+}
 
 export type AgentZeroEcosystemAgentRecord = {
   id: 'agent_zero'
@@ -52,6 +89,8 @@ export type AgentZeroEcosystemAgentRecord = {
   category: 'agent'
   status: AgentZeroEcosystemAgentState
   state: AgentZeroEcosystemAgentState
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
   mode: 'bridge_session_execution' | 'read_only'
   execution_enabled: boolean
   writes_enabled: false
@@ -66,6 +105,14 @@ export type AgentZeroEcosystemAgentRecord = {
   agent_zero_called: boolean
   last_checked: number
   last_checked_at: string
+  runtime_detection: {
+    strategy: 'http_health_endpoints'
+    docker_required: false
+    docker_status: 'not_checked'
+    checked_endpoints: string[]
+    selected_endpoint: string | null
+  }
+  proof_packet: AgentZeroProofPacket
   detail: {
     endpoint: string
     health_endpoint: string
@@ -1011,6 +1058,35 @@ export function getAgentZeroBaseUrl(): string {
   return normalizeBaseUrl()
 }
 
+type AgentZeroRuntimeProbeOptions = {
+  env?: EnvLike
+  timeoutMs?: number
+}
+
+function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
+  return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))))
+}
+
+function endpointFor(baseUrl: string, value: string): string {
+  if (/^https?:\/\//i.test(value)) return value.replace(/\/+$/, '')
+  const pathValue = value.startsWith('/') ? value : `/${value}`
+  return `${baseUrl}${pathValue}`
+}
+
+function agentZeroHealthEndpointCandidates(baseUrl: string, env: EnvLike): string[] {
+  const configuredPaths = env.AGENT_ZERO_HEALTH_PATHS
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean) || []
+  return uniqueNonEmpty([
+    env.AGENT_ZERO_HEALTH_URL,
+    ...configuredPaths.map((value) => endpointFor(baseUrl, value)),
+    `${baseUrl}/api/health`,
+    `${baseUrl}/health`,
+    `${baseUrl}/api/status`,
+  ])
+}
+
 function safeReadSecretFile(filePath: string): string | null {
   try {
     const stat = fs.statSync(filePath)
@@ -1075,49 +1151,125 @@ export function getAgentZeroApiKeyState(env: EnvLike = process.env): AgentZeroAp
   }
 }
 
-export async function probeAgentZeroRuntime(baseUrl = getAgentZeroBaseUrl()): Promise<AgentZeroRuntimeProbe> {
+export async function probeAgentZeroRuntime(
+  baseUrl = getAgentZeroBaseUrl(),
+  options: AgentZeroRuntimeProbeOptions = {},
+): Promise<AgentZeroRuntimeProbe> {
   const normalized = normalizeBaseUrl(baseUrl)
-  const healthEndpoint = `${normalized}/api/health`
+  const endpoints = agentZeroHealthEndpointCandidates(normalized, options.env || process.env)
   const startedAt = Date.now()
-  try {
-    const response = await fetch(healthEndpoint, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    })
-    const text = await response.text()
-    let payload: any = {}
+  let lastFailure: Omit<AgentZeroRuntimeProbe, 'checked_endpoints'> | null = null
+
+  for (const endpoint of endpoints) {
     try {
-      payload = text ? JSON.parse(text) : {}
-    } catch {
-      payload = {}
+      const response = await fetch(endpoint, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(options.timeoutMs ?? 5000),
+      })
+      const text = await response.text()
+      let payload: any = {}
+      try {
+        payload = text ? JSON.parse(text) : {}
+      } catch {
+        payload = {}
+      }
+      const probe: Omit<AgentZeroRuntimeProbe, 'checked_endpoints'> = {
+        base_url: normalized,
+        web_endpoint: `${normalized}/`,
+        health_endpoint: endpoint,
+        chat_endpoint: `${normalized}/api/api_message`,
+        probe_strategy: 'http_health_endpoints',
+        selected_endpoint: response.ok ? endpoint : null,
+        docker_required: false,
+        docker_status: 'not_checked',
+        reachable: response.ok,
+        health_ok: response.ok,
+        http_status: response.status,
+        latency_ms: Date.now() - startedAt,
+        version: payload?.gitinfo?.version || payload?.gitinfo?.short_tag || null,
+        commit_hash: payload?.gitinfo?.commit_hash || null,
+        error: response.ok ? null : `agent_zero_health_http_${response.status}`,
+      }
+      if (response.ok) return { ...probe, checked_endpoints: endpoints }
+      lastFailure = probe
+    } catch (error) {
+      lastFailure = {
+        base_url: normalized,
+        web_endpoint: `${normalized}/`,
+        health_endpoint: endpoint,
+        chat_endpoint: `${normalized}/api/api_message`,
+        probe_strategy: 'http_health_endpoints',
+        selected_endpoint: null,
+        docker_required: false,
+        docker_status: 'not_checked',
+        reachable: false,
+        health_ok: false,
+        http_status: null,
+        latency_ms: Date.now() - startedAt,
+        version: null,
+        commit_hash: null,
+        error: error instanceof Error ? error.message : 'agent_zero_health_probe_failed',
+      }
     }
-    return {
+  }
+
+  return {
+    ...(lastFailure || {
       base_url: normalized,
       web_endpoint: `${normalized}/`,
-      health_endpoint: healthEndpoint,
+      health_endpoint: endpoints[0] || `${normalized}/api/health`,
       chat_endpoint: `${normalized}/api/api_message`,
-      reachable: response.ok,
-      health_ok: response.ok,
-      http_status: response.status,
-      latency_ms: Date.now() - startedAt,
-      version: payload?.gitinfo?.version || payload?.gitinfo?.short_tag || null,
-      commit_hash: payload?.gitinfo?.commit_hash || null,
-      error: response.ok ? null : `agent_zero_health_http_${response.status}`,
-    }
-  } catch (error) {
-    return {
-      base_url: normalized,
-      web_endpoint: `${normalized}/`,
-      health_endpoint: healthEndpoint,
-      chat_endpoint: `${normalized}/api/api_message`,
+      probe_strategy: 'http_health_endpoints' as const,
+      selected_endpoint: null,
+      docker_required: false as const,
+      docker_status: 'not_checked' as const,
       reachable: false,
       health_ok: false,
       http_status: null,
       latency_ms: Date.now() - startedAt,
       version: null,
       commit_hash: null,
-      error: error instanceof Error ? error.message : 'agent_zero_health_probe_failed',
+      error: 'agent_zero_health_probe_failed',
+    }),
+    checked_endpoints: endpoints,
+  }
+}
+
+function classifyAgentZeroClosure(input: {
+  runtime: AgentZeroRuntimeProbe
+  apiKey: AgentZeroApiKeyState
+  chatStatus: AgentZeroEcosystemAgentRecord['chat_status']
+  chatBlocker: string | null
+}): {
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+  blocker: string | null
+} {
+  if (!input.runtime.reachable || !input.runtime.health_ok) {
+    return {
+      canonicalStatus: 'SERVICE_DOWN',
+      blockerClass: 'SERVICE_DOWN',
+      blocker: input.runtime.error || 'agent_zero_health_unreachable',
     }
+  }
+  if (!input.apiKey.present) {
+    return {
+      canonicalStatus: 'CREDENTIAL_GATED',
+      blockerClass: 'CREDENTIAL_GATED',
+      blocker: 'agent_zero_external_api_key_missing',
+    }
+  }
+  if (input.chatStatus === 'blocked') {
+    return {
+      canonicalStatus: 'BLOCKED',
+      blockerClass: 'BLOCKED',
+      blocker: input.chatBlocker || 'agent_zero_test_chat_blocked',
+    }
+  }
+  return {
+    canonicalStatus: 'LIVE',
+    blockerClass: 'NONE',
+    blocker: null,
   }
 }
 
@@ -1125,10 +1277,13 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
   verifyChat?: boolean
   chatTimeoutMs?: number
   context?: AgentZeroReadOnlyContext
+  env?: EnvLike
+  baseUrl?: string
 } = {}): Promise<AgentZeroEcosystemAgentRecord> {
-  const runtime = await probeAgentZeroRuntime()
-  const apiKey = getAgentZeroApiKeyState()
+  const runtime = await probeAgentZeroRuntime(input.baseUrl || getAgentZeroBaseUrl(), { env: input.env })
+  const apiKey = getAgentZeroApiKeyState(input.env)
   const now = Date.now()
+  const checkedAt = new Date(now).toISOString()
   let chatStatus: AgentZeroEcosystemAgentRecord['chat_status'] = 'not_checked'
   let agentZeroCalled = false
   let chatBlocker: string | null = null
@@ -1138,6 +1293,7 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
       ownerMessage: 'Mission Control provider registry health check. Reply with one short sentence confirming read-only ecosystem context is visible. Do not execute anything.',
       context: input.context || buildAgentZeroReadOnlyContext({ providerIds: ['agent_zero'] }),
       timeoutMs: input.chatTimeoutMs ?? 12000,
+      env: input.env,
     })
     agentZeroCalled = result.agent_zero_called
     chatStatus = result.ok ? 'working' : 'blocked'
@@ -1159,6 +1315,12 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
     : state === 'degraded'
       ? (chatBlocker || 'Agent Zero health works, but Mission Control cannot complete authenticated test-chat yet.')
       : null
+  const closure = classifyAgentZeroClosure({
+    runtime,
+    apiKey,
+    chatStatus,
+    chatBlocker,
+  })
 
   return {
     id: 'agent_zero',
@@ -1166,6 +1328,8 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
     category: 'agent',
     status: state,
     state,
+    canonical_status: closure.canonicalStatus,
+    blocker_class: closure.blockerClass,
     mode: 'bridge_session_execution',
     execution_enabled: true,
     writes_enabled: false,
@@ -1179,7 +1343,29 @@ export async function buildAgentZeroEcosystemAgentRecord(input: {
     chat_status: chatStatus,
     agent_zero_called: agentZeroCalled,
     last_checked: now,
-    last_checked_at: new Date(now).toISOString(),
+    last_checked_at: checkedAt,
+    runtime_detection: {
+      strategy: runtime.probe_strategy,
+      docker_required: runtime.docker_required,
+      docker_status: runtime.docker_status,
+      checked_endpoints: runtime.checked_endpoints,
+      selected_endpoint: runtime.selected_endpoint,
+    },
+    proof_packet: {
+      lane: 'Agent Zero',
+      timestamp: checkedAt,
+      runtime_commit: runtime.commit_hash,
+      route_or_service_checked: runtime.selected_endpoint || runtime.health_endpoint,
+      result: closure.canonicalStatus,
+      blocker: closure.blocker,
+      blocker_class: closure.blockerClass,
+      audit_pointer: chatStatus === 'working' ? '/api/bridge/agent-zero/status' : null,
+      safe_log_pointer: null,
+      rollback_command: 'git revert <day-01-agent-zero-commit>',
+      docker_required: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
     detail: {
       endpoint: runtime.web_endpoint,
       health_endpoint: runtime.health_endpoint,

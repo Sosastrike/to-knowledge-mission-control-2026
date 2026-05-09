@@ -1,12 +1,14 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildAgentZeroEcosystemAgentRecord,
   buildAgentZeroReadOnlyContext,
   buildAgentZeroReadOnlyContractReply,
   buildAgentZeroReadOnlyPrompt,
   getAgentZeroApiKeyState,
+  probeAgentZeroRuntime,
   sanitizeAgentZeroOwnerReply,
   sendAgentZeroReadOnlyMessage,
 } from './agent-zero-bridge'
@@ -35,6 +37,10 @@ const sharedSkillSourceFields = (root: string) => ({
 })
 
 describe('Agent Zero read-only bridge connector', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('reports missing external API auth without exposing a secret', () => {
     const state = getAgentZeroApiKeyState({})
     expect(state.present).toBe(false)
@@ -82,6 +88,89 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(result.blocker).toBe('agent_zero_external_api_key_missing')
     expect(result.execution_enabled).toBe(false)
     expect(result.writes_enabled).toBe(false)
+  })
+
+  it('probes Agent Zero with HTTP health endpoints and no Docker requirement', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response('not found', { status: 404 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        gitinfo: {
+          version: 'v1.2.3',
+          commit_hash: 'agent-zero-test-sha',
+        },
+      }), { status: 200 }))
+    vi.stubGlobal('fetch', fetch)
+
+    const result = await probeAgentZeroRuntime('http://agent-zero.test', {
+      env: {},
+      timeoutMs: 100,
+    })
+
+    expect(fetch.mock.calls.map((call) => String(call[0]))).toEqual([
+      'http://agent-zero.test/api/health',
+      'http://agent-zero.test/health',
+    ])
+    expect(result).toMatchObject({
+      reachable: true,
+      health_ok: true,
+      health_endpoint: 'http://agent-zero.test/health',
+      selected_endpoint: 'http://agent-zero.test/health',
+      probe_strategy: 'http_health_endpoints',
+      docker_required: false,
+      docker_status: 'not_checked',
+      version: 'v1.2.3',
+      commit_hash: 'agent-zero-test-sha',
+    })
+    expect(result.checked_endpoints).toContain('http://agent-zero.test/api/status')
+  })
+
+  it('classifies Agent Zero as credential gated when health is reachable but API auth is missing', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      gitinfo: { commit_hash: 'agent-zero-health-sha' },
+    }), { status: 200 })))
+
+    const record = await buildAgentZeroEcosystemAgentRecord({
+      baseUrl: 'http://agent-zero.test',
+      env: {},
+      verifyChat: false,
+    })
+
+    expect(record.state).toBe('degraded')
+    expect(record.canonical_status).toBe('CREDENTIAL_GATED')
+    expect(record.blocker_class).toBe('CREDENTIAL_GATED')
+    expect(record.runtime_detection).toMatchObject({
+      strategy: 'http_health_endpoints',
+      docker_required: false,
+      docker_status: 'not_checked',
+      selected_endpoint: 'http://agent-zero.test/api/health',
+    })
+    expect(record.proof_packet).toMatchObject({
+      lane: 'Agent Zero',
+      runtime_commit: 'agent-zero-health-sha',
+      route_or_service_checked: 'http://agent-zero.test/api/health',
+      result: 'CREDENTIAL_GATED',
+      blocker: 'agent_zero_external_api_key_missing',
+      blocker_class: 'CREDENTIAL_GATED',
+      docker_required: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    })
+  })
+
+  it('classifies Agent Zero as service down when HTTP health cannot be reached', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('down', { status: 503 })))
+
+    const record = await buildAgentZeroEcosystemAgentRecord({
+      baseUrl: 'http://agent-zero.test',
+      env: { AGENT_ZERO_API_KEY: 'redacted-test-key' },
+      verifyChat: false,
+    })
+
+    expect(record.state).toBe('offline')
+    expect(record.canonical_status).toBe('SERVICE_DOWN')
+    expect(record.blocker_class).toBe('SERVICE_DOWN')
+    expect(record.proof_packet.blocker_class).toBe('SERVICE_DOWN')
+    expect(JSON.stringify(record)).not.toContain('redacted-test-key')
   })
 
   it('builds a read-only Mission Control context and refuses execution claims', () => {

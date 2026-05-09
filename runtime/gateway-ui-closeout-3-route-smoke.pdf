@@ -1,0 +1,110 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1440 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-ui-closeout-3-route-smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway UI Closeout 3 — Route Smoke) Tj
+0 -12 Td
+(Date: 2026-05-08) Tj
+0 -12 Td
+(Status: PASS \(unauthenticated protection\), PARTIAL \(authenticated visual proof pending owner ses) Tj
+0 -12 Td
+(sion\)) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+(Checked routes:) Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`) Tj
+0 -12 Td
+(- `/agent-network`) Tj
+0 -12 Td
+(- `/agents`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Unauthenticated Smoke Result) Tj
+0 -12 Td
+(Base URL:) Tj
+0 -12 Td
+(- `https://tkmc.knowledge-vs-ai.com`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(All checked routes returned:) Tj
+0 -12 Td
+(- `307` redirect to `/login`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This matches expected protected-route behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Authenticated Behavior) Tj
+0 -12 Td
+(- Authenticated route rendering of FULL v3 mounted pages requires owner-authenticated browser se) Tj
+0 -12 Td
+(ssion.) Tj
+0 -12 Td
+(- This report does not claim authenticated GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No raw path exposure in route responses.) Tj
+0 -12 Td
+(- No secret output.) Tj
+0 -12 Td
+(- No fake route success claims.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001733 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1803
+%%EOF

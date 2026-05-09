@@ -1,0 +1,370 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2939 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-36-farmer-rollback-disable-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 36 — Farmer Rollback / Disable 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Brain / Build-Wiki / Farmer) Tj
+0 -12 Td
+(Status: CLOSED AS SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Publish safe rollback / disable guidance for the Fork 1 Build-Wiki Farmer without creating a fak) Tj
+0 -12 Td
+(e disable button, broad execution path, SMB/Fork 2 path, external farmer path, or second vault.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a read-only `rollback_disable` contract to `GET /api/bridge/brain-sync/build-wiki/status) Tj
+0 -12 Td
+(`.) Tj
+0 -12 Td
+(- Exposed owner/admin host runbook steps for stopping the oneshot service and disabling the time) Tj
+0 -12 Td
+(r.) Tj
+0 -12 Td
+(- Kept all disable controls non-executable from Mission Control.) Tj
+0 -12 Td
+(- Added the rollback/disable state to the Mission Control Build-Wiki card as `RUNBOOK_ONLY`.) Tj
+0 -12 Td
+(- Added tests proving the runbook is exact, read-only, scoped to Fork 1, and secret/path safe.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/status/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/status/route.test.ts`) Tj
+0 -12 Td
+(- `src/components/agent-network/AgentNetworkClient.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New response field:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```json) Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "rollback_disable": {) Tj
+0 -12 Td
+(    "read_only": true,) Tj
+0 -12 Td
+(    "execution_enabled": false,) Tj
+0 -12 Td
+(    "writes_enabled": false,) Tj
+0 -12 Td
+(    "disable_controls_enabled": false,) Tj
+0 -12 Td
+(    "bridge_session_required_for_future_disable_control": true,) Tj
+0 -12 Td
+(    "service_unit": "opencloud-docs-farmer.service",) Tj
+0 -12 Td
+(    "timer_unit": "opencloud-docs-farmer.timer") Tj
+0 -12 Td
+(  }) Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control shows Rollback / Disable as `RUNBOOK_ONLY`.) Tj
+0 -12 Td
+(- The Build-Wiki card displays the owner/admin runbook.) Tj
+0 -12 Td
+(- Mission Control does not execute stop/disable controls from the status card.) Tj
+0 -12 Td
+(- Run Now remains the only wired Build-Wiki action in this hop.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner/Admin Runbook) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(systemctl --user stop opencloud-docs-farmer.service) Tj
+0 -12 Td
+(systemctl --user disable --now opencloud-docs-farmer.timer) Tj
+0 -12 Td
+(systemctl --user status opencloud-docs-farmer.service opencloud-docs-farmer.timer) Tj
+0 -12 Td
+(```) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2540 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `46361`.) Tj
+0 -12 Td
+(- Production/local proof commit: `9ac74c9934425ecc900bfcf266135350dd3a84df`.) Tj
+0 -12 Td
+(- No public local exposure was added.) Tj
+0 -12 Td
+(- `systemctl` is not available in this local runtime context, so live service/timer stop proof r) Tj
+0 -12 Td
+(emains blocked by `systemctl_command_not_found_in_local_runtime`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test src/app/api/bridge/brain-sync/build-wiki/status/route.test.ts`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full test result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Test files: 157 passed) Tj
+0 -12 Td
+(- Tests: 1326 passed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-36-farmer-rollback-disable-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verified:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` returned 200.) Tj
+0 -12 Td
+(- Unauthenticated status route returned a protected response.) Tj
+0 -12 Td
+(- Authenticated status route returned 200.) Tj
+0 -12 Td
+(- `rollback_disable.read_only=true`.) Tj
+0 -12 Td
+(- `execution_enabled=false`.) Tj
+0 -12 Td
+(- `writes_enabled=false`.) Tj
+0 -12 Td
+(- `disable_controls_enabled=false`.) Tj
+0 -12 Td
+(- Runbook is exactly scoped to `opencloud-docs-farmer.service` and `opencloud-docs-farmer.timer`) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+(- No disable execution was attempted.) Tj
+0 -12 Td
+(- No SMB/Fork 2/external farmer path was added.) Tj
+0 -12 Td
+(- No raw local paths or secret-shaped values were exposed in the status payload.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No broad connector execution.) Tj
+0 -12 Td
+(- No SMB mount.) Tj
+0 -12 Td
+(- No Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+(- No fake button: disable is runbook-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(9ac74c9934425ecc900bfcf266135350dd3a84df) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 919 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(origin/to-knowledge-mc contains 9ac74c9934425ecc900bfcf266135350dd3a84df) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 9ac74c9934425ecc900bfcf266135350dd3a84df) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(SERVICE_DOWN: systemctl_command_not_found_in_local_runtime) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This does not block developer-side Day 36 closure because Mission Control now exposes the exact ) Tj
+0 -12 Td
+(rollback/disable runbook safely and does not pretend it executed the stop/disable action.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 37 — Brain Status Page is next.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003244 00000 n 
+0000003370 00000 n 
+0000005962 00000 n 
+0000006088 00000 n 
+0000007058 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7128
+%%EOF

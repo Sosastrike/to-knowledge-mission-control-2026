@@ -1,0 +1,76 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T21:30:39.765Z",
+  "day": 36,
+  "lane": "Farmer rollback / disable",
+  "source_commit": "9ac74c9934425ecc900bfcf266135350dd3a84df",
+  "origin_commit": "9ac74c9934425ecc900bfcf266135350dd3a84df",
+  "deployed_commit": "9ac74c9934425ecc900bfcf266135350dd3a84df",
+  "runtime": {
+    "bind": "127.0.0.1:3337",
+    "pid": "46361",
+    "service_public_exposure": false
+  },
+  "routes": {
+    "login": {
+      "status": 200
+    },
+    "unauthenticated_status": {
+      "status": 401,
+      "location": null
+    },
+    "authenticated_status": {
+      "status": 200
+    }
+  },
+  "rollback_disable": {
+    "read_only": true,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "disable_controls_enabled": false,
+    "bridge_session_required_for_future_disable_control": true,
+    "rollback_ref": "systemctl --user stop opencloud-docs-farmer.service (oneshot exits on completion; no manual rollback usually needed)",
+    "service_unit": "opencloud-docs-farmer.service",
+    "timer_unit": "opencloud-docs-farmer.timer",
+    "owner_admin_runbook": [
+      "systemctl --user stop opencloud-docs-farmer.service",
+      "systemctl --user disable --now opencloud-docs-farmer.timer",
+      "systemctl --user status opencloud-docs-farmer.service opencloud-docs-farmer.timer"
+    ],
+    "next_action": "Owner/admin can use this runbook on the runtime host if the farmer must be stopped or disabled. Mission Control does not execute disable controls from this read-only status surface."
+  },
+  "service_probe": {
+    "available": false,
+    "blocker": "systemctl_command_not_found_in_local_runtime",
+    "service_active": null,
+    "timer_active": false
+  },
+  "blocker_class": "SERVICE_DOWN",
+  "blocker": "systemctl_command_not_found_in_local_runtime",
+  "checks": {
+    "head_matches_origin": true,
+    "login_200": true,
+    "unauth_status_protected": true,
+    "auth_status_200": true,
+    "rollback_read_only": true,
+    "rollback_execution_disabled": true,
+    "rollback_writes_disabled": true,
+    "rollback_disable_controls_disabled": true,
+    "rollback_bridge_required_for_future_control": true,
+    "service_unit_scoped": true,
+    "timer_unit_scoped": true,
+    "runbook_exact": true,
+    "no_secret_shape": true,
+    "no_raw_path_shape": true,
+    "no_execution_attempted": true
+  },
+  "safety": {
+    "no_env_change": true,
+    "no_secret_output": true,
+    "no_public_exposure": true,
+    "no_fake_execution": true,
+    "no_smb": true,
+    "no_fork_2": true,
+    "no_external_farmers": true
+  }
+}

@@ -86,7 +86,7 @@ BT
 0 -12 Td
 (## Commit / Push) Tj
 0 -12 Td
-(- Commit: `0558f19`) Tj
+(- Commit: `fb7a480`) Tj
 0 -12 Td
 (- Branch: `to-knowledge-mc`) Tj
 0 -12 Td
@@ -98,7 +98,7 @@ BT
 0 -12 Td
 (## Rollback) Tj
 0 -12 Td
-(- `git revert 0558f19`) Tj
+(- `git revert fb7a480`) Tj
 0 -12 Td
 () Tj
 ET

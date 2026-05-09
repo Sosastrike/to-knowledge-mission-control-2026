@@ -30,10 +30,10 @@ Status: PASS
 - No public local exposure added.
 
 ## Commit / Push
-- Commit: `0558f19`
+- Commit: `fb7a480`
 - Branch: `to-knowledge-mc`
 - Remote: `origin/to-knowledge-mc`
 - Push: pending at this report update timestamp; completed in final execution step.
 
 ## Rollback
-- `git revert 0558f19`
+- `git revert fb7a480`

@@ -115,7 +115,7 @@ function buildDesignerMissionControlCsp(): string {
     `default-src 'self'`,
     `base-uri 'self'`,
     `object-src 'none'`,
-    `frame-ancestors 'none'`,
+    `frame-ancestors 'self'`,
     `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com`,
@@ -130,13 +130,14 @@ function buildDesignerMissionControlCsp(): string {
 
 function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce?: string): NextResponse {
   const requestId = crypto.randomUUID()
+  const pathname = _request.nextUrl.pathname
+  const isDesignerMissionControl = pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')
   response.headers.set('X-Request-Id', requestId)
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Frame-Options', isDesignerMissionControl ? 'SAMEORIGIN' : 'DENY')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  const pathname = _request.nextUrl.pathname
-  if (pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')) {
+  if (isDesignerMissionControl) {
     response.headers.set('Content-Security-Policy', buildDesignerMissionControlCsp())
   } else {
     const googleEnabled = isGoogleAuthConfigured()

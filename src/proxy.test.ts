@@ -108,4 +108,64 @@ describe('proxy host matching', () => {
     const response = proxy(request)
     expect(response.status).toBe(401)
   })
+
+  it('allows protected designer assets to be framed by same-origin Gateway pages only', async () => {
+    vi.resetModules()
+    vi.doMock('node:os', () => ({
+      default: { hostname: () => 'hetzner-jarv' },
+      hostname: () => 'hetzner-jarv',
+    }))
+
+    const { proxy } = await import('./proxy')
+    const request = {
+      headers: new Headers({ host: 'localhost:3000' }),
+      nextUrl: {
+        host: 'localhost:3000',
+        hostname: 'localhost',
+        pathname: '/designer-mission-control/design/gateway/Agent%20Hub.html',
+        searchParams: new URLSearchParams(),
+        clone: () => ({ pathname: '/designer-mission-control/design/gateway/Agent%20Hub.html' }),
+      },
+      method: 'GET',
+      cookies: { get: (name: string) => name === 'mc-session' ? { value: 'local-proof-session' } : undefined },
+    } as any
+
+    setNodeEnv('production')
+    process.env.MC_ALLOWED_HOSTS = 'localhost,127.0.0.1'
+    delete process.env.MC_ALLOW_ANY_HOST
+
+    const response = proxy(request)
+    expect(response.headers.get('X-Frame-Options')).toBe('SAMEORIGIN')
+    expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'self'`)
+  })
+
+  it('keeps non-designer Mission Control pages protected from framing', async () => {
+    vi.resetModules()
+    vi.doMock('node:os', () => ({
+      default: { hostname: () => 'hetzner-jarv' },
+      hostname: () => 'hetzner-jarv',
+    }))
+
+    const { proxy } = await import('./proxy')
+    const request = {
+      headers: new Headers({ host: 'localhost:3000' }),
+      nextUrl: {
+        host: 'localhost:3000',
+        hostname: 'localhost',
+        pathname: '/gateway/agent-hub',
+        searchParams: new URLSearchParams(),
+        clone: () => ({ pathname: '/gateway/agent-hub' }),
+      },
+      method: 'GET',
+      cookies: { get: (name: string) => name === 'mc-session' ? { value: 'local-proof-session' } : undefined },
+    } as any
+
+    setNodeEnv('production')
+    process.env.MC_ALLOWED_HOSTS = 'localhost,127.0.0.1'
+    delete process.env.MC_ALLOW_ANY_HOST
+
+    const response = proxy(request)
+    expect(response.headers.get('X-Frame-Options')).toBe('DENY')
+    expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'none'`)
+  })
 })

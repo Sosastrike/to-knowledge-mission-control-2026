@@ -45,7 +45,7 @@ export function DesignerGatewayMockFrame({ page, title }: DesignerGatewayMockFra
 
     const onLoad = () => {
       syncHeight()
-      if (!iframe.contentDocument) return
+      if (!iframe.contentDocument || observer) return
       const observedNode = iframe.contentDocument.documentElement
       observer = new ResizeObserver(syncHeightRaf)
       observer.observe(observedNode)
@@ -56,6 +56,11 @@ export function DesignerGatewayMockFrame({ page, title }: DesignerGatewayMockFra
 
     iframe.addEventListener('load', onLoad)
     window.addEventListener('resize', syncHeightRaf)
+    if (iframe.contentDocument?.readyState === 'complete') {
+      onLoad()
+    } else {
+      syncHeightRaf()
+    }
 
     return () => {
       iframe.removeEventListener('load', onLoad)

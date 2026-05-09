@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T19:55:00.711Z",
+  "base_url": "http://127.0.0.1:3337",
+  "approval_id": "apr_3b58495a-cc51-47a7-9e17-75bd3801defc",
+  "protected_routes": [
+    "/api/bridge/approval-requests/apr_3b58495a-cc51-47a7-9e17-75bd3801defc/approve",
+    "/api/bridge/approval-requests/apr_3b58495a-cc51-47a7-9e17-75bd3801defc/deny",
+    "/api/bridge/brain-sync/build-wiki/run-now/apr_3b58495a-cc51-47a7-9e17-75bd3801defc/dispatch"
+  ],
+  "create_response": {
+    "status": 201,
+    "mode": "run_now_approval_requested_no_execution",
+    "accepted_for_execution": false,
+    "execution_enabled": false
+  },
+  "unauthenticated_results": {
+    "approve": {
+      "status": 401,
+      "ok": true
+    },
+    "deny": {
+      "status": 401,
+      "ok": true
+    },
+    "dispatch": {
+      "status": 401,
+      "ok": true
+    }
+  },
+  "invalid_api_key_results": {
+    "approve": {
+      "status": 401,
+      "ok": true
+    },
+    "deny": {
+      "status": 401,
+      "ok": true
+    },
+    "dispatch": {
+      "status": 401,
+      "ok": true
+    }
+  },
+  "owner_cleanup_deny": {
+    "status": 200,
+    "mode": "approval_request_denied_no_execution",
+    "approval_state": "denied",
+    "accepted_for_execution": false,
+    "execution_enabled": false
+  },
+  "persistence_rows": {
+    "approval": {
+      "id": "apr_3b58495a-cc51-47a7-9e17-75bd3801defc",
+      "approval_state": "denied",
+      "resolution_reason": "Day 28 owner cleanup denial after auth checks."
+    },
+    "run_count": 0,
+    "audit_outcomes": [
+      {
+        "outcome": "approval_requested"
+      },
+      {
+        "outcome": "denied"
+      }
+    ]
+  },
+  "non_owner_live_credential_available": false,
+  "non_owner_live_credential_blocker": "non_owner_runtime_credential_not_available; route-level regression test covers requireRole rejection",
+  "blocker_class": "NONE",
+  "no_secret_values_printed": true,
+  "no_env_changes": true,
+  "rollback": "No execution rollback required. Security proof approval apr_3b58495a-cc51-47a7-9e17-75bd3801defc was denied with zero runs."
+}

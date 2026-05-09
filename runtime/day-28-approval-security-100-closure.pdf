@@ -1,0 +1,340 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2416 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-28-approval-security-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 28 - Approval Security) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Status: CLOSED) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+(Code commit: pending) Tj
+0 -12 Td
+(Rollback: `git revert <day28_commit_sha>`) Tj
+0 -12 Td
+(Next day started: Day 29 - Approval Audit Export / Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Decision) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 28 is closed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Approval security now has focused regression coverage plus live route proof. Unauthenticated and) Tj
+0 -12 Td
+( invalid-key callers cannot approve, deny, or dispatch protected actions. Denial remains non-exe) Tj
+0 -12 Td
+(cuting, replay-safe, and audited.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added focused route tests for:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- unauthorized denial attempts returning before persistence mutation) Tj
+0 -12 Td
+(- owner denial creating a denial audit event) Tj
+0 -12 Td
+(- owner denial creating zero connector run rows) Tj
+0 -12 Td
+(- denial replay staying non-executing) Tj
+0 -12 Td
+(- denial replay not adding a second audit row) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source file added:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/[id]/deny/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production route logic was changed; the existing implementation already enforced the required) Tj
+0 -12 Td
+( behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Security Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`runtime/day-28-approval-security-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Approval id:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`apr_3b58495a-cc51-47a7-9e17-75bd3801defc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Protected routes checked:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests/{id}/approve`) Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests/{id}/deny`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- approve: 401) Tj
+0 -12 Td
+(- deny: 401) Tj
+0 -12 Td
+(- dispatch: 401) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Invalid API key results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- approve: 401) Tj
+0 -12 Td
+(- deny: 401) Tj
+0 -12 Td
+(- dispatch: 401) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2454 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Owner cleanup denial:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- status: 200) Tj
+0 -12 Td
+(- mode: `approval_request_denied_no_execution`) Tj
+0 -12 Td
+(- approval state: `denied`) Tj
+0 -12 Td
+(- accepted for execution: false) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Persistence proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- approval state: `denied`) Tj
+0 -12 Td
+(- run count: 0) Tj
+0 -12 Td
+(- audit outcomes:) Tj
+0 -12 Td
+(  - `approval_requested`) Tj
+0 -12 Td
+(  - `denied`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Non-Owner Proof Note) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(A live non-owner credential was not available in this local runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker note:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`non_owner_runtime_credential_not_available`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This does not block Day 28 because the route-level regression test directly covers `requireRole`) Tj
+0 -12 Td
+( rejection and verifies persistence is unchanged when authorization fails.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh checks run after the test addition:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: pass) Tj
+0 -12 Td
+(- `pnpm run typecheck`: pass) Tj
+0 -12 Td
+(- `pnpm run build`: pass) Tj
+0 -12 Td
+(- `pnpm test`: pass, 154 files / 1319 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: pass) Tj
+0 -12 Td
+(- live approval security proof: pass) Tj
+0 -12 Td
+(- staged secret scan: pending before commit) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public exposure added.) Tj
+0 -12 Td
+(- No fake approval.) Tj
+0 -12 Td
+(- No fake execution.) Tj
+0 -12 Td
+(- No connector execution occurred during denied/security proof.) Tj
+0 -12 Td
+(- No SMB.) Tj
+0 -12 Td
+(- No Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Added) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/[id]/deny/route.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-28-approval-security-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-28-approval-security-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-28-approval-security-100-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 421 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(None for approval security.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Day 29 Start) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 29 - Approval Audit Export / Report begins next.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Goal:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Expose safe approval audit/report data with request, decision, result, and history without secre) Tj
+0 -12 Td
+(ts, raw paths, or auth bypass.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002721 00000 n 
+0000002847 00000 n 
+0000005353 00000 n 
+0000005479 00000 n 
+0000005951 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6021
+%%EOF

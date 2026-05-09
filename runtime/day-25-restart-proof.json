@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T19:43:07.805Z",
+  "runtime": "local_standalone",
+  "pid": "21292",
+  "process_start": "Sat May  9 15:42:21 2026",
+  "login_status": 200,
+  "bind": "127.0.0.1:3337",
+  "head": "39fc228",
+  "standalone_artifact_repaired_for_proof": true,
+  "still_listening_after_seconds": 8,
+  "no_public_exposure_added": true,
+  "no_secret_values_printed": true,
+  "no_env_changes": true
+}

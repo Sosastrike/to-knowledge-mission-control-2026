@@ -1,0 +1,58 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-09T19:43:08.147Z",
+  "base_url": "http://127.0.0.1:3337",
+  "auth_context": "db_api_key_loaded_without_printing_value",
+  "results": [
+    {
+      "path": "/login",
+      "auth": false,
+      "status": 200,
+      "ok": true,
+      "body_bytes": 100850
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/status",
+      "auth": false,
+      "status": 401,
+      "ok": true,
+      "body_bytes": 24
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/run-now",
+      "auth": false,
+      "status": 401,
+      "ok": true,
+      "body_bytes": 24
+    },
+    {
+      "path": "/api/bridge/button-contracts",
+      "auth": false,
+      "status": 401,
+      "ok": true,
+      "body_bytes": 24
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/status",
+      "auth": true,
+      "status": 200,
+      "ok": true,
+      "body_bytes": 4082
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/run-now",
+      "auth": true,
+      "status": 200,
+      "ok": true,
+      "body_bytes": 1459
+    },
+    {
+      "path": "/api/bridge/button-contracts",
+      "auth": true,
+      "status": 200,
+      "ok": true,
+      "body_bytes": 68625
+    }
+  ],
+  "no_secret_values_printed": true
+}

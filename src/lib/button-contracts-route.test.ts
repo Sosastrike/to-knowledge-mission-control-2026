@@ -77,6 +77,19 @@ describe('Mission Control button contracts', () => {
     })
     expect(brainStatus?.credential_names).toEqual([])
 
+    const knowledgeReport = payload.buttons.find((button) => button.label === 'Knowledge report')
+    expect(knowledgeReport).toMatchObject({
+      endpoint: '/api/bridge/brain-sync/knowledge-report',
+      state: 'READ_ONLY',
+      execution_enabled: true,
+      fake_success_allowed: false,
+      owner_status: {
+        status: 'LIVE',
+        tone: 'green',
+        blocker_class: 'NONE',
+      },
+    })
+
     const farmerLogs = payload.buttons.find((button) => button.label === 'Build-Wiki farmer logs')
     expect(farmerLogs).toMatchObject({
       endpoint: '/api/bridge/brain-sync/build-wiki/logs',

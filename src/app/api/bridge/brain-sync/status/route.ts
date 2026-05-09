@@ -172,10 +172,7 @@ function safeRunNowHistory() {
   }
 }
 
-export async function GET(request: NextRequest) {
-  const auth = requireRole(request, 'viewer')
-  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
-
+async function buildBrainSyncStatusPayload() {
   const upstreamConfigured = hasClaudeClawDashboardToken()
   const obsidianLocal = safeObsidianStatus()
   const mempalaceLocal = safeMemPalaceStatus()
@@ -476,5 +473,13 @@ export async function GET(request: NextRequest) {
     },
   }
 
-  return NextResponse.json(sanitizeBridgeProviderPayload(payload), { headers: { 'Cache-Control': 'no-store' } })
+  return sanitizeBridgeProviderPayload(payload)
+}
+
+export async function GET(request: NextRequest) {
+  const auth = requireRole(request, 'viewer')
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const payload = await buildBrainSyncStatusPayload()
+  return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } })
 }

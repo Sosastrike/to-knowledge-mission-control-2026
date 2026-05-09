@@ -769,7 +769,8 @@ async function readBuildWikiFarmerStatus(input: {
       logs: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/logs', read_only: true, execution_enabled: false, requires_bridge_session: false },
       run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },
       run_now_read: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}', read_only: true, execution_enabled: false, requires_bridge_session: false },
-      run_now_dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch', read_only: false, execution_enabled: false, requires_bridge_session: true },
+      run_now_approve: { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve', read_only: false, execution_enabled: true, requires_bridge_session: false },
+      run_now_dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch', read_only: false, execution_enabled: true, requires_bridge_session: true },
     },
     farmer_service: BUILDWIKI_TARGET_SERVICE,
     farmer_timer: 'opencloud-docs-farmer.timer',
@@ -812,6 +813,7 @@ async function readBuildWikiFarmerStatus(input: {
       owner_approval_required: true,
       bridge_session_required: true,
       execution_enabled: false,
+      execution_enabled_after_owner_approval: true,
       dispatch_scope: BUILDWIKI_TARGET_KEY,
       blocked_reason: runNowBlockedReason,
     },
@@ -840,7 +842,7 @@ async function readBuildWikiFarmerStatus(input: {
       blocker: smb.mounted ? 'smb_mount_visible_but_fork2_not_enabled' : smb.blocker,
     },
     farmer_execution_enabled: false,
-    note: 'Agent Zero can see Build-Wiki/Farmer status only. Run Now requires a Bridge Session and owner approval, dispatch stays scoped to opencloud-docs-farmer.service, and SMB/Fork 2 remains blocked unless an SMB mount is verified and separately approved.',
+    note: 'Agent Zero can see Build-Wiki/Farmer status and request Run Now approval. Run Now requires a Bridge Session and owner approval, approved dispatch stays scoped to opencloud-docs-farmer.service, and SMB/Fork 2 remains blocked unless an SMB mount is verified and separately approved.',
   }
 }
 

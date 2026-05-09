@@ -2860,7 +2860,7 @@ function BuildWikiStatusCard({ payload }: { payload: BuildWikiStatusPayload | nu
       <p className={styles.providerNotes}>Sources: {payload.active_sources?.length ?? farmer?.sources_count ?? 0} active · {payload.available_source_expansions?.length ?? 0} available local additions</p>
       <p className={styles.providerNotes}>Destination: {destination.obsidian_path ? 'Configured Build-Wiki knowledge destination' : 'OpenClaw+ / Build-Wiki knowledge destination'}</p>
       <ul className={styles.connectorList}>
-        <li><span>Run Now<br /><small>Creates Agent Zero owner-channel approval only; dispatch stays exact-scope.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
+        <li><span>Run Now<br /><small>Creates exact-scope owner approval; approval dispatches the farmer only.</small></span><strong>{controls.run_now || runNow?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Pause / Resume<br /><small>Timer-only control; no service rewrite from this card.</small></span><strong>{timerControl?.offered_action ? `${timerControl.offered_action}: ${controls[`${timerControl.offered_action}_sync`] || 'OWNER_APPROVAL_REQUIRED'}` : 'not applicable'}</strong></li>
         <li><span>Add Local Source<br /><small>Approval-driven source-list change; SMB/external farmers stay disabled.</small></span><strong>{controls.add_local_source || addSource?.ui_state || 'OWNER_APPROVAL_REQUIRED'}</strong></li>
         <li><span>Latest files/logs<br /><small>Read-only browser visibility, secret-scanned.</small></span><strong>READ_ONLY</strong></li>
@@ -2929,21 +2929,21 @@ function BuildWikiRunNowCard({
       <div className={styles.providerMeta}>
         <span>action: buildwiki.run_now</span>
         <span>scope: opencloud-docs-farmer.service only</span>
-        <span>approval: Agent Zero → owner channel</span>
-        <span>execution: owner approval required</span>
+        <span>approval: Mission Control owner approval</span>
+        <span>execution: dispatch after owner approval only</span>
       </div>
       <p className={styles.providerNotes}>
         Flow: Request run → Approval pending → Run dispatched / completed.
       </p>
       <p className={styles.providerNotes}>
-        This creates a structured Telegram approval request. Mission Control does not approve directly and does not start the farmer by itself.
+        This creates a scoped owner approval request. After owner approval, the server starts only opencloud-docs-farmer.service and writes the audit/run record.
       </p>
       <button type="button" className={styles.btnPrimary} disabled={busy} onClick={onRequest}>
-        {busy ? 'Sending Telegram request…' : 'Request Run Now Approval'}
+        {busy ? 'Requesting approval…' : 'Request Run Now Approval'}
       </button>
       {(result?.approval_id || result?.approval?.id) && (
         <p className={styles.providerNotes}>
-          Request: {result.approval_id || result.approval?.id} · state: {result.approval_state || result.approval?.approval_state || 'pending'} · Telegram message: {result.telegram_message_id || result.approval?.telegram_message_id || 'pending'}
+          Request: {result.approval_id || result.approval?.id} · state: {result.approval_state || result.approval?.approval_state || 'pending'}{result.telegram_message_id || result.approval?.telegram_message_id ? ` · owner-channel message: ${result.telegram_message_id || result.approval?.telegram_message_id}` : ''}
         </p>
       )}
       {result?.run?.run_state && (

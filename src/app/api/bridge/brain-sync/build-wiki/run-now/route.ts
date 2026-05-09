@@ -20,8 +20,9 @@ export const dynamic = 'force-dynamic'
 //
 // Creates an approval request for action `buildwiki.run_now` with target hard-
 // coded to opencloud-docs-farmer.service. Returns the approval id immediately.
-// No service is started here. After owner approval, the exact scoped dispatch
-// route may start opencloud-docs-farmer.service once for this approval id.
+// No service is started here. After owner approval, the owner approval route
+// starts opencloud-docs-farmer.service once for this approval id through the
+// same exact scoped dispatch helper used by the manual dispatch route.
 //
 // GET on the same route returns the latest run-now state — convenient when
 // the UI needs the read view without going through the heavier /status route.
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       execution_enabled: false,
       accepted_for_execution: false,
       next_action: latest.persistence_ready
-        ? 'Use Run now to create a buildwiki.run_now approval request. Dispatch occurs only after owner approval.'
+        ? 'Use Run now to create a buildwiki.run_now approval request. The approval route dispatches only opencloud-docs-farmer.service after owner approval.'
         : 'Apply Bridge approval/audit/run persistence before creating Run Now approvals.',
     },
     { headers: { 'Cache-Control': 'no-store' } },
@@ -105,6 +106,9 @@ export async function POST(request: NextRequest) {
         dispatch_route: result.approval
           ? `/api/bridge/brain-sync/build-wiki/run-now/${result.approval.id}/dispatch`
           : null,
+        approval_route: result.approval
+          ? `/api/bridge/approval-requests/${result.approval.id}/approve`
+          : null,
         next_action: result.next_action,
       },
       { status: result.http_status, headers: { 'Cache-Control': 'no-store' } },
@@ -113,10 +117,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        mode: 'telegram_run_now_request_failed',
+        mode: 'run_now_approval_request_failed',
         approval_request_created: false,
         execution_enabled: false,
-        error: error instanceof Error ? error.message.slice(0, 240) : 'telegram_approval_proxy_failed',
+        error: error instanceof Error ? error.message.slice(0, 240) : 'run_now_approval_request_failed',
       },
       { status: 502 },
     )

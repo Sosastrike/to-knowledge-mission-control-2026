@@ -374,7 +374,7 @@ export type AgentZeroBuildWikiFarmerSummary = {
   blocked_reason: string | null
   read_blocked_reason: string | null
   write_blocked_reason: string | null
-  routes: Record<string, { method: 'GET' | 'POST'; path: string; read_only: boolean; execution_enabled: false; requires_bridge_session: boolean }>
+  routes: Record<string, { method: 'GET' | 'POST'; path: string; read_only: boolean; execution_enabled: boolean; requires_bridge_session: boolean }>
   farmer_service: string
   farmer_timer: string
   timer_active: boolean | null
@@ -416,6 +416,7 @@ export type AgentZeroBuildWikiFarmerSummary = {
     owner_approval_required: true
     bridge_session_required: true
     execution_enabled: false
+    execution_enabled_after_owner_approval: boolean
     dispatch_scope: 'opencloud-docs-farmer.service'
     blocked_reason: string | null
   }
@@ -2464,6 +2465,7 @@ export function buildAgentZeroReadOnlyContext(input: {
       routes: {
         status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
         run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },
+        run_now_approve: { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve', read_only: false, execution_enabled: true, requires_bridge_session: false },
       },
       farmer_service: 'opencloud-docs-farmer.service',
       farmer_timer: 'opencloud-docs-farmer.timer',
@@ -2506,6 +2508,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         owner_approval_required: true,
         bridge_session_required: true,
         execution_enabled: false,
+        execution_enabled_after_owner_approval: true,
         dispatch_scope: 'opencloud-docs-farmer.service',
         blocked_reason: 'buildwiki_run_now_requires_owner_approval',
       },

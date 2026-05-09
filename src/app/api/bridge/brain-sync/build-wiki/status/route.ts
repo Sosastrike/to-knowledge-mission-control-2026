@@ -475,12 +475,14 @@ export async function GET(request: NextRequest) {
         approval: canonical.approval,
         run: canonical.run,
         linked_task: canonical.linked_task,
-        approval_channel: 'Agent Zero -> owner channel',
-        web_approval_enabled: false,
-        dispatch_surface: 'telegram_callback_only',
+        approval_channel: 'Mission Control owner approval API',
+        web_approval_enabled: true,
+        dispatch_surface: 'approval_route_exact_scope_dispatch',
         endpoints: {
           create:   { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now' },
           read:     { method: 'GET',  path: '/api/bridge/brain-sync/build-wiki/run-now/{id}' },
+          approve:  { method: 'POST', path: '/api/bridge/approval-requests/{id}/approve' },
+          dispatch: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now/{id}/dispatch' },
         },
       }
     })(),

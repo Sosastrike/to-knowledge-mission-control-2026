@@ -160,6 +160,7 @@ describe('Build-Wiki Run Now route', () => {
       ui_state: 'pending_approval',
     })
     expect(payload.dispatch_route).toContain('/api/bridge/brain-sync/build-wiki/run-now/')
+    expect(payload.approval_route).toContain('/api/bridge/approval-requests/')
 
     const db = new Database(mocks.dbPath, { readonly: true })
     const approval = db.prepare('SELECT action, target_key, approval_state FROM bridge_approval_requests LIMIT 1').get() as any

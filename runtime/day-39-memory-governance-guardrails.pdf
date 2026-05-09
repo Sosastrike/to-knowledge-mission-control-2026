@@ -1,0 +1,287 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3308 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-39-memory-governance-guardrails) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 39 - Memory / Governance Guardrails) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE PASS) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+(Source commit: `3703c60`) Tj
+0 -12 Td
+(Push result: pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 39 closes the memory/governance guardrail lane for accidental protected-file changes. It doe) Tj
+0 -12 Td
+(s not modify active agent routing, voice routing, Tony behavior, owner memory, runtime data, `.e) Tj
+0 -12 Td
+(nv`, or governance documents.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Existing protected-file invariant script: `scripts/check-protected-file-invariants.mjs`.) Tj
+0 -12 Td
+(- Existing coverage before Day 39: `.env` files, database files, `.data/`, private keys, backup ) Tj
+0 -12 Td
+(archives.) Tj
+0 -12 Td
+(- Gap found: no explicit protection for active memory files/stores or governance stores before s) Tj
+0 -12 Td
+(taging/commit.) Tj
+0 -12 Td
+(- Active memory route inspected: `src/app/api/memory/route.ts`.) Tj
+0 -12 Td
+(- Per-agent working-memory route inspected: `src/app/api/agents/[id]/memory/route.ts`.) Tj
+0 -12 Td
+(- Shared memory path safety inspected: `src/lib/memory-path.ts`.) Tj
+0 -12 Td
+(- Existing runtime memory paths are path-contained and auth-guarded; no runtime route changes we) Tj
+0 -12 Td
+(re required for this day.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Updated `scripts/check-protected-file-invariants.mjs` to fail if git status includes protected c) Tj
+0 -12 Td
+(hanges to:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `active_memory_file`: `WORKING.md` or `MEMORY.md`.) Tj
+0 -12 Td
+(- `active_memory_store`: active memory store directories such as `agent-memory`, `memory-store`,) Tj
+0 -12 Td
+( `memory-data`, `openclaw-memory`, `hermes-memory`, `mempalace`, `obsidian-vault`, or root `memo) Tj
+0 -12 Td
+(ry/` and `memories/`.) Tj
+0 -12 Td
+(- `governance_file`: root governance directory or governance metadata files.) Tj
+0 -12 Td
+(- `legacy_tony_identity_store`: legacy Tony identity store directories such as `tony-memory`, `t) Tj
+0 -12 Td
+(ony-voice`, `tony-routing`, or `tony-governance`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The script still inspects git status paths only. It does not read or print protected file conten) Tj
+0 -12 Td
+(ts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Guardrail Test) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added `scripts/check-protected-file-invariants-self-test.mjs`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The self-test verifies:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime reports are allowed.) Tj
+0 -12 Td
+(- Memory source code changes are allowed.) Tj
+0 -12 Td
+(- Active agent `WORKING.md` is blocked.) Tj
+0 -12 Td
+(- Root `MEMORY.md` is blocked.) Tj
+0 -12 Td
+(- Runtime memory store paths are blocked.) Tj
+0 -12 Td
+(- Governance directory changes are blocked.) Tj
+0 -12 Td
+(- Legacy Tony identity stores are blocked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Red/green note:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The self-test failed before the invariant update because `agents/agent-zero/WORKING.md` was no) Tj
+0 -12 Td
+(t blocked.) Tj
+0 -12 Td
+(- The self-test passed after the invariant update.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2260 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No owner-facing UI was changed on Day 39. This day adds a commit-time protection layer only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No service runtime behavior was changed. No restart is required for this script-only guardrail l) Tj
+0 -12 Td
+(ane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`runtime/day-39-memory-governance-guardrails-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- self-test: PASS, 7 fixtures checked.) Tj
+0 -12 Td
+(- workspace invariant scan: PASS, 0 protected changes.) Tj
+0 -12 Td
+(- `.env` changed: no.) Tj
+0 -12 Td
+(- secrets printed: no.) Tj
+0 -12 Td
+(- auth weakened: no.) Tj
+0 -12 Td
+(- active memory deleted: no.) Tj
+0 -12 Td
+(- governance modified: no.) Tj
+0 -12 Td
+(- Tony routing/voice/memory/governance modified: no.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Completed validation:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` - PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` - PASS) Tj
+0 -12 Td
+(- `pnpm run build` - PASS) Tj
+0 -12 Td
+(- `pnpm test` - PASS, 159 files / 1331 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants-self-test.mjs` - PASS, 7 fixtures checked) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` - PASS, 0 protected changes) Tj
+0 -12 Td
+(- staged secret scan - PASS) Tj
+0 -12 Td
+(- `.env` diff check - clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` - 200) Tj
+0 -12 Td
+(- unauthenticated `/api/memory/health` - 401) Tj
+0 -12 Td
+(- unauthenticated `/api/memory?action=tree` - 401) Tj
+0 -12 Td
+(- unauthenticated `/api/agents/agent-zero/memory` - 401) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production restart was performed because Day 39 changed scripts/reports only and did not alte) Tj
+0 -12 Td
+(r runtime application source.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert 3703c60`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After validation, commit, and push, automatically start Day 40: Knowledge Report 100% Closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003607 00000 n 
+0000003733 00000 n 
+0000006045 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6115
+%%EOF

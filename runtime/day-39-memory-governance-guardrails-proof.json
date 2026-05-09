@@ -1,0 +1,52 @@
+{
+  "day": 39,
+  "lane": "memory-governance-guardrails",
+  "status": "developer_side_guardrail_ready",
+  "blocker_class": "NONE",
+  "runtime_commit_before_day": "541dbbd",
+  "source_commit": "3703c60",
+  "push": {
+    "remote": "origin",
+    "branch": "to-knowledge-mc",
+    "ok": true
+  },
+  "implemented_guardrails": [
+    "active_memory_file",
+    "active_memory_store",
+    "governance_file",
+    "legacy_tony_identity_store"
+  ],
+  "self_test": {
+    "command": "node scripts/check-protected-file-invariants-self-test.mjs",
+    "ok": true,
+    "checked_fixtures": 7
+  },
+  "workspace_invariant_scan": {
+    "command": "node scripts/check-protected-file-invariants.mjs",
+    "ok": true,
+    "protected_changes": 0
+  },
+  "validation": {
+    "git_diff_check": true,
+    "typecheck": true,
+    "build": true,
+    "tests": "159 files / 1331 tests passed",
+    "runtime_smoke": {
+      "login": 200,
+      "memory_health_unauthenticated": 401,
+      "memory_tree_unauthenticated": 401,
+      "agent_zero_memory_unauthenticated": 401
+    },
+    "staged_secret_scan": true,
+    "env_diff_clean": true
+  },
+  "safety": {
+    "env_changed": false,
+    "secrets_printed": false,
+    "auth_weakened": false,
+    "active_memory_deleted": false,
+    "governance_modified": false,
+    "tony_routing_voice_memory_governance_modified": false
+  },
+  "rollback": "git revert 3703c60"
+}

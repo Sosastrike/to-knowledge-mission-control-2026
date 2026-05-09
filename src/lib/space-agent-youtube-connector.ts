@@ -5,7 +5,7 @@ import {
   type YouTubeResearchPacket,
   type YouTubeTranscriptSegment,
 } from './space-agent-research'
-import { isYouTubeTranscriptConnectorAvailable } from './space-agent-youtube-runtime'
+import { getYouTubeTranscriptConnectorStatus, type YouTubeTranscriptConnectorStatus } from './space-agent-youtube-runtime'
 
 const YOUTUBE_URL_RE = /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[^\s&#]+|youtu\.be\/[^\s&#]+)/i
 
@@ -62,7 +62,8 @@ function loadTranscriptSegments(videoId: string | null): {
   blockedReason: string | null
 } {
   if (!videoId) return { segments: [], blockedReason: 'youtube_video_id_not_detected' }
-  if (!isYouTubeTranscriptConnectorAvailable()) return { segments: [], blockedReason: 'youtube_transcript_connector_not_proven' }
+  const connectorStatus = getYouTubeTranscriptConnectorStatus()
+  if (!connectorStatus.ok) return { segments: [], blockedReason: connectorStatus.blocked_reason || 'youtube_transcript_connector_not_proven' }
 
   const python = `
 import json
@@ -122,10 +123,12 @@ export async function createSpaceAgentYouTubeConnectorPacket(input: {
   ok: boolean
   packet: YouTubeResearchPacket
   blocked_reason: string | null
+  connector_status: YouTubeTranscriptConnectorStatus
 }> {
   const request = input.request || ''
   const url = firstYouTubeUrl(request)
   const videoId = videoIdFromUrl(url)
+  const connectorStatus = getYouTubeTranscriptConnectorStatus()
   const metadata = url ? await fetchYouTubeMetadata(url) : { title: null, channel: null, publishDate: null, description: null }
   const transcript = loadTranscriptSegments(videoId)
   const packet = createYouTubeResearchPacket({
@@ -158,5 +161,6 @@ export async function createSpaceAgentYouTubeConnectorPacket(input: {
     ok: packet.status === 'ready' || packet.status === 'limited',
     packet,
     blocked_reason: blockedReason,
+    connector_status: connectorStatus,
   }
 }

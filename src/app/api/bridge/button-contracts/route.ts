@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { describeOwnerFacingStatus, OWNER_FACING_STATUS_STATES } from '@/lib/owner-status'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -49,9 +50,20 @@ function buttonWithRuntimeContract(button: ButtonContract) {
   const execution_enabled = canExecuteNow(button)
   const credential_readonly_status =
     button.method === 'GET' && button.state === 'CREDENTIAL_REQUIRED'
+  const owner_status = describeOwnerFacingStatus({
+    rawStatus: button.state.toLowerCase(),
+    blockers: button.note ? [button.note] : [],
+    credentialNames: button.credential_names,
+    readEnabled: button.method === 'GET' || button.method === 'LOCAL',
+    writeEnabled: false,
+    executionEnabled: execution_enabled,
+    requiresBridgeSession: button.approval_required,
+    requiresOwnerApproval: button.state === 'OWNER_APPROVAL_REQUIRED',
+  })
   return {
     ...button,
     current_backend_state: button.state,
+    owner_status,
     blocked_http_status: blocked_status,
     execution_enabled,
     protected_execution_enabled: false,
@@ -203,6 +215,7 @@ export async function GET(request: NextRequest) {
     ok: true,
     generated_at: new Date().toISOString(),
     allowed_states: ['LIVE', 'READ_ONLY', 'BACKEND_REQUIRED', 'CREDENTIAL_REQUIRED', 'OWNER_APPROVAL_REQUIRED', 'DISABLED'],
+    allowed_owner_statuses: OWNER_FACING_STATUS_STATES,
     no_fake_success: true,
     protected_execution_enabled: false,
     buttons: BUTTONS.map(buttonWithRuntimeContract),

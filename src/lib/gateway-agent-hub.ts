@@ -1,5 +1,6 @@
 import type { SpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
 import type { GatewayApiNode } from './gateway-registry-api'
+import { describeOwnerFacingStatus, OWNER_FACING_STATUS_STATES, type OwnerFacingStatusDescriptor } from './owner-status'
 import {
   buildGatewayFlowsPayload,
   buildGatewayNodesPayload,
@@ -23,6 +24,7 @@ export type AgentHubRuntimeSystem = {
   execution_enabled: boolean
   requires_bridge_session: boolean
   blocked_reason: string | null
+  owner_status: OwnerFacingStatusDescriptor
 }
 
 export type AgentHubAgent = {
@@ -44,6 +46,7 @@ export type AgentHubAgent = {
   requires_bridge_session: boolean
   blocked_reason: string | null
   blockers: string[]
+  owner_status: OwnerFacingStatusDescriptor
   supervisors: string[]
   capabilities: string[]
   routes: {
@@ -90,6 +93,8 @@ export type AgentHubStatusPayload = {
   agents_total: number
   live_interfaces_proven: number
   gated_or_blocked: number
+  allowed_owner_statuses: typeof OWNER_FACING_STATUS_STATES
+  owner_status_summary: Record<string, number>
   production_truth: {
     agent_zero: 'partial_go_commander_track'
     hermes: 'gated_until_hermes_called_true'
@@ -177,6 +182,7 @@ export type AgentHubAgentHealthPayload = {
   last_success: string | null
   last_error: string | null
   blocker: string | null
+  owner_status: OwnerFacingStatusDescriptor
   execution_enabled: false
   writes_enabled: false
   secrets_exposed: false
@@ -387,6 +393,8 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     agents_total: agents.length,
     live_interfaces_proven: agents.filter((agent) => agent.live_interface_proven).length,
     gated_or_blocked: agents.filter((agent) => ['gated', 'pending', 'blocked'].includes(agent.status)).length,
+    allowed_owner_statuses: OWNER_FACING_STATUS_STATES,
+    owner_status_summary: summarizeOwnerStatuses(agents.map((agent) => agent.owner_status)),
     production_truth: {
       agent_zero: 'partial_go_commander_track',
       hermes: 'gated_until_hermes_called_true',
@@ -486,6 +494,7 @@ export function buildAgentHubAgentHealthPayload(registry: GatewayRegistry, id: s
     last_success: detail?.node.last_success || null,
     last_error: detail?.node.last_error || agent.blocked_reason,
     blocker: agent.blocked_reason,
+    owner_status: agent.owner_status,
     execution_enabled: false,
     writes_enabled: false,
     secrets_exposed: false,
@@ -587,6 +596,20 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
     const blockers = ownerSafeList(preferDefinitionBlocker
       ? [...definition.extraBlockers, ...observedBlockers]
       : [...observedBlockers, ...definition.extraBlockers])
+    const readEnabled = Boolean(node?.read_enabled) || definition.status === 'partial_go' || definition.status === 'read_only'
+    const ownerStatus = describeOwnerFacingStatus({
+      rawStatus: definition.status,
+      blockers,
+      summary: definition.productionTruth,
+      connected: definition.liveInterfaceProven && Boolean(node?.connected),
+      configured: Boolean(node?.configured) && blockers.length === 0,
+      readEnabled,
+      writeEnabled: false,
+      executionEnabled: false,
+      requiresBridgeSession: true,
+      requiresOwnerApproval: definition.status === 'gated',
+      preferReadyWhenReadable: definition.status === 'partial_go' || definition.status === 'read_only',
+    })
     return {
       id: definition.id,
       registry_node_id: definition.registryNodeId,
@@ -600,12 +623,13 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       called_true_proven: definition.calledTrueProven,
       connected: definition.liveInterfaceProven && Boolean(node?.connected),
       configured: Boolean(node?.configured) && blockers.length === 0,
-      read_enabled: Boolean(node?.read_enabled) || definition.status === 'partial_go',
+      read_enabled: readEnabled,
       write_enabled: false,
       execution_enabled: false,
       requires_bridge_session: true,
       blocked_reason: blockers[0] || null,
       blockers,
+      owner_status: ownerStatus,
       supervisors: ownerSafeList(registryNode?.supervisors || []),
       capabilities: ownerSafeList(node?.capabilities || registryNode?.capabilities || []),
       routes: {
@@ -643,19 +667,40 @@ function buildSupportingRuntimeSystems(registry: GatewayRegistry): AgentHubRunti
   const nodes = buildGatewayNodesPayload(registry).nodes
   return SUPPORTING_RUNTIME_NODE_IDS.map((id) => nodes.find((node) => node.id === id))
     .filter((node): node is GatewayApiNode => Boolean(node))
-    .map((node) => ({
-      id: node.id,
-      name: node.name,
-      type: node.type,
-      status: node.status,
-      connected: node.connected,
-      configured: node.configured,
-      read_enabled: node.read_enabled,
-      write_enabled: false,
-      execution_enabled: false,
-      requires_bridge_session: node.requires_bridge_session,
-      blocked_reason: ownerSafeText(node.blocked_reason),
-    }))
+    .map((node) => {
+      const ownerStatus = describeOwnerFacingStatus({
+        rawStatus: node.status,
+        blockers: node.blocked_reason ? [node.blocked_reason] : [],
+        summary: node.health?.summary || null,
+        connected: node.connected,
+        configured: node.configured,
+        readEnabled: node.read_enabled,
+        writeEnabled: false,
+        executionEnabled: false,
+        requiresBridgeSession: node.requires_bridge_session,
+      })
+      return {
+        id: node.id,
+        name: node.name,
+        type: node.type,
+        status: node.status,
+        connected: node.connected,
+        configured: node.configured,
+        read_enabled: node.read_enabled,
+        write_enabled: false,
+        execution_enabled: false,
+        requires_bridge_session: node.requires_bridge_session,
+        blocked_reason: ownerSafeText(node.blocked_reason),
+        owner_status: ownerStatus,
+      }
+    })
+}
+
+function summarizeOwnerStatuses(statuses: OwnerFacingStatusDescriptor[]): Record<string, number> {
+  return OWNER_FACING_STATUS_STATES.reduce((acc, status) => {
+    acc[status] = statuses.filter((item) => item.status === status).length
+    return acc
+  }, {} as Record<string, number>)
 }
 
 function ownerSafeList(values: readonly string[]): string[] {

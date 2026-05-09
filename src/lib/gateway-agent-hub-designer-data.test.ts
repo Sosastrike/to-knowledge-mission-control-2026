@@ -74,6 +74,18 @@ describe('Gateway Agent Hub designer data hydration', () => {
           id: 'openclaw-plus',
           role: 'Runtime / Skills / Mini-Agent Execution Layer',
           status: 'blocked',
+          owner_status: {
+            status: 'SERVICE_DOWN',
+            label: 'SERVICE_DOWN',
+            summary: 'Required runtime service, backend, adapter, or CLI is not reachable from Mission Control.',
+            reason: 'openclaw_doctor_runtime_not_reachable',
+            blocker_class: 'SERVICE_DOWN',
+            tone: 'red',
+            can_read: true,
+            can_write: false,
+            can_execute: false,
+            bridge_session_required: true,
+          },
           production_truth: 'SERVICE_DOWN until the OpenClaw+ CLI is reachable from Mission Control.',
           read_enabled: true,
           write_enabled: false,
@@ -104,6 +116,7 @@ describe('Gateway Agent Hub designer data hydration', () => {
       X: false,
       bridge: true,
       blocked_reason: 'openclaw_doctor_runtime_not_reachable',
+      owner_status_label: 'SERVICE_DOWN',
       audit_route: '/api/gateway/agent-hub/agents/openclaw-plus/audit',
     })
     expect(agents.byId('openclaw-plus').caps).toContain('OpenClaw+ shared skills')

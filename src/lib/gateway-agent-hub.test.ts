@@ -29,9 +29,12 @@ describe('Gateway Agent Hub', () => {
     expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
     expect(payload.agents_total).toBe(6)
     expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
+    expect(payload.agents.find((agent) => agent.id === 'agent-zero')?.owner_status).toMatchObject({ status: 'READY', tone: 'blue' })
     expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({ role: 'Lieutenant / Skill + Workflow Builder', status: 'gated', called_true_proven: false })
+    expect(payload.agents.find((agent) => agent.id === 'hermes')?.owner_status).toMatchObject({ status: 'OWNER_GATED', tone: 'yellow' })
     expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
+    expect(payload.agents.find((agent) => agent.id === 'spaceagent')?.owner_status).toMatchObject({ status: 'READY', tone: 'blue' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
       status: 'read_only',
@@ -41,6 +44,7 @@ describe('Gateway Agent Hub', () => {
       },
     })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBeNull()
+    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.owner_status).toMatchObject({ status: 'READY', tone: 'blue' })
     expect(payload.agents.find((agent) => agent.id === 'openclaw-plus')).toMatchObject({
       name: 'OpenClaw+',
       role: 'Runtime / Skills / Mini-Agent Execution Layer',
@@ -50,6 +54,9 @@ describe('Gateway Agent Hub', () => {
         bridge_status: '/api/openclaw/doctor',
       },
     })
+    expect(payload.agents.find((agent) => agent.id === 'openclaw-plus')?.owner_status).toMatchObject({ status: 'SERVICE_DOWN', tone: 'red' })
+    expect(payload.allowed_owner_statuses).toEqual(['LIVE', 'READY', 'OWNER_GATED', 'CREDENTIAL_GATED', 'SERVICE_DOWN', 'BLOCKED', 'DISABLED'])
+    expect(payload.owner_status_summary.READY).toBeGreaterThanOrEqual(3)
     expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {

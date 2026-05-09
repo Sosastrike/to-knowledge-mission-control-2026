@@ -18,6 +18,11 @@ type ButtonContract = {
   execution_enabled: boolean
   fake_success_allowed: boolean
   accepted_for_execution?: boolean
+  owner_status?: {
+    status: string
+    tone: string
+    blocker_class: string
+  }
 }
 
 describe('Mission Control button contracts', () => {
@@ -25,10 +30,11 @@ describe('Mission Control button contracts', () => {
     const route = await import('@/app/api/bridge/button-contracts/route')
     const response = await route.GET(new NextRequest('http://localhost/api/bridge/button-contracts'))
     expect(response.status).toBe(200)
-    const payload = await response.json() as { buttons: ButtonContract[]; no_fake_success: boolean; protected_execution_enabled: boolean }
+    const payload = await response.json() as { buttons: ButtonContract[]; no_fake_success: boolean; protected_execution_enabled: boolean; allowed_owner_statuses: string[] }
 
     expect(payload.no_fake_success).toBe(true)
     expect(payload.protected_execution_enabled).toBe(false)
+    expect(payload.allowed_owner_statuses).toEqual(['LIVE', 'READY', 'OWNER_GATED', 'CREDENTIAL_GATED', 'SERVICE_DOWN', 'BLOCKED', 'DISABLED'])
 
     const unsafeMissing = payload.buttons.filter((button) => {
       if (!['LIVE', 'READ_ONLY'].includes(button.state)) return false
@@ -63,6 +69,11 @@ describe('Mission Control button contracts', () => {
       endpoint: '/api/bridge/brain-sync/status',
       state: 'CREDENTIAL_REQUIRED',
       execution_enabled: false,
+      owner_status: {
+        status: 'CREDENTIAL_GATED',
+        tone: 'yellow',
+        blocker_class: 'CREDENTIAL_GATED',
+      },
     })
     expect(brainStatus?.credential_names).toContain('CLAUDECLAW_DASHBOARD_TOKEN')
 
@@ -71,6 +82,11 @@ describe('Mission Control button contracts', () => {
       endpoint: '/api/bridge/brain-sync/build-wiki/logs',
       state: 'BACKEND_REQUIRED',
       execution_enabled: false,
+      owner_status: {
+        status: 'SERVICE_DOWN',
+        tone: 'red',
+        blocker_class: 'SERVICE_DOWN',
+      },
     })
 
     const runNow = payload.buttons.find((button) => button.label === 'Build-Wiki request run now')
@@ -81,6 +97,11 @@ describe('Mission Control button contracts', () => {
       audit_required: true,
       execution_enabled: false,
       fake_success_allowed: false,
+      owner_status: {
+        status: 'OWNER_GATED',
+        tone: 'yellow',
+        blocker_class: 'OWNER_GATED',
+      },
     })
   })
 })

@@ -451,7 +451,8 @@ window.AGENTS = (function () {
     return id;
   }
 
-  function liveAgentStatusToDesignStatus(status) {
+  function liveAgentStatusToDesignStatus(status, ownerStatus) {
+    if (ownerStatus && ownerStatus.tone) return ownerStatus.tone;
     const map = {
       partial_go: 'green',
       gated: 'yellow',
@@ -498,10 +499,14 @@ window.AGENTS = (function () {
       const designAgent = byId(designId);
       if (!designAgent) return;
 
-      const mappedStatus = liveAgentStatusToDesignStatus(liveAgent.status);
+      const mappedStatus = liveAgentStatusToDesignStatus(liveAgent.status, liveAgent.owner_status);
       designAgent.status = mappedStatus;
       designAgent.role = liveAgent.role || designAgent.role;
-      designAgent.tagline = liveAgent.interface?.owner_access || designAgent.tagline;
+      designAgent.owner_status = liveAgent.owner_status || null;
+      designAgent.owner_status_label = liveAgent.owner_status?.label || null;
+      designAgent.tagline = liveAgent.owner_status
+        ? `${liveAgent.owner_status.label}: ${liveAgent.owner_status.summary}`
+        : liveAgent.interface?.owner_access || designAgent.tagline;
       designAgent.summary = liveAgent.production_truth || designAgent.summary;
       designAgent.R = Boolean(liveAgent.read_enabled);
       designAgent.W = Boolean(liveAgent.write_enabled);
@@ -517,10 +522,10 @@ window.AGENTS = (function () {
         ? liveAgent.capabilities
         : designAgent.caps;
 
-      const blocker = liveAgent.blocked_reason || (Array.isArray(liveAgent.blockers) && liveAgent.blockers[0]) || null;
+      const blocker = liveAgent.owner_status?.reason || liveAgent.blocked_reason || (Array.isArray(liveAgent.blockers) && liveAgent.blockers[0]) || null;
       designAgent.blocked_reason = mappedStatus === 'red' ? blocker : null;
       designAgent.gated_reason = mappedStatus !== 'green' && mappedStatus !== 'red'
-        ? blocker || liveAgent.production_truth || null
+        ? `${liveAgent.owner_status?.label || 'STATUS'}: ${blocker || liveAgent.production_truth || liveAgent.owner_status?.summary || 'No protected action is enabled.'}`
         : null;
     });
 

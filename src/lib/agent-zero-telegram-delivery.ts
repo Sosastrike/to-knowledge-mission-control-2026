@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import { readAgentZeroReportFile } from './agent-zero-report-delivery'
 import { readLatestAgentZeroBridgeSession, type AgentZeroBridgeSessionRequester } from './agent-zero-bridge-session'
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 
 const TELEGRAM_TOKEN_KEYS = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_TOKEN', 'BOT_TOKEN'] as const
 const TELEGRAM_CHAT_KEYS = ['AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID', 'TELEGRAM_OWNER_CHAT_ID', 'TELEGRAM_CHAT_ID'] as const
@@ -32,6 +33,8 @@ export type AgentZeroTelegramDeliveryStatus = {
   provider: 'telegram'
   mode: 'agent_zero_telegram_delivery_adapter'
   status: 'configured' | 'blocked'
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
   connector_configured: boolean
   execution_enabled: false
   writes_enabled: false
@@ -42,9 +45,40 @@ export type AgentZeroTelegramDeliveryStatus = {
   owner_channel_configured: boolean
   missing_credentials: string[]
   blocked_reason: string | null
+  active_commander: 'agent_zero'
+  owner_command_route: 'agent_zero'
+  tony_active: false
+  inbound_owner_validation_model: 'owner_chat_id_match_required'
+  dry_run_endpoint: '/api/bridge/telegram-approval-preview'
+  proof_packet: AgentZeroTelegramProofPacket
   normal_reply: string
   no_fake_done: true
   no_tokens_exposed: true
+}
+
+export type AgentZeroTelegramProofPacket = {
+  lane: 'Telegram owner command lane'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  active_commander: 'agent_zero'
+  owner_command_route: 'agent_zero'
+  tony_active: false
+  connector_configured: boolean
+  credential_present: boolean
+  owner_channel_configured: boolean
+  bridge_session_required: true
+  send_enabled_without_bridge: false
+  inbound_owner_validation_required: true
+  fake_delivery_allowed: false
+  secrets_exposed: false
+  raw_paths_exposed: false
 }
 
 export type AgentZeroTelegramUploadResult = {
@@ -66,13 +100,52 @@ export type AgentZeroTelegramUploadResult = {
   no_tokens_exposed: true
 }
 
+function buildTelegramProofPacket(input: {
+  configured: boolean
+  credentialPresent: boolean
+  ownerChannelConfigured: boolean
+  blockedReason: string | null
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+}): AgentZeroTelegramProofPacket {
+  return {
+    lane: 'Telegram owner command lane',
+    timestamp: new Date().toISOString(),
+    runtime_commit: null,
+    route_or_service_checked: '/api/bridge/agent-zero/telegram/status',
+    result: input.canonicalStatus,
+    blocker: input.blockedReason,
+    blocker_class: input.blockerClass,
+    audit_pointer: null,
+    safe_log_pointer: null,
+    rollback_command: 'git revert <day-09-telegram-owner-command-commit>',
+    active_commander: 'agent_zero',
+    owner_command_route: 'agent_zero',
+    tony_active: false,
+    connector_configured: input.configured,
+    credential_present: input.credentialPresent,
+    owner_channel_configured: input.ownerChannelConfigured,
+    bridge_session_required: true,
+    send_enabled_without_bridge: false,
+    inbound_owner_validation_required: true,
+    fake_delivery_allowed: false,
+    secrets_exposed: false,
+    raw_paths_exposed: false,
+  }
+}
+
 export function getAgentZeroTelegramDeliveryStatus(): AgentZeroTelegramDeliveryStatus {
   const state = configuredState()
+  const blockedReason = state.configured ? 'active_bridge_session_required' : 'telegram_report_delivery_adapter_not_configured'
+  const canonicalStatus: MissionControlCanonicalStatus = state.configured ? 'OWNER_GATED' : 'CREDENTIAL_GATED'
+  const blockerClass: MissionControlClosureBlockerClass = state.configured ? 'OWNER_GATED' : 'CREDENTIAL_GATED'
   return {
     ok: true,
     provider: 'telegram',
     mode: 'agent_zero_telegram_delivery_adapter',
     status: state.configured ? 'configured' : 'blocked',
+    canonical_status: canonicalStatus,
+    blocker_class: blockerClass,
     connector_configured: state.configured,
     execution_enabled: false,
     writes_enabled: false,
@@ -82,7 +155,20 @@ export function getAgentZeroTelegramDeliveryStatus(): AgentZeroTelegramDeliveryS
     credential_values_exposed: false,
     owner_channel_configured: Boolean(state.ownerChatId),
     missing_credentials: state.missing,
-    blocked_reason: state.configured ? 'active_bridge_session_required' : 'telegram_report_delivery_adapter_not_configured',
+    blocked_reason: blockedReason,
+    active_commander: 'agent_zero',
+    owner_command_route: 'agent_zero',
+    tony_active: false,
+    inbound_owner_validation_model: 'owner_chat_id_match_required',
+    dry_run_endpoint: '/api/bridge/telegram-approval-preview',
+    proof_packet: buildTelegramProofPacket({
+      configured: state.configured,
+      credentialPresent: Boolean(state.token),
+      ownerChannelConfigured: Boolean(state.ownerChatId),
+      blockedReason,
+      canonicalStatus,
+      blockerClass,
+    }),
     normal_reply: state.configured
       ? 'Telegram report delivery is configured, but sending requires an active approved Bridge Session.'
       : 'Telegram report delivery is blocked because bot token or owner chat channel is not configured.',

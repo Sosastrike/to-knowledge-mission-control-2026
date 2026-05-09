@@ -36,6 +36,9 @@ function buildPreview(input: TelegramApprovalPreviewRequest) {
   return {
     channel: 'Agent Zero -> owner-channel approval',
     recipient: 'owner',
+    active_commander: 'agent_zero',
+    owner_command_route: 'agent_zero',
+    tony_active: false,
     send_state: 'DISABLED',
     approval_request_created: false,
     persistence_state: 'not_connected',
@@ -64,6 +67,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     ok: true,
     mode: 'telegram_approval_preview_contract',
+    active_commander: 'agent_zero',
+    owner_command_route: 'agent_zero',
+    tony_active: false,
     no_execution_enabled: true,
     no_persistence_enabled: true,
     no_telegram_send_enabled: true,
@@ -102,6 +108,9 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ok: true,
     mode: 'telegram_approval_preview_read_only',
+    active_commander: 'agent_zero',
+    owner_command_route: 'agent_zero',
+    tony_active: false,
     generated_at: new Date().toISOString(),
     no_execution_enabled: true,
     no_persistence_enabled: true,

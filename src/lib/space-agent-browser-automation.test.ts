@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { buildSpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
-import type { PlaywrightMcpStatus } from './playwright-mcp'
+import { buildPlaywrightMcpClosureSummary, type PlaywrightMcpStatus } from './playwright-mcp'
 
 const connectedPlaywright: PlaywrightMcpStatus = {
   ok: true,
   mode: 'playwright_mcp_status',
   status: 'connected',
+  canonical_status: 'LIVE',
+  blocker_class: 'NONE',
   service_name: 'playwright-mcp.service',
   endpoint: 'localhost:8931/mcp',
   service_endpoint: '127.0.0.1:8931',
@@ -27,6 +29,26 @@ const connectedPlaywright: PlaywrightMcpStatus = {
   last_error: null,
   no_secrets_exposed: true,
   raw_paths_exposed: false,
+  proof_packet: {
+    lane: 'SpaceAgent Playwright MCP',
+    timestamp: '2026-05-07T00:00:00.000Z',
+    runtime_commit: null,
+    route_or_service_checked: '/api/bridge/playwright-mcp/status',
+    result: 'LIVE',
+    blocker: null,
+    blocker_class: 'NONE',
+    audit_pointer: '/api/bridge/playwright-mcp/status',
+    safe_log_pointer: null,
+    rollback_command: 'git revert <day-06-spaceagent-playwright-commit>',
+    tool_server: 'playwright_mcp',
+    service_endpoint: '127.0.0.1:8931',
+    local_only: true,
+    public_exposure: false,
+    execution_enabled: false,
+    writes_enabled: false,
+    secrets_exposed: false,
+    raw_paths_exposed: false,
+  },
 }
 
 describe('SpaceAgent browser automation truth payload', () => {
@@ -75,5 +97,44 @@ describe('SpaceAgent browser automation truth payload', () => {
       expect(button.blocker).toMatch(/^bridge_session_required_/)
       expect(button.bridge_session_required).toBe(true)
     }
+  })
+
+  it('classifies Playwright MCP closure states without enabling execution', () => {
+    const live = buildPlaywrightMcpClosureSummary({
+      ok: true,
+      requiredToolsPresent: true,
+      blocker: null,
+      timestamp: '2026-05-07T00:00:00.000Z',
+    })
+    const serviceDown = buildPlaywrightMcpClosureSummary({
+      ok: false,
+      requiredToolsPresent: false,
+      blocker: 'playwright_mcp_service_unreachable',
+      timestamp: '2026-05-07T00:00:00.000Z',
+    })
+    const blocked = buildPlaywrightMcpClosureSummary({
+      ok: false,
+      requiredToolsPresent: false,
+      blocker: 'playwright_mcp_required_tools_missing',
+      timestamp: '2026-05-07T00:00:00.000Z',
+    })
+
+    expect(live).toMatchObject({
+      canonical_status: 'LIVE',
+      blocker_class: 'NONE',
+      blocker: null,
+      proof_packet: { lane: 'SpaceAgent Playwright MCP', result: 'LIVE', execution_enabled: false, writes_enabled: false },
+    })
+    expect(serviceDown).toMatchObject({
+      canonical_status: 'SERVICE_DOWN',
+      blocker_class: 'SERVICE_DOWN',
+      blocker: 'playwright_mcp_service_unreachable',
+    })
+    expect(blocked).toMatchObject({
+      canonical_status: 'BLOCKED',
+      blocker_class: 'BLOCKED',
+      blocker: 'playwright_mcp_required_tools_missing',
+    })
+    expect(JSON.stringify([live, serviceDown, blocked])).not.toMatch(/sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{20,}|auth\.json|\/home\/tony/i)
   })
 })

@@ -1,7 +1,39 @@
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
+
+export type PlaywrightMcpProofPacket = {
+  lane: 'SpaceAgent Playwright MCP'
+  timestamp: string
+  runtime_commit: string | null
+  route_or_service_checked: string
+  result: MissionControlCanonicalStatus
+  blocker: string | null
+  blocker_class: MissionControlClosureBlockerClass
+  audit_pointer: string | null
+  safe_log_pointer: string | null
+  rollback_command: string
+  tool_server: 'playwright_mcp'
+  service_endpoint: '127.0.0.1:8931'
+  local_only: true
+  public_exposure: false
+  execution_enabled: false
+  writes_enabled: false
+  secrets_exposed: false
+  raw_paths_exposed: false
+}
+
+export type PlaywrightMcpClosureSummary = {
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
+  blocker: string | null
+  proof_packet: PlaywrightMcpProofPacket
+}
+
 export type PlaywrightMcpStatus = {
   ok: boolean
   mode: 'playwright_mcp_status'
   status: 'connected' | 'blocked'
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
   service_name: 'playwright-mcp.service'
   endpoint: 'localhost:8931/mcp'
   service_endpoint: '127.0.0.1:8931'
@@ -23,6 +55,7 @@ export type PlaywrightMcpStatus = {
   last_error: string | null
   no_secrets_exposed: true
   raw_paths_exposed: false
+  proof_packet: PlaywrightMcpProofPacket
 }
 
 export type BrowserEvidencePacket = {
@@ -69,10 +102,12 @@ export async function getPlaywrightMcpStatus(): Promise<PlaywrightMcpStatus> {
     const tools = await listTools(client)
     const names = tools.map((tool) => sanitizeText(tool.name || '')).filter(Boolean)
     const requiredToolsPresent = REQUIRED_TOOLS.every((tool) => names.includes(tool))
-    return {
+    return attachPlaywrightMcpClosure({
       ok: requiredToolsPresent,
       mode: 'playwright_mcp_status',
       status: requiredToolsPresent ? 'connected' : 'blocked',
+      canonical_status: requiredToolsPresent ? 'LIVE' : 'BLOCKED',
+      blocker_class: requiredToolsPresent ? 'NONE' : 'BLOCKED',
       service_name: 'playwright-mcp.service',
       endpoint: 'localhost:8931/mcp',
       service_endpoint: '127.0.0.1:8931',
@@ -94,7 +129,12 @@ export async function getPlaywrightMcpStatus(): Promise<PlaywrightMcpStatus> {
       last_error: null,
       no_secrets_exposed: true,
       raw_paths_exposed: false,
-    }
+      proof_packet: buildPlaywrightMcpClosureSummary({
+        ok: requiredToolsPresent,
+        requiredToolsPresent,
+        blocker: requiredToolsPresent ? null : 'playwright_mcp_required_tools_missing',
+      }).proof_packet,
+    })
   } catch (error) {
     return blockedStatus(error instanceof Error ? error.message : 'playwright_mcp_unreachable')
   }
@@ -238,11 +278,90 @@ export function getPlaywrightMcpEvidenceIndex(generatedAt = new Date().toISOStri
   }
 }
 
-function blockedStatus(message: string): PlaywrightMcpStatus {
+function classifyPlaywrightMcpClosure(input: {
+  ok: boolean
+  requiredToolsPresent: boolean
+  blocker: string | null
+}): {
+  canonicalStatus: MissionControlCanonicalStatus
+  blockerClass: MissionControlClosureBlockerClass
+  blocker: string | null
+} {
+  const blocker = input.blocker || null
+  if (input.ok && input.requiredToolsPresent && !blocker) {
+    return { canonicalStatus: 'LIVE', blockerClass: 'NONE', blocker: null }
+  }
+  const normalizedBlocker = blocker || 'playwright_mcp_required_tools_missing'
+  if (/(credential|token|api[_-]?key|oauth|secret)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'CREDENTIAL_GATED', blockerClass: 'CREDENTIAL_GATED', blocker: normalizedBlocker }
+  }
+  if (/(unreachable|service|connection|refused|timeout|http[_-]?\d+|session[_-]?id[_-]?missing)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'SERVICE_DOWN', blockerClass: 'SERVICE_DOWN', blocker: normalizedBlocker }
+  }
+  if (/(required[_-]?tools[_-]?missing|blocked|not[_-]?configured|unsupported)/i.test(normalizedBlocker)) {
+    return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker: normalizedBlocker }
+  }
+  return { canonicalStatus: 'BLOCKED', blockerClass: 'BLOCKED', blocker: normalizedBlocker }
+}
+
+export function buildPlaywrightMcpClosureSummary(input: {
+  ok: boolean
+  requiredToolsPresent: boolean
+  blocker: string | null
+  timestamp?: string
+  runtimeCommit?: string | null
+  routeOrServiceChecked?: string | null
+  rollbackCommand?: string
+}): PlaywrightMcpClosureSummary {
+  const classified = classifyPlaywrightMcpClosure(input)
   return {
+    canonical_status: classified.canonicalStatus,
+    blocker_class: classified.blockerClass,
+    blocker: classified.blocker,
+    proof_packet: {
+      lane: 'SpaceAgent Playwright MCP',
+      timestamp: input.timestamp || new Date().toISOString(),
+      runtime_commit: input.runtimeCommit || null,
+      route_or_service_checked: input.routeOrServiceChecked || '/api/bridge/playwright-mcp/status',
+      result: classified.canonicalStatus,
+      blocker: classified.blocker,
+      blocker_class: classified.blockerClass,
+      audit_pointer: classified.blockerClass === 'NONE' ? '/api/bridge/playwright-mcp/status' : null,
+      safe_log_pointer: null,
+      rollback_command: input.rollbackCommand || 'git revert <day-06-spaceagent-playwright-commit>',
+      tool_server: 'playwright_mcp',
+      service_endpoint: '127.0.0.1:8931',
+      local_only: true,
+      public_exposure: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      secrets_exposed: false,
+      raw_paths_exposed: false,
+    },
+  }
+}
+
+function attachPlaywrightMcpClosure(status: PlaywrightMcpStatus): PlaywrightMcpStatus {
+  const closure = buildPlaywrightMcpClosureSummary({
+    ok: status.ok,
+    requiredToolsPresent: status.required_tools_present,
+    blocker: status.blocker,
+  })
+  return {
+    ...status,
+    canonical_status: closure.canonical_status,
+    blocker_class: closure.blocker_class,
+    proof_packet: closure.proof_packet,
+  }
+}
+
+function blockedStatus(message: string): PlaywrightMcpStatus {
+  return attachPlaywrightMcpClosure({
     ok: false,
     mode: 'playwright_mcp_status',
     status: 'blocked',
+    canonical_status: 'SERVICE_DOWN',
+    blocker_class: 'SERVICE_DOWN',
     service_name: 'playwright-mcp.service',
     endpoint: 'localhost:8931/mcp',
     service_endpoint: '127.0.0.1:8931',
@@ -264,7 +383,12 @@ function blockedStatus(message: string): PlaywrightMcpStatus {
     last_error: sanitizeText(message),
     no_secrets_exposed: true,
     raw_paths_exposed: false,
-  }
+    proof_packet: buildPlaywrightMcpClosureSummary({
+      ok: false,
+      requiredToolsPresent: false,
+      blocker: 'playwright_mcp_service_unreachable',
+    }).proof_packet,
+  })
 }
 
 function evidenceBlocked(packetId: string, requestedUrl: string, service: PlaywrightMcpStatus, blocker: string, bridgeSessionRequired: boolean): BrowserEvidencePacket {

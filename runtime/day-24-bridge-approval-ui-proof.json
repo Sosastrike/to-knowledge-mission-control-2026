@@ -1,0 +1,142 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T18:45:55.258Z",
+  "lane": "day-24-bridge-approval-ui",
+  "runtime": {
+    "bind": "127.0.0.1:3337",
+    "db_context": "standalone_runtime"
+  },
+  "auth": {
+    "method": "temporary_local_proof_session",
+    "token_printed": false,
+    "auth_files_read": false,
+    "temporary_proof_user_created": true,
+    "temporary_proof_user_deleted": true
+  },
+  "checks": [
+    {
+      "name": "login_route_available",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "unauthenticated_bridge_page_protected",
+      "pass": true,
+      "status": 307,
+      "location_is_login": true
+    },
+    {
+      "name": "authenticated_bridge_page_loads",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "authenticated_bridge_page_uses_designer_frame",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "designer_bridge_mock_loads",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "designer_bridge_mock_includes_hydration_script",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "designer_bridge_mock_has_live_mount_points",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "bridge_approval_hydration_script_loads",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "bridge_approval_hydration_script_uses_same_origin_credentials",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "bridge_approval_hydration_script_has_no_execute_path",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "approval_queue_api_authenticates_with_session",
+      "pass": true,
+      "status": 200,
+      "mode": "approval_requests_read_only_queue"
+    },
+    {
+      "name": "approval_ui_state_present_on_get",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "approval_request_created_without_execution",
+      "pass": true,
+      "status": 201,
+      "approval_state": "pending",
+      "accepted_for_execution": false,
+      "execution_enabled": false
+    },
+    {
+      "name": "approval_request_ui_returned_on_create",
+      "pass": true,
+      "status": 201
+    },
+    {
+      "name": "pending_request_visible_in_approval_ui_state",
+      "pass": true,
+      "status": 200,
+      "ui_state": "pending"
+    },
+    {
+      "name": "pending_request_has_approve_deny_commands",
+      "pass": true,
+      "approve_path": "/api/bridge/approval-requests/apr_e7ecf76b-b10c-4b7d-8f22-ccb160762517/approve",
+      "deny_path": "/api/bridge/approval-requests/apr_e7ecf76b-b10c-4b7d-8f22-ccb160762517/deny"
+    },
+    {
+      "name": "pending_request_execution_command_disabled",
+      "pass": true,
+      "blocker": "owner_approval_required_before_execution"
+    },
+    {
+      "name": "approval_request_denied_without_execution",
+      "pass": true,
+      "status": 200,
+      "approval_state": "denied",
+      "accepted_for_execution": false,
+      "audit_event_id_present": true
+    },
+    {
+      "name": "audit_events_written_for_request_lifecycle",
+      "pass": true,
+      "audit_events_for_request": 2
+    },
+    {
+      "name": "denied_request_moves_to_approval_history",
+      "pass": true,
+      "status": 200,
+      "ui_state": "denied",
+      "approval_state": "denied"
+    },
+    {
+      "name": "no_connector_run_created_by_ui_request_or_denial",
+      "pass": true,
+      "connector_runs_for_request": 0
+    }
+  ],
+  "safety": {
+    "no_execution": true,
+    "no_connector_writes": true,
+    "no_env_change": true,
+    "no_secret_output": true,
+    "proof_session_deleted": true
+  }
+}

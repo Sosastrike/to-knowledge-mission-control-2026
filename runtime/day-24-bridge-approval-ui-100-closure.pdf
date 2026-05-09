@@ -1,0 +1,380 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3002 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-24-bridge-approval-ui-100-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 24 — Bridge Approval UI 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS — developer-side closure complete) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class: NONE for Day 24 implementation and local runtime proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Important boundary: this does not claim Bridge approved execution GO. Day 24 proves the approval) Tj
+0 -12 Td
+( UI lifecycle and audit visibility. Actual scoped execution remains Day 25+ work and must still ) Tj
+0 -12 Td
+(require owner approval.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Bridge approval UI:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pending approval visibility) Tj
+0 -12 Td
+(- approve / deny commands) Tj
+0 -12 Td
+(- result / history visibility) Tj
+0 -12 Td
+(- audit timeline hydration) Tj
+0 -12 Td
+(- no execution from the UI) Tj
+0 -12 Td
+(- no connector writes from approval request or denial) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a canonical Bridge approval UI state builder.) Tj
+0 -12 Td
+(- Exposed `approval_ui_state` from `GET /api/bridge/approval-requests`.) Tj
+0 -12 Td
+(- Added `approval_request_ui` to `POST /api/bridge/approval-requests`.) Tj
+0 -12 Td
+(- Mounted live approval hydration into the accepted FULL v3 `Bridge Session Flow.html` designer ) Tj
+0 -12 Td
+(page.) Tj
+0 -12 Td
+(- Preserved the designer mock mounting model and shared class vocabulary.) Tj
+0 -12 Td
+(- Added approve/deny button behavior for pending requests only.) Tj
+0 -12 Td
+(- Kept execution controls disabled with exact blockers.) Tj
+0 -12 Td
+(- Kept direct mock files static when opened as standalone design references.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/bridge-approval-ui-state.ts`) Tj
+0 -12 Td
+(- `src/lib/bridge-approval-ui-state.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/route.ts`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Bridge Session Flow.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/bridge-approvals.js`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/approval-requests`) Tj
+0 -12 Td
+(  - now returns `approval_ui_state`) Tj
+0 -12 Td
+(  - shows pending and history rows) Tj
+0 -12 Td
+(  - keeps `execution_enabled=false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/approval-requests`) Tj
+0 -12 Td
+(  - now returns `approval_request_ui`) Tj
+0 -12 Td
+(  - creates a persistent pending approval request) Tj
+0 -12 Td
+(  - does not execute the action) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway/bridge-session`) Tj
+0 -12 Td
+(  - still mounts the FULL v3 designer page) Tj
+0 -12 Td
+(  - now hydrates pending approvals and audit/history into the designer page) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending state:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2824 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- pending request appears in the owner prompt area) Tj
+0 -12 Td
+(- Approve button calls the scoped approve endpoint) Tj
+0 -12 Td
+(- Deny button calls the scoped deny endpoint) Tj
+0 -12 Td
+(- execute remains disabled with `owner_approval_required_before_execution`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(History state:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- denied, expired, failed, completed, and approved rows move out of pending UI state) Tj
+0 -12 Td
+(- completed / failed / denied result labels render from the canonical approval model) Tj
+0 -12 Td
+(- approve and deny commands are disabled for non-pending rows) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocked / unavailable state:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- if the approval API is unavailable, the UI shows an exact unavailable message) Tj
+0 -12 Td
+(- it does not fake approval success) Tj
+0 -12 Td
+(- it does not claim execution) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local standalone runtime proof used a temporary proof session:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- proof session token was not printed) Tj
+0 -12 Td
+(- auth files were not read) Tj
+0 -12 Td
+(- temporary proof user was deleted) Tj
+0 -12 Td
+(- proof session was deleted) Tj
+0 -12 Td
+(- no `.env` changes) Tj
+0 -12 Td
+(- no connector run was created) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-24-bridge-approval-ui-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-24-bridge-approval-ui-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-24-route-rendering-smoke.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- 21 approval UI lifecycle checks passed) Tj
+0 -12 Td
+(- 7 route smoke checks passed) Tj
+0 -12 Td
+(- approval request created as pending) Tj
+0 -12 Td
+(- approval request denied for cleanup) Tj
+0 -12 Td
+(- audit events written) Tj
+0 -12 Td
+(- no connector execution row created) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `node --check public/designer-mission-control/design/gateway/shared/bridge-approvals.js` — PAS) Tj
+0 -12 Td
+(S) Tj
+0 -12 Td
+(- `pnpm test src/lib/bridge-approval-ui-state.test.ts` — PASS, 2 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS) Tj
+0 -12 Td
+(- `pnpm run build` — PASS) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 152 files / 1313 tests) Tj
+0 -12 Td
+(- staged secret scan — PASS) Tj
+0 -12 Td
+(- `.env` diff check — clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No fake approval success.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1080 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No fake execution.) Tj
+0 -12 Td
+(- No connector writes.) Tj
+0 -12 Td
+(- No SMB / Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- Only the literal service target `opencloud-docs-farmer.service` appears in the scoped proof re) Tj
+0 -12 Td
+(quest.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Implementation commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `bd33d01` — `feat\(bridge\): add approval ui state contract`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert bd33d01) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Work) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Next day automatically started:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day 25 — Safe Scoped Execution 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 25 must prove one safe scoped execution path behind Bridge owner approval. Day 24 does not m) Tj
+0 -12 Td
+(ark Bridge Session GO.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003307 00000 n 
+0000003433 00000 n 
+0000006309 00000 n 
+0000006435 00000 n 
+0000007567 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7637
+%%EOF

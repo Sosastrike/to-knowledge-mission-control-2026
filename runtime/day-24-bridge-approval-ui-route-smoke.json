@@ -1,0 +1,68 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T18:47:07.689Z",
+  "lane": "day-24-bridge-approval-ui-route-smoke",
+  "auth": {
+    "method": "temporary_local_proof_session",
+    "token_printed": false,
+    "auth_files_read": false,
+    "temporary_proof_user_deleted": true
+  },
+  "routes": [
+    {
+      "name": "login_available",
+      "status": 200,
+      "location": null,
+      "body_sample": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\" class=\"dark\"><head><meta charSet=\"utf-8",
+      "pass": true
+    },
+    {
+      "name": "gateway_bridge_session_unauth_redirects_to_login",
+      "status": 307,
+      "location": "/login",
+      "body_sample": "/login",
+      "pass": true
+    },
+    {
+      "name": "gateway_bridge_session_auth_loads",
+      "status": 200,
+      "location": null,
+      "body_sample": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\" class=\"dark\"><head><meta charSet=\"utf-8",
+      "pass": true
+    },
+    {
+      "name": "approval_requests_api_unauth_rejects",
+      "status": 401,
+      "location": null,
+      "body_sample": "{\"error\":\"Unauthorized\"}",
+      "pass": true
+    },
+    {
+      "name": "approval_requests_api_auth_loads",
+      "status": 200,
+      "location": null,
+      "body_sample": "{\"ok\":true,\"mode\":\"approval_requests_read_only_queue\",\"generated_at\":\"2026-05-09",
+      "pass": true
+    },
+    {
+      "name": "bridge_designer_mock_auth_loads",
+      "status": 200,
+      "location": null,
+      "body_sample": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\" />\n<title>Gateway ",
+      "pass": true
+    },
+    {
+      "name": "bridge_approval_hydration_script_auth_loads",
+      "status": 200,
+      "location": null,
+      "body_sample": "(function () {\n  if (window.top === window) return;\n\n  const API = '/api/bridge/",
+      "pass": true
+    }
+  ],
+  "safety": {
+    "no_env_change": true,
+    "no_secret_output": true,
+    "no_public_exposure_added": true,
+    "proof_session_deleted": true
+  }
+}

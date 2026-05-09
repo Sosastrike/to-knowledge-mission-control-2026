@@ -1,6 +1,7 @@
 /* ============================================================
-   Agent Hub mock data — drives Agent Hub.html and Paperclip.html.
-   Loaded after gateway-data.js. Read-only mocks; no live calls.
+   Agent Hub designer data — drives Agent Hub.html and Paperclip.html.
+   Loaded after gateway-data.js. Hydrates from read-only Gateway APIs
+   when Mission Control auth is present; otherwise keeps design fallback.
 
    Architecture order (locked):
    Owner → Gateway → Agent Zero / Pi / Hermes → Paperclip
@@ -13,7 +14,7 @@
 
 window.AGENTS = (function () {
 
-  /* -- Agent roster (5) ------------------------------------- */
+  /* -- Agent roster (6) ------------------------------------- */
   const agents = [
     {
       id: 'paperclip',
@@ -133,6 +134,30 @@ window.AGENTS = (function () {
       gated_reason: 'Candidate. Recommendations only — not yet wired into execution path.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Dispatcher candidate. Recommends routes by cost/latency/capability.'
+    },
+
+    {
+      id: 'openclaw-plus',
+      name: 'OpenClaw+',
+      role: 'Runtime · Skills · Mini-Agent Execution Layer',
+      tagline: 'Runtime layer. Doctor blocked until CLI is reachable.',
+      status: 'red',
+      marker: 'orange',
+      kind: 'runtime',
+      bridge: true,
+      R: true, W: false, X: false,
+      localhost: 'service gated',
+      iframe_safe: false,
+      auth: 'mission control session + runtime service user',
+      repo: 'github.com/Sosastrike/openclaw',
+      repo_grounding: 'pending',
+      caps: ['runtime', 'skills', 'mini-agent execution', 'tool execution', 'doctor'],
+      models: ['runtime-managed'],
+      tools: ['openclaw doctor', 'skill registry', 'mini-agent lifecycle'],
+      blocked_reason: 'openclaw_doctor_runtime_not_reachable',
+      gated_reason: null,
+      pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
+      summary: 'OpenClaw+ is the runtime / skills / mini-agent execution layer. Execution stays blocked until the CLI/runtime is reachable from Mission Control.'
     }
   ];
 
@@ -164,7 +189,8 @@ window.AGENTS = (function () {
     'pi-mono': [
       { ts: '13:11:22', req: 'req_8c41a611', op: 'recommend',      engine: 'claude-haiku-4-5', ms: 230,  result: 'ok',     bridge: false },
       { ts: '12:52:41', req: 'req_8c41a554', op: 'recommend',      engine: 'claude-haiku-4-5', ms: 280,  result: 'ok',     bridge: false }
-    ]
+    ],
+    'openclaw-plus': []
   };
 
   /* -- Tool calls in flight + last 20 per agent ------------- */
@@ -184,7 +210,8 @@ window.AGENTS = (function () {
     'space-agent': [],
     'pi-mono': [
       { ts: '13:11:22.014', tool: 'router.recommend', target: 'task:plan-q3', ms: 230, result: 'ok' }
-    ]
+    ],
+    'openclaw-plus': []
   };
 
   /* -- Decision trace (action summary; NOT chain-of-thought) - */
@@ -203,7 +230,8 @@ window.AGENTS = (function () {
     'space-agent': [],
     'pi-mono': [
       { ts: '13:11:22', summary: 'Recommend route claude-sonnet-4 for plan-q3', route: 'pi → agent-zero (advisory)', cost_usd: 0.001 }
-    ]
+    ],
+    'openclaw-plus': []
   };
 
   /* -- Memory state summary (NOT raw memory) ---------------- */
@@ -223,7 +251,8 @@ window.AGENTS = (function () {
       co_workers: 0, tasks: 0, work_products: 0
     },
     'space-agent': { working_set: [], note: 'Not installed' },
-    'pi-mono': { working_set: ['Engine cost table cache (5m TTL)'], routes_observed: 27 }
+    'pi-mono': { working_set: ['Engine cost table cache (5m TTL)'], routes_observed: 27 },
+    'openclaw-plus': { working_set: ['Runtime doctor blocked', 'Skill registry visible as metadata only'], note: 'CLI/runtime not reachable from Mission Control service user' }
   };
 
   /* -- Persona summary (the SHAPE of the system prompt) ----- */
@@ -232,7 +261,8 @@ window.AGENTS = (function () {
     'hermes':     { id: 'persona:hermes@v1.7',      tone: 'lieutenant · skills', word_count: 1240, last_edit: '2026-05-02' },
     'paperclip':  { id: 'persona:paperclip@v0.2',   tone: 'workforce manager',   word_count: 870,  last_edit: '2026-05-04' },
     'space-agent':{ id: 'persona:space@v0.1',       tone: 'researcher',          word_count: 540,  last_edit: '2026-04-12' },
-    'pi-mono':    { id: 'persona:pi@v0.1',          tone: 'dispatcher',          word_count: 410,  last_edit: '2026-04-08' }
+    'pi-mono':    { id: 'persona:pi@v0.1',          tone: 'dispatcher',          word_count: 410,  last_edit: '2026-04-08' },
+    'openclaw-plus': { id: 'persona:openclaw-runtime@v0.1', tone: 'runtime / skills', word_count: 320, last_edit: '2026-05-09' }
   };
 
   /* -- Token + cost meter (today, since midnight local) ----- */
@@ -241,7 +271,8 @@ window.AGENTS = (function () {
     'hermes':      { today_usd: 0.61, today_tokens:    91_400, day_cap_usd: 10, soft_cap_usd:  7 },
     'paperclip':   { today_usd: 0.00, today_tokens:         0, day_cap_usd:  5, soft_cap_usd:  3 },
     'space-agent': { today_usd: 0.00, today_tokens:         0, day_cap_usd:  3, soft_cap_usd:  2 },
-    'pi-mono':     { today_usd: 0.04, today_tokens:    12_400, day_cap_usd:  2, soft_cap_usd:  1 }
+    'pi-mono':     { today_usd: 0.04, today_tokens:    12_400, day_cap_usd:  2, soft_cap_usd:  1 },
+    'openclaw-plus': { today_usd: 0.00, today_tokens:       0, day_cap_usd:  5, soft_cap_usd:  3 }
   };
 
   /* -- Errors + retry log ----------------------------------- */
@@ -256,16 +287,20 @@ window.AGENTS = (function () {
     'space-agent': [
       { ts: '00:00:00', code: 'NOT_INSTALLED',  target: '—',              detail: 'service not running',     retried: 0, resolved: false }
     ],
-    'pi-mono':     []
+    'pi-mono':     [],
+    'openclaw-plus': [
+      { ts: '00:00:00', code: 'SERVICE_DOWN', target: 'openclaw doctor', detail: 'openclaw_doctor_runtime_not_reachable', retried: 0, resolved: false }
+    ]
   };
 
   /* -- Connections graph (out-edges per agent) -------------- */
   const connections = {
     'agent-zero':  [{to:'gateway',type:'router'}, {to:'hermes',type:'delegate'}, {to:'paperclip',type:'workforce'}, {to:'legacy-memory',type:'memory:R'}, {to:'obsidian',type:'memory:RW'}, {to:'mempalace',type:'memory:RW'}],
-    'hermes':      [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'skill-registry',type:'memory:RW'}],
-    'paperclip':   [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'agent-zero',type:'reports-up'}, {to:'workforce-ledger',type:'memory:RW'}],
+    'hermes':      [{to:'gateway',type:'router'}, {to:'openclaw-plus',type:'handoff'}, {to:'skill-registry',type:'memory:RW'}],
+    'paperclip':   [{to:'gateway',type:'router'}, {to:'openclaw-plus',type:'handoff'}, {to:'agent-zero',type:'reports-up'}, {to:'workforce-ledger',type:'memory:RW'}],
     'space-agent': [{to:'gateway',type:'router'}, {to:'firecrawl',type:'tool'}, {to:'youtube',type:'tool'}],
-    'pi-mono':     [{to:'gateway',type:'router'}, {to:'engine-ledger',type:'read'}]
+    'pi-mono':     [{to:'gateway',type:'router'}, {to:'engine-ledger',type:'read'}],
+    'openclaw-plus': [{to:'gateway',type:'router'}, {to:'paperclip',type:'supervised-by'}, {to:'skill-registry',type:'read'}]
   };
 
   /* -- Bridge requirement matrix per dangerous action ------- */
@@ -474,6 +509,10 @@ window.AGENTS = (function () {
       designAgent.bridge = Boolean(liveAgent.requires_bridge_session);
       designAgent.localhost = liveAgent.interface?.tailnet_url || liveAgent.interface?.local_ui_url || designAgent.localhost;
       designAgent.auth = liveAgent.interface?.auth_required ? 'mission control session' : designAgent.auth;
+      designAgent.local_ui_proven = Boolean(liveAgent.interface?.local_ui_proven || liveAgent.interface?.tailnet_ui_proven);
+      designAgent.audit_route = liveAgent.routes?.audit || `/api/gateway/agent-hub/agents/${liveAgent.id}/audit`;
+      designAgent.health_route = liveAgent.routes?.health || `/api/gateway/agent-hub/agents/${liveAgent.id}/health`;
+      designAgent.detail_route = liveAgent.interface?.mission_control_surface || liveAgent.routes?.detail || '/gateway/agent-hub';
       designAgent.caps = Array.isArray(liveAgent.capabilities) && liveAgent.capabilities.length > 0
         ? liveAgent.capabilities
         : designAgent.caps;

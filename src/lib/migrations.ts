@@ -1600,6 +1600,45 @@ const migrations: Migration[] = [
       db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_audit_events_action ON bridge_audit_events(connector, action, created_at)`)
       db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_audit_events_corr ON bridge_audit_events(correlation_id)`)
     }
+  },
+  {
+    id: '054_bridge_connector_run_persistence',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS bridge_connector_runs (
+          id TEXT PRIMARY KEY,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          tenant_id INTEGER NOT NULL DEFAULT 1,
+          connector TEXT NOT NULL,
+          action TEXT NOT NULL,
+          target TEXT,
+          target_key TEXT NOT NULL DEFAULT '',
+          approval_request_id TEXT,
+          audit_event_id TEXT,
+          run_state TEXT NOT NULL,
+          risk_level TEXT NOT NULL DEFAULT 'low',
+          input_hash TEXT,
+          output_hash TEXT,
+          rollback_ref TEXT,
+          started_at TEXT,
+          finished_at TEXT,
+          correlation_id TEXT NOT NULL,
+          idempotency_key TEXT,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          FOREIGN KEY (approval_request_id) REFERENCES bridge_approval_requests(id) ON DELETE SET NULL,
+          FOREIGN KEY (audit_event_id) REFERENCES bridge_audit_events(id) ON DELETE SET NULL
+        );
+      `)
+
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_connector_runs_state ON bridge_connector_runs(workspace_id, tenant_id, connector, run_state, created_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_connector_runs_approval ON bridge_connector_runs(approval_request_id, created_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_bridge_connector_runs_correlation ON bridge_connector_runs(correlation_id, created_at)`)
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_bridge_connector_runs_idempotency
+        ON bridge_connector_runs(workspace_id, tenant_id, idempotency_key)
+        WHERE idempotency_key IS NOT NULL
+      `)
+    }
   }
 ]
 

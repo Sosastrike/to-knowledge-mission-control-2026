@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import { createHash, randomUUID } from 'node:crypto'
 import { config } from '@/lib/config'
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,19 @@ export const BUILDWIKI_PROTECTED_CATEGORY = 'tooling'
 export const BUILDWIKI_REQUIRED_APPROVER = 'owner'
 export const BUILDWIKI_ROLLBACK_REF =
   'systemctl --user stop opencloud-docs-farmer.service (oneshot exits on completion; no manual rollback usually needed)'
+
+export const BUILDWIKI_RUN_NOW_APPROVAL_SCOPE = {
+  action: BUILDWIKI_ACTION_RUN_NOW,
+  connector: BUILDWIKI_CONNECTOR,
+  target_service: BUILDWIKI_TARGET_SERVICE,
+  command: ['systemctl', '--user', 'start', BUILDWIKI_TARGET_SERVICE],
+  fork: 'fork_1_only',
+  no_smb: true,
+  no_fork_2: true,
+  no_external_farmers: true,
+  no_second_vault: true,
+  no_immediate_execution: true,
+}
 
 export type ApprovalRow = {
   id: string
@@ -57,6 +71,30 @@ export type ConnectorRunRow = {
   correlation_id: string
 }
 
+export type BuildWikiRunNowRequester = {
+  userId: number | null
+  username: string
+  workspaceId: number
+  tenantId: number
+}
+
+export type BuildWikiRunNowApprovalResult = {
+  ok: boolean
+  http_status: number
+  persistence_ready: boolean
+  approval_request_created: boolean
+  reused_existing: boolean
+  approval: ApprovalRow | null
+  audit_event_id: string | null
+  ui_state: 'idle' | 'pending_approval' | 'denied' | 'approved' | 'dispatching' | 'completed' | 'failed' | 'expired'
+  is_terminal: boolean
+  execution_enabled: false
+  accepted_for_execution: false
+  writes_enabled: false
+  blocked_reason: string | null
+  next_action: string
+}
+
 export function tableExists(db: Database.Database, name: string): boolean {
   const row = db
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1")
@@ -70,6 +108,189 @@ export function approvalPersistenceReady(db: Database.Database): boolean {
     tableExists(db, 'bridge_audit_events') &&
     tableExists(db, 'bridge_connector_runs')
   )
+}
+
+export function createBuildWikiRunNowApproval(input: {
+  db: Database.Database
+  requester: BuildWikiRunNowRequester
+  reason?: string
+  idempotencyKey?: string | null
+  now?: Date
+}): BuildWikiRunNowApprovalResult {
+  const { db, requester } = input
+  const now = input.now || new Date()
+  const nowIso = now.toISOString()
+
+  if (!approvalPersistenceReady(db)) {
+    return {
+      ok: false,
+      http_status: 503,
+      persistence_ready: false,
+      approval_request_created: false,
+      reused_existing: false,
+      approval: null,
+      audit_event_id: null,
+      ui_state: 'idle',
+      is_terminal: true,
+      execution_enabled: false,
+      accepted_for_execution: false,
+      writes_enabled: false,
+      blocked_reason: 'approval_persistence_not_applied',
+      next_action: 'Apply Bridge approval/audit/run persistence before creating Build-Wiki Run Now approvals.',
+    }
+  }
+
+  const existing = db
+    .prepare(
+      `SELECT id, workspace_id, tenant_id, connector, action, target, target_key,
+              requester, requester_user_id, risk_level, approval_state,
+              protected_category, reason, required_approver, expires_at,
+              resolved_at, resolved_by, resolved_by_user_id, resolution_reason,
+              correlation_id, idempotency_key, created_at
+         FROM bridge_approval_requests
+        WHERE workspace_id = ?
+          AND tenant_id = ?
+          AND connector = ?
+          AND action = ?
+          AND target_key = ?
+          AND approval_state = 'pending'
+          AND (expires_at IS NULL OR expires_at > ?)
+        ORDER BY created_at DESC
+        LIMIT 1`,
+    )
+    .get(
+      requester.workspaceId,
+      requester.tenantId,
+      BUILDWIKI_CONNECTOR,
+      BUILDWIKI_ACTION_RUN_NOW,
+      BUILDWIKI_TARGET_KEY,
+      nowIso,
+    ) as ApprovalRow | undefined
+
+  if (existing) {
+    return {
+      ok: true,
+      http_status: 200,
+      persistence_ready: true,
+      approval_request_created: false,
+      reused_existing: true,
+      approval: existing,
+      audit_event_id: null,
+      ui_state: 'pending_approval',
+      is_terminal: false,
+      execution_enabled: false,
+      accepted_for_execution: false,
+      writes_enabled: false,
+      blocked_reason: null,
+      next_action: 'Existing pending Build-Wiki Run Now approval is waiting for owner approval.',
+    }
+  }
+
+  const id = `apr_${randomUUID()}`
+  const auditId = `audit_${randomUUID()}`
+  const correlationId = `corr_buildwiki_run_now_${randomUUID()}`
+  const approvalScopeJson = stableJson(BUILDWIKI_RUN_NOW_APPROVAL_SCOPE)
+  const scopeHash = createHash('sha256').update([
+    requester.workspaceId,
+    requester.tenantId,
+    BUILDWIKI_CONNECTOR,
+    BUILDWIKI_ACTION_RUN_NOW,
+    BUILDWIKI_TARGET_KEY,
+    approvalScopeJson,
+  ].join('|')).digest('hex')
+  const reason = String(input.reason || 'Owner requested Build-Wiki/Farmer Run Now.').slice(0, 500)
+  const expiresAt = new Date(now.getTime() + 30 * 60 * 1000).toISOString()
+  const idempotencyKey = input.idempotencyKey || `buildwiki.run_now:${requester.workspaceId}:${requester.tenantId}:${nowIso.slice(0, 16)}`
+
+  db.transaction(() => {
+    db.prepare(
+      `INSERT INTO bridge_approval_requests (
+         id, workspace_id, tenant_id, connector, action, target, target_key,
+         requester, requester_user_id, risk_level, approval_state,
+         protected_category, approval_scope_json, scope_hash, reason,
+         required_approver, rollback_available, rollback_ref, expires_at,
+         correlation_id, idempotency_key
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+    ).run(
+      id,
+      requester.workspaceId,
+      requester.tenantId,
+      BUILDWIKI_CONNECTOR,
+      BUILDWIKI_ACTION_RUN_NOW,
+      BUILDWIKI_TARGET_SERVICE,
+      BUILDWIKI_TARGET_KEY,
+      requester.username,
+      requester.userId,
+      BUILDWIKI_RISK_LEVEL,
+      BUILDWIKI_PROTECTED_CATEGORY,
+      approvalScopeJson,
+      scopeHash,
+      reason,
+      BUILDWIKI_REQUIRED_APPROVER,
+      BUILDWIKI_ROLLBACK_REF,
+      expiresAt,
+      correlationId,
+      idempotencyKey,
+    )
+
+    db.prepare(
+      `INSERT INTO bridge_audit_events (
+         id, workspace_id, tenant_id, approval_request_id, actor, actor_user_id,
+         connector, action, target, target_key, outcome, payload_hash,
+         rollback_ref, metadata_json, correlation_id
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approval_requested', ?, ?, ?, ?)`,
+    ).run(
+      auditId,
+      requester.workspaceId,
+      requester.tenantId,
+      id,
+      requester.username,
+      requester.userId,
+      BUILDWIKI_CONNECTOR,
+      BUILDWIKI_ACTION_RUN_NOW,
+      BUILDWIKI_TARGET_SERVICE,
+      BUILDWIKI_TARGET_KEY,
+      createHash('sha256').update(approvalScopeJson).digest('hex'),
+      BUILDWIKI_ROLLBACK_REF,
+      stableJson({
+        source: 'mission-control',
+        scope: BUILDWIKI_RUN_NOW_APPROVAL_SCOPE,
+        approval_request_created: true,
+        execution_enabled: false,
+        accepted_for_execution: false,
+      }),
+      correlationId,
+    )
+  })()
+
+  const approval = db
+    .prepare(
+      `SELECT id, workspace_id, tenant_id, connector, action, target, target_key,
+              requester, requester_user_id, risk_level, approval_state,
+              protected_category, reason, required_approver, expires_at,
+              resolved_at, resolved_by, resolved_by_user_id, resolution_reason,
+              correlation_id, idempotency_key, created_at
+         FROM bridge_approval_requests
+        WHERE id = ? LIMIT 1`,
+    )
+    .get(id) as ApprovalRow
+
+  return {
+    ok: true,
+    http_status: 201,
+    persistence_ready: true,
+    approval_request_created: true,
+    reused_existing: false,
+    approval,
+    audit_event_id: auditId,
+    ui_state: 'pending_approval',
+    is_terminal: false,
+    execution_enabled: false,
+    accepted_for_execution: false,
+    writes_enabled: false,
+    blocked_reason: null,
+    next_action: 'Owner must approve this exact buildwiki.run_now request before dispatching opencloud-docs-farmer.service.',
+  }
 }
 
 /**
@@ -198,6 +419,11 @@ export function pickPublicApprovalView(approval: ApprovalRow | null) {
     correlation_id: approval.correlation_id,
     created_at: approval.created_at,
   }
+}
+
+function stableJson(value: unknown): string {
+  if (!value || typeof value !== 'object') return '{}'
+  return JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort())
 }
 
 export function pickPublicRunView(run: ConnectorRunRow | null) {

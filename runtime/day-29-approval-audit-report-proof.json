@@ -1,0 +1,43 @@
+{
+  "schema": "day29_approval_audit_report_proof_v1",
+  "generated_at": "2026-05-09T20:09:58.158Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "route": "/api/bridge/approval-requests/audit-report",
+  "login_status": 200,
+  "unauthenticated_status": 401,
+  "authenticated_status": 200,
+  "mode": "approval_audit_report",
+  "persistence_ready": true,
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "report_title": "Bridge Approval Audit Report",
+  "summary": {
+    "total": 8,
+    "pending": 1,
+    "approved": 5,
+    "denied": 2,
+    "expired": 0,
+    "revoked": 0,
+    "completed_runs": 0,
+    "failed_runs": 5
+  },
+  "request_count": 8,
+  "latest_request": {
+    "id": "apr_3b58495a-cc51-47a7-9e17-75bd3801defc",
+    "connector": "skill.build_wiki",
+    "action": "buildwiki.run_now",
+    "target_key": "opencloud-docs-farmer.service",
+    "approval_state": "denied",
+    "run_state": null,
+    "audit_event_count": 2
+  },
+  "safety": {
+    "read_only": true,
+    "no_execution_enabled": true,
+    "no_connector_writes_enabled": true,
+    "no_secret_values": true,
+    "raw_paths_redacted": true
+  },
+  "unsafe_output_detected": false,
+  "secret_values_printed": false
+}

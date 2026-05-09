@@ -12,8 +12,12 @@ type ButtonContract = {
   endpoint: string | null
   method: string
   state: string
+  credential_names?: string[]
+  approval_required?: boolean
+  audit_required?: boolean
   execution_enabled: boolean
   fake_success_allowed: boolean
+  accepted_for_execution?: boolean
 }
 
 describe('Mission Control button contracts', () => {
@@ -47,6 +51,37 @@ describe('Mission Control button contracts', () => {
     )
 
     expect(unsafeExecutable).toEqual([])
+  })
+
+  it('classifies Day 20 live blockers and approval-only actions without fake execution', async () => {
+    const route = await import('@/app/api/bridge/button-contracts/route')
+    const response = await route.GET(new NextRequest('http://localhost/api/bridge/button-contracts'))
+    const payload = await response.json() as { buttons: ButtonContract[] }
+
+    const brainStatus = payload.buttons.find((button) => button.label === 'Brain Sync source status')
+    expect(brainStatus).toMatchObject({
+      endpoint: '/api/bridge/brain-sync/status',
+      state: 'CREDENTIAL_REQUIRED',
+      execution_enabled: false,
+    })
+    expect(brainStatus?.credential_names).toContain('CLAUDECLAW_DASHBOARD_TOKEN')
+
+    const farmerLogs = payload.buttons.find((button) => button.label === 'Build-Wiki farmer logs')
+    expect(farmerLogs).toMatchObject({
+      endpoint: '/api/bridge/brain-sync/build-wiki/logs',
+      state: 'BACKEND_REQUIRED',
+      execution_enabled: false,
+    })
+
+    const runNow = payload.buttons.find((button) => button.label === 'Build-Wiki request run now')
+    expect(runNow).toMatchObject({
+      endpoint: '/api/bridge/brain-sync/build-wiki/run-now',
+      state: 'OWNER_APPROVAL_REQUIRED',
+      approval_required: true,
+      audit_required: true,
+      execution_enabled: false,
+      fake_success_allowed: false,
+    })
   })
 })
 

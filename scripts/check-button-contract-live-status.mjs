@@ -65,6 +65,12 @@ function sampleBodyFor(endpoint) {
       approval_gates: ['approval persistence not connected'],
     }
   }
+  if (endpoint === '/api/bridge/brain-sync/build-wiki/run-now') {
+    return {
+      reason: 'Button contract live probe. Approval request only; do not execute.',
+      idempotency_key: 'button-contract-buildwiki-run-now-probe',
+    }
+  }
   if (endpoint === '/api/firecrawl/jobs') return { type: 'scrape', url: 'https://example.invalid/' }
   if (endpoint === '/api/firecrawl/drafts') return { type: 'scrape', title: 'button contract probe' }
   if (endpoint === '/api/n8n/test') return { probe: true }
@@ -176,12 +182,30 @@ function expectedStatusesFor(buttons) {
   const statuses = new Set([200, 201, 202, 204, 400, 401, 403, 405])
   if (states.has('OWNER_APPROVAL_REQUIRED')) statuses.add(423)
   if (states.has('BACKEND_REQUIRED') || states.has('CREDENTIAL_REQUIRED')) statuses.add(503)
+  if (states.has('BACKEND_REQUIRED')) statuses.add(404)
   if ([...buttons].some((button) => (button.credential_names || []).length > 0)) statuses.add(503)
   // Dynamic sample IDs can return semantic not-found responses while proving
   // the route handler exists. Static checks still catch missing route files.
   if ([...buttons].some((button) => String(button.endpoint || '').includes(':id'))) statuses.add(404)
   if (methods.has('GET') && states.has('READ_ONLY')) statuses.add(200)
   return statuses
+}
+
+function isSemanticNotFound(responseBody) {
+  const error = String(responseBody?.error || responseBody?.blocked_reason || '')
+  return Boolean(error && error !== 'not_found' && error !== 'route_not_found')
+}
+
+function approvalRequestCreationAllowed(buttons, responseBody) {
+  if (responseBody?.approval_request_created !== true) return true
+  const hasApprovalButton = buttons.some((button) =>
+    button?.approval_required === true &&
+    button?.state === 'OWNER_APPROVAL_REQUIRED',
+  )
+  return hasApprovalButton &&
+    responseBody?.execution_enabled !== true &&
+    responseBody?.writes_enabled !== true &&
+    responseBody?.accepted_for_execution !== true
 }
 
 for (const endpoint of endpointsToProbe) {
@@ -219,11 +243,18 @@ for (const endpoint of endpointsToProbe) {
     continue
   }
 
-  results.push({ endpoint, url, method, status, response_state: responseBody?.state || responseBody?.error || null })
+  results.push({
+    endpoint,
+    url,
+    method,
+    status,
+    response_state: responseBody?.state || responseBody?.error || null,
+    approval_request_created: responseBody?.approval_request_created === true,
+  })
   if (!expectedStatuses.has(status)) failures.push({ endpoint, url, method, status, error: 'unexpected_status_for_button_contract' })
-  if (status === 404 && !endpoint.includes(':id')) failures.push({ endpoint, url, method, status, error: 'route_not_found' })
+  if (status === 404 && !endpoint.includes(':id') && !isSemanticNotFound(responseBody)) failures.push({ endpoint, url, method, status, error: 'route_not_found' })
   if (status >= 500 && ![503].includes(status)) failures.push({ endpoint, url, method, status, error: 'route_server_error' })
-  if (responseBody?.execution_enabled === true || responseBody?.writes_enabled === true || responseBody?.approval_request_created === true) {
+  if (responseBody?.execution_enabled === true || responseBody?.writes_enabled === true || !approvalRequestCreationAllowed(buttons, responseBody)) {
     failures.push({ endpoint, url, method, status, error: 'endpoint_enabled_execution_writes_or_fake_approval' })
   }
 }

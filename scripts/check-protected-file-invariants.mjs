@@ -7,6 +7,10 @@ const protectedPatterns = [
   { name: 'data_directory', regex: /^\.data\// },
   { name: 'private_key', regex: /(^|\/)(id_rsa|id_ed25519|.*\.pem|.*\.key)$/i },
   { name: 'backup_archive', regex: /(^|\/).*backup.*\.(tar|tar\.gz|tgz|zip)$/i },
+  { name: 'active_memory_file', regex: /(^|\/)(WORKING|MEMORY)\.md$/i },
+  { name: 'active_memory_store', regex: /(^|\/)(agent-memory|memory-store|memory-data|openclaw-memory|hermes-memory|mempalace|obsidian-vault)(\/|$)|^(memory|memories)\//i },
+  { name: 'governance_file', regex: /(^|\/)governance(\/|$)|(^|\/)governance\.(json|ya?ml|md)$/i },
+  { name: 'legacy_tony_identity_store', regex: /(^|\/)(tony-memory|tony-voice|tony-routing|tony-governance)(\/|$)/i },
 ]
 
 const allowedReferencePatterns = [
@@ -24,10 +28,12 @@ function isAllowedReference(path) {
 
 function gitStatus() {
   try {
-    return execFileSync('git', ['status', '--short', '--untracked-files=all'], {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024,
-    })
+    const statusText = process.env.PROTECTED_FILE_INVARIANTS_STATUS_FIXTURE ??
+      execFileSync('git', ['status', '--short', '--untracked-files=all'], {
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+      })
+    return statusText
       .split('\n')
       .map((line) => line.trimEnd())
       .filter(Boolean)

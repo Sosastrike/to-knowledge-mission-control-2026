@@ -1,0 +1,51 @@
+{
+  "day": 45,
+  "lane": "MCP UI Page",
+  "status": "DEVELOPER_SIDE_CLOSED",
+  "blocker_class": "SERVICE_DOWN",
+  "source_commit": "68c8f7d844599984a3d1269a6bc7ad7464694707",
+  "pushed": true,
+  "production": {
+    "branch": "to-knowledge-mc",
+    "origin_head": "68c8f7d844599984a3d1269a6bc7ad7464694707",
+    "runtime_head": "68c8f7d844599984a3d1269a6bc7ad7464694707",
+    "bind": "127.0.0.1:3337",
+    "pid": 86208,
+    "restart_timestamp": "2026-05-09T23:49:26Z"
+  },
+  "mcp_runtime_truth": {
+    "ok": true,
+    "canonical_status": "SERVICE_DOWN",
+    "blocker_class": "SERVICE_DOWN",
+    "blocker": "claude_mcp_discovery_unavailable: spawn claude ENOENT",
+    "total": 0,
+    "server_count": 0,
+    "writes_enabled": false,
+    "execution_enabled": false,
+    "no_tool_invocation": true
+  },
+  "ui_contract": {
+    "mcp_tools_page_uses_canonical_status": true,
+    "mcp_tools_page_uses_blocker_class": true,
+    "mcp_tools_page_contains_tony_visibility_check": false,
+    "mcp_tools_page_contains_stale_connected_claim": false,
+    "agent_network_mcp_node_status": "blocked",
+    "agent_network_mcp_node_label": "registry blocked"
+  },
+  "checks": {
+    "git_diff_check": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "tests": "pass: 165 files / 1342 tests",
+    "mcp_ui_contract": "pass",
+    "mcp_status_consistency": "pass with canonical SERVICE_DOWN blocker",
+    "mission_control_route_rendering": "pass: 46 routes / 8 designer pages",
+    "protected_file_invariants": "pass",
+    "staged_secret_scan": "pass",
+    "env_diff": "clean"
+  },
+  "rollback": {
+    "source": "git revert 68c8f7d844599984a3d1269a6bc7ad7464694707"
+  },
+  "next_day_started": "Day 46 - Zapier Registry"
+}

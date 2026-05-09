@@ -1,0 +1,358 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3283 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-45-mcp-ui-page) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 45 - MCP UI Page) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: MCP UI Page) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 45 closes the MCP owner-facing UI truth gap. The backend MCP registry already reports a cano) Tj
+0 -12 Td
+(nical blocked/service-down state when no MCP servers are discoverable from the Mission Control r) Tj
+0 -12 Td
+(untime. The UI still had stale connected language and a Tony-era visibility check. This work rem) Tj
+0 -12 Td
+(oves those false active claims and wires the UI to the canonical MCP registry/tool contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This is not MCP runtime GO. The runtime blocker remains:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`claude_mcp_discovery_unavailable: spawn claude ENOENT`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/MCPToolsPage.jsx`) Tj
+0 -12 Td
+(- `src/components/agent-network/AgentNetworkClient.tsx`) Tj
+0 -12 Td
+(- `scripts/check-mcp-ui-contracts.mjs`) Tj
+0 -12 Td
+(- `scripts/check-mcp-status-consistency.mjs`) Tj
+0 -12 Td
+(- `scripts/check-mission-control-route-rendering.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Implementation:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- MCP Tools page now displays canonical `canonical_status` and `blocker_class`.) Tj
+0 -12 Td
+(- Empty MCP server inventory now shows the exact current blocker instead of implying setup is li) Tj
+0 -12 Td
+(ve.) Tj
+0 -12 Td
+(- MCP Tools page no longer checks `visible_to?.tony`.) Tj
+0 -12 Td
+(- MCP Tools page no longer displays stale setup copy or fake live tool claims.) Tj
+0 -12 Td
+(- Agent Network MCP node no longer says `connected` / `schemas visible`.) Tj
+0 -12 Td
+(- Agent Network MCP node now reports `blocked` / `registry blocked`.) Tj
+0 -12 Td
+(- Added `scripts/check-mcp-ui-contracts.mjs` so stale MCP UI truth and Tony visibility checks fa) Tj
+0 -12 Td
+(il validation.) Tj
+0 -12 Td
+(- Updated MCP consistency smoke to accept an empty inventory only when paired with canonical blo) Tj
+0 -12 Td
+(cked/service-down truth and a blocker.) Tj
+0 -12 Td
+(- Updated route rendering smoke to include the non-secret runtime API-key cookie context used by) Tj
+0 -12 Td
+( production local smokes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes And UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Routes checked:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/mcp/status`) Tj
+0 -12 Td
+(- `/api/mcp/servers`) Tj
+0 -12 Td
+(- `/designer-mission-control/Mission%20Control.html?page=mcp-tools`) Tj
+0 -12 Td
+(- Mission Control route-rendering smoke across 46 routes and 8 designer pages) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(UI behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Owner-facing MCP page shows `SERVICE_DOWN` when MCP discovery is unavailable.) Tj
+0 -12 Td
+(- Owner-facing MCP page shows the current blocker.) Tj
+0 -12 Td
+(- No MCP tools are shown as live when the server list is empty.) Tj
+0 -12 Td
+(- Reauth/enable/disable remain owner-approval actions when rows exist.) Tj
+0 -12 Td
+(- No tool execution is invoked by the MCP UI smoke.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2429 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(Production branch: `to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`68c8f7d844599984a3d1269a6bc7ad7464694707`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Origin contains source commit: yes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime restarted: yes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New Mission Control PID:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`86208`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime bind:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`127.0.0.1:3337`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` returned 200.) Tj
+0 -12 Td
+(- `/api/mcp/servers` returned 200 with:) Tj
+0 -12 Td
+(  - `canonical_status: SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker_class: SERVICE_DOWN`) Tj
+0 -12 Td
+(  - `blocker: claude_mcp_discovery_unavailable: spawn claude ENOENT`) Tj
+0 -12 Td
+(  - `total: 0`) Tj
+0 -12 Td
+(  - `writes_enabled: false`) Tj
+0 -12 Td
+(  - `execution_enabled: false`) Tj
+0 -12 Td
+(  - `no_tool_invocation: true`) Tj
+0 -12 Td
+(- Served MCP Tools source contains canonical status/blocker fields.) Tj
+0 -12 Td
+(- Served MCP Tools source does not contain the Tony visibility check.) Tj
+0 -12 Td
+(- Served MCP Tools source does not contain stale `schemas visible` or stale empty-state setup te) Tj
+0 -12 Td
+(xt.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Passed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `node scripts/check-mcp-ui-contracts.mjs`) Tj
+0 -12 Td
+(- `node scripts/check-mcp-status-consistency.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test` - 165 files / 1342 tests) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No MCP execution enabled.) Tj
+0 -12 Td
+(- No fake live tool status.) Tj
+0 -12 Td
+(- No Tony active commander or Tony visibility check added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(MCP UI is developer-side closed, but MCP runtime remains:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 713 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(`SERVICE_DOWN`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`claude_mcp_discovery_unavailable: spawn claude ENOENT`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action needed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Install or expose the approved Claude MCP CLI/runtime to the Mission Control runtime context, th) Tj
+0 -12 Td
+(en rerun MCP registry and tool discovery smokes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert 68c8f7d844599984a3d1269a6bc7ad7464694707`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 46 - Zapier Registry starts next.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003588 00000 n 
+0000003714 00000 n 
+0000006195 00000 n 
+0000006321 00000 n 
+0000007085 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7155
+%%EOF

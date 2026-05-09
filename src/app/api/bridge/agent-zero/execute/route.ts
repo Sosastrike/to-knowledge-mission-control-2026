@@ -5,6 +5,7 @@ import {
   listAgentZeroExecutionAdapters,
 } from '@/lib/agent-zero-execution-gateway'
 import { readLatestAgentZeroBridgeSession } from '@/lib/agent-zero-bridge-session'
+import { createBridgeApprovalRequest } from '@/lib/bridge-approval-request-store'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -82,6 +83,53 @@ export async function POST(request: NextRequest) {
     action,
     input: payload,
   })
+
+  if (
+    result.http_status === 423 &&
+    result.blocked_reason === 'active_bridge_session_required' &&
+    result.adapter_registered &&
+    result.adapter
+  ) {
+    const approval = createBridgeApprovalRequest({
+      requester: {
+        userId: auth.user.id || null,
+        username: auth.user.username || auth.user.display_name || 'mission-control',
+        workspaceId: auth.user.workspace_id || 1,
+        tenantId: auth.user.tenant_id || 1,
+      },
+      connector: 'agent_zero',
+      action: 'agent_zero.execute',
+      target: action,
+      targetKey: action,
+      riskLevel: result.adapter.writes_enabled ? 'high' : 'medium',
+      protectedCategory: 'agent_execution',
+      approvalScope: {
+        route: '/api/bridge/agent-zero/execute',
+        requested_action: action,
+        adapter_category: result.adapter.category,
+        allowed_scope_keys: result.adapter.allowed_scope_keys,
+        bridge_session_required: true,
+      },
+      reason: `Agent Zero action ${action} requires owner approval and an active Bridge Session before execution.`,
+      idempotencyKey: `agent_zero_execute:${auth.user.workspace_id || 1}:${auth.user.tenant_id || 1}:${action}`,
+    })
+
+    return NextResponse.json({
+      ...result,
+      approval_request_created: approval.approval_request_created,
+      approval_request_reused: approval.approval_request_reused,
+      approval_request_id: approval.approval_request_id,
+      approval_state: approval.approval_state,
+      approval_blocked_reason: approval.blocked_reason,
+      request_dispatched: false,
+      next_action: approval.approval_request_created
+        ? approval.next_action
+        : 'Open an Agent Zero Bridge Session before retrying this registered adapter action.',
+    }, {
+      status: result.http_status,
+      headers: { 'Cache-Control': 'no-store' },
+    })
+  }
 
   return NextResponse.json(result, {
     status: result.http_status,

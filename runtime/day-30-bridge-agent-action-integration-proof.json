@@ -1,0 +1,34 @@
+{
+  "schema": "day30_bridge_agent_action_integration_proof_v1",
+  "generated_at": "2026-05-09T20:23:05.640Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "route": "/api/bridge/agent-zero/execute",
+  "login_status": 200,
+  "unauthenticated_post_status": 401,
+  "authenticated_registry_status": 200,
+  "registry_execution_enabled": false,
+  "active_execution_skipped_to_avoid_unapproved_action": false,
+  "authenticated_post_status": 423,
+  "action": "mission_control.report.attach",
+  "approval_request_created": true,
+  "approval_request_reused": false,
+  "approval_request_id": "apr_b1367ff0-6f12-41d2-a601-8cf7445a2b3f",
+  "approval_state": "pending",
+  "accepted_for_execution": false,
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "request_dispatched": false,
+  "blocked_reason": "active_bridge_session_required",
+  "report_row_found": true,
+  "report_row": {
+    "connector": "agent_zero",
+    "action": "agent_zero.execute",
+    "target_key": "mission_control.report.attach",
+    "approval_state": "pending",
+    "audit_outcomes": [
+      "approval_requested"
+    ]
+  },
+  "unsafe_output_detected": false,
+  "secret_values_printed": false
+}

@@ -67,15 +67,15 @@ describe('Mission Control button contracts', () => {
     const brainStatus = payload.buttons.find((button) => button.label === 'Brain Sync source status')
     expect(brainStatus).toMatchObject({
       endpoint: '/api/bridge/brain-sync/status',
-      state: 'CREDENTIAL_REQUIRED',
-      execution_enabled: false,
+      state: 'READ_ONLY',
+      execution_enabled: true,
       owner_status: {
-        status: 'CREDENTIAL_GATED',
-        tone: 'yellow',
-        blocker_class: 'CREDENTIAL_GATED',
+        status: 'LIVE',
+        tone: 'green',
+        blocker_class: 'NONE',
       },
     })
-    expect(brainStatus?.credential_names).toContain('CLAUDECLAW_DASHBOARD_TOKEN')
+    expect(brainStatus?.credential_names).toEqual([])
 
     const farmerLogs = payload.buttons.find((button) => button.label === 'Build-Wiki farmer logs')
     expect(farmerLogs).toMatchObject({

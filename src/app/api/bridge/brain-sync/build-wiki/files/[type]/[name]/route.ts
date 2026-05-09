@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { isValidFilename, isValidType, readFileSafe } from '@/lib/build-wiki-files'
+import { sanitizeBridgeProviderPayload } from '@/lib/bridge-provider-sanitizer'
+import { isValidFilename, isValidType, ownerSafeFileContent, readFileSafe } from '@/lib/build-wiki-files'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -55,13 +56,13 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   }
 
   return NextResponse.json(
-    {
+    sanitizeBridgeProviderPayload({
       ok: true,
       mode: 'build_wiki_file_read_only',
       generated_at: new Date().toISOString(),
-      file,
+      file: ownerSafeFileContent(file),
       no_writes_enabled: true,
-    },
+    }),
     { headers: { 'Cache-Control': 'no-store' } },
   )
 }

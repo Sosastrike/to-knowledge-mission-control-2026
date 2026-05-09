@@ -7,6 +7,7 @@ import {
   WIKI_DIR,
   isValidType,
   listLatestFiles,
+  ownerSafeFileMeta,
 } from '@/lib/build-wiki-files'
 
 export const runtime = 'nodejs'
@@ -77,14 +78,14 @@ export async function GET(request: NextRequest) {
     response.raw = {
       dir: RAW_DIR,
       count: rawItems.length,
-      items: rawItems,
+      items: rawItems.map(ownerSafeFileMeta),
     }
   }
   if (wantsWiki) {
     response.wiki = {
       dir: WIKI_DIR,
       count: wikiItems.length,
-      items: wikiItems,
+      items: wikiItems.map(ownerSafeFileMeta),
     }
   }
 

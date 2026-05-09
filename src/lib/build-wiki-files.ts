@@ -53,6 +53,14 @@ export type FileContent = FileMeta & {
   scan_warnings: string[]
 }
 
+export type OwnerSafeFileMeta = Omit<FileMeta, 'full_path'> & {
+  path_ref: string
+}
+
+export type OwnerSafeFileContent = Omit<FileContent, 'full_path'> & {
+  path_ref: string
+}
+
 export function dirForType(type: FileType): string {
   return type === 'raw' ? RAW_DIR : WIKI_DIR
 }
@@ -248,5 +256,23 @@ export async function readFileSafe(type: FileType, name: string): Promise<FileCo
     secrets_present: secretsPresent,
     secrets_redactions: redactions,
     scan_warnings: warnings,
+  }
+}
+
+export function ownerSafeFileMeta(file: FileMeta): OwnerSafeFileMeta {
+  const { full_path: _fullPath, ...rest } = file
+  void _fullPath
+  return {
+    ...rest,
+    path_ref: `buildwiki_${file.type}_file`,
+  }
+}
+
+export function ownerSafeFileContent(file: FileContent): OwnerSafeFileContent {
+  const { full_path: _fullPath, ...rest } = file
+  void _fullPath
+  return {
+    ...rest,
+    path_ref: `buildwiki_${file.type}_file`,
   }
 }

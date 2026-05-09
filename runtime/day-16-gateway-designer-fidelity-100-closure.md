@@ -7,7 +7,9 @@ Status: DEVELOPER-SIDE CLOSED
 Blocker class: OWNER_GATED for authenticated owner visual confirmation
 Code commit under proof: 25f577e
 Report base commit: 3124248
+Report commit: 97563c7
 Code rollback: git revert 25f577e
+Report rollback: git revert 97563c7
 
 ## Scope
 
@@ -221,9 +223,10 @@ Owner retest needed:
 - Blocker classification: OWNER_GATED
 - Code commit under proof: 25f577e
 - Report base commit: 3124248
-- Push result: pending for this report
+- Report commit hash: 97563c7
+- Push result: pushed to origin/to-knowledge-mc
 - Deployed/proof commit: 25f577e
 - Runtime proof: local-only standalone proof on 127.0.0.1:3337
 - Code rollback command: git revert 25f577e
-- Report rollback command: git revert <day16_report_commit_sha>
+- Report rollback command: git revert 97563c7
 - Next day automatically started: Day 17 - Gateway Overview 100% Closure

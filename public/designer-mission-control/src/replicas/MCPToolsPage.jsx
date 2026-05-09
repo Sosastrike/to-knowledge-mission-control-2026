@@ -1,18 +1,25 @@
 // ============================================================
 // MCPToolsPage — MCP server registry
-// Reads truth from `claude mcp list` + ~/.claude/mcp.json.
-// Surfaces firecrawl-mcp failure if present, never hides it.
+// Reads truth from Mission Control's canonical MCP registry API.
+// Surfaces blocked/service-down state directly; never implies tools are live.
 // ============================================================
 
-function McpServerPill({ status }) {
+function McpServerPill({ status, canonical }) {
   const map = {
     connected: ['live', 'Connected'],
     ok:        ['live', 'OK'],
     failed:    ['failed', 'Failed'],
     degraded:  ['degraded', 'Degraded'],
     unknown:   ['unknown', 'Unknown'],
+    LIVE: ['live', 'LIVE'],
+    READY: ['read-only', 'READY'],
+    OWNER_GATED: ['approval', 'OWNER_GATED'],
+    CREDENTIAL_GATED: ['credential', 'CREDENTIAL_GATED'],
+    SERVICE_DOWN: ['failed', 'SERVICE_DOWN'],
+    BLOCKED: ['failed', 'BLOCKED'],
+    DISABLED: ['disabled', 'DISABLED'],
   };
-  const [cls, label] = map[status] || map.unknown;
+  const [cls, label] = map[canonical || status] || map.unknown;
   return <span className={`ns-pill ${cls}`}>{label}</span>;
 }
 
@@ -29,7 +36,7 @@ function MCPToolsPage() {
         fetch('/api/mcp/status').then(r => r.json()),
       ]);
       setData(d); setStatus(s);
-    } catch (e) { setData({ servers: [], error: e.message }); }
+    } catch (e) { setData({ servers: [], error: e.message, canonical_status: 'SERVICE_DOWN', blocker_class: 'SERVICE_DOWN' }); }
   }
   React.useEffect(() => {
     load();
@@ -64,12 +71,22 @@ function MCPToolsPage() {
   }
 
   const servers = data.servers || [];
+  const summary = data.summary || status?.summary || {
+    total: status?.total ?? servers.length,
+    healthy: status?.healthy ?? 0,
+    degraded: status?.degraded ?? 0,
+    failed: status?.failed ?? 0,
+    unknown: status?.unknown ?? 0,
+  };
+  const topStatus = data.canonical_status || status?.canonical_status || 'BLOCKED';
+  const topBlocker = data.blocker || status?.blocker || data.error || null;
+  const ownerStatusSummary = data.owner_status_summary || status?.owner_status_summary || {};
 
   return (
     <div className="ns-page">
       <div className="ns-header">
         <div>
-          <h1>MCP Tools</h1>
+          <h1>MCP Tools <McpServerPill canonical={topStatus}/></h1>
           <div className="ns-sub">Model Context Protocol servers · transport, auth, tool count, visibility</div>
         </div>
         <div className="ns-header-actions">
@@ -85,12 +102,18 @@ function MCPToolsPage() {
 
       {toast && <div className={`ns-banner ${toast.kind}`}>{toast.msg}</div>}
 
+      {topBlocker && (
+        <div className="ns-banner danger">
+          <strong>Current blocker:</strong>&nbsp;{topBlocker}
+        </div>
+      )}
+
       <div className="ns-status-strip">
-        <div className="ns-stat"><div className="ns-stat-label">Total</div><div className="ns-stat-value">{status?.total ?? servers.length}</div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Healthy</div><div className="ns-stat-value">{status?.healthy ?? 0}</div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Degraded</div><div className="ns-stat-value">{status?.degraded ?? 0}</div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Failed</div><div className="ns-stat-value">{status?.failed ?? 0}</div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Unknown</div><div className="ns-stat-value">{status?.unknown ?? 0}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Total</div><div className="ns-stat-value">{summary.total ?? servers.length}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Ready</div><div className="ns-stat-value">{ownerStatusSummary.READY ?? 0}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Live</div><div className="ns-stat-value">{ownerStatusSummary.LIVE ?? 0}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Gated</div><div className="ns-stat-value">{(ownerStatusSummary.OWNER_GATED ?? 0) + (ownerStatusSummary.CREDENTIAL_GATED ?? 0)}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Blocked</div><div className="ns-stat-value">{(ownerStatusSummary.SERVICE_DOWN ?? 0) + (ownerStatusSummary.BLOCKED ?? 0) + (ownerStatusSummary.DISABLED ?? 0)}</div></div>
       </div>
 
       <div className="ns-card">
@@ -100,28 +123,28 @@ function MCPToolsPage() {
         </div>
         {servers.length === 0 ? (
           <div className="ns-empty">
-            {data.note === 'no_mcp_servers_detected'
-              ? 'No MCP servers detected. Configure via `claude mcp add` or ~/.claude/mcp.json.'
-              : 'Loading…'}
+            {topBlocker
+              ? `No MCP servers are visible to Mission Control. Current blocker: ${topBlocker}. Tool execution remains unavailable and no live tools are being claimed.`
+              : 'Loading MCP server registry…'}
           </div>
         ) : (
           <table className="ns-table">
             <thead><tr>
-              <th>Name</th><th>Transport</th><th>Status</th><th>Auth</th>
-              <th>Tools</th><th>Visible to Agent Zero</th><th>Visible to sub-agents</th>
-              <th>Last error</th><th></th>
+              <th>Name</th><th>Transport</th><th>Canonical</th><th>Auth</th>
+              <th>Tools</th><th>Owner visible</th><th>Sub-agents</th>
+              <th>Blocker</th><th></th>
             </tr></thead>
             <tbody>
               {servers.map(s => (
                 <tr key={s.name}>
                   <td><strong>{s.name}</strong> <span style={{fontSize: 10, color: 'var(--text-dim, #8a8f98)'}}>· {s.source}</span></td>
                   <td>{s.transport}</td>
-                  <td><McpServerPill status={s.status}/></td>
+                  <td><McpServerPill status={s.status} canonical={s.canonical_status}/></td>
                   <td>{s.auth || 'unknown'}</td>
                   <td className="num">{s.tool_count ?? '—'}</td>
-                  <td>{s.visible_to?.tony ? 'yes' : 'no'}</td>
+                  <td>{s.visible_to?.owner ? 'yes' : 'no'}</td>
                   <td>{s.visible_to?.sub_agents ? 'yes' : 'no'}</td>
-                  <td style={{fontSize: 11, color: s.error ? '#ef4444' : 'var(--text-dim, #8a8f98)'}}>{s.error || '—'}</td>
+                  <td style={{fontSize: 11, color: (s.blocker || s.error) ? '#ef4444' : 'var(--text-dim, #8a8f98)'}}>{s.blocker || s.error || '—'}</td>
                   <td className="row-actions">
                     <button className="ns-btn tiny" onClick={() => testServer(s.name)} disabled={busy[s.name]}>Test</button>
                     <button className="ns-btn tiny warn" onClick={() => approval(s.name, 'reauth')}  data-locked="Owner approval required">Reauth</button>

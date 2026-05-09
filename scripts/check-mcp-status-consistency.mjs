@@ -84,12 +84,17 @@ if (serverCounts.total !== serverListCount) {
   })
 }
 
-if (serverCounts.total === 0 && process.env.ALLOW_EMPTY_MCP_SERVERS !== '1') {
+const canonicalStatus = servers.body?.canonical_status || status.body?.canonical_status || null
+const truthfulEmptyRegistry = serverCounts.total === 0
+  && ['SERVICE_DOWN', 'BLOCKED', 'CREDENTIAL_GATED', 'OWNER_GATED'].includes(canonicalStatus)
+  && Boolean(servers.body?.blocker || status.body?.blocker || servers.body?.note || status.body?.note)
+
+if (serverCounts.total === 0 && process.env.ALLOW_EMPTY_MCP_SERVERS !== '1' && !truthfulEmptyRegistry) {
   failures.push({
     endpoint: '/api/mcp/servers',
     error: 'no_mcp_servers_detected',
     note: servers.body?.note || null,
-    next_action: 'Mission Control should surface the live Claude MCP inventory. Set ALLOW_EMPTY_MCP_SERVERS=1 only for isolated test environments.',
+    next_action: 'Mission Control should surface the live Claude MCP inventory or a canonical blocked/service-down owner-facing status.',
   })
 }
 
@@ -101,6 +106,9 @@ if (failures.length) {
     status: { http: status.status, counts: statusCounts },
     servers: {
       http: servers.status,
+      canonical_status: canonicalStatus,
+      blocker_class: servers.body?.blocker_class || status.body?.blocker_class || null,
+      blocker: servers.body?.blocker || status.body?.blocker || null,
       counts: serverCounts,
       server_list_count: serverListCount,
       sources_checked: servers.body?.sources_checked || [],
@@ -113,6 +121,9 @@ if (failures.length) {
 console.log(JSON.stringify({
   ok: true,
   base_url: baseUrl,
+  canonical_status: canonicalStatus,
+  blocker_class: servers.body?.blocker_class || status.body?.blocker_class || null,
+  blocker: servers.body?.blocker || status.body?.blocker || null,
   counts: statusCounts,
   server_list_count: serverListCount,
   sources_checked: servers.body?.sources_checked || [],

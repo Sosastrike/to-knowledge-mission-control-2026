@@ -73,7 +73,10 @@ function buildDesignerPath(page) {
 
 async function fetchRoute(path, options = {}) {
   const headers = {}
-  if (apiKey && path.startsWith('/api/')) headers['x-api-key'] = apiKey
+  if (apiKey && path.startsWith('/api/')) {
+    headers['x-api-key'] = apiKey
+    headers.cookie = 'mc-session=runtime-smoke-proxy-pass'
+  }
   const timeoutMs = path.startsWith('/api/mcp/') ? 30000 : 10000
 
   const response = await fetch(`${baseUrl}${path}`, {

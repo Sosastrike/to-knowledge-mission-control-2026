@@ -1,0 +1,360 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3171 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-41-brain-security-sweep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 41 — Brain Security Sweep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PASS) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Brain / Build-Wiki / Farmer security sweep.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Remove or guard owner-facing raw path, secret-like value, unapproved vault, SMB, Fork 2, and ext) Tj
+0 -12 Td
+(ernal-farmer exposure in the Brain / Build-Wiki / Farmer surfaces without changing `.env`, auth,) Tj
+0 -12 Td
+( memory, governance, or execution policy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reviewed active Brain / Farmer surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/knowledge-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files/:type/:name`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/logs`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/obsidian`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/mempalace`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Confirmed source-only local path constants still exist where needed for local adapter resolution) Tj
+0 -12 Td
+(, but owner-facing route responses must not expose those values.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Found and fixed one concrete owner-facing leak risk:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Build-Wiki file metadata and detail helpers retained internal `full_path`.) Tj
+0 -12 Td
+(- The file listing route already ran the bridge sanitizer, but still returned `full_path` as an ) Tj
+0 -12 Td
+(owner-facing field.) Tj
+0 -12 Td
+(- The file detail route returned `readFileSafe\(\)` directly, which could expose `full_path`, raw ) Tj
+0 -12 Td
+(local path text inside content, or secret-shaped strings inside content.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Changes made:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added owner-safe file view helpers that omit `full_path` and expose only a safe `path_ref`.) Tj
+0 -12 Td
+(- Updated Build-Wiki file listing to map metadata through the owner-safe helper.) Tj
+0 -12 Td
+(- Updated Build-Wiki file detail route to map through the owner-safe helper and sanitize the ful) Tj
+0 -12 Td
+(l response payload.) Tj
+0 -12 Td
+(- Added tests for both list and detail routes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/build-wiki-files.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/files/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/files/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/files/[type]/[name]/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/files/[type]/[name]/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/files/:type/:name`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2900 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## UI / Owner-Facing Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- File metadata no longer exposes `full_path`.) Tj
+0 -12 Td
+(- File detail responses no longer expose `full_path`.) Tj
+0 -12 Td
+(- Raw local path text is redacted as `<redacted-path>`.) Tj
+0 -12 Td
+(- Secret-shaped values are redacted as `<redacted-secret>`.) Tj
+0 -12 Td
+(- `relative_path` remains because it is a vault-relative label used by the UI, not a host path.) Tj
+0 -12 Td
+(- Read-only behavior is unchanged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No Build-Wiki execution was triggered.) Tj
+0 -12 Td
+(- No Farmer run was started.) Tj
+0 -12 Td
+(- No SMB, Fork 2, external farmer, or second vault behavior was enabled.) Tj
+0 -12 Td
+(- Allowed service literal remains only: `opencloud-docs-farmer.service`.) Tj
+0 -12 Td
+(- Mission Control runtime restarted on source commit `9f6d8c5d6e2a906302a85378d6de3b151bbc77a4`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `72421`.) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS — 163 files / 1336 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(During validation, stale generated Next type duplicates under `.next/types` with ` 2.ts` suffixe) Tj
+0 -12 Td
+(s were removed. These were generated build artifacts only, not source or owner data.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-41-brain-security-sweep-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated runtime response scan:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Endpoints checked: 7) Tj
+0 -12 Td
+(- Raw local path violations: 0) Tj
+0 -12 Td
+(- Secret-shaped value violations: 0) Tj
+0 -12 Td
+(- SMB / Fork 2 / external farmer / second vault violations: 0) Tj
+0 -12 Td
+(- `GET /login`: 200) Tj
+0 -12 Td
+(- Unauthenticated `GET /api/bridge/brain-sync/build-wiki/files?type=all&limit=1`: 401) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Note: authenticated smoke used the runtime API key and a non-secret placeholder session cookie o) Tj
+0 -12 Td
+(nly to pass the proxy prefilter; route-level authorization still validated the API key. No crede) Tj
+0 -12 Td
+(ntial value was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Source commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `9f6d8c5` — `fix\(brain\): redact build wiki file paths`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Push:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `origin/to-knowledge-mc`: pushed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 717 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Rollback source change:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 9f6d8c5) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No memory or governance changes.) Tj
+0 -12 Td
+(- No Build-Wiki execution.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+(- No second vault.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 42 — Brain / Farmer final closeout is now the active next lane.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003476 00000 n 
+0000003602 00000 n 
+0000006554 00000 n 
+0000006680 00000 n 
+0000007448 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7518
+%%EOF

@@ -1,0 +1,94 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-09T23:06:01.169Z",
+  "runtime_commit": "9f6d8c5d6e2a906302a85378d6de3b151bbc77a4",
+  "runtime_pid": 72421,
+  "base": "http://127.0.0.1:3337",
+  "endpoints_checked": 7,
+  "results": [
+    {
+      "endpoint": "/api/bridge/brain-sync/status",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 11550,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/knowledge-report",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 3205,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/status",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 23066,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/files?type=all&limit=5",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 265,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/brain-sync/build-wiki/logs?lines=20",
+      "status": 404,
+      "expected_status": [
+        200,
+        404
+      ],
+      "ok": true,
+      "bytes": 76,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/agent-zero/obsidian",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 1167,
+      "violations": []
+    },
+    {
+      "endpoint": "/api/bridge/agent-zero/mempalace",
+      "status": 200,
+      "expected_status": [
+        200
+      ],
+      "ok": true,
+      "bytes": 1312,
+      "violations": []
+    }
+  ],
+  "auth_guard": {
+    "unauth_buildwiki_files_status": 401,
+    "login_status": 200,
+    "proxy_pass_cookie_used": true,
+    "route_api_key_validated": true
+  },
+  "safety": {
+    "response_bodies_printed": false,
+    "api_key_printed": false,
+    "env_modified": false,
+    "public_exposure_added": false,
+    "allowed_service_literal": "opencloud-docs-farmer.service"
+  }
+}

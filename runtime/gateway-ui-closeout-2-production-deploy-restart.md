@@ -13,8 +13,8 @@ Result:
 - fast-forward sync completed on `to-knowledge-mc`.
 - standalone rebuild completed.
 - deployment output reported:
-  - `deployed commit 0f7e71a`
-  - `pid=60726`
+  - `deployed commit 8ab2df7`
+  - `pid=62376`
   - `port=3000`
   - static asset probe passed.
 
@@ -30,4 +30,3 @@ Result:
 ## Notes
 - Remote hosted production commit hash cannot be proven from unauthenticated headers alone.
 - Local deploy/runtime restart pipeline is healthy and completes with static-asset verification.
-

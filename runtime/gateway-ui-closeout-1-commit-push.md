@@ -33,7 +33,7 @@ Status: PASS
 - Commit: `fb7a480`
 - Branch: `to-knowledge-mc`
 - Remote: `origin/to-knowledge-mc`
-- Push: pending at this report update timestamp; completed in final execution step.
+- Push: completed (`origin/to-knowledge-mc` fast-forwarded to include `fb7a480` and follow-up docs record `8ab2df7`).
 
 ## Rollback
 - `git revert fb7a480`

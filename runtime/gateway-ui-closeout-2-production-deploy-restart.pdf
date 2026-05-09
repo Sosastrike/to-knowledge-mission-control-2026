@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 1473 >>
+<< /Length 1458 >>
 stream
 BT
 /F1 10 Tf
@@ -48,9 +48,9 @@ BT
 0 -12 Td
 (- deployment output reported:) Tj
 0 -12 Td
-(  - `deployed commit 0f7e71a`) Tj
+(  - `deployed commit 8ab2df7`) Tj
 0 -12 Td
-(  - `pid=60726`) Tj
+(  - `pid=62376`) Tj
 0 -12 Td
 (  - `port=3000`) Tj
 0 -12 Td
@@ -83,8 +83,6 @@ BT
 (- Local deploy/runtime restart pipeline is healthy and completes with static-asset verification.) Tj
 0 -12 Td
 () Tj
-0 -12 Td
-() Tj
 ET
 endstream
 endobj
@@ -98,9 +96,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000001766 00000 n 
+0000001751 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1836
+1821
 %%EOF

@@ -1,6 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
+import {
+  describeOwnerFacingStatus,
+  OWNER_FACING_STATUS_STATES,
+  type OwnerFacingBlockerClass,
+  type OwnerFacingStatus,
+  type OwnerFacingStatusDescriptor,
+} from './owner-status'
 
 export type McpToolWriteClassification = 'read' | 'write' | 'unknown'
 
@@ -54,10 +61,20 @@ export type McpServerToolRecord = {
 export type McpServerToolsResult = {
   ok: boolean
   status: 'live' | 'unavailable'
+  canonical_status: OwnerFacingStatus
+  blocker_class: OwnerFacingBlockerClass
+  owner_status: OwnerFacingStatusDescriptor
   server: string
   mcp_reachable: boolean
   tools_total: number
   tools: McpServerToolRecord[]
+  read_tools_total: number
+  write_tools_total: number
+  unknown_tools_total: number
+  read_enabled: boolean
+  bridge_session_required: true
+  approval_required_for_writes: true
+  allowed_owner_statuses: typeof OWNER_FACING_STATUS_STATES
   source: 'claude_mcp_oauth_cache' | 'server_authorization_header' | 'server_token_query' | null
   credentials_source: string | null
   auth_attached: boolean
@@ -314,13 +331,70 @@ function sanitizeTool(serverName: string, tool: RawMcpTool): McpServerToolRecord
   }
 }
 
+function rawStatusForToolDiscovery(result: Pick<McpServerToolsResult, 'ok' | 'error'>): string {
+  if (result.ok) return 'read_only'
+  switch (result.error) {
+    case 'mcp_auth_missing':
+      return 'credential_required'
+    case 'mcp_tools_list_failed':
+      return 'service_down'
+    default:
+      return 'blocked'
+  }
+}
+
+export function describeMcpToolDiscoveryResult(
+  result: Omit<
+    McpServerToolsResult,
+    | 'canonical_status'
+    | 'blocker_class'
+    | 'owner_status'
+    | 'read_tools_total'
+    | 'write_tools_total'
+    | 'unknown_tools_total'
+    | 'read_enabled'
+    | 'bridge_session_required'
+    | 'approval_required_for_writes'
+    | 'allowed_owner_statuses'
+  >,
+): McpServerToolsResult {
+  const readToolsTotal = result.tools.filter((tool) => tool.write_classification === 'read').length
+  const writeToolsTotal = result.tools.filter((tool) => tool.write_classification === 'write').length
+  const unknownToolsTotal = result.tools.filter((tool) => tool.write_classification === 'unknown').length
+  const ownerStatus = describeOwnerFacingStatus({
+    rawStatus: rawStatusForToolDiscovery(result),
+    blockers: result.blocker ? [result.blocker] : [],
+    connected: result.ok,
+    configured: result.error !== 'mcp_server_not_configured',
+    readEnabled: result.ok,
+    writeEnabled: false,
+    executionEnabled: false,
+    requiresBridgeSession: true,
+    preferReadyWhenReadable: true,
+  })
+
+  return {
+    ...result,
+    canonical_status: ownerStatus.status,
+    blocker_class: ownerStatus.blocker_class,
+    owner_status: ownerStatus,
+    read_tools_total: readToolsTotal,
+    write_tools_total: writeToolsTotal,
+    unknown_tools_total: unknownToolsTotal,
+    read_enabled: ownerStatus.can_read,
+    bridge_session_required: true,
+    approval_required_for_writes: true,
+    allowed_owner_statuses: OWNER_FACING_STATUS_STATES,
+  }
+}
+
 export async function getMcpServerTools(serverId: string): Promise<McpServerToolsResult> {
   const serverName = normalizeServerId(serverId)
   const servers = readClaudeMcpServers()
   const server = servers[serverName]
 
   if (!server) {
-    return {
+    return describeMcpToolDiscoveryResult({
       ok: false,
       status: 'unavailable',
       server: serverName,
@@ -337,11 +411,11 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
       error: 'mcp_server_not_configured',
       blocker: `MCP server ${serverName} is not present in the Claude MCP configuration.`,
       next_action: 'Connect or resync the MCP server in Claude Code, then retry this read-only route.',
-    }
+    })
   }
 
   if (!isHttpServer(server)) {
-    return {
+    return describeMcpToolDiscoveryResult({
       ok: false,
       status: 'unavailable',
       server: serverName,
@@ -358,12 +432,12 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
       error: 'mcp_server_not_http',
       blocker: `MCP server ${serverName} is configured, but read-only HTTP tools/list passthrough only supports HTTP MCP servers.`,
       next_action: 'Use Claude CLI MCP discovery for non-HTTP servers.',
-    }
+    })
   }
 
   const auth = withAuth(serverName, server)
   if (!auth.ok) {
-    return {
+    return describeMcpToolDiscoveryResult({
       ok: false,
       status: 'unavailable',
       server: serverName,
@@ -380,7 +454,7 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
       error: 'mcp_auth_missing',
       blocker: auth.reason || 'MCP OAuth token is missing.',
       next_action: `Re-authenticate ${serverName} in Claude Code. No tools were invoked.`,
-    }
+    })
   }
 
   try {
@@ -393,7 +467,7 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
     const tools = Array.isArray(result?.tools)
       ? result.tools.map((tool) => sanitizeTool(serverName, tool)).filter((tool): tool is McpServerToolRecord => Boolean(tool))
       : []
-    return {
+    return describeMcpToolDiscoveryResult({
       ok: true,
       status: 'live',
       server: serverName,
@@ -407,9 +481,9 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
       execution_enabled: false,
       writes_enabled: false,
       no_tool_invocation: true,
-    }
+    })
   } catch (error) {
-    return {
+    return describeMcpToolDiscoveryResult({
       ok: false,
       status: 'unavailable',
       server: serverName,
@@ -426,6 +500,6 @@ export async function getMcpServerTools(serverId: string): Promise<McpServerTool
       error: 'mcp_tools_list_failed',
       blocker: error instanceof Error ? error.message : 'MCP tools/list failed.',
       next_action: 'Retry after confirming MCP server health. No tools were invoked.',
-    }
+    })
   }
 }

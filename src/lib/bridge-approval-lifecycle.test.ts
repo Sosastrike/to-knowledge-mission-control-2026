@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3'
 import { describe, expect, it } from 'vitest'
-import { resolveBridgeApprovalRequest } from './bridge-approval-lifecycle'
+import { mapBridgeApprovalRequestModel, resolveBridgeApprovalRequest } from './bridge-approval-lifecycle'
 
 function setupDb() {
   const db = new Database(':memory:')
@@ -84,6 +84,110 @@ const requester = {
 }
 
 describe('Bridge approval lifecycle', () => {
+  it('projects a complete approval request model with scope, owner, execution, result, error, and audit pointers', () => {
+    const model = mapBridgeApprovalRequestModel({
+      approval: {
+        id: 'apr_model',
+        workspace_id: 1,
+        tenant_id: 1,
+        connector: 'skill.build_wiki',
+        action: 'buildwiki.run_now',
+        target: 'opencloud-docs-farmer.service',
+        target_key: 'opencloud-docs-farmer.service',
+        requester: 'owner',
+        requester_user_id: 1,
+        risk_level: 'medium',
+        approval_state: 'approved',
+        protected_category: 'tooling',
+        approval_scope_json: '{"service":"opencloud-docs-farmer.service","scope":"buildwiki.run_now"}',
+        scope_hash: 'scope_hash',
+        reason: 'Owner requested Fork 1 Run Now only.',
+        required_approver: 'owner',
+        rollback_available: 1,
+        rollback_ref: 'systemctl --user stop opencloud-docs-farmer.service',
+        expires_at: '2026-05-09T15:00:00.000Z',
+        resolved_at: '2026-05-09T14:05:00.000Z',
+        resolved_by: 'owner',
+        resolved_by_user_id: 1,
+        resolution_reason: 'approved exact Run Now scope',
+        correlation_id: 'corr_model',
+        idempotency_key: 'idem_model',
+        created_at: '2026-05-09T14:00:00.000Z',
+      },
+      latestRun: {
+        id: 'run_model',
+        approval_request_id: 'apr_model',
+        connector: 'skill.build_wiki',
+        action: 'buildwiki.run_now',
+        target: 'opencloud-docs-farmer.service',
+        target_key: 'opencloud-docs-farmer.service',
+        run_state: 'completed',
+        input_hash: 'input_hash',
+        output_hash: 'output_hash',
+        rollback_ref: 'systemctl --user stop opencloud-docs-farmer.service',
+        started_at: '2026-05-09T14:06:00.000Z',
+        finished_at: '2026-05-09T14:06:02.000Z',
+        correlation_id: 'corr_model',
+        created_at: '2026-05-09T14:06:00.000Z',
+      },
+      latestAudit: {
+        id: 'audit_model',
+        approval_request_id: 'apr_model',
+        actor: 'mission-control',
+        actor_user_id: 1,
+        connector: 'skill.build_wiki',
+        action: 'buildwiki.run_now',
+        target: 'opencloud-docs-farmer.service',
+        target_key: 'opencloud-docs-farmer.service',
+        outcome: 'completed',
+        metadata_json: '{"executor":"systemctl --user","result":"run dispatched / completed"}',
+        correlation_id: 'corr_model',
+        created_at: '2026-05-09T14:06:02.000Z',
+      },
+    })
+
+    expect(model).toMatchObject({
+      id: 'apr_model',
+      request_type: 'buildwiki.run_now',
+      scope: {
+        connector: 'skill.build_wiki',
+        action: 'buildwiki.run_now',
+        target_key: 'opencloud-docs-farmer.service',
+        approval_scope: {
+          service: 'opencloud-docs-farmer.service',
+          scope: 'buildwiki.run_now',
+        },
+      },
+      owner: {
+        requester: 'owner',
+        required_approver: 'owner',
+        resolved_by: 'owner',
+      },
+      lifecycle: {
+        approval_state: 'approved',
+        requested_at: '2026-05-09T14:00:00.000Z',
+        approved_at: '2026-05-09T14:05:00.000Z',
+        denied_at: null,
+      },
+      execution: {
+        accepted_for_execution: true,
+        executor: 'systemctl --user',
+        run_id: 'run_model',
+        run_state: 'completed',
+        result: 'run dispatched / completed',
+        error: null,
+        audit_event_id: 'audit_model',
+      },
+      audit: {
+        latest_event_id: 'audit_model',
+        latest_outcome: 'completed',
+        correlation_id: 'corr_model',
+      },
+    })
+    expect(model.execution.execution_enabled).toBe(false)
+    expect(model.execution.writes_enabled).toBe(false)
+  })
+
   it('approves a pending request and writes an audit event without executing', () => {
     const db = setupDb()
     insertApproval(db)

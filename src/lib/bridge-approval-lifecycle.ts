@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3'
 import { createHash, randomUUID } from 'node:crypto'
+import { ownerSafeStatusText } from './owner-status'
 
 export type BridgeApprovalDecision = 'approved' | 'denied'
 
@@ -53,6 +54,94 @@ export type BridgeApprovalResolveResult = {
   next_action: string
 }
 
+export type BridgeConnectorRunLifecycleRow = {
+  id: string
+  approval_request_id: string | null
+  connector: string
+  action: string
+  target: string | null
+  target_key: string
+  run_state: string
+  input_hash: string | null
+  output_hash: string | null
+  rollback_ref: string | null
+  started_at: string | null
+  finished_at: string | null
+  correlation_id: string
+  created_at: string
+}
+
+export type BridgeAuditLifecycleRow = {
+  id: string
+  approval_request_id: string | null
+  actor: string
+  actor_user_id: number | null
+  connector: string
+  action: string
+  target: string | null
+  target_key: string
+  outcome: string
+  metadata_json: string
+  correlation_id: string
+  created_at: string
+}
+
+export type BridgeApprovalRequestModel = {
+  id: string
+  request_type: string
+  scope: {
+    connector: string
+    action: string
+    target: string | null
+    target_key: string
+    protected_category: string
+    risk_level: string
+    approval_scope: Record<string, unknown>
+    scope_hash: string
+  }
+  owner: {
+    requester: string
+    requester_user_id: number | null
+    required_approver: string
+    resolved_by: string | null
+    resolved_by_user_id: number | null
+    resolution_reason: string | null
+  }
+  lifecycle: {
+    approval_state: string
+    requested_at: string
+    created_at: string
+    expires_at: string | null
+    resolved_at: string | null
+    approved_at: string | null
+    denied_at: string | null
+    expired_at: string | null
+  }
+  execution: {
+    accepted_for_execution: boolean
+    execution_enabled: false
+    writes_enabled: false
+    executor: string | null
+    run_id: string | null
+    run_state: string | null
+    result: string | null
+    error: string | null
+    started_at: string | null
+    completed_at: string | null
+    audit_event_id: string | null
+  }
+  audit: {
+    latest_event_id: string | null
+    latest_outcome: string | null
+    latest_actor: string | null
+    correlation_id: string
+  }
+  rollback: {
+    available: boolean
+    ref: string | null
+  }
+}
+
 export function bridgeApprovalLifecyclePersistenceReady(db: Database.Database): boolean {
   return (
     tableExists(db, 'bridge_approval_requests') &&
@@ -84,6 +173,77 @@ export function readBridgeApprovalRequest(
     )
     .get(approvalId) as BridgeApprovalLifecycleRow | undefined
   return row || null
+}
+
+export function mapBridgeApprovalRequestModel(input: {
+  approval: BridgeApprovalLifecycleRow
+  latestRun?: BridgeConnectorRunLifecycleRow | null
+  latestAudit?: BridgeAuditLifecycleRow | null
+}): BridgeApprovalRequestModel {
+  const { approval } = input
+  const latestRun = input.latestRun || null
+  const latestAudit = input.latestAudit || null
+  const metadata = safeJsonObject(latestAudit?.metadata_json)
+  const runState = safeText(latestRun?.run_state)
+  const executor = safeText(metadata.executor) || safeText(metadata.runner) || safeText(latestAudit?.actor)
+  const result = safeText(metadata.result) || safeText(metadata.summary) || safeText(metadata.run_summary) || runState
+  const error = safeText(metadata.error) || safeText(metadata.blocked_reason) || (runState === 'failed' ? 'execution_failed' : null)
+
+  return {
+    id: approval.id,
+    request_type: approval.action,
+    scope: {
+      connector: approval.connector,
+      action: approval.action,
+      target: approval.target,
+      target_key: approval.target_key,
+      protected_category: approval.protected_category,
+      risk_level: approval.risk_level,
+      approval_scope: safeJsonObject(approval.approval_scope_json),
+      scope_hash: approval.scope_hash,
+    },
+    owner: {
+      requester: approval.requester,
+      requester_user_id: approval.requester_user_id,
+      required_approver: approval.required_approver,
+      resolved_by: approval.resolved_by,
+      resolved_by_user_id: approval.resolved_by_user_id,
+      resolution_reason: safeText(approval.resolution_reason),
+    },
+    lifecycle: {
+      approval_state: approval.approval_state,
+      requested_at: approval.created_at,
+      created_at: approval.created_at,
+      expires_at: approval.expires_at,
+      resolved_at: approval.resolved_at,
+      approved_at: approval.approval_state === 'approved' ? approval.resolved_at : null,
+      denied_at: approval.approval_state === 'denied' ? approval.resolved_at : null,
+      expired_at: approval.approval_state === 'expired' ? approval.resolved_at : null,
+    },
+    execution: {
+      accepted_for_execution: Boolean(latestRun),
+      execution_enabled: false,
+      writes_enabled: false,
+      executor,
+      run_id: latestRun?.id || null,
+      run_state: runState,
+      result,
+      error,
+      started_at: latestRun?.started_at || null,
+      completed_at: latestRun?.finished_at || null,
+      audit_event_id: latestAudit?.id || null,
+    },
+    audit: {
+      latest_event_id: latestAudit?.id || null,
+      latest_outcome: safeText(latestAudit?.outcome),
+      latest_actor: safeText(latestAudit?.actor),
+      correlation_id: approval.correlation_id,
+    },
+    rollback: {
+      available: Boolean(approval.rollback_available),
+      ref: safeText(latestRun?.rollback_ref) || safeText(approval.rollback_ref),
+    },
+  }
 }
 
 export function resolveBridgeApprovalRequest(input: {
@@ -225,6 +385,23 @@ export function resolveBridgeApprovalRequest(input: {
       ? 'Approval is approved. Use the exact scoped dispatch route; no broad execution is enabled.'
       : 'Approval is denied. The protected action must not execute.',
   }
+}
+
+function safeJsonObject(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'string') return {}
+  try {
+    const parsed = JSON.parse(value)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {}
+  } catch {
+    return {}
+  }
+}
+
+function safeText(value: unknown): string | null {
+  const safe = ownerSafeStatusText(String(value ?? '').trim())
+  return safe ? safe.slice(0, 500) : null
 }
 
 function insertDecisionAudit(

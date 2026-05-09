@@ -6,6 +6,13 @@ import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { fetchClaudeClawJson, hasClaudeClawDashboardToken } from '@/lib/claudeclaw-telegram-approvals'
 import { splitApprovalQueue, summarizeApprovalQueue, normalizeApprovalQueueState } from '@/lib/approval-queue-state'
+import {
+  mapBridgeApprovalRequestModel,
+  readBridgeApprovalRequest,
+  type BridgeApprovalLifecycleRow,
+  type BridgeAuditLifecycleRow,
+  type BridgeConnectorRunLifecycleRow,
+} from '@/lib/bridge-approval-lifecycle'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,24 +25,7 @@ const APPROVAL_STUB = {
   canonical_contract: '/api/bridge/approval-contract',
 }
 
-type ApprovalRow = {
-  id: string
-  connector: string
-  action: string
-  target: string | null
-  target_key: string
-  requester: string
-  risk_level: string
-  approval_state: string
-  protected_category: string
-  reason: string | null
-  required_approver: string
-  expires_at: string | null
-  resolved_at: string | null
-  resolved_by: string | null
-  correlation_id: string
-  created_at: string
-}
+type ApprovalRow = BridgeApprovalLifecycleRow
 
 type TelegramApprovalQueuePayload = {
   ok?: boolean
@@ -170,23 +160,37 @@ function readApprovalQueue() {
     }
 
     const approvals = db.prepare(`
-      SELECT id, connector, action, target, target_key, requester, risk_level,
-             approval_state, protected_category, reason, required_approver,
-             expires_at, resolved_at, resolved_by, correlation_id, created_at
+      SELECT id, workspace_id, tenant_id, connector, action, target, target_key,
+             requester, requester_user_id, risk_level, approval_state,
+             protected_category, approval_scope_json, scope_hash, reason,
+             required_approver, rollback_available, rollback_ref, expires_at,
+             resolved_at, resolved_by, resolved_by_user_id, resolution_reason,
+             correlation_id, idempotency_key, created_at
       FROM bridge_approval_requests
       ORDER BY created_at DESC
       LIMIT 100
     `).all() as ApprovalRow[]
 
     const generatedAt = new Date()
+    const latestRuns = readLatestConnectorRuns(db, approvals.map((row) => row.id))
+    const latestAudits = readLatestAuditEvents(db, approvals.map((row) => row.id))
+    const approvalRequestModels = approvals.map((approval) => mapBridgeApprovalRequestModel({
+      approval,
+      latestRun: latestRuns.get(approval.id) || null,
+      latestAudit: latestAudits.get(approval.id) || null,
+    }))
     const summary = summarizeApprovalQueue(approvals, generatedAt)
     const { activeApprovals, historyApprovals } = splitApprovalQueue(approvals, generatedAt)
+    const activeIds = new Set(activeApprovals.map((row) => row.id))
 
     return {
       persistence_ready: true,
       approvals,
+      approval_request_models: approvalRequestModels,
       active_approvals: activeApprovals,
       history_approvals: historyApprovals,
+      active_approval_models: approvalRequestModels.filter((row) => activeIds.has(row.id)),
+      history_approval_models: approvalRequestModels.filter((row) => !activeIds.has(row.id)),
       active_queue_visible: activeApprovals.length > 0,
       summary,
       error: null,
@@ -195,8 +199,11 @@ function readApprovalQueue() {
     return {
       persistence_ready: false,
       approvals: [] as ApprovalRow[],
+      approval_request_models: [],
       active_approvals: [] as ApprovalRow[],
       history_approvals: [] as ApprovalRow[],
+      active_approval_models: [],
+      history_approval_models: [],
       active_queue_visible: false,
       summary: { total: 0, pending: 0, approved: 0, denied: 0, expired: 0, revoked: 0 },
       error: error instanceof Error ? error.message.slice(0, 200) : 'approval queue read failed',
@@ -204,6 +211,53 @@ function readApprovalQueue() {
   } finally {
     try { db?.close() } catch { /* noop */ }
   }
+}
+
+function readLatestConnectorRuns(
+  db: Database.Database,
+  approvalIds: string[],
+): Map<string, BridgeConnectorRunLifecycleRow> {
+  if (approvalIds.length === 0 || !tableExists(db, 'bridge_connector_runs')) return new Map()
+  const placeholders = approvalIds.map(() => '?').join(',')
+  const rows = db.prepare(`
+    SELECT id, approval_request_id, connector, action, target, target_key,
+           run_state, input_hash, output_hash, rollback_ref, started_at,
+           finished_at, correlation_id, created_at
+      FROM bridge_connector_runs
+     WHERE approval_request_id IN (${placeholders})
+     ORDER BY created_at DESC
+  `).all(...approvalIds) as BridgeConnectorRunLifecycleRow[]
+
+  const latest = new Map<string, BridgeConnectorRunLifecycleRow>()
+  for (const row of rows) {
+    if (row.approval_request_id && !latest.has(row.approval_request_id)) {
+      latest.set(row.approval_request_id, row)
+    }
+  }
+  return latest
+}
+
+function readLatestAuditEvents(
+  db: Database.Database,
+  approvalIds: string[],
+): Map<string, BridgeAuditLifecycleRow> {
+  if (approvalIds.length === 0 || !tableExists(db, 'bridge_audit_events')) return new Map()
+  const placeholders = approvalIds.map(() => '?').join(',')
+  const rows = db.prepare(`
+    SELECT id, approval_request_id, actor, actor_user_id, connector, action,
+           target, target_key, outcome, metadata_json, correlation_id, created_at
+      FROM bridge_audit_events
+     WHERE approval_request_id IN (${placeholders})
+     ORDER BY created_at DESC
+  `).all(...approvalIds) as BridgeAuditLifecycleRow[]
+
+  const latest = new Map<string, BridgeAuditLifecycleRow>()
+  for (const row of rows) {
+    if (row.approval_request_id && !latest.has(row.approval_request_id)) {
+      latest.set(row.approval_request_id, row)
+    }
+  }
+  return latest
 }
 
 async function readTelegramApprovalQueue() {
@@ -344,6 +398,9 @@ export async function GET(request: NextRequest) {
     active_approvals: queue.active_approvals || [],
     history_approvals: queue.history_approvals || [],
     approvals: queue.approvals,
+    active_approval_models: queue.active_approval_models || [],
+    history_approval_models: queue.history_approval_models || [],
+    approval_request_models: queue.approval_request_models || [],
     summary: queue.summary,
     error: queue.error,
     ui_placeholder: {
@@ -485,6 +542,9 @@ export async function POST(request: NextRequest) {
 
       return { id, reused: false, state: 'pending' }
     })()
+    const approval = readBridgeApprovalRequest(db, created.id)
+    const latestAudit = readLatestAuditEvents(db, [created.id]).get(created.id) || null
+    const approvalRequestModel = approval ? mapBridgeApprovalRequestModel({ approval, latestAudit }) : null
 
     return NextResponse.json({
       ok: true,
@@ -497,6 +557,7 @@ export async function POST(request: NextRequest) {
       execution_enabled: false,
       accepted_for_execution: false,
       no_connector_writes_enabled: true,
+      approval_request_model: approvalRequestModel,
       next_action: 'Owner must approve this request before any protected action can execute. Execution runners remain disabled.',
     }, { status: created.reused ? 200 : 201 })
   } catch (error) {

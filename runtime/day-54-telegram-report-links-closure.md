@@ -130,13 +130,16 @@ Telegram report links and protected Mission Control report URLs.
 
 ## Rollback
 
-After commit:
+Implementation rollback:
 
-`git revert <day54_commit_sha>`
+`git revert d32d471`
 
 ## Commit and push
 
-Pending at report creation. The commit hash and push result will be recorded after exact-path staging, staged secret scan, commit, and push.
+- Implementation commit: `d32d471`
+- Commit message: `feat(telegram): add protected report links`
+- Push result: pushed to `origin/to-knowledge-mc`
+- Report-only closeout update: pending at this report revision
 
 ## Next day started
 

@@ -287,7 +287,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 1018 >>
+<< /Length 1117 >>
 stream
 BT
 /F1 10 Tf
@@ -322,11 +322,11 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(After commit:) Tj
+(Implementation rollback:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(`git revert <day54_commit_sha>`) Tj
+(`git revert d32d471`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -334,9 +334,13 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Pending at report creation. The commit hash and push result will be recorded after exact-path st) Tj
+(- Implementation commit: `d32d471`) Tj
 0 -12 Td
-(aging, staged secret scan, commit, and push.) Tj
+(- Commit message: `feat\(telegram\): add protected report links`) Tj
+0 -12 Td
+(- Push result: pushed to `origin/to-knowledge-mc`) Tj
+0 -12 Td
+(- Report-only closeout update: pending at this report revision) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -364,9 +368,9 @@ xref
 0000003580 00000 n 
 0000006716 00000 n 
 0000006842 00000 n 
-0000007912 00000 n 
+0000008011 00000 n 
 trailer
 << /Size 10 /Root 1 0 R >>
 startxref
-7982
+8081
 %%EOF

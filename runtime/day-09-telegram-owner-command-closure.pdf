@@ -1,0 +1,332 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2626 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-09-telegram-owner-command-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 09 - Telegram Owner Command Lane 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: Telegram owner command) Tj
+0 -12 Td
+(Status: CREDENTIAL_GATED) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Close the developer-side Telegram owner command lane without keeping Tony active and without pre) Tj
+0 -12 Td
+(tending Telegram send/voice proof is live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The correct active command structure is:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner -> Gateway / Nucleus -> Agent Zero / Pi / Hermes -> Paperclip -> OpenClaw+ -> specialists ) Tj
+0 -12 Td
+(/ tools / reports / approvals) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No Telegram bot token printed.) Tj
+0 -12 Td
+(- No Telegram send executed.) Tj
+0 -12 Td
+(- No fake approval created.) Tj
+0 -12 Td
+(- No fake delivery status.) Tj
+0 -12 Td
+(- No Tony active commander path.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated with runtime API key context.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### GET `/api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- `provider`: `telegram`) Tj
+0 -12 Td
+(- `mode`: `agent_zero_telegram_delivery_adapter`) Tj
+0 -12 Td
+(- `status`: `blocked`) Tj
+0 -12 Td
+(- `canonical_status`: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- `blocker_class`: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- `blocked_reason`: `telegram_report_delivery_adapter_not_configured`) Tj
+0 -12 Td
+(- `connector_configured`: `false`) Tj
+0 -12 Td
+(- `credential_present`: `false`) Tj
+0 -12 Td
+(- `owner_channel_configured`: `false`) Tj
+0 -12 Td
+(- `execution_enabled`: `false`) Tj
+0 -12 Td
+(- `writes_enabled`: `false`) Tj
+0 -12 Td
+(- `bridge_session_required`: `true`) Tj
+0 -12 Td
+(- `active_commander`: `agent_zero`) Tj
+0 -12 Td
+(- `owner_command_route`: `agent_zero`) Tj
+0 -12 Td
+(- `tony_active`: `false`) Tj
+0 -12 Td
+(- `inbound_owner_validation_model`: `owner_chat_id_match_required`) Tj
+0 -12 Td
+(- missing credential names only:) Tj
+0 -12 Td
+(  - `TELEGRAM_BOT_TOKEN`) Tj
+0 -12 Td
+(  - `AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### GET `/api/bridge/telegram-approval-preview`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- `active_commander`: `agent_zero`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2924 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `owner_command_route`: `agent_zero`) Tj
+0 -12 Td
+(- `tony_active`: `false`) Tj
+0 -12 Td
+(- `no_execution_enabled`: `true`) Tj
+0 -12 Td
+(- `no_persistence_enabled`: `true`) Tj
+0 -12 Td
+(- `no_telegram_send_enabled`: `true`) Tj
+0 -12 Td
+(- `approval_request_created`: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Test Results) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Passed:) Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/agent-zero-telegram-delivery.test.ts src/lib/agent-zero-report-d) Tj
+0 -12 Td
+(elivery.test.ts src/lib/agent-zero-bridge.test.ts src/lib/gateway-events.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Test totals:) Tj
+0 -12 Td
+(- Targeted Telegram/Agent Zero tests: 4 files / 25 tests passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Recent full-suite gate from the current runtime workstream:) Tj
+0 -12 Td
+(- `git diff --check`: passed) Tj
+0 -12 Td
+(- `pnpm run typecheck`: passed) Tj
+0 -12 Td
+(- `pnpm run build`: passed) Tj
+0 -12 Td
+(- `pnpm test`: passed, 171 files / 1357 tests) Tj
+0 -12 Td
+(- Route rendering smoke: passed) Tj
+0 -12 Td
+(- Protected-file invariant scan: passed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact blockers:) Tj
+0 -12 Td
+(- `telegram_report_delivery_adapter_not_configured`) Tj
+0 -12 Td
+(- Missing `TELEGRAM_BOT_TOKEN`) Tj
+0 -12 Td
+(- Missing `AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification:) Tj
+0 -12 Td
+(- CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action package:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Provide Telegram bot token through the approved secret path.) Tj
+0 -12 Td
+(2. Provide the owner Telegram chat id through the approved secret path.) Tj
+0 -12 Td
+(3. Restart Mission Control after credential sync.) Tj
+0 -12 Td
+(4. Re-run `GET /api/bridge/agent-zero/telegram/status`.) Tj
+0 -12 Td
+(5. Only after the route is configured, run owner-channel proof.) Tj
+0 -12 Td
+(6. Telegram PDF attachment and approval sends remain Bridge-gated and must not fake delivery.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Jarvis voice-note note:) Tj
+0 -12 Td
+(- This Mission Control lane proves the Agent Zero Telegram owner-command adapter and approval pr) Tj
+0 -12 Td
+(eview state.) Tj
+0 -12 Td
+(- It does not prove the separate Jarvis Telegram voice-note STT service.) Tj
+0 -12 Td
+(- Live Jarvis voice-note proof remains owner/service gated unless the Jarvis bot service, audio ) Tj
+0 -12 Td
+(download, and STT provider are available to this runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tony Active Status) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Tony is not active in this Mission Control Telegram lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proved values:) Tj
+0 -12 Td
+(- `active_commander`: `agent_zero`) Tj
+0 -12 Td
+(- `owner_command_route`: `agent_zero`) Tj
+0 -12 Td
+(- `tony_active`: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day09_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 306 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 09 Telegram owner-command lane is developer-side closed as CREDENTIAL_GATED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Next day automatically started:) Tj
+0 -12 Td
+(- Day 10 - Bridge Session approvals 100% Closure) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002931 00000 n 
+0000003057 00000 n 
+0000006033 00000 n 
+0000006159 00000 n 
+0000006516 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6586
+%%EOF

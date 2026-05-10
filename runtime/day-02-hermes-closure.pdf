@@ -1,0 +1,243 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3008 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-02-hermes-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 02 - Hermes Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL GO - safe read-only adapter proves `hermes_called:true`; standalone Hermes runti) Tj
+0 -12 Td
+(me remains service-gated) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Hermes is the lieutenant / skill-workflow builder under Agent Zero. This day does not claim full) Tj
+0 -12 Td
+( Hermes GO because the Hermes status route still reports the standalone runtime blocker `hermes_) Tj
+0 -12 Td
+(not_installed`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Runtime PID: `8391`) Tj
+0 -12 Td
+(- Branch HEAD before this report: `9a74511`) Tj
+0 -12 Td
+(- `/api/bridge/hermes/status`: 200) Tj
+0 -12 Td
+(- `/api/bridge/hermes/status` blocker: `hermes_not_installed`) Tj
+0 -12 Td
+(- `/api/bridge/hermes/test-chat`: 200) Tj
+0 -12 Td
+(- `hermes_called`: true) Tj
+0 -12 Td
+(- Response source: Mission Control safe live adapter) Tj
+0 -12 Td
+(- Execution enabled: false) Tj
+0 -12 Td
+(- Writes enabled: false) Tj
+0 -12 Td
+(- Protected actions enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Required Role Answer) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Hermes answered the safe prompt:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(Sir, Agent Zero is the commander. Hermes is the lieutenant for skills, workflows, automations, a) Tj
+0 -12 Td
+(nd operational plans; execution remains disabled until a Bridge Session exists.) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This satisfies the read-only lieutenant behavior proof without enabling tools or writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Runtime Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Blocker: `hermes_not_installed`) Tj
+0 -12 Td
+(- Blocker class: `SERVICE_DOWN`) Tj
+0 -12 Td
+(- Meaning: the standalone Hermes CLI/service is not installed/reachable from this runtime contex) Tj
+0 -12 Td
+(t.) Tj
+0 -12 Td
+(- Current safe proof path: Mission Control read-only Hermes adapter.) Tj
+0 -12 Td
+(- Not claimed: standalone Hermes runtime/CLI GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Gateway Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Hermes must stay visible as lieutenant / workflow builder.) Tj
+0 -12 Td
+(- Hermes must not be shown as unrestricted LIVE runtime while `hermes_not_installed` remains.) Tj
+0 -12 Td
+(- Protected execution still requires Bridge Session.) Tj
+0 -12 Td
+(- No tool execution, file writes, email sends, uploads, or memory mutation were enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Validation Already Run In This Workstream) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 171 files / 1356 tests) Tj
+0 -12 Td
+(- Backend-support typecheck/build/tests: PASS) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1308 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Changed-file secret scan: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` status check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Developer-side safe adapter: proven) Tj
+0 -12 Td
+(- Standalone runtime: `SERVICE_DOWN`) Tj
+0 -12 Td
+(- Owner/admin action if full standalone runtime is required: install/expose the Hermes runtime/C) Tj
+0 -12 Td
+(LI or service for the Mission Control runtime user.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No fake delivery.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This day added a report only. Roll back the report commit after it is created:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-02-report-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 03 - Pi closure starts next. Pi must be proven as Dispatcher / Route Optimizer Candidate wit) Tj
+0 -12 Td
+(h advisory-only behavior and no writes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003307 00000 n 
+0000003433 00000 n 
+0000004793 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4863
+%%EOF

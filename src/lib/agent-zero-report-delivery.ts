@@ -220,7 +220,9 @@ function buildNormalReply(channels: AgentZeroReportDeliveryChannel[]): string {
     return 'Google Drive upload is blocked because the upload connector is not configured.'
   }
   if (requestedBlocked.some((channel) => channel.provider === 'telegram')) {
-    return 'I created the report in Mission Control, but Telegram PDF attachment is blocked because no approved document attachment route is configured.'
+    return requestedBlocked.some((channel) => channel.reason === 'telegram_report_delivery_adapter_not_configured')
+      ? 'Telegram PDF attachment is blocked because Telegram connector is not configured.'
+      : 'Telegram PDF attachment is blocked until an approved active Bridge Session is available.'
   }
   return 'Done. The report is ready in Mission Control.'
 }

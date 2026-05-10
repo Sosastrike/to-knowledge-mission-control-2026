@@ -1,10 +1,16 @@
 import Database from 'better-sqlite3'
 import { readAgentZeroReportFile } from './agent-zero-report-delivery'
-import { readLatestAgentZeroBridgeSession, type AgentZeroBridgeSessionRequester } from './agent-zero-bridge-session'
+import {
+  readLatestAgentZeroBridgeSession,
+  recordAgentZeroBridgeSessionAudit,
+  type AgentZeroBridgeSessionObject,
+  type AgentZeroBridgeSessionRequester,
+} from './agent-zero-bridge-session'
 import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 
 const TELEGRAM_TOKEN_KEYS = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_TOKEN', 'BOT_TOKEN'] as const
 const TELEGRAM_CHAT_KEYS = ['AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID', 'TELEGRAM_OWNER_CHAT_ID', 'TELEGRAM_CHAT_ID'] as const
+const TELEGRAM_UPLOAD_REPORT_SCOPE = 'telegram.upload_report_pdf' as const
 
 function firstEnv(keys: readonly string[]): string | null {
   for (const key of keys) {
@@ -38,6 +44,7 @@ export type AgentZeroTelegramDeliveryStatus = {
   connector_configured: boolean
   execution_enabled: false
   writes_enabled: false
+  required_scope: typeof TELEGRAM_UPLOAD_REPORT_SCOPE
   bridge_session_required: true
   external_write_requires_bridge_session: true
   credential_present: boolean
@@ -50,6 +57,7 @@ export type AgentZeroTelegramDeliveryStatus = {
   tony_active: false
   inbound_owner_validation_model: 'owner_chat_id_match_required'
   dry_run_endpoint: '/api/bridge/telegram-approval-preview'
+  upload_endpoint: '/api/bridge/agent-zero/telegram/upload-report'
   proof_packet: AgentZeroTelegramProofPacket
   normal_reply: string
   no_fake_done: true
@@ -74,6 +82,7 @@ export type AgentZeroTelegramProofPacket = {
   credential_present: boolean
   owner_channel_configured: boolean
   bridge_session_required: true
+  required_scope: typeof TELEGRAM_UPLOAD_REPORT_SCOPE
   send_enabled_without_bridge: false
   inbound_owner_validation_required: true
   fake_delivery_allowed: false
@@ -91,9 +100,11 @@ export type AgentZeroTelegramUploadResult = {
   writes_enabled: false
   bridge_session_required: true
   owner_approval_required: true
+  required_scope: typeof TELEGRAM_UPLOAD_REPORT_SCOPE
   connector_configured: boolean
   report_link: string | null
   telegram_message_id: number | null
+  audit_event_id: string | null
   blocked_reason: string | null
   normal_reply: string
   no_fake_done: true
@@ -126,6 +137,7 @@ function buildTelegramProofPacket(input: {
     credential_present: input.credentialPresent,
     owner_channel_configured: input.ownerChannelConfigured,
     bridge_session_required: true,
+    required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
     send_enabled_without_bridge: false,
     inbound_owner_validation_required: true,
     fake_delivery_allowed: false,
@@ -149,6 +161,7 @@ export function getAgentZeroTelegramDeliveryStatus(): AgentZeroTelegramDeliveryS
     connector_configured: state.configured,
     execution_enabled: false,
     writes_enabled: false,
+    required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
     bridge_session_required: true,
     external_write_requires_bridge_session: true,
     credential_present: Boolean(state.token),
@@ -161,6 +174,7 @@ export function getAgentZeroTelegramDeliveryStatus(): AgentZeroTelegramDeliveryS
     tony_active: false,
     inbound_owner_validation_model: 'owner_chat_id_match_required',
     dry_run_endpoint: '/api/bridge/telegram-approval-preview',
+    upload_endpoint: '/api/bridge/agent-zero/telegram/upload-report',
     proof_packet: buildTelegramProofPacket({
       configured: state.configured,
       credentialPresent: Boolean(state.token),
@@ -193,14 +207,27 @@ function blockedResult(input: {
     writes_enabled: false,
     bridge_session_required: true,
     owner_approval_required: true,
+    required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
     connector_configured: input.connectorConfigured,
     report_link: input.reportLink || null,
     telegram_message_id: null,
+    audit_event_id: null,
     blocked_reason: input.reason,
     normal_reply: input.normalReply,
     no_fake_done: true,
     no_tokens_exposed: true,
   }
+}
+
+function telegramDeliveryInScope(session: AgentZeroBridgeSessionObject): boolean {
+  const joined = [
+    ...session.allowed_delivery_surfaces,
+    ...session.allowed_integrations,
+    ...session.allowed_tools,
+  ].join(' ')
+  return joined.includes('all_registered_delivery_surfaces')
+    || joined.includes('telegram.delivery_if_route_configured')
+    || joined.includes(TELEGRAM_UPLOAD_REPORT_SCOPE)
 }
 
 export async function uploadAgentZeroReportToTelegram(input: {
@@ -247,12 +274,48 @@ export async function uploadAgentZeroReportToTelegram(input: {
     })
   }
 
+  if (!telegramDeliveryInScope(bridge)) {
+    return blockedResult({
+      connectorConfigured: status.connector_configured,
+      reportLink,
+      reason: 'telegram_delivery_not_in_bridge_session_scope',
+      normalReply: 'Telegram PDF delivery is blocked because the active Bridge Session does not include Telegram delivery scope.',
+    })
+  }
+
   if (!status.connector_configured) {
     return blockedResult({
       connectorConfigured: false,
       reportLink,
       reason: 'telegram_report_delivery_adapter_not_configured',
       normalReply: 'Telegram PDF delivery is blocked because the Telegram bot token or owner chat channel is not configured.',
+    })
+  }
+
+  const audit = recordAgentZeroBridgeSessionAudit({
+    db: input.db,
+    sessionId: bridge.session_id,
+    requester: input.requester,
+    agentId: 'agent_zero',
+    action: TELEGRAM_UPLOAD_REPORT_SCOPE,
+    target: report.manifest.id,
+    outcome: 'approved_for_send',
+    metadata: {
+      provider: 'telegram',
+      report_id: report.manifest.id,
+      report_pdf_url: report.manifest.pdf_url,
+      bridge_session_required: true,
+      no_fake_done: true,
+      no_tokens_exposed: true,
+    },
+  })
+
+  if (!audit.ok || !audit.audit_event?.id) {
+    return blockedResult({
+      connectorConfigured: status.connector_configured,
+      reportLink,
+      reason: audit.blocked_reason || 'telegram_delivery_audit_required',
+      normalReply: 'Telegram PDF delivery is blocked because the Bridge Session audit record could not be written.',
     })
   }
 
@@ -285,9 +348,11 @@ export async function uploadAgentZeroReportToTelegram(input: {
         writes_enabled: false,
         bridge_session_required: true,
         owner_approval_required: true,
+        required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
         connector_configured: true,
         report_link: reportLink,
         telegram_message_id: null,
+        audit_event_id: audit.audit_event.id,
         blocked_reason: `telegram_api_error_${response.status}`,
         normal_reply: 'Telegram PDF delivery failed at the Telegram API boundary. No fake delivery was reported.',
         no_fake_done: true,
@@ -309,9 +374,11 @@ export async function uploadAgentZeroReportToTelegram(input: {
       writes_enabled: false,
       bridge_session_required: true,
       owner_approval_required: true,
+      required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
       connector_configured: true,
       report_link: reportLink,
       telegram_message_id: messageId,
+      audit_event_id: audit.audit_event.id,
       blocked_reason: null,
       normal_reply: 'Telegram PDF delivery completed through Agent Zero owner channel with approved scope.',
       no_fake_done: true,
@@ -328,9 +395,11 @@ export async function uploadAgentZeroReportToTelegram(input: {
       writes_enabled: false,
       bridge_session_required: true,
       owner_approval_required: true,
+      required_scope: TELEGRAM_UPLOAD_REPORT_SCOPE,
       connector_configured: true,
       report_link: reportLink,
       telegram_message_id: null,
+      audit_event_id: audit.audit_event.id,
       blocked_reason: 'telegram_api_request_failed',
       normal_reply: 'Telegram PDF delivery failed before confirmation from Telegram API.',
       no_fake_done: true,

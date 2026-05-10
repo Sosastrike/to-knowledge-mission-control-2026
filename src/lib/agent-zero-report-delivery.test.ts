@@ -75,7 +75,7 @@ describe('Agent Zero report delivery surface', () => {
     expect(result.report.normal_reply).not.toContain('/home/tony')
   })
 
-  it('blocks Telegram attachment until an approved document route exists', async () => {
+  it('blocks Telegram attachment through the Bridge-gated adapter without fake done', async () => {
     const root = makeRoot()
     const result = await createAgentZeroReport({
       root,
@@ -87,6 +87,7 @@ describe('Agent Zero report delivery surface', () => {
     const telegram = result.report.delivery_channels.find((channel) => channel.provider === 'telegram')
     expect(telegram).toMatchObject({ requested: true, status: 'blocked' })
     expect(telegram?.reason).toBe('telegram_report_delivery_adapter_not_configured')
+    expect(result.report.normal_reply).toBe('Telegram PDF attachment is blocked because Telegram connector is not configured.')
     expect(result.report.normal_reply).not.toMatch(/^Done\b/)
   })
 

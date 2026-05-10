@@ -1,0 +1,342 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3429 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-53-telegram-pdf-delivery-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 53 - Telegram PDF Delivery Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10T15:54:37Z) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Base commit before Day 53: 3650f5752b3a) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED / LIVE SEND GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Telegram PDF delivery through Agent Zero.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added exact Telegram PDF upload scope: `telegram.upload_report_pdf`.) Tj
+0 -12 Td
+(- Exposed the required scope and upload endpoint through Agent Zero Telegram delivery status.) Tj
+0 -12 Td
+(- Changed Telegram PDF delivery so upload is blocked unless:) Tj
+0 -12 Td
+(  - the Mission Control report exists,) Tj
+0 -12 Td
+(  - an active approved Bridge Session exists,) Tj
+0 -12 Td
+(  - the Bridge Session includes Telegram delivery scope,) Tj
+0 -12 Td
+(  - Telegram connector credentials and owner chat target are configured,) Tj
+0 -12 Td
+(  - a Bridge audit row is written before the Telegram API call.) Tj
+0 -12 Td
+(- Updated Mission Control report delivery copy so it no longer says the Telegram route is missin) Tj
+0 -12 Td
+(g when the route exists.) Tj
+0 -12 Td
+(- Added a runtime guard smoke proving report/PDF creation works while Telegram upload remains Br) Tj
+0 -12 Td
+(idge-gated and cannot fake a send.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-zero-telegram-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-telegram-delivery.test.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.test.ts`) Tj
+0 -12 Td
+(- `scripts/check-telegram-pdf-delivery-guard.mjs`) Tj
+0 -12 Td
+(- `runtime/day-53-telegram-pdf-delivery-guard-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-53-route-rendering-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-53-telegram-pdf-delivery-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-53-telegram-pdf-delivery-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes touched or verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports/[id]/pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI and owner-facing behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Report creation can produce a Mission Control PDF.) Tj
+0 -12 Td
+(- Telegram upload is not shown as done unless Telegram confirms delivery.) Tj
+0 -12 Td
+(- Telegram upload returns an exact blocker when Bridge Session scope is missing.) Tj
+0 -12 Td
+(- Status reports `CREDENTIAL_GATED` when Telegram connector configuration is absent.) Tj
+0 -12 Td
+(- Owner-facing reply distinguishes connector missing from Bridge approval missing.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service/runtime behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local production-style runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after final build/restart: `27179`.) Tj
+0 -12 Td
+(- `/login` returned `200`.) Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+(- No `.env` changes were made.) Tj
+0 -12 Td
+(- No secrets or Telegram tokens were printed.) Tj
+0 -12 Td
+(- No external Telegram send was attempted during the smoke; the smoke used a deliberately nonmat) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2837 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(ching Bridge Session id.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-53-telegram-pdf-delivery-guard-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - authenticated Telegram status: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(  - required scope: `telegram.upload_report_pdf`) Tj
+0 -12 Td
+(  - PDF endpoint returned `application/pdf` and `%PDF-`) Tj
+0 -12 Td
+(  - upload route returned `423 active_bridge_session_required`) Tj
+0 -12 Td
+(  - no fake done) Tj
+0 -12 Td
+(  - no token exposure) Tj
+0 -12 Td
+(- `runtime/day-53-route-rendering-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - failures: `0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests and checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused tests:) Tj
+0 -12 Td
+(  - `pnpm exec vitest run src/lib/agent-zero-telegram-delivery.test.ts src/lib/agent-zero-report) Tj
+0 -12 Td
+(-delivery.test.ts --pool=forks --no-file-parallelism --reporter verbose`) Tj
+0 -12 Td
+(  - Result: `2 files / 10 tests passed`) Tj
+0 -12 Td
+(- Script syntax:) Tj
+0 -12 Td
+(  - `node --check scripts/check-telegram-pdf-delivery-guard.mjs`) Tj
+0 -12 Td
+(- Diff whitespace:) Tj
+0 -12 Td
+(  - `git diff --check`) Tj
+0 -12 Td
+(- Typecheck:) Tj
+0 -12 Td
+(  - `pnpm run typecheck`) Tj
+0 -12 Td
+(- Build:) Tj
+0 -12 Td
+(  - `pnpm run build`) Tj
+0 -12 Td
+(- Full tests:) Tj
+0 -12 Td
+(  - `pnpm test`) Tj
+0 -12 Td
+(  - Result: `179 files / 1404 tests passed`) Tj
+0 -12 Td
+(- Runtime guard:) Tj
+0 -12 Td
+(  - `node scripts/check-telegram-pdf-delivery-guard.mjs http://127.0.0.1:3337 runtime/day-53-tel) Tj
+0 -12 Td
+(egram-pdf-delivery-guard-smoke.json`) Tj
+0 -12 Td
+(- Route rendering:) Tj
+0 -12 Td
+(  - `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337 > runtime/day-) Tj
+0 -12 Td
+(53-route-rendering-smoke.json`) Tj
+0 -12 Td
+(- Final runtime smoke was rerun after the standalone build was resynced and the runtime was rest) Tj
+0 -12 Td
+(arted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Developer-side implementation: `NONE`) Tj
+0 -12 Td
+(- Live Telegram PDF send: `OWNER_GATED` until an approved active Bridge Session includes `telegr) Tj
+0 -12 Td
+(am.upload_report_pdf`.) Tj
+0 -12 Td
+(- Live Telegram connector: `CREDENTIAL_GATED` if Telegram bot token or owner chat target is not ) Tj
+0 -12 Td
+(configured.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secret output.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No fake sent status.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No raw local paths in owner-facing delivery output.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 514 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert <day53_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit and push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report creation. The commit hash and push result will be recorded after exact-path st) Tj
+0 -12 Td
+(aging, staged secret scan, commit, and push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next day started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After Day 53 commit/push, continue automatically to Day 54: Telegram report links.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003734 00000 n 
+0000003860 00000 n 
+0000006749 00000 n 
+0000006875 00000 n 
+0000007440 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7510
+%%EOF

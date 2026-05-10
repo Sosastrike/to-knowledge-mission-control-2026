@@ -35,6 +35,24 @@ describe('Gateway navigation metadata route', () => {
     expect(payload.breadcrumbs.map((crumb: any) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub'])
   })
 
+  it('returns safe breadcrumbs for the mounted Paperclip Agent Hub page', async () => {
+    const response = await GET(new Request('http://mission-control.test/api/gateway/navigation?route=/gateway/agent-hub/paperclip') as NextRequest)
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      ok: true,
+      mode: 'gateway_navigation_metadata',
+      targets: {
+        mission_control_home: '/',
+        safe_back: '/gateway/agent-hub',
+        gateway_overview: '/gateway',
+        agent_hub: '/gateway/agent-hub',
+      },
+    })
+    expect(payload.breadcrumbs.map((crumb: any) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub', 'Paperclip'])
+  })
+
   it('classifies unknown routes without exposing raw errors', async () => {
     const response = await GET(new Request('http://mission-control.test/api/gateway/navigation?route=/gateway/missing') as NextRequest)
     const payload = await response.json()

@@ -13,9 +13,20 @@ describe('ROUTE_METADATA', () => {
       '/gateway',
       '/gateway/overview',
       '/gateway/agent-hub',
+      '/gateway/agent-hub/paperclip',
+      '/gateway/agent-hub/:agentId',
+      '/gateway/routes',
+      '/gateway/registry',
+      '/gateway/policies',
+      '/gateway/health',
       '/gateway/dispatcher',
       '/gateway/token-governor',
       '/gateway/bridge-session',
+      '/gateway/status',
+      '/gateway/brain',
+      '/gateway/space-agent',
+      '/gateway/node-detail',
+      '/gateway/mobile-tablet',
       '/agent-network',
       '/agents',
       '/reports',
@@ -56,6 +67,12 @@ describe('getRouteMetadata', () => {
     expect(meta).not.toBeNull()
     expect(meta!.route).toBe('/agents/:agentId')
   })
+
+  it('matches mounted Agent Hub detail routes', () => {
+    const meta = getRouteMetadata('/gateway/agent-hub/agent-zero')
+    expect(meta).not.toBeNull()
+    expect(meta!.route).toBe('/gateway/agent-hub/:agentId')
+  })
 })
 
 describe('getBreadcrumbTrail', () => {
@@ -67,6 +84,11 @@ describe('getBreadcrumbTrail', () => {
   it('handles routes with no parent', () => {
     const trail = getBreadcrumbTrail('/').map((r) => r.route)
     expect(trail).toEqual(['/'])
+  })
+
+  it('produces the Paperclip route trail under Agent Hub', () => {
+    const trail = getBreadcrumbTrail('/gateway/agent-hub/paperclip').map((r) => r.route)
+    expect(trail).toEqual(['/', '/gateway', '/gateway/agent-hub', '/gateway/agent-hub/paperclip'])
   })
 
   it('returns [] for unknown route', () => {

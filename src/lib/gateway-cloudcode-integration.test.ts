@@ -187,6 +187,19 @@ describe('CloudCode backend-support integration', () => {
     expect(nav.breadcrumbs.map((crumb) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub'])
   })
 
+  it('returns route metadata for the mounted Paperclip Agent Hub page', () => {
+    const nav = buildCloudCodeNavigation('/gateway/agent-hub/paperclip')
+
+    expect(nav.current?.route).toBe('/gateway/agent-hub/paperclip')
+    expect(nav.targets).toMatchObject({
+      mission_control_home: '/',
+      safe_back: '/gateway/agent-hub',
+      gateway_overview: '/gateway',
+      agent_hub: '/gateway/agent-hub',
+    })
+    expect(nav.breadcrumbs.map((crumb) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub', 'Paperclip'])
+  })
+
   it('keeps Build-Wiki Run Now approval-gated and Fork 1 only', () => {
     const truth = buildCloudCodeBuildWikiTruth({
       service_probe: {

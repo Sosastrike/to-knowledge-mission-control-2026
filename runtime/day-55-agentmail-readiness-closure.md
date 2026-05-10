@@ -130,17 +130,17 @@ AgentMail send proof:
 
 Rollback command after commit:
 
-- `git revert <day55_agentmail_readiness_commit_sha>`
+- `git revert 65aba5d`
 
 ## Commit / Push
 
 Commit hash:
 
-- Pending at report creation.
+- `65aba5d`
 
 Push result:
 
-- Pending at report creation.
+- Pushed to `origin/to-knowledge-mc`.
 
 ## Next Day
 

@@ -71,14 +71,14 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
 vid = ${JSON.stringify(videoId)}
 try:
-    transcript = YouTubeTranscriptApi.get_transcript(vid)
+    transcript = YouTubeTranscriptApi().fetch(vid)
     rows = []
     for item in transcript[:30]:
-        text = str(item.get('text','')).strip()
+        text = str(getattr(item, 'text', '')).strip()
         if not text:
             continue
-        start = item.get('start')
-        duration = item.get('duration')
+        start = getattr(item, 'start', None)
+        duration = getattr(item, 'duration', None)
         end = None
         if isinstance(start,(int,float)) and isinstance(duration,(int,float)):
             end = float(start) + float(duration)

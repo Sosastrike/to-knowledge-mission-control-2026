@@ -1,0 +1,62 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 6,
+  "expectation": "Connector action contracts block execution safely: credentials are required first, otherwise owner approval/HTTP 423 or backend-required placeholders are returned. No writes or fake approval persistence.",
+  "results": [
+    {
+      "name": "zapier_tools_inventory",
+      "path": "/api/zapier/tools",
+      "status": 200,
+      "blocker": "none",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "name": "firecrawl_job_request",
+      "path": "/api/firecrawl/jobs",
+      "status": 503,
+      "blocker": "credential_required",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "name": "n8n_workflow_inventory",
+      "path": "/api/n8n/workflows",
+      "status": 503,
+      "blocker": "credential_required",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "name": "n8n_workflow_execute",
+      "path": "/api/n8n/workflows/sample/execute",
+      "status": 503,
+      "blocker": "credential_required",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "name": "viral_crawl_video_run",
+      "path": "/api/viral-crawl/video/request-run",
+      "status": 423,
+      "blocker": "owner_approval_required",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "name": "skill_install_request",
+      "path": "/api/skills/finder/request-install",
+      "status": 423,
+      "blocker": "owner_approval_required",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    }
+  ]
+}

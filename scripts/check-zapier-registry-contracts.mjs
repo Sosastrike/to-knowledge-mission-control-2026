@@ -43,15 +43,16 @@ const checks = await Promise.all([
   getJson('/api/bridge/zapier/status'),
   getJson('/api/bridge/zapier/tools'),
   getJson('/api/bridge/zapier/tools/search?q=heygen'),
+  getJson('/api/bridge/heygen/schema-readiness'),
   getJson('/api/zapier/status'),
   getJson('/api/zapier/tools'),
   getText('/designer-mission-control/src/replicas/ZapierPage.jsx'),
 ])
 
 const failures = []
-const [bridgeStatus, bridgeTools, bridgeSearch, legacyStatus, legacyTools, zapierPage] = checks
+const [bridgeStatus, bridgeTools, bridgeSearch, heygenReadiness, legacyStatus, legacyTools, zapierPage] = checks
 
-for (const result of [bridgeStatus, bridgeTools, bridgeSearch, legacyStatus, legacyTools]) {
+for (const result of [bridgeStatus, bridgeTools, bridgeSearch, heygenReadiness, legacyStatus, legacyTools]) {
   if (result.status !== 200 || result.body?.ok !== true) {
     failures.push({ path: result.path, status: result.status, error: 'zapier_registry_route_not_ok' })
   }
@@ -70,6 +71,15 @@ function assertCanonical(result) {
 
 for (const result of [bridgeStatus, bridgeTools, bridgeSearch, legacyStatus, legacyTools]) assertCanonical(result)
 
+if (!allowedStatuses.has(heygenReadiness.body?.canonical_status)) {
+  failures.push({ path: heygenReadiness.path, error: 'heygen_missing_or_invalid_canonical_status', canonical_status: heygenReadiness.body?.canonical_status })
+}
+if (heygenReadiness.body?.accepted_for_generation !== false) failures.push({ path: heygenReadiness.path, error: 'heygen_generation_accepted' })
+if (heygenReadiness.body?.execution_enabled !== false) failures.push({ path: heygenReadiness.path, error: 'heygen_execution_enabled' })
+if (heygenReadiness.body?.writes_enabled !== false) failures.push({ path: heygenReadiness.path, error: 'heygen_writes_enabled' })
+if (heygenReadiness.body?.no_heygen_generation !== true) failures.push({ path: heygenReadiness.path, error: 'heygen_generation_guard_missing' })
+if (heygenReadiness.body?.no_zapier_writes !== true) failures.push({ path: heygenReadiness.path, error: 'heygen_zapier_write_guard_missing' })
+
 for (const result of [bridgeTools, bridgeSearch, legacyTools]) {
   const tools = Array.isArray(result.body?.tools) ? result.body.tools : []
   for (const tool of tools) {
@@ -84,6 +94,7 @@ for (const result of [bridgeTools, bridgeSearch, legacyTools]) {
 if (zapierPage.status !== 200) failures.push({ path: zapierPage.path, status: zapierPage.status, error: 'zapier_page_source_not_served' })
 if (!zapierPage.body.includes('/api/bridge/zapier/status')) failures.push({ path: zapierPage.path, error: 'ui_not_using_bridge_status' })
 if (!zapierPage.body.includes('/api/bridge/zapier/tools')) failures.push({ path: zapierPage.path, error: 'ui_not_using_bridge_tools' })
+if (!zapierPage.body.includes('/api/bridge/heygen/schema-readiness')) failures.push({ path: zapierPage.path, error: 'ui_not_using_heygen_schema_readiness' })
 const legacyToolFieldPatterns = [
   /key=\{t\.name\}/,
   /\{t\.name\}/,
@@ -112,10 +123,18 @@ const summary = {
     blocker: legacyStatus.body?.blocker || null,
     tools_count: legacyStatus.body?.tools_count ?? 0,
   },
+  heygen_schema_readiness: {
+    canonical_status: heygenReadiness.body?.canonical_status,
+    blocker_class: heygenReadiness.body?.blocker_class,
+    blocker: heygenReadiness.body?.blocker || null,
+    schema_available: heygenReadiness.body?.schema_available === true,
+    accepted_for_generation: heygenReadiness.body?.accepted_for_generation === true,
+  },
   ui_source: {
     bytes: zapierPage.body.length,
     uses_bridge_status: zapierPage.body.includes('/api/bridge/zapier/status'),
     uses_bridge_tools: zapierPage.body.includes('/api/bridge/zapier/tools'),
+    uses_heygen_schema_readiness: zapierPage.body.includes('/api/bridge/heygen/schema-readiness'),
   },
 }
 

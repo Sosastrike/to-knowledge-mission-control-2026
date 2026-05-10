@@ -25,17 +25,19 @@ function ZapierPage() {
   const [status, setStatus] = React.useState(null);
   const [audit, setAudit]   = React.useState({ blocked_writes: [], allowed_reads: [], events: [] });
   const [tools, setTools]   = React.useState({ ok: false, backend_required: true });
+  const [heygen, setHeygen] = React.useState(null);
   const [toast, setToast]   = React.useState(null);
 
   React.useEffect(() => {
     let dead = false;
     async function load() {
       try {
-        const [s, a] = await Promise.all([
+        const [s, a, h] = await Promise.all([
           fetch('/api/bridge/zapier/status').then(r => r.json()),
           fetch('/api/zapier/audit').then(r => r.json()),
+          fetch('/api/bridge/heygen/schema-readiness').then(r => r.json()),
         ]);
-        if (!dead) { setStatus(s); setAudit(a); }
+        if (!dead) { setStatus(s); setAudit(a); setHeygen(h); }
       } catch (e) {
         if (!dead) setStatus({ status: 'unknown', error: e.message });
       }
@@ -163,6 +165,24 @@ function ZapierPage() {
             <button className="ns-btn warn" onClick={requestApproval} data-locked="Owner-unlock UI not built yet">Request write approval</button>
             <button className="ns-btn" onClick={revokeApproval}>Revoke approval</button>
           </div>
+        </div>
+
+        <div className="ns-card">
+          <div className="ns-card-h">
+            <h2>HeyGen schema readiness</h2>
+            <ZapStatePill state={(heygen && heygen.canonical_status) || 'unknown'} />
+          </div>
+          <div style={{fontSize: 12, color: 'var(--text-dim, #8a8f98)', lineHeight: 1.6}}>
+            Schema validation only. Generation remains disabled until exact Bridge Session approval exists.
+          </div>
+          <div className="ns-status-strip" style={{marginTop: 14}}>
+            <div className="ns-stat"><div className="ns-stat-label">Schema</div><div className="ns-stat-value">{heygen && heygen.schema_available ? 'Visible' : 'Not visible'}</div></div>
+            <div className="ns-stat"><div className="ns-stat-label">Tool</div><div className="ns-stat-value" style={{fontSize: 11}}>{(heygen && heygen.tool_name) || '—'}</div></div>
+            <div className="ns-stat"><div className="ns-stat-label">Required</div><div className="ns-stat-value" style={{fontSize: 11}}>{heygen && heygen.required_fields && heygen.required_fields.length ? heygen.required_fields.join(', ') : '—'}</div></div>
+            <div className="ns-stat"><div className="ns-stat-label">Generation</div><div className="ns-stat-value"><span className="ns-pill approval">Bridge gated</span></div></div>
+          </div>
+          {heygen && heygen.blocker && <div className="ns-banner warn" style={{marginTop: 14}}><strong>Blocker:</strong>&nbsp;{heygen.blocker}</div>}
+          {heygen && heygen.next_action && <div className="ns-empty" style={{marginTop: 14}}>{heygen.next_action}</div>}
         </div>
       </div>
 

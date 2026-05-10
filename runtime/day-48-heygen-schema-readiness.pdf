@@ -1,0 +1,380 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2963 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-48-heygen-schema-readiness) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 48 - HeyGen Schema Readiness) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: HeyGen Schema Readiness) Tj
+0 -12 Td
+(Status: CLOSED AS BLOCKED) Tj
+0 -12 Td
+(Blocker class: BACKEND_MISSING) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Make HeyGen payload/schema readiness visible without enabling generation. Day 48 does not run He) Tj
+0 -12 Td
+(yGen, does not invoke Zapier tools, and does not create videos.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a read-only schema readiness helper for HeyGen through the existing Zapier Tool Bridge.) Tj
+0 -12 Td
+(- Added protected endpoint: `GET/POST /api/bridge/heygen/schema-readiness`.) Tj
+0 -12 Td
+(- The endpoint validates schema visibility and payload shape only.) Tj
+0 -12 Td
+(- The endpoint always returns:) Tj
+0 -12 Td
+(  - `accepted_for_generation: false`) Tj
+0 -12 Td
+(  - `execution_enabled: false`) Tj
+0 -12 Td
+(  - `writes_enabled: false`) Tj
+0 -12 Td
+(  - `no_heygen_generation: true`) Tj
+0 -12 Td
+(  - `no_zapier_writes: true`) Tj
+0 -12 Td
+(  - `bridge_session_required: true`) Tj
+0 -12 Td
+(  - `approval_required_for_generation: true`) Tj
+0 -12 Td
+(- Added a small Zapier page readiness card that uses the endpoint and does not add a generate bu) Tj
+0 -12 Td
+(tton.) Tj
+0 -12 Td
+(- Updated the Zapier registry contract smoke to include the HeyGen readiness endpoint and UI sou) Tj
+0 -12 Td
+(rce check.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Runtime Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(HeyGen schema readiness is developer-side wired, but live schema proof is blocked because Zapier) Tj
+0 -12 Td
+( MCP is not present in the current Claude MCP configuration.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current live result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `canonical_status: BLOCKED`) Tj
+0 -12 Td
+(- `blocker_class: BLOCKED`) Tj
+0 -12 Td
+(- `blocker: MCP server zapier is not present in the Claude MCP configuration.`) Tj
+0 -12 Td
+(- `schema_available: false`) Tj
+0 -12 Td
+(- `accepted_for_generation: false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact blocker classification for the day: `BACKEND_MISSING`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/heygen-schema-readiness.ts`) Tj
+0 -12 Td
+(- `src/lib/heygen-schema-readiness.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/heygen/schema-readiness/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/heygen/schema-readiness/route.test.ts`) Tj
+0 -12 Td
+(- `scripts/check-heygen-schema-readiness.mjs`) Tj
+0 -12 Td
+(- `scripts/check-zapier-registry-contracts.mjs`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/ZapierPage.jsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated access:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/heygen/schema-readiness` returns `401`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated access:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3091 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/heygen/schema-readiness` returns schema readiness or exact blocker.) Tj
+0 -12 Td
+(- `POST /api/bridge/heygen/schema-readiness` validates a payload shape and still never executes.) Tj
+0 -12 Td
+(- Missing required fields return `heygen_payload_missing_required_fields` when schema is visible) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+(- If schema is not visible, the endpoint returns the current Zapier MCP blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier page now calls `/api/bridge/heygen/schema-readiness`.) Tj
+0 -12 Td
+(- UI shows schema visibility, selected tool, required fields, generation gate, blocker, and next) Tj
+0 -12 Td
+( action.) Tj
+0 -12 Td
+(- No fake generate button was added.) Tj
+0 -12 Td
+(- Generation remains Bridge-gated and disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Commands:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(node scripts/check-heygen-schema-readiness.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-zapier-registry-contracts.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-zapier-no-write-guard.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-connector-action-contracts.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- HeyGen readiness smoke: PASS, `checked: 3`, `failures: []`) Tj
+0 -12 Td
+(- Zapier registry contract: PASS, HeyGen readiness included) Tj
+0 -12 Td
+(- Zapier no-write guard: PASS, `checked: 6`) Tj
+0 -12 Td
+(- Connector action contracts: PASS, `checked: 6`) Tj
+0 -12 Td
+(- Mission Control route rendering smoke: PASS, `46` routes and `8` designer pages) Tj
+0 -12 Td
+(- `/login`: `200`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-48-heygen-schema-readiness-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-48-zapier-registry-contract-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-48-zapier-no-write-guard-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-48-connector-action-contract-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- TDD red: route/helper tests first failed on missing implementation.) Tj
+0 -12 Td
+(- Focused tests: PASS, `2` files / `7` tests.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, `174` files / `1371` tests) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- Staged secret scan: run immediately before commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control standalone runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `9519`.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1223 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Bridge bypass.) Tj
+0 -12 Td
+(- No approval request was created automatically.) Tj
+0 -12 Td
+(- No fake sent/done/live state.) Tj
+0 -12 Td
+(- No raw local paths exposed in proof payloads.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit: recorded after this report is committed.) Tj
+0 -12 Td
+(- Expected message: `feat\(heygen\): add schema readiness guard`) Tj
+0 -12 Td
+(- Push target: `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day48_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`BACKEND_MISSING`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(HeyGen schema proof can move forward only after:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier MCP/backend is configured in the runtime.) Tj
+0 -12 Td
+(- HeyGen appears in the Zapier MCP tool inventory.) Tj
+0 -12 Td
+(- A future exact Bridge Session scope exists before any generation action.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003268 00000 n 
+0000003394 00000 n 
+0000006537 00000 n 
+0000006663 00000 n 
+0000007938 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8008
+%%EOF

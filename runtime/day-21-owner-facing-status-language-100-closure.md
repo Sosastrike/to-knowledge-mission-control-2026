@@ -95,6 +95,42 @@ Button contract owner status proof:
 - DISABLED: 7
 - BLOCKED: 0
 
+## 2026-05-10 Current Runtime Revalidation
+
+The Day 21 implementation remains valid, but the live runtime status values have
+changed since the original proof. Current status language proof is:
+
+Agent Hub:
+
+- Paperclip: SERVICE_DOWN, reason paperclip_sandbox_service_not_running
+- Agent Zero: CREDENTIAL_GATED, reason agent_zero_external_api_key_missing
+- Hermes: SERVICE_DOWN, reason hermes_not_installed
+- SpaceAgent: CREDENTIAL_GATED, reason playwright_mcp_service_unreachable
+- Pi-mono: READY, advisory-only dispatcher / route optimizer candidate
+- OpenClaw+: SERVICE_DOWN, reason openclaw_doctor_runtime_not_reachable
+
+Button contract owner status proof:
+
+- LIVE: 35
+- READY: 5
+- OWNER_GATED: 13
+- CREDENTIAL_GATED: 8
+- SERVICE_DOWN: 7
+- BLOCKED: 2
+- DISABLED: 8
+
+Revalidation commands:
+
+- pnpm test src/lib/owner-status.test.ts src/lib/gateway-agent-hub.test.ts
+  src/lib/gateway-agent-hub-designer-data.test.ts
+  src/lib/button-contracts-route.test.ts: pass, 4 files / 12 tests
+- Runtime-key authenticated /api/gateway/agent-hub/status: 200
+- Runtime-key authenticated /api/bridge/button-contracts: 200
+- Allowed owner status vocabulary remained exactly:
+  LIVE, READY, OWNER_GATED, CREDENTIAL_GATED, SERVICE_DOWN, BLOCKED, DISABLED
+- Unsafe status count: 0
+- Raw local path-like reason output: false
+
 ## Tests Run
 - `pnpm test src/lib/owner-status.test.ts src/lib/gateway-agent-hub.test.ts src/lib/gateway-agent-hub-designer-data.test.ts src/lib/button-contracts-route.test.ts`
   - 4 files / 12 tests passed.

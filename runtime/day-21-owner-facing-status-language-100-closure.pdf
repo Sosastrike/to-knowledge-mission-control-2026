@@ -3,10 +3,10 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
 << /Length 3214 >>
@@ -145,10 +145,10 @@ ET
 endstream
 endobj
 5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 2556 >>
+<< /Length 2769 >>
 stream
 BT
 /F1 10 Tf
@@ -237,6 +237,89 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
+(## 2026-05-10 Current Runtime Revalidation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The Day 21 implementation remains valid, but the live runtime status values have) Tj
+0 -12 Td
+(changed since the original proof. Current status language proof is:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip: SERVICE_DOWN, reason paperclip_sandbox_service_not_running) Tj
+0 -12 Td
+(- Agent Zero: CREDENTIAL_GATED, reason agent_zero_external_api_key_missing) Tj
+0 -12 Td
+(- Hermes: SERVICE_DOWN, reason hermes_not_installed) Tj
+0 -12 Td
+(- SpaceAgent: CREDENTIAL_GATED, reason playwright_mcp_service_unreachable) Tj
+0 -12 Td
+(- Pi-mono: READY, advisory-only dispatcher / route optimizer candidate) Tj
+0 -12 Td
+(- OpenClaw+: SERVICE_DOWN, reason openclaw_doctor_runtime_not_reachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Button contract owner status proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- LIVE: 35) Tj
+0 -12 Td
+(- READY: 5) Tj
+0 -12 Td
+(- OWNER_GATED: 13) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: 8) Tj
+0 -12 Td
+(- SERVICE_DOWN: 7) Tj
+0 -12 Td
+(- BLOCKED: 2) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2891 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- DISABLED: 8) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Revalidation commands:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- pnpm test src/lib/owner-status.test.ts src/lib/gateway-agent-hub.test.ts) Tj
+0 -12 Td
+(  src/lib/gateway-agent-hub-designer-data.test.ts) Tj
+0 -12 Td
+(  src/lib/button-contracts-route.test.ts: pass, 4 files / 12 tests) Tj
+0 -12 Td
+(- Runtime-key authenticated /api/gateway/agent-hub/status: 200) Tj
+0 -12 Td
+(- Runtime-key authenticated /api/bridge/button-contracts: 200) Tj
+0 -12 Td
+(- Allowed owner status vocabulary remained exactly:) Tj
+0 -12 Td
+(  LIVE, READY, OWNER_GATED, CREDENTIAL_GATED, SERVICE_DOWN, BLOCKED, DISABLED) Tj
+0 -12 Td
+(- Unsafe status count: 0) Tj
+0 -12 Td
+(- Raw local path-like reason output: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
 (## Tests Run) Tj
 0 -12 Td
 (- `pnpm test src/lib/owner-status.test.ts src/lib/gateway-agent-hub.test.ts src/lib/gateway-agen) Tj
@@ -280,18 +363,7 @@ BT
 (- No `.env` changes.) Tj
 0 -12 Td
 (- No secrets printed.) Tj
-ET
-endstream
-endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
-endobj
-8 0 obj
-<< /Length 1432 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
+0 -12 Td
 (- No auth weakening.) Tj
 0 -12 Td
 (- No public local exposure added.) Tj
@@ -347,7 +419,18 @@ BT
 (- Delivery connector lanes remain gated until their credentials/session/Bridge proof gates pass.) Tj
 0 -12 Td
 () Tj
-0 -12 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 156 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (## Next Day) Tj
 0 -12 Td
 (Day 22 — Authenticated Visual Proof starts automatically after this report commit.) Tj
@@ -356,23 +439,25 @@ BT
 ET
 endstream
 endobj
-9 0 obj
+11 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 10
+0 12
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000127 00000 n 
-0000000253 00000 n 
-0000003519 00000 n 
-0000003645 00000 n 
-0000006253 00000 n 
-0000006379 00000 n 
-0000007863 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000003526 00000 n 
+0000003653 00000 n 
+0000006474 00000 n 
+0000006601 00000 n 
+0000009544 00000 n 
+0000009672 00000 n 
+0000009880 00000 n 
 trailer
-<< /Size 10 /Root 1 0 R >>
+<< /Size 12 /Root 1 0 R >>
 startxref
-7933
+9951
 %%EOF

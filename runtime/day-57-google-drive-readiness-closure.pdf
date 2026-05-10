@@ -287,7 +287,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 1291 >>
+<< /Length 1247 >>
 stream
 BT
 /F1 10 Tf
@@ -320,7 +320,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- `git revert <day57_google_drive_readiness_commit_sha>`) Tj
+(- `git revert 5f273e2`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -332,7 +332,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- Pending at report creation.) Tj
+(- `5f273e2`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -340,7 +340,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- Pending at report creation.) Tj
+(- Pushed to `origin/to-knowledge-mc`.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -372,9 +372,9 @@ xref
 0000003301 00000 n 
 0000006030 00000 n 
 0000006156 00000 n 
-0000007499 00000 n 
+0000007455 00000 n 
 trailer
 << /Size 10 /Root 1 0 R >>
 startxref
-7569
+7525
 %%EOF

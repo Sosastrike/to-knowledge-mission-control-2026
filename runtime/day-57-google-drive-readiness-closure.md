@@ -133,17 +133,17 @@ Google Drive upload proof:
 
 Rollback command after commit:
 
-- `git revert <day57_google_drive_readiness_commit_sha>`
+- `git revert 5f273e2`
 
 ## Commit / Push
 
 Commit hash:
 
-- Pending at report creation.
+- `5f273e2`
 
 Push result:
 
-- Pending at report creation.
+- Pushed to `origin/to-knowledge-mc`.
 
 ## Next Day
 

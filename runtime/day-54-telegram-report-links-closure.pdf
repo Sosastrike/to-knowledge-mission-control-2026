@@ -1,0 +1,372 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3149 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-54-telegram-report-links-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 54 - Telegram Report Links Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10T16:12:00Z) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Base commit before Day 54: 293075d) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED / PUBLIC TELEGRAM LINK SEND GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Telegram report links and protected Mission Control report URLs.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a protected report-link contract for Agent Zero reports.) Tj
+0 -12 Td
+(- Added safe public-origin normalization so local/private origins are not sent as owner-facing p) Tj
+0 -12 Td
+(ublic links.) Tj
+0 -12 Td
+(- Added `GET /api/bridge/agent-zero/reports/[id]/links`.) Tj
+0 -12 Td
+(- Added `report_links` to:) Tj
+0 -12 Td
+(  - `POST /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(  - `GET /api/bridge/agent-zero/reports/[id]`) Tj
+0 -12 Td
+(- Added a Day 54 runtime guard script proving report links are auth-gated, local-safe, and free ) Tj
+0 -12 Td
+(of raw paths/secrets.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-report-delivery.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/reports/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/reports/[id]/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/agent-zero/reports/[id]/links/route.ts`) Tj
+0 -12 Td
+(- `scripts/check-telegram-report-links-guard.mjs`) Tj
+0 -12 Td
+(- `runtime/day-54-telegram-report-links-guard-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-54-route-rendering-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-54-telegram-report-links-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-54-telegram-report-links-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes changed or verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports/[id]`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports/[id]/links`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports/[id]/pdf`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/reports/[id]/markdown`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI and owner-facing behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Owner-visible report responses now include `report_links`.) Tj
+0 -12 Td
+(- Link bundles mark:) Tj
+0 -12 Td
+(  - `auth_required: true`) Tj
+0 -12 Td
+(  - `protected: true`) Tj
+0 -12 Td
+(  - `raw_local_paths_exposed: false`) Tj
+0 -12 Td
+(  - `public_local_exposure: false`) Tj
+0 -12 Td
+(- Local runtime origins such as `127.0.0.1` are rejected for public Telegram report links and re) Tj
+0 -12 Td
+(ported as `mission_control_public_url_required`.) Tj
+0 -12 Td
+(- If a safe public Mission Control origin is available, the bundle can produce absolute HTTPS li) Tj
+0 -12 Td
+(nks.) Tj
+0 -12 Td
+(- No Telegram message is marked sent by this lane.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service/runtime behavior) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3084 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Local production-style runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `28918`.) Tj
+0 -12 Td
+(- `/login` returned `200`.) Tj
+0 -12 Td
+(- No public local exposure was added.) Tj
+0 -12 Td
+(- No `.env` changes were made.) Tj
+0 -12 Td
+(- No secrets were printed.) Tj
+0 -12 Td
+(- No external Telegram send was attempted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-54-telegram-report-links-guard-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - checked: `6`) Tj
+0 -12 Td
+(  - created report: `201`) Tj
+0 -12 Td
+(  - unauthenticated links endpoint: `401`) Tj
+0 -12 Td
+(  - authenticated links endpoint: `200`) Tj
+0 -12 Td
+(  - PDF unauthenticated: `401`) Tj
+0 -12 Td
+(  - Markdown unauthenticated: `401`) Tj
+0 -12 Td
+(  - unsafe text detected: `false`) Tj
+0 -12 Td
+(- `runtime/day-54-route-rendering-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - failures: `0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests and checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Red test verified missing helper first:) Tj
+0 -12 Td
+(  - `buildAgentZeroReportLinks is not a function`) Tj
+0 -12 Td
+(  - `normalizeMissionControlPublicOrigin is not a function`) Tj
+0 -12 Td
+(- Focused tests:) Tj
+0 -12 Td
+(  - `pnpm exec vitest run src/lib/agent-zero-report-delivery.test.ts --pool=forks --no-file-para) Tj
+0 -12 Td
+(llelism --reporter verbose`) Tj
+0 -12 Td
+(  - Result: `1 file / 8 tests passed`) Tj
+0 -12 Td
+(- Script syntax:) Tj
+0 -12 Td
+(  - `node --check scripts/check-telegram-report-links-guard.mjs`) Tj
+0 -12 Td
+(- Typecheck:) Tj
+0 -12 Td
+(  - `pnpm run typecheck`) Tj
+0 -12 Td
+(- Build:) Tj
+0 -12 Td
+(  - `pnpm run build`) Tj
+0 -12 Td
+(  - Build includes `/api/bridge/agent-zero/reports/[id]/links`) Tj
+0 -12 Td
+(- Full tests:) Tj
+0 -12 Td
+(  - `pnpm test`) Tj
+0 -12 Td
+(  - Result: `179 files / 1406 tests passed`) Tj
+0 -12 Td
+(- Runtime guard:) Tj
+0 -12 Td
+(  - `node scripts/check-telegram-report-links-guard.mjs http://127.0.0.1:3337 runtime/day-54-tel) Tj
+0 -12 Td
+(egram-report-links-guard-smoke.json`) Tj
+0 -12 Td
+(- Route rendering:) Tj
+0 -12 Td
+(  - `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337 > runtime/day-) Tj
+0 -12 Td
+(54-route-rendering-smoke.json`) Tj
+0 -12 Td
+(- Diff whitespace:) Tj
+0 -12 Td
+(  - `git diff --check`) Tj
+0 -12 Td
+(- Protected-file invariant:) Tj
+0 -12 Td
+(  - `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `.env` diff:) Tj
+0 -12 Td
+(  - clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Developer-side implementation: `NONE`) Tj
+0 -12 Td
+(- Public Telegram report link send: `OWNER_GATED` until owner-approved Telegram send scope exist) Tj
+0 -12 Td
+(s.) Tj
+0 -12 Td
+(- Absolute public report URL on local runtime: `OWNER_GATED` / `SERVICE_DOWN` until the request ) Tj
+0 -12 Td
+(is served from the owner-approved public Mission Control origin.) Tj
+0 -12 Td
+(- Telegram connector: `CREDENTIAL_GATED` if Telegram credentials are not configured.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1018 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Safety confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secret output.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No fake sent status.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No raw local paths in report-link payloads.) Tj
+0 -12 Td
+(- No public local origin exposed as a Telegram link.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No external farmers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert <day54_commit_sha>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit and push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report creation. The commit hash and push result will be recorded after exact-path st) Tj
+0 -12 Td
+(aging, staged secret scan, commit, and push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next day started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After Day 54 commit/push, continue automatically to Day 55: AgentMail readiness.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003454 00000 n 
+0000003580 00000 n 
+0000006716 00000 n 
+0000006842 00000 n 
+0000007912 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7982
+%%EOF

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { buildAgentZeroReportLinks, readAgentZeroReport, readAgentZeroReportFile } from '@/lib/agent-zero-report-delivery'
+import { buildAgentZeroReportLinks, readAgentZeroReport } from '@/lib/agent-zero-report-delivery'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,18 +16,17 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   if (!report) {
     return NextResponse.json({ ok: false, error: 'agent_zero_report_not_found' }, { status: 404 })
   }
-  const markdown = readAgentZeroReportFile(id, 'markdown')
+
   return NextResponse.json({
     ok: true,
-    mode: 'agent_zero_report_detail',
-    report,
+    mode: 'agent_zero_protected_report_links',
+    report_id: report.id,
     report_links: buildAgentZeroReportLinks(report, request.url),
-    markdown_preview: markdown ? markdown.bytes.toString('utf8').slice(0, 8000) : null,
     safety: {
+      auth_required: true,
       raw_local_paths_exposed: false,
-      task_ids_in_normal_replies: false,
-      protected_actions_executed: false,
-      external_writes_executed: false,
+      public_local_exposure: false,
+      no_fake_done: true,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

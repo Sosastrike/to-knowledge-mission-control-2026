@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { createAgentZeroReport, listAgentZeroReports } from '@/lib/agent-zero-report-delivery'
+import { buildAgentZeroReportLinks, createAgentZeroReport, listAgentZeroReports } from '@/lib/agent-zero-report-delivery'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
     ok: true,
     mode: 'agent_zero_report_delivery_surface',
     generated_at: new Date().toISOString(),
-    reports,
+    reports: reports.map((report) => ({
+      ...report,
+      report_links: buildAgentZeroReportLinks(report, request.url),
+    })),
     count: reports.length,
     safety: safety(),
     next_action: 'POST to this route to create a local Agent Zero Markdown/PDF report. External delivery remains blocked unless a separate approved adapter exists.',
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
     ok: true,
     mode: 'agent_zero_report_delivery_surface',
     report: result.report,
+    report_links: buildAgentZeroReportLinks(result.report, request.url),
     attachments: result.attachments,
     normal_reply: result.report.normal_reply,
     safety: safety(),

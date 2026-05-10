@@ -3,9 +3,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  buildAgentZeroReportLinks,
   containsUnsafeOwnerText,
   createAgentZeroReport,
   listAgentZeroReports,
+  normalizeMissionControlPublicOrigin,
   readAgentZeroReportFile,
   shouldCreateAgentZeroReportFromMessage,
 } from './agent-zero-report-delivery'
@@ -38,6 +40,40 @@ describe('Agent Zero report delivery surface', () => {
     expect(fs.readFileSync(result.internal.markdown_path, 'utf8')).not.toContain('runtime/executive-reports')
     expect(JSON.stringify(result.report)).not.toContain(root)
     expect(containsUnsafeOwnerText(result.report.normal_reply)).toBe(false)
+  })
+
+  it('builds protected report links without exposing local origins or filesystem paths', async () => {
+    const root = makeRoot()
+    const result = await createAgentZeroReport({
+      root,
+      title: 'Protected Link Report',
+      summary: 'Owner-safe protected link bundle.',
+    })
+
+    const localLinks = buildAgentZeroReportLinks(result.report, 'http://127.0.0.1:3337/gateway')
+    expect(localLinks.auth_required).toBe(true)
+    expect(localLinks.raw_local_paths_exposed).toBe(false)
+    expect(localLinks.public_origin_available).toBe(false)
+    expect(localLinks.blocked_reason).toBe('mission_control_public_url_required')
+    expect(localLinks.mission_control.url).toBe(result.report.mission_control_url)
+    expect(localLinks.pdf.url).toBe(result.report.pdf_url)
+    expect(localLinks.markdown.url).toBe(result.report.markdown_url)
+    expect(localLinks.mission_control.absolute_url).toBeNull()
+    expect(JSON.stringify(localLinks)).not.toContain(root)
+    expect(JSON.stringify(localLinks)).not.toContain('127.0.0.1')
+
+    const publicLinks = buildAgentZeroReportLinks(result.report, 'https://tkmc.knowledge-vs-ai.com/gateway')
+    expect(publicLinks.public_origin_available).toBe(true)
+    expect(publicLinks.blocked_reason).toBeNull()
+    expect(publicLinks.mission_control.absolute_url).toBe(`https://tkmc.knowledge-vs-ai.com${result.report.mission_control_url}`)
+    expect(publicLinks.pdf.absolute_url).toBe(`https://tkmc.knowledge-vs-ai.com${result.report.pdf_url}`)
+  })
+
+  it('normalizes only safe Mission Control public origins', () => {
+    expect(normalizeMissionControlPublicOrigin('https://tkmc.knowledge-vs-ai.com/gateway')).toBe('https://tkmc.knowledge-vs-ai.com')
+    expect(normalizeMissionControlPublicOrigin('http://127.0.0.1:3337/gateway')).toBeNull()
+    expect(normalizeMissionControlPublicOrigin('http://10.69.1.138/gateway')).toBeNull()
+    expect(normalizeMissionControlPublicOrigin('file:///tmp/report.html')).toBeNull()
   })
 
   it('blocks requested external delivery without fake done claims', async () => {

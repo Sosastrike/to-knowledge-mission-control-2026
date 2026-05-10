@@ -1,0 +1,80 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 6,
+  "expectation": "Agent Zero report links are protected, auth-gated, relative on local runtime, and free of raw paths/secrets.",
+  "failures": [],
+  "results": [
+    {
+      "name": "create_report",
+      "path": "/api/bridge/agent-zero/reports",
+      "status": 201,
+      "report_id": "azr_mozyzult_637e0edff25e",
+      "normal_reply": "Telegram PDF attachment is blocked because Telegram connector is not configured.",
+      "link_summary": {
+        "public_origin_available": false,
+        "blocked_reason": "mission_control_public_url_required",
+        "auth_required": true,
+        "raw_local_paths_exposed": false,
+        "public_local_exposure": false,
+        "mission_control_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e",
+        "mission_control_absolute_url": null,
+        "pdf_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/pdf",
+        "markdown_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/markdown"
+      },
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "unauthenticated_links_requires_auth",
+      "path": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/links",
+      "status": 401,
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "authenticated_links",
+      "path": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/links",
+      "status": 200,
+      "mode": "agent_zero_protected_report_links",
+      "report_id": "azr_mozyzult_637e0edff25e",
+      "link_summary": {
+        "public_origin_available": false,
+        "blocked_reason": "mission_control_public_url_required",
+        "auth_required": true,
+        "raw_local_paths_exposed": false,
+        "public_local_exposure": false,
+        "mission_control_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e",
+        "mission_control_absolute_url": null,
+        "pdf_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/pdf",
+        "markdown_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/markdown"
+      },
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "report_detail_includes_links",
+      "path": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e",
+      "status": 200,
+      "link_summary": {
+        "public_origin_available": false,
+        "blocked_reason": "mission_control_public_url_required",
+        "auth_required": true,
+        "raw_local_paths_exposed": false,
+        "public_local_exposure": false,
+        "mission_control_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e",
+        "mission_control_absolute_url": null,
+        "pdf_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/pdf",
+        "markdown_url": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/markdown"
+      },
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "pdf_requires_auth",
+      "path": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/pdf",
+      "status": 401
+    },
+    {
+      "name": "markdown_requires_auth",
+      "path": "/api/bridge/agent-zero/reports/azr_mozyzult_637e0edff25e/markdown",
+      "status": 401
+    }
+  ]
+}

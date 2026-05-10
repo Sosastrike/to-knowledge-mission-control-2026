@@ -49,6 +49,31 @@ export type AgentZeroReportManifest = {
   }
 }
 
+export type AgentZeroReportProtectedLink = {
+  url: string
+  absolute_url: string | null
+  auth_required: true
+  protected: true
+  raw_local_paths_exposed: false
+  public_local_exposure: false
+}
+
+export type AgentZeroReportProtectedLinks = {
+  ok: true
+  report_id: string
+  auth_required: true
+  protected: true
+  public_origin_available: boolean
+  public_origin: string | null
+  blocked_reason: 'mission_control_public_url_required' | null
+  mission_control: AgentZeroReportProtectedLink
+  pdf: AgentZeroReportProtectedLink
+  markdown: AgentZeroReportProtectedLink
+  raw_local_paths_exposed: false
+  public_local_exposure: false
+  no_fake_done: true
+}
+
 export type AgentZeroReportCreationResult = {
   report: AgentZeroReportManifest
   attachments: Array<{ type: 'pdf' | 'markdown'; label: string; url: string }>
@@ -209,6 +234,66 @@ function deliveryChannels(requested: AgentZeroReportRequestedDelivery[], id: str
       external_write: true,
     },
   ]
+}
+
+function isPrivateIpv4(hostname: string): boolean {
+  const parts = hostname.split('.').map((part) => Number(part))
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false
+  const [a, b] = parts
+  return a === 10
+    || a === 127
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168)
+    || (a === 169 && b === 254)
+    || a === 0
+}
+
+export function normalizeMissionControlPublicOrigin(value?: string | null): string | null {
+  if (!value || typeof value !== 'string') return null
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    const hostname = url.hostname.toLowerCase()
+    if (!hostname || hostname === 'localhost' || hostname.endsWith('.local')) return null
+    if (hostname === '::1' || hostname.startsWith('[')) return null
+    if (isPrivateIpv4(hostname)) return null
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+function protectedLink(url: string, origin: string | null): AgentZeroReportProtectedLink {
+  return {
+    url,
+    absolute_url: origin ? new URL(url, origin).toString() : null,
+    auth_required: true,
+    protected: true,
+    raw_local_paths_exposed: false,
+    public_local_exposure: false,
+  }
+}
+
+export function buildAgentZeroReportLinks(
+  report: Pick<AgentZeroReportManifest, 'id' | 'mission_control_url' | 'pdf_url' | 'markdown_url'>,
+  publicOrigin?: string | null,
+): AgentZeroReportProtectedLinks {
+  const origin = normalizeMissionControlPublicOrigin(publicOrigin || process.env.MISSION_CONTROL_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || null)
+  return {
+    ok: true,
+    report_id: report.id,
+    auth_required: true,
+    protected: true,
+    public_origin_available: Boolean(origin),
+    public_origin: origin,
+    blocked_reason: origin ? null : 'mission_control_public_url_required',
+    mission_control: protectedLink(report.mission_control_url, origin),
+    pdf: protectedLink(report.pdf_url, origin),
+    markdown: protectedLink(report.markdown_url, origin),
+    raw_local_paths_exposed: false,
+    public_local_exposure: false,
+    no_fake_done: true,
+  }
 }
 
 function buildNormalReply(channels: AgentZeroReportDeliveryChannel[]): string {

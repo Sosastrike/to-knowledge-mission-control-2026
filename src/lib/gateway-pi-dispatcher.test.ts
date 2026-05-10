@@ -168,6 +168,7 @@ describe('Pi shadow dispatcher', () => {
       ['Create a workforce task and assign a co-worker', 'paperclip', 'paperclip_task_write_requires_bridge_session'],
       ['Execute a mini-agent skill through OpenClaw runtime', 'openclaw_plus', 'openclaw_runtime_execution_requires_bridge_session'],
       ['Deliver this report to Google Drive', 'delivery_adapter', 'delivery_adapter_requires_bridge_session_and_configured_connector'],
+      ['Send this report by email', 'delivery_adapter', 'delivery_adapter_requires_bridge_session_and_configured_connector'],
       ['Use UnknownCRM to update a record', 'blocked', 'unknown_connector_not_registered'],
     ] as const
 

@@ -1,0 +1,430 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2713 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-03-pi-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 03 - Pi 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Pi Dispatcher / Route Optimizer Candidate) Tj
+0 -12 Td
+(Status: GO for advisory dispatcher lane) Tj
+0 -12 Td
+(Blocker class: NONE for Pi advisory proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-10 - Safety / Branch / Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch confirmed: `to-knowledge-mc`.) Tj
+0 -12 Td
+(- Runtime proof target: local production-style Mission Control runtime on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Restart completed after the Pi dispatcher fix so the proof used the rebuilt server bundle.) Tj
+0 -12 Td
+(- New runtime PID: `15751`.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- Pi remains advisory-only. It does not execute tools, write data, or replace Agent Zero.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 10-20 - Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Checked Pi-owned surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.test.ts`) Tj
+0 -12 Td
+(- `GET /api/bridge/pi/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/pi/status`) Tj
+0 -12 Td
+(- `GET /api/gateway/nodes/pi`) Tj
+0 -12 Td
+(- Gateway / Agent Hub status path through the canonical registry and CloudCode health helpers.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pi role confirmed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Role: Dispatcher / Route Optimizer Candidate) Tj
+0 -12 Td
+(- Authority: advisory only) Tj
+0 -12 Td
+(- Execution: disabled) Tj
+0 -12 Td
+(- Writes: disabled) Tj
+0 -12 Td
+(- External writes: disabled) Tj
+0 -12 Td
+(- Commander: false) Tj
+0 -12 Td
+(- Agent Zero remains commander.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20-45 - Backend Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fixed one routing gap in the Pi dispatcher override logic.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Before:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `Deliver this report to Google Drive` routed correctly to the delivery adapter.) Tj
+0 -12 Td
+(- `Send this report by email` could fall through into an unrelated tool/memory route.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Email/report send requests route to `delivery_adapter`.) Tj
+0 -12 Td
+(- The route remains Bridge Session gated.) Tj
+0 -12 Td
+(- No delivery send is executed.) Tj
+0 -12 Td
+(- No fake sent/uploaded status is produced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 45-65 - UI / Status Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No new UI redesign was introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The existing Mission Control/Gateway truth contract remains:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3272 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Pi is visible as Dispatcher / Route Optimizer Candidate.) Tj
+0 -12 Td
+(- Pi status is advisory/shadow only.) Tj
+0 -12 Td
+(- Protected execution still flows through Agent Zero, Gateway policy, and Bridge Session gates.) Tj
+0 -12 Td
+(- Delivery remains gated until Bridge Session plus configured connector exists.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 65-80 - Tests) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Targeted test added:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `Send this report by email` must route to `delivery_adapter`.) Tj
+0 -12 Td
+(- Blocker must be `delivery_adapter_requires_bridge_session_and_configured_connector`.) Tj
+0 -12 Td
+(- Execution and writes must remain false.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Verification run:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/gateway-pi-dispatcher.test.ts` - PASS, 9 tests.) Tj
+0 -12 Td
+(- `git diff --check` - PASS.) Tj
+0 -12 Td
+(- `pnpm run typecheck` - PASS.) Tj
+0 -12 Td
+(- `pnpm run build` - PASS.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation is run again before the Day 03 commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 80-95 - Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated runtime proof used the Mission Control API key from the local runtime database wit) Tj
+0 -12 Td
+(hout printing it.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`GET /api/bridge/pi/status`:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- mode: `pi_dispatcher_shadow_status`) Tj
+0 -12 Td
+(- canonical status: `LIVE`) Tj
+0 -12 Td
+(- role: `Dispatcher / Route Optimizer Candidate`) Tj
+0 -12 Td
+(- authority: `advisory_only`) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- external writes enabled: false) Tj
+0 -12 Td
+(- advisory result proven: true) Tj
+0 -12 Td
+(- proof blocker class: `NONE`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`GET /api/gateway/nodes/pi`:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- node id: `pi`) Tj
+0 -12 Td
+(- name: `Pi`) Tj
+0 -12 Td
+(- status: `read_only`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pi route recommendation matrix:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Request | Target | Policy | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- | --- |) Tj
+0 -12 Td
+(| Read this website and summarize it | `space_agent` | `allowed` | none |) Tj
+0 -12 Td
+(| Use Firecrawl to scrape this public page | `space_agent` | `missing_credential` | `firecrawl_c) Tj
+0 -12 Td
+(redential_required` |) Tj
+0 -12 Td
+(| Extract the transcript from this public YouTube video | `space_agent` | `allowed` | none |) Tj
+0 -12 Td
+(| Design a workflow skill for email triage | `hermes` | `blocked` | `hermes_degraded_or_pending_) Tj
+0 -12 Td
+(live_proof` |) Tj
+0 -12 Td
+(| Create a workforce task and assign a co-worker | `paperclip` | `requires_session` | `paperclip) Tj
+0 -12 Td
+(_task_write_requires_bridge_session` |) Tj
+0 -12 Td
+(| Execute a mini-agent skill through OpenClaw runtime | `openclaw_plus` | `requires_session` | `) Tj
+0 -12 Td
+(openclaw_runtime_execution_requires_bridge_session` |) Tj
+0 -12 Td
+(| Deliver this report to Google Drive | `delivery_adapter` | `requires_session` | `delivery_adap) Tj
+0 -12 Td
+(ter_requires_bridge_session_and_configured_connector` |) Tj
+0 -12 Td
+(| Send this report by email | `delivery_adapter` | `requires_session` | `delivery_adapter_requir) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2065 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(es_bridge_session_and_configured_connector` |) Tj
+0 -12 Td
+(| Use UnknownCRM to update a record | `blocked` | `blocked` | `unknown_connector_not_registered`) Tj
+0 -12 Td
+( |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(All matrix checks returned:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- no external writes) Tj
+0 -12 Td
+(- no fake Done) Tj
+0 -12 Td
+(- no fake send/upload) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 95-100 - Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What was implemented:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pi delivery-intent routing now covers email/report-send language and routes it to the gated de) Tj
+0 -12 Td
+(livery adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-03-pi-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-03-pi-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Routes/endpoints proved:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/pi/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/pi/status`) Tj
+0 -12 Td
+(- `GET /api/gateway/nodes/pi`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(UI behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Pi remains visible as advisory dispatcher candidate.) Tj
+0 -12 Td
+(- No buttons were added.) Tj
+0 -12 Td
+(- No fake live/write behavior added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Service/runtime behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control runtime restarted on the rebuilt bundle.) Tj
+0 -12 Td
+(- Runtime remained bound to `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `15751`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Remaining blocker:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- NONE for Pi advisory dispatcher proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git revert <day-03-pi-commit>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Next day:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day 04 Paperclip starts automatically after Day 03 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003018 00000 n 
+0000003144 00000 n 
+0000006468 00000 n 
+0000006594 00000 n 
+0000008711 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8781
+%%EOF

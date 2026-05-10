@@ -435,7 +435,7 @@ function specializedRouteOverride(
     }
   }
 
-  if (/deliver|delivery|telegram|agentmail|google drive|onedrive|one drive|upload|attach/.test(text)) {
+  if (/deliver|delivery|telegram|agentmail|google drive|onedrive|one drive|upload|attach|\bsend\b.*\b(?:email|mail|report)\b|\b(?:email|mail)\b.*\b(?:send|deliver|report)\b/.test(text)) {
     return {
       target: 'delivery_adapter',
       via: ['owner', 'gateway', 'pi', 'gateway', 'agent_zero', 'gateway', 'delivery_adapter'],

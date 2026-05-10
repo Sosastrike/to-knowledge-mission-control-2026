@@ -1,0 +1,291 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3651 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-dropin-final-mount-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway Drop-In Final Mount Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL GO) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mount the owner-provided Gateway drop-in design as the production Gateway visual surface without) Tj
+0 -12 Td
+( rebuilding, restyling, or changing HTML/CSS/class names.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The approved `Gateway-DropIn-v1-FINAL` designer files were copied into the existing Gateway de) Tj
+0 -12 Td
+(signer asset mount.) Tj
+0 -12 Td
+(- `/gateway/agent-hub` continues to mount `Agent Hub.html`.) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` continues to mount `Paperclip.html`.) Tj
+0 -12 Td
+(- The React frame no longer adds custom wrapper navigation or visual chrome around the designer ) Tj
+0 -12 Td
+(mock.) Tj
+0 -12 Td
+(- The previous fixed-height clipping behavior remains removed; the frame expands to the mounted ) Tj
+0 -12 Td
+(document height and allows native vertical scrolling.) Tj
+0 -12 Td
+(- `shared/agent-data.js` was preserved so `window.AGENTS` is still hydrated from `/api/gateway/a) Tj
+0 -12 Td
+(gent-hub/status`.) Tj
+0 -12 Td
+(- `shared/gateway-data.js` was rehydrated from read-only Gateway APIs:) Tj
+0 -12 Td
+(  - `/api/gateway/nodes`) Tj
+0 -12 Td
+(  - `/api/gateway/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## CloudCode Package) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(CloudCode backend-support package: not consumed in this correction.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason: this hop was explicitly scoped to mounting the owner-provided drop-in UI as-is and resto) Tj
+0 -12 Td
+(ring existing read-only data hydration. The CloudCode package remains queued for the next truth-) Tj
+0 -12 Td
+(rendering pass where status normalization, breadcrumbs, and route smoke tables can be wired with) Tj
+0 -12 Td
+(out altering the approved visual contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Agent Hub.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Agent Zero Commander.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Brain Systems.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Bridge Session Flow.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Delivery Connectors.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Dispatcher.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Gateway Mobile Tablet.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Gateway Routes.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/Hermes Lieutenant.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/OpenCloud Workers.html`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/gateway-data.js`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/render.js`) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/tokens.css`) Tj
+0 -12 Td
+(- `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub-designer-data.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-native-frame-decision.test.ts`) Tj
+0 -12 Td
+(- `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Affected) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway`) Tj
+0 -12 Td
+(- `/gateway/routes`) Tj
+0 -12 Td
+(- `/gateway/registry`) Tj
+0 -12 Td
+(- `/gateway/policies`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2252 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `/gateway/health`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`) Tj
+0 -12 Td
+(- `/gateway/node-detail`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet`) Tj
+0 -12 Td
+(- `/agent-network`) Tj
+0 -12 Td
+(- `/agents`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 167 files / 1347 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- Unauthenticated Gateway routes: protected redirects to `/login`) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/gateway-dropin-route-rendering-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control production runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `98651`.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit: `836e059`) Tj
+0 -12 Td
+(- Message: `fix\(gateway\): mount approved drop-in UI`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 836e059) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner authenticated visual retest is still required before Gateway UI can be marked GO.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current status remains PARTIAL GO until the owner confirms:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway/agent-hub` visually matches the approved drop-in mock.) Tj
+0 -12 Td
+(- Page scroll works naturally.) Tj
+0 -12 Td
+(- Owner is not trapped.) Tj
+0 -12 Td
+(- Agent Hub and Paperclip surfaces remain truthful and navigable.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003950 00000 n 
+0000004076 00000 n 
+0000006380 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6450
+%%EOF

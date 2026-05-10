@@ -1,0 +1,287 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2511 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-47-zapier-no-write-guard) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 47 - Zapier No-Write Guard) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Lane: Zapier No-Write Guard) Tj
+0 -12 Td
+(Status: CLOSED AS BLOCKED) Tj
+0 -12 Td
+(Blocker class: BACKEND_MISSING / OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Prevent Zapier write execution unless an exact owner-approved Bridge Session scope exists. Day 4) Tj
+0 -12 Td
+(7 does not enable Zapier writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier write-like tool names are classified before any backend invocation.) Tj
+0 -12 Td
+(- Write-like requests return a non-executing owner-approval response.) Tj
+0 -12 Td
+(- Backend-missing read/write paths keep execution disabled.) Tj
+0 -12 Td
+(- No approval request is created automatically.) Tj
+0 -12 Td
+(- No Zapier write executes.) Tj
+0 -12 Td
+(- Existing read-only registry/status behavior remains blocked because the Zapier MCP backend is ) Tj
+0 -12 Td
+(not configured.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/zapier/[[...path]]/route.ts`) Tj
+0 -12 Td
+(- `src/lib/zapier-write-guard.ts`) Tj
+0 -12 Td
+(- `src/lib/zapier-write-guard.test.ts`) Tj
+0 -12 Td
+(- `scripts/check-zapier-no-write-guard.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Write-gated responses include:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `accepted_for_execution: false`) Tj
+0 -12 Td
+(- `execution_enabled: false`) Tj
+0 -12 Td
+(- `writes_enabled: false`) Tj
+0 -12 Td
+(- `no_zapier_writes: true`) Tj
+0 -12 Td
+(- `owner_approval_required: true`) Tj
+0 -12 Td
+(- `bridge_session_required: true`) Tj
+0 -12 Td
+(- `approval_request_created: false`) Tj
+0 -12 Td
+(- `required_scope: zapier.write`) Tj
+0 -12 Td
+(- `blocker: owner_approval_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Backend-missing responses include:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `backend_required: true`) Tj
+0 -12 Td
+(- `accepted_for_execution: false`) Tj
+0 -12 Td
+(- `execution_enabled: false`) Tj
+0 -12 Td
+(- `writes_enabled: false`) Tj
+0 -12 Td
+(- `no_zapier_writes: true`) Tj
+0 -12 Td
+(- `blocker: zapier_write_runner_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(node scripts/check-zapier-no-write-guard.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1919 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `ok: true`) Tj
+0 -12 Td
+(- `checked: 6`) Tj
+0 -12 Td
+(- `failures: 0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-47-zapier-no-write-guard-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-47-zapier-registry-contract-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 167 files / 1347 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- Route rendering smoke: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Bridge bypass.) Tj
+0 -12 Td
+(- No fake sent/done state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control production runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `98651`.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit: `815cc7b`) Tj
+0 -12 Td
+(- Message: `fix\(zapier\): harden no-write guard`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 815cc7b) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Zapier remains BLOCKED until:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier MCP/backend is configured.) Tj
+0 -12 Td
+(- Owner creates an exact Bridge Session scope for `zapier.write`.) Tj
+0 -12 Td
+(- A future approved write proof is run safely.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000002810 00000 n 
+0000002936 00000 n 
+0000004907 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4977
+%%EOF

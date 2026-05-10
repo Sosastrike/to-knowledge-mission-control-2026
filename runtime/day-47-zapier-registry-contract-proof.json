@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "failures": [],
+  "bridge_status": {
+    "canonical_status": "BLOCKED",
+    "blocker_class": "BLOCKED",
+    "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+    "tools_total": 0,
+    "read_tools_total": 0,
+    "write_tools_total": 0
+  },
+  "legacy_status": {
+    "canonical_status": "BLOCKED",
+    "blocker_class": "BLOCKED",
+    "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+    "tools_count": 0
+  },
+  "ui_source": {
+    "bytes": 9179,
+    "uses_bridge_status": true,
+    "uses_bridge_tools": true
+  }
+}

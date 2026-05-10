@@ -1,0 +1,388 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2797 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-08-spaceagent-firecrawl-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 08 - SpaceAgent Firecrawl 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+(Lane: SpaceAgent Firecrawl) Tj
+0 -12 Td
+(Status: CREDENTIAL_GATED) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Close the developer-side Firecrawl lane without pretending Firecrawl is live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 08 is considered developer-side closed because the readiness detector, UI truth surface, blo) Tj
+0 -12 Td
+(cked action contract, tests, and proof harness are in place. Live Firecrawl execution remains ga) Tj
+0 -12 Td
+(ted by missing credential and missing backend SDK/adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No broad crawl.) Tj
+0 -12 Td
+(- No private page.) Tj
+0 -12 Td
+(- No login.) Tj
+0 -12 Td
+(- No writes.) Tj
+0 -12 Td
+(- No external connector execution.) Tj
+0 -12 Td
+(- Firecrawl remains a read-only readiness lane until credential/backend are approved and present) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Firecrawl already had a truthful readiness contract. During Day 08, one adjacent SpaceAgent trut) Tj
+0 -12 Td
+(h-surface mismatch was fixed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/gateway/space-agent/browser/status` now passes Firecrawl credential truth into the Space) Tj
+0 -12 Td
+(Agent browser automation payload.) Tj
+0 -12 Td
+(- `/api/gateway/space-agent/browser/status` now passes the proven YouTube transcript connector t) Tj
+0 -12 Td
+(ruth into the same payload.) Tj
+0 -12 Td
+(- The YouTube card no longer shows the stale `youtube_transcript_connector_not_proven` blocker a) Tj
+0 -12 Td
+(fter Day 07 proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Firecrawl execution path was enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/gateway/space-agent/browser/status/route.ts`) Tj
+0 -12 Td
+(- `src/lib/space-agent-browser-automation.ts`) Tj
+0 -12 Td
+(- `src/lib/space-agent-browser-automation.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-08-spaceagent-firecrawl-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-08-spaceagent-firecrawl-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Proved) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated with runtime API key context:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### GET `/api/firecrawl/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- HTTP 200) Tj
+0 -12 Td
+(- `status`: `credential_required`) Tj
+0 -12 Td
+(- `state`: `CREDENTIAL_REQUIRED`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3175 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `canonical_status`: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- `blocker_class`: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- `blocked_reason`: `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `blockers`: `firecrawl_credential_required`, `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+(- `key_present`: `false`) Tj
+0 -12 Td
+(- `sdk_loaded`: `false`) Tj
+0 -12 Td
+(- `read_only_smoke_allowed`: `false`) Tj
+0 -12 Td
+(- `write_execution_enabled`: `false`) Tj
+0 -12 Td
+(- `broad_crawl_enabled`: `false`) Tj
+0 -12 Td
+(- `public_exposure`: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(### GET `/api/gateway/space-agent/browser/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- HTTP 503 because Playwright MCP remains service-down from Day 06.) Tj
+0 -12 Td
+(- Firecrawl card:) Tj
+0 -12 Td
+(  - `status`: `blocked`) Tj
+0 -12 Td
+(  - `blocker`: `firecrawl_credential_required`) Tj
+0 -12 Td
+(  - `configured`: `false`) Tj
+0 -12 Td
+(  - `connected`: `false`) Tj
+0 -12 Td
+(  - `public_exposure`: `false`) Tj
+0 -12 Td
+(- YouTube card after Day 07:) Tj
+0 -12 Td
+(  - `blocker`: `null`) Tj
+0 -12 Td
+(  - `configured`: `true`) Tj
+0 -12 Td
+(  - summary says the read-only transcript connector is proven.) Tj
+0 -12 Td
+(- `execution_enabled`: `false`) Tj
+0 -12 Td
+(- `writes_enabled`: `false`) Tj
+0 -12 Td
+(- `external_writes_enabled`: `false`) Tj
+0 -12 Td
+(- `no_public_exposure`: `true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Passed:) Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/space-agent-browser-automation.test.ts src/lib/firecrawl-status.) Tj
+0 -12 Td
+(test.ts src/lib/space-agent-routes.test.ts src/lib/space-agent-research.test.ts src/lib/space-ag) Tj
+0 -12 Td
+(ent-youtube-connector.test.ts`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337 /api/firecrawl/s) Tj
+0 -12 Td
+(tatus /api/gateway/space-agent/browser/status`) Tj
+0 -12 Td
+(- `node scripts/check-connector-readiness-live.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `node scripts/check-connector-action-contracts.mjs`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Test totals:) Tj
+0 -12 Td
+(- Full suite: 171 files / 1357 tests passed.) Tj
+0 -12 Td
+(- Targeted SpaceAgent/Firecrawl suite: 5 files / 44 tests passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Additional note:) Tj
+0 -12 Td
+(- `node scripts/check-viral-firecrawl-readiness.mjs http://127.0.0.1:3337` was not used as the D) Tj
+0 -12 Td
+(ay 08 gate because it also asserts the separate Viral Crawl video wrapper lane. The Firecrawl ha) Tj
+0 -12 Td
+(lf of its output matched the expected gated state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Production Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Local production runtime restarted from the rebuilt standalone bundle.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime:) Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- PID after restart: 26160) Tj
+0 -12 Td
+(- `/login`: included in route-rendering smoke and returned 200.) Tj
+0 -12 Td
+(- No new public exposure.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1565 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current exact blockers:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `firecrawl_backend_adapter_not_configured`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification:) Tj
+0 -12 Td
+(- CREDENTIAL_GATED first, because the Mission Control runtime has no Firecrawl credential.) Tj
+0 -12 Td
+(- SERVICE_DOWN/BACKEND missing remains secondary, because the Firecrawl SDK/backend adapter is a) Tj
+0 -12 Td
+(lso absent.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action package:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Provide `FIRECRAWL_API_KEY` through the approved secret path.) Tj
+0 -12 Td
+(2. Install or approve the Mission Control Firecrawl backend adapter/package.) Tj
+0 -12 Td
+(3. Restart Mission Control after credential/package changes.) Tj
+0 -12 Td
+(4. Re-run `GET /api/firecrawl/status`.) Tj
+0 -12 Td
+(5. Only if status becomes READY, run exactly one read-only smoke against `https://example.com/`.) Tj
+0 -12 Td
+(6. Keep broad crawl, private pages, login, writes, and Brain ingestion blocked until Bridge appr) Tj
+0 -12 Td
+(oval/audit exists.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day08_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 08 SpaceAgent Firecrawl is developer-side closed as CREDENTIAL_GATED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Next day automatically started:) Tj
+0 -12 Td
+(- Day 09 - Telegram owner command lane) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003102 00000 n 
+0000003228 00000 n 
+0000006455 00000 n 
+0000006581 00000 n 
+0000008198 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8268
+%%EOF

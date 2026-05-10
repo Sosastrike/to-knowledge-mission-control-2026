@@ -82,6 +82,23 @@ describe('SpaceAgent browser automation truth payload', () => {
     expect(payload.external_writes_enabled).toBe(false)
   })
 
+  it('does not keep showing the stale YouTube blocker once the transcript connector is proven', () => {
+    const payload = buildSpaceAgentBrowserAutomationPayload({
+      generatedAt: '2026-05-07T00:00:00.000Z',
+      playwrightMcp: connectedPlaywright,
+      youtubeTranscriptConnectorProven: true,
+    })
+    const youtube = payload.cards.find((card) => card.id === 'youtube_research')
+
+    expect(youtube).toMatchObject({
+      status: 'limited_pending',
+      blocker: null,
+      configured: true,
+      summary: 'Metadata/transcript connector is proven for read-only public video research. Full video download stays blocked.',
+    })
+    expect(JSON.stringify(youtube)).not.toContain('not proven')
+  })
+
   it('keeps enabled buttons mapped to real routes and disables gated actions with blockers', () => {
     const payload = buildSpaceAgentBrowserAutomationPayload({ generatedAt: '2026-05-07T00:00:00.000Z', playwrightMcp: connectedPlaywright })
 

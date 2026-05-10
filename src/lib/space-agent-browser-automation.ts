@@ -136,7 +136,9 @@ export function buildSpaceAgentBrowserAutomationPayload(input: {
         bridge_required_for_interactive: true,
         bridge_required_for_authenticated: true,
         blocker: youtubeProven ? null : 'youtube_transcript_connector_not_proven',
-        summary: 'Metadata/transcript packet model exists, but a dedicated live transcript connector is not proven.',
+        summary: youtubeProven
+          ? 'Metadata/transcript connector is proven for read-only public video research. Full video download stays blocked.'
+          : 'Metadata/transcript packet model exists, but a dedicated live transcript connector is not proven.',
         details: ['Use official metadata/transcript paths first.', 'Do not download full videos by default.', 'Return limited status when transcript is unavailable.'],
       },
     ],

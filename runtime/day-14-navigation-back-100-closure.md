@@ -1,16 +1,17 @@
 # Day 14 - Mission Control Navigation / Back 100% Closure
 
-Date: 2026-05-09
+Date: 2026-05-10
 Branch: to-knowledge-mc
 Lane: Mission Control Navigation / Back
 Status: DEVELOPER-SIDE CLOSED
 Blocker class: OWNER_GATED for authenticated owner navigation/back confirmation
-Code commit: b7bd95d
-Rollback: git revert b7bd95d
+Current source commit: 752b0bc
+Prior Day 14 navigation source commit: b7bd95d
+Rollback: git revert 752b0bc
 
 ## Scope
 
-Day 14 closes the developer-side navigation defect where Mission Control panel navigation and legacy aliases could keep owners in old designer or compatibility routes instead of live Mission Control and Gateway FULL v3 surfaces.
+Day 14 closes the developer-side navigation and back-path behavior for Mission Control and Gateway. The earlier Day 14 source work moved Mission Control home/overview exits to live routes, preserved Gateway aliases, and reset scroll on route changes. This refresh consumes the CloudCode route metadata support to cover the mounted Gateway FULL v3 pages that were missing from the normalized navigation contract.
 
 This is not owner visual GO. Authenticated owner retest remains required before the Gateway/Mission Control visual lane can move beyond PARTIAL GO.
 
@@ -18,45 +19,54 @@ This is not owner visual GO. Authenticated owner retest remains required before 
 
 Navigation surfaces inspected:
 
-- src/lib/navigation.ts
-  - `panelHref()` was still mostly direct-path based.
-  - route transitions used `router.push(href, { scroll: false })`, which could preserve awkward/trapped scroll positions across page transitions.
-- src/app/[[...panel]]/route.ts
-  - root/default Mission Control panels still returned the old designer Mission Control HTML route.
-  - Gateway aliases were already redirected to Gateway/Agent Hub but needed regression coverage alongside the home exit.
-- src/app/gateway-route-alias.test.ts
-  - covered Gateway compatibility aliases but did not cover root/home/overview.
-- Gateway FULL v3 designer routes
-  - already exist as protected routes and remain the source of visual truth.
+- `src/lib/navigation.ts`
+  - Mission Control panel routes already target concrete live routes.
+  - `router.push(href, { scroll: true })` is in place, so route changes reset scroll.
+- `src/app/[[...panel]]/route.ts`
+  - Mission Control home/default panels route to `/tkmc`.
+  - Gateway aliases route toward Gateway FULL v3 surfaces.
+- `backend-support/src/route-metadata.ts`
+  - CloudCode route metadata powered `/api/gateway/navigation`, but it did not cover all mounted Gateway FULL v3 pages.
+  - Before this increment, `/api/gateway/navigation?route=/gateway/agent-hub/paperclip` returned `404 ROUTE_MISSING`.
+- `src/app/api/gateway/navigation/route.ts`
+  - Uses `buildCloudCodeNavigation()` and now receives complete mounted-route metadata.
 
 ## What Was Implemented
 
-- Added canonical Mission Control panel route overrides:
-  - `overview`, `mission`, `dashboard` -> `/tkmc`
-  - `gateway` -> `/gateway`
-  - `gateway-parent`, `agents`, `agent-network` -> `/gateway/agent-hub`
-  - `gateways` -> `/gateway`
-  - `gateway-config` -> `/gateway/policies`
-  - settings/admin panels -> concrete `/settings/tkmc/...` routes
-- Changed panel navigation route pushes to reset scroll:
-  - from: `router.push(href, { scroll: false })`
-  - to: `router.push(href, { scroll: true })`
-- Changed catch-all Mission Control panel redirects so root/home/overview/default routes land on `/tkmc` instead of the old designer Mission Control shell.
-- Added regression tests for:
-  - root Mission Control -> `/tkmc`
-  - overview panel -> `/tkmc`
-  - concrete Gateway FULL v3 routes
-  - concrete settings/admin routes
-  - no return to `scroll: false`
+Added mounted Gateway FULL v3 route metadata for:
+
+- `/gateway/agent-hub/paperclip`
+- `/gateway/agent-hub/:agentId`
+- `/gateway/routes`
+- `/gateway/registry`
+- `/gateway/policies`
+- `/gateway/health`
+- `/gateway/status`
+- `/gateway/brain`
+- `/gateway/space-agent`
+- `/gateway/node-detail`
+- `/gateway/mobile-tablet`
+
+The Paperclip page now resolves as:
+
+- current page: `Paperclip`
+- safe back: `/gateway/agent-hub`
+- Gateway overview: `/gateway`
+- Agent Hub: `/gateway/agent-hub`
+- breadcrumbs: `Mission Control > Gateway > Agent Hub > Paperclip`
+
+No designer HTML, CSS, shared tokens, class names, or Gateway mock rendering code were changed.
 
 ## Files Changed
 
-- src/lib/navigation.ts
-- src/lib/navigation.test.ts
-- src/app/[[...panel]]/route.ts
-- src/app/gateway-route-alias.test.ts
+Current increment:
 
-No designer mock HTML, shared tokens, Gateway FULL v3 classes, `.env`, credentials, governance files, or parked artifacts were changed.
+- `backend-support/src/route-metadata.ts`
+- `backend-support/src/__tests__/route-metadata.test.ts`
+- `src/lib/gateway-cloudcode-integration.test.ts`
+- `src/app/api/gateway/navigation/route.test.ts`
+
+No `.env`, credentials, governance files, protected runtime data, designer mock HTML/CSS, or parked duplicate files were changed.
 
 ## Routes / UI Behavior
 
@@ -65,95 +75,91 @@ Expected behavior after this change:
 - Mission Control Home exits target `/tkmc`.
 - Gateway Overview exits target `/gateway`.
 - Agent Hub exits target `/gateway/agent-hub`.
+- Paperclip Agent Hub page safe back targets `/gateway/agent-hub`.
+- Mounted Gateway pages have normalized route metadata instead of raw/unknown route errors.
 - Old aliases still land safely:
   - `/agents` -> Gateway Agent Hub after authentication
   - `/agent-network` -> Gateway Agent Hub after authentication
   - `/gateway-parent` -> Gateway Agent Hub after authentication
   - `/gateways` -> Gateway Overview after authentication
   - `/gateway-config` -> Gateway Policies after authentication
-- Route changes reset scroll instead of preserving a prior trapped position.
 - Protected route behavior is preserved.
 
-## Runtime / Deployment
+## Runtime / Deployment Proof
 
-Source commit pushed:
+Source commit created:
 
-- b7bd95d
+- `752b0bc` - `fix(navigation): add mounted gateway route metadata`
 
-Standalone deployment:
+Local-only proof runtime:
 
-- Build/deploy script rebuilt commit b7bd95d.
-- The deploy script reported:
-  - deployed commit: b7bd95d
-  - pid: 41874
-  - port: 3337
-- The deploy child exited before route smoke, matching the known standalone child-exit behavior in this local proof environment.
-- Controlled proof runtime was started in a local-only screen-backed process:
-  - host: 127.0.0.1
-  - port: 3337
-  - pid: 42107
-  - restart timestamp: Sat May 9 11:48:57 2026
-
-This proof runtime was local-only. No public listener was added.
-
-## Route Smoke
-
-Smoke base: http://127.0.0.1:3337
-
-Unauthenticated route behavior:
-
+- host: `127.0.0.1`
+- port: `3337`
+- PID: `79828`
+- restart timestamp: 2026-05-10T13:12Z
 - `/login`: 200
-- `/`: 307 to `/login`
-- `/overview`: 307 to `/login`
-- `/tkmc`: 307 to `/login`
-- `/gateway`: 307 to `/login`
-- `/gateway/agent-hub`: 307 to `/login`
-- `/agents`: 307 to `/login`
-- `/agent-network`: 307 to `/login`
-- `/gateway-parent`: 307 to `/login`
-- `/gateways`: 307 to `/login`
-- `/gateway-config`: 307 to `/login`
-- `/settings/tkmc`: 307 to `/login`
-- `/settings/tkmc/security`: 307 to `/login`
 
-Route-handler unit proof confirms the post-auth navigation targets:
+The first detached restart attempt exited after printing `Ready` without an error, so route smoke was run against an attached local-only proof runtime. No public listener was added.
 
-- `/` redirects to `/tkmc`
-- `/overview` redirects to `/tkmc`
-- Gateway aliases redirect to the intended Gateway FULL v3 surfaces.
+## Authenticated Navigation Smoke
 
-Protected action invariant:
+Smoke base: `http://127.0.0.1:3337`
 
-- scripts/check-protected-actions-locked.mjs against http://127.0.0.1:3337
+Authenticated API context:
+
+- `x-api-key` loaded from local runtime settings without printing the value.
+- `mc-session=runtime-smoke-proxy-pass` cookie used for local smoke only.
+
+Results:
+
+- `/gateway`: 200, current `Gateway`, safe back `/`, breadcrumbs `Mission Control > Gateway`
+- `/gateway/agent-hub`: 200, current `Agent Hub`, safe back `/gateway`, breadcrumbs `Mission Control > Gateway > Agent Hub`
+- `/gateway/agent-hub/paperclip`: 200, current `Paperclip`, safe back `/gateway/agent-hub`, breadcrumbs `Mission Control > Gateway > Agent Hub > Paperclip`
+- `/gateway/routes`: 200, current `Routes`, safe back `/gateway`
+- `/gateway/registry`: 200, current `Registry`, safe back `/gateway`
+- `/gateway/policies`: 200, current `Policies`, safe back `/gateway`
+- `/gateway/health`: 200, current `Health`, safe back `/gateway`
+- `/gateway/dispatcher`: 200, current `Dispatcher`, safe back `/gateway`
+- `/gateway/token-governor`: 200, current `Token Governor`, safe back `/gateway`
+- `/gateway/bridge-session`: 200, current `Bridge Session`, safe back `/gateway`
+- `/gateway/missing`: 404, classified safely as missing, no raw stack/error exposure
+
+## Route Rendering Smoke
+
+Command:
+
+- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`
+
+Result:
+
 - ok: true
-- checked: 11
-- protected actions remained locked.
+- routes checked: 46
+- designer pages checked: 8
+- failures: 0
 
-Authenticated owner navigation proof:
-
-- Not performed because this runtime does not have an owner browser session.
-- Remaining blocker: owner_authenticated_navigation_retest_required
+The smoke confirmed protected shell routes redirect to `/login` when unauthenticated, read-only Bridge APIs return JSON, and designer Mission Control pages remain auth-gated.
 
 ## Tests Run
 
-- pnpm test src/lib/navigation.test.ts src/app/gateway-route-alias.test.ts
-  - 2 files passed
-  - 13 tests passed
-- git diff --check
+- `pnpm test`
+  - 171 files passed
+  - 1361 tests passed
+- `pnpm run typecheck`
   - passed
-- pnpm run typecheck
+- `pnpm run build`
   - passed
-- pnpm run build
+- `git diff --check`
   - passed
-- pnpm test
-  - 146 files passed
-  - 1291 tests passed
-- node scripts/check-protected-file-invariants.mjs
+- `pnpm --dir backend-support run typecheck`
+  - passed
+- `pnpm --dir backend-support test`
+  - 9 files passed
+  - 106 tests passed
+- `node scripts/check-protected-file-invariants.mjs`
   - ok: true
-- staged secret scan
+- staged secret-pattern scan for source commit
   - ok: true
-  - checked files: 4
-- .env diff check
+- `.env` diff check
   - clean
 
 ## Safety Confirmation
@@ -168,11 +174,11 @@ Authenticated owner navigation proof:
 - No designer mock redesign.
 - No Gateway FULL v3 token/class changes.
 - No parked artifacts staged.
-- Final proof runtime bound to 127.0.0.1 only.
+- Proof runtime bound to `127.0.0.1` only.
 
 ## Remaining Blocker
 
-Blocker: owner_authenticated_navigation_retest_required
+Blocker: `owner_authenticated_navigation_retest_required`
 
 Classification: OWNER_GATED
 
@@ -182,8 +188,9 @@ Owner retest needed:
 - Open `/tkmc`.
 - Open `/gateway`.
 - Open `/gateway/agent-hub`.
-- Use Mission Control Home, Gateway Overview, Agent Hub, and browser back.
-- Confirm the owner is not trapped in Agent Hub.
+- Open `/gateway/agent-hub/paperclip`.
+- Use Mission Control Home, Gateway Overview, Agent Hub, Paperclip safe back, and browser back.
+- Confirm the owner is not trapped in Agent Hub or Paperclip.
 - Confirm scroll position resets naturally when moving between pages.
 
 ## Closeout Ledger
@@ -191,9 +198,8 @@ Owner retest needed:
 - Day number and lane: Day 14 - Mission Control Navigation / Back
 - Status: DEVELOPER-SIDE CLOSED
 - Blocker classification: OWNER_GATED
-- Commit hash: b7bd95d
-- Push result: pushed to origin/to-knowledge-mc
-- Deployed commit: b7bd95d
-- Runtime proof: local-only standalone proof on 127.0.0.1:3337, pid 42107
-- Rollback command: git revert b7bd95d
+- Current source commit: 752b0bc
+- Push result: pending at report generation; to be pushed with this report commit
+- Runtime proof: local-only standalone proof on `127.0.0.1:3337`, PID 79828
+- Rollback command: `git revert 752b0bc`
 - Next day automatically started: Day 15 - Gateway Native Implementation Decision 100% Closure

@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 3366 >>
+<< /Length 3196 >>
 stream
 BT
 /F1 10 Tf
@@ -22,7 +22,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Date: 2026-05-09) Tj
+(Date: 2026-05-10) Tj
 0 -12 Td
 (Branch: to-knowledge-mc) Tj
 0 -12 Td
@@ -32,9 +32,11 @@ BT
 0 -12 Td
 (Blocker class: OWNER_GATED for authenticated owner navigation/back confirmation) Tj
 0 -12 Td
-(Code commit: b7bd95d) Tj
+(Current source commit: 752b0bc) Tj
 0 -12 Td
-(Rollback: git revert b7bd95d) Tj
+(Prior Day 14 navigation source commit: b7bd95d) Tj
+0 -12 Td
+(Rollback: git revert 752b0bc) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -42,11 +44,15 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Day 14 closes the developer-side navigation defect where Mission Control panel navigation and le) Tj
+(Day 14 closes the developer-side navigation and back-path behavior for Mission Control and Gatew) Tj
 0 -12 Td
-(gacy aliases could keep owners in old designer or compatibility routes instead of live Mission C) Tj
+(ay. The earlier Day 14 source work moved Mission Control home/overview exits to live routes, pre) Tj
 0 -12 Td
-(ontrol and Gateway FULL v3 surfaces.) Tj
+(served Gateway aliases, and reset scroll on route changes. This refresh consumes the CloudCode r) Tj
+0 -12 Td
+(oute metadata support to cover the mounted Gateway FULL v3 pages that were missing from the norm) Tj
+0 -12 Td
+(alized navigation contract.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -64,31 +70,31 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- src/lib/navigation.ts) Tj
+(- `src/lib/navigation.ts`) Tj
 0 -12 Td
-(  - `panelHref\(\)` was still mostly direct-path based.) Tj
+(  - Mission Control panel routes already target concrete live routes.) Tj
 0 -12 Td
-(  - route transitions used `router.push\(href, { scroll: false }\)`, which could preserve awkward/) Tj
+(  - `router.push\(href, { scroll: true }\)` is in place, so route changes reset scroll.) Tj
 0 -12 Td
-(trapped scroll positions across page transitions.) Tj
+(- `src/app/[[...panel]]/route.ts`) Tj
 0 -12 Td
-(- src/app/[[...panel]]/route.ts) Tj
+(  - Mission Control home/default panels route to `/tkmc`.) Tj
 0 -12 Td
-(  - root/default Mission Control panels still returned the old designer Mission Control HTML rou) Tj
+(  - Gateway aliases route toward Gateway FULL v3 surfaces.) Tj
 0 -12 Td
-(te.) Tj
+(- `backend-support/src/route-metadata.ts`) Tj
 0 -12 Td
-(  - Gateway aliases were already redirected to Gateway/Agent Hub but needed regression coverage ) Tj
+(  - CloudCode route metadata powered `/api/gateway/navigation`, but it did not cover all mounted) Tj
 0 -12 Td
-(alongside the home exit.) Tj
+( Gateway FULL v3 pages.) Tj
 0 -12 Td
-(- src/app/gateway-route-alias.test.ts) Tj
+(  - Before this increment, `/api/gateway/navigation?route=/gateway/agent-hub/paperclip` returned) Tj
 0 -12 Td
-(  - covered Gateway compatibility aliases but did not cover root/home/overview.) Tj
+( `404 ROUTE_MISSING`.) Tj
 0 -12 Td
-(- Gateway FULL v3 designer routes) Tj
+(- `src/app/api/gateway/navigation/route.ts`) Tj
 0 -12 Td
-(  - already exist as protected routes and remain the source of visual truth.) Tj
+(  - Uses `buildCloudCodeNavigation\(\)` and now receives complete mounted-route metadata.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -96,51 +102,45 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- Added canonical Mission Control panel route overrides:) Tj
-0 -12 Td
-(  - `overview`, `mission`, `dashboard` -> `/tkmc`) Tj
-0 -12 Td
-(  - `gateway` -> `/gateway`) Tj
-0 -12 Td
-(  - `gateway-parent`, `agents`, `agent-network` -> `/gateway/agent-hub`) Tj
-0 -12 Td
-(  - `gateways` -> `/gateway`) Tj
-0 -12 Td
-(  - `gateway-config` -> `/gateway/policies`) Tj
-0 -12 Td
-(  - settings/admin panels -> concrete `/settings/tkmc/...` routes) Tj
-0 -12 Td
-(- Changed panel navigation route pushes to reset scroll:) Tj
-0 -12 Td
-(  - from: `router.push\(href, { scroll: false }\)`) Tj
-0 -12 Td
-(  - to: `router.push\(href, { scroll: true }\)`) Tj
-0 -12 Td
-(- Changed catch-all Mission Control panel redirects so root/home/overview/default routes land on) Tj
-0 -12 Td
-( `/tkmc` instead of the old designer Mission Control shell.) Tj
-0 -12 Td
-(- Added regression tests for:) Tj
-0 -12 Td
-(  - root Mission Control -> `/tkmc`) Tj
-0 -12 Td
-(  - overview panel -> `/tkmc`) Tj
-0 -12 Td
-(  - concrete Gateway FULL v3 routes) Tj
-0 -12 Td
-(  - concrete settings/admin routes) Tj
-0 -12 Td
-(  - no return to `scroll: false`) Tj
+(Added mounted Gateway FULL v3 route metadata for:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Files Changed) Tj
+(- `/gateway/agent-hub/paperclip`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/:agentId`) Tj
+0 -12 Td
+(- `/gateway/routes`) Tj
+0 -12 Td
+(- `/gateway/registry`) Tj
+0 -12 Td
+(- `/gateway/policies`) Tj
+0 -12 Td
+(- `/gateway/health`) Tj
+0 -12 Td
+(- `/gateway/status`) Tj
+0 -12 Td
+(- `/gateway/brain`) Tj
+0 -12 Td
+(- `/gateway/space-agent`) Tj
+0 -12 Td
+(- `/gateway/node-detail`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- src/lib/navigation.ts) Tj
+(The Paperclip page now resolves as:) Tj
 0 -12 Td
-(- src/lib/navigation.test.ts) Tj
+() Tj
+0 -12 Td
+(- current page: `Paperclip`) Tj
+0 -12 Td
+(- safe back: `/gateway/agent-hub`) Tj
+0 -12 Td
+(- Gateway overview: `/gateway`) Tj
+0 -12 Td
+(- Agent Hub: `/gateway/agent-hub`) Tj
 ET
 endstream
 endobj
@@ -148,20 +148,40 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 2867 >>
+<< /Length 3105 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
-(- src/app/[[...panel]]/route.ts) Tj
-0 -12 Td
-(- src/app/gateway-route-alias.test.ts) Tj
+(- breadcrumbs: `Mission Control > Gateway > Agent Hub > Paperclip`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(No designer mock HTML, shared tokens, Gateway FULL v3 classes, `.env`, credentials, governance f) Tj
+(No designer HTML, CSS, shared tokens, class names, or Gateway mock rendering code were changed.) Tj
 0 -12 Td
-(iles, or parked artifacts were changed.) Tj
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current increment:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `backend-support/src/route-metadata.ts`) Tj
+0 -12 Td
+(- `backend-support/src/__tests__/route-metadata.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/navigation/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No `.env`, credentials, governance files, protected runtime data, designer mock HTML/CSS, or par) Tj
+0 -12 Td
+(ked duplicate files were changed.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -179,6 +199,10 @@ BT
 0 -12 Td
 (- Agent Hub exits target `/gateway/agent-hub`.) Tj
 0 -12 Td
+(- Paperclip Agent Hub page safe back targets `/gateway/agent-hub`.) Tj
+0 -12 Td
+(- Mounted Gateway pages have normalized route metadata instead of raw/unknown route errors.) Tj
+0 -12 Td
 (- Old aliases still land safely:) Tj
 0 -12 Td
 (  - `/agents` -> Gateway Agent Hub after authentication) Tj
@@ -191,95 +215,71 @@ BT
 0 -12 Td
 (  - `/gateway-config` -> Gateway Policies after authentication) Tj
 0 -12 Td
-(- Route changes reset scroll instead of preserving a prior trapped position.) Tj
-0 -12 Td
 (- Protected route behavior is preserved.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Runtime / Deployment) Tj
+(## Runtime / Deployment Proof) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Source commit pushed:) Tj
+(Source commit created:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- b7bd95d) Tj
+(- `752b0bc` - `fix\(navigation\): add mounted gateway route metadata`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Standalone deployment:) Tj
+(Local-only proof runtime:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- Build/deploy script rebuilt commit b7bd95d.) Tj
+(- host: `127.0.0.1`) Tj
 0 -12 Td
-(- The deploy script reported:) Tj
+(- port: `3337`) Tj
 0 -12 Td
-(  - deployed commit: b7bd95d) Tj
+(- PID: `79828`) Tj
 0 -12 Td
-(  - pid: 41874) Tj
-0 -12 Td
-(  - port: 3337) Tj
-0 -12 Td
-(- The deploy child exited before route smoke, matching the known standalone child-exit behavior ) Tj
-0 -12 Td
-(in this local proof environment.) Tj
-0 -12 Td
-(- Controlled proof runtime was started in a local-only screen-backed process:) Tj
-0 -12 Td
-(  - host: 127.0.0.1) Tj
-0 -12 Td
-(  - port: 3337) Tj
-0 -12 Td
-(  - pid: 42107) Tj
-0 -12 Td
-(  - restart timestamp: Sat May 9 11:48:57 2026) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(This proof runtime was local-only. No public listener was added.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(## Route Smoke) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Smoke base: http://127.0.0.1:3337) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Unauthenticated route behavior:) Tj
-0 -12 Td
-() Tj
+(- restart timestamp: 2026-05-10T13:12Z) Tj
 0 -12 Td
 (- `/login`: 200) Tj
 0 -12 Td
-(- `/`: 307 to `/login`) Tj
+() Tj
 0 -12 Td
-(- `/overview`: 307 to `/login`) Tj
+(The first detached restart attempt exited after printing `Ready` without an error, so route smok) Tj
 0 -12 Td
-(- `/tkmc`: 307 to `/login`) Tj
+(e was run against an attached local-only proof runtime. No public listener was added.) Tj
 0 -12 Td
-(- `/gateway`: 307 to `/login`) Tj
+() Tj
 0 -12 Td
-(- `/gateway/agent-hub`: 307 to `/login`) Tj
+(## Authenticated Navigation Smoke) Tj
 0 -12 Td
-(- `/agents`: 307 to `/login`) Tj
+() Tj
 0 -12 Td
-(- `/agent-network`: 307 to `/login`) Tj
+(Smoke base: `http://127.0.0.1:3337`) Tj
 0 -12 Td
-(- `/gateway-parent`: 307 to `/login`) Tj
+() Tj
 0 -12 Td
-(- `/gateways`: 307 to `/login`) Tj
+(Authenticated API context:) Tj
 0 -12 Td
-(- `/gateway-config`: 307 to `/login`) Tj
+() Tj
 0 -12 Td
-(- `/settings/tkmc`: 307 to `/login`) Tj
+(- `x-api-key` loaded from local runtime settings without printing the value.) Tj
 0 -12 Td
-(- `/settings/tkmc/security`: 307 to `/login`) Tj
+(- `mc-session=runtime-smoke-proxy-pass` cookie used for local smoke only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway`: 200, current `Gateway`, safe back `/`, breadcrumbs `Mission Control > Gateway`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`: 200, current `Agent Hub`, safe back `/gateway`, breadcrumbs `Mission Con) Tj
+0 -12 Td
+(trol > Gateway > Agent Hub`) Tj
 ET
 endstream
 endobj
@@ -287,46 +287,62 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 2386 >>
+<< /Length 2829 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
+(- `/gateway/agent-hub/paperclip`: 200, current `Paperclip`, safe back `/gateway/agent-hub`, brea) Tj
+0 -12 Td
+(dcrumbs `Mission Control > Gateway > Agent Hub > Paperclip`) Tj
+0 -12 Td
+(- `/gateway/routes`: 200, current `Routes`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/registry`: 200, current `Registry`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/policies`: 200, current `Policies`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/health`: 200, current `Health`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`: 200, current `Dispatcher`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/token-governor`: 200, current `Token Governor`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`: 200, current `Bridge Session`, safe back `/gateway`) Tj
+0 -12 Td
+(- `/gateway/missing`: 404, classified safely as missing, no raw stack/error exposure) Tj
+0 -12 Td
 () Tj
 0 -12 Td
-(Route-handler unit proof confirms the post-auth navigation targets:) Tj
+(## Route Rendering Smoke) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- `/` redirects to `/tkmc`) Tj
-0 -12 Td
-(- `/overview` redirects to `/tkmc`) Tj
-0 -12 Td
-(- Gateway aliases redirect to the intended Gateway FULL v3 surfaces.) Tj
+(Command:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Protected action invariant:) Tj
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- scripts/check-protected-actions-locked.mjs against http://127.0.0.1:3337) Tj
+(Result:) Tj
+0 -12 Td
+() Tj
 0 -12 Td
 (- ok: true) Tj
 0 -12 Td
-(- checked: 11) Tj
+(- routes checked: 46) Tj
 0 -12 Td
-(- protected actions remained locked.) Tj
+(- designer pages checked: 8) Tj
 0 -12 Td
-() Tj
-0 -12 Td
-(Authenticated owner navigation proof:) Tj
+(- failures: 0) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- Not performed because this runtime does not have an owner browser session.) Tj
+(The smoke confirmed protected shell routes redirect to `/login` when unauthenticated, read-only ) Tj
 0 -12 Td
-(- Remaining blocker: owner_authenticated_navigation_retest_required) Tj
+(Bridge APIs return JSON, and designer Mission Control pages remain auth-gated.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -334,41 +350,43 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- pnpm test src/lib/navigation.test.ts src/app/gateway-route-alias.test.ts) Tj
+(- `pnpm test`) Tj
 0 -12 Td
-(  - 2 files passed) Tj
+(  - 171 files passed) Tj
 0 -12 Td
-(  - 13 tests passed) Tj
+(  - 1361 tests passed) Tj
 0 -12 Td
-(- git diff --check) Tj
-0 -12 Td
-(  - passed) Tj
-0 -12 Td
-(- pnpm run typecheck) Tj
+(- `pnpm run typecheck`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm run build) Tj
+(- `pnpm run build`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm test) Tj
+(- `git diff --check`) Tj
 0 -12 Td
-(  - 146 files passed) Tj
+(  - passed) Tj
 0 -12 Td
-(  - 1291 tests passed) Tj
+(- `pnpm --dir backend-support run typecheck`) Tj
 0 -12 Td
-(- node scripts/check-protected-file-invariants.mjs) Tj
+(  - passed) Tj
+0 -12 Td
+(- `pnpm --dir backend-support test`) Tj
+0 -12 Td
+(  - 9 files passed) Tj
+0 -12 Td
+(  - 106 tests passed) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
 0 -12 Td
 (  - ok: true) Tj
 0 -12 Td
-(- staged secret scan) Tj
+(- staged secret-pattern scan for source commit) Tj
 0 -12 Td
 (  - ok: true) Tj
 0 -12 Td
-(  - checked files: 4) Tj
-0 -12 Td
-(- .env diff check) Tj
+(- `.env` diff check) Tj
 0 -12 Td
 (  - clean) Tj
 0 -12 Td
@@ -398,15 +416,26 @@ BT
 0 -12 Td
 (- No parked artifacts staged.) Tj
 0 -12 Td
-(- Final proof runtime bound to 127.0.0.1 only.) Tj
+(- Proof runtime bound to `127.0.0.1` only.) Tj
 0 -12 Td
 () Tj
-0 -12 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1385 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (## Remaining Blocker) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Blocker: owner_authenticated_navigation_retest_required) Tj
+(Blocker: `owner_authenticated_navigation_retest_required`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -419,27 +448,18 @@ BT
 () Tj
 0 -12 Td
 (- Log in to Mission Control.) Tj
-ET
-endstream
-endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
-endobj
-10 0 obj
-<< /Length 1004 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
+0 -12 Td
 (- Open `/tkmc`.) Tj
 0 -12 Td
 (- Open `/gateway`.) Tj
 0 -12 Td
 (- Open `/gateway/agent-hub`.) Tj
 0 -12 Td
-(- Use Mission Control Home, Gateway Overview, Agent Hub, and browser back.) Tj
+(- Open `/gateway/agent-hub/paperclip`.) Tj
 0 -12 Td
-(- Confirm the owner is not trapped in Agent Hub.) Tj
+(- Use Mission Control Home, Gateway Overview, Agent Hub, Paperclip safe back, and browser back.) Tj
+0 -12 Td
+(- Confirm the owner is not trapped in Agent Hub or Paperclip.) Tj
 0 -12 Td
 (- Confirm scroll position resets naturally when moving between pages.) Tj
 0 -12 Td
@@ -455,15 +475,13 @@ BT
 0 -12 Td
 (- Blocker classification: OWNER_GATED) Tj
 0 -12 Td
-(- Commit hash: b7bd95d) Tj
+(- Current source commit: 752b0bc) Tj
 0 -12 Td
-(- Push result: pushed to origin/to-knowledge-mc) Tj
+(- Push result: pending at report generation; to be pushed with this report commit) Tj
 0 -12 Td
-(- Deployed commit: b7bd95d) Tj
+(- Runtime proof: local-only standalone proof on `127.0.0.1:3337`, PID 79828) Tj
 0 -12 Td
-(- Runtime proof: local-only standalone proof on 127.0.0.1:3337, pid 42107) Tj
-0 -12 Td
-(- Rollback command: git revert b7bd95d) Tj
+(- Rollback command: `git revert 752b0bc`) Tj
 0 -12 Td
 (- Next day automatically started: Day 15 - Gateway Native Implementation Decision 100% Closure) Tj
 0 -12 Td
@@ -481,15 +499,15 @@ xref
 0000000058 00000 n 
 0000000133 00000 n 
 0000000260 00000 n 
-0000003678 00000 n 
-0000003805 00000 n 
-0000006724 00000 n 
-0000006851 00000 n 
-0000009289 00000 n 
-0000009417 00000 n 
-0000010474 00000 n 
+0000003508 00000 n 
+0000003635 00000 n 
+0000006792 00000 n 
+0000006919 00000 n 
+0000009800 00000 n 
+0000009928 00000 n 
+0000011366 00000 n 
 trailer
 << /Size 12 /Root 1 0 R >>
 startxref
-10545
+11437
 %%EOF

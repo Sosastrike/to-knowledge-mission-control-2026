@@ -1,0 +1,125 @@
+{
+  "day": 46,
+  "lane": "Zapier registry",
+  "status": "DEVELOPER_SIDE_CLOSED",
+  "blocker_class": "BLOCKED",
+  "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+  "checked_at": "2026-05-10T00:04:33Z",
+  "branch": "to-knowledge-mc",
+  "source_commits": [
+    "5661b4889ed5f1c889c65ccd36781df2da13dc40",
+    "26ea8766eb55c5311706b881fe8a83bb6b2fb4ac"
+  ],
+  "runtime": {
+    "base_url": "http://127.0.0.1:3337",
+    "pid": 89509,
+    "restart_timestamp": "Sat May 9 20:02:22 2026",
+    "login_status": 200
+  },
+  "routes": [
+    {
+      "path": "/api/bridge/zapier/status",
+      "status": 200,
+      "ok": true,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "tools_total": 0,
+      "read_tools_total": 0,
+      "write_tools_total": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "bridge_session_required": true,
+      "approval_required_for_writes": true
+    },
+    {
+      "path": "/api/bridge/zapier/tools",
+      "status": 200,
+      "ok": true,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "tools_total": 0,
+      "read_tools_total": 0,
+      "write_tools_total": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "bridge_session_required": true,
+      "approval_required_for_writes": true
+    },
+    {
+      "path": "/api/bridge/zapier/tools/search?q=heygen",
+      "status": 200,
+      "ok": true,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "tools_total": 0,
+      "read_tools_total": 0,
+      "write_tools_total": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "bridge_session_required": true,
+      "approval_required_for_writes": true
+    },
+    {
+      "path": "/api/zapier/status",
+      "status": 200,
+      "ok": true,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "tools_total": 0,
+      "read_tools_total": 0,
+      "write_tools_total": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "bridge_session_required": true,
+      "approval_required_for_writes": true
+    },
+    {
+      "path": "/api/zapier/tools",
+      "status": 200,
+      "ok": true,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "tools_total": 0,
+      "read_tools_total": 0,
+      "write_tools_total": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "bridge_session_required": true,
+      "approval_required_for_writes": true
+    }
+  ],
+  "validation": {
+    "git_diff_check": "passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "tests": "166 files / 1344 tests passed",
+    "protected_file_invariants": "passed",
+    "staged_secret_scan": "passed",
+    "env_diff": "clean",
+    "zapier_registry_contract": "passed",
+    "connector_action_contracts": "passed",
+    "route_rendering": "passed"
+  },
+  "rollback": [
+    "git revert 26ea8766eb55c5311706b881fe8a83bb6b2fb4ac",
+    "git revert 5661b4889ed5f1c889c65ccd36781df2da13dc40"
+  ],
+  "safety": {
+    "env_changed": false,
+    "secrets_printed": false,
+    "auth_weakened": false,
+    "public_exposure_added": false,
+    "zapier_writes_enabled": false,
+    "fake_tools_claimed": false
+  }
+}

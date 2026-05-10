@@ -1,0 +1,322 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3301 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-46-zapier-registry) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 46 - Zapier Registry) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10T00:04:33Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class: BLOCKED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact blocker: MCP server zapier is not present in the Claude MCP configuration.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This is not GO. The developer-side registry contract is implemented, tested, pushed, and runtime) Tj
+0 -12 Td
+(-proven, but live Zapier tool discovery remains blocked because the Zapier MCP server is not con) Tj
+0 -12 Td
+(figured in the current runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 46 closed the Zapier registry/read-only discovery lane. The work does not enable Zapier writ) Tj
+0 -12 Td
+(es, does not execute Zapier actions, and does not claim connected tools when the inventory is no) Tj
+0 -12 Td
+(t visible.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added canonical Zapier registry fields: `canonical_status`, `blocker_class`, `owner_status`, r) Tj
+0 -12 Td
+(ead/write/unknown tool counts, Bridge requirement, approval requirement, and no-write/no-executi) Tj
+0 -12 Td
+(on flags.) Tj
+0 -12 Td
+(- Wired legacy `/api/zapier/status` to the same canonical bridge-backed truth as `/api/bridge/za) Tj
+0 -12 Td
+(pier/status`.) Tj
+0 -12 Td
+(- Kept `/api/zapier/tools` and bridge Zapier tool routes read-only and exact-blocked when the Za) Tj
+0 -12 Td
+(pier MCP server is missing.) Tj
+0 -12 Td
+(- Updated the Zapier Mission Control page to fetch `/api/bridge/zapier/status` and `/api/bridge/) Tj
+0 -12 Td
+(zapier/tools`.) Tj
+0 -12 Td
+(- Replaced fake/legacy UI assumptions with exact canonical status and blocker display.) Tj
+0 -12 Td
+(- Added a Zapier registry contract smoke script.) Tj
+0 -12 Td
+(- Added Zapier bridge tests and updated downstream Drive/OneDrive tests for the expanded registr) Tj
+0 -12 Td
+(y contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/zapier-tool-bridge.ts`) Tj
+0 -12 Td
+(- `src/lib/zapier-tool-bridge.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/zapier/[[...path]]/route.ts`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/ZapierPage.jsx`) Tj
+0 -12 Td
+(- `scripts/check-zapier-registry-contracts.mjs`) Tj
+0 -12 Td
+(- `scripts/check-connector-action-contracts.mjs`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-google-drive-delivery.test.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-onedrive-delivery.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/zapier/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/zapier/tools`) Tj
+0 -12 Td
+(- `GET /api/bridge/zapier/tools/search`) Tj
+0 -12 Td
+(- `GET /api/zapier/status`) Tj
+0 -12 Td
+(- `GET /api/zapier/tools`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier page now displays canonical owner-facing status.) Tj
+0 -12 Td
+(- Empty inventory shows the exact blocker instead of pretending tools are available.) Tj
+0 -12 Td
+(- Write/execution controls remain locked behind Bridge Session and owner approval.) Tj
+0 -12 Td
+(- The UI uses bridge status/tool endpoints and no longer depends on legacy tool field names.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2979 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime base: `http://127.0.0.1:3337`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime PID: `89509`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Restart timestamp: `Sat May 9 20:02:22 2026`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`/login` returned `200`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Zapier proof routes returned:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Route | HTTP | Canonical status | Blocker | Writes | Execution |) Tj
+0 -12 Td
+(| --- | ---: | --- | --- | --- | --- |) Tj
+0 -12 Td
+(| `/api/bridge/zapier/status` | 200 | BLOCKED | MCP server zapier is not present in the Claude M) Tj
+0 -12 Td
+(CP configuration. | false | false |) Tj
+0 -12 Td
+(| `/api/bridge/zapier/tools` | 200 | BLOCKED | MCP server zapier is not present in the Claude MC) Tj
+0 -12 Td
+(P configuration. | false | false |) Tj
+0 -12 Td
+(| `/api/bridge/zapier/tools/search?q=heygen` | 200 | BLOCKED | MCP server zapier is not present ) Tj
+0 -12 Td
+(in the Claude MCP configuration. | false | false |) Tj
+0 -12 Td
+(| `/api/zapier/status` | 200 | BLOCKED | MCP server zapier is not present in the Claude MCP conf) Tj
+0 -12 Td
+(iguration. | false | false |) Tj
+0 -12 Td
+(| `/api/zapier/tools` | 200 | BLOCKED | MCP server zapier is not present in the Claude MCP confi) Tj
+0 -12 Td
+(guration. | false | false |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: passed.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: passed.) Tj
+0 -12 Td
+(- `pnpm run build`: passed.) Tj
+0 -12 Td
+(- `pnpm test`: passed, 166 files / 1344 tests.) Tj
+0 -12 Td
+(- `node scripts/check-zapier-registry-contracts.mjs http://127.0.0.1:3337`: passed.) Tj
+0 -12 Td
+(- `node scripts/check-connector-action-contracts.mjs http://127.0.0.1:3337`: passed.) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`: passed, 46 rou) Tj
+0 -12 Td
+(tes / 8 designer pages.) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: passed.) Tj
+0 -12 Td
+(- Staged secret scan: passed.) Tj
+0 -12 Td
+(- `.env` diff check: clean.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commits) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source implementation: `5661b4889ed5f1c889c65ccd36781df2da13dc40`) Tj
+0 -12 Td
+(- Contract-script correction: `26ea8766eb55c5311706b881fe8a83bb6b2fb4ac`) Tj
+0 -12 Td
+(- Push result: pushed to `origin/to-knowledge-mc`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert 26ea8766eb55c5311706b881fe8a83bb6b2fb4ac) Tj
+0 -12 Td
+(git revert 5661b4889ed5f1c889c65ccd36781df2da13dc40) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No Zapier writes enabled.) Tj
+0 -12 Td
+(- No Zapier execution enabled.) Tj
+0 -12 Td
+(- No fake tool inventory claimed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 232 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Day 47 starts next: Zapier no-write guard. The focus is to prove every Zapier write/action path ) Tj
+0 -12 Td
+(remains blocked unless exact owner approval and Bridge Session scope exist.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003606 00000 n 
+0000003732 00000 n 
+0000006763 00000 n 
+0000006889 00000 n 
+0000007172 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7242
+%%EOF

@@ -67,7 +67,6 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 .ag-glyph.hermes      { background:linear-gradient(135deg, #fcd34d, #f59e0b); }
 .ag-glyph.space-agent { background:linear-gradient(135deg, #5eead4, #0d9488); }
 .ag-glyph.pi-mono     { background:linear-gradient(135deg, #fdba74, #ea580c); }
-.ag-glyph.openclaw-plus { background:linear-gradient(135deg, var(--st-orange), var(--st-red)); }
 
 .ag-title { display:grid; gap:2px; flex:1; }
 .ag-name { font-size:16px; font-weight:600; }
@@ -84,7 +83,6 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 .ag-actions { display:flex; gap:6px; flex-wrap:wrap; }
 .ag-btn { font-family:inherit; font-size:11.5px; padding:7px 12px; border-radius:6px; cursor:pointer; background:var(--bg-3); border:1px solid var(--line-3); color:var(--t-1); display:inline-flex; align-items:center; gap:6px; }
 .ag-btn:hover { border-color:var(--line-strong); }
-.ag-btn:disabled { cursor:not-allowed; opacity:0.58; }
 .ag-btn.gated { border-color:var(--st-yellow-bd); color:var(--st-yellow); }
 .ag-btn.gated::before { content:'🔒'; font-size:10px; }
 .ag-btn.danger { border-color:var(--st-red-bd); color:var(--st-red); }
@@ -214,10 +212,10 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 <header class="page-head">
   <div>
     <h1><span class="icon">A</span>Agent Hub · Control Center</h1>
-    <p class="lede">One place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Designer-mounted view — live status hydration when authenticated; no direct execution.</p>
+    <p class="lede">One place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Design only — no production calls.</p>
   </div>
   <div class="head-meta">
-    <span class="pill" id="agent-summary-pill">6 agents · <strong>1 green · 2 yellow · 2 gray · 1 red</strong></span>
+    <span class="pill">5 agents · <strong>1 green · 2 yellow · 2 gray</strong></span>
     <span class="pill">Bridge · <strong>not active</strong></span>
   </div>
 </header>
@@ -226,7 +224,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 <nav class="tabs" id="tabs">
   <button class="tab active" data-id="overview">
     <span class="dot" style="background:var(--brand-cyan)"></span>
-    Overview <span class="role">6 agents</span>
+    Overview <span class="role">5 agents</span>
   </button>
   <button class="tab" data-id="paperclip">
     <span class="dot" style="background:var(--st-yellow)"></span>
@@ -247,10 +245,6 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   <button class="tab" data-id="pi-mono">
     <span class="dot" style="background:var(--st-gray)"></span>
     Pi-mono <span class="role">Dispatcher candidate</span>
-  </button>
-  <button class="tab" data-id="openclaw-plus">
-    <span class="dot" style="background:var(--st-red)"></span>
-    OpenClaw+ <span class="role">Runtime / skills</span>
   </button>
 </nav>
 
@@ -290,7 +284,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     </div>
 
     <div class="panel">
-      <header>Repo grounding<span class="meta">6 of 6 pending</span></header>
+      <header>Repo grounding<span class="meta">5 of 5 pending</span></header>
       <div class="body">
         <div style="font-size:11.5px; color:var(--t-3); line-height:1.55;">
           Public repo access not available in design environment. URLs preserved on each panel.
@@ -303,7 +297,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 </div>
 
 <footer class="repo-note">
-  <div>Mission Control → Gateway → <strong style="color:var(--t-2);">Agent Hub</strong> · 6 agents · hybrid localhost embed · Bridge-gated dangerous actions</div>
+  <div>Mission Control → Gateway → <strong style="color:var(--t-2);">Agent Hub</strong> · 5 agents · hybrid localhost embed · Bridge-gated dangerous actions</div>
   <div>tokens: <code>shared/tokens.css</code> · data: <code>shared/agent-data.js</code></div>
 </footer>
 
@@ -313,37 +307,6 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   const A = window.AGENTS;
   const canvas = document.getElementById('canvas');
   const tabs = document.getElementById('tabs');
-
-  function escAttr(value) {
-    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
-  }
-
-  function statusSummary() {
-    const order = ['green', 'yellow', 'blue', 'red', 'gray'];
-    const counts = order.reduce((acc, status) => {
-      acc[status] = A.agents.filter(a => a.status === status).length;
-      return acc;
-    }, {});
-    const parts = order.filter(status => counts[status] > 0).map(status => `${counts[status]} ${status}`);
-    return `${A.agents.length} agents · <strong>${parts.join(' · ')}</strong>`;
-  }
-
-  function updateChromeFromData() {
-    const summary = document.getElementById('agent-summary-pill');
-    if (summary) summary.innerHTML = statusSummary();
-    const overviewRole = tabs.querySelector('.tab[data-id="overview"] .role');
-    if (overviewRole) overviewRole.textContent = `${A.agents.length} agents`;
-    [...tabs.querySelectorAll('.tab[data-id]')].forEach(tab => {
-      const id = tab.dataset.id;
-      if (!id || id === 'overview') return;
-      const agent = A.byId(id);
-      if (!agent) return;
-      const dot = tab.querySelector('.dot');
-      if (dot) dot.style.background = `var(--st-${agent.status})`;
-    });
-  }
-
-  updateChromeFromData();
 
   // ---------- side rail: gate list + cost meter ----------
   const gateList = document.getElementById('gate-list');
@@ -371,21 +334,15 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     return `<span class="ag-status-pill" style="color:var(--st-${s});background:var(--st-${s}-bg);border:1px solid var(--st-${s}-bd);">${map[s]||s.toUpperCase()}</span>`;
   }
   function actionBtns(a, opts={}) {
-    const auditRoute = a.audit_route || `/api/gateway/agent-hub/agents/${encodeURIComponent(a.id)}/audit`;
     const btns = [
-      { l:'Open localhost', cls: 'primary', disabled: !a.local_ui_proven, title: a.local_ui_proven ? 'Open proven local interface.' : 'Localhost or Tailnet UI is not proven in Mission Control yet.' },
-      { l:'Send command',   cls: 'gated', disabled: true, title: 'Protected command dispatch requires a scoped Bridge Session and registered adapter.' },
-      { l:'Pause queue',    cls: 'gated', disabled: true, title: 'Queue mutation requires a scoped Bridge Session and service adapter proof.' },
-      { l:'Bridge Session', cls: 'gated', disabled: true, title: 'Open or approve Bridge Session from the dedicated Bridge Session flow.' },
-      { l:'Restart',        cls: 'gated danger', disabled: true, title: 'Restart is disabled here; owner approval plus service-specific adapter proof required.' },
-      { l:'Audit',          cls: '', disabled: false, title: 'Open protected Agent Hub audit payload.', action: 'open-route', route: auditRoute }
+      { l:'Open localhost', cls: a.iframe_safe ? 'primary' : 'primary' },
+      { l:'Send command',   cls: '' },
+      { l:'Pause queue',    cls: '' },
+      { l:'Bridge Session', cls: 'gated' },
+      { l:'Restart',        cls: 'gated danger' },
+      { l:'Audit',          cls: '' }
     ];
-    return btns.map(b => {
-      const disabled = b.disabled ? 'disabled aria-disabled="true"' : '';
-      const action = b.action ? `data-action="${escAttr(b.action)}"` : '';
-      const route = b.route ? `data-route="${escAttr(b.route)}"` : '';
-      return `<button class="ag-btn ${b.cls}" title="${escAttr(b.title)}" ${disabled} ${action} ${route}>${b.l}</button>`;
-    }).join('');
+    return btns.map(b => `<button class="ag-btn ${b.cls}">${b.l}</button>`).join('');
   }
   function laneTable(rows) {
     if (!rows.length) return `<div class="empty-mini">No Gateway requests for this agent yet.</div>`;
@@ -454,7 +411,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
         <div class="node"><div class="lbl">6</div><div class="nm">Mini-agents · skills · tools</div><div class="sub">execution leaves</div></div>
       </div>
 
-      <div class="sec-head"><h3>Agents · click to drill in</h3><span class="meta">${A.agents.length} cards</span><span class="filler"></span></div>
+      <div class="sec-head"><h3>Agents · click to drill in</h3><span class="meta">5 cards</span><span class="filler"></span></div>
       <div class="agent-grid" id="agent-grid"></div>
     `;
   }
@@ -654,17 +611,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     selectTab(t.dataset.id);
   });
 
-  document.addEventListener('click', e => {
-    const b = e.target.closest('button[data-action="open-route"]');
-    if (!b || b.disabled) return;
-    const route = b.dataset.route;
-    if (!route) return;
-    window.open(route, '_blank', 'noopener');
-  });
-
-  const initialTab = (window.location.hash || '').replace(/^#/, '');
-  if (initialTab && A.byId(initialTab)) selectTab(initialTab);
-  else render('overview');
+  render('overview');
 })();
 </script>
 </body>

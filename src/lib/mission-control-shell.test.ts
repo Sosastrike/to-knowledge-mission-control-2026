@@ -16,13 +16,22 @@ describe('Mission Control shell ownership', () => {
 
   it('keeps mounted Gateway designer pages scrollable with visible exits', () => {
     const frame = readSource('src/components/gateway/DesignerGatewayMockFrame.tsx')
+    const agentHubHtml = readSource('public/designer-mission-control/design/gateway/Agent Hub.html')
+    const paperclipHtml = readSource('public/designer-mission-control/design/gateway/Paperclip.html')
 
     expect(frame).toContain("<main className='min-h-screen w-full")
     expect(frame).toContain("scrolling='yes'")
-    expect(frame).toContain("href='/tkmc'")
-    expect(frame).toContain("href='/gateway'")
-    expect(frame).toContain("href='/gateway/agent-hub'")
+    expect(frame).not.toContain("href='/tkmc'")
+    expect(frame).not.toContain("href='/gateway'")
+    expect(frame).not.toContain("href='/gateway/agent-hub'")
     expect(frame).not.toContain('h-screen w-full overflow-hidden')
+    expect(agentHubHtml).toContain('class="gw-crumbs"')
+    expect(agentHubHtml).toContain('href="index.html"')
+    expect(agentHubHtml).toContain('href="Gateway Overview.html"')
+    expect(agentHubHtml).toContain('href="Paperclip.html"')
+    expect(paperclipHtml).toContain('class="gw-crumbs"')
+    expect(paperclipHtml).toContain('href="Gateway Overview.html"')
+    expect(paperclipHtml).toContain('href="Agent Hub.html"')
   })
 
   it('keeps /tkmc as a concrete Mission Control home route', () => {

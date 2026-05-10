@@ -1,6 +1,5 @@
- 'use client'
+'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useRef } from 'react'
 
 type DesignerGatewayMockFrameProps = {
@@ -74,22 +73,6 @@ export function DesignerGatewayMockFrame({ page, title, fragment }: DesignerGate
 
   return (
     <main className='min-h-screen w-full bg-[#070912]'>
-      <header className='sticky top-0 z-20 border-b border-[#182438] bg-[#0b111c]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[#0b111c]/85 md:px-6'>
-        <nav aria-label='Gateway frame navigation' className='flex flex-wrap items-center gap-2 text-sm text-[#9aacbf]'>
-          <Link className='rounded border border-[#24344d] px-2.5 py-1 text-[#d4deea] hover:border-[#3f587d]' href='/tkmc'>
-            Mission Control Home
-          </Link>
-          <span>/</span>
-          <Link className='rounded border border-[#24344d] px-2.5 py-1 text-[#d4deea] hover:border-[#3f587d]' href='/gateway'>
-            Gateway Overview
-          </Link>
-          <span>/</span>
-          <Link className='rounded border border-[#24344d] px-2.5 py-1 text-[#d4deea] hover:border-[#3f587d]' href='/gateway/agent-hub'>
-            Agent Hub
-          </Link>
-          <span className='ml-auto text-xs text-[#7f93aa]'>{title}</span>
-        </nav>
-      </header>
       <iframe
         ref={iframeRef}
         title={title}

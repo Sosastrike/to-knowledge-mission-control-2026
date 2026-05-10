@@ -1,0 +1,372 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2977 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-49-heygen-exact-scope-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 49 - HeyGen Exact-Scope Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: HeyGen Exact-Scope Proof) Tj
+0 -12 Td
+(Status: CLOSED AS BLOCKED) Tj
+0 -12 Td
+(Blocker class: BACKEND_MISSING) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Implement the exact-scope HeyGen generation proof path behind Bridge approval without running He) Tj
+0 -12 Td
+(yGen, invoking Zapier writes, or creating video output.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added protected endpoint: `POST /api/bridge/heygen/exact-scope-proof`.) Tj
+0 -12 Td
+(- The endpoint uses Day 48 schema readiness first.) Tj
+0 -12 Td
+(- If HeyGen schema is not visible, the route returns a safe blocker and does not create an appro) Tj
+0 -12 Td
+(val request.) Tj
+0 -12 Td
+(- If schema is visible and payload is invalid, the route returns missing fields and does not cre) Tj
+0 -12 Td
+(ate an approval request.) Tj
+0 -12 Td
+(- If schema is visible and payload is valid, the route creates a pending Bridge approval request) Tj
+0 -12 Td
+( scoped to `heygen.generate`.) Tj
+0 -12 Td
+(- The approval scope stores a payload hash and field names only, not raw script/body values.) Tj
+0 -12 Td
+(- The route always keeps generation disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Current Runtime Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current live runtime cannot see Zapier MCP/HeyGen schema:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `status: 503`) Tj
+0 -12 Td
+(- `mode: heygen_exact_scope_blocked`) Tj
+0 -12 Td
+(- `required_scope: heygen.generate`) Tj
+0 -12 Td
+(- `blocker: MCP server zapier is not present in the Claude MCP configuration.`) Tj
+0 -12 Td
+(- `approval_request_created: false`) Tj
+0 -12 Td
+(- `accepted_for_execution: false`) Tj
+0 -12 Td
+(- `execution_enabled: false`) Tj
+0 -12 Td
+(- `writes_enabled: false`) Tj
+0 -12 Td
+(- `no_heygen_generation: true`) Tj
+0 -12 Td
+(- `no_zapier_writes: true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact blocker classification for the day: `BACKEND_MISSING`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/heygen/exact-scope-proof/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/heygen/exact-scope-proof/route.test.ts`) Tj
+0 -12 Td
+(- `scripts/check-heygen-exact-scope-proof.mjs`) Tj
+0 -12 Td
+(- `runtime/day-49-heygen-exact-scope-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-49-heygen-schema-readiness-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-49-route-rendering-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-49-heygen-exact-scope-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-49-heygen-exact-scope-proof.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## API Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/heygen/exact-scope-proof` returns `401`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated with current backend missing:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Returns `503`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2810 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No approval request is created.) Tj
+0 -12 Td
+(- No execution or write path is enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated with schema visible and valid payload:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Creates a pending Bridge approval request for `heygen.generate`.) Tj
+0 -12 Td
+(- The request uses:) Tj
+0 -12 Td
+(  - `connector: zapier.heygen`) Tj
+0 -12 Td
+(  - `action: heygen.generate`) Tj
+0 -12 Td
+(  - `riskLevel: high`) Tj
+0 -12 Td
+(  - `protectedCategory: external_automation`) Tj
+0 -12 Td
+(  - `targetKey: <visible HeyGen tool name>`) Tj
+0 -12 Td
+(- The route still returns `accepted_for_execution: false`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Commands:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(node scripts/check-heygen-exact-scope-proof.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-heygen-schema-readiness.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- HeyGen exact-scope proof smoke: PASS, `checked: 2`, `failures: []`) Tj
+0 -12 Td
+(- HeyGen schema readiness smoke: PASS, `checked: 3`, `failures: []`) Tj
+0 -12 Td
+(- Route rendering smoke: PASS, `46` routes and `8` designer pages) Tj
+0 -12 Td
+(- `/login`: `200`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifacts:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-49-heygen-exact-scope-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-49-heygen-schema-readiness-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-49-route-rendering-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- TDD red: endpoint test first failed on missing route.) Tj
+0 -12 Td
+(- Focused test: PASS, `1` file / `4` tests.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, `175` files / `1375` tests) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- Staged secret scan: run immediately before commit.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control standalone runtime restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Runtime PID after restart: `12295`.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Bridge bypass.) Tj
+0 -12 Td
+(- No approval request is created while schema is unavailable.) Tj
+0 -12 Td
+(- Raw payload/script text is not returned by the endpoint or proof script.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1090 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No fake sent/done/live state.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit: recorded after this report is committed.) Tj
+0 -12 Td
+(- Expected message: `feat\(heygen\): gate exact-scope proof approval`) Tj
+0 -12 Td
+(- Push target: `origin/to-knowledge-mc`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day49_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`BACKEND_MISSING`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(HeyGen exact-scope proof can move forward only after:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Zapier MCP/backend is configured in the runtime.) Tj
+0 -12 Td
+(- HeyGen appears in the Zapier MCP tool inventory.) Tj
+0 -12 Td
+(- A valid payload is submitted through the schema-readiness contract.) Tj
+0 -12 Td
+(- Owner approves an exact `heygen.generate` Bridge request before any generation runner is allow) Tj
+0 -12 Td
+(ed.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003282 00000 n 
+0000003408 00000 n 
+0000006270 00000 n 
+0000006396 00000 n 
+0000007538 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7608
+%%EOF

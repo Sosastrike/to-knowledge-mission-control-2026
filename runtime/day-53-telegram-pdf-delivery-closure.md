@@ -115,13 +115,16 @@ Telegram PDF delivery through Agent Zero.
 
 ## Rollback
 
-After commit:
+Implementation rollback:
 
-`git revert <day53_commit_sha>`
+`git revert 73e82aa`
 
 ## Commit and push
 
-Pending at report creation. The commit hash and push result will be recorded after exact-path staging, staged secret scan, commit, and push.
+- Implementation commit: `73e82aa4e08a9823fc3e95eb8bc3b3d7db2abc55`
+- Commit message: `feat(telegram): gate pdf delivery with bridge audit`
+- Push result: pushed to `origin/to-knowledge-mc`
+- Report-only closeout update: pending at this report revision
 
 ## Next day started
 

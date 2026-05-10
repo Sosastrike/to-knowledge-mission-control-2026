@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "canonical_status": "SERVICE_DOWN",
+  "blocker_class": "SERVICE_DOWN",
+  "blocker": "claude_mcp_discovery_unavailable: spawn claude ENOENT",
+  "counts": {
+    "total": 0,
+    "healthy": 0,
+    "degraded": 0,
+    "failed": 0,
+    "unknown": 0
+  },
+  "server_list_count": 0,
+  "sources_checked": [
+    "claude-cli",
+    "claude-user-mcp-config",
+    "claude-config-mcp-config",
+    "claude-json-mcp-config"
+  ],
+  "note": "no_mcp_servers_detected"
+}

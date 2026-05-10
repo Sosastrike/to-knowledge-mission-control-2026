@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 2,
+  "expectation": "HeyGen exact-scope proof stays behind Bridge approval and never runs generation in this lane.",
+  "failures": [],
+  "results": [
+    {
+      "name": "unauthenticated_post_requires_auth",
+      "path": "/api/bridge/heygen/exact-scope-proof",
+      "status": 401,
+      "mode": null,
+      "required_scope": null,
+      "blocker": "Unauthorized",
+      "approval_request_created": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_heygen_generation": false,
+      "no_zapier_writes": false
+    },
+    {
+      "name": "authenticated_exact_scope_probe",
+      "path": "/api/bridge/heygen/exact-scope-proof",
+      "status": 503,
+      "mode": "heygen_exact_scope_blocked",
+      "required_scope": "heygen.generate",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "approval_request_created": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_heygen_generation": true,
+      "no_zapier_writes": true
+    }
+  ]
+}

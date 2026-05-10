@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 3,
+  "expectation": "HeyGen schema readiness is read-only and never generates video without exact Bridge Session approval.",
+  "failures": [],
+  "results": [
+    {
+      "name": "unauthenticated_get_requires_auth",
+      "path": "/api/bridge/heygen/schema-readiness",
+      "status": 401,
+      "canonical_status": null,
+      "blocker_class": null,
+      "blocker": "Unauthorized",
+      "schema_available": false,
+      "payload_valid": null,
+      "accepted_for_generation": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_heygen_generation": false
+    },
+    {
+      "name": "authenticated_get_readiness",
+      "path": "/api/bridge/heygen/schema-readiness",
+      "status": 200,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "schema_available": false,
+      "payload_valid": null,
+      "accepted_for_generation": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_heygen_generation": true
+    },
+    {
+      "name": "invalid_payload_stays_non_executable",
+      "path": "/api/bridge/heygen/schema-readiness",
+      "status": 200,
+      "canonical_status": "BLOCKED",
+      "blocker_class": "BLOCKED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "schema_available": false,
+      "payload_valid": null,
+      "accepted_for_generation": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_heygen_generation": true
+    }
+  ]
+}

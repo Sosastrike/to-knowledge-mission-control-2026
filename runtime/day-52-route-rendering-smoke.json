@@ -1,0 +1,774 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "api_auth": "x-api-key provided from environment",
+  "routes_checked": 46,
+  "designer_pages_checked": 8,
+  "failures": [],
+  "results": [
+    {
+      "path": "/login",
+      "label": "Designer login",
+      "allowedStatuses": [
+        200
+      ],
+      "required": [
+        "Mission Control",
+        "Microsoft 365"
+      ],
+      "forbidden": [
+        "Single sign-on (SAML)",
+        ">SAML<"
+      ],
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 100850,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/tkmc",
+      "label": "Auth-gated TKMC shell route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/agents",
+      "label": "Auth-gated agents route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/viral-crawl",
+      "label": "Auth-gated Viral Crawl route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/schedule",
+      "label": "Auth-gated Schedule route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/live-meeting",
+      "label": "Auth-gated Live Meeting route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc",
+      "label": "Auth-gated TKMC settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/integrations",
+      "label": "Auth-gated Integrations settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/models",
+      "label": "Auth-gated Models settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/users",
+      "label": "Auth-gated Users settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/audit",
+      "label": "Auth-gated Audit settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/agents",
+      "label": "Auth-gated Agent settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/channels",
+      "label": "Auth-gated Channels settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/alerts",
+      "label": "Auth-gated Alerts settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/roles",
+      "label": "Auth-gated Roles settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/skills",
+      "label": "Auth-gated Skills settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/settings/tkmc/security",
+      "label": "Auth-gated Security settings route",
+      "allowedStatuses": [
+        200,
+        302,
+        307,
+        308,
+        401,
+        403
+      ],
+      "required": [],
+      "status": 307,
+      "location": "/login",
+      "auth_gated": true,
+      "body_bytes": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/approval-contract",
+      "label": "Approval contract API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 6405,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/approval-readiness",
+      "label": "Approval readiness API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 2998,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/approval-requests",
+      "label": "Approval request queue API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 1537,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/button-contracts",
+      "label": "Button contracts API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 75032,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/capability-matrix",
+      "label": "Bridge capability matrix API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 32486,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/connector-readiness",
+      "label": "Connector readiness API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 14602,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/preflight",
+      "label": "Bridge preflight contract API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 1455,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/execution-cycle",
+      "label": "Agent execution cycle API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 4174,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/costs",
+      "label": "Bridge cost/rate governance API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 1093,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/owner-gates",
+      "label": "Bridge owner gates API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 6222,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/executive-report-preview",
+      "label": "Executive report preview API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 620,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/telegram-approval-preview",
+      "label": "Telegram approval preview API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 779,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/bridge/providers",
+      "label": "Provider registry API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 5722,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/firecrawl/status",
+      "label": "FireCrawl readiness API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 2196,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/zapier/status",
+      "label": "Zapier status API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 1075,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/zapier/tools",
+      "label": "Zapier read-only tool inventory API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 1573,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/n8n/status",
+      "label": "n8n readiness API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 394,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/mcp/status",
+      "label": "MCP status API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 386,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/mcp/servers",
+      "label": "MCP server inventory API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 989,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/skills",
+      "label": "Skills registry API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 6773,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "path": "/api/viral-crawl/video/status",
+      "label": "Viral Crawl video status API",
+      "allowedStatuses": [
+        200
+      ],
+      "json": true,
+      "status": 200,
+      "auth_gated": false,
+      "body_bytes": 2064,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "mission",
+      "label": "Mission",
+      "required": [
+        "Mission Control.html",
+        "src/app.jsx"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=mission",
+      "status": 307,
+      "location": "/login?page=mission",
+      "auth_gated": true,
+      "body_bytes": 19,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "brain-sync",
+      "label": "Brain Sync",
+      "required": [
+        "Mission Control.html",
+        "BrainSyncPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=brain-sync",
+      "status": 307,
+      "location": "/login?page=brain-sync",
+      "auth_gated": true,
+      "body_bytes": 22,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "agent-network",
+      "label": "Agent Network / Bridge Mode",
+      "required": [
+        "Mission Control.html",
+        "AgentNetworkPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=agent-network",
+      "status": 307,
+      "location": "/login?page=agent-network",
+      "auth_gated": true,
+      "body_bytes": 25,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "firecrawl",
+      "label": "FireCrawl",
+      "required": [
+        "Mission Control.html",
+        "FireCrawlPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=firecrawl",
+      "status": 307,
+      "location": "/login?page=firecrawl",
+      "auth_gated": true,
+      "body_bytes": 21,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "zapier",
+      "label": "Zapier",
+      "required": [
+        "Mission Control.html",
+        "ZapierPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=zapier",
+      "status": 307,
+      "location": "/login?page=zapier",
+      "auth_gated": true,
+      "body_bytes": 18,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "n8n",
+      "label": "n8n",
+      "required": [
+        "Mission Control.html",
+        "N8NPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=n8n",
+      "status": 307,
+      "location": "/login?page=n8n",
+      "auth_gated": true,
+      "body_bytes": 15,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "mcp-tools",
+      "label": "MCP Tools",
+      "required": [
+        "Mission Control.html",
+        "MCPToolsPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=mcp-tools",
+      "status": 307,
+      "location": "/login?page=mcp-tools",
+      "auth_gated": true,
+      "body_bytes": 21,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    },
+    {
+      "id": "skills",
+      "label": "Skills",
+      "required": [
+        "Mission Control.html",
+        "SkillsRegistryPage"
+      ],
+      "path": "/designer-mission-control/Mission%20Control.html?page=skills",
+      "status": 307,
+      "location": "/login?page=skills",
+      "auth_gated": true,
+      "body_bytes": 18,
+      "missing": [],
+      "forbidden_present": [],
+      "json_ok": true
+    }
+  ],
+  "note": "This smoke test verifies the authenticated shell routes, static designer entrypoint, and read-only Bridge APIs. It does not click browser buttons or enable execution."
+}

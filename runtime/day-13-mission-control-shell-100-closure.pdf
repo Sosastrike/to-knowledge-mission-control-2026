@@ -3,13 +3,13 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+<< /Type /Pages /Count 4 /Kids [3 0 R 5 0 R 7 0 R 9 0 R] >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 3139 >>
+<< /Length 3385 >>
 stream
 BT
 /F1 10 Tf
@@ -22,7 +22,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Date: 2026-05-09) Tj
+(Date: 2026-05-10) Tj
 0 -12 Td
 (Branch: to-knowledge-mc) Tj
 0 -12 Td
@@ -32,9 +32,11 @@ BT
 0 -12 Td
 (Blocker class: OWNER_GATED for authenticated owner visual confirmation) Tj
 0 -12 Td
-(Code commit: 92c130b) Tj
+(Current verification HEAD: 9094ef7) Tj
 0 -12 Td
-(Rollback: git revert 92c130b) Tj
+(Source shell commit in current lineage: 92c130b) Tj
+0 -12 Td
+(Rollback for shell source: git revert 92c130b) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -44,11 +46,9 @@ BT
 0 -12 Td
 (Day 13 closes the developer-side shell/layout defect that could trap or clip long routed pages. ) Tj
 0 -12 Td
-(The goal was to make the Mission Control root shell stop forcing every page into a single fixed ) Tj
+(The goal is to make Mission Control stop forcing every page into a single fixed viewport and all) Tj
 0 -12 Td
-(viewport and allow natural document scrolling for Gateway FULL v3 and other long Mission Control) Tj
-0 -12 Td
-( surfaces.) Tj
+(ow natural document scrolling for Gateway FULL v3 and other long surfaces.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -66,45 +66,49 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- src/app/layout.tsx) Tj
+(- `src/app/layout.tsx`) Tj
 0 -12 Td
-(  - previous wrapper: h-screen overflow-hidden bg-background text-foreground) Tj
+(  - prior bad pattern: `h-screen overflow-hidden bg-background text-foreground`) Tj
 0 -12 Td
-(  - impact: every routed page lived inside a fixed-height clipped shell unless that page managed) Tj
+(  - current pattern: `min-h-screen bg-background text-foreground`) Tj
 0 -12 Td
-( its own internal scroll perfectly.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Related surfaces inspected:) Tj
+(  - impact: the root document now owns page height instead of clipping long pages.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- src/components/gateway/DesignerGatewayMockFrame.tsx) Tj
+(Related surfaces verified:) Tj
 0 -12 Td
-(  - already uses min-h-screen) Tj
+() Tj
 0 -12 Td
-(  - iframe scrolling remains enabled) Tj
+(- `src/components/gateway/DesignerGatewayMockFrame.tsx`) Tj
 0 -12 Td
-(  - visible exits remain present:) Tj
+(  - uses `min-h-screen`) Tj
 0 -12 Td
-(    - Mission Control Home) Tj
+(  - iframe `scrolling='yes'`) Tj
 0 -12 Td
-(    - Gateway Overview) Tj
+(  - does not reintroduce `h-screen w-full overflow-hidden`) Tj
 0 -12 Td
-(    - Agent Hub) Tj
+(- `public/designer-mission-control/Mission Control.html`) Tj
 0 -12 Td
-(- src/app/tkmc/page.tsx) Tj
+(  - includes the approved Gateway shell script line:) Tj
 0 -12 Td
-(  - remains a concrete Mission Control home route.) Tj
+(    - `<script type="text/babel" src="src/gateway/GatewayShell.jsx"></script>`) Tj
 0 -12 Td
-(- src/app/[[...panel]]/route.ts) Tj
+(- `public/designer-mission-control/src/shell.jsx`) Tj
 0 -12 Td
-(  - still protects main app entrypoints and redirects unauthenticated users toward /login.) Tj
+(  - keeps Gateway as an additive left-rail entry.) Tj
 0 -12 Td
-(- src/components/layout/nav-rail.tsx) Tj
+(- `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
 0 -12 Td
-(  - Gateway entry remains present in the navigation structure.) Tj
+(  - mounts the approved designer pages through the Gateway drop-in shell.) Tj
+0 -12 Td
+(- `src/app/tkmc/page.tsx`) Tj
+0 -12 Td
+(  - remains a concrete Mission Control home route, not a redirect stub.) Tj
+0 -12 Td
+(- `src/app/[[...panel]]/route.ts`) Tj
+0 -12 Td
+(  - still protects main app entrypoints and redirects unauthenticated users toward `/login`.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -112,25 +116,50 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
+(Already present in current lineage:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
 (- Replaced the root forced viewport wrapper with a natural document-height wrapper:) Tj
 0 -12 Td
-(  - from: h-screen overflow-hidden) Tj
+(  - from: `h-screen overflow-hidden`) Tj
 0 -12 Td
-(  - to: min-h-screen) Tj
+(  - to: `min-h-screen`) Tj
 0 -12 Td
-(- Added a regression guardrail test:) Tj
+(- Added shell ownership guardrail tests in:) Tj
 0 -12 Td
-(  - src/lib/mission-control-shell.test.ts) Tj
+(  - `src/lib/mission-control-shell.test.ts`) Tj
 0 -12 Td
-(- The test asserts:) Tj
+() Tj
 0 -12 Td
-(  - the root shell does not use h-screen overflow-hidden) Tj
+(The guardrail now asserts:) Tj
 0 -12 Td
-(  - the Gateway designer frame remains scrollable) Tj
+() Tj
 0 -12 Td
-(  - the Gateway designer frame keeps visible exits to /tkmc, /gateway, and /gateway/agent-hub) Tj
+(- the root shell does not use the fixed/clipped viewport pattern) Tj
 0 -12 Td
-(  - /tkmc remains a real Mission Control home route, not a redirect stub.) Tj
+(- the Gateway designer frame stays scrollable) Tj
+0 -12 Td
+(- the accepted designer mock pages keep their own crumbs/links) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2837 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `/tkmc` remains a real Mission Control home route) Tj
+0 -12 Td
+(- the approved static `GatewayShell.jsx` is loaded by the designer Mission Control shell) Tj
+0 -12 Td
+(- the Gateway rail entry uses the existing shell shape and Network icon) Tj
+0 -12 Td
+(- the Gateway shell mounts `Agent Hub.html` and `Paperclip.html` as designer pages) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -138,21 +167,28 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- src/app/layout.tsx) Tj
+(Source files already present in current lineage:) Tj
 0 -12 Td
-(- src/lib/mission-control-shell.test.ts) Tj
-ET
-endstream
-endobj
-5 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
-endobj
-6 0 obj
-<< /Length 2569 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
+() Tj
+0 -12 Td
+(- `src/app/layout.tsx`) Tj
+0 -12 Td
+(- `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No source changes were required in this current refresh.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Report files refreshed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-13-mission-control-shell-100-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-13-mission-control-shell-100-closure.pdf`) Tj
+0 -12 Td
 () Tj
 0 -12 Td
 (No designer tokens, designer mock HTML, Gateway FULL v3 class names, or accepted visual contract) Tj
@@ -165,162 +201,160 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Expected behavior after this change:) Tj
+(Expected behavior after the shell fix:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (- Long pages can use native document scroll instead of being clipped by the root shell.) Tj
 0 -12 Td
-(- Gateway FULL v3 mounted mock pages are no longer fighting an outer h-screen overflow-hidden ro) Tj
+(- Gateway FULL v3 mounted mock pages are no longer fighting an outer `h-screen overflow-hidden` ) Tj
 0 -12 Td
-(ot.) Tj
+(root.) Tj
 0 -12 Td
-(- Existing protected route behavior is preserved.) Tj
+(- Mission Control top-level navigation is provided by the existing left rail.) Tj
 0 -12 Td
-(- Existing Gateway exit navigation is preserved.) Tj
+(- Inside Gateway, `GatewayShell.jsx` provides its internal Gateway subrail.) Tj
+0 -12 Td
+(- No custom nav chrome was injected into the mock pages.) Tj
 0 -12 Td
 (- No fake buttons were added.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Runtime / Deployment) Tj
+(## Runtime Proof) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Source commit pushed:) Tj
+(Proof runtime:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- 92c130b) Tj
+(- Base URL: `http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- Runtime PID: 71076) Tj
+0 -12 Td
+(- Listener: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Public exposure: none observed in listener check) Tj
+0 -12 Td
+(- Current verification HEAD: `9094ef7`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Standalone deployment:) Tj
+(Unauthenticated route smoke:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- Build/deploy script rebuilt commit 92c130b.) Tj
+(- `/login`: 200) Tj
 0 -12 Td
-(- The deploy script again reported a standalone PID and then its child exited before route smoke) Tj
+(- `/tkmc`: 307 to `/login`) Tj
 0 -12 Td
-(.) Tj
+(- `/gateway`: 307 to `/login`) Tj
 0 -12 Td
-(- Controlled proof runtime was started in a local-only screen-backed process:) Tj
+(- `/gateway/agent-hub`: 307 to `/login`) Tj
 0 -12 Td
-(  - host: 127.0.0.1) Tj
+(- `/gateway/token-governor`: 307 to `/login`) Tj
 0 -12 Td
-(  - port: 3337) Tj
+(- `/agents`: 307 to `/login`) Tj
 0 -12 Td
-(  - pid: 38987) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(This proof runtime was local-only. No public listener remained.) Tj
+(- `/agent-network`: 307 to `/login`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Route Smoke) Tj
+(Route rendering smoke:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Smoke base: http://127.0.0.1:3337) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Unauthenticated route behavior:) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(- /login: 200) Tj
-0 -12 Td
-(- /tkmc: 307 to /login) Tj
-0 -12 Td
-(- /gateway: 307 to /login) Tj
-0 -12 Td
-(- /gateway/agent-hub: 307 to /login) Tj
-0 -12 Td
-(- /gateway/token-governor: 307 to /login) Tj
-0 -12 Td
-(- /agents: 307 to /login) Tj
-0 -12 Td
-(- /agent-network: 307 to /login) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Protected action invariant:) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(- scripts/check-protected-actions-locked.mjs against http://127.0.0.1:3337) Tj
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
 0 -12 Td
 (- ok: true) Tj
 0 -12 Td
-(- checked: 11) Tj
+(- routes checked: 46) Tj
 0 -12 Td
-(- protected actions remained locked.) Tj
+(- designer pages checked: 8) Tj
+0 -12 Td
+(- failures: 0) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (Authenticated visual shell proof:) Tj
 0 -12 Td
 () Tj
-0 -12 Td
-(- Not performed because this runtime does not have an owner browser session.) Tj
-0 -12 Td
-(- Remaining blocker: owner_authenticated_visual_shell_retest_required) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(## Tests Run) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(- pnpm test src/lib/mission-control-shell.test.ts) Tj
-0 -12 Td
-(  - 1 file passed) Tj
-0 -12 Td
-(  - 3 tests passed) Tj
 ET
 endstream
 endobj
 7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 2200 >>
+<< /Length 2634 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
-(- git diff --check) Tj
+(- Not performed because this runtime does not include an owner browser session.) Tj
+0 -12 Td
+(- Remaining blocker: `owner_authenticated_visual_shell_retest_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh checks run on 2026-05-10:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(  - 1 file passed) Tj
+0 -12 Td
+(  - 4 tests passed) Tj
+0 -12 Td
+(- `git diff --check`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm run typecheck) Tj
+(- `pnpm run typecheck`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm run build) Tj
+(- `pnpm run build`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm test) Tj
+(- `pnpm test`) Tj
 0 -12 Td
-(  - 145 files passed) Tj
+(  - 171 files passed) Tj
 0 -12 Td
-(  - 1284 tests passed) Tj
+(  - 1359 tests passed) Tj
 0 -12 Td
-(- node scripts/check-protected-file-invariants.mjs) Tj
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
 0 -12 Td
 (  - ok: true) Tj
 0 -12 Td
-(- staged secret scan) Tj
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
 0 -12 Td
-(  - no matches) Tj
+(  - ok: true) Tj
 0 -12 Td
-(- .env diff check) Tj
+(- `.env` diff check) Tj
 0 -12 Td
-(  - clean) Tj
+(  - 0 bytes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Auxiliary harness note:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Some button/protected-action live-status scripts still need a later route-smoke harness update) Tj
+0 -12 Td
+( to pass the local smoke session cookie when probing protected authenticated APIs. They return 4) Tj
+0 -12 Td
+(01 in this standalone runtime when run with only API-key context. This does not change the Day 1) Tj
+0 -12 Td
+(3 shell result.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -328,7 +362,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- No .env changes.) Tj
+(- No `.env` changes.) Tj
 0 -12 Td
 (- No secrets printed.) Tj
 0 -12 Td
@@ -346,7 +380,7 @@ BT
 0 -12 Td
 (- No parked artifacts staged.) Tj
 0 -12 Td
-(- Final proof runtime bound to 127.0.0.1 only.) Tj
+(- Final proof runtime bound to `127.0.0.1` only.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -354,7 +388,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Blocker: owner_authenticated_visual_shell_retest_required) Tj
+(Blocker: `owner_authenticated_visual_shell_retest_required`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -368,37 +402,52 @@ BT
 0 -12 Td
 (- Log in to Mission Control.) Tj
 0 -12 Td
-(- Open /tkmc.) Tj
+(- Open `/tkmc`.) Tj
 0 -12 Td
-(- Open /gateway.) Tj
+(- Open `/gateway`.) Tj
 0 -12 Td
-(- Open /gateway/agent-hub.) Tj
+(- Open `/gateway/agent-hub`.) Tj
 0 -12 Td
 (- Confirm pages scroll naturally and are not clipped by the Mission Control shell.) Tj
 0 -12 Td
-(- Confirm owner can return to Mission Control Home and Gateway Overview.) Tj
+(- Confirm owner can move via the Mission Control rail and Gateway subrail without browser-back d) Tj
+0 -12 Td
+(ependency.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Closeout Ledger) Tj
 0 -12 Td
 () Tj
-0 -12 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 688 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (- Day number and lane: Day 13 - Mission Control Shell) Tj
 0 -12 Td
 (- Status: DEVELOPER-SIDE CLOSED) Tj
 0 -12 Td
 (- Blocker classification: OWNER_GATED) Tj
 0 -12 Td
-(- Commit hash: 92c130b) Tj
+(- Source commit hash: `92c130b`) Tj
 0 -12 Td
-(- Push result: pushed to origin/to-knowledge-mc) Tj
+(- Current verification HEAD: `9094ef7`) Tj
 0 -12 Td
-(- Deployed commit: 92c130b) Tj
+(- Report refresh commit: pending) Tj
 0 -12 Td
-(- Runtime proof: local-only standalone proof on 127.0.0.1:3337, pid 38987) Tj
+(- Push result for source implementation: already pushed in current branch lineage) Tj
 0 -12 Td
-(- Rollback command: git revert 92c130b) Tj
+(- Runtime proof: local-only standalone proof on `127.0.0.1:3337`, pid 71076) Tj
+0 -12 Td
+(- Rollback command: `git revert 92c130b`) Tj
 0 -12 Td
 (- Next day automatically started: Day 14 - Mission Control Navigation / Back 100% Closure) Tj
 0 -12 Td
@@ -406,23 +455,25 @@ BT
 ET
 endstream
 endobj
-9 0 obj
+11 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 xref
-0 10
+0 12
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
-0000000127 00000 n 
-0000000253 00000 n 
-0000003444 00000 n 
-0000003570 00000 n 
-0000006191 00000 n 
-0000006317 00000 n 
-0000008569 00000 n 
+0000000133 00000 n 
+0000000260 00000 n 
+0000003697 00000 n 
+0000003824 00000 n 
+0000006713 00000 n 
+0000006840 00000 n 
+0000009526 00000 n 
+0000009654 00000 n 
+0000010394 00000 n 
 trailer
-<< /Size 10 /Root 1 0 R >>
+<< /Size 12 /Root 1 0 R >>
 startxref
-8639
+10465
 %%EOF

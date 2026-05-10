@@ -29,7 +29,7 @@ describe('Gateway navigation metadata route', () => {
         mission_control_home: '/',
         safe_back: '/gateway',
         gateway_overview: '/gateway',
-        agent_hub: '/gateway/agent-hub',
+        agent_hub: '/gateway?tab=agent-hub',
       },
     })
     expect(payload.breadcrumbs.map((crumb: any) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub'])
@@ -45,9 +45,9 @@ describe('Gateway navigation metadata route', () => {
       mode: 'gateway_navigation_metadata',
       targets: {
         mission_control_home: '/',
-        safe_back: '/gateway/agent-hub',
+        safe_back: '/gateway?tab=agent-hub',
         gateway_overview: '/gateway',
-        agent_hub: '/gateway/agent-hub',
+        agent_hub: '/gateway?tab=agent-hub',
       },
     })
     expect(payload.breadcrumbs.map((crumb: any) => crumb.breadcrumb_label)).toEqual(['Mission Control', 'Gateway', 'Agent Hub', 'Paperclip'])

@@ -85,7 +85,7 @@ describe('Gateway status route CloudCode truth', () => {
     expect(payload.route_metadata.targets).toMatchObject({
       mission_control_home: '/',
       gateway_overview: '/gateway',
-      agent_hub: '/gateway/agent-hub',
+      agent_hub: '/gateway?tab=agent-hub',
     })
     expect(payload.classified_errors.some((error: any) => error.kind === 'OWNER_GATED')).toBe(true)
     expect(JSON.stringify(payload)).not.toMatch(/\/Users\/|\/home\/|Bearer\s+|sk-[A-Za-z0-9_-]{20,}/)

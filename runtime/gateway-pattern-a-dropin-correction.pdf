@@ -1,0 +1,328 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3170 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(gateway-pattern-a-dropin-correction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Gateway Pattern A Drop-In Correction) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Status: IMPLEMENTED - owner retest still required before GO) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Correct the Gateway FULL v3 integration so the designer mock remains the production UI contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Root Cause) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The live Gateway leaf routes were implemented as Next page wrappers that mounted the designer pa) Tj
+0 -12 Td
+(ges inside a React/Next page frame. That created visual drift, wrapper chrome, and scroll/contai) Tj
+0 -12 Td
+(ner behavior that did not match the designer mock.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Designer Decision Applied) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pattern A was applied:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway` is the only Next Gateway surface.) Tj
+0 -12 Td
+(- `/gateway` redirects into the static designer Mission Control shell with `page=gateway`.) Tj
+0 -12 Td
+(- Gateway sub-pages are internal GatewayShell tabs.) Tj
+0 -12 Td
+(- Legacy leaf URLs redirect to `/gateway?tab=...`.) Tj
+0 -12 Td
+(- GatewayShell loads raw static mock HTML via iframe from absolute same-origin static asset path) Tj
+0 -12 Td
+(s.) Tj
+0 -12 Td
+(- Mock HTML, mock CSS, shared tokens, and class names were not edited.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `next.config.js`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/app.jsx`) Tj
+0 -12 Td
+(- `src/app/gateway/page.tsx`) Tj
+0 -12 Td
+(- `src/app/agents/route.ts`) Tj
+0 -12 Td
+(- `src/app/[[...panel]]/route.ts`) Tj
+0 -12 Td
+(- `src/lib/navigation.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.ts`) Tj
+0 -12 Td
+(- Gateway/navigation tests) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway` -> `/designer-mission-control/Mission%20Control.html?page=gateway`) Tj
+0 -12 Td
+(- `/gateway/agent-hub` -> `/gateway?tab=agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` -> `/gateway?tab=paperclip`) Tj
+0 -12 Td
+(- `/gateway/routes` -> `/gateway?tab=routes`) Tj
+0 -12 Td
+(- `/gateway/registry` -> `/gateway?tab=registry`) Tj
+0 -12 Td
+(- `/gateway/policies` -> `/gateway?tab=policies`) Tj
+0 -12 Td
+(- `/gateway/health` -> `/gateway?tab=health`) Tj
+0 -12 Td
+(- `/gateway/dispatcher` -> `/gateway?tab=dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor` -> `/gateway?tab=governor`) Tj
+0 -12 Td
+(- `/gateway/bridge-session` -> `/gateway?tab=bridge`) Tj
+0 -12 Td
+(- `/gateway/node-detail` -> `/gateway?tab=node-detail`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet` -> `/gateway?tab=mobile`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deleted Wrapper Pages) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The following Next wrappers were removed so they cannot re-render or reinterpret the mocks:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/gateway/routes/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/registry/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/policies/page.tsx`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3206 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `src/app/gateway/health/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/dispatcher/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/token-governor/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/agent-hub/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/agent-hub/paperclip/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/agent-hub/[id]/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/bridge-session/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/node-detail/page.tsx`) Tj
+0 -12 Td
+(- `src/app/gateway/mobile-tablet/page.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Data Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`shared/agent-data.js` remains the data-wiring file for Agent Hub. It reads `/api/gateway/agent-) Tj
+0 -12 Td
+(hub/status` and maps live/gated/blocked states into the designer status grammar. The mock render) Tj
+0 -12 Td
+(ing code remains unchanged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Verification So Far) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Focused tests passed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/gateway-native-frame-decision.test.ts`) Tj
+0 -12 Td
+(- `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(- `src/app/gateway-route-alias.test.ts`) Tj
+0 -12 Td
+(- `src/lib/navigation.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/status/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/navigation/route.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result: 8 files / 34 tests passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation run:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: passed.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: passed after clearing stale generated `.next/types`.) Tj
+0 -12 Td
+(- `pnpm run build`: passed; deleted Gateway wrapper pages no longer appear as app routes.) Tj
+0 -12 Td
+(- `pnpm test`: passed, 181 files / 1414 tests.) Tj
+0 -12 Td
+(- `scripts/check-protected-file-invariants.mjs`: passed.) Tj
+0 -12 Td
+(- `.env` diff check: no diff.) Tj
+0 -12 Td
+(- `scripts/check-mission-control-route-rendering.mjs`: passed, 46 routes and 8 designer pages ch) Tj
+0 -12 Td
+(ecked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime smoke on `127.0.0.1:3337`:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/login` returns 200.) Tj
+0 -12 Td
+(- `/gateway` redirects to `/login` when unauthenticated.) Tj
+0 -12 Td
+(- `/gateway/agent-hub` redirects to `/gateway?tab=agent-hub`.) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` redirects to `/gateway?tab=paperclip`.) Tj
+0 -12 Td
+(- `/gateway/routes` redirects to `/gateway?tab=routes`.) Tj
+0 -12 Td
+(- Designer static assets remain protected when unauthenticated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Owner Retest Required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway UI is not GO until owner confirms:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway` shows the FULL v3 Gateway shell.) Tj
+0 -12 Td
+(- `/gateway?tab=agent-hub` shows the designer Agent Hub mock.) Tj
+0 -12 Td
+(- The owner can navigate through Mission Control rail and Gateway internal tabs.) Tj
+0 -12 Td
+(- Agent Hub scrolls normally.) Tj
+0 -12 Td
+(- No fake buttons, raw paths, secrets, or fake live status are visible.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(OWNER_GATED: owner visual retest required after deploy/restart.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 173 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert <gateway_pattern_a_commit_sha>`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003475 00000 n 
+0000003601 00000 n 
+0000006859 00000 n 
+0000006985 00000 n 
+0000007209 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7279
+%%EOF

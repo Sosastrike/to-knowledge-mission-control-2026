@@ -16,6 +16,23 @@ const nextConfig = {
   
   // Security headers
   // Content-Security-Policy is set in src/proxy.ts with a per-request nonce.
+  async redirects() {
+    return [
+      { source: '/gateway/agent-hub/paperclip', destination: '/gateway?tab=paperclip', permanent: false },
+      { source: '/gateway/agent-hub/:id', destination: '/gateway?tab=agent-hub', permanent: false },
+      { source: '/gateway/agent-hub', destination: '/gateway?tab=agent-hub', permanent: false },
+      { source: '/gateway/routes', destination: '/gateway?tab=routes', permanent: false },
+      { source: '/gateway/registry', destination: '/gateway?tab=registry', permanent: false },
+      { source: '/gateway/policies', destination: '/gateway?tab=policies', permanent: false },
+      { source: '/gateway/health', destination: '/gateway?tab=health', permanent: false },
+      { source: '/gateway/dispatcher', destination: '/gateway?tab=dispatcher', permanent: false },
+      { source: '/gateway/token-governor', destination: '/gateway?tab=governor', permanent: false },
+      { source: '/gateway/bridge-session', destination: '/gateway?tab=bridge', permanent: false },
+      { source: '/gateway/node-detail', destination: '/gateway?tab=node-detail', permanent: false },
+      { source: '/gateway/mobile-tablet', destination: '/gateway?tab=mobile', permanent: false },
+    ];
+  },
+
   async headers() {
     return [
       {

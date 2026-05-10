@@ -12,11 +12,11 @@ describe('Mission Control panel navigation', () => {
 
   it('uses canonical Gateway FULL v3 routes without relying on compatibility redirects', () => {
     expect(panelHref('gateway')).toBe('/gateway')
-    expect(panelHref('gateway-parent')).toBe('/gateway/agent-hub')
+    expect(panelHref('gateway-parent')).toBe('/gateway?tab=agent-hub')
     expect(panelHref('gateways')).toBe('/gateway')
-    expect(panelHref('gateway-config')).toBe('/gateway/policies')
-    expect(panelHref('agents')).toBe('/gateway/agent-hub')
-    expect(panelHref('agent-network')).toBe('/gateway/agent-hub')
+    expect(panelHref('gateway-config')).toBe('/gateway?tab=policies')
+    expect(panelHref('agents')).toBe('/gateway?tab=agent-hub')
+    expect(panelHref('agent-network')).toBe('/gateway?tab=agent-hub')
   })
 
   it('uses concrete Mission Control settings routes for admin navigation', () => {

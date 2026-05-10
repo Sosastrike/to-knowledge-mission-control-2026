@@ -32,7 +32,7 @@ function App() {
   });
   React.useEffect(()=>localStorage.setItem('cc.page', page), [page]);
   React.useEffect(() => {
-    if (page === 'agent-network') window.location.href = '/gateway/agent-hub';
+    if (page === 'agent-network') window.location.href = '/gateway?tab=agent-hub';
   }, [page]);
   const [modules, setModules] = React.useState({ agents:true, meetings:true, hive:true, tasks:true, quick:true, schedule:true, alerts:true, health:true, memory:true, tokens:true, graphify:true, webops:true, obsidian:true, telemetry:true, policy:true, pacman:true });
 
@@ -96,7 +96,7 @@ function App() {
     else if (p === 'brain-sync'){ setPage('brain-sync'); }
     else if (p === 'mirofish')  { setPage('mirofish'); }
     else if (p === 'gateway') { setPage('gateway'); }
-    else if (p === 'agent-network') { window.location.href = '/gateway/agent-hub'; return; }
+    else if (p === 'agent-network') { window.location.href = '/gateway?tab=agent-hub'; return; }
     else if (p === 'firecrawl') { setPage('firecrawl'); }
     else if (p === 'zapier') { setPage('zapier'); }
     else if (p === 'n8n') { setPage('n8n'); }

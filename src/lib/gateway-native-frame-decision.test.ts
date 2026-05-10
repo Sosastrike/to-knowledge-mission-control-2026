@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -6,60 +6,71 @@ function readSource(path: string) {
   return readFileSync(join(process.cwd(), path), 'utf8')
 }
 
-const gatewayMockRoutes: Array<[routePath: string, designerFile: string]> = [
-  ['src/app/gateway/page.tsx', 'Gateway Overview.html'],
-  ['src/app/gateway/routes/page.tsx', 'Gateway Routes.html'],
-  ['src/app/gateway/registry/page.tsx', 'Gateway Registry.html'],
-  ['src/app/gateway/policies/page.tsx', 'Gateway Policies.html'],
-  ['src/app/gateway/health/page.tsx', 'Gateway Health.html'],
-  ['src/app/gateway/dispatcher/page.tsx', 'Dispatcher.html'],
-  ['src/app/gateway/token-governor/page.tsx', 'Token Governor.html'],
-  ['src/app/gateway/agent-hub/page.tsx', 'Agent Hub.html'],
-  ['src/app/gateway/agent-hub/paperclip/page.tsx', 'Paperclip.html'],
-  ['src/app/gateway/bridge-session/page.tsx', 'Bridge Session Flow.html'],
-  ['src/app/gateway/node-detail/page.tsx', 'Gateway Node Detail.html'],
-  ['src/app/gateway/mobile-tablet/page.tsx', 'Gateway Mobile Tablet.html'],
+const gatewayRedirectRules: Array<[source: string, destination: string]> = [
+  ['/gateway/routes', '/gateway?tab=routes'],
+  ['/gateway/registry', '/gateway?tab=registry'],
+  ['/gateway/policies', '/gateway?tab=policies'],
+  ['/gateway/health', '/gateway?tab=health'],
+  ['/gateway/dispatcher', '/gateway?tab=dispatcher'],
+  ['/gateway/token-governor', '/gateway?tab=governor'],
+  ['/gateway/agent-hub', '/gateway?tab=agent-hub'],
+  ['/gateway/agent-hub/paperclip', '/gateway?tab=paperclip'],
+  ['/gateway/agent-hub/:id', '/gateway?tab=agent-hub'],
+  ['/gateway/bridge-session', '/gateway?tab=bridge'],
+  ['/gateway/node-detail', '/gateway?tab=node-detail'],
+  ['/gateway/mobile-tablet', '/gateway?tab=mobile'],
+]
+
+const removedWrapperPages = [
+  'src/app/gateway/routes/page.tsx',
+  'src/app/gateway/registry/page.tsx',
+  'src/app/gateway/policies/page.tsx',
+  'src/app/gateway/health/page.tsx',
+  'src/app/gateway/dispatcher/page.tsx',
+  'src/app/gateway/token-governor/page.tsx',
+  'src/app/gateway/agent-hub/page.tsx',
+  'src/app/gateway/agent-hub/paperclip/page.tsx',
+  'src/app/gateway/agent-hub/[id]/page.tsx',
+  'src/app/gateway/bridge-session/page.tsx',
+  'src/app/gateway/node-detail/page.tsx',
+  'src/app/gateway/mobile-tablet/page.tsx',
 ]
 
 describe('Gateway native frame architecture decision', () => {
-  it('keeps the accepted FULL v3 designer files as the mounted visual contract', () => {
-    for (const [routePath, designerFile] of gatewayMockRoutes) {
-      const source = readSource(routePath)
+  it('uses one GatewayShell route and redirects leaf routes into shell sub-tabs', () => {
+    const gatewayPage = readSource('src/app/gateway/page.tsx')
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+    const nextConfig = readSource('next.config.js')
 
-      expect(source).toContain('DesignerGatewayMockFrame')
-      expect(source).toContain(`page='${designerFile}'`)
-      expect(source).not.toContain('GatewayControlShell')
+    expect(gatewayPage).toContain('redirect(')
+    expect(gatewayPage).toContain('/designer-mission-control/Mission%20Control.html?page=gateway')
+    expect(gatewayShell).toContain("src: '/designer-mission-control/design/gateway/Agent Hub.html'")
+    expect(gatewayShell).toContain("src: '/designer-mission-control/design/gateway/Paperclip.html'")
+
+    for (const [source, destination] of gatewayRedirectRules) {
+      expect(nextConfig).toContain(`source: '${source}'`)
+      expect(nextConfig).toContain(`destination: '${destination}'`)
+    }
+
+    for (const routePath of removedWrapperPages) {
+      expect(existsSync(join(process.cwd(), routePath))).toBe(false)
     }
   })
 
-  it('lets Mission Control own page scroll while preserving same-origin mock fidelity', () => {
-    const frame = readSource('src/components/gateway/DesignerGatewayMockFrame.tsx')
+  it('does not keep a Next page iframe wrapper for accepted Gateway mock pages', () => {
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
 
-    expect(frame).toContain("<main className='min-h-screen w-full")
-    expect(frame).not.toContain('h-screen w-full overflow-hidden')
-    expect(frame).toContain("scrolling='yes'")
-    expect(frame).toContain('iframe.style.height')
-    expect(frame).toContain('ResizeObserver')
-    expect(frame).toContain("iframe.contentDocument?.readyState === 'complete'")
-    expect(frame).not.toContain("from 'next/link'")
-    expect(frame).not.toContain("href='/tkmc'")
-    expect(frame).not.toContain("href='/gateway'")
-    expect(frame).not.toContain("href='/gateway/agent-hub'")
-    expect(frame).not.toContain('Gateway frame navigation')
-    expect(frame).toContain('fragment?: string')
-    expect(frame).toContain('encodeURIComponent(fragment)')
+    expect(gatewayShell).toContain('function GatewayShell()')
+    expect(gatewayShell).toContain('<iframe')
+    expect(gatewayShell).not.toContain("src: 'design/gateway/Agent Hub.html'")
+    expect(gatewayShell).not.toContain("src: 'design/gateway/Paperclip.html'")
   })
 
-  it('routes Agent Hub agent detail pages into the accepted Agent Hub designer detail tabs', () => {
-    const route = readSource('src/app/gateway/agent-hub/[id]/page.tsx')
+  it('routes Agent Hub agent detail URLs into the GatewayShell Agent Hub deep link', () => {
+    const nextConfig = readSource('next.config.js')
 
-    expect(route).toContain("page='Agent Hub.html'")
-    expect(route).toContain('fragment={fragment}')
-    expect(route).toContain("'agent-zero': 'agent-zero'")
-    expect(route).toContain("'space-agent': 'space-agent'")
-    expect(route).toContain("'pi-mono': 'pi-mono'")
-    expect(route).toContain("'openclaw-plus': 'openclaw-plus'")
-    expect(route).toContain('notFound()')
+    expect(nextConfig).toContain("source: '/gateway/agent-hub/:id'")
+    expect(nextConfig).toContain("destination: '/gateway?tab=agent-hub'")
   })
 
   it('serves designer assets with same-origin frame headers instead of blocking the Gateway frame', () => {

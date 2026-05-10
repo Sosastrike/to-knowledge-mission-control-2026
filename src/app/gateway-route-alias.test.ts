@@ -27,7 +27,7 @@ describe('Gateway route aliases', () => {
     })
 
     expect(response.status).toBe(307)
-    expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
+    expect(response.headers.get('Location')).toBe('/gateway?tab=agent-hub')
   })
 
   it('routes the /gateway entry point to the production Agent Hub', async () => {
@@ -36,7 +36,7 @@ describe('Gateway route aliases', () => {
     })
 
     expect(response.status).toBe(307)
-    expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
+    expect(response.headers.get('Location')).toBe('/gateway?tab=agent-hub')
   })
 
   it('routes legacy /gateways to Gateway FULL v3 overview', async () => {
@@ -54,7 +54,7 @@ describe('Gateway route aliases', () => {
     })
 
     expect(response.status).toBe(307)
-    expect(response.headers.get('Location')).toBe('/gateway/policies')
+    expect(response.headers.get('Location')).toBe('/gateway?tab=policies')
   })
 
   it('routes Gateway parent panel id to the production Agent Hub', async () => {
@@ -63,13 +63,13 @@ describe('Gateway route aliases', () => {
     })
 
     expect(response.status).toBe(307)
-    expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
+    expect(response.headers.get('Location')).toBe('/gateway?tab=agent-hub')
   })
 
   it('keeps the /agents clean route as a Gateway compatibility alias', async () => {
     const response = await agentsGet()
 
     expect(response.status).toBe(307)
-    expect(response.headers.get('Location')).toBe('/gateway/agent-hub')
+    expect(response.headers.get('Location')).toBe('/gateway?tab=agent-hub')
   })
 })

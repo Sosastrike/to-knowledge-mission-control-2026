@@ -9,7 +9,8 @@ type RouteContext = {
 
 const DESIGNER_BASE = '/designer-mission-control/Mission%20Control.html'
 const MISSION_CONTROL_HOME = '/tkmc'
-const PRODUCTION_AGENT_HUB = '/gateway/agent-hub'
+const PRODUCTION_GATEWAY = '/gateway'
+const PRODUCTION_AGENT_HUB = '/gateway?tab=agent-hub'
 
 function locationForPanel(panel: string[] | undefined): string {
   const firstPanel = panel?.[0] || 'mission'
@@ -20,8 +21,8 @@ function locationForPanel(panel: string[] | undefined): string {
     firstPanel === 'agents' ||
     firstPanel === 'agent-network'
   ) return PRODUCTION_AGENT_HUB
-  if (firstPanel === 'gateways') return '/gateway'
-  if (firstPanel === 'gateway-config') return '/gateway/policies'
+  if (firstPanel === 'gateways') return PRODUCTION_GATEWAY
+  if (firstPanel === 'gateway-config') return '/gateway?tab=policies'
   if (firstPanel === 'reports' || firstPanel === 'executive-reports' || firstPanel === 'scheduled-reports') return DESIGNER_BASE + '?page=reports'
   return MISSION_CONTROL_HOME
 }

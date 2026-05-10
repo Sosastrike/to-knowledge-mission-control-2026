@@ -23,21 +23,46 @@
    ============================================================ */
 
 const GATEWAY_TABS = [
-  { id: 'overview',   label: 'Overview',           src: 'design/gateway/Gateway Overview.html',     hint: 'Nucleus — primary' },
-  { id: 'agent-hub',  label: 'Agent Hub',          src: 'design/gateway/Agent Hub.html',            hint: '5 agents' },
-  { id: 'paperclip',  label: 'Paperclip',          src: 'design/gateway/Paperclip.html',            hint: 'Workforce Control Plane' },
-  { id: 'dispatcher', label: 'Dispatcher',         src: 'design/gateway/Dispatcher.html',           hint: '9-step gate' },
-  { id: 'governor',   label: 'Token Governor',     src: 'design/gateway/Token Governor.html',       hint: 'budgets' },
-  { id: 'bridge',     label: 'Bridge Session',     src: 'design/gateway/Bridge Session Flow.html',  hint: 'gating' },
-  { id: 'health',     label: 'Health',             src: 'design/gateway/Gateway Health.html',       hint: 'live status' },
-  { id: 'routes',     label: 'Routes',             src: 'design/gateway/Gateway Routes.html',       hint: 'engine routes' },
-  { id: 'registry',   label: 'Registry',           src: 'design/gateway/Gateway Registry.html',     hint: 'nodes' },
-  { id: 'policies',   label: 'Policies',           src: 'design/gateway/Gateway Policies.html',     hint: 'R/W/X' },
+  { id: 'overview',   label: 'Overview',           src: '/designer-mission-control/design/gateway/Gateway Overview.html',     hint: 'Nucleus — primary' },
+  { id: 'agent-hub',  label: 'Agent Hub',          src: '/designer-mission-control/design/gateway/Agent Hub.html',            hint: '5 agents' },
+  { id: 'paperclip',  label: 'Paperclip',          src: '/designer-mission-control/design/gateway/Paperclip.html',            hint: 'Workforce Control Plane' },
+  { id: 'dispatcher', label: 'Dispatcher',         src: '/designer-mission-control/design/gateway/Dispatcher.html',           hint: '9-step gate' },
+  { id: 'governor',   label: 'Token Governor',     src: '/designer-mission-control/design/gateway/Token Governor.html',       hint: 'budgets' },
+  { id: 'bridge',     label: 'Bridge Session',     src: '/designer-mission-control/design/gateway/Bridge Session Flow.html',  hint: 'gating' },
+  { id: 'health',     label: 'Health',             src: '/designer-mission-control/design/gateway/Gateway Health.html',       hint: 'live status' },
+  { id: 'routes',     label: 'Routes',             src: '/designer-mission-control/design/gateway/Gateway Routes.html',       hint: 'engine routes' },
+  { id: 'registry',   label: 'Registry',           src: '/designer-mission-control/design/gateway/Gateway Registry.html',     hint: 'nodes' },
+  { id: 'policies',   label: 'Policies',           src: '/designer-mission-control/design/gateway/Gateway Policies.html',     hint: 'R/W/X' },
+  { id: 'node-detail',label: 'Node spec',          src: '/designer-mission-control/design/gateway/Gateway Node Detail.html',  hint: 'drilldown' },
+  { id: 'mobile',     label: 'Mobile',             src: '/designer-mission-control/design/gateway/Gateway Mobile Tablet.html', hint: 'responsive' },
 ];
 
+function resolveGatewayTab() {
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get('tab') || window.location.hash.replace(/^#/, '');
+  return GATEWAY_TABS.some(t => t.id === requested) ? requested : 'overview';
+}
+
 function GatewayShell() {
-  const [active, setActive] = React.useState('overview');
+  const [active, setActive] = React.useState(resolveGatewayTab);
   const tab = GATEWAY_TABS.find(t => t.id === active) || GATEWAY_TABS[0];
+  const selectTab = (id) => {
+    setActive(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'gateway');
+    url.searchParams.set('tab', id);
+    window.history.replaceState({}, '', url);
+  };
+
+  React.useEffect(() => {
+    const syncFromUrl = () => setActive(resolveGatewayTab());
+    window.addEventListener('hashchange', syncFromUrl);
+    window.addEventListener('popstate', syncFromUrl);
+    return () => {
+      window.removeEventListener('hashchange', syncFromUrl);
+      window.removeEventListener('popstate', syncFromUrl);
+    };
+  }, []);
 
   return (
     <div className="gateway-shell">
@@ -64,7 +89,7 @@ function GatewayShell() {
           <div
             key={t.id}
             className={'gw-tab' + (t.id === active ? ' active' : '')}
-            onClick={() => setActive(t.id)}
+            onClick={() => selectTab(t.id)}
           >
             <span>{t.label}</span>
             <span className="hint">{t.hint}</span>

@@ -101,6 +101,22 @@ function explicitBlocker(message: string, ownerMessage?: string): AnyRecord {
   }
 }
 
+function gatewayShellTarget(route: string): string {
+  if (route === '/gateway/agent-hub' || route === '/agent-network' || route === '/agents') return '/gateway?tab=agent-hub'
+  if (route === '/gateway/agent-hub/paperclip') return '/gateway?tab=paperclip'
+  if (route.startsWith('/gateway/agent-hub/')) return '/gateway?tab=agent-hub'
+  if (route === '/gateway/routes') return '/gateway?tab=routes'
+  if (route === '/gateway/registry') return '/gateway?tab=registry'
+  if (route === '/gateway/policies') return '/gateway?tab=policies'
+  if (route === '/gateway/health') return '/gateway?tab=health'
+  if (route === '/gateway/dispatcher') return '/gateway?tab=dispatcher'
+  if (route === '/gateway/token-governor') return '/gateway?tab=governor'
+  if (route === '/gateway/bridge-session') return '/gateway?tab=bridge'
+  if (route === '/gateway/node-detail') return '/gateway?tab=node-detail'
+  if (route === '/gateway/mobile-tablet') return '/gateway?tab=mobile'
+  return route
+}
+
 function gatewayStatusBlockers(raw: AnyRecord): AnyRecord[] {
   const blockers: AnyRecord[] = []
   for (const summary of [raw.agent_zero, raw.hermes]) {
@@ -130,7 +146,7 @@ export function buildCloudCodeNavigation(route: string) {
         mission_control_home: '/',
         safe_back: '/',
         gateway_overview: '/gateway',
-        agent_hub: '/gateway/agent-hub',
+        agent_hub: '/gateway?tab=agent-hub',
       },
       classified_error: classifyError({
         http_status: 404,
@@ -147,9 +163,9 @@ export function buildCloudCodeNavigation(route: string) {
     all_routes: ROUTE_METADATA,
     targets: {
       mission_control_home: current.mission_control_home_target,
-      safe_back: current.safe_back_target,
+      safe_back: gatewayShellTarget(current.safe_back_target),
       gateway_overview: '/gateway',
-      agent_hub: '/gateway/agent-hub',
+      agent_hub: '/gateway?tab=agent-hub',
     },
     classified_error: null,
   }

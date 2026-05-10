@@ -22,6 +22,7 @@ const disabledStates = new Set([
   'DISABLED',
 ])
 const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || readApiKeyFromDb()).trim()
+const smokeCookie = (process.env.MISSION_CONTROL_COOKIE || process.env.MC_PROOF_COOKIE || 'mc-session=runtime-smoke-proxy-pass').trim()
 
 function readApiKeyFromDb() {
   try {
@@ -109,9 +110,12 @@ const results = []
 let liveButtons = []
 
 async function getJson(pathname) {
+  const headers = {}
+  if (apiKey) headers['x-api-key'] = apiKey
+  if (smokeCookie) headers.cookie = smokeCookie
   const response = await fetch(`${baseUrl}${pathname}`, {
     method: 'GET',
-    headers: apiKey ? { 'x-api-key': apiKey } : {},
+    headers,
     cache: 'no-store',
     signal: AbortSignal.timeout(5000),
   })
@@ -226,6 +230,7 @@ for (const endpoint of endpointsToProbe) {
       method,
       headers: {
         ...(apiKey && endpoint.startsWith('/api/') ? { 'x-api-key': apiKey } : {}),
+        ...(smokeCookie ? { cookie: smokeCookie } : {}),
         ...(body ? { 'content-type': 'application/json' } : {}),
       },
       body,

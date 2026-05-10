@@ -134,6 +134,9 @@ export function createBuildWikiRunNowApproval(input: {
   const { db, requester } = input
   const now = input.now || new Date()
   const nowIso = now.toISOString()
+  const idempotencyKey =
+    input.idempotencyKey ||
+    `buildwiki.run_now:${requester.workspaceId}:${requester.tenantId}:${nowIso.slice(0, 16)}`
 
   if (!approvalPersistenceReady(db)) {
     return {
@@ -151,6 +154,81 @@ export function createBuildWikiRunNowApproval(input: {
       writes_enabled: false,
       blocked_reason: 'approval_persistence_not_applied',
       next_action: 'Apply Bridge approval/audit/run persistence before creating Build-Wiki Run Now approvals.',
+    }
+  }
+
+  const idempotentApproval = db
+    .prepare(
+      `SELECT id, workspace_id, tenant_id, connector, action, target, target_key,
+              requester, requester_user_id, risk_level, approval_state,
+              protected_category, reason, required_approver, expires_at,
+              resolved_at, resolved_by, resolved_by_user_id, resolution_reason,
+              correlation_id, idempotency_key, created_at
+         FROM bridge_approval_requests
+        WHERE workspace_id = ?
+          AND tenant_id = ?
+          AND idempotency_key = ?
+        LIMIT 1`,
+    )
+    .get(
+      requester.workspaceId,
+      requester.tenantId,
+      idempotencyKey,
+    ) as ApprovalRow | undefined
+
+  if (idempotentApproval) {
+    if (
+      idempotentApproval.connector !== BUILDWIKI_CONNECTOR ||
+      idempotentApproval.action !== BUILDWIKI_ACTION_RUN_NOW ||
+      idempotentApproval.target_key !== BUILDWIKI_TARGET_KEY
+    ) {
+      return {
+        ok: false,
+        http_status: 409,
+        persistence_ready: true,
+        approval_request_created: false,
+        reused_existing: false,
+        approval: null,
+        audit_event_id: null,
+        ui_state: 'idle',
+        is_terminal: true,
+        execution_enabled: false,
+        accepted_for_execution: false,
+        writes_enabled: false,
+        blocked_reason: 'idempotency_key_scope_conflict',
+        next_action: 'Use a unique idempotency key scoped to buildwiki.run_now.',
+      }
+    }
+
+    const run = db
+      .prepare(
+        `SELECT id, approval_request_id, audit_event_id, run_state, started_at,
+                finished_at, output_hash, rollback_ref, correlation_id
+           FROM bridge_connector_runs
+          WHERE approval_request_id = ?
+          ORDER BY created_at DESC
+          LIMIT 1`,
+      )
+      .get(idempotentApproval.id) as ConnectorRunRow | undefined
+    const ui = deriveRunNowUiState(idempotentApproval, run || null)
+
+    return {
+      ok: true,
+      http_status: 200,
+      persistence_ready: true,
+      approval_request_created: false,
+      reused_existing: true,
+      approval: idempotentApproval,
+      audit_event_id: null,
+      ui_state: ui.ui_state,
+      is_terminal: ui.is_terminal,
+      execution_enabled: false,
+      accepted_for_execution: false,
+      writes_enabled: false,
+      blocked_reason: null,
+      next_action: ui.ui_state === 'pending_approval'
+        ? 'Existing pending Build-Wiki Run Now approval is waiting for owner approval.'
+        : 'Existing Build-Wiki Run Now approval was returned for this idempotency key.',
     }
   }
 
@@ -214,7 +292,6 @@ export function createBuildWikiRunNowApproval(input: {
   ].join('|')).digest('hex')
   const reason = String(input.reason || 'Owner requested Build-Wiki/Farmer Run Now.').slice(0, 500)
   const expiresAt = new Date(now.getTime() + 30 * 60 * 1000).toISOString()
-  const idempotencyKey = input.idempotencyKey || `buildwiki.run_now:${requester.workspaceId}:${requester.tenantId}:${nowIso.slice(0, 16)}`
 
   db.transaction(() => {
     db.prepare(

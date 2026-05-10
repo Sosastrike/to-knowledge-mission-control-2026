@@ -2,7 +2,8 @@
 import { execFileSync } from 'node:child_process'
 
 const baseUrl = (process.argv[2] || process.env.MISSION_CONTROL_BASE_URL || 'http://127.0.0.1:3337').replace(/\/+$/, '')
-const apiKey = process.env.MISSION_CONTROL_API_KEY || readApiKeyFromDb()
+const apiKey = (process.env.MISSION_CONTROL_API_KEY || readApiKeyFromDb()).trim()
+const smokeCookie = (process.env.MISSION_CONTROL_COOKIE || process.env.MC_PROOF_COOKIE || 'mc-session=runtime-smoke-proxy-pass').trim()
 
 if (!apiKey) {
   console.error(JSON.stringify({ ok: false, error: 'missing_api_key_for_local_check' }, null, 2))
@@ -118,6 +119,7 @@ for (const check of cases) {
     headers: {
       'content-type': 'application/json',
       'x-api-key': apiKey,
+      ...(smokeCookie ? { cookie: smokeCookie } : {}),
     },
     body: JSON.stringify(check.body),
     cache: 'no-store',

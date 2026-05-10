@@ -207,6 +207,34 @@ describe('Build-Wiki Run Now route', () => {
     })
   })
 
+  it('reuses an existing expired idempotency key instead of surfacing a database conflict', async () => {
+    const first = await POST(request({ reason: 'probe', idempotency_key: 'expired-run-now-test' }))
+    const firstPayload = await first.json()
+
+    const db = new Database(mocks.dbPath)
+    db.prepare(
+      `UPDATE bridge_approval_requests
+          SET expires_at = '2000-01-01T00:00:00.000Z'
+        WHERE id = ?`,
+    ).run(firstPayload.approval_id)
+    db.close()
+
+    const second = await POST(request({ reason: 'probe again', idempotency_key: 'expired-run-now-test' }))
+    const secondPayload = await second.json()
+
+    expect(second.status).toBe(200)
+    expect(secondPayload).toMatchObject({
+      ok: true,
+      approval_request_created: false,
+      reused_existing: true,
+      approval_id: firstPayload.approval_id,
+      execution_enabled: false,
+      accepted_for_execution: false,
+      ui_state: 'expired',
+      blocked_reason: null,
+    })
+  })
+
   it('reads the latest Run Now state without executing', async () => {
     await POST(request({ reason: 'read probe' }))
     const response = await GET(getRequest())

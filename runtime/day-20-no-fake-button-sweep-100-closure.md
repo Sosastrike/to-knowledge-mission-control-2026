@@ -120,6 +120,53 @@ Route smoke:
 - unauth /api/bridge/button-contracts -> 401
 - auth /api/bridge/button-contracts -> 200
 
+## 2026-05-10 Corrective Proof
+
+Day 20 was rechecked after the later auth/runtime changes. The first live
+button-contract probe correctly failed unauthenticated with 401, then exposed a
+real Build-Wiki Run Now idempotency regression once the local proof cookie was
+included.
+
+Corrective implementation:
+
+- Updated scripts/check-button-contract-live-status.mjs to send the local proof
+  cookie with the API key when probing the protected local runtime.
+- Updated scripts/check-protected-actions-locked.mjs to use the same protected
+  local proof context.
+- Fixed createBuildWikiRunNowApproval so a repeated idempotency key returns the
+  existing Build-Wiki Run Now approval, including expired approvals, instead of
+  surfacing a SQLite UNIQUE constraint as 502.
+- Added a regression test proving expired Run Now idempotency keys are reused
+  safely with execution_enabled=false and accepted_for_execution=false.
+
+Corrective validation:
+
+- git diff --check: pass
+- pnpm test src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts
+  src/lib/button-contracts-route.test.ts: pass, 2 files / 9 tests
+- pnpm run typecheck: pass
+- pnpm run build: pass
+- pnpm test: pass, 172 files / 1364 tests
+- node scripts/check-button-contract-live-status.mjs http://127.0.0.1:3337:
+  pass, 55 endpoints checked, 1 allowed missing endpoint skipped
+- node scripts/check-protected-actions-locked.mjs http://127.0.0.1:3337:
+  pass, 11 protected probes locked
+- node scripts/check-mission-control-route-rendering.mjs
+  http://127.0.0.1:3337: pass, 46 routes checked, 8 designer pages checked
+- node scripts/check-protected-file-invariants.mjs: pass
+- .env diff check: clean
+
+Corrective runtime proof:
+
+- Rebuilt standalone bundle after source changes.
+- Restarted local-only Mission Control proof runtime on 127.0.0.1:3337.
+- Old PID: 82838
+- New PID: 89946
+- No new public exposure.
+- Build-Wiki Run Now probe now returns 200 with approval_request_created=false
+  for the existing expired idempotency key. It does not dispatch
+  opencloud-docs-farmer.service and does not enable writes.
+
 ## Current Honest Blockers Captured By The Contract
 
 - Brain Sync source status: CREDENTIAL_REQUIRED because CLAUDECLAW_DASHBOARD_TOKEN is absent in the proof runtime.

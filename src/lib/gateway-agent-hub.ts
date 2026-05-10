@@ -96,11 +96,11 @@ export type AgentHubStatusPayload = {
   allowed_owner_statuses: typeof OWNER_FACING_STATUS_STATES
   owner_status_summary: Record<string, number>
   production_truth: {
-    agent_zero: 'partial_go_commander_track'
-    hermes: 'gated_until_hermes_called_true'
+    agent_zero: 'credential_gated_until_agent_zero_external_api_key_available'
+    hermes: 'partial_safe_adapter_proven_but_runtime_service_down'
     pi_mono: 'live_shadow_dispatcher_advisory_only'
-    spaceagent: 'playwright_mcp_live_local_only_browser_research'
-    paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
+    spaceagent: 'youtube_transcript_ready_playwright_service_down_firecrawl_credential_gated'
+    paperclip: 'service_down_until_paperclip_sandbox_runtime_running'
     openclaw_plus: 'service_down_until_openclaw_cli_reachable'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
@@ -252,16 +252,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Paperclip',
     role: 'Workforce Control Plane',
     layer: 'workforce_and_task_orchestration_before_openclaw_runtime',
-    productionTruth: 'partial/degraded until local or Tailnet owner login, company dashboard, agent roster, and task queue are proven',
-    status: 'pending',
+    productionTruth: 'service-down until the Paperclip sandbox/local or Tailnet-only runtime is running and owner login/session proof is available',
+    status: 'blocked',
     liveInterfaceProven: false,
     calledTrueProven: false,
-    interfaceSummary: 'Mission Control node visible; Paperclip service and owner session proof pending',
+    interfaceSummary: 'Mission Control node visible; Paperclip sandbox service is not currently running',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'local_only_pending',
     bridgeStatusRoute: '/api/bridge/paperclip/status',
-    extraBlockers: ['paperclip_localhost_or_tailnet_ui_not_proven'],
+    extraBlockers: ['paperclip_sandbox_service_not_running'],
   },
   {
     id: 'agent-zero',
@@ -269,16 +269,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Agent Zero',
     role: 'Commander',
     layer: 'command_authority',
-    productionTruth: 'commander track; authenticated test-chat has returned agent_zero_called:true, final GO still depends on every downstream route',
-    status: 'partial_go',
-    liveInterfaceProven: true,
-    calledTrueProven: true,
-    interfaceSummary: 'Mission Control bridge surface available; Agent Zero remains owner-facing commander',
+    productionTruth: 'commander track; status route is visible, but live test-chat remains credential-gated until the approved Agent Zero external API key is available',
+    status: 'blocked',
+    liveInterfaceProven: false,
+    calledTrueProven: false,
+    interfaceSummary: 'Mission Control bridge status surface is available; live commander chat proof is credential-gated',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/agent-zero/status',
-    extraBlockers: ['agent_zero_full_go_requires_downstream_route_completion'],
+    extraBlockers: ['agent_zero_external_api_key_missing'],
   },
   {
     id: 'hermes',
@@ -286,16 +286,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Hermes',
     role: 'Lieutenant / Skill + Workflow Builder',
     layer: 'planning_and_skill_design',
-    productionTruth: 'yellow/gated until hermes_called:true is proven',
-    status: 'gated',
-    liveInterfaceProven: false,
+    productionTruth: 'safe test-chat adapter proof exists, but the standalone Hermes runtime status route remains service-down until hermes-gateway service/runtime is installed',
+    status: 'blocked',
+    liveInterfaceProven: true,
     calledTrueProven: false,
-    interfaceSummary: 'Read-only status visible; live chat proof pending',
+    interfaceSummary: 'Safe chat adapter has proof, but standalone Hermes runtime remains blocked',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'service_gated',
     bridgeStatusRoute: '/api/bridge/hermes/status',
-    extraBlockers: ['hermes_called_true_not_proven'],
+    extraBlockers: ['hermes_not_installed'],
   },
   {
     id: 'spaceagent',
@@ -303,16 +303,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'SpaceAgent',
     role: 'Browser / Firecrawl / YouTube Research Specialist',
     layer: 'web_research_specialist',
-    productionTruth: 'Playwright MCP browser automation is live as a local-only SpaceAgent research tool; interactive/authenticated actions remain Bridge Session gated',
-    status: 'read_only',
+    productionTruth: 'YouTube transcript connector is proven for public read-only research; Playwright MCP is currently service-down and Firecrawl remains credential/backend gated',
+    status: 'pending',
     liveInterfaceProven: true,
     calledTrueProven: false,
-    interfaceSummary: 'Gateway research node visible; Playwright MCP is connected at localhost only and returns read-only Browser Evidence Packets',
+    interfaceSummary: 'Gateway research node visible; YouTube research is proven, while Playwright MCP and Firecrawl remain blocked by exact runtime/credential gates',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['firecrawl_credential_required', 'youtube_transcript_connector_not_proven', 'interactive_browser_actions_require_bridge_session'],
+    extraBlockers: ['playwright_mcp_service_unreachable', 'firecrawl_credential_required', 'interactive_browser_actions_require_bridge_session'],
   },
   {
     id: 'pi-mono',
@@ -396,11 +396,11 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     allowed_owner_statuses: OWNER_FACING_STATUS_STATES,
     owner_status_summary: summarizeOwnerStatuses(agents.map((agent) => agent.owner_status)),
     production_truth: {
-      agent_zero: 'partial_go_commander_track',
-      hermes: 'gated_until_hermes_called_true',
+      agent_zero: 'credential_gated_until_agent_zero_external_api_key_available',
+      hermes: 'partial_safe_adapter_proven_but_runtime_service_down',
       pi_mono: 'live_shadow_dispatcher_advisory_only',
-      spaceagent: 'playwright_mcp_live_local_only_browser_research',
-      paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
+      spaceagent: 'youtube_transcript_ready_playwright_service_down_firecrawl_credential_gated',
+      paperclip: 'service_down_until_paperclip_sandbox_runtime_running',
       openclaw_plus: 'service_down_until_openclaw_cli_reachable',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
@@ -592,10 +592,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       ...(node?.blocked_reason ? [node.blocked_reason] : []),
       ...(registryNode?.blockers || []),
     ]
-    const preferDefinitionBlocker = definition.id === 'pi-mono' || definition.id === 'spaceagent' || definition.id === 'openclaw-plus'
-    const blockers = ownerSafeList(preferDefinitionBlocker
-      ? [...definition.extraBlockers, ...observedBlockers]
-      : [...observedBlockers, ...definition.extraBlockers])
+    const blockers = ownerSafeList([...definition.extraBlockers, ...observedBlockers])
     const readEnabled = Boolean(node?.read_enabled) || definition.status === 'partial_go' || definition.status === 'read_only'
     const ownerStatus = describeOwnerFacingStatus({
       rawStatus: definition.status,

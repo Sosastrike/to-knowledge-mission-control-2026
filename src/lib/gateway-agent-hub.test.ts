@@ -28,13 +28,39 @@ describe('Gateway Agent Hub', () => {
     })
     expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
     expect(payload.agents_total).toBe(6)
-    expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
-    expect(payload.agents.find((agent) => agent.id === 'agent-zero')?.owner_status).toMatchObject({ status: 'READY', tone: 'blue' })
-    expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({ role: 'Lieutenant / Skill + Workflow Builder', status: 'gated', called_true_proven: false })
-    expect(payload.agents.find((agent) => agent.id === 'hermes')?.owner_status).toMatchObject({ status: 'OWNER_GATED', tone: 'yellow' })
-    expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
-    expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
-    expect(payload.agents.find((agent) => agent.id === 'spaceagent')?.owner_status).toMatchObject({ status: 'READY', tone: 'blue' })
+    expect(payload.production_truth).toMatchObject({
+      agent_zero: 'credential_gated_until_agent_zero_external_api_key_available',
+      hermes: 'partial_safe_adapter_proven_but_runtime_service_down',
+      spaceagent: 'youtube_transcript_ready_playwright_service_down_firecrawl_credential_gated',
+      paperclip: 'service_down_until_paperclip_sandbox_runtime_running',
+    })
+    expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({
+      role: 'Commander',
+      status: 'blocked',
+      called_true_proven: false,
+      blocked_reason: 'agent_zero_external_api_key_missing',
+    })
+    expect(payload.agents.find((agent) => agent.id === 'agent-zero')?.owner_status).toMatchObject({ status: 'CREDENTIAL_GATED', tone: 'yellow' })
+    expect(payload.agents.find((agent) => agent.id === 'hermes')).toMatchObject({
+      role: 'Lieutenant / Skill + Workflow Builder',
+      status: 'blocked',
+      called_true_proven: false,
+      blocked_reason: 'hermes_not_installed',
+    })
+    expect(payload.agents.find((agent) => agent.id === 'hermes')?.owner_status).toMatchObject({ status: 'SERVICE_DOWN', tone: 'red' })
+    expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({
+      role: 'Workforce Control Plane',
+      status: 'blocked',
+      live_interface_proven: false,
+      blocked_reason: 'paperclip_sandbox_service_not_running',
+    })
+    expect(payload.agents.find((agent) => agent.id === 'paperclip')?.owner_status).toMatchObject({ status: 'SERVICE_DOWN', tone: 'red' })
+    expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({
+      role: 'Browser / Firecrawl / YouTube Research Specialist',
+      status: 'pending',
+      blocked_reason: 'playwright_mcp_service_unreachable',
+    })
+    expect(payload.agents.find((agent) => agent.id === 'spaceagent')?.owner_status).toMatchObject({ status: 'CREDENTIAL_GATED', tone: 'yellow' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
       status: 'read_only',
@@ -56,7 +82,9 @@ describe('Gateway Agent Hub', () => {
     })
     expect(payload.agents.find((agent) => agent.id === 'openclaw-plus')?.owner_status).toMatchObject({ status: 'SERVICE_DOWN', tone: 'red' })
     expect(payload.allowed_owner_statuses).toEqual(['LIVE', 'READY', 'OWNER_GATED', 'CREDENTIAL_GATED', 'SERVICE_DOWN', 'BLOCKED', 'DISABLED'])
-    expect(payload.owner_status_summary.READY).toBeGreaterThanOrEqual(3)
+    expect(payload.owner_status_summary.READY).toBe(1)
+    expect(payload.owner_status_summary.CREDENTIAL_GATED).toBe(2)
+    expect(payload.owner_status_summary.SERVICE_DOWN).toBe(3)
     expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {

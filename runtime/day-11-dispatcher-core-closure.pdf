@@ -1,0 +1,422 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3012 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-11-dispatcher-core-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 11 - Dispatcher Core 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Dispatcher Core / Canonical Agent Hub Truth) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker classification: OWNER_GATED / CREDENTIAL_GATED / SERVICE_DOWN lanes remain truthful; Day) Tj
+0 -12 Td
+( 11 core dispatcher work has no developer-side blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Make Mission Control / Gateway / Agent Hub use one owner-safe dispatcher truth source for the co) Tj
+0 -12 Td
+(re agents:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- Pi) Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 11 specifically fixes stale Agent Hub truth that made some blocked lanes look READY or parti) Tj
+0 -12 Td
+(ally live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The Agent Hub status payload no longer reports stale production truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Zero is now `CREDENTIAL_GATED` until the approved Agent Zero external API key is availab) Tj
+0 -12 Td
+(le.) Tj
+0 -12 Td
+(- Hermes is now service-down for standalone runtime, while preserving the earlier safe adapter p) Tj
+0 -12 Td
+(roof.) Tj
+0 -12 Td
+(- Paperclip is now service-down until the sandbox/local or Tailnet-only runtime is running.) Tj
+0 -12 Td
+(- SpaceAgent is split honestly:) Tj
+0 -12 Td
+(  - Playwright MCP: `SERVICE_DOWN`) Tj
+0 -12 Td
+(  - YouTube research: `READ_ONLY`) Tj
+0 -12 Td
+(  - Firecrawl: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- Pi remains `READ_ONLY` advisory dispatcher / route optimizer candidate.) Tj
+0 -12 Td
+(- OpenClaw+ remains `SERVICE_DOWN` until the CLI/runtime doctor is reachable.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The CloudCode backend-support agent-health helper now consumes the SpaceAgent browser automation) Tj
+0 -12 Td
+( card truth instead of copying one aggregate SpaceAgent blocker across Playwright, YouTube, and ) Tj
+0 -12 Td
+(Firecrawl.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/gateway/agent-hub/status/route.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-11-dispatcher-core-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-11-dispatcher-core-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The route now includes live SpaceAgent browser automation inputs:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Playwright MCP status from the local MCP status probe.) Tj
+0 -12 Td
+(- Firecrawl credential presence yes/no only.) Tj
+0 -12 Td
+(- YouTube transcript connector proof status.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2753 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub and downstream detail/status consumers now receive owner-facing truth that avoids fake) Tj
+0 -12 Td
+( LIVE or fake READY states.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current owner-facing status summary from the restarted runtime:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Status | Count |) Tj
+0 -12 Td
+(| --- | ---: |) Tj
+0 -12 Td
+(| LIVE | 0 |) Tj
+0 -12 Td
+(| READY | 1 |) Tj
+0 -12 Td
+(| OWNER_GATED | 0 |) Tj
+0 -12 Td
+(| CREDENTIAL_GATED | 2 |) Tj
+0 -12 Td
+(| SERVICE_DOWN | 3 |) Tj
+0 -12 Td
+(| BLOCKED | 0 |) Tj
+0 -12 Td
+(| DISABLED | 0 |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent card truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Agent | Status | Owner status | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- | --- |) Tj
+0 -12 Td
+(| Agent Zero | blocked | CREDENTIAL_GATED | `agent_zero_external_api_key_missing` |) Tj
+0 -12 Td
+(| Hermes | blocked | SERVICE_DOWN | `hermes_not_installed` |) Tj
+0 -12 Td
+(| Pi | read_only | READY | none |) Tj
+0 -12 Td
+(| Paperclip | blocked | SERVICE_DOWN | `paperclip_sandbox_service_not_running` |) Tj
+0 -12 Td
+(| SpaceAgent | pending | CREDENTIAL_GATED | `playwright_mcp_service_unreachable` plus Firecrawl ) Tj
+0 -12 Td
+(credential gate |) Tj
+0 -12 Td
+(| OpenClaw+ | blocked | SERVICE_DOWN | `openclaw_doctor_runtime_not_reachable` |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(SpaceAgent component truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Component | Status | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- |) Tj
+0 -12 Td
+(| Playwright MCP | SERVICE_DOWN | `playwright_mcp_service_unreachable` |) Tj
+0 -12 Td
+(| YouTube Research | READ_ONLY | none |) Tj
+0 -12 Td
+(| Firecrawl | CREDENTIAL_GATED | `firecrawl_credential_required` |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control was rebuilt and restarted locally on the production standalone bundle.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- PID after final restart: `71076`) Tj
+0 -12 Td
+(- `/login`: HTTP 200) Tj
+0 -12 Td
+(- Public exposure check: only `127.0.0.1:3337` was listening.) Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated runtime probe:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status`: HTTP 200 with corrected production truth.) Tj
+0 -12 Td
+(- `GET /api/gateway/space-agent/youtube/status`: `READY`, `transcript_connector_proven=true`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Passed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(  - 171 test files passed.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2378 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - 1359 tests passed.) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(  - 46 routes checked.) Tj
+0 -12 Td
+(  - 8 designer pages checked.) Tj
+0 -12 Td
+(  - 0 failures.) Tj
+0 -12 Td
+(- `.env` diff check: `0` bytes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Targeted regression:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These tests now fail if stale Agent Zero/Hermes/Paperclip/SpaceAgent fake-ready status returns.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This report and PDF are the Day 11 proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-11-dispatcher-core-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-11-dispatcher-core-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These are not Day 11 developer blockers; they are truthful downstream lane states:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Blocker | Class | Lane |) Tj
+0 -12 Td
+(| --- | --- | --- |) Tj
+0 -12 Td
+(| `agent_zero_external_api_key_missing` | CREDENTIAL_GATED | Agent Zero |) Tj
+0 -12 Td
+(| `hermes_not_installed` | SERVICE_DOWN | Hermes runtime |) Tj
+0 -12 Td
+(| `paperclip_sandbox_service_not_running` | SERVICE_DOWN | Paperclip |) Tj
+0 -12 Td
+(| `playwright_mcp_service_unreachable` | SERVICE_DOWN | SpaceAgent Playwright |) Tj
+0 -12 Td
+(| `firecrawl_credential_required` | CREDENTIAL_GATED | SpaceAgent Firecrawl |) Tj
+0 -12 Td
+(| `openclaw_doctor_runtime_not_reachable` | SERVICE_DOWN | OpenClaw+ |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command after commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day11_dispatcher_core_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Commit hash: pending until this report commit is created.) Tj
+0 -12 Td
+(Push result: pending until this report commit is pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 12 - Token Governor begins next. The next lane is canonical token/budget/model enforcement w) Tj
+0 -12 Td
+(ith owner-safe UI state, tests, and proof.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003317 00000 n 
+0000003443 00000 n 
+0000006248 00000 n 
+0000006374 00000 n 
+0000008804 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8874
+%%EOF

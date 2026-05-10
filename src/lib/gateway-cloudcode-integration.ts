@@ -259,9 +259,75 @@ function agentHubProbe(agent: AnyRecord): AgentProbeInput[] {
 }
 
 export function buildCloudCodeAgentHealth(agentHubPayload: AnyRecord): ComponentStatus[] {
-  const probes = asArray(agentHubPayload.agents).flatMap(agentHubProbe)
+  const browserAutomation = asRecord(agentHubPayload.space_agent_browser_automation)
+  const hasSpaceAgentCards = asArray(browserAutomation.cards).length > 0
+  const probes = [
+    ...asArray(agentHubPayload.agents)
+      .filter((agent) => !(hasSpaceAgentCards && agentHubIdToCloudCodeIds(firstString(agent.id, agent.name) || '').some((id) => id.startsWith('spaceagent_'))))
+      .flatMap(agentHubProbe),
+    ...spaceAgentBrowserAutomationProbes(browserAutomation),
+  ]
   return buildAgentHealth(probes, {
     executionEnabled: agentHubPayload.execution_enabled === true,
+  })
+}
+
+function spaceAgentBrowserAutomationProbes(browserAutomation: AnyRecord): AgentProbeInput[] {
+  const cards = asArray(browserAutomation.cards)
+  if (cards.length === 0) return []
+  return cards.map((card) => {
+    const id = firstString(card.id)
+    const blocker = firstString(card.blocker)
+    const connected = card.connected === true
+    const configured = card.configured === true
+    const status = firstString(card.status)
+    if (id === 'playwright_mcp') {
+      return {
+        id: 'spaceagent_playwright',
+        reachable: connected,
+        configured: true,
+        credential_configured: true,
+        service_running: connected,
+        blocker,
+        next_action: blocker ? 'Start or expose the local Playwright MCP service before browser automation can be marked ready.' : null,
+        proof_available: connected,
+      }
+    }
+    if (id === 'youtube_research') {
+      const proven = configured && !blocker
+      return {
+        id: 'spaceagent_youtube',
+        reachable: proven,
+        configured: proven,
+        credential_configured: true,
+        service_running: proven,
+        blocker,
+        next_action: blocker ? 'Keep YouTube limited until transcript connector proof is available.' : null,
+        proof_available: proven,
+      }
+    }
+    if (id === 'firecrawl') {
+      return {
+        id: 'spaceagent_firecrawl',
+        reachable: false,
+        configured: true,
+        credential_configured: configured,
+        service_running: null,
+        blocker: blocker || (status === 'blocked' ? 'firecrawl_credential_required' : null),
+        next_action: configured ? 'Prove the Firecrawl backend adapter with one read-only smoke.' : 'Owner must provide the approved Firecrawl credential source.',
+        proof_available: false,
+      }
+    }
+    return {
+      id: firstString(card.id) || 'spaceagent_playwright',
+      reachable: connected,
+      configured,
+      credential_configured: !/credential/i.test(blocker || ''),
+      service_running: connected || null,
+      blocker,
+      next_action: blocker ? 'Resolve this SpaceAgent blocker before marking the card ready.' : null,
+      proof_available: connected,
+    }
   })
 }
 

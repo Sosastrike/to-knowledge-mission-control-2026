@@ -119,6 +119,61 @@ describe('CloudCode backend-support integration', () => {
     expect(health.every((agent) => agent.status !== 'LIVE')).toBe(true)
   })
 
+  it('uses SpaceAgent browser automation card truth instead of one aggregate fake status', () => {
+    const health = buildCloudCodeAgentHealth({
+      execution_enabled: false,
+      agents: [
+        {
+          id: 'spaceagent',
+          name: 'SpaceAgent',
+          connected: true,
+          configured: true,
+          blocked_reason: 'firecrawl_credential_required',
+          live_interface_proven: true,
+        },
+      ],
+      space_agent_browser_automation: {
+        cards: [
+          {
+            id: 'playwright_mcp',
+            status: 'blocked',
+            configured: true,
+            connected: false,
+            blocker: 'playwright_mcp_service_unreachable',
+          },
+          {
+            id: 'youtube_research',
+            status: 'limited_pending',
+            configured: true,
+            connected: false,
+            blocker: null,
+          },
+          {
+            id: 'firecrawl',
+            status: 'blocked',
+            configured: false,
+            connected: false,
+            blocker: 'firecrawl_credential_required',
+          },
+        ],
+      },
+    } as any)
+
+    expect(health.find((agent) => agent.id === 'spaceagent_playwright')).toMatchObject({
+      status: 'SERVICE_DOWN',
+      blocker: 'playwright_mcp_service_unreachable',
+    })
+    expect(health.find((agent) => agent.id === 'spaceagent_youtube')).toMatchObject({
+      status: 'READ_ONLY',
+      blocker: null,
+    })
+    expect(health.find((agent) => agent.id === 'spaceagent_firecrawl')).toMatchObject({
+      status: 'CREDENTIAL_GATED',
+      blocker: 'firecrawl_credential_required',
+    })
+    expect(health.every((agent) => agent.status !== 'LIVE')).toBe(true)
+  })
+
   it('returns route metadata for breadcrumbs, home, back, Gateway Overview, and Agent Hub', () => {
     const nav = buildCloudCodeNavigation('/gateway/agent-hub')
 

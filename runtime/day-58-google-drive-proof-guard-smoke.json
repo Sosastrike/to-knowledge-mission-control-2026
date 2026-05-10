@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 3,
+  "expectation": "Google Drive readiness and upload proof are authenticated, canonical, folder-aware, scoped, and never fake upload.",
+  "failures": [],
+  "results": [
+    {
+      "name": "unauthenticated_status_requires_auth",
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "status": 401,
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "authenticated_status",
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "status": 200,
+      "mode": "agent_zero_google_drive_delivery_adapter",
+      "canonical_status": "CREDENTIAL_GATED",
+      "blocker_class": "CREDENTIAL_GATED",
+      "blocked_reason": "google_drive_credential_required",
+      "credential_present": false,
+      "required_scope": "google_drive.upload",
+      "target_folder_required": true,
+      "target_folder_configured": false,
+      "upload_connector_configured": false,
+      "writes_enabled": false,
+      "no_upload_performed": true,
+      "no_fake_done": true,
+      "no_tokens_exposed": true,
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "authenticated_upload_stays_blocked",
+      "path": "/api/bridge/agent-zero/google-drive/upload-report",
+      "status": 423,
+      "action": "google_drive.upload_report_pdf",
+      "accepted_for_execution": false,
+      "required_scope": "google_drive.upload",
+      "target_folder_required": true,
+      "target_folder_configured": true,
+      "blocked_reason": "google_drive_upload_connector_not_configured",
+      "upload_connector_configured": false,
+      "no_upload_performed": true,
+      "no_fake_done": true,
+      "no_tokens_exposed": true,
+      "unsafe_text_detected": false
+    }
+  ]
+}

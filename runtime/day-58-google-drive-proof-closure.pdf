@@ -1,0 +1,233 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2867 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-58-google-drive-proof-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 58 - Google Drive Proof Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Google Drive proof) Tj
+0 -12 Td
+(Status: CREDENTIAL_GATED / BACKEND_MISSING proof harness complete) Tj
+0 -12 Td
+(Branch: to-knowledge-mc) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Close the developer-side Google Drive proof lane without fake uploads.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The lane verifies that Google Drive upload/link proof remains Bridge-gated, requires provider au) Tj
+0 -12 Td
+(th and a target folder, never exposes a raw local path, and never claims upload unless a real ad) Tj
+0 -12 Td
+(apter verifies it.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Updated Google Drive delivery proof behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Upload proof now exposes `required_scope: google_drive.upload`.) Tj
+0 -12 Td
+(- Upload proof declares `target_folder_required: true`.) Tj
+0 -12 Td
+(- Upload proof reports whether target folder configuration exists.) Tj
+0 -12 Td
+(- Blocked upload results now include `no_upload_performed: true`.) Tj
+0 -12 Td
+(- Link verification remains blocked through the same safe result surface.) Tj
+0 -12 Td
+(- Readiness guard script now fails if upload proof does not expose the required scope and no-upl) Tj
+0 -12 Td
+(oad truth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-zero-google-drive-delivery.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-zero-google-drive-delivery.test.ts`) Tj
+0 -12 Td
+(- `scripts/check-google-drive-readiness-guard.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No fake upload state is introduced. The UI must continue showing Google Drive as gated/blocked u) Tj
+0 -12 Td
+(ntil:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bridge Session scope exists for `google_drive.upload`.) Tj
+0 -12 Td
+(- Google Drive auth is present.) Tj
+0 -12 Td
+(- Target folder is configured.) Tj
+0 -12 Td
+(- A real provider upload/list runner verifies the operation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Focused Google Drive adapter tests passed as part of the current focused gate:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-zero-google-drive-delivery.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result: 3 tests passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation run:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: passed.) Tj
+0 -12 Td
+(- `pnpm run typecheck`: passed after clearing stale generated `.next/types`.) Tj
+0 -12 Td
+(- `pnpm run build`: passed.) Tj
+0 -12 Td
+(- `pnpm test`: passed, 181 files / 1414 tests.) Tj
+0 -12 Td
+(- `scripts/check-protected-file-invariants.mjs`: passed.) Tj
+0 -12 Td
+(- `.env` diff check: no diff.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1255 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Runtime proof on `127.0.0.1:3337`:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `scripts/check-google-drive-readiness-guard.mjs`: passed.) Tj
+0 -12 Td
+(- Authenticated status returned `CREDENTIAL_GATED`.) Tj
+0 -12 Td
+(- Blocker: `google_drive_credential_required`.) Tj
+0 -12 Td
+(- Upload proof returned HTTP 423.) Tj
+0 -12 Td
+(- Upload proof included `required_scope: google_drive.upload`.) Tj
+0 -12 Td
+(- Upload proof included `no_upload_performed: true`.) Tj
+0 -12 Td
+(- No fake upload, no fake done, no token exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## External Writes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Google Drive upload was attempted.) Tj
+0 -12 Td
+(No external write occurred.) Tj
+0 -12 Td
+(No token or OAuth secret was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(CREDENTIAL_GATED / BACKEND_MISSING:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Google Drive OAuth/provider execution is not proven in the current runtime.) Tj
+0 -12 Td
+(- Upload remains blocked until approved Bridge scope and provider adapter proof are present.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(`git revert <day_58_google_drive_commit_sha>`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003166 00000 n 
+0000003292 00000 n 
+0000004599 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4669
+%%EOF

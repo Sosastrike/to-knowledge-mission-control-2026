@@ -83,12 +83,16 @@ export type AgentZeroGoogleDriveActionResult = {
   writes_enabled: false
   bridge_session_required: true
   owner_approval_required: true
+  required_scope: typeof GOOGLE_DRIVE_UPLOAD_SCOPE
+  target_folder_required: true
+  target_folder_configured: boolean
   upload_connector_configured: boolean
   normal_reply: string
   blocked_reason: string
   report_link?: string | null
   folder?: string | null
   verify_link?: string | null
+  no_upload_performed: true
   no_fake_done: true
   no_tokens_exposed: true
 }
@@ -263,6 +267,7 @@ export async function getAgentZeroGoogleDriveDeliveryStatus(input: StatusInput =
 function blockedAction(input: {
   action: string
   uploadConnectorConfigured: boolean
+  targetFolderConfigured: boolean
   folder?: string | null
   verifyLink?: string | null
   reportLink?: string | null
@@ -277,6 +282,9 @@ function blockedAction(input: {
     writes_enabled: false,
     bridge_session_required: true,
     owner_approval_required: true,
+    required_scope: GOOGLE_DRIVE_UPLOAD_SCOPE,
+    target_folder_required: true,
+    target_folder_configured: input.targetFolderConfigured,
     upload_connector_configured: input.uploadConnectorConfigured,
     normal_reply: GOOGLE_DRIVE_UPLOAD_BLOCKED_MESSAGE,
     blocked_reason: input.uploadConnectorConfigured
@@ -285,6 +293,7 @@ function blockedAction(input: {
     folder: input.folder || null,
     verify_link: input.verifyLink || null,
     report_link: input.reportLink || null,
+    no_upload_performed: true,
     no_fake_done: true,
     no_tokens_exposed: true,
   }
@@ -295,6 +304,7 @@ export async function lookupAgentZeroGoogleDriveFolder(input: { folder?: string 
   return blockedAction({
     action: 'google_drive.folder_lookup',
     uploadConnectorConfigured: status.upload_connector_configured,
+    targetFolderConfigured: status.target_folder_configured || Boolean(input.folder),
     folder: input.folder || null,
   })
 }
@@ -304,6 +314,7 @@ export async function uploadAgentZeroGoogleDriveTestFile(input: { folder?: strin
   return blockedAction({
     action: 'google_drive.upload_test_file',
     uploadConnectorConfigured: status.upload_connector_configured && Boolean(input.bridgeSessionId),
+    targetFolderConfigured: status.target_folder_configured || Boolean(input.folder),
     folder: input.folder || null,
   })
 }
@@ -314,6 +325,7 @@ export async function uploadAgentZeroReportToGoogleDrive(input: { reportId?: str
   return blockedAction({
     action: 'google_drive.upload_report_pdf',
     uploadConnectorConfigured: status.upload_connector_configured && Boolean(input.bridgeSessionId),
+    targetFolderConfigured: status.target_folder_configured || Boolean(input.folder),
     folder: input.folder || null,
     reportLink: report?.mission_control_url || null,
   })
@@ -324,6 +336,7 @@ export async function verifyAgentZeroGoogleDriveLink(input: { link?: string | nu
   return blockedAction({
     action: 'google_drive.verify_link',
     uploadConnectorConfigured: status.upload_connector_configured,
+    targetFolderConfigured: status.target_folder_configured,
     verifyLink: input.link || null,
   })
 }

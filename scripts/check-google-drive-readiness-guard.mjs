@@ -80,14 +80,21 @@ results.push({
   status: upload.status,
   action: upload.body?.action || null,
   accepted_for_execution: upload.body?.accepted_for_execution ?? null,
+  required_scope: upload.body?.required_scope || null,
+  target_folder_required: upload.body?.target_folder_required ?? null,
+  target_folder_configured: upload.body?.target_folder_configured ?? null,
   blocked_reason: upload.body?.blocked_reason || null,
   upload_connector_configured: upload.body?.upload_connector_configured ?? null,
+  no_upload_performed: upload.body?.no_upload_performed ?? null,
   no_fake_done: upload.body?.no_fake_done ?? null,
   no_tokens_exposed: upload.body?.no_tokens_exposed ?? null,
   unsafe_text_detected: upload.unsafe_text_detected,
 })
 if (upload.status !== 423) failures.push({ name: 'authenticated_upload_stays_blocked', error: `expected_423_got_${upload.status}` })
 if (upload.body?.accepted_for_execution !== false) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'unexpected_execution_acceptance' })
+if (upload.body?.required_scope !== 'google_drive.upload') failures.push({ name: 'authenticated_upload_stays_blocked', error: 'missing_google_drive_scope' })
+if (upload.body?.target_folder_required !== true) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'missing_target_folder_requirement' })
+if (upload.body?.no_upload_performed !== true) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'missing_no_upload_performed' })
 if (upload.body?.no_fake_done !== true) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'missing_no_fake_done' })
 if (upload.body?.no_tokens_exposed !== true) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'missing_no_tokens_exposed' })
 if (upload.unsafe_text_detected) failures.push({ name: 'authenticated_upload_stays_blocked', error: 'unsafe_text_detected' })
@@ -96,7 +103,7 @@ const payload = {
   ok: failures.length === 0,
   base_url: baseUrl,
   checked: results.length,
-  expectation: 'Google Drive readiness is authenticated, canonical, folder-aware, and never fakes upload.',
+  expectation: 'Google Drive readiness and upload proof are authenticated, canonical, folder-aware, scoped, and never fake upload.',
   failures,
   results,
 }

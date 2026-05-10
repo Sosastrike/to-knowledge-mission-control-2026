@@ -1,0 +1,243 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2887 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-01-agent-zero-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 01 - Agent Zero Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: CREDENTIAL_GATED - developer-side proof harness complete, not GO) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Zero is the intended active commander. This day does not claim Agent Zero is 100% live, be) Tj
+0 -12 Td
+(cause read-only test chat is blocked by a missing external API key.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- Runtime PID: `8391`) Tj
+0 -12 Td
+(- Deployed source commit for current runtime: `e814ba1b057cd11afdbae1ac203c9256aa1ff2a2`) Tj
+0 -12 Td
+(- Branch HEAD after reports: `b811cec6f53e8c1882f3ac7b5a6f320aadc952ab`) Tj
+0 -12 Td
+(- `/api/bridge/agent-zero/status`: 200) Tj
+0 -12 Td
+(- Agent role from status route: `ecosystem commander`) Tj
+0 -12 Td
+(- `/api/bridge/agent-zero/test-chat`: 503 with exact blocker) Tj
+0 -12 Td
+(- Exact blocker: `agent_zero_external_api_key_missing`) Tj
+0 -12 Td
+(- `agent_zero_called`: false for test-chat prompts because the external API credential is not av) Tj
+0 -12 Td
+(ailable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commander Questions) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The required commander prompts were attempted through the authenticated read-only test-chat rout) Tj
+0 -12 Td
+(e:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Who is commander?) Tj
+0 -12 Td
+(- Is Tony active?) Tj
+0 -12 Td
+(- What agents can you see?) Tj
+0 -12 Td
+(- What tools can you see?) Tj
+0 -12 Td
+(- What skills can you see?) Tj
+0 -12 Td
+(- What integrations can you see?) Tj
+0 -12 Td
+(- What is Pi?) Tj
+0 -12 Td
+(- What is Hermes?) Tj
+0 -12 Td
+(- What is Paperclip?) Tj
+0 -12 Td
+(- What is OpenClaw+?) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every prompt returned the same blocker before model execution:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```text) Tj
+0 -12 Td
+(agent_zero_external_api_key_missing) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Because Agent Zero was not actually called, no answer is treated as proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Registry Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Hub status now includes CloudCode `buildAgentHealth` output.) Tj
+0 -12 Td
+(- Agent Zero does not get promoted to fake LIVE by the new Gateway truth layer.) Tj
+0 -12 Td
+(- Agent Zero remains commander in the status model, but live chat proof is credential-gated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Validation Already Run In This Workstream) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 171 files / 1356 tests) Tj
+0 -12 Td
+(- Backend-support typecheck/build/tests: PASS) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1380 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Changed-file secret scan: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` status check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Blocker Classification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Blocker class: `CREDENTIAL_GATED`) Tj
+0 -12 Td
+(- Owner action required: provide or approve the Agent Zero external API credential path without ) Tj
+0 -12 Td
+(exposing the value.) Tj
+0 -12 Td
+(- Codex action after credential is available: rerun `/api/bridge/agent-zero/test-chat` and requi) Tj
+0 -12 Td
+(re `agent_zero_called:true`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No delivery/execution write attempted.) Tj
+0 -12 Td
+(- No fake Agent Zero response was recorded.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This day added a report only. Roll back the report commit after it is created:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-01-report-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 02 - Hermes closure starts next. Hermes must be proven with a live safe adapter call or clas) Tj
+0 -12 Td
+(sified with an exact blocker.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003186 00000 n 
+0000003312 00000 n 
+0000004744 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4814
+%%EOF

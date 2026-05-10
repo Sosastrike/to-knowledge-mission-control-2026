@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-10T15:16:25.572Z",
+  "status": 201,
+  "mode": "tool_action_approval_requested",
+  "canonical_status": "OWNER_GATED",
+  "blocker_class": "OWNER_GATED",
+  "required_scope": "agentmail.send",
+  "approval_request_created": true,
+  "approval_request_reused": false,
+  "approval_id_present": true,
+  "approval_state": "pending",
+  "audit_event_id_present": true,
+  "accepted_for_execution": false,
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "bridge_session_required": true,
+  "owner_approval_required": true,
+  "no_external_writes": true,
+  "unsafe_output_detected": false
+}

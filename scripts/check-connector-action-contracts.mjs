@@ -26,6 +26,7 @@ async function request(path, init = {}) {
     headers: {
       'content-type': 'application/json',
       'x-api-key': apiKey,
+      cookie: 'mc-session=runtime-smoke-proxy-pass',
       ...(init.headers || {}),
     },
     body: init.body ? JSON.stringify(init.body) : undefined,

@@ -1,5 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { getMcpServerTools } from './mcp-server-tool-schemas'
+import {
+  describeOwnerFacingStatus,
+  OWNER_FACING_STATUS_STATES,
+  type OwnerFacingBlockerClass,
+  type OwnerFacingStatus,
+  type OwnerFacingStatusDescriptor,
+} from './owner-status'
 
 export type ZapierWriteClassification = 'read' | 'write' | 'unknown'
 
@@ -18,9 +25,16 @@ export type ZapierToolRecord = {
 
 export type ZapierToolBridgePayload = {
   ok: true
+  canonical_status: OwnerFacingStatus
+  blocker_class: OwnerFacingBlockerClass
+  owner_status: OwnerFacingStatusDescriptor
   connected: boolean
   mcp_reachable: boolean
+  read_enabled: boolean
   tools_total: number
+  read_tools_total: number
+  write_tools_total: number
+  unknown_tools_total: number
   tools: ZapierToolRecord[]
   heygen_found: boolean
   heygen_tools: ZapierToolRecord[]
@@ -33,7 +47,11 @@ export type ZapierToolBridgePayload = {
   execution_enabled: false
   writes_enabled: false
   no_zapier_writes: true
+  bridge_session_required: true
+  approval_required_for_writes: true
+  allowed_owner_statuses: typeof OWNER_FACING_STATUS_STATES
   blocker: string | null
+  warning: string | null
   next_action: string
 }
 
@@ -161,11 +179,15 @@ function parseMcpJsonResponse(text: string): unknown {
 async function listLiveMcpTools(providerNames: string[]): Promise<{
   mcp_reachable: boolean
   tools: ZapierToolRecord[]
+  blocker: string | null
+  canonical_status: OwnerFacingStatus
 }> {
   const claudeMcp = await getMcpServerTools('zapier')
   if (claudeMcp.ok && claudeMcp.tools.length > 0) {
     return {
       mcp_reachable: true,
+      blocker: null,
+      canonical_status: 'READY',
       tools: claudeMcp.tools
         .map((tool) => toRecord({
           name: tool.tool_name,
@@ -182,7 +204,14 @@ async function listLiveMcpTools(providerNames: string[]): Promise<{
   }
 
   const url = zapierMcpUrl()
-  if (!url) return { mcp_reachable: false, tools: [] }
+  if (!url) {
+    return {
+      mcp_reachable: false,
+      tools: [],
+      blocker: claudeMcp.blocker || claudeMcp.error || 'zapier_mcp_not_configured',
+      canonical_status: claudeMcp.canonical_status,
+    }
+  }
 
   try {
     const response = await fetch(url, {
@@ -203,13 +232,30 @@ async function listLiveMcpTools(providerNames: string[]): Promise<{
     const payload = parseMcpJsonResponse(await response.text()) as
       | { result?: { tools?: McpTool[] }; error?: unknown }
       | null
-    if (!response.ok || payload?.error) return { mcp_reachable: false, tools: [] }
+    if (!response.ok || payload?.error) {
+      return {
+        mcp_reachable: false,
+        tools: [],
+        blocker: `zapier_mcp_tools_list_failed: HTTP ${response.status}`,
+        canonical_status: 'SERVICE_DOWN',
+      }
+    }
     const tools = (payload?.result?.tools || [])
       .map((tool) => toRecord(tool, 'zapier_mcp', providerNames))
       .filter((tool): tool is ZapierToolRecord => Boolean(tool))
-    return { mcp_reachable: true, tools }
+    return {
+      mcp_reachable: true,
+      tools,
+      blocker: tools.length ? null : 'zapier_mcp_returned_no_tools',
+      canonical_status: tools.length ? 'READY' : 'BLOCKED',
+    }
   } catch {
-    return { mcp_reachable: false, tools: [] }
+    return {
+      mcp_reachable: false,
+      tools: [],
+      blocker: 'zapier_mcp_tools_list_failed',
+      canonical_status: 'SERVICE_DOWN',
+    }
   }
 }
 
@@ -283,12 +329,46 @@ export async function getZapierToolBridge(query?: string | null): Promise<Zapier
     : cached.length > 0
       ? 'cached_snapshot'
       : 'none'
+  const readToolsTotal = allTools.filter((tool) => tool.write_classification === 'read').length
+  const writeToolsTotal = allTools.filter((tool) => tool.write_classification === 'write').length
+  const unknownToolsTotal = allTools.filter((tool) => tool.write_classification === 'unknown').length
+  const blocker = allTools.length === 0
+    ? (live.blocker || 'zapier_tool_inventory_not_visible')
+    : null
+  const warning = allTools.length > 0 && !live.mcp_reachable
+    ? 'Zapier tools are shown from a cached snapshot. Live Zapier MCP is not reachable, and execution remains locked.'
+    : allTools.length > 0
+      ? 'Zapier tool inventory is visible. Tool execution remains locked until scoped owner approval and exact runner wiring.'
+      : null
+  const owner_status = describeOwnerFacingStatus({
+    rawStatus: allTools.length > 0
+      ? 'read_only'
+      : live.canonical_status === 'CREDENTIAL_GATED'
+        ? 'credential_required'
+        : live.canonical_status === 'SERVICE_DOWN'
+          ? 'service_down'
+          : 'blocked',
+    blockers: blocker ? [blocker] : [],
+    configured: Boolean(zapierMcpUrl()) || allTools.length > 0,
+    readEnabled: allTools.length > 0,
+    writeEnabled: false,
+    executionEnabled: false,
+    requiresBridgeSession: true,
+    preferReadyWhenReadable: true,
+  })
 
   return {
     ok: true,
+    canonical_status: owner_status.status,
+    blocker_class: owner_status.blocker_class,
+    owner_status,
     connected: allTools.length > 0,
     mcp_reachable: live.mcp_reachable,
+    read_enabled: owner_status.can_read,
     tools_total: allTools.length,
+    read_tools_total: readToolsTotal,
+    write_tools_total: writeToolsTotal,
+    unknown_tools_total: unknownToolsTotal,
     tools: filteredTools,
     heygen_found: heygenTools.length > 0,
     heygen_tools: heygenTools,
@@ -305,9 +385,11 @@ export async function getZapierToolBridge(query?: string | null): Promise<Zapier
     execution_enabled: false,
     writes_enabled: false,
     no_zapier_writes: true,
-    blocker: allTools.length === 0
-      ? 'Zapier tool inventory is not visible. Owner must connect/resync Zapier MCP before using Zapier tools.'
-      : 'Zapier tool inventory is visible. Tool execution remains locked until scoped Telegram approval and exact runner wiring.',
+    bridge_session_required: true,
+    approval_required_for_writes: true,
+    allowed_owner_statuses: OWNER_FACING_STATUS_STATES,
+    blocker,
+    warning,
     next_action: heygenTools.length > 0
       ? 'Use the Zapier HeyGen path for video planning. Do not ask for direct HeyGen API keys first.'
       : 'HeyGen is not visible in Zapier MCP. Owner must connect HeyGen in Zapier, then rerun Zapier resync/tool discovery.',

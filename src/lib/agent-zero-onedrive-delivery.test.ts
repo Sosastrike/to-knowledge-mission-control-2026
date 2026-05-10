@@ -11,9 +11,27 @@ import type { ZapierToolBridgePayload } from './zapier-tool-bridge'
 function fakeBridge(): ZapierToolBridgePayload {
   return {
     ok: true,
+    canonical_status: 'READY',
+    blocker_class: 'NONE',
+    owner_status: {
+      status: 'READY',
+      label: 'READY',
+      summary: 'Visible and usable for safe read-only or advisory work; protected execution is still gated.',
+      reason: null,
+      blocker_class: 'NONE',
+      tone: 'blue',
+      can_read: true,
+      can_write: false,
+      can_execute: false,
+      bridge_session_required: true,
+    },
     connected: true,
     mcp_reachable: true,
+    read_enabled: true,
     tools_total: 2,
+    read_tools_total: 1,
+    write_tools_total: 1,
+    unknown_tools_total: 0,
     tools: [
       {
         tool_name: 'mcp__zapier__onedrive_upload_file',
@@ -51,7 +69,19 @@ function fakeBridge(): ZapierToolBridgePayload {
     execution_enabled: false,
     writes_enabled: false,
     no_zapier_writes: true,
+    bridge_session_required: true,
+    approval_required_for_writes: true,
+    allowed_owner_statuses: [
+      'LIVE',
+      'READY',
+      'OWNER_GATED',
+      'CREDENTIAL_GATED',
+      'SERVICE_DOWN',
+      'BLOCKED',
+      'DISABLED',
+    ],
     blocker: null,
+    warning: null,
     next_action: 'test',
   }
 }

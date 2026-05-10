@@ -9,6 +9,13 @@ function ZapStatePill({ state }) {
     not_configured: ['not-installed', 'Not configured'],
     degraded: ['degraded', 'Degraded'],
     unknown: ['unknown', 'Unknown'],
+    LIVE: ['live', 'LIVE'],
+    READY: ['read-only', 'READY'],
+    OWNER_GATED: ['approval', 'OWNER_GATED'],
+    CREDENTIAL_GATED: ['credential', 'CREDENTIAL_GATED'],
+    SERVICE_DOWN: ['failed', 'SERVICE_DOWN'],
+    BLOCKED: ['failed', 'BLOCKED'],
+    DISABLED: ['disabled', 'DISABLED'],
   };
   const [cls, label] = map[state] || map.unknown;
   return <span className={`ns-pill ${cls}`}>{label}</span>;
@@ -25,7 +32,7 @@ function ZapierPage() {
     async function load() {
       try {
         const [s, a] = await Promise.all([
-          fetch('/api/zapier/status').then(r => r.json()),
+          fetch('/api/bridge/zapier/status').then(r => r.json()),
           fetch('/api/zapier/audit').then(r => r.json()),
         ]);
         if (!dead) { setStatus(s); setAudit(a); }
@@ -39,7 +46,7 @@ function ZapierPage() {
   }, []);
 
   async function loadTools() {
-    try { setTools(await fetch('/api/zapier/tools').then(r => r.json())); }
+    try { setTools(await fetch('/api/bridge/zapier/tools').then(r => r.json())); }
     catch (e) { setTools({ ok: false, error: e.message }); }
   }
   async function requestApproval() {
@@ -78,12 +85,13 @@ function ZapierPage() {
 
   const s = status || {};
   const events = audit.events || [];
+  const topState = s.canonical_status || s.status || 'unknown';
 
   return (
     <div className="ns-page">
       <div className="ns-header">
         <div>
-          <h1>Zapier <ZapStatePill state={s.status || 'unknown'}/></h1>
+          <h1>Zapier <ZapStatePill state={topState}/></h1>
           <div className="ns-sub">Zapier MCP control center · Read actions allowed · Writes locked behind owner approval</div>
         </div>
         <div className="ns-header-actions">
@@ -98,14 +106,16 @@ function ZapierPage() {
       </div>
 
       {toast && <div className={`ns-banner ${toast.kind}`}>{toast.msg}</div>}
+      {s.blocker && <div className="ns-banner danger"><strong>Current blocker:</strong>&nbsp;{s.blocker}</div>}
+      {s.warning && <div className="ns-banner warn"><strong>Readiness note:</strong>&nbsp;{s.warning}</div>}
 
       <div className="ns-status-strip">
         <div className="ns-stat"><div className="ns-stat-label">OAuth</div><div className="ns-stat-value"><span className={`ns-pill ${s.oauth ? 'live' : 'not-installed'}`}>{s.oauth ? 'Connected' : 'Not connected'}</span></div></div>
-        <div className="ns-stat"><div className="ns-stat-label">MCP</div><div className="ns-stat-value"><ZapStatePill state={s.mcp || 'unknown'}/></div></div>
+        <div className="ns-stat"><div className="ns-stat-label">MCP</div><div className="ns-stat-value"><ZapStatePill state={topState}/></div></div>
         <div className="ns-stat"><div className="ns-stat-label">Tools</div><div className="ns-stat-value">{s.tools_count ?? '—'}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Read</div><div className="ns-stat-value">{s.read_tools_total ?? 0}</div></div>
+        <div className="ns-stat"><div className="ns-stat-label">Write</div><div className="ns-stat-value">{s.write_tools_total ?? 0}</div></div>
         <div className="ns-stat"><div className="ns-stat-label">Writes</div><div className="ns-stat-value"><span className={`ns-pill ${s.writes_unlocked ? 'live' : 'approval'}`}>{s.writes_unlocked ? 'Unlocked' : 'Locked'}</span></div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Blocked writes (24h)</div><div className="ns-stat-value">{s.blocked_writes_24h ?? 0}</div></div>
-        <div className="ns-stat"><div className="ns-stat-label">Allowed reads (24h)</div><div className="ns-stat-value">{s.allowed_reads_24h ?? 0}</div></div>
       </div>
 
       <div className="ns-cols">
@@ -119,19 +129,24 @@ function ZapierPage() {
               <span className="ns-pill backend">Backend required</span>
               <div style={{marginTop: 8}}>{tools.next_action || 'MCP client not implemented yet.'}</div>
             </div>
-          ) : tools.ok && tools.tools ? (
+          ) : tools.ok && Array.isArray(tools.tools) && tools.tools.length > 0 ? (
             <table className="ns-table">
               <thead><tr><th>Tool</th><th>Kind</th><th>Allowed</th></tr></thead>
               <tbody>
                 {tools.tools.map(t => (
-                  <tr key={t.name}>
-                    <td>{t.name}</td>
-                    <td>{t.kind}</td>
-                    <td><span className={`ns-pill ${t.kind === 'read' ? 'read-only' : 'approval'}`}>{t.kind === 'read' ? 'Read-only' : 'Approval required'}</span></td>
+                  <tr key={t.tool_name}>
+                    <td>{t.tool_name}</td>
+                    <td>{t.write_classification}</td>
+                    <td><span className={`ns-pill ${t.write_classification === 'read' ? 'read-only' : 'approval'}`}>{t.write_classification === 'read' ? 'Read-only' : 'Approval required'}</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          ) : tools.ok ? (
+            <div className="ns-empty">
+              <span className="ns-pill failed">{tools.canonical_status || 'BLOCKED'}</span>
+              <div style={{marginTop: 8}}>{tools.blocker || tools.next_action || 'Zapier tool inventory is not visible. No tools are being claimed.'}</div>
+            </div>
           ) : <div className="ns-empty">Click "Load tool list" to enumerate via MCP.</div>}
         </div>
 

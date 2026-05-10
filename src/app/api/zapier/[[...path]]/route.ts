@@ -41,22 +41,40 @@ function readAuditEvents(kind?: string | null) {
   }
 }
 
-function statusPayload() {
+async function statusPayload() {
   const conn = readZapierState()
   const oauth = !!conn?.connected || hasEnv('ZAPIER_ACCESS_TOKEN') || hasEnv('ZAPIER_API_KEY')
   const mcpConfigured = hasEnv('ZAPIER_MCP_URL') || hasEnv('ZAPIER_MCP_SERVER')
+  const bridge = await getZapierToolBridge()
   return {
     ok: true,
-    status: oauth || mcpConfigured ? 'connected' : 'not_configured',
+    status: bridge.connected
+      ? 'connected'
+      : bridge.canonical_status === 'SERVICE_DOWN'
+        ? 'degraded'
+        : 'not_configured',
+    canonical_status: bridge.canonical_status,
+    blocker_class: bridge.blocker_class,
+    owner_status: bridge.owner_status,
     oauth,
-    mcp: conn?.health || (mcpConfigured ? 'configured' : 'not_configured'),
-    tools_count: conn?.tool_count || 0,
+    mcp: bridge.mcp_reachable ? 'connected' : (conn?.health || (mcpConfigured ? 'configured' : 'not_configured')),
+    tools_count: bridge.tools_total || conn?.tool_count || 0,
+    read_tools_total: bridge.read_tools_total,
+    write_tools_total: bridge.write_tools_total,
+    unknown_tools_total: bridge.unknown_tools_total,
     writes_unlocked: false,
+    execution_enabled: false,
+    writes_enabled: false,
+    no_zapier_writes: true,
+    bridge_session_required: true,
+    approval_required_for_writes: true,
     unlock_expires_at: null,
     blocked_writes_24h: readAuditEvents('blocked').length,
     allowed_reads_24h: readAuditEvents('allowed').length,
     credential_names: ['ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY', 'ZAPIER_MCP_URL'],
-    next_action: 'Wire Zapier MCP client and owner approval persistence before write actions.',
+    blocker: bridge.blocker,
+    warning: bridge.warning,
+    next_action: bridge.next_action,
   }
 }
 
@@ -65,7 +83,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   if (auth) return auth
 
   const path = routePath((await params).path)
-  if (!path || path === 'status') return NextResponse.json(statusPayload())
+  if (!path || path === 'status') return NextResponse.json(await statusPayload())
   if (path === 'audit') {
     const kind = new URL(request.url).searchParams.get('kind')
     return NextResponse.json({

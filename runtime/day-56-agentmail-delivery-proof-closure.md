@@ -134,17 +134,17 @@ Owner/live send proof:
 
 Rollback command after commit:
 
-- `git revert <day56_agentmail_delivery_commit_sha>`
+- `git revert 7e94417`
 
 ## Commit / Push
 
 Commit hash:
 
-- Pending at report creation.
+- `7e94417`
 
 Push result:
 
-- Pending at report creation.
+- Pushed to `origin/to-knowledge-mc`.
 
 ## Next Day
 

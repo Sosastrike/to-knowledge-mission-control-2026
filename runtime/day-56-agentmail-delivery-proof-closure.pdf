@@ -287,7 +287,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
 endobj
 8 0 obj
-<< /Length 1428 >>
+<< /Length 1388 >>
 stream
 BT
 /F1 10 Tf
@@ -330,7 +330,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- `git revert <day56_agentmail_delivery_commit_sha>`) Tj
+(- `git revert 7e94417`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -342,7 +342,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- Pending at report creation.) Tj
+(- `7e94417`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -350,7 +350,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- Pending at report creation.) Tj
+(- Pushed to `origin/to-knowledge-mc`.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -382,9 +382,9 @@ xref
 0000003459 00000 n 
 0000006206 00000 n 
 0000006332 00000 n 
-0000007812 00000 n 
+0000007772 00000 n 
 trailer
 << /Size 10 /Root 1 0 R >>
 startxref
-7882
+7842
 %%EOF

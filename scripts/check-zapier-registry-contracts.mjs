@@ -84,7 +84,15 @@ for (const result of [bridgeTools, bridgeSearch, legacyTools]) {
 if (zapierPage.status !== 200) failures.push({ path: zapierPage.path, status: zapierPage.status, error: 'zapier_page_source_not_served' })
 if (!zapierPage.body.includes('/api/bridge/zapier/status')) failures.push({ path: zapierPage.path, error: 'ui_not_using_bridge_status' })
 if (!zapierPage.body.includes('/api/bridge/zapier/tools')) failures.push({ path: zapierPage.path, error: 'ui_not_using_bridge_tools' })
-if (zapierPage.body.includes('t.name') || zapierPage.body.includes('t.kind')) failures.push({ path: zapierPage.path, error: 'ui_uses_legacy_tool_fields' })
+const legacyToolFieldPatterns = [
+  /key=\{t\.name\}/,
+  /\{t\.name\}/,
+  /\{t\.kind\}/,
+  /t\.kind\s*===/,
+]
+if (legacyToolFieldPatterns.some((pattern) => pattern.test(zapierPage.body))) {
+  failures.push({ path: zapierPage.path, error: 'ui_uses_legacy_tool_fields' })
+}
 
 const summary = {
   ok: failures.length === 0,

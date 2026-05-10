@@ -1,7 +1,24 @@
 import { getZapierToolBridge, type ZapierToolBridgePayload, type ZapierToolRecord } from './zapier-tool-bridge'
 import { readAgentZeroReport } from './agent-zero-report-delivery'
+import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
 
 export const GOOGLE_DRIVE_UPLOAD_BLOCKED_MESSAGE = 'Google Drive upload is blocked because the upload connector is not configured.'
+export const GOOGLE_DRIVE_UPLOAD_SCOPE = 'google_drive.upload' as const
+
+const GOOGLE_DRIVE_CREDENTIAL_KEYS = [
+  'GOOGLE_DRIVE_CREDENTIALS',
+  'GOOGLE_SERVICE_ACCOUNT_JSON',
+  'GOOGLE_DRIVE_CLIENT_ID',
+  'GOOGLE_DRIVE_ACCESS_TOKEN',
+  'GOOGLE_DRIVE_REFRESH_TOKEN',
+  'GOOGLE_CLIENT_ID',
+] as const
+
+const GOOGLE_DRIVE_TARGET_FOLDER_KEYS = [
+  'GOOGLE_DRIVE_TARGET_FOLDER_ID',
+  'GOOGLE_DRIVE_REPORTS_FOLDER_ID',
+  'GOOGLE_DRIVE_TARGET_FOLDER',
+] as const
 
 export type AgentZeroGoogleDriveStepId =
   | 'status_only'
@@ -25,9 +42,16 @@ export type AgentZeroGoogleDriveDeliveryStatus = {
   ok: true
   provider: 'google_drive'
   mode: 'agent_zero_google_drive_delivery_adapter'
+  canonical_status: MissionControlCanonicalStatus
+  blocker_class: MissionControlClosureBlockerClass
   status: 'blocked' | 'configured'
   connected: boolean
   configured: boolean
+  required_scope: typeof GOOGLE_DRIVE_UPLOAD_SCOPE
+  target_folder_required: true
+  target_folder_configured: boolean
+  target_folder_keys: string[]
+  credential_names: string[]
   upload_connector_configured: boolean
   upload_tool_visible: boolean
   folder_lookup_tool_visible: boolean
@@ -44,6 +68,7 @@ export type AgentZeroGoogleDriveDeliveryStatus = {
   steps: AgentZeroGoogleDriveStep[]
   normal_reply: string
   blocked_reason: string
+  no_upload_performed: true
   no_fake_done: true
   no_tokens_exposed: true
 }
@@ -89,6 +114,10 @@ function isGoogleDriveFolderLookupTool(tool: ZapierToolRecord): boolean {
 
 function hasSchema(tool: ZapierToolRecord): boolean {
   return Array.isArray(tool.required_fields) && tool.required_fields.length > 0
+}
+
+function presentEnvNames(keys: readonly string[]): string[] {
+  return keys.filter((key) => typeof process.env[key] === 'string' && process.env[key]?.trim())
 }
 
 function steps(input: {
@@ -158,19 +187,51 @@ export async function getAgentZeroGoogleDriveDeliveryStatus(input: StatusInput =
   const googleDriveTools = bridge.tools.filter(isGoogleDriveTool)
   const uploadTools = googleDriveTools.filter(isGoogleDriveUploadTool)
   const folderLookupTools = googleDriveTools.filter(isGoogleDriveFolderLookupTool)
+  const credentialNames = presentEnvNames(GOOGLE_DRIVE_CREDENTIAL_KEYS)
+  const targetFolderKeys = presentEnvNames(GOOGLE_DRIVE_TARGET_FOLDER_KEYS)
 
   // Tool/schema visibility is not enough to claim an upload connector exists.
   // This remains false until a scoped invocation adapter and Bridge Session
   // persistence/audit layer are implemented and tested.
   const uploadConnectorConfigured = false
+  const credentialPresent = credentialNames.length > 0
+  const targetFolderConfigured = targetFolderKeys.length > 0
+  const blockedReason = !credentialPresent
+    ? 'google_drive_credential_required'
+    : !targetFolderConfigured
+      ? 'google_drive_target_folder_required'
+      : uploadConnectorConfigured
+        ? 'bridge_session_required_for_google_drive_upload'
+        : 'google_drive_upload_connector_not_configured'
+  const canonicalStatus: MissionControlCanonicalStatus = !credentialPresent
+    ? 'CREDENTIAL_GATED'
+    : !targetFolderConfigured
+      ? 'OWNER_GATED'
+      : uploadConnectorConfigured
+        ? 'OWNER_GATED'
+        : 'BLOCKED'
+  const blockerClass: MissionControlClosureBlockerClass = !credentialPresent
+    ? 'CREDENTIAL_GATED'
+    : !targetFolderConfigured
+      ? 'OWNER_GATED'
+      : uploadConnectorConfigured
+        ? 'OWNER_GATED'
+        : 'BLOCKED'
 
   return {
     ok: true,
     provider: 'google_drive',
     mode: 'agent_zero_google_drive_delivery_adapter',
+    canonical_status: canonicalStatus,
+    blocker_class: blockerClass,
     status: uploadConnectorConfigured ? 'configured' : 'blocked',
     connected: bridge.connected && googleDriveTools.length > 0,
     configured: uploadConnectorConfigured,
+    required_scope: GOOGLE_DRIVE_UPLOAD_SCOPE,
+    target_folder_required: true,
+    target_folder_configured: targetFolderConfigured,
+    target_folder_keys: targetFolderKeys,
+    credential_names: credentialNames,
     upload_connector_configured: uploadConnectorConfigured,
     upload_tool_visible: uploadTools.length > 0,
     folder_lookup_tool_visible: folderLookupTools.length > 0,
@@ -178,7 +239,7 @@ export async function getAgentZeroGoogleDriveDeliveryStatus(input: StatusInput =
     tool_names: googleDriveTools.map((tool) => tool.tool_name).slice(0, 50),
     folder_lookup_tool_names: folderLookupTools.map((tool) => tool.tool_name).slice(0, 20),
     upload_tool_names: uploadTools.map((tool) => tool.tool_name).slice(0, 20),
-    credential_present: Boolean(bridge.connected && bridge.mcp_reachable && googleDriveTools.length > 0),
+    credential_present: credentialPresent,
     credential_values_exposed: false,
     execution_enabled: false,
     writes_enabled: false,
@@ -192,7 +253,8 @@ export async function getAgentZeroGoogleDriveDeliveryStatus(input: StatusInput =
     normal_reply: uploadConnectorConfigured
       ? 'Google Drive upload is configured, but uploads still require a scoped Bridge Session.'
       : GOOGLE_DRIVE_UPLOAD_BLOCKED_MESSAGE,
-    blocked_reason: uploadConnectorConfigured ? 'bridge_session_required_for_google_drive_upload' : 'google_drive_upload_connector_not_configured',
+    blocked_reason: blockedReason,
+    no_upload_performed: true,
     no_fake_done: true,
     no_tokens_exposed: true,
   }

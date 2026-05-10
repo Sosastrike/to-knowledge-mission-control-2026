@@ -91,6 +91,12 @@ describe('Agent Zero Google Drive delivery adapter', () => {
     const status = await getAgentZeroGoogleDriveDeliveryStatus({ toolBridge: fakeBridge() })
 
     expect(status.connected).toBe(true)
+    expect(status.canonical_status).toBe('CREDENTIAL_GATED')
+    expect(status.blocker_class).toBe('CREDENTIAL_GATED')
+    expect(status.required_scope).toBe('google_drive.upload')
+    expect(status.target_folder_required).toBe(true)
+    expect(status.target_folder_configured).toBe(false)
+    expect(status.no_upload_performed).toBe(true)
     expect(status.upload_tool_visible).toBe(true)
     expect(status.folder_lookup_tool_visible).toBe(true)
     expect(status.schema_available).toBe(true)

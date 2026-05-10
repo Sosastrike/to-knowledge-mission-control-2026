@@ -126,6 +126,10 @@ describe('tool action approval route', () => {
       ok: false,
       mode: 'tool_action_approval_blocked',
       blocker: 'tool_action_scope_not_supported',
+      classified_error: {
+        kind: 'BACKEND_MISSING',
+        owner_message: expect.any(String),
+      },
       required_scope: null,
       approval_request_created: false,
       accepted_for_execution: false,

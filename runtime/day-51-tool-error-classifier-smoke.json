@@ -1,0 +1,49 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 3,
+  "expectation": "Tool errors classify into canonical owner-facing blockers with no secret, raw path, or private-host leakage.",
+  "failures": [],
+  "results": [
+    {
+      "name": "unauthenticated_post_requires_auth",
+      "path": "/api/bridge/tool-error-classifier",
+      "status": 401,
+      "mode": null,
+      "kinds": [],
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "no_secret_output": false
+    },
+    {
+      "name": "canonical_error_batch",
+      "path": "/api/bridge/tool-error-classifier",
+      "status": 200,
+      "mode": "tool_error_classification",
+      "kinds": [
+        "SERVICE_DOWN",
+        "AUTH_REQUIRED",
+        "CREDENTIAL_GATED",
+        "BACKEND_MISSING"
+      ],
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "no_secret_output": true
+    },
+    {
+      "name": "owner_gated_single_error",
+      "path": "/api/bridge/tool-error-classifier",
+      "status": 200,
+      "mode": "tool_error_classification",
+      "kinds": [
+        "OWNER_GATED"
+      ],
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "no_secret_output": true
+    }
+  ]
+}

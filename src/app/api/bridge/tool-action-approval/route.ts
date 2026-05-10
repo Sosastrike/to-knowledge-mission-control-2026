@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { createBridgeApprovalRequest } from '@/lib/bridge-approval-request-store'
 import { buildToolActionApprovalPlan } from '@/lib/tool-action-approval'
+import { classifyToolError } from '@/lib/tool-error-classifier'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,11 +52,17 @@ export async function POST(request: NextRequest) {
   }
 
   if (!plan.ok) {
+    const classifiedError = classifyToolError({
+      http_status: 400,
+      message: plan.blocker || 'unsupported tool action approval scope',
+      context: { has_backend: false },
+    })
     return jsonResponse({
       ok: false,
       mode: 'tool_action_approval_blocked',
       ...base,
       blocker: plan.blocker,
+      classified_error: classifiedError,
       approval_request_created: false,
       next_action: plan.next_action,
     }, 400)
@@ -105,6 +112,12 @@ export async function POST(request: NextRequest) {
     canonical_status: approval.ok ? 'OWNER_GATED' : 'BLOCKED',
     blocker_class: approval.ok ? 'OWNER_GATED' : 'BLOCKED',
     blocker: approval.blocked_reason || plan.blocker,
+    classified_error: approval.ok
+      ? null
+      : classifyToolError({
+        http_status: approval.http_status,
+        message: approval.blocked_reason || 'approval request creation failed',
+      }),
     approval_request_created: approval.approval_request_created,
     approval_request_reused: approval.approval_request_reused,
     approval_id: approval.approval_request_id,

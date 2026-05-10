@@ -1,5 +1,5 @@
-import type { CanonicalStatus, RouteSmokeReport, RouteSmokeResult } from './types.js'
-import { redactString, redactOrigin } from './redact.js'
+import type { CanonicalStatus, RouteSmokeReport, RouteSmokeResult } from './types'
+import { redactString, redactOrigin } from './redact'
 
 // Routes covered by the route-smoke helper. Order is owner-meaningful: the UI
 // displays them in this order. New routes get appended; never reordered.

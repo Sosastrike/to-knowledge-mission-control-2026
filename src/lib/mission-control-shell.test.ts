@@ -40,4 +40,19 @@ describe('Mission Control shell ownership', () => {
     expect(home).toContain('PriorityDashboard')
     expect(home).not.toContain('redirect(')
   })
+
+  it('wires the approved static GatewayShell into the designer Mission Control shell without touching mock pages', () => {
+    const missionControl = readSource('public/designer-mission-control/Mission Control.html')
+    const shell = readSource('public/designer-mission-control/src/shell.jsx')
+    const app = readSource('public/designer-mission-control/src/app.jsx')
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+
+    expect(missionControl).toContain('<script type="text/babel" src="src/gateway/GatewayShell.jsx"></script>')
+    expect(shell).toContain("{ id: 'gateway',  label: 'Gateway'")
+    expect(shell).toContain("icon: 'Network'")
+    expect(app).toContain("{page === 'gateway' && <GatewayShell/>}")
+    expect(app).not.toContain("if (page === 'gateway') window.location.href = '/gateway'")
+    expect(gatewayShell).toContain("src: 'design/gateway/Agent Hub.html'")
+    expect(gatewayShell).toContain("src: 'design/gateway/Paperclip.html'")
+  })
 })

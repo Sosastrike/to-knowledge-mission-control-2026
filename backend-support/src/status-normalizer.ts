@@ -5,9 +5,9 @@ import type {
   ClassifiedError,
   ComponentStatus,
   GatewayStatusSnapshot,
-} from './types.js'
-import { normalizeStatusLabel, rollupStatuses } from './label-map.js'
-import { redactString } from './redact.js'
+} from './types'
+import { normalizeStatusLabel, rollupStatuses } from './label-map'
+import { redactString } from './redact'
 
 // Loose shape for raw input — anything Codex (or the existing /api/gateway/status
 // route) hands us. Every field is optional; we never trust raw input to be complete.

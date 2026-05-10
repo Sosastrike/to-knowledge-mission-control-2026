@@ -1,5 +1,5 @@
-import type { BuildWikiFarmerStatus } from './types.js'
-import { redactString } from './redact.js'
+import type { BuildWikiFarmerStatus } from './types'
+import { redactString } from './redact'
 
 // READ-ONLY helper for the Build-Wiki / OpenCloud-Docs Farmer.
 // This module never invokes systemctl. It never spawns child processes.

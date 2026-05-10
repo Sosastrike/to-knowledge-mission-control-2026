@@ -1,4 +1,4 @@
-import type { RouteMetadata } from './types.js'
+import type { RouteMetadata } from './types'
 
 // Canonical Mission Control / Gateway navigation map.
 // Codex consumes this for back/home/breadcrumb wiring — the UI never invents routes.

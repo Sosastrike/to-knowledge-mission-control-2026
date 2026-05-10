@@ -2,6 +2,7 @@
 
 const NAV = [
   { id: 'mission',  label: 'Mission Control', icon: 'Mission' },
+  { id: 'gateway',  label: 'Gateway',         icon: 'Network' },
   { id: 'schedule', label: 'Schedule',        icon: 'Schedule', count: 14 },
   { id: 'tasks',    label: 'Tasks',           icon: 'Tasks',    count: 63 },
   { id: 'meeting',  label: 'Live Meeting',    icon: 'Meeting',  live: true },

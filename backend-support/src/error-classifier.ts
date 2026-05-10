@@ -1,5 +1,5 @@
-import type { CanonicalErrorKind, ClassifiedError } from './types.js'
-import { redactString } from './redact.js'
+import type { CanonicalErrorKind, ClassifiedError } from './types'
+import { redactString } from './redact'
 
 // Patterns that map raw errors / states to a canonical error kind.
 // Order matters — the first hit wins. Be conservative: if nothing matches, UNKNOWN.

@@ -27,6 +27,7 @@ import {
   readLatestAddSource,
   readSourcesBlock,
 } from '@/lib/build-wiki-add-source'
+import { buildCloudCodeBuildWikiTruth } from '@/lib/gateway-cloudcode-integration'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -600,7 +601,10 @@ export async function GET(request: NextRequest) {
     },
   }
 
-  return NextResponse.json(response, {
+  return NextResponse.json({
+    ...response,
+    ...buildCloudCodeBuildWikiTruth(response),
+  }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }

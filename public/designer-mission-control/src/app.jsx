@@ -32,7 +32,6 @@ function App() {
   });
   React.useEffect(()=>localStorage.setItem('cc.page', page), [page]);
   React.useEffect(() => {
-    if (page === 'gateway') window.location.href = '/gateway';
     if (page === 'agent-network') window.location.href = '/gateway/agent-hub';
   }, [page]);
   const [modules, setModules] = React.useState({ agents:true, meetings:true, hive:true, tasks:true, quick:true, schedule:true, alerts:true, health:true, memory:true, tokens:true, graphify:true, webops:true, obsidian:true, telemetry:true, policy:true, pacman:true });
@@ -96,7 +95,7 @@ function App() {
     else if (p === 'mission')  { setPage('mission'); }
     else if (p === 'brain-sync'){ setPage('brain-sync'); }
     else if (p === 'mirofish')  { setPage('mirofish'); }
-    else if (p === 'gateway') { window.location.href = '/gateway'; return; }
+    else if (p === 'gateway') { setPage('gateway'); }
     else if (p === 'agent-network') { window.location.href = '/gateway/agent-hub'; return; }
     else if (p === 'firecrawl') { setPage('firecrawl'); }
     else if (p === 'zapier') { setPage('zapier'); }
@@ -189,7 +188,8 @@ function App() {
           {page === 'mission'    && <Dashboard onGo={goTo} onJoin={(m)=>{setMeeting(m); setMeetingOpen(true);}} editMode={editMode} setEditMode={setEditMode} modules={modules} toggleModule={toggleModule} onAgent={setAgent} onTicket={setTicket} onOpenTasks={openTasks} onOps={(k,arg1,arg2)=>{ setOpsDrawer(k); if (k==='pacman' && arg1) setPacmanTab(arg1); if (k==='telemetry') setTelemetryFocus({ tab:arg1||null, skillId:arg2||null }); }}/>}
           {page === 'brain-sync' && <BrainSyncPage/>}
           {page === 'mirofish'   && <MiroFishPage/>}
-          {(page === 'gateway' || page === 'agent-network') && <AgentNetworkPage/>}
+          {page === 'gateway' && <GatewayShell/>}
+          {page === 'agent-network' && <AgentNetworkPage/>}
           {page === 'firecrawl' && <FireCrawlPage/>}
           {page === 'zapier' && <ZapierPage/>}
           {page === 'n8n' && <N8NPage/>}

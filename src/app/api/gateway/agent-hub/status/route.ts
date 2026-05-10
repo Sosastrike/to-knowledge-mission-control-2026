@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { buildCloudCodeAgentHealth } from '@/lib/gateway-cloudcode-integration'
 import { attachSpaceAgentBrowserAutomationStatus, buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
 import { getPlaywrightMcpStatus } from '@/lib/playwright-mcp'
@@ -20,7 +21,15 @@ export async function GET(request: NextRequest) {
     buildSpaceAgentBrowserAutomationPayload({ generatedAt, playwrightMcp }),
   )
 
-  return NextResponse.json(payload, {
+  return NextResponse.json({
+    ...payload,
+    cloudcode_backend_support: {
+      applied: true,
+      source: 'cloudcode-backend-support-handoff',
+      helpers: ['buildAgentHealth'],
+    },
+    cloudcode_agent_health: buildCloudCodeAgentHealth(payload as any),
+  }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }

@@ -1,5 +1,5 @@
-import type { CanonicalStatus, ComponentStatus } from './types.js'
-import { redactString } from './redact.js'
+import type { CanonicalStatus, ComponentStatus } from './types'
+import { redactString } from './redact'
 
 // Canonical roster for the Agent Hub. Adding new agents here is the only place
 // the UI should source the list — Codex never hardcodes agents in the UI.

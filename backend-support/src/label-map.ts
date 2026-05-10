@@ -1,4 +1,4 @@
-import type { CanonicalStatus } from './types.js'
+import type { CanonicalStatus } from './types'
 
 // Map of legacy / vendor-specific labels (from existing Mission Control / connector code)
 // onto the canonical owner-facing vocabulary. New label aliases get added here, not in callers.

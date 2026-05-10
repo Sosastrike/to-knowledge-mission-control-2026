@@ -1,0 +1,384 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2962 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-10-bridge-approvals-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 10 — Bridge Session Approvals Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10T02:16:57Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED, OWNER_GATED FOR LIVE APPROVED EXECUTION) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Bridge Session approval lifecycle.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Fixed the Build-Wiki / Farmer Run Now read model so a pending approval past `expires_at` rende) Tj
+0 -12 Td
+(rs as terminal `expired`, not `pending_approval`.) Tj
+0 -12 Td
+(- Added a regression test proving the Run Now GET route reports expired pending approvals truthf) Tj
+0 -12 Td
+(ully.) Tj
+0 -12 Td
+(- Did not alter Bridge auth, owner approval rules, execution scope, `.env`, secrets, or external) Tj
+0 -12 Td
+( write behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/build-wiki-run-now.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-10-bridge-approvals-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-10-bridge-approvals-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/approval-readiness`) Tj
+0 -12 Td
+(- `GET /api/bridge/approval-contract`) Tj
+0 -12 Td
+(- `GET /api/bridge/approval-requests?limit=5`) Tj
+0 -12 Td
+(- `GET /api/bridge/approval-requests/audit-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now`) Tj
+0 -12 Td
+(- route render smoke for Mission Control / Gateway protected pages and Bridge APIs) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Production-like local runtime was rebuilt and restarted on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New runtime PID: `29809`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Run Now stale-expiration proof before creating a new request:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- latest old Build-Wiki request: `apr_5f8fd696-5469-4569-bacf-653efde203c5`) Tj
+0 -12 Td
+(- approval state in DB: `pending`) Tj
+0 -12 Td
+(- `expires_at`: `2026-05-09T23:40:00.565Z`) Tj
+0 -12 Td
+(- UI state after fix: `expired`) Tj
+0 -12 Td
+(- terminal: `true`) Tj
+0 -12 Td
+(- execution enabled: `false`) Tj
+0 -12 Td
+(- accepted for execution: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New exact-scope approval request created for proof only:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- approval id: `apr_9a5acdcd-4106-477c-8cde-3f1a52b7ea76`) Tj
+0 -12 Td
+(- audit event id: `audit_a7572e8a-0ebe-427f-9040-02fb378aebf4`) Tj
+0 -12 Td
+(- action: `buildwiki.run_now`) Tj
+0 -12 Td
+(- target service: `opencloud-docs-farmer.service`) Tj
+0 -12 Td
+(- UI state: `pending_approval`) Tj
+0 -12 Td
+(- execution enabled: `false`) Tj
+0 -12 Td
+(- accepted for execution: `false`) Tj
+0 -12 Td
+(- writes enabled: `false`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3021 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- next action: owner approval required before dispatch) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Approval queue after proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- total approvals: `15`) Tj
+0 -12 Td
+(- pending: `2`) Tj
+0 -12 Td
+(- active pending: `2`) Tj
+0 -12 Td
+(- approved: `7`) Tj
+0 -12 Td
+(- denied: `3`) Tj
+0 -12 Td
+(- expired: `3`) Tj
+0 -12 Td
+(- running: `0`) Tj
+0 -12 Td
+(- completed: `0`) Tj
+0 -12 Td
+(- failed: `0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Active pending requests:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `apr_9a5acdcd-4106-477c-8cde-3f1a52b7ea76` — `buildwiki.run_now`, blocker `owner_approval_requ) Tj
+0 -12 Td
+(ired_before_execution`) Tj
+0 -12 Td
+(- `apr_b1367ff0-6f12-41d2-a601-8cf7445a2b3f` — `agent_zero.execute`, blocker `owner_approval_req) Tj
+0 -12 Td
+(uired_before_execution`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Bridge queue is readable.) Tj
+0 -12 Td
+(- Pending approvals show yellow owner-gated state.) Tj
+0 -12 Td
+(- Expired Run Now approvals no longer look pending.) Tj
+0 -12 Td
+(- Run Now proof request stays approval-gated.) Tj
+0 -12 Td
+(- No fake run, send, upload, or done state was emitted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/brain-sync/build-wiki/run-now` created only an approval request and audit ro) Tj
+0 -12 Td
+(w.) Tj
+0 -12 Td
+(- It did not run `systemctl`.) Tj
+0 -12 Td
+(- `systemctl --user start opencloud-docs-farmer.service` remains reachable only through the scop) Tj
+0 -12 Td
+(ed dispatch path after owner approval.) Tj
+0 -12 Td
+(- No SMB/Fork 2, Zapier write, HeyGen generation, external farmer, or second vault was enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Verification) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- Targeted Bridge lifecycle tests:) Tj
+0 -12 Td
+(  - `src/lib/bridge-approval-lifecycle.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/bridge-approval-ui-state.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/bridge/approval-requests/[id]/approve/route.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/bridge/approval-requests/[id]/deny/route.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/bridge/approval-requests/audit-report/route.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/bridge/brain-sync/build-wiki/run-now/route.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch/route.test.ts`) Tj
+0 -12 Td
+(- Full test result: `171` test files, `1358` tests passed.) Tj
+0 -12 Td
+(- Route rendering smoke: `ok: true`, `46` routes checked, `8` designer pages checked, `0` failur) Tj
+0 -12 Td
+(es.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` change.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No raw local paths added to owner-facing output.) Tj
+0 -12 Td
+(- No fake LIVE/GO/Done status.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1314 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No external write executed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact blocker: `owner_approval_required_before_execution`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reason: the live proof created an exact-scope approval request, but did not approve or dispatch ) Tj
+0 -12 Td
+(it. A real approved execution requires owner approval of `apr_9a5acdcd-4106-477c-8cde-3f1a52b7ea) Tj
+0 -12 Td
+(76`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Code rollback after commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day10_bridge_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live request rollback / cleanup:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- deny `apr_9a5acdcd-4106-477c-8cde-3f1a52b7ea76`, or let it expire.) Tj
+0 -12 Td
+(- do not dispatch it unless owner explicitly approves the exact scope.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit hash: recorded after this report commit is created.) Tj
+0 -12 Td
+(- Push result: recorded after push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 11 — Dispatcher Core starts automatically after this Day 10 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003267 00000 n 
+0000003393 00000 n 
+0000006466 00000 n 
+0000006592 00000 n 
+0000007958 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8028
+%%EOF

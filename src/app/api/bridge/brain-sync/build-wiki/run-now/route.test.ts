@@ -228,6 +228,37 @@ describe('Build-Wiki Run Now route', () => {
     })
   })
 
+  it('classifies expired pending Run Now approvals as terminal expired state', async () => {
+    const created = await POST(request({ reason: 'expired read probe' }))
+    const createdPayload = await created.json()
+
+    const db = new Database(mocks.dbPath)
+    db.prepare(
+      `UPDATE bridge_approval_requests
+          SET expires_at = '2000-01-01T00:00:00.000Z'
+        WHERE id = ?`,
+    ).run(createdPayload.approval_id)
+    db.close()
+
+    const response = await GET(getRequest())
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      ok: true,
+      mode: 'run_now_read_only',
+      ui_state: 'expired',
+      is_terminal: true,
+      execution_enabled: false,
+      accepted_for_execution: false,
+    })
+    expect(payload.history[0]).toMatchObject({
+      ui_state: 'expired',
+      is_terminal: true,
+      result_label: 'approval expired',
+    })
+  })
+
   it('returns the Run Now approval, dispatch, and audit history without raw paths or secrets', async () => {
     const created = await POST(request({ reason: 'history probe' }))
     const createdPayload = await created.json()

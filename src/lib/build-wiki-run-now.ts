@@ -494,6 +494,9 @@ export function deriveRunNowUiState(
   if (!approval) return { ui_state: 'idle', is_terminal: true }
 
   if (approval.approval_state === 'pending') {
+    if (isExpiredApproval(approval)) {
+      return { ui_state: 'expired', is_terminal: true }
+    }
     return { ui_state: 'pending_approval', is_terminal: false }
   }
   if (approval.approval_state === 'denied') {
@@ -518,6 +521,13 @@ export function deriveRunNowUiState(
     default:
       return { ui_state: 'dispatching', is_terminal: false }
   }
+}
+
+function isExpiredApproval(approval: Pick<ApprovalRow, 'expires_at'>): boolean {
+  if (!approval.expires_at) return false
+  const expiresAt = Date.parse(approval.expires_at)
+  if (!Number.isFinite(expiresAt)) return false
+  return expiresAt <= Date.now()
 }
 
 export function pickPublicApprovalView(approval: ApprovalRow | null) {

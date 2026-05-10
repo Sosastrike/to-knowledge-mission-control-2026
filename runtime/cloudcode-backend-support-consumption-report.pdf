@@ -1,0 +1,390 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3761 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(cloudcode-backend-support-consumption-report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# CloudCode Backend Support Consumption Report) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-09) Tj
+0 -12 Td
+(Status: PARTIAL GO - production-smoked, owner visual retest still required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(CloudCode backend-support was consumed without restarting or replacing the 100-day plan. The pac) Tj
+0 -12 Td
+(kage was applied with mailbox patches, then wired into Mission Control / Gateway truth endpoints) Tj
+0 -12 Td
+( and the approved static Gateway drop-in shell. The designer mock pages were not modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Package Intake) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Source package: `cloudcode-backend-support-handoff/`) Tj
+0 -12 Td
+(- Apply method: `git am cloudcode-backend-support-handoff/patches/*.patch`) Tj
+0 -12 Td
+(- Conflicts: none) Tj
+0 -12 Td
+(- Warning: one trailing whitespace warning in `backend-support/proof/vitest.txt`; fixed during i) Tj
+0 -12 Td
+(ntegration) Tj
+0 -12 Td
+(- CloudCode source branch: `cloudcode/backend-support-gateway-status`) Tj
+0 -12 Td
+(- CloudCode original commits: `491fe09`, `4b0b3d2`) Tj
+0 -12 Td
+(- Applied commits in this repository: `529f4a6`, `61b2480`) Tj
+0 -12 Td
+(- Integration commit: `e814ba1b057cd11afdbae1ac203c9256aa1ff2a2`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Helpers Consumed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `normalizeGatewayStatus\(raw\)` now augments `/api/gateway/status`.) Tj
+0 -12 Td
+(- `ROUTE_METADATA` and `getBreadcrumbTrail` now power `/api/gateway/navigation`.) Tj
+0 -12 Td
+(- `runRouteSmoke` and `buildRouteSmokeReport` now power `/api/gateway/route-smoke` as a safe dia) Tj
+0 -12 Td
+(gnostics payload.) Tj
+0 -12 Td
+(- `buildAgentHealth` now augments Agent Hub status and per-agent health routes.) Tj
+0 -12 Td
+(- `buildBuildWikiStatus` and `evaluateRunNowGate` now augment Build-Wiki / Farmer status.) Tj
+0 -12 Td
+(- `classifyError` and `classifyErrors` now surface owner-facing blocker categories.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Designer Drop-In Integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added `src/gateway/GatewayShell.jsx` to the static Mission Control shell.) Tj
+0 -12 Td
+(- Added the one required script line to `public/designer-mission-control/Mission Control.html`.) Tj
+0 -12 Td
+(- Added a Gateway left-rail entry in `public/designer-mission-control/src/shell.jsx`.) Tj
+0 -12 Td
+(- Adapted `public/designer-mission-control/src/app.jsx` so selecting Gateway renders `GatewayShe) Tj
+0 -12 Td
+(ll`.) Tj
+0 -12 Td
+(- Confirmed `GatewayShell.jsx` matches the shared drop-in source by SHA-256.) Tj
+0 -12 Td
+(- The approved mock HTML/CSS/class names were not changed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/gateway/status`) Tj
+0 -12 Td
+(- `/api/gateway/navigation`) Tj
+0 -12 Td
+(- `/api/gateway/route-smoke`) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/status`) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/agents/[id]/health`) Tj
+0 -12 Td
+(- `/api/bridge/brain-sync/build-wiki/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Gateway static Mission Control now has a top-level Gateway rail entry.) Tj
+0 -12 Td
+(- GatewayShell owns its internal sub-rail and iframe drop-in behavior.) Tj
+0 -12 Td
+(- Mission Control Home, Back, Gateway Overview, and Agent Hub targets are exposed through naviga) Tj
+0 -12 Td
+(tion metadata.) Tj
+0 -12 Td
+(- Route Smoke now exposes safe table data instead of raw confusing output.) Tj
+0 -12 Td
+(- Agent Hub status routes now include normalized agent health rows so the UI does not need to gu) Tj
+0 -12 Td
+(ess fake LIVE states.) Tj
+0 -12 Td
+(- Build-Wiki Run Now remains approval-gated and disabled until owner approval.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2914 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 171 files / 1356 tests) Tj
+0 -12 Td
+(- Backend-support typecheck: PASS) Tj
+0 -12 Td
+(- Backend-support build: PASS) Tj
+0 -12 Td
+(- Backend-support tests: PASS, 9 files / 104 tests) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Changed-file secret scan: PASS) Tj
+0 -12 Td
+(- Staged secret scan: PASS) Tj
+0 -12 Td
+(- `.env` status check: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Built standalone runtime and restarted Mission Control.) Tj
+0 -12 Td
+(- Previous PID: `98651`) Tj
+0 -12 Td
+(- New PID: `8391`) Tj
+0 -12 Td
+(- Runtime bind: `127.0.0.1:3337`) Tj
+0 -12 Td
+(- `/login`: 200) Tj
+0 -12 Td
+(- No new public exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated route smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway`: 307 to `/login`) Tj
+0 -12 Td
+(- `/gateway/agent-hub`: 307 to `/login`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`: 307 to `/login`) Tj
+0 -12 Td
+(- `/gateway/dispatcher`: 307 to `/login`) Tj
+0 -12 Td
+(- `/gateway/token-governor`: 307 to `/login`) Tj
+0 -12 Td
+(- `/gateway/bridge-session`: 307 to `/login`) Tj
+0 -12 Td
+(- `/agent-network`: 307 to `/login`) Tj
+0 -12 Td
+(- `/agents`: 307 to `/login`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated smoke used a short-lived local session row that was deleted after the check:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway`: 200) Tj
+0 -12 Td
+(- `/gateway/agent-hub`: 200) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip`: 200) Tj
+0 -12 Td
+(- `/gateway/dispatcher`: 200) Tj
+0 -12 Td
+(- `/gateway/token-governor`: 200) Tj
+0 -12 Td
+(- `/gateway/bridge-session`: 200) Tj
+0 -12 Td
+(- `/agent-network`: 307 to `/gateway/agent-hub`) Tj
+0 -12 Td
+(- `/agents`: 307 to `/gateway/agent-hub`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated API smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/gateway/status`: 200, CloudCode applied, normalized Gateway status returned) Tj
+0 -12 Td
+(- `/api/gateway/agent-hub/status`: 200, CloudCode agent health returned) Tj
+0 -12 Td
+(- `/api/gateway/navigation?route=/gateway/agent-hub`: 200, breadcrumb count 3, Home/Back/Overvie) Tj
+0 -12 Td
+(w/Agent Hub targets present) Tj
+0 -12 Td
+(- `/api/gateway/route-smoke`: 200, safe diagnostics payload returned) Tj
+0 -12 Td
+(- `/api/bridge/brain-sync/build-wiki/status`: 200, service fixed to `opencloud-docs-farmer.servi) Tj
+0 -12 Td
+(ce`, Run Now not executable without approval) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Browser smoke:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Route: `/gateway/agent-hub`) Tj
+0 -12 Td
+(- Viewport: 1480 x 900) Tj
+0 -12 Td
+(- Screenshot: `runtime/cloudcode-gateway-agenthub-smoke.png`) Tj
+0 -12 Td
+(- `bodyScrollHeight`: 4163) Tj
+0 -12 Td
+(- `clientHeight`: 900) Tj
+0 -12 Td
+(- iframe count: 1) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1540 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- root overflow hidden: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `OWNER_GATED`: owner visual retest is still required before Gateway UI can be marked GO.) Tj
+0 -12 Td
+(- Gateway status is honestly degraded because downstream lanes still include blockers; this is e) Tj
+0 -12 Td
+(xpected and not a fake GO.) Tj
+0 -12 Td
+(- Owner-facing visual acceptance remains pending.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public bind added.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No fake LIVE status introduced.) Tj
+0 -12 Td
+(- No mock HTML/CSS/class edits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback the integration and CloudCode package:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert e814ba1b057cd11afdbae1ac203c9256aa1ff2a2 61b24808a1331c4803bf22a588d83cdc557667ce 529) Tj
+0 -12 Td
+(f4a6) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Restart Mission Control after rollback if production has been restarted onto these commits.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Step) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Continue the 100-day plan. The immediate next gate is owner visual retest for Gateway, then Agen) Tj
+0 -12 Td
+(t Zero commander proof and the rest of the main production lanes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000004066 00000 n 
+0000004192 00000 n 
+0000007158 00000 n 
+0000007284 00000 n 
+0000008876 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8946
+%%EOF

@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 3377 >>
+<< /Length 3116 >>
 stream
 BT
 /F1 10 Tf
@@ -22,7 +22,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Date: 2026-05-09) Tj
+(Date: 2026-05-10) Tj
 0 -12 Td
 (Branch: to-knowledge-mc) Tj
 0 -12 Td
@@ -32,15 +32,11 @@ BT
 0 -12 Td
 (Blocker class: OWNER_GATED for authenticated owner visual confirmation) Tj
 0 -12 Td
-(Code commit under proof: 25f577e) Tj
+(Current source commit: 0c08e33) Tj
 0 -12 Td
-(Report base commit: 3124248) Tj
+(Prior frame/mount source commits: 25f577e, 836e059) Tj
 0 -12 Td
-(Report commit: 97563c7) Tj
-0 -12 Td
-(Code rollback: git revert 25f577e) Tj
-0 -12 Td
-(Report rollback: git revert 97563c7) Tj
+(Rollback: git revert 0c08e33) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -48,25 +44,23 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Day 16 verifies whether the production Gateway FULL v3 routes are using the accepted designer mo) Tj
+(Day 16 verifies that production Gateway FULL v3 pages use the accepted designer mock contract in) Tj
 0 -12 Td
-(ck contract instead of a custom React reinterpretation.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(The decision from Day 15 remains in force: Mission Control mounts the existing FULL v3 designer ) Tj
-0 -12 Td
-(HTML files directly inside protected Gateway routes. The designer files remain the visual contra) Tj
-0 -12 Td
-(ct. No custom redesign, token override, class rename, or Tailwind port was performed in this lan) Tj
-0 -12 Td
-(e.) Tj
+(stead of a custom React reinterpretation.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(This is not owner visual GO. The developer-side proof passes, but authenticated owner retest is ) Tj
+(The owner instruction is explicit: do not rebuild, restyle, or improve the mock. The accepted HT) Tj
 0 -12 Td
-(still required before the Gateway owner visual lane can move beyond PARTIAL GO.) Tj
+(ML is the production UI. Data may hydrate through `window.AGENTS`, but the HTML/CSS/class contra) Tj
+0 -12 Td
+(ct must not drift.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This is not owner visual GO. Developer-side proof passes, but authenticated owner retest is stil) Tj
+0 -12 Td
+(l required before the Gateway owner visual lane can move beyond PARTIAL GO.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -78,33 +72,21 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Overview.html) Tj
+(- `design/gateway/Agent Hub.html`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Routes.html) Tj
+(- `design/gateway/paperclip-v1/Paperclip.html`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Registry.html) Tj
+(- `design/gateway/shared/tokens.css`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Policies.html) Tj
+(- `design/gateway/shared/agent-data.js`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Health.html) Tj
+(- `public/designer-mission-control/design/gateway/Agent Hub.html`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Dispatcher.html) Tj
+(- `public/designer-mission-control/design/gateway/Paperclip.html`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Token Governor.html) Tj
+(- `.next/standalone/public/designer-mission-control/design/gateway/Agent Hub.html`) Tj
 0 -12 Td
-(- public/designer-mission-control/design/gateway/Agent Hub.html) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/Paperclip.html) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/Bridge Session Flow.html) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Node Detail.html) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/Gateway Mobile Tablet.html) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/shared/tokens.css) Tj
-0 -12 Td
-(- public/designer-mission-control/design/gateway/shared/render.js) Tj
+(- `.next/standalone/public/designer-mission-control/design/gateway/Paperclip.html`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -138,7 +120,25 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Gateway frame and route files already corrected in Day 15:) Tj
+(## Defect Found) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The mounted production `Agent Hub.html` had one production-side HTML edit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- accepted designer footer: `data: shared/agent-data-v2-playwright-mcp.js`) Tj
+0 -12 Td
+(- mounted production footer before fix: `data: shared/agent-data.js`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The script still loads `shared/agent-data.js` by design. The footer text is part of the accepted) Tj
+0 -12 Td
+( mock and should not have been changed in the mounted HTML. This was visual-contract drift, not ) Tj
+0 -12 Td
+(backend truth wiring.) Tj
 0 -12 Td
 () Tj
 ET
@@ -148,58 +148,52 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 6 0 R >>
 endobj
 6 0 obj
-<< /Length 3591 >>
+<< /Length 2989 >>
 stream
 BT
 /F1 10 Tf
 50 780 Td
-(- src/components/gateway/DesignerGatewayMockFrame.tsx) Tj
-0 -12 Td
-(- src/proxy.ts) Tj
-0 -12 Td
-(- src/proxy.test.ts) Tj
-0 -12 Td
-(- src/lib/gateway-native-frame-decision.test.ts) Tj
+(`Paperclip.html` already matched the accepted design file byte-for-byte.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(## Why The Owner Saw A Mismatch Earlier) Tj
+(## What Was Implemented) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(The accepted diagnosis remains:) Tj
+(- Restored the mounted production `Agent Hub.html` from the accepted `design/gateway/Agent Hub.h) Tj
+0 -12 Td
+(tml`.) Tj
+0 -12 Td
+(- Added a regression guardrail:) Tj
+0 -12 Td
+(  - `design/gateway/Agent Hub.html` must exactly match `public/designer-mission-control/design/g) Tj
+0 -12 Td
+(ateway/Agent Hub.html`.) Tj
+0 -12 Td
+(  - `design/gateway/paperclip-v1/Paperclip.html` must exactly match `public/designer-mission-con) Tj
+0 -12 Td
+(trol/design/gateway/Paperclip.html`.) Tj
+0 -12 Td
+(- Left data hydration in JS. No rendering code, CSS, class names, or designer layout were change) Tj
+0 -12 Td
+(d.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- `src/components/gateway/DesignerGatewayMockFrame.tsx` previously used a fixed viewport wrapper) Tj
-0 -12 Td
-( pattern that clipped the mounted FULL v3 page.) Tj
-0 -12 Td
-(- The designer asset path was also frame-blocked by security headers before Day 15:) Tj
-0 -12 Td
-(  - `X-Frame-Options: DENY`) Tj
-0 -12 Td
-(  - CSP `frame-ancestors 'none'`) Tj
-0 -12 Td
-(- The iframe height sync could miss already-loaded frames and leave the page stuck at the defaul) Tj
-0 -12 Td
-(t iframe height.) Tj
+(## Files Changed) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Effect: the owner saw the right route, but the designer mock was trapped inside the Mission Cont) Tj
+(- `public/designer-mission-control/design/gateway/Agent Hub.html`) Tj
 0 -12 Td
-(rol mount. It looked like a static picture or a wrong implementation even though the designer as) Tj
-0 -12 Td
-(set existed in the repo.) Tj
+(- `src/lib/gateway-designer-fidelity.test.ts`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Day 15 fixed the implementation path by allowing same-origin designer assets to be framed by Gat) Tj
+(No `.env`, credentials, governance files, protected runtime data, parked duplicate files, shared) Tj
 0 -12 Td
-(eway, preserving app-page frame denial, and syncing iframe height from the loaded designer docum) Tj
-0 -12 Td
-(ent. Day 16 verifies the direct-mock fidelity after that fix.) Tj
+( tokens, or mock class names were changed.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -207,166 +201,65 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Proof runtime:) Tj
+(Direct file proof:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- Base URL: http://127.0.0.1:3337) Tj
+(- `design/gateway/Agent Hub.html` matches `public/designer-mission-control/design/gateway/Agent ) Tj
 0 -12 Td
-(- Bind: 127.0.0.1 only) Tj
+(Hub.html`) Tj
 0 -12 Td
-(- Runtime proof process from Day 15: screen-backed local process) Tj
+(- `design/gateway/Agent Hub.html` matches `.next/standalone/public/designer-mission-control/desi) Tj
 0 -12 Td
-(- Proof viewport: 1480x900) Tj
+(gn/gateway/Agent Hub.html`) Tj
 0 -12 Td
-(- Auth method: local proof cookie only, no owner secrets) Tj
+(- `design/gateway/paperclip-v1/Paperclip.html` matches `public/designer-mission-control/design/g) Tj
 0 -12 Td
-(- Designer comparison method: open mounted route, locate iframe source, open direct designer ass) Tj
+(ateway/Paperclip.html`) Tj
 0 -12 Td
-(et, compare normalized body text and document heights.) Tj
+(- `design/gateway/paperclip-v1/Paperclip.html` matches `.next/standalone/public/designer-mission) Tj
 0 -12 Td
-() Tj
-0 -12 Td
-(Mounted routes and expected direct designer files:) Tj
+(-control/design/gateway/Paperclip.html`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- `/gateway` -> `Gateway Overview.html`) Tj
-0 -12 Td
-(- `/gateway/routes` -> `Gateway Routes.html`) Tj
-0 -12 Td
-(- `/gateway/registry` -> `Gateway Registry.html`) Tj
-0 -12 Td
-(- `/gateway/policies` -> `Gateway Policies.html`) Tj
-0 -12 Td
-(- `/gateway/health` -> `Gateway Health.html`) Tj
-0 -12 Td
-(- `/gateway/dispatcher` -> `Dispatcher.html`) Tj
-0 -12 Td
-(- `/gateway/token-governor` -> `Token Governor.html`) Tj
-0 -12 Td
-(- `/gateway/agent-hub` -> `Agent Hub.html`) Tj
-0 -12 Td
-(- `/gateway/agent-hub/paperclip` -> `Paperclip.html`) Tj
-0 -12 Td
-(- `/gateway/bridge-session` -> `Bridge Session Flow.html`) Tj
-0 -12 Td
-(- `/gateway/node-detail` -> `Gateway Node Detail.html`) Tj
-0 -12 Td
-(- `/gateway/mobile-tablet` -> `Gateway Mobile Tablet.html`) Tj
+(HTTP proof:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Result:) Tj
+(- `GET /designer-mission-control/design/gateway/Agent%20Hub.html` with local proof session: 200) Tj
+0 -12 Td
+(- response contains accepted footer reference: `shared/agent-data-v2-playwright-mcp.js`) Tj
+0 -12 Td
+(- response still loads data script: `src="shared/agent-data.js"`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- 12 of 12 routes mounted the intended designer HTML file.) Tj
-0 -12 Td
-(- 11 of 12 mounted route body hashes matched the direct designer asset body hash exactly in the ) Tj
-0 -12 Td
-(live harness.) Tj
-0 -12 Td
-(- `/gateway` used the correct `Gateway Overview.html` source and matched structurally, but one c) Tj
-0 -12 Td
-(omparison had volatile designer-script text differences:) Tj
-0 -12 Td
-(  - mounted: `load 58%`) Tj
-0 -12 Td
-(  - direct: `load 44%`) Tj
-0 -12 Td
-(  - mounted: `execute->agentmail`) Tj
-0 -12 Td
-(  - direct: `execute->firecrawl`) Tj
-0 -12 Td
-(- This Overview difference is generated by the designer mock's live/ticker behavior, not by a pr) Tj
-ET
-endstream
-endobj
-7 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
-endobj
-8 0 obj
-<< /Length 2930 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
-(oduction React reinterpretation.) Tj
+(The data script remains the correct place for live truth hydration.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Long-page scroll proof:) Tj
+(## Runtime / Deployment Proof) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- `/gateway/agent-hub`) Tj
-0 -12 Td
-(  - source: `Agent Hub.html`) Tj
-0 -12 Td
-(  - iframe document height: 29556) Tj
-0 -12 Td
-(  - mounted page body scroll height: 29611) Tj
-0 -12 Td
-(  - result: scrollable, not clipped to one viewport) Tj
-0 -12 Td
-(- `/gateway/agent-hub/paperclip`) Tj
-0 -12 Td
-(  - source: `Paperclip.html`) Tj
-0 -12 Td
-(  - iframe document height: 38036) Tj
-0 -12 Td
-(  - mounted page body scroll height: 37973) Tj
-0 -12 Td
-(  - result: scrollable, not clipped to one viewport) Tj
-0 -12 Td
-(- `/gateway/dispatcher`) Tj
-0 -12 Td
-(  - source: `Dispatcher.html`) Tj
-0 -12 Td
-(  - iframe document height: 13590) Tj
-0 -12 Td
-(  - mounted page body scroll height: 13600) Tj
-0 -12 Td
-(  - result: scrollable, not clipped to one viewport) Tj
+(Local-only proof runtime:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(The intentional difference from opening a designer file by itself is the Mission Control exit wr) Tj
+(- host: `127.0.0.1`) Tj
 0 -12 Td
-(apper above the iframe. It exists because the owner explicitly required visible exits back to Mi) Tj
+(- port: `3337`) Tj
 0 -12 Td
-(ssion Control Home, Gateway Overview, and Agent Hub.) Tj
+(- PID after restart: `82838`) Tj
 0 -12 Td
-() Tj
+(- `/login`: 200) Tj
 0 -12 Td
-(## UI Behavior) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(Preserved behavior:) Tj
+(- no public listener added) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- FULL v3 designer files are mounted directly.) Tj
-0 -12 Td
-(- `shared/tokens.css` remains the color, spacing, and font source.) Tj
-0 -12 Td
-(- Shared designer classes remain untouched.) Tj
-0 -12 Td
-(- Gateway routes remain protected by Mission Control auth.) Tj
-0 -12 Td
-(- Mission Control Home, Gateway Overview, and Agent Hub exits remain visible above the mounted d) Tj
-0 -12 Td
-(esigner page.) Tj
-0 -12 Td
-(- Long designer pages scroll through the parent Mission Control page instead of being clipped in) Tj
-0 -12 Td
-(side a fixed viewport.) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(No designer fidelity source files were changed on Day 16.) Tj
+(Build synced public assets into `.next/standalone/public/`.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -374,86 +267,82 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Smoke base: http://127.0.0.1:3337) Tj
+(Command:) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(Unauthenticated route behavior:) Tj
+(- `node scripts/check-mission-control-route-rendering.mjs http://127.0.0.1:3337`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
-(- `/login`: 200) Tj
-0 -12 Td
-(- `/gateway`: 307 to `/login`) Tj
-0 -12 Td
-(- `/gateway/agent-hub`: 307 to `/login`) Tj
-0 -12 Td
-(- `/gateway/agent-hub/paperclip`: 307 to `/login`) Tj
-0 -12 Td
-(- `/gateway/dispatcher`: 307 to `/login`) Tj
-0 -12 Td
-(- `/gateway/token-governor`: 307 to `/login`) Tj
-0 -12 Td
-(- `/gateway/bridge-session`: 307 to `/login`) Tj
-0 -12 Td
-(- `/agents`: 307 to `/login`) Tj
-0 -12 Td
-(- `/agent-network`: 307 to `/login`) Tj
+(Result:) Tj
 0 -12 Td
 () Tj
-0 -12 Td
-(Protected action invariant:) Tj
-0 -12 Td
-() Tj
-0 -12 Td
-(- scripts/check-protected-actions-locked.mjs against http://127.0.0.1:3337) Tj
 0 -12 Td
 (- ok: true) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2559 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- routes checked: 46) Tj
 0 -12 Td
-(- checked: 11) Tj
+(- designer pages checked: 8) Tj
 0 -12 Td
-(- protected writes and executions remain locked.) Tj
+(- failures: 0) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The smoke confirmed protected shell routes redirect to `/login` when unauthenticated, read-only ) Tj
+0 -12 Td
+(Bridge APIs return JSON, and designer Mission Control pages remain auth-gated.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
 (## Tests Run) Tj
 0 -12 Td
 () Tj
-ET
-endstream
-endobj
-9 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
-endobj
-10 0 obj
-<< /Length 2555 >>
-stream
-BT
-/F1 10 Tf
-50 780 Td
-(- git diff --check) Tj
+0 -12 Td
+(- `pnpm test src/lib/gateway-designer-fidelity.test.ts`) Tj
+0 -12 Td
+(  - RED before fix: 1 failed, proving mounted `Agent Hub.html` drifted from accepted design.) Tj
+0 -12 Td
+(  - GREEN after fix: 1 file passed, 2 tests passed.) Tj
+0 -12 Td
+(- `git diff --check`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm run typecheck) Tj
+(- `pnpm run typecheck`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm run build) Tj
+(- `pnpm run build`) Tj
 0 -12 Td
 (  - passed) Tj
 0 -12 Td
-(- pnpm test) Tj
+(- `pnpm test`) Tj
 0 -12 Td
-(  - 147 files passed) Tj
+(  - 172 files passed) Tj
 0 -12 Td
-(  - 1296 tests passed) Tj
+(  - 1363 tests passed) Tj
 0 -12 Td
-(- node scripts/check-protected-file-invariants.mjs) Tj
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
 0 -12 Td
 (  - ok: true) Tj
 0 -12 Td
-(- .env diff check) Tj
+(- staged secret-pattern scan) Tj
+0 -12 Td
+(  - ok: true) Tj
+0 -12 Td
+(- `.env` diff check) Tj
 0 -12 Td
 (  - clean) Tj
 0 -12 Td
@@ -497,7 +386,7 @@ BT
 0 -12 Td
 () Tj
 0 -12 Td
-(Blocker: owner_authenticated_gateway_fidelity_retest_required) Tj
+(Blocker: `owner_authenticated_gateway_fidelity_retest_required`) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -515,15 +404,13 @@ BT
 0 -12 Td
 (- Open `/gateway/agent-hub`.) Tj
 0 -12 Td
-(- Confirm the FULL v3 mounted UI is visible.) Tj
+(- Open `/gateway/agent-hub/paperclip`.) Tj
+0 -12 Td
+(- Confirm the FULL v3 mounted UI is visible and matches the accepted mock.) Tj
 0 -12 Td
 (- Confirm scroll works naturally.) Tj
 0 -12 Td
-(- Confirm Mission Control Home, Gateway Overview, and Agent Hub exits are visible and usable.) Tj
-0 -12 Td
-(- Confirm the page feels like the accepted designer mock, with the added Mission Control exit wr) Tj
-0 -12 Td
-(apper.) Tj
+(- Confirm Mission Control Home / Gateway / Agent Hub navigation remains usable.) Tj
 0 -12 Td
 () Tj
 0 -12 Td
@@ -532,26 +419,29 @@ BT
 () Tj
 0 -12 Td
 (- Day number and lane: Day 16 - Gateway Designer Fidelity) Tj
-0 -12 Td
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 11 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 504 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
 (- Status: DEVELOPER-SIDE CLOSED) Tj
 0 -12 Td
 (- Blocker classification: OWNER_GATED) Tj
 0 -12 Td
-(- Code commit under proof: 25f577e) Tj
+(- Current source commit: 0c08e33) Tj
 0 -12 Td
-(- Report base commit: 3124248) Tj
+(- Push result: pending at report generation; to be pushed with this report commit) Tj
 0 -12 Td
-(- Report commit hash: 97563c7) Tj
+(- Runtime proof: local-only standalone proof on `127.0.0.1:3337`, PID 82838) Tj
 0 -12 Td
-(- Push result: pushed to origin/to-knowledge-mc) Tj
-0 -12 Td
-(- Deployed/proof commit: 25f577e) Tj
-0 -12 Td
-(- Runtime proof: local-only standalone proof on 127.0.0.1:3337) Tj
-0 -12 Td
-(- Code rollback command: git revert 25f577e) Tj
-0 -12 Td
-(- Report rollback command: git revert 97563c7) Tj
+(- Rollback command: `git revert 0c08e33`) Tj
 0 -12 Td
 (- Next day automatically started: Day 17 - Gateway Overview 100% Closure) Tj
 0 -12 Td
@@ -569,15 +459,15 @@ xref
 0000000058 00000 n 
 0000000133 00000 n 
 0000000260 00000 n 
-0000003689 00000 n 
-0000003816 00000 n 
-0000007459 00000 n 
-0000007586 00000 n 
-0000010568 00000 n 
-0000010696 00000 n 
-0000013304 00000 n 
+0000003428 00000 n 
+0000003555 00000 n 
+0000006596 00000 n 
+0000006723 00000 n 
+0000009334 00000 n 
+0000009462 00000 n 
+0000010018 00000 n 
 trailer
 << /Size 12 /Root 1 0 R >>
 startxref
-13375
+10089
 %%EOF

@@ -8,6 +8,7 @@ import {
   routePath,
 } from '@/lib/designer-module-api'
 import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
+import { isZapierWriteTool, zapierBackendLocked, zapierNoWriteGuard } from '@/lib/zapier-write-guard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -117,11 +118,12 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
     const body = await request.json().catch(() => ({}))
     const tool = String(body?.tool || '')
     if (!tool) return NextResponse.json({ ok: false, error: 'tool required' }, { status: 400 })
-    if (/^(create|update|delete|send|post|upload|run|execute)/i.test(tool)) {
-      return ownerApprovalRequired({ tool, reason: 'write_tools_locked' })
+    if (isZapierWriteTool(tool)) {
+      return ownerApprovalRequired(zapierNoWriteGuard({ tool, reason: 'write_tools_locked' }))
     }
     return backendRequired({
       tool,
+      ...zapierBackendLocked({ tool }),
       missing: 'zapier_mcp_client.callTool()',
       note: 'Read-only tool discovery may be available at GET /api/zapier/tools, but tool invocation is intentionally disabled.',
     })
@@ -129,16 +131,16 @@ export async function POST(request: NextRequest, { params }: { params: CatchAllP
   if (path === 'request-write-approval') {
     const body = await request.json().catch(() => ({}))
     const tool = String(body?.tool || 'all')
-    return ownerApprovalRequired({
+    return ownerApprovalRequired(zapierNoWriteGuard({
       tool,
       scope: body?.scope || 'session',
       ttl_minutes: body?.ttl_minutes || 30,
       designed_payload_accepted: true,
-      next_action: 'Owner approval UI and audit chain required before writes can unlock.',
-    })
+    }))
   }
   if (path === 'revoke-write-approval') {
     return backendRequired({
+      ...zapierBackendLocked({ tool: 'zapier.write' }),
       approval_state: 'not_connected',
       revoked: false,
       next_action: 'Approval persistence is not connected, so there is no durable Zapier approval state to revoke yet.',

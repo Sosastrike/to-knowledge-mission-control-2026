@@ -1,0 +1,408 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3242 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-04-paperclip-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 04 - Paperclip 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Paperclip Workforce Control Plane) Tj
+0 -12 Td
+(Status: SERVICE_DOWN closure with developer-side truth complete) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker: `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-10 - Safety / Branch / Runtime) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch confirmed: `to-knowledge-mc`.) Tj
+0 -12 Td
+(- Runtime proof target: local production-style Mission Control runtime on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Mission Control runtime PID during proof: `15751`.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No Paperclip writes, task creation, mutations, or external execution attempted.) Tj
+0 -12 Td
+(- Paperclip remains before OpenClaw+ in the operating chain.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 10-20 - Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Checked Paperclip-owned surfaces:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/paperclip/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/paperclip/companies`) Tj
+0 -12 Td
+(- `GET /api/bridge/paperclip/agents`) Tj
+0 -12 Td
+(- `GET /api/bridge/paperclip/issues`) Tj
+0 -12 Td
+(- Paperclip bridge implementation and tests.) Tj
+0 -12 Td
+(- Agent Network / Gateway Paperclip owner-facing status card.) Tj
+0 -12 Td
+(- Local process list for Paperclip-like runtimes.) Tj
+0 -12 Td
+(- Local service manager availability.) Tj
+0 -12 Td
+(- Approved local workspace names for a runnable Paperclip repository.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Inventory result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No Paperclip process was running.) Tj
+0 -12 Td
+(- No runnable Paperclip repo/package was found in the approved local workspace scan.) Tj
+0 -12 Td
+(- Local `systemctl` is unavailable in this macOS runtime context, so a user service cannot be st) Tj
+0 -12 Td
+(arted from here.) Tj
+0 -12 Td
+(- The Mission Control Paperclip adapter expects a loopback or Tailnet-only service and refuses n) Tj
+0 -12 Td
+(on-local/non-Tailnet endpoints.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20-45 - Backend / Service Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No source change was required for this phase because the backend already implements the required) Tj
+0 -12 Td
+( truthful behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Service detection checks only loopback/Tailnet-safe endpoints.) Tj
+0 -12 Td
+(- Default probe target is loopback `3100`.) Tj
+0 -12 Td
+(- Public endpoints are rejected.) Tj
+0 -12 Td
+(- Unreachable service is classified as `SERVICE_DOWN`.) Tj
+0 -12 Td
+(- Company, agent, and issue reads return 503 when the sandbox service is not reachable.) Tj
+0 -12 Td
+(- Protected actions remain disabled.) Tj
+0 -12 Td
+(- Writes require Bridge Session and a configured Paperclip write adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Current endpoint truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Route | HTTP | Result |) Tj
+0 -12 Td
+(| --- | ---: | --- |) Tj
+0 -12 Td
+(| `/api/bridge/paperclip/status` | 200 | `SERVICE_DOWN`, blocker `paperclip_sandbox_service_not_) Tj
+0 -12 Td
+(running` |) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3149 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(| `/api/bridge/paperclip/companies` | 503 | blocked by `paperclip_sandbox_service_not_running` |) Tj
+0 -12 Td
+(| `/api/bridge/paperclip/agents` | 503 | blocked by `paperclip_sandbox_service_not_running` |) Tj
+0 -12 Td
+(| `/api/bridge/paperclip/issues` | 503 | blocked by `paperclip_sandbox_service_not_running` |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 45-65 - UI / Status Truth) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control and Gateway behavior remains truthful:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip is shown as Workforce Control Plane.) Tj
+0 -12 Td
+(- Paperclip does not replace Agent Zero.) Tj
+0 -12 Td
+(- Paperclip remains before OpenClaw+.) Tj
+0 -12 Td
+(- Paperclip service health is not faked.) Tj
+0 -12 Td
+(- Paperclip task creation remains blocked without Bridge Session and adapter proof.) Tj
+0 -12 Td
+(- Owner-facing controls must remain live, Bridge-gated, or disabled with exact blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No UI redesign was performed in this phase.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 65-80 - Tests) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Targeted Paperclip tests:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/paperclip-bridge.test.ts`) Tj
+0 -12 Td
+(- `src/lib/paperclip-bridge-routes.test.ts`) Tj
+0 -12 Td
+(- `src/lib/paperclip-routing-gauntlet.test.ts`) Tj
+0 -12 Td
+(- `src/components/agent-network/AgentNetworkClient.paperclip.test.tsx`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- 4 test files passed.) Tj
+0 -12 Td
+(- 47 tests passed.) Tj
+0 -12 Td
+(- Paperclip routing gauntlet passed 1,000 scenarios with 0 failures.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Previously completed root validation during this closeout window:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` - PASS.) Tj
+0 -12 Td
+(- `pnpm run typecheck` - PASS.) Tj
+0 -12 Td
+(- `pnpm run build` - PASS.) Tj
+0 -12 Td
+(- `pnpm test` - PASS, 171 files / 1356 tests.) Tj
+0 -12 Td
+(- Protected-file invariant scan - PASS.) Tj
+0 -12 Td
+(- Owned-file secret scan - PASS.) Tj
+0 -12 Td
+(- `.env` diff check - clean.) Tj
+0 -12 Td
+(- Route rendering smoke - PASS, 46 routes and 8 designer pages checked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 80-95 - Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated Paperclip route proof used the Mission Control API key from the runtime database w) Tj
+0 -12 Td
+(ithout printing it.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/bridge/paperclip/status` is authenticated and reachable.) Tj
+0 -12 Td
+(- The status endpoint reports the exact service blocker.) Tj
+0 -12 Td
+(- Read routes for companies, agents, and issues do not fabricate rows when Paperclip is down.) Tj
+0 -12 Td
+(- No raw private paths were exposed in the route summaries.) Tj
+0 -12 Td
+(- No secrets were printed.) Tj
+0 -12 Td
+(- No external writes occurred.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 95-100 - Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(What was implemented:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No new code was required. Day 04 closes developer-side as service-gated because Mission Contro) Tj
+0 -12 Td
+(l already exposes the correct Paperclip truth contract and test harness.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1865 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Files changed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-04-paperclip-closure.md`) Tj
+0 -12 Td
+(- `runtime/day-04-paperclip-closure.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Routes/endpoints changed:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- None.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(UI behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip remains visible but not falsely live.) Tj
+0 -12 Td
+(- Paperclip controls remain blocked/gated according to the service and Bridge state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Service/runtime behavior:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip sandbox service is not running or reachable.) Tj
+0 -12 Td
+(- No safe local/Tailnet-only Paperclip runtime could be started from this host context.) Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Remaining blocker:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Owner/admin action package:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(1. Provide or start the Paperclip sandbox service on a loopback or Tailnet-only endpoint.) Tj
+0 -12 Td
+(2. Expected health route: `/api/health`.) Tj
+0 -12 Td
+(3. Expected read routes: `/api/companies`, `/api/companies/{companyId}/agents`, `/api/companies/) Tj
+0 -12 Td
+({companyId}/issues`.) Tj
+0 -12 Td
+(4. Do not expose Paperclip publicly.) Tj
+0 -12 Td
+(5. Do not provide production secrets through `.env`.) Tj
+0 -12 Td
+(6. After service is running, rerun the four Mission Control bridge routes listed above.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Rollback command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git revert <day-04-paperclip-report-commit>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Next day:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day 05 OpenClaw+ starts automatically after this report commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003547 00000 n 
+0000003673 00000 n 
+0000006874 00000 n 
+0000007000 00000 n 
+0000008917 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8987
+%%EOF

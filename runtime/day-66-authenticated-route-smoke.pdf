@@ -1,0 +1,243 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3425 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-66-authenticated-route-smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 66 — Authenticated Route Smoke Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Lane: Runtime / protected owner-auth proof) Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE PASS, OWNER_GATED) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED) Tj
+0 -12 Td
+(Blocker: owner_authenticated_browser_session_required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+(Day 66 adds a safe authenticated route-smoke harness for Mission Control, Gateway, Agent Hub, Br) Tj
+0 -12 Td
+(idge, connector, agent, and report surfaces. The harness does not store cookies, does not write ) Tj
+0 -12 Td
+(response bodies, and does not claim owner visual proof unless an owner session is supplied and e) Tj
+0 -12 Td
+(very authenticated probe passes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+(- scripts/authenticated-route-smoke-contract.mjs) Tj
+0 -12 Td
+(- src/lib/authenticated-route-smoke-contract.test.ts) Tj
+0 -12 Td
+(- runtime/day-66-authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-66-authenticated-route-smoke.md) Tj
+0 -12 Td
+(- runtime/day-66-authenticated-route-smoke.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Routes inventoried:) Tj
+0 -12 Td
+(- Pages: /tkmc, /gateway, /gateway?tab=agent-hub, /gateway?tab=paperclip, /gateway?tab=bridge, /) Tj
+0 -12 Td
+(gateway?tab=dispatcher, /gateway?tab=governor, /gateway/status, /gateway/space-agent, /gateway/b) Tj
+0 -12 Td
+(rain, /agents, /agent-network, /settings/tkmc, /settings/tkmc/integrations, /settings/tkmc/secur) Tj
+0 -12 Td
+(ity.) Tj
+0 -12 Td
+(- APIs: /api/runtime/health, /api/status?action=dashboard, /api/gateway/status, /api/gateway/age) Tj
+0 -12 Td
+(nt-hub/status, /api/gateway/navigation?route=/gateway/agent-hub, Bridge approval/connector endpo) Tj
+0 -12 Td
+(ints, Agent Zero, Hermes, Pi, Paperclip, Build-Wiki, delivery connector, Zapier, HeyGen, SpaceAg) Tj
+0 -12 Td
+(ent browser, and YouTube status endpoints.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Behavior) Tj
+0 -12 Td
+(- Missing owner session closes as OWNER_GATED.) Tj
+0 -12 Td
+(- Failed owner session closes as BLOCKED.) Tj
+0 -12 Td
+(- Unreachable Mission Control /login probe closes as SERVICE_DOWN.) Tj
+0 -12 Td
+(- owner_visual_proof_claimed is false unless authenticated smoke succeeds with session_kind=owne) Tj
+0 -12 Td
+(r.) Tj
+0 -12 Td
+(- Cookie values are not stored.) Tj
+0 -12 Td
+(- Response bodies are not written.) Tj
+0 -12 Td
+(- Unsafe text checks cover secret-like strings and raw local path exposure.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+(Command:) Tj
+0 -12 Td
+(node scripts/authenticated-route-smoke-contract.mjs http://127.0.0.1:3337 > runtime/day-66-authe) Tj
+0 -12 Td
+(nticated-route-smoke.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result summary:) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- authenticated_smoke_proven: false) Tj
+0 -12 Td
+(- owner_visual_proof_claimed: false) Tj
+0 -12 Td
+(- blocker_class: OWNER_GATED) Tj
+0 -12 Td
+(- blocker: owner_authenticated_browser_session_required) Tj
+0 -12 Td
+(- /login status: 200) Tj
+0 -12 Td
+(- Mission Control marker present: true) Tj
+0 -12 Td
+(- unsafe text detected: false) Tj
+0 -12 Td
+(- routes_checked: 0 because no owner cookie was supplied) Tj
+0 -12 Td
+(- page inventory: 15) Tj
+0 -12 Td
+(- API inventory: 21) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(Focused red/green tests added for:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1570 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- primary route inventory) Tj
+0 -12 Td
+(- missing owner session owner-gated behavior) Tj
+0 -12 Td
+(- service-down login probe classification) Tj
+0 -12 Td
+(- page/API success classification) Tj
+0 -12 Td
+(- provided-session failure behavior) Tj
+0 -12 Td
+(- owner visual proof only when owner session smoke succeeds) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation is recorded in the final closeout after command execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart) Tj
+0 -12 Td
+(No production source route or runtime server code changed for Day 66. No deploy/restart is requi) Tj
+0 -12 Td
+(red for the harness itself. The local Mission Control runtime remained reachable at http://127.0) Tj
+0 -12 Td
+(.0.1:3337 during proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security Confirmation) Tj
+0 -12 Td
+(No .env changes intended.) Tj
+0 -12 Td
+(No secrets printed or stored.) Tj
+0 -12 Td
+(No auth weakening.) Tj
+0 -12 Td
+(No public exposure added.) Tj
+0 -12 Td
+(No external writes.) Tj
+0 -12 Td
+(No fake GO or owner visual proof claim.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+(Owner-authenticated route proof requires an owner browser session or approved safe proof cookie ) Tj
+0 -12 Td
+(injection.) Tj
+0 -12 Td
+(Classification: OWNER_GATED.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(After commit, use:) Tj
+0 -12 Td
+(git revert <day-66-commit-sha>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(After Day 66 commit/push, continue automatically to Day 67 — Secret Scan 100% Closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003724 00000 n 
+0000003850 00000 n 
+0000005472 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5542
+%%EOF

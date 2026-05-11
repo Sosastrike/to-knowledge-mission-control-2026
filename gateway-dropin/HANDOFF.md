@@ -6,12 +6,18 @@
 **Scope:** Gateway designer drop-in only. Codex's 100-day plan is not
 touched. Codex is paused and the Gateway lane does NOT hand back to
 Codex until Luis explicitly reactivates.
-**Production deploy status:** **CLEARED TO SHIP** — Designer Department
-resolved DDR-Gateway-001 + DDR-Gateway-002 as **C+C** on 2026-05-11
-("C+C approved. Ship it. Then move on. Don't hold the build for
-accessibility wins." — Luis). The currently-shipping shell adapter in
-commit `7c51e68` is the final form. Operator-side apply checklist
-in § 22.
+**Designer authorisation:** **C+C approved** by Designer Department
+on 2026-05-11 ("C+C approved. Ship it. Then move on. Don't hold the
+build for accessibility wins." — Luis). DDR-Gateway-001 + DDR-Gateway-002
+resolved.
+
+**Production deploy status:** **NOT YET VERIFIED. PRODUCTION AUDIT
+PENDING.** Luis reported on 2026-05-11 that the live web interface
+does NOT match the approved designer files. Gateway integration is
+treated as FAILED IN PRODUCTION until the live `/gateway` matches the
+approved designer screenshots byte-identically. Audit plan in § 24.
+Operator-side apply checklist in § 22 is still the deploy path; § 24
+is the audit that follows once the package is reachable.
 
 ---
 
@@ -620,3 +626,102 @@ go through the DAG (file a fresh DESIGNER_DECISION_REQUIRED).
 - **Production deploy:** operator-run, cleared
 - **Codex:** paused at A66 (no credits); does not participate; resumes
   only on explicit Luis reactivation
+
+---
+
+## 24. Production-truth audit plan (FAILED IN PRODUCTION — pending)
+
+**Status as of 2026-05-11 (second update):** Luis reported the live web
+interface does NOT match the approved designer files. Gateway
+integration is treated as FAILED IN PRODUCTION until live `/gateway`
+matches the approved screenshots byte-identically. CloudCode has not
+seen production directly (no SSH, no domain provided yet); this section
+is the audit CloudCode runs the moment a reachable scope is provided.
+
+### 24.1 Candidate root causes (one of these is true)
+
+1. The new package was never applied (operator did not run § 22).
+2. The wrong route is winning (Next 15 resolution picked a sibling).
+3. The old Gateway implementation is still active in production.
+4. Designer files are not being served from `/public/design/gateway/`.
+5. `/gateway` route is not mounted to the new `GatewayShell`.
+6. A legacy catch-all or wrapper is still serving old UI.
+7. Browser caching / stale build is masking the deploy.
+
+### 24.2 One-shot audit script
+
+CloudCode shipped `gateway-dropin/scripts/audit-production.mjs` —
+self-contained Node script, no extra deps. Usage:
+
+```
+node gateway-dropin/scripts/audit-production.mjs --base https://<domain>
+```
+
+What it does (single run, redacted JSON output):
+
+| Step | Probe | Tells us |
+| --- | --- | --- |
+| A + B | Fetch every entry from `design-lock/gateway-manifest.json` under `/design/gateway/`, SHA-256 each response | Are all 31 designer files reachable? Are they byte-identical to the approved package? |
+| C | Highlight `Agent Hub.html` specifically | Direct match to Luis's audit step C |
+| D | Fetch `/gateway` HTML; look for `class="gateway-shell"`, `gw-tab`, `GatewayShell` marker, and `<iframe src>` values; look for legacy markers (`GatewayWrapper`, `designer-mission-control/` iframes, `gateway-legacy`/`legacy-gateway` class names) | Which component is rendering, which iframes load, are legacy markers visible? |
+| E | Fetch each `/gateway/<segment>` deep link with `redirect: manual` | Which segments are 200, which are redirects, which are 404? Diagnoses missing rewrites. |
+
+It then prints a `diagnoses` array suggesting which of the 7 causes
+fits the evidence (`CAUSE_2_*`, `CAUSE_4_*`, `CAUSE_5_*`, `CAUSE_6_*`).
+
+### 24.3 What CloudCode needs from Luis to run the audit
+
+Any ONE of the following unblocks the audit immediately:
+
+- **Production domain** — CloudCode runs `audit-production.mjs --base https://<domain>`
+  from this Mac and / or via Chrome MCP. No SSH needed.
+- **Operator-side `ls -la public/design/gateway/` + `sha256sum public/design/gateway/Agent\ Hub.html`** on the production tree — answers A/B/C even without browser reach.
+- **Web terminal URL already authenticated to srv1568353** — CloudCode drives the
+  audit through Chrome MCP.
+- **CI/CD UI URL** — CloudCode redeploys and audits via Chrome MCP.
+
+### 24.4 Decision tree (once audit data lands)
+
+| Audit shows | Likely cause | CloudCode fix path |
+| --- | --- | --- |
+| `/design/gateway/*` 404 across the board | CAUSE_1 / CAUSE_4 | Confirm package was applied; if not, operator runs § 22. If yes, fix static-serving root (Next `public/` not deployed) |
+| `Agent Hub.html` 200 but SHA differs | CAUSE_4 file drift | Re-deploy the package, verify CDN purge |
+| `/gateway` 200 + HTML contains `designer-mission-control/` iframes | CAUSE_6 legacy catch-all winning | Demote / remove the legacy `designer-mission-control/[[...path]]` page or fix Next route precedence so `app/gateway/page.tsx` wins |
+| `/gateway` 200 + no `gateway-shell` class + no legacy markers | CAUSE_5 — new GatewayShell page not deployed | Operator re-runs § 22 with explicit `mv` of `src/app/gateway/page.tsx` and `src/components/gateway/GatewayShell.tsx` |
+| `/gateway/agent-hub` 404 / 308 to a non-`/gateway` target | CAUSE_2 rewrites missing | Merge `next.config.partial.js` rewrites into prod `next.config.js`; rebuild |
+| All checks green but Luis still sees old UI | CAUSE_7 stale build / CDN | Operator does `pnpm build` against a fresh checkout, hard restart, CDN purge |
+
+### 24.5 Fix rules (what CloudCode WILL do once cause is known)
+
+- Move / mount / remove **engineering** files (routes, middleware, rewrites,
+  static serving, build manifests) — all in the DAG-allowed list.
+- Re-emit the design-lock manifest if the production tree shows a file
+  count delta — this is a **registration** action, not a content edit.
+- **Will NOT** touch mock HTML/CSS/JS, even if the audit shows drift.
+  If a file drifted in production, the fix is "redeploy the approved
+  copy", never "edit it to match what's live".
+- **Will NOT** change tab labels, colours, spacing, layout, status grammar.
+- **Will NOT** change `.env`, auth, SMB / Fork-2, Zapier writes.
+- If audit reveals a question that requires a design choice
+  (e.g. "the legacy `/designer-mission-control` proxy is the new
+  Gateway; demote the new package instead"), CloudCode files a fresh
+  `DESIGNER_DECISION_REQUIRED`.
+
+### 24.6 Likely-quickest path to truth
+
+CloudCode's bet, based on memory + the seven causes: **CAUSE_1 (never applied)** or **CAUSE_6 (legacy catch-all winning)** are the two most-likely roots given the codebase has `designer-mission-control/[[...path]]` still mounted and the operator-side apply was never confirmed.
+
+The audit will say which. CloudCode does not act on the bet without the audit.
+
+---
+
+## 25. Status of record (after the 2026-05-11 second update)
+
+- **Designer authorisation:** C+C approved (still valid)
+- **Package on CloudCode side:** ready, design-lock OK, tests OK, branch
+  tip `fbc3f5d`
+- **Production application:** **NOT VERIFIED** — Luis reports mismatch
+- **Production audit:** **PENDING** — needs domain / operator output / web terminal
+- **Codex:** still paused at A66
+- **Designer Authorization Gate:** still binding
+- **Memory:** unchanged — will be updated only when audit + fix close the lane

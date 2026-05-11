@@ -8,9 +8,16 @@ CloudCode does not have network reach to that server from this session.
 **SHIP STATUS (2026-05-11):** Designer Department approved **C+C** on
 2026-05-11 ("C+C approved. Ship it. Then move on. Don't hold the build
 for accessibility wins." — Luis). DDR-Gateway-001 and DDR-Gateway-002
-are resolved. The currently-shipping shell adapter in
+are resolved. The shell adapter intended for production is
 `gateway-dropin/src/components/gateway/GatewayShell.tsx` (commit
-`7c51e68`) is the final form.
+`7c51e68`).
+
+**PRODUCTION VERIFICATION STATUS (2026-05-11 — second update):**
+**NOT YET VERIFIED. Live web interface does NOT match the approved
+designer files** per Luis's report. Gateway integration is treated as
+**FAILED IN PRODUCTION** until the live `/gateway` matches the approved
+designer screenshots byte-identically. Production audit pending — plan
+documented in `gateway-dropin/HANDOFF.md` § 24.
 
 The Option A+A variant remains under `gateway-dropin/options/` purely
 as audit trail of the design decision. Not a live alternative; nothing
@@ -29,12 +36,13 @@ workflow; they are byte-equivalent and yield identical history.
 ## What is in this delivery
 
 - **Branch:** `cloudcode/gateway-dropin-integration`
-- **Branch tip:** `b3f2603`
+- **Branch tip:** `33035d4`
 - **Commits included (in order):**
   1. `7c51e68` — `feat(gateway-dropin): mount Gateway designer mocks at /gateway under Next 15`
   2. `43f628c` — `docs(gateway-dropin): backfill commit SHA into closeout report`
   3. `b72a93b` — `docs(gateway-dropin): apply Designer Authorization Gate audit + raise DDR-Gateway-001/002`
   4. `b3f2603` — `docs(gateway-dropin): HOLD-pending-designer + Option A+A prep + CloudCode-owner wording`
+  5. `33035d4` — `docs(gateway-dropin): C+C approved by Designer Dept — lift HOLD, ship-ready`
 - **Base commit (already on `main` / `claude/fervent-montalcini-62fba8`):** `354d632`
 - **Files added:** 54 new files under `gateway-dropin/`. **Zero** existing
   files were modified.

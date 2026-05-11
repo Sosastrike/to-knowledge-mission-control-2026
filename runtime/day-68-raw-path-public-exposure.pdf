@@ -1,0 +1,225 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3170 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-68-raw-path-public-exposure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 68 — Raw Path / Public Exposure Sweep Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Lane: Runtime / security and owner-facing exposure) Tj
+0 -12 Td
+(Status: PASS) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+(Day 68 scans owner-facing Mission Control/Gateway surfaces and current proof reports for raw loc) Tj
+0 -12 Td
+(al paths, file URLs, and public-local exposure hints. The scanner reports file names and disposi) Tj
+0 -12 Td
+(tions only; it does not print raw matched values.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+(- scripts/raw-exposure-scan-contract.mjs) Tj
+0 -12 Td
+(- src/lib/raw-exposure-scan-contract.test.ts) Tj
+0 -12 Td
+(- public/designer-mission-control/src/settings.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/settings-pages.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/replicas/BuildWikiFarmerSyncPanel.jsx) Tj
+0 -12 Td
+(- runtime/day-68-raw-path-public-exposure.json) Tj
+0 -12 Td
+(- runtime/day-68-raw-path-public-exposure.md) Tj
+0 -12 Td
+(- runtime/day-68-raw-path-public-exposure.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Corrections Made) Tj
+0 -12 Td
+(- Masked a public Mission Control settings deploy path as `internal path hidden`.) Tj
+0 -12 Td
+(- Replaced a Build-Wiki source placeholder raw home path with `approved local source alias`.) Tj
+0 -12 Td
+(- Reworded Build-Wiki source guidance to avoid exposing raw host prefixes while preserving owner) Tj
+0 -12 Td
+(-approved/local-source semantics.) Tj
+0 -12 Td
+(- Replaced the visible firewall example `0.0.0.0/0` with `public internet /0`.) Tj
+0 -12 Td
+(- Preserved Gateway FULL v3 mock contract files; no Gateway design HTML/CSS/class names were cha) Tj
+0 -12 Td
+(nged.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scanner Behavior) Tj
+0 -12 Td
+(The scanner targets current owner-facing surfaces and current proof artifacts:) Tj
+0 -12 Td
+(- Mission Control catch-all shell) Tj
+0 -12 Td
+(- Gateway pages) Tj
+0 -12 Td
+(- login/settings pages) Tj
+0 -12 Td
+(- components) Tj
+0 -12 Td
+(- public designer Mission Control assets) Tj
+0 -12 Td
+(- public Gateway design assets) Tj
+0 -12 Td
+(- current Day 66, Day 67, and Day 68 runtime reports) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(It blocks unresolved raw local paths, file URLs, public bind examples, ngrok/trycloudflare/funne) Tj
+0 -12 Td
+(l hints, and similar public exposure strings.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+(Command:) Tj
+0 -12 Td
+(node scripts/raw-exposure-scan-contract.mjs > runtime/day-68-raw-path-public-exposure.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result summary:) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- blocker_class: NONE) Tj
+0 -12 Td
+(- blockers: []) Tj
+0 -12 Td
+(- raw_exposure_files: 0) Tj
+0 -12 Td
+(- public_exposure_files: 0) Tj
+0 -12 Td
+(- unresolved_raw_exposure_files: 0) Tj
+0 -12 Td
+(- unresolved_public_exposure_files: 0) Tj
+0 -12 Td
+(- values_printed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(Focused test coverage:) Tj
+0 -12 Td
+(- allowlisted diagnostics/developer fixtures) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1061 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- owner-facing source files block when unresolved) Tj
+0 -12 Td
+(- allowlisted-only scan passes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation is recorded in the final closeout after command execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart) Tj
+0 -12 Td
+(Static public assets changed. A rebuild syncs public assets into the standalone bundle. Restart/) Tj
+0 -12 Td
+(redeploy is required before production owner visual confirmation if this lane is deployed indepe) Tj
+0 -12 Td
+(ndently.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security Confirmation) Tj
+0 -12 Td
+(No .env changes.) Tj
+0 -12 Td
+(No secrets printed.) Tj
+0 -12 Td
+(No auth weakening.) Tj
+0 -12 Td
+(No public exposure added.) Tj
+0 -12 Td
+(No external writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(After commit, use:) Tj
+0 -12 Td
+(git revert <day-68-commit-sha>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(After Day 68 commit/push, continue automatically to Day 69 — Rollback Plan Per Lane 100% Closure) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003469 00000 n 
+0000003595 00000 n 
+0000004708 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4778
+%%EOF

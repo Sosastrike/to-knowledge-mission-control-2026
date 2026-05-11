@@ -1090,7 +1090,7 @@ function NewIpModal({ onClose, onSave }){
                 <span className="muted xsmall">~16M IPs — entire internal RFC1918 range</span>
               </div>
               <div className="hstack" style={{gap:8}}>
-                <span className="mono xsmall" style={{minWidth:130, color:'var(--fg-1)'}}>0.0.0.0/0</span>
+                <span className="mono xsmall" style={{minWidth:130, color:'var(--fg-1)'}}>public internet /0</span>
                 <span className="muted xsmall">everyone — defeats the allowlist, don't use</span>
               </div>
             </div>

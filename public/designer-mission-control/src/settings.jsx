@@ -324,7 +324,7 @@ function AboutPage() {
             <div style={{color:'var(--fg-0)'}}>Host</div><span className="mono xsmall">srv1568353</span>
           </div>
           <div className="hstack" style={{justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--line-1)'}}>
-            <div style={{color:'var(--fg-0)'}}>Deploy</div><span className="mono xsmall">/home/tony/claudeclaw/</span>
+            <div style={{color:'var(--fg-0)'}}>Deploy</div><span className="mono xsmall">internal path hidden</span>
           </div>
           <div className="hstack" style={{justifyContent:'space-between', padding:'8px 0'}}>
             <div style={{color:'var(--fg-0)'}}>Gateway</div><span className="mono xsmall">localhost:18789</span>

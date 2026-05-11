@@ -921,7 +921,7 @@ function BWAddSourceControl({ addSource, availableExpansions, onAction }) {
           <div className="hstack" style={{ gap: 6, flexWrap: 'wrap' }}>
             <input
               type="text"
-              placeholder="/home/tony/some/docs/"
+              placeholder="approved local source alias"
               value={pathInput}
               onChange={(e) => setPathInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') submitPath(); }}
@@ -936,7 +936,7 @@ function BWAddSourceControl({ addSource, availableExpansions, onAction }) {
             {actionBtn}
           </div>
           <div className="muted xsmall">
-            Local paths only · must be under <code style={{ fontSize: 11 }}>/home/tony/</code> · must be a readable directory · denylisted paths (.env, .ssh, secret-like, db dirs, vault internals, backup dirs) are rejected up front.
+            Local sources only · must be owner-approved · must be readable by the service · denylisted paths (.env, .ssh, secret-like, db dirs, vault internals, backup dirs) are rejected up front.
           </div>
           {Array.isArray(availableExpansions) && availableExpansions.length > 0 ? (
             <div className="hstack" style={{ gap: 4, flexWrap: 'wrap' }}>

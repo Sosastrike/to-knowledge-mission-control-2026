@@ -4,6 +4,12 @@ function setNodeEnv(value: string) {
   ;(process.env as Record<string, string | undefined>).NODE_ENV = value
 }
 
+function nextUrlFor(value: string) {
+  const url = new URL(value) as URL & { clone: () => URL }
+  url.clone = () => new URL(url.toString())
+  return url
+}
+
 describe('proxy host matching', () => {
   it('allows the system hostname implicitly', async () => {
     vi.resetModules()
@@ -139,7 +145,7 @@ describe('proxy host matching', () => {
     expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'self'`)
   })
 
-  it('keeps non-designer Mission Control pages protected from framing', async () => {
+  it('redirects authenticated Gateway compatibility routes into the Gateway shell after auth', async () => {
     vi.resetModules()
     vi.doMock('node:os', () => ({
       default: { hostname: () => 'hetzner-jarv' },
@@ -147,15 +153,10 @@ describe('proxy host matching', () => {
     }))
 
     const { proxy } = await import('./proxy')
+    const location = nextUrlFor('http://localhost:3000/gateway/agent-hub')
     const request = {
       headers: new Headers({ host: 'localhost:3000' }),
-      nextUrl: {
-        host: 'localhost:3000',
-        hostname: 'localhost',
-        pathname: '/gateway/agent-hub',
-        searchParams: new URLSearchParams(),
-        clone: () => ({ pathname: '/gateway/agent-hub' }),
-      },
+      nextUrl: location,
       method: 'GET',
       cookies: { get: (name: string) => name === 'mc-session' ? { value: 'local-proof-session' } : undefined },
     } as any
@@ -165,7 +166,36 @@ describe('proxy host matching', () => {
     delete process.env.MC_ALLOW_ANY_HOST
 
     const response = proxy(request)
+    const target = new URL(response.headers.get('Location') || 'http://invalid.local')
+    expect(response.status).toBe(307)
+    expect(`${target.pathname}${target.search}`).toBe('/gateway?tab=agent-hub')
     expect(response.headers.get('X-Frame-Options')).toBe('DENY')
     expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'none'`)
+  })
+
+  it('does not route unauthenticated Gateway compatibility paths before login protection', async () => {
+    vi.resetModules()
+    vi.doMock('node:os', () => ({
+      default: { hostname: () => 'hetzner-jarv' },
+      hostname: () => 'hetzner-jarv',
+    }))
+
+    const { proxy } = await import('./proxy')
+    const location = nextUrlFor('http://localhost:3000/gateway/agent-hub')
+    const request = {
+      headers: new Headers({ host: 'localhost:3000' }),
+      nextUrl: location,
+      method: 'GET',
+      cookies: { get: () => undefined },
+    } as any
+
+    setNodeEnv('production')
+    process.env.MC_ALLOWED_HOSTS = 'localhost,127.0.0.1'
+    delete process.env.MC_ALLOW_ANY_HOST
+
+    const response = proxy(request)
+    const target = new URL(response.headers.get('Location') || 'http://invalid.local')
+    expect(response.status).toBe(307)
+    expect(target.pathname).toBe('/login')
   })
 })

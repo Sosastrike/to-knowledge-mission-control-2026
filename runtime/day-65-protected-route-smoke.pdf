@@ -1,0 +1,348 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3352 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-65-protected-route-smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 65 - Protected Route Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Lane: Runtime / deployment / security) Tj
+0 -12 Td
+(Status: developer-side PASS) Tj
+0 -12 Td
+(Blocker class: NONE for unauthenticated protected-route proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Prove that protected Mission Control, Gateway, Agent Hub, Bridge, runtime health, and connector ) Tj
+0 -12 Td
+(routes do not render owner-facing production surfaces to unauthenticated requests.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a reusable unauthenticated protected-route smoke contract and fixed Gateway compatibility ) Tj
+0 -12 Td
+(route handling so it runs after session/proxy auth protection instead of using Next config redir) Tj
+0 -12 Td
+(ects before the auth proxy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Root Cause) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway compatibility redirects in `next.config.js` ran before the auth proxy:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway/agent-hub` redirected to `/gateway?tab=agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` redirected to `/gateway?tab=paperclip`) Tj
+0 -12 Td
+(- `/gateway/bridge-session` redirected to `/gateway?tab=bridge`) Tj
+0 -12 Td
+(- `/gateway/dispatcher` redirected to `/gateway?tab=dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor` redirected to `/gateway?tab=governor`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Unauthenticated requests still ended at a protected Gateway surface, but the first hop was not t) Tj
+0 -12 Td
+(he login gate. Day 65 treats that as a protection defect because owner-facing compatibility rout) Tj
+0 -12 Td
+(es must not route internally before authentication.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `next.config.js`) Tj
+0 -12 Td
+(- `src/proxy.ts`) Tj
+0 -12 Td
+(- `src/proxy.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-native-frame-decision.test.ts`) Tj
+0 -12 Td
+(- `src/lib/protected-route-smoke-contract.test.ts`) Tj
+0 -12 Td
+(- `scripts/protected-route-smoke-contract.mjs`) Tj
+0 -12 Td
+(- `runtime/day-65-protected-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-65-protected-route-smoke.md`) Tj
+0 -12 Td
+(- `runtime/day-65-protected-route-smoke.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway leaf compatibility redirects were moved from `next.config.js` into the auth proxy after ) Tj
+0 -12 Td
+(session/proxy auth is accepted:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway/routes` -> `/gateway?tab=routes`) Tj
+0 -12 Td
+(- `/gateway/registry` -> `/gateway?tab=registry`) Tj
+0 -12 Td
+(- `/gateway/policies` -> `/gateway?tab=policies`) Tj
+0 -12 Td
+(- `/gateway/health` -> `/gateway?tab=health`) Tj
+0 -12 Td
+(- `/gateway/dispatcher` -> `/gateway?tab=dispatcher`) Tj
+0 -12 Td
+(- `/gateway/token-governor` -> `/gateway?tab=governor`) Tj
+0 -12 Td
+(- `/gateway/agent-hub` -> `/gateway?tab=agent-hub`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/paperclip` -> `/gateway?tab=paperclip`) Tj
+0 -12 Td
+(- `/gateway/agent-hub/*` -> `/gateway?tab=agent-hub`) Tj
+0 -12 Td
+(- `/gateway/bridge-session` -> `/gateway?tab=bridge`) Tj
+0 -12 Td
+(- `/gateway/node-detail` -> `/gateway?tab=node-detail`) Tj
+0 -12 Td
+(- `/gateway/mobile-tablet` -> `/gateway?tab=mobile`) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2369 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Unauthenticated requests to these routes now redirect to `/login` before any internal Gateway ta) Tj
+0 -12 Td
+(b redirect.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No designer mock HTML, CSS, or class names were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Authenticated Gateway compatibility routes still route into the single accepted Gateway shell an) Tj
+0 -12 Td
+(d raw designer iframe assets. Unauthenticated owners/users get the login gate first.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Smoke Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Command:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3337 > runtime/day-65-protected) Tj
+0 -12 Td
+(-route-smoke.json) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result summary:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `ok: true`) Tj
+0 -12 Td
+(- Routes checked: `40`) Tj
+0 -12 Td
+(- Protected pages checked: `20`) Tj
+0 -12 Td
+(- Protected APIs checked: `16`) Tj
+0 -12 Td
+(- Public routes checked: `4`) Tj
+0 -12 Td
+(- Failures: `0`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The smoke sends:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- no auth headers) Tj
+0 -12 Td
+(- no cookies) Tj
+0 -12 Td
+(- no API key) Tj
+0 -12 Td
+(- no response bodies to the report artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh validation required before commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm test src/lib/protected-route-smoke-contract.test.ts src/proxy.test.ts src/lib/gateway-na) Tj
+0 -12 Td
+(tive-frame-decision.test.ts`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control standalone was rebuilt and restarted locally on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof PID:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Listener PID: `86339`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Use:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-65-protected-route-smoke-commit-sha>) Tj
+0 -12 Td
+(MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 558 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No fake route protection claim.) Tj
+0 -12 Td
+(- No designer mock rewrites.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 66 starts automatically after commit and push: Authenticated Route Smoke 100% Closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003657 00000 n 
+0000003783 00000 n 
+0000006204 00000 n 
+0000006330 00000 n 
+0000006939 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7009
+%%EOF

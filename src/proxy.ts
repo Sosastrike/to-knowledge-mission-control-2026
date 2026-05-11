@@ -165,6 +165,33 @@ function extractApiKeyFromRequest(request: NextRequest): string {
   return ''
 }
 
+function gatewayCompatibilityDestination(pathname: string): string | null {
+  const exact: Record<string, string> = {
+    '/gateway/routes': '/gateway?tab=routes',
+    '/gateway/registry': '/gateway?tab=registry',
+    '/gateway/policies': '/gateway?tab=policies',
+    '/gateway/health': '/gateway?tab=health',
+    '/gateway/dispatcher': '/gateway?tab=dispatcher',
+    '/gateway/token-governor': '/gateway?tab=governor',
+    '/gateway/agent-hub': '/gateway?tab=agent-hub',
+    '/gateway/agent-hub/paperclip': '/gateway?tab=paperclip',
+    '/gateway/bridge-session': '/gateway?tab=bridge',
+    '/gateway/node-detail': '/gateway?tab=node-detail',
+    '/gateway/mobile-tablet': '/gateway?tab=mobile',
+  }
+  if (exact[pathname]) return exact[pathname]
+  if (pathname.startsWith('/gateway/agent-hub/')) return '/gateway?tab=agent-hub'
+  return null
+}
+
+function redirectToGatewayCompatibility(request: NextRequest, destination: string): NextResponse {
+  const url = request.nextUrl.clone()
+  const [pathname, search = ''] = destination.split('?')
+  url.pathname = pathname
+  url.search = search ? `?${search}` : ''
+  return NextResponse.redirect(url)
+}
+
 export function proxy(request: NextRequest) {
   // Network access control.
   // In production: default-deny unless explicitly allowed.
@@ -236,6 +263,10 @@ export function proxy(request: NextRequest) {
 
   // Page routes: allow if session cookie present
   if (sessionToken) {
+    const gatewayDestination = gatewayCompatibilityDestination(pathname)
+    if (gatewayDestination) {
+      return addSecurityHeaders(redirectToGatewayCompatibility(request, gatewayDestination), request)
+    }
     const { response, nonce } = nextResponseWithNonce(request)
     return addSecurityHeaders(response, request, nonce)
   }
@@ -248,6 +279,10 @@ export function proxy(request: NextRequest) {
     const proxyUsername = (request.headers.get(proxyAuthHeader) || '').trim()
     const realIp = (request.headers.get('x-real-ip') || '').trim()
     if (proxyUsername && realIp && trustedIps.has(realIp)) {
+      const gatewayDestination = gatewayCompatibilityDestination(pathname)
+      if (gatewayDestination) {
+        return addSecurityHeaders(redirectToGatewayCompatibility(request, gatewayDestination), request)
+      }
       const { response, nonce } = nextResponseWithNonce(request)
       return addSecurityHeaders(response, request, nonce)
     }

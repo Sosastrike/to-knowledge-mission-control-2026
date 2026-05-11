@@ -37,10 +37,11 @@ const removedWrapperPages = [
 ]
 
 describe('Gateway native frame architecture decision', () => {
-  it('uses one GatewayShell route and redirects leaf routes into shell sub-tabs', () => {
+  it('uses one GatewayShell route and moves leaf-route redirects behind auth protection', () => {
     const gatewayPage = readSource('src/app/gateway/page.tsx')
     const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
     const nextConfig = readSource('next.config.js')
+    const proxy = readSource('src/proxy.ts')
 
     expect(gatewayPage).toContain('redirect(')
     expect(gatewayPage).toContain('/designer-mission-control/Mission%20Control.html?page=gateway')
@@ -48,8 +49,9 @@ describe('Gateway native frame architecture decision', () => {
     expect(gatewayShell).toContain("src: '/designer-mission-control/design/gateway/Paperclip.html'")
 
     for (const [source, destination] of gatewayRedirectRules) {
-      expect(nextConfig).toContain(`source: '${source}'`)
-      expect(nextConfig).toContain(`destination: '${destination}'`)
+      expect(nextConfig).not.toContain(`source: '${source}'`)
+      expect(proxy).toContain(source.replace('/:id', '/'))
+      expect(proxy).toContain(destination)
     }
 
     for (const routePath of removedWrapperPages) {
@@ -67,10 +69,10 @@ describe('Gateway native frame architecture decision', () => {
   })
 
   it('routes Agent Hub agent detail URLs into the GatewayShell Agent Hub deep link', () => {
-    const nextConfig = readSource('next.config.js')
+    const proxy = readSource('src/proxy.ts')
 
-    expect(nextConfig).toContain("source: '/gateway/agent-hub/:id'")
-    expect(nextConfig).toContain("destination: '/gateway?tab=agent-hub'")
+    expect(proxy).toContain("pathname.startsWith('/gateway/agent-hub/')")
+    expect(proxy).toContain("return '/gateway?tab=agent-hub'")
   })
 
   it('serves designer assets with same-origin frame headers instead of blocking the Gateway frame', () => {

@@ -1,13 +1,27 @@
-# Designer review package — DDR-Gateway-001 + DDR-Gateway-002
+# Designer review package — DDR-Gateway-001 + DDR-Gateway-002 (RESOLVED — C+C approved)
 
-This folder is the materials the Designer Department reviews to resolve
-the two bound DESIGNER_DECISION_REQUIRED items. Both items must be
-resolved together (paired). Luis explicitly held C+C approval and asked
-CloudCode to prepare A+A as a sibling option.
+```
+DDR-Gateway-001 RESOLUTION: C
+DDR-Gateway-002 RESOLUTION: C
+Resolved by:  Designer Department (delivered via Luis)
+Approved by:  Luis Sosa <luis@ecopiersolutions.com>
+Date:         2026-05-11
+Notes:        "C+C approved. Ship it. Then move on. Don't hold the
+              build for accessibility wins."
+```
 
-Until a decision lands, **production deploy is on hold.** Designer mock
-files under `public/design/gateway/` remain byte-identical to source;
-`design-lock` continues to pass.
+Both bound items resolved together as Option C+C. The shell adapter
+shipping in production is `gateway-dropin/src/components/gateway/GatewayShell.tsx`
+(commit `7c51e68`). This folder is retained as the audit trail of the
+decision — Option A+A is now historical, not a live alternative.
+
+Production deploy is **unblocked** as of the resolution above. Designer
+mock files under `public/design/gateway/` remain byte-identical to
+source; `design-lock` passes.
+
+---
+
+## Original review package (for record)
 
 ---
 

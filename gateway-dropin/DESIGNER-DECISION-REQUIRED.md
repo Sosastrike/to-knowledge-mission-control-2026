@@ -1,4 +1,35 @@
-# DESIGNER_DECISION_REQUIRED — open items
+# DESIGNER_DECISION_REQUIRED — RESOLVED 2026-05-11 (C+C approved)
+
+```
+DDR-Gateway-001 RESOLUTION: C
+DDR-Gateway-002 RESOLUTION: C
+Resolved by:  Designer Department (delivered via Luis)
+Approved by:  Luis Sosa <luis@ecopiersolutions.com>
+Date:         2026-05-11
+Notes:        "C+C approved. Ship it. Then move on. Don't hold the
+              build for accessibility wins."
+```
+
+**Outcome:**
+- `<button type="button">` for tab elements — **APPROVED**
+- The three CSS declarations (`background: transparent; width: 100%;
+  text-align: left;`) added to `.gw-tab` — **APPROVED**
+- Combined as an accessibility-only exception. Rendered output is
+  visually identical to the designer's `<div>`-based original. The
+  `<button>` form additionally yields keyboard focus / Enter+Space
+  activation / screen-reader semantics for free.
+- Both changes ship as part of commit `7c51e68` (already in the
+  delivery bundle); no further code change required.
+
+Designer mock files under `public/design/gateway/` remain
+byte-identical to source (`design-lock OK: 31 files match manifest`).
+
+The Option A+A variant kept under `gateway-dropin/options/` is retained
+as audit trail of the design decision, not as a live alternative.
+
+---
+
+## Original filing (for record)
 
 Filed against commit `7c51e68` on `cloudcode/gateway-dropin-integration`
 in compliance with the Designer Authorization Gate (issued by Luis

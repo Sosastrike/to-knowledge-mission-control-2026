@@ -5,23 +5,20 @@ credits). Production deploy executed by Luis or a designated human
 operator with SSH access to `srv1568353:/home/tony/mission-control`;
 CloudCode does not have network reach to that server from this session.
 
-**HOLD STATUS (2026-05-11):** Designer Department has not yet resolved
-DDR-Gateway-001 + DDR-Gateway-002. Until they do, the deliverable below
-is *ready to apply* but **not authorised to ship**. Two variants of the
-shell adapter are prepared so the designer can choose:
+**SHIP STATUS (2026-05-11):** Designer Department approved **C+C** on
+2026-05-11 ("C+C approved. Ship it. Then move on. Don't hold the build
+for accessibility wins." — Luis). DDR-Gateway-001 and DDR-Gateway-002
+are resolved. The currently-shipping shell adapter in
+`gateway-dropin/src/components/gateway/GatewayShell.tsx` (commit
+`7c51e68`) is the final form.
 
-- **Option C+C** (currently in `gateway-dropin/src/components/gateway/GatewayShell.tsx`)
-  — `<button type="button">` for tabs, with three compensating CSS
-  declarations. Visually identical to designer source; adds default
-  keyboard accessibility.
-- **Option A+A** (in `gateway-dropin/options/GatewayShell.option-A.tsx`)
-  — `<div>` for tabs (designer's original markup), no extra CSS. Closest
-  to designer byte-identity; no default keyboard accessibility.
+The Option A+A variant remains under `gateway-dropin/options/` purely
+as audit trail of the design decision. Not a live alternative; nothing
+to swap.
 
-Full comparison: `gateway-dropin/options/DESIGNER-REVIEW.md`. Both
-variants typecheck and pass tests; both pass `verify-design-lock.mjs`
-(mock files under `public/design/gateway/` are byte-identical to source
-in either variant).
+Design-lock continues to pass (31 files match manifest), and the
+designer mock files under `public/design/gateway/` remain byte-identical
+to source.
 
 The `cloudcode/gateway-dropin-integration` branch could not be pushed —
 no git remote is configured on this worktree (same as the prior
@@ -32,11 +29,12 @@ workflow; they are byte-equivalent and yield identical history.
 ## What is in this delivery
 
 - **Branch:** `cloudcode/gateway-dropin-integration`
-- **Branch tip:** `b72a93b`
+- **Branch tip:** `b3f2603`
 - **Commits included (in order):**
   1. `7c51e68` — `feat(gateway-dropin): mount Gateway designer mocks at /gateway under Next 15`
   2. `43f628c` — `docs(gateway-dropin): backfill commit SHA into closeout report`
   3. `b72a93b` — `docs(gateway-dropin): apply Designer Authorization Gate audit + raise DDR-Gateway-001/002`
+  4. `b3f2603` — `docs(gateway-dropin): HOLD-pending-designer + Option A+A prep + CloudCode-owner wording`
 - **Base commit (already on `main` / `claude/fervent-montalcini-62fba8`):** `354d632`
 - **Files added:** 54 new files under `gateway-dropin/`. **Zero** existing
   files were modified.

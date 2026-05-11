@@ -6,9 +6,12 @@
 **Scope:** Gateway designer drop-in only. Codex's 100-day plan is not
 touched. Codex is paused and the Gateway lane does NOT hand back to
 Codex until Luis explicitly reactivates.
-**Production deploy status:** **HOLD** — pending Designer Department
-decision on DDR-Gateway-001 + DDR-Gateway-002. Package is
-production-ready; no live ship until designer resolves the two items.
+**Production deploy status:** **CLEARED TO SHIP** — Designer Department
+resolved DDR-Gateway-001 + DDR-Gateway-002 as **C+C** on 2026-05-11
+("C+C approved. Ship it. Then move on. Don't hold the build for
+accessibility wins." — Luis). The currently-shipping shell adapter in
+commit `7c51e68` is the final form. Operator-side apply checklist
+in § 22.
 
 ---
 
@@ -482,35 +485,38 @@ git rm tests/gateway/*.test.ts
 
 ---
 
-## 21. Designer Authorization Gate closeout (added 2026-05-11)
+## 21. Designer Authorization Gate closeout (resolved 2026-05-11)
 
-**HOLD STATUS as of 2026-05-11:** Luis issued the gate response and
-HELD C+C approval. CloudCode has prepared Option A+A in parallel
-(see `gateway-dropin/options/`) and will not ship further
-design-adjacent changes until the Designer Department resolves
-DDR-Gateway-001 + DDR-Gateway-002 paired. Production deploy is on hold
-until that resolution lands.
+**RESOLUTION:** Designer Department approved **C+C** on 2026-05-11.
+Both DDR-Gateway-001 (`<div>` → `<button type="button">`) and
+DDR-Gateway-002 (three CSS declarations on `.gw-tab`) are accepted as
+accessibility-only adaptations. The currently-shipping shell adapter
+in commit `7c51e68` is the final form. HOLD lifted.
+
+The Option A+A variant under `gateway-dropin/options/` is retained as
+audit trail only — not a live alternative.
 
 Per the gate, every design-touching task closeout must include the five
 fields below.
 
 - **Designer changes made:** **NONE** to mock HTML/CSS/JS files under
   `public/design/gateway/`. Two design-touching changes to the SHELL
-  adapter (`src/components/gateway/GatewayShell.tsx`) are filed as
-  DESIGNER_DECISION_REQUIRED — see § 21 below and the dedicated file
-  `DESIGNER-DECISION-REQUIRED.md` at the package root.
+  adapter (`src/components/gateway/GatewayShell.tsx`) — the
+  `<div>` → `<button type="button">` swap and three compensating CSS
+  declarations — were filed as DDR-Gateway-001/002 and **approved C+C
+  by the Designer Department on 2026-05-11**. They ship as committed.
 
-- **Designer questions raised:** 2.
-  1. DDR-Gateway-001 — `<div>` → `<button>` for the 10 left-rail tab elements
-     (accessibility upgrade; visual output identical when paired with #2).
+- **Designer questions raised:** 2, both resolved.
+  1. DDR-Gateway-001 — `<div>` → `<button>` for the 10 left-rail tab
+     elements. **Resolution: C** (keep `<button>`; accessibility-only
+     accepted exception).
   2. DDR-Gateway-002 — three CSS declarations added to `.gw-tab`
-     (`background: transparent; width: 100%; text-align: left;`) to
-     compensate for `<button>` defaults so the rendered tab stays
-     visually identical to the designer's `<div>` original.
+     (`background: transparent; width: 100%; text-align: left;`).
+     **Resolution: C** (keep; visual output is pixel-identical to the
+     designer's `<div>` original).
 
-- **DESIGNER_DECISION_REQUIRED items:** as above. Resolution must be
-  paired (A+A or C+C). Detailed Options table in
-  `DESIGNER-DECISION-REQUIRED.md`.
+- **DESIGNER_DECISION_REQUIRED items:** none open. Resolution stamps at
+  the top of `DESIGNER-DECISION-REQUIRED.md` and `options/DESIGNER-REVIEW.md`.
 
 - **Mock HTML/CSS modification confirmation:** mock files at
   `public/design/gateway/**` were NOT modified.
@@ -528,3 +534,89 @@ The binding policy is saved to memory at
 `~/.claude/projects/-Users-sosastrike-Documents-New-project/memory/designer_authorization_gate.md`
 and indexed in `MEMORY.md`, so it loads automatically in every future
 CloudCode session.
+
+---
+
+## 22. Operator apply-checklist (post-resolution)
+
+CloudCode cannot SSH to `srv1568353` from this Claude environment. The
+steps below are for the human operator with server access (Luis, or
+whoever holds the production credentials). The package in
+`cloudcode-gateway-dropin-handoff/` is fully self-contained and the
+designer decision is recorded; no further CloudCode action is needed
+before the operator runs the steps.
+
+```bash
+# (1) On srv1568353, in the Mission Control v2 repo:
+ssh srv1568353
+cd /home/tony/mission-control
+
+# (2) Apply the CloudCode patch series:
+git checkout -b cloudcode/gateway-dropin-integration
+git am /path/to/cloudcode-gateway-dropin-handoff/patches/*.patch
+#   OR via bundle:
+# git fetch /path/to/cloudcode-gateway-dropin.bundle \
+#     cloudcode/gateway-dropin-integration:cloudcode/gateway-dropin-integration
+# git checkout cloudcode/gateway-dropin-integration
+
+# (3) Merge the two partial patches into existing prod files:
+#   - gateway-dropin/next.config.partial.js rewrites array  ->  next.config.js
+#   - gateway-dropin/middleware.gateway-csp.partial.ts      ->  src/middleware.ts
+#   Per the per-file map in INTEGRATION-PATCH.md.
+
+# (4) Move the staged files into the production tree
+#   (mv targets per INTEGRATION-PATCH.md):
+#   public/design/gateway/                ->  apps/mission-control/public/design/gateway/
+#   src/components/gateway/GatewayShell.tsx -> apps/mission-control/src/components/gateway/GatewayShell.tsx
+#   src/app/gateway/page.tsx              ->  apps/mission-control/src/app/gateway/page.tsx
+#   design-lock/gateway-manifest.json     ->  apps/mission-control/design-lock/gateway-manifest.json
+#   scripts/compute-design-lock.mjs       ->  apps/mission-control/scripts/compute-design-lock.mjs
+#   scripts/verify-design-lock.mjs        ->  apps/mission-control/scripts/verify-design-lock.mjs
+#   tests/*.test.ts                       ->  apps/mission-control/tests/gateway/
+
+# (5) Verify locally before deploy:
+pnpm install
+pnpm typecheck
+pnpm test -- tests/gateway      # expect: 29/29 passing
+pnpm build                      # expect: success
+node scripts/verify-design-lock.mjs   # expect: design-lock OK: 31 files match manifest
+
+# (6) Deploy via the operator-approved release path (systemctl restart,
+#    pm2 reload, Docker swap, etc. — whatever this environment uses).
+
+# (7) Production proofs (run from the operator workstation):
+curl -fsS "https://<domain>/design/gateway/Agent%20Hub.html" | head -3
+curl -fsS "https://<domain>/gateway" | grep -c gateway-shell
+
+for tab in overview agent-hub paperclip dispatcher token-governor \
+           bridge-session health routes registry policies; do
+  printf '%-30s ' "$tab"
+  curl -fsS -o /dev/null -w '%{http_code}\n' "https://<domain>/gateway/$tab"
+done
+# Expect all 200, no redirects, no 404.
+
+# (8) Browser-side smoke (visual, owner-eye):
+#   A. /design/gateway/Agent Hub.html — raw approved mock renders.
+#   B. /gateway — GatewayShell with 10 left-rail tabs.
+#   C. Each tab loads the matching mock in the iframe.
+#   D. Mission Control left rail unchanged.
+#   E. SpaceAgent → Browser Automation → Playwright MCP shows gray
+#      "not installed".
+#   F. No fake LIVE; no clipping; no nested scroll lock.
+```
+
+If any step fails, the rollback path is § 18 (single branch / single
+commit revert). Designer decision is RESOLVED, so further visual issues
+go through the DAG (file a fresh DESIGNER_DECISION_REQUIRED).
+
+---
+
+## 23. Final status
+
+- **Lane:** Gateway designer integration — **DONE on the CloudCode side.**
+- **Branch:** `cloudcode/gateway-dropin-integration`
+- **Final tip:** see § 16 (refreshed each commit)
+- **Designer decision:** C+C approved (Luis + Designer Department, 2026-05-11)
+- **Production deploy:** operator-run, cleared
+- **Codex:** paused at A66 (no credits); does not participate; resumes
+  only on explicit Luis reactivation

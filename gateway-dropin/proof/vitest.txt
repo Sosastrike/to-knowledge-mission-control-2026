@@ -2,11 +2,11 @@
  RUN  v2.1.9 /[redacted]/gateway-dropin
 
  ✓ tests/csp-scope.test.ts (11 tests) 2ms
+ ✓ tests/design-lock.test.ts (4 tests) 11ms
  ✓ tests/gateway-shell.test.ts (14 tests) 3ms
- ✓ tests/design-lock.test.ts (4 tests) 9ms
 
  Test Files  3 passed (3)
       Tests  29 passed (29)
-   Start at  08:26:27
-   Duration  514ms (transform 83ms, setup 0ms, collect 134ms, tests 15ms, environment 0ms, prepare 183ms)
+   Start at  08:31:00
+   Duration  453ms (transform 75ms, setup 0ms, collect 137ms, tests 16ms, environment 0ms, prepare 224ms)
 

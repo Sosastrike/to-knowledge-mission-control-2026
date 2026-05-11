@@ -367,7 +367,12 @@ package file.
 
 ## 16. Commit hash
 
-(filled in after the commit step runs)
+```
+7c51e68  feat(gateway-dropin): mount Gateway designer mocks at /gateway under Next 15
+```
+
+Branch tip on `cloudcode/gateway-dropin-integration` after this commit:
+`7c51e684aec4dd5c74189de6d771ed7f84a14ea3`.
 
 ---
 

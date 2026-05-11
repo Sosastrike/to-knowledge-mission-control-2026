@@ -1,0 +1,209 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2561 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-69-rollback-plan) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 69 — Rollback Plan Per Lane Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Lane: Runtime / rollback coverage) Tj
+0 -12 Td
+(Status: PASS) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+(Day 69 creates a rollback-plan contract for the main Mission Control / Gateway closure lanes and) Tj
+0 -12 Td
+( checks recent daily closeout reports for explicit rollback guidance. The checker reports paths ) Tj
+0 -12 Td
+(and dispositions only; it does not print sensitive report contents.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+(Files changed:) Tj
+0 -12 Td
+(- scripts/rollback-plan-contract.mjs) Tj
+0 -12 Td
+(- src/lib/rollback-plan-contract.test.ts) Tj
+0 -12 Td
+(- runtime/day-69-rollback-plan.json) Tj
+0 -12 Td
+(- runtime/day-69-rollback-plan.md) Tj
+0 -12 Td
+(- runtime/day-69-rollback-plan.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Covered Core Lanes) Tj
+0 -12 Td
+(The rollback matrix covers 15 primary lanes:) Tj
+0 -12 Td
+(- Mission Control) Tj
+0 -12 Td
+(- Gateway / Agent Hub) Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- Pi) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+(- Bridge Session) Tj
+0 -12 Td
+(- Build-Wiki / Farmer) Tj
+0 -12 Td
+(- Delivery connectors) Tj
+0 -12 Td
+(- Brain) Tj
+0 -12 Td
+(- Runtime / deployment) Tj
+0 -12 Td
+(- Security) Tj
+0 -12 Td
+(- UX) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+(Command:) Tj
+0 -12 Td
+(node scripts/rollback-plan-contract.mjs > runtime/day-69-rollback-plan.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result summary:) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- blocker_class: NONE) Tj
+0 -12 Td
+(- core_lanes: 15) Tj
+0 -12 Td
+(- closeout_files_checked: 6) Tj
+0 -12 Td
+(- missing_rollback_reports: 0) Tj
+0 -12 Td
+(- rollback_values_printed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests) Tj
+0 -12 Td
+(Focused tests cover:) Tj
+0 -12 Td
+(- primary lane matrix completeness) Tj
+0 -12 Td
+(- closeout text with rollback command passes) Tj
+0 -12 Td
+(- closeout text without rollback guidance fails) Tj
+0 -12 Td
+(- report blocks when any closeout lacks rollback guidance) Tj
+0 -12 Td
+(- report passes when checked closeouts include rollback guidance) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation is recorded in the final closeout after command execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart) Tj
+0 -12 Td
+(No production route/server behavior changed. No deploy or restart is required for this Day 69 ro) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 589 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(llback harness.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security Confirmation) Tj
+0 -12 Td
+(No .env changes.) Tj
+0 -12 Td
+(No secrets printed.) Tj
+0 -12 Td
+(No auth weakening.) Tj
+0 -12 Td
+(No public exposure added.) Tj
+0 -12 Td
+(No external writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(After commit, use:) Tj
+0 -12 Td
+(git revert <day-69-commit-sha>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(After Day 69 commit/push, continue automatically to Day 70 — Monitoring / Failure States 100% Cl) Tj
+0 -12 Td
+(osure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000002860 00000 n 
+0000002986 00000 n 
+0000003626 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3696
+%%EOF

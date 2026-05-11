@@ -214,6 +214,7 @@ export function Dashboard() {
   const dashboardData: DashboardData = {
     isLocal,
     systemStats,
+    runtimeHealth: systemStats?.runtimeHealth,
     dbStats,
     claudeStats,
     githubStats,

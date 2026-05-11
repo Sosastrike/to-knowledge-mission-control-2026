@@ -14,6 +14,7 @@ import { detectProviderSubscriptions, getPrimarySubscription } from '@/lib/provi
 import { APP_VERSION } from '@/lib/version'
 import { isHermesInstalled, scanHermesSessions } from '@/lib/hermes-sessions'
 import { registerMcAsDashboard } from '@/lib/gateway-runtime'
+import { buildRuntimeHealthPayload } from '@/lib/runtime-health'
 
 export async function GET(request: NextRequest) {
   // Docker/Kubernetes health probes must work without auth/cookies.
@@ -72,12 +73,17 @@ export async function GET(request: NextRequest) {
  * Combines system health, DB stats, audit summary, and recent activity.
  */
 async function getDashboardData(workspaceId: number) {
-  const [system, dbStats] = await Promise.all([
+  const [system, dbStats, runtimeHealth] = await Promise.all([
     getSystemStatus(workspaceId),
     getDbStats(workspaceId),
+    getRuntimeHealthSummary(),
   ])
 
-  return { ...system, db: dbStats }
+  return { ...system, db: dbStats, runtimeHealth }
+}
+
+async function getRuntimeHealthSummary() {
+  return buildRuntimeHealthPayload({ port: process.env.PORT || '3337' })
 }
 
 async function getMemorySnapshot() {

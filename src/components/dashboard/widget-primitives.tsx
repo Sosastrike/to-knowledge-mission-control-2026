@@ -34,6 +34,7 @@ export type LogLike = {
 export interface DashboardData {
   isLocal: boolean
   systemStats: any
+  runtimeHealth?: any
   dbStats: DbStats | null
   claudeStats: ClaudeStats | null
   githubStats: any

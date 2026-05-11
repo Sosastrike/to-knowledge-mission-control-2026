@@ -1,0 +1,334 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3092 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-64-runtime-health-dashboard) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 64 - Runtime Health Dashboard) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Lane: Runtime / deployment / security) Tj
+0 -12 Td
+(Status: developer-side PASS, production owner visual status unchanged) Tj
+0 -12 Td
+(Blocker class: NONE for local runtime-health proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Expose a safe runtime health contract in Mission Control so the owner-facing dashboard can show ) Tj
+0 -12 Td
+(the current runtime commit, local bind posture, standalone bundle status, PID/listener match, an) Tj
+0 -12 Td
+(d deployment timestamps without exposing secrets or raw local paths.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Implemented a protected runtime health endpoint and wired its safe payload into the Mission Cont) Tj
+0 -12 Td
+(rol dashboard data model.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The endpoint is intentionally read-only. It does not restart services, does not mutate environme) Tj
+0 -12 Td
+(nt files, and does not execute external writes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/runtime-health.ts`) Tj
+0 -12 Td
+(- `src/app/api/runtime/health/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/runtime/health/route.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/status/route.ts`) Tj
+0 -12 Td
+(- `src/components/dashboard/dashboard.tsx`) Tj
+0 -12 Td
+(- `src/components/dashboard/widget-primitives.tsx`) Tj
+0 -12 Td
+(- `src/components/dashboard/widgets/runtime-health-widget.tsx`) Tj
+0 -12 Td
+(- `runtime/day-64-runtime-health-live.json`) Tj
+0 -12 Td
+(- `runtime/day-64-dashboard-runtime-health-live.json`) Tj
+0 -12 Td
+(- `runtime/day-64-runtime-health-dashboard.md`) Tj
+0 -12 Td
+(- `runtime/day-64-runtime-health-dashboard.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added protected `GET /api/runtime/health`.) Tj
+0 -12 Td
+(- Extended `GET /api/status?action=dashboard` with `runtimeHealth`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control dashboard now has a runtime health widget that shows:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime status.) Tj
+0 -12 Td
+(- Current source commit and branch.) Tj
+0 -12 Td
+(- Expected safe bind host and port.) Tj
+0 -12 Td
+(- Standalone bundle/static readiness.) Tj
+0 -12 Td
+(- PID file and listener match state.) Tj
+0 -12 Td
+(- Last build/static sync timestamps.) Tj
+0 -12 Td
+(- Exact blocker list when the runtime cannot be classified as live.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No raw local filesystem paths are shown. The PID file is reported as a safe relative label only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime health detection checks:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `.next/standalone/server.js` or standalone `server.js`.) Tj
+0 -12 Td
+(- `.next/standalone/.next/static` or `.next/static`.) Tj
+0 -12 Td
+(- `.next/standalone/server.pid` or `server.pid`.) Tj
+0 -12 Td
+(- Local listener PID on the configured port.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2490 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Whether the PID file matches the active listener.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The bind contract remains local-only:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Expected host: `127.0.0.1`) Tj
+0 -12 Td
+(- Override variable: `MC_HOSTNAME`) Tj
+0 -12 Td
+(- Proof port: `3337`) Tj
+0 -12 Td
+(- No new public exposure added: `true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-64-runtime-health-live.json`) Tj
+0 -12 Td
+(- `runtime/day-64-dashboard-runtime-health-live.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed live proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime health status: `LIVE`) Tj
+0 -12 Td
+(- Runtime source commit at proof time: `ccc0ce5`) Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- PID file value: `81685`) Tj
+0 -12 Td
+(- Listener PID: `81685`) Tj
+0 -12 Td
+(- PID matched listener: `true`) Tj
+0 -12 Td
+(- Runtime cwd mode: `standalone`) Tj
+0 -12 Td
+(- Raw path leak in dashboard proof artifact: `false`) Tj
+0 -12 Td
+(- Secret output in dashboard proof artifact: `false`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Fresh validation required before commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm test src/app/api/runtime/health/route.test.ts`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control standalone was rebuilt and restarted in local-only mode on `127.0.0.1:3337`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Live smoke results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/runtime/health` authenticated with API key and session cookie returned `status: LIVE) Tj
+0 -12 Td
+(`.) Tj
+0 -12 Td
+(- `GET /api/status?action=dashboard` authenticated included `runtimeHealth`.) Tj
+0 -12 Td
+(- Runtime health proof confirmed no public bind.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Use:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-64-runtime-health-commit-sha>) Tj
+0 -12 Td
+(MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 382 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No fake runtime status.) Tj
+0 -12 Td
+(- No raw local paths in staged runtime proof artifacts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 65 starts automatically after commit and push: Protected Route Smoke 100% Closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003397 00000 n 
+0000003523 00000 n 
+0000006065 00000 n 
+0000006191 00000 n 
+0000006624 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6694
+%%EOF

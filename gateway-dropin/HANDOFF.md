@@ -2,8 +2,13 @@
 
 **Date:** 2026-05-11
 **Branch:** `cloudcode/gateway-dropin-integration`
-**Lane owner:** CloudCode (per D1)
-**Scope:** Gateway designer drop-in only — Codex's 100-day plan untouched.
+**Lane owner:** CloudCode (sole active owner — Codex paused at A66, no credits)
+**Scope:** Gateway designer drop-in only. Codex's 100-day plan is not
+touched. Codex is paused and the Gateway lane does NOT hand back to
+Codex until Luis explicitly reactivates.
+**Production deploy status:** **HOLD** — pending Designer Department
+decision on DDR-Gateway-001 + DDR-Gateway-002. Package is
+production-ready; no live ship until designer resolves the two items.
 
 ---
 
@@ -376,7 +381,7 @@ Branch tip on `cloudcode/gateway-dropin-integration` after this commit:
 
 ---
 
-## 17. Push result
+## 17. Push / deploy result
 
 ```
 git remote -v
@@ -393,6 +398,33 @@ A `gateway-dropin-handoff/` directory will contain:
 - `cloudcode-gateway-dropin.tar.gz` (file tree only, no git involvement)
 - `SHA256SUMS`
 - `DELIVERY.md` (apply / verify / rollback instructions)
+
+**Production deploy is on HOLD pending DDR-Gateway-001 + DDR-Gateway-002
+designer resolution.** The actual deploy step also requires a human
+operator with SSH access to `srv1568353:/home/tony/mission-control` —
+CloudCode has no network reach to that server from the current
+environment, so even without the HOLD the live deploy step is not
+something CloudCode can perform from this session. Once the designer
+decision lands and the owner is ready to ship, the apply path is:
+
+```bash
+ssh srv1568353
+cd /home/tony/mission-control
+git checkout -b cloudcode/gateway-dropin-integration
+git am /path/to/cloudcode-gateway-dropin-handoff/patches/*.patch
+# If Option A+A is approved, replace src/components/gateway/GatewayShell.tsx
+# with gateway-dropin/options/GatewayShell.option-A.tsx before continuing.
+# Then merge next.config.partial.js rewrites + middleware.gateway-csp.partial.ts.
+pnpm install
+pnpm typecheck
+pnpm test -- tests/gateway
+pnpm build
+node scripts/verify-design-lock.mjs
+# Then deploy / restart via the operator-approved release path.
+```
+
+After deploy, run the production proofs in § 10 (static mock URL,
+`/gateway`, deep-link curl loop, browser-side smoke).
 
 ---
 
@@ -443,15 +475,24 @@ git rm tests/gateway/*.test.ts
   `INTEGRATION-PATCH.md`).
 - Run the four production proofs in § 10.
 - If anything looks different from the design after integration: the
-  design is the contract — file a Codex ticket, not a CloudCode patch.
+  design is the contract — file a Designer Decision request, not a
+  CloudCode visual patch. Codex is paused at A66 (no credits) so visual
+  drift does NOT route through Codex right now.
 - **Resolve DDR-Gateway-001 + DDR-Gateway-002** (see § 21).
 
 ---
 
 ## 21. Designer Authorization Gate closeout (added 2026-05-11)
 
-Per the gate Luis issued 2026-05-11, every design-touching task closeout
-must include the five fields below.
+**HOLD STATUS as of 2026-05-11:** Luis issued the gate response and
+HELD C+C approval. CloudCode has prepared Option A+A in parallel
+(see `gateway-dropin/options/`) and will not ship further
+design-adjacent changes until the Designer Department resolves
+DDR-Gateway-001 + DDR-Gateway-002 paired. Production deploy is on hold
+until that resolution lands.
+
+Per the gate, every design-touching task closeout must include the five
+fields below.
 
 - **Designer changes made:** **NONE** to mock HTML/CSS/JS files under
   `public/design/gateway/`. Two design-touching changes to the SHELL

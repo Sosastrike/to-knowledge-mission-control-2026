@@ -1,0 +1,76 @@
+FOCUSED DIFF — design-relevant lines only.
+Comment / docstring differences between the two files are NOT shown here.
+Source: gateway-dropin/src/components/gateway/GatewayShell.tsx (Option C+C — currently shipped)
+Target: gateway-dropin/options/GatewayShell.option-A.tsx (Option A+A — pending decision)
+
+================================================================================
+1. CSS rule for .gw-tab — three declarations present in C+C, absent in A+A
+================================================================================
+
+-  C+C (current):
+-  .gateway-shell .gw-side .gw-tab {
+-    display: flex; align-items: center; justify-content: space-between;
+-    gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px;
+-    cursor: pointer; color: #cdd4df; border: 1px solid transparent;
+-    margin-bottom: 2px;
+-    background: transparent;     /* A+A removes */
+-    width: 100%;                 /* A+A removes */
+-    text-align: left;            /* A+A removes */
+-  }
+
++  A+A (revert):
++  .gateway-shell .gw-side .gw-tab {
++    display: flex; align-items: center; justify-content: space-between;
++    gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px;
++    cursor: pointer; color: #cdd4df; border: 1px solid transparent;
++    margin-bottom: 2px;
++  }
+
+================================================================================
+2. Tab JSX element — <button type="button"> in C+C, <div> in A+A
+================================================================================
+
+-  C+C (current):
+-  {GATEWAY_TABS.map((t) => (
+-    <button
+-      key={t.id}
+-      type="button"
+-      className={'gw-tab' + (t.id === activeId ? ' active' : '')}
+-      onClick={() => onTabClick(t)}
+-      data-testid={`gateway-tab-${t.id}`}
+-    >
+-      <span>{t.label}</span>
+-      <span className="hint">{t.hint}</span>
+-    </button>
+-  ))}
+
++  A+A (revert):
++  {GATEWAY_TABS.map((t) => (
++    <div
++      key={t.id}
++      className={'gw-tab' + (t.id === activeId ? ' active' : '')}
++      onClick={() => onTabClick(t)}
++      data-testid={`gateway-tab-${t.id}`}
++    >
++      <span>{t.label}</span>
++      <span className="hint">{t.hint}</span>
++    </div>
++  ))}
+
+================================================================================
+End of design-relevant diff. Everything else in the two files is identical.
+================================================================================
+
+Visual rendered output:
+  - Option C+C: pixel-identical to designer's <div>-based original
+    (the three CSS declarations precisely neutralise <button> defaults).
+  - Option A+A: pixel-identical to designer's <div>-based original
+    (it IS the <div>-based original markup + CSS).
+  - There is no visible difference between the two on screen.
+
+Functional difference:
+  - Option C+C: tabs are keyboard-focusable, Enter/Space activate them,
+    screen readers announce "button". (Free a11y from <button>.)
+  - Option A+A: tabs are NOT keyboard-focusable, Enter/Space do not
+    activate them, screen readers do not announce them as interactive.
+    (Designer's original.)

@@ -40,7 +40,7 @@ package is the entire deliverable for that lane:
 
 | Decision | This package's behaviour |
 | --- | --- |
-| D1 — Coordination | CloudCode owns Gateway designer integration; Codex retains 100-day plan ownership and leaves the Gateway lane alone. |
+| D1 — Coordination | CloudCode is the active owner of Gateway designer integration. Codex is paused at A66 (no credits) and is NOT part of this lane right now; Codex's 100-day plan remains untouched and Codex resumes only when Luis explicitly reactivates. |
 | D2 — Missing package | `Mission-Control-Gateway-FULL-v3` is PRESENT on the drive but at `/Volumes/Personal-Drive/Chrome Files 2026/handoff 3/Mission-Control-Gateway-FULL-v3/` (not in the `handoff/` folder Luis referenced). We use `Gateway-DropIn-v1-FINAL` for the production drop-in; the FULL-v3 reference shell is out of scope here. |
 | D3 — Next 15 / App Router | `GatewayShell.jsx` → `GatewayShell.tsx`, `'use client'`, `import { useState, useEffect, useCallback, useMemo } from 'react'`, `usePathname` + `useSearchParams` + `useRouter`, default export. Mock HTML/CSS untouched. |
 | D4 — CSP | Path-scoped `Content-Security-Policy` for `/design/gateway/*` only. `script-src 'self' 'unsafe-inline'` is justified inline. Parent CSP unchanged. iframe `sandbox="allow-scripts"` (no `allow-same-origin` until data wiring needs it). |

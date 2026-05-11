@@ -1,0 +1,127 @@
+--- gateway-dropin/src/components/gateway/GatewayShell.tsx	2026-05-11 07:25:24
++++ gateway-dropin/options/GatewayShell.option-A.tsx	2026-05-11 08:24:05
+@@ -3,18 +3,31 @@
+ import { useCallback, useEffect, useMemo, useState } from 'react'
+ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+ 
+-// Mounts the approved Gateway design files INSIDE Mission Control as iframes
+-// so the visuals match the design pixel-for-pixel. No re-implementation —
+-// the design IS the production page. This file is the only adapter between
+-// Next 15 App Router and the raw designer mock HTML; do NOT edit the mocks
+-// to fit this shell, and do NOT add visual states beyond the locked grammar.
++// OPTION A+A — pending Designer Department decision.
++//
++// This variant reverts the two design-touching changes from commit 7c51e68:
++//   1. Tab element returns to <div className="gw-tab" onClick=…>
++//      (designer's original shape; loses default keyboard accessibility)
++//   2. The three CSS declarations added to compensate for <button> defaults
++//      (background: transparent; width: 100%; text-align: left) are removed.
++//
++// Every other engineering adaptation from the C+C variant stays:
++//   - 'use client' for Next 15 App Router
++//   - React hook imports (no global React)
++//   - basePath-aware iframe src via encodeURI
++//   - usePathname / useSearchParams / useRouter for deep-link resolution
++//   - iframe sandbox="allow-scripts" (D4 — engineering-allowed)
++//   - design-lock manifest registration (D6 — engineering-allowed)
++//
++// Side-by-side comparison with the C+C variant lives at
++// gateway-dropin/options/DESIGNER-REVIEW.md.
+ 
+ interface GatewayTab {
+   id: string
+   label: string
+-  src: string       // path relative to /design/gateway/
++  src: string
+   hint: string
+-  routeSegment: string // /gateway/<routeSegment> deep link
++  routeSegment: string
+ }
+ 
+ const GATEWAY_TABS: ReadonlyArray<GatewayTab> = [
+@@ -35,20 +48,12 @@
+ 
+ const DEFAULT_TAB_ID = GATEWAY_TABS[0].id
+ 
+-// Read NEXT_PUBLIC_BASE_PATH at module scope so the iframe src is consistent
+-// across SSR + hydration. Filenames preserve spaces (D5); encodeURI handles
+-// the URL encoding so a literal "Agent Hub.html" becomes "Agent%20Hub.html".
+ const BASE_PATH = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+ 
+ function iframeSrcFor(tab: GatewayTab): string {
+   return encodeURI(`${BASE_PATH}/design/gateway/${tab.src}`)
+ }
+ 
+-// Decide which tab is "active" given the current URL + query.
+-// Precedence:
+-//   1. ?tab=<id>      (legacy URL shape, supported for backwards compat)
+-//   2. /gateway/<segment>   (rewrite target — set by next.config.js rewrites)
+-//   3. fallback to DEFAULT_TAB_ID (Overview)
+ function activeTabFrom(pathname: string | null, searchParams: URLSearchParams | null): GatewayTab {
+   const explicit = searchParams?.get('tab')
+   if (explicit && TAB_BY_ID.has(explicit)) return TAB_BY_ID.get(explicit)!
+@@ -56,8 +61,6 @@
+     const stripped = pathname.replace(/^\/+/, '').split(/[\/?#]/)
+     if (stripped[0] === 'gateway' && stripped[1]) {
+       const seg = stripped[1]
+-      // Check drill-down BEFORE plain segment match — /gateway/agent-hub/paperclip
+-      // must resolve to paperclip, not agent-hub.
+       if (seg === 'agent-hub' && stripped[2] === 'paperclip') return TAB_BY_ID.get('paperclip')!
+       if (TAB_BY_SEGMENT.has(seg)) return TAB_BY_SEGMENT.get(seg)!
+     }
+@@ -76,7 +79,6 @@
+   )
+   const [activeId, setActiveId] = useState<string>(initialTab.id)
+ 
+-  // Keep state in sync with URL when the user hits browser back/forward.
+   useEffect(() => {
+     const tab = activeTabFrom(pathname, searchParams)
+     if (tab.id !== activeId) setActiveId(tab.id)
+@@ -85,11 +87,7 @@
+   const onTabClick = useCallback(
+     (tab: GatewayTab) => {
+       setActiveId(tab.id)
+-      const target = `/gateway/${tab.routeSegment}`
+-      // Use shallow client navigation so the iframe parent doesn't re-mount
+-      // every tab click. Next handles the rewrite to /gateway?tab=… on the
+-      // server side; here we just update the URL bar.
+-      router.push(target)
++      router.push(`/gateway/${tab.routeSegment}`)
+     },
+     [router],
+   )
+@@ -104,7 +102,7 @@
+         .gateway-shell .gw-side { background: #0e1218; border-right: 1px solid rgba(255,255,255,0.10); padding: 20px 12px; overflow-y: auto; }
+         .gateway-shell .gw-side h3 { margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #9aa3b2; padding: 0 10px; }
+         .gateway-shell .gw-side .sub { font-size: 10.5px; color: #6b7280; padding: 0 10px; margin-bottom: 14px; }
+-        .gateway-shell .gw-side .gw-tab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: #cdd4df; border: 1px solid transparent; margin-bottom: 2px; background: transparent; width: 100%; text-align: left; }
++        .gateway-shell .gw-side .gw-tab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: #cdd4df; border: 1px solid transparent; margin-bottom: 2px; }
+         .gateway-shell .gw-side .gw-tab:hover { background: #131923; color: #f1f4f9; }
+         .gateway-shell .gw-side .gw-tab.active { background: #1a212d; color: #f1f4f9; border-color: rgba(255,255,255,0.10); }
+         .gateway-shell .gw-side .gw-tab .hint { font-size: 10px; color: #6b7280; font-weight: 400; }
+@@ -119,16 +117,15 @@
+         <h3>Gateway</h3>
+         <div className="sub">Mission Control · Gateway</div>
+         {GATEWAY_TABS.map((t) => (
+-          <button
++          <div
+             key={t.id}
+-            type="button"
+             className={'gw-tab' + (t.id === activeId ? ' active' : '')}
+             onClick={() => onTabClick(t)}
+             data-testid={`gateway-tab-${t.id}`}
+           >
+             <span>{t.label}</span>
+             <span className="hint">{t.hint}</span>
+-          </button>
++          </div>
+         ))}
+         <div className="gw-foot">
+           <strong>Status grammar</strong><br/>
+@@ -155,6 +152,5 @@
+   )
+ }
+ 
+-// Re-exported for parity tests and the upcoming data-wiring PR.
+ export { GATEWAY_TABS, iframeSrcFor, activeTabFrom }
+ export type { GatewayTab }

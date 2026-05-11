@@ -1,143 +1,158 @@
-# DESIGNER_DECISION_REQUIRED — RESOLVED 2026-05-11 (C+C approved)
+# DESIGNER_DECISION_REQUIRED — Gateway lane (2026-05-11 update)
+
+## Resolved (kept for record)
 
 ```
-DDR-Gateway-001 RESOLUTION: C
-DDR-Gateway-002 RESOLUTION: C
-Resolved by:  Designer Department (delivered via Luis)
-Approved by:  Luis Sosa <luis@ecopiersolutions.com>
+DDR-Gateway-001 RESOLUTION: C    (<button type="button"> for tabs)
+DDR-Gateway-002 RESOLUTION: C    (three compensating CSS declarations)
+Approved by:  Luis Sosa + Designer Department
 Date:         2026-05-11
 Notes:        "C+C approved. Ship it. Then move on. Don't hold the
               build for accessibility wins."
 ```
 
-**Outcome:**
-- `<button type="button">` for tab elements — **APPROVED**
-- The three CSS declarations (`background: transparent; width: 100%;
-  text-align: left;`) added to `.gw-tab` — **APPROVED**
-- Combined as an accessibility-only exception. Rendered output is
-  visually identical to the designer's `<div>`-based original. The
-  `<button>` form additionally yields keyboard focus / Enter+Space
-  activation / screen-reader semantics for free.
-- Both changes ship as part of commit `7c51e68` (already in the
-  delivery bundle); no further code change required.
+## Open — production audit raised these (2026-05-11 second update)
 
-Designer mock files under `public/design/gateway/` remain
-byte-identical to source (`design-lock OK: 31 files match manifest`).
+Luis reported the live `/gateway` does not match the approved designer
+screenshots. Production-truth audit found that the designer's own
+v1-FINAL package contains two competing navigations and three broken
+top-rail links. CloudCode cannot pick between them alone — the DAG
+makes this the Designer Department's call.
 
-The Option A+A variant kept under `gateway-dropin/options/` is retained
-as audit trail of the design decision, not as a live alternative.
+Design-lock status: PASS. SMB v1-FINAL source byte-identical to
+CloudCode staged copy (31/31 sha256 match).
 
 ---
 
-## Original filing (for record)
+## DDR-Gateway-003 — TWO competing navigations in v1-FINAL
 
-Filed against commit `7c51e68` on `cloudcode/gateway-dropin-integration`
-in compliance with the Designer Authorization Gate (issued by Luis
-2026-05-11). Both items are bound; resolve as a pair.
+**Page / route:** `/gateway` and every `/gateway/<segment>` page.
 
-Full audit + ADR live at
-[gateway-integration-review/ADR-002-designer-authorization-gate.md](../gateway-integration-review/ADR-002-designer-authorization-gate.md).
-
-Design-lock status: PASS — `31 files match manifest`. Mock HTML/CSS
-under `public/design/gateway/` was NOT modified.
-
----
-
-## DDR-Gateway-001 — `<div>` → `<button>` for tab elements
-
-**Page / route:** `/gateway` (left sub-rail tabs of the Gateway shell)
-**File involved:** `gateway-dropin/src/components/gateway/GatewayShell.tsx`
-(the adapter shell — NOT a mock under `public/design/gateway/`)
+**File involved:**
+- `src/gateway/GatewayShell.jsx`  (designer-authored, 10-tab left rail)
+- `design/gateway/shared/render.js`  (designer-authored, 15-tab top rail injected into every mock by `GW.topbar()`)
 
 **Issue:**
-Designer's original `GatewayShell.jsx` rendered each tab as
-`<div className="gw-tab" onClick=…>`. CloudCode's Next 15 adapter
-renders it as `<button type="button" className="gw-tab" onClick=…>`.
-
-**Why CloudCode made the change:**
-`<div>` with an `onClick` is not keyboard-focusable, not Enter/Space-
-activatable, and screen readers do not announce it as interactive.
-`<button>` gets all of the above for free.
+The designer's package ships two navigations that target different sets
+of pages and live in different positions. Luis's approved screenshots
+show the 15-tab top-rail (each mock rendered standalone). Production
+currently renders the 10-tab left-rail wrapper AROUND the iframed mock,
+which already has its own 15-tab top-rail inside it — so users see
+both navs simultaneously, which does NOT match the screenshots.
 
 **Evidence:**
-- diff hunk: original line ~64 → adapted line ~121.
-- Visual output is identical when paired with DDR-Gateway-002.
-- design-lock still passes (mock files in `public/design/gateway/`
-  byte-identical to the designer's source).
+
+| Surface | Tabs | Position | Targets |
+| --- | --- | --- | --- |
+| `GatewayShell.jsx` (10 tabs) | Overview, Agent Hub, Paperclip, Dispatcher, Token Governor, Bridge Session, Health, Routes, Registry, Policies | LEFT rail | `Gateway Overview.html`, `Agent Hub.html`, `Paperclip.html`, `Dispatcher.html`, `Token Governor.html`, `Bridge Session Flow.html`, `Gateway Health.html`, `Gateway Routes.html`, `Gateway Registry.html`, `Gateway Policies.html` |
+| `render.js` `NAV_ITEMS` (15 tabs) | Index, Overview, Routes, Registry, Policies, Health, Agent Zero, Hermes, OpenCloud, OpenClaw+, Brain, Connectors, Node spec, Legend, Mobile | TOP rail (inside every mock) | `index.html`, `Gateway Overview.html`, `Gateway Routes.html`, `Gateway Registry.html`, `Gateway Policies.html`, `Gateway Health.html`, `Agent Zero Commander.html`, `Hermes Lieutenant.html`, `OpenCloud Workers.html`, `OpenClaw+ Skills.html`, `Brain Systems.html`, `Delivery Connectors.html`, `node-card-spec.html`*, `color-status-legend.html`*, `mobile-tablet.html`* |
+
+\* = three top-rail targets reference filenames that don't exist in the v1-FINAL package — see DDR-Gateway-004 below.
+
+The two navigations agree on five tabs (Overview, Routes, Registry,
+Policies, Health). They diverge on everything else.
 
 **Engineering diagnosis:**
-DOM markup change inside the designer-authored shell adapter. Strictly
-an accessibility upgrade. No new visual state, no new colour, no new
-label, no new element count.
+This is a designer-side inconsistency, not an engineering bug.
+CloudCode shipped the GatewayShell.jsx the designer included. Stripping
+it requires designer approval.
 
 **Options:**
 
-| | Choice | Result |
+| | Choice | Engineering work |
 | --- | --- | --- |
-| A | Revert to `<div>`. CloudCode adds `tabIndex={0}` + `onKeyDown` for Enter/Space keyboard activation. | Keeps designer markup; needs tiny JS for keyboard. |
-| B | Designer provides an updated `GatewayShell` with `<button>` as the intended markup. | Adapter keeps the current shape; no further change. |
-| C | Luis + designer approve `<button>` as accepted accessibility-only upgrade. | Adapter keeps the current shape; treat as permanent exception, documented here. |
+| A | **The 15-tab top-rail is canonical. Strip the 10-tab GatewayShell wrapper from production.** `/gateway` serves `Gateway Overview.html` (or `index.html`) directly via Next; `/gateway/<segment>` serves the matching `*.html` mock directly. The top-rail inside each mock becomes the production navigation. | CloudCode rewrites the `/gateway` route to serve the static mock directly (Next `rewrites` from `/gateway` → `/design/gateway/Gateway Overview.html`, plus per-segment rewrites). Removes `GatewayShell.tsx` + `src/app/gateway/page.tsx`. Per-route metadata updated. No mock HTML/CSS/JS change. |
+| B | **The 10-tab GatewayShell wrapper is canonical. The top-rail in mocks is dead chrome.** Production keeps the GatewayShell wrapper; designer accepts that the top-rail inside each mock is visible but inert. | No engineering change. CloudCode files DDR-Gateway-005 asking designer if the top-rail should be hidden via CSS injection (designer change) or accepted as visible-but-noop. |
+| C | **Both navs coexist.** Production keeps both the 10-tab left-rail (GatewayShell) AND the 15-tab top-rail (inside mocks). Both are functional. | CloudCode keeps current architecture. This is what's deployed. Luis confirms it's acceptable. |
+| D | **Designer respec.** The designer re-delivers a v2 package with a single canonical navigation. | CloudCode waits for the new package. Production stays as-is or is rolled back to a pre-Gateway state. |
 
-**Recommendation:** Option C. Currently shipping in commit `7c51e68`. If
-the designer prefers A on principle, the revert is six lines and ships
-the same day.
+**Recommendation:** None. CloudCode does not choose between A/B/C/D.
+The DAG explicitly assigns this to the Designer Department.
+
+If forced to flag a leaning purely from the visual evidence Luis shared:
+his screenshots show **standalone mocks with the top-rail visible and no
+left-rail visible**, which is consistent with Option A. But the
+designer's own `GatewayShell.jsx` ships the left-rail, so the designer
+must confirm before any code moves.
 
 **Required approval:** Luis + Designer Department.
 
 ---
 
-## DDR-Gateway-002 — three CSS declarations added to `.gw-tab`
+## DDR-Gateway-004 — three top-rail tabs point to files that don't exist
 
-**Page / route:** `/gateway` (same scope as DDR-Gateway-001)
-**File involved:** `gateway-dropin/src/components/gateway/GatewayShell.tsx`
-(inline `<style>` block — NOT a mock CSS file under
-`public/design/gateway/shared/`)
+**Page / route:** Top-rail inside every mock (rendered by `render.js`).
+
+**File involved:**
+- `design/gateway/shared/render.js`  (`NAV_ITEMS` array, last three entries)
 
 **Issue:**
-The `.gateway-shell .gw-side .gw-tab` rule has three declarations added:
-```css
-background: transparent;
-width: 100%;
-text-align: left;
+The designer's `render.js` top-rail nav includes three entries whose
+target filenames are not present anywhere in the v1-FINAL package:
+
+| Top-rail label | Linked-to filename | Present in package? |
+| --- | --- | --- |
+| Node spec | `node-card-spec.html` | NO |
+| Legend | `color-status-legend.html` | NO |
+| Mobile | `mobile-tablet.html` | NO |
+
+These same three top-rail links also appear in `index.html`:
+
 ```
-These exist solely to keep the rendered tab visually identical to the
-designer's `<div>`-based original once DDR-Gateway-001 changes the tag
-to `<button>` (which has different browser defaults: gray background,
-narrow width, centered text).
+<a class="card" href="color-status-legend.html"> ...
+<a class="card" href="node-card-spec.html"> ...
+<a class="card" href="mobile-tablet.html"> ...     (assumed by parity)
+```
 
-**Evidence:**
-- diff hunk: original line ~49 → adapted line ~107.
-- Visual output: pixel-identical to the `<div>` original.
-- design-lock still passes.
+The package DOES contain `Gateway Node Detail.html` and
+`Gateway Mobile Tablet.html` — plausibly the intended targets — but
+the link text and href don't match.
 
 **Engineering diagnosis:**
-CSS rule modified inside designer-authored shell. Visual output
-unchanged. Bound to DDR-Gateway-001 — if that one reverts, these three
-lines also revert.
+Designer-side naming inconsistency. The links are wrong OR the files
+are missing OR there are intended new files the designer hasn't shipped.
 
 **Options:**
 
-| | Choice | Result |
-| --- | --- | --- |
-| A | Revert these three declarations (paired with reverting DDR-Gateway-001 to `<div>`). | CSS source byte-identical to designer's original. |
-| B | Designer provides an updated CSS block that anticipates `<button>`. | Adapter takes the new block verbatim. |
-| C | Luis + designer approve the three lines as the minimal CSS needed for DDR-Gateway-001 to ship without a visual regression. | Keep as shipped. |
+| | Choice |
+| --- | --- |
+| A | Designer updates `render.js` + `index.html` so the hrefs point to existing files (`Gateway Node Detail.html`, `color-status-legend.html` → some existing CSS-tokens page or remove, `Gateway Mobile Tablet.html`). Files unchanged. |
+| B | Designer ships the three missing pages (`node-card-spec.html`, `color-status-legend.html`, `mobile-tablet.html`) in a v1-FINAL.1 or v2 drop. |
+| C | Designer removes the three broken entries from `NAV_ITEMS`. |
+| D | CloudCode adds Next `rewrites` so broken hrefs redirect to existing pages (engineering workaround). This is also a design-touching change because it changes the navigation behavior; flagged for designer ack. |
 
-**Recommendation:** Coupled with DDR-Gateway-001. Bound resolution = A+A
-or C+C.
+**Recommendation:** None. CloudCode prefers A or C purely on
+maintainability grounds, but the call is the designer's.
 
 **Required approval:** Luis + Designer Department.
 
 ---
 
-## Until approval
+## Until DDR-Gateway-003 + DDR-Gateway-004 resolve
 
-- CloudCode will not ship further design changes to the shell adapter.
-- Non-design engineering work (rewrites, CSP, design-lock manifest,
-  tests, basePath, sandbox) continues unblocked.
-- Mock HTML/CSS under `public/design/gateway/` is and remains
-  byte-identical to the designer's source. Design-lock guard enforces
-  this on every CI run.
-- If Luis or the designer needs a side-by-side visual diff before
-  deciding, CloudCode can prepare a screenshot pair (`<div>` form vs
-  `<button>` form) on request.
+CloudCode does NOT:
+- modify mock HTML/CSS/JS
+- modify `shared/render.js`
+- modify `shared/topbar.html`
+- modify `GatewayShell.tsx` (the C+C-approved state stays)
+- pick A/B/C/D for either DDR
+- ship further design-adjacent changes
+
+CloudCode DOES (engineering-only, DAG-allowed):
+- keep design-lock passing
+- preserve the package as-is
+- update HANDOFF/DELIVERY status to FAILED-IN-PRODUCTION pending decision
+- prepare Option A engineering scaffolding so it can ship in <30 min once
+  approved (a sibling branch with the GatewayShell removal + per-segment
+  rewrites, byte-untouched mock files)
+- run the production audit script the moment Luis hands over a domain
+
+---
+
+## What CloudCode is asking Luis to do next
+
+1. Resolve DDR-Gateway-003: A, B, C, or D.
+2. Resolve DDR-Gateway-004: A, B, C, or D.
+3. (Independent) Hand over the production domain so CloudCode can run
+   `audit-production.mjs --base https://<domain>` and produce the JSON
+   proof of which navigation is currently winning in production.

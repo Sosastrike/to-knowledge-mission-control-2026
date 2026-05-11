@@ -11,13 +11,28 @@ on 2026-05-11 ("C+C approved. Ship it. Then move on. Don't hold the
 build for accessibility wins." — Luis). DDR-Gateway-001 + DDR-Gateway-002
 resolved.
 
-**Production deploy status:** **NOT YET VERIFIED. PRODUCTION AUDIT
-PENDING.** Luis reported on 2026-05-11 that the live web interface
-does NOT match the approved designer files. Gateway integration is
-treated as FAILED IN PRODUCTION until the live `/gateway` matches the
-approved designer screenshots byte-identically. Audit plan in § 24.
-Operator-side apply checklist in § 22 is still the deploy path; § 24
-is the audit that follows once the package is reachable.
+**Production deploy status:** **FAILED IN PRODUCTION — ROOT CAUSE
+IDENTIFIED, DESIGNER DECISIONS PENDING.** Luis reported on 2026-05-11
+that the live web interface does NOT match the approved designer
+screenshots. CloudCode's audit (against the SMB v1-FINAL source —
+byte-identical to staged copy, 31/31 SHA match) found two structural
+design-side issues:
+
+  - **DDR-Gateway-003** — designer's package ships TWO competing
+    navigations (10-tab left-rail in `GatewayShell.jsx` vs 15-tab
+    top-rail in `shared/render.js`). Production currently shows both
+    stacked; screenshots show only the top-rail. Designer must pick.
+  - **DDR-Gateway-004** — three top-rail entries (`node-card-spec.html`,
+    `color-status-legend.html`, `mobile-tablet.html`) reference files
+    that don't exist in the package.
+
+Both DDRs are in `gateway-dropin/DESIGNER-DECISION-REQUIRED.md` with
+4 options each. CloudCode is not picking. The C+C resolution on
+DDR-Gateway-001/002 still stands; this is a separate, larger structural
+question that the audit surfaced.
+
+Audit plan in § 24. Operator-side apply checklist in § 22 still
+applies once the DDRs resolve.
 
 ---
 

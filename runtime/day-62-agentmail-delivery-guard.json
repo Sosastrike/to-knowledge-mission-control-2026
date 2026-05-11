@@ -1,0 +1,46 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 3,
+  "expectation": "AgentMail send route is authenticated, Bridge-gated, credential-safe, and never fakes email delivery.",
+  "failures": [],
+  "results": [
+    {
+      "name": "unauthenticated_send_requires_auth",
+      "path": "/api/bridge/agent-zero/agentmail/send",
+      "status": 401,
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "authenticated_status",
+      "path": "/api/bridge/agent-zero/agentmail/status",
+      "status": 200,
+      "mode": "agentmail_readiness",
+      "canonical_status": "CREDENTIAL_GATED",
+      "blocker_class": "CREDENTIAL_GATED",
+      "blocked_reason": "agentmail_credential_required",
+      "outgoing_status": "blocked",
+      "required_scope": "agentmail.send",
+      "writes_enabled": false,
+      "no_email_sent": true,
+      "no_fake_done": true,
+      "unsafe_text_detected": false
+    },
+    {
+      "name": "authenticated_send_stays_gated",
+      "path": "/api/bridge/agent-zero/agentmail/send",
+      "status": 423,
+      "action": "agentmail.send",
+      "delivery_status": "blocked",
+      "accepted_for_execution": false,
+      "required_scope": "agentmail.send",
+      "blocked_reason": "agentmail_credential_required",
+      "approval_request_created": false,
+      "agentmail_message_id": null,
+      "no_email_sent": true,
+      "no_fake_done": true,
+      "no_tokens_exposed": true,
+      "unsafe_text_detected": false
+    }
+  ]
+}

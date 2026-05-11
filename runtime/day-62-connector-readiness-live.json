@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "connector_count": 10,
+  "connector_summary": {
+    "total": 10,
+    "by_state": {
+      "CREDENTIAL_REQUIRED": 7,
+      "READ_ONLY": 3
+    },
+    "execution_enabled": 0,
+    "writes_enabled": 0,
+    "owner_approval_required_for_execution": 10
+  },
+  "expectation": "All connector read-only endpoints respond without enabling execution, writes, or fake approval persistence.",
+  "endpoint_results": [
+    {
+      "id": "firecrawl",
+      "path": "/api/firecrawl/status",
+      "status": 200,
+      "ok": true,
+      "state": "CREDENTIAL_REQUIRED",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "viral_crawl_video",
+      "path": "/api/viral-crawl/video/status",
+      "status": 200,
+      "ok": true,
+      "state": "READ_ONLY",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "zapier",
+      "path": "/api/bridge/zapier/tools",
+      "status": 200,
+      "ok": true,
+      "state": null,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "telegram",
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "status": 200,
+      "ok": true,
+      "state": "blocked",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "agentmail",
+      "path": "/api/bridge/agent-zero/agentmail/status",
+      "status": 200,
+      "ok": true,
+      "state": "agentmail_readiness",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "google_drive",
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "status": 200,
+      "ok": true,
+      "state": "blocked",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "onedrive",
+      "path": "/api/bridge/agent-zero/onedrive/status",
+      "status": 200,
+      "ok": true,
+      "state": "blocked",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "n8n",
+      "path": "/api/n8n/status",
+      "status": 200,
+      "ok": true,
+      "state": "not_installed",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "mcp_tools",
+      "path": "/api/mcp/servers",
+      "status": 200,
+      "ok": true,
+      "state": null,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    },
+    {
+      "id": "skills_registry",
+      "path": "/api/skills/tool-skills",
+      "status": 200,
+      "ok": true,
+      "state": "READ_ONLY",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "approval_request_created": false
+    }
+  ]
+}

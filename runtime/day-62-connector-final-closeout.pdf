@@ -1,0 +1,328 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3547 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-62-connector-final-closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 62 — Connector Final Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Connector final closeout) Tj
+0 -12 Td
+(Status: PARTIAL GO — developer-side connector proof harness complete; external sends/uploads rem) Tj
+0 -12 Td
+(ain owner/credential gated.) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED / CREDENTIAL_GATED / BACKEND_MISSING depending on connector.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Close the connector block from Days 53-61 by proving every connector-facing lane is truthful, au) Tj
+0 -12 Td
+(thenticated, gated, and unable to fake send/upload/execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Connectors Covered) Tj
+0 -12 Td
+(- Telegram PDF delivery) Tj
+0 -12 Td
+(- Telegram report links) Tj
+0 -12 Td
+(- AgentMail readiness and delivery) Tj
+0 -12 Td
+(- Google Drive readiness/upload guard) Tj
+0 -12 Td
+(- OneDrive readiness/upload guard) Tj
+0 -12 Td
+(- Zapier registry/no-write guard) Tj
+0 -12 Td
+(- Connector readiness unified matrix) Tj
+0 -12 Td
+(- Connector action contracts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifacts) Tj
+0 -12 Td
+(- `runtime/day-62-connector-readiness-live.json`) Tj
+0 -12 Td
+(- `runtime/day-62-telegram-pdf-delivery-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-telegram-report-links-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-agentmail-readiness-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-agentmail-delivery-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-google-drive-readiness-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-onedrive-readiness-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-zapier-no-write-guard.json`) Tj
+0 -12 Td
+(- `runtime/day-62-zapier-registry-contracts.json`) Tj
+0 -12 Td
+(- `runtime/day-62-connector-action-contracts.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Results) Tj
+0 -12 Td
+(All proof scripts returned `ok: true`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Connector readiness: 10 connectors, 0 execution enabled, 0 writes enabled.) Tj
+0 -12 Td
+(- Telegram PDF: PDF can be generated/protected; Telegram upload remains Bridge-gated and no Tele) Tj
+0 -12 Td
+(gram message id is reported.) Tj
+0 -12 Td
+(- Telegram report links: safe protected links without raw path exposure.) Tj
+0 -12 Td
+(- AgentMail readiness: credential/backend/allow-list truth is exposed without tokens.) Tj
+0 -12 Td
+(- AgentMail delivery: send route remains authenticated and Bridge-gated; no message id or fake s) Tj
+0 -12 Td
+(end.) Tj
+0 -12 Td
+(- Google Drive: status/upload guard proves scope `google_drive.upload`, target-folder requiremen) Tj
+0 -12 Td
+(t, no upload performed.) Tj
+0 -12 Td
+(- OneDrive: status/upload guard proves scope `onedrive.upload`, target-folder requirement, no up) Tj
+0 -12 Td
+(load performed.) Tj
+0 -12 Td
+(- Zapier no-write: write/action paths remain non-executable and non-persistent without exact app) Tj
+0 -12 Td
+(roval.) Tj
+0 -12 Td
+(- Zapier registry: read-only registry contract remains available.) Tj
+0 -12 Td
+(- Connector action contracts: protected connector action contract remains locked.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+(The Mission Control connector UI consumes `/api/bridge/connector-readiness`, which now includes ) Tj
+0 -12 Td
+(the delivery connectors and the existing tool connectors in one truthful matrix.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every visible connector action must be one of:) Tj
+0 -12 Td
+(- read-only status) Tj
+0 -12 Td
+(- credential gated) Tj
+0 -12 Td
+(- owner approval gated) Tj
+0 -12 Td
+(- backend missing) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3798 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- disabled/blocked with reason) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No connector was promoted to GO. No button is allowed to imply send/upload when the connector is) Tj
+0 -12 Td
+( missing credentials, missing owner approval, or missing an execution adapter.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Proven) Tj
+0 -12 Td
+(- `GET /api/bridge/connector-readiness`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/agentmail/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/agentmail/send`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/google-drive/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/onedrive/status`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+(- `GET /api/bridge/zapier/tools`) Tj
+0 -12 Td
+(- Zapier protected write routes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(- Local Mission Control runtime was already rebuilt and restarted from the Day 61 standalone out) Tj
+0 -12 Td
+(put on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- All Day 62 proof scripts were run against that local runtime.) Tj
+0 -12 Td
+(- No external connector write was executed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks) Tj
+0 -12 Td
+(- `node scripts/check-connector-readiness-live.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-telegram-pdf-delivery-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-telegram-report-links-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-agentmail-readiness-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-agentmail-delivery-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-google-drive-readiness-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-onedrive-readiness-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-zapier-no-write-guard.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-zapier-registry-contracts.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-connector-action-contracts.mjs http://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+(- Telegram actual attachment: OWNER_GATED / CREDENTIAL_GATED until owner channel and scoped Brid) Tj
+0 -12 Td
+(ge Session are available.) Tj
+0 -12 Td
+(- AgentMail actual send: OWNER_GATED / CREDENTIAL_GATED until connector, allow-list, and scoped ) Tj
+0 -12 Td
+(Bridge Session are available.) Tj
+0 -12 Td
+(- Google Drive actual upload: CREDENTIAL_GATED / OWNER_GATED until auth, target folder, adapter,) Tj
+0 -12 Td
+( and scoped Bridge Session are available.) Tj
+0 -12 Td
+(- OneDrive actual upload: CREDENTIAL_GATED / OWNER_GATED until auth, target folder, adapter, and) Tj
+0 -12 Td
+( scoped Bridge Session are available.) Tj
+0 -12 Td
+(- Zapier writes: OWNER_GATED and exact-scope approval required; no broad writes enabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No fake sent/uploaded/done state.) Tj
+0 -12 Td
+(- No raw local paths exposed.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(If this report-only commit needs rollback after commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-62-connector-final-closeout-commit>) Tj
+0 -12 Td
+(```) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 323 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 63 — Production Deployment Pipeline is next. It should inventory deploy scripts, rebuild/res) Tj
+0 -12 Td
+(tart commands, deployed commit reporting, health probes, route smoke, rollback, and proof artifa) Tj
+0 -12 Td
+(cts.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003852 00000 n 
+0000003978 00000 n 
+0000007828 00000 n 
+0000007954 00000 n 
+0000008328 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8398
+%%EOF

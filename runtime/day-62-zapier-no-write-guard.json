@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:3337",
+  "checked": 6,
+  "expectation": "Zapier write/action paths remain non-executable, non-writing, and non-persistent without exact owner approval and Bridge Session scope.",
+  "failures": [],
+  "results": [
+    {
+      "name": "write_approval_send_mail",
+      "path": "/api/zapier/request-write-approval",
+      "status": 423,
+      "owner_approval_required": true,
+      "backend_required": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "approval_request_created": false,
+      "blocker": "owner_approval_required"
+    },
+    {
+      "name": "write_classified_test_read",
+      "path": "/api/zapier/test-read",
+      "status": 423,
+      "owner_approval_required": true,
+      "backend_required": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "approval_request_created": false,
+      "blocker": "owner_approval_required"
+    },
+    {
+      "name": "read_invocation_stays_backend_locked",
+      "path": "/api/zapier/test-read",
+      "status": 503,
+      "owner_approval_required": false,
+      "backend_required": true,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "approval_request_created": false,
+      "blocker": "zapier_write_runner_not_configured"
+    },
+    {
+      "name": "revoke_without_backend_stays_locked",
+      "path": "/api/zapier/revoke-write-approval",
+      "status": 503,
+      "owner_approval_required": false,
+      "backend_required": true,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": true,
+      "approval_request_created": false,
+      "blocker": "zapier_write_runner_not_configured"
+    },
+    {
+      "name": "bridge_tools_reject_post",
+      "path": "/api/bridge/zapier/tools",
+      "status": 405,
+      "owner_approval_required": false,
+      "backend_required": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": false,
+      "approval_request_created": false,
+      "blocker": null
+    },
+    {
+      "name": "bridge_search_reject_post",
+      "path": "/api/bridge/zapier/tools/search?q=heygen",
+      "status": 405,
+      "owner_approval_required": false,
+      "backend_required": false,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "no_zapier_writes": false,
+      "approval_request_created": false,
+      "blocker": null
+    }
+  ]
+}

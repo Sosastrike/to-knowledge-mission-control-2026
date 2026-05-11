@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Routes</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.routes-page { padding: 28px 36px; max-width: 1380px; margin: 0 auto; }
+.routes-page h1 { margin: 0 0 6px; font-size: 24px; }
+.lead { color: var(--t-3); max-width: 760px; margin: 0 0 24px; }
+.routes-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; align-items: center; margin: 18px 0; }
+.routes-row .step { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 14px; text-align: center; }
+.routes-row .step .ti { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); margin-bottom: 6px; }
+.routes-row .step .nm { font-size: 13px; font-weight: 600; }
+.routes-row .step .sub { font-size: 11px; color: var(--t-3); margin-top: 4px; line-height: 1.4; }
+.routes-row .arrow { display: grid; place-items: center; color: var(--t-5); font-size: 18px; }
+.routes-row .step.gateway { background: linear-gradient(180deg, rgba(94,234,212,0.10), var(--bg-2)); border-color: rgba(94,234,212,0.35); }
+.routes-row .step.commander { background: linear-gradient(180deg, rgba(167,139,250,0.10), var(--bg-2)); border-color: rgba(167,139,250,0.35); }
+.routes-row .step.terminal { background: linear-gradient(180deg, rgba(46,204,113,0.10), var(--bg-2)); border-color: rgba(46,204,113,0.35); }
+.routes-row .step.gated { background: linear-gradient(180deg, rgba(245,181,10,0.10), var(--bg-2)); border-color: rgba(245,181,10,0.35); }
+.routes-row .step.blocked { background: linear-gradient(180deg, rgba(239,68,68,0.10), var(--bg-2)); border-color: rgba(239,68,68,0.35); }
+.scenarios { display: grid; gap: 16px; margin-top: 28px; }
+.scenario { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px 20px; }
+.scenario h2 { margin: 0 0 4px; font-size: 16px; }
+.scenario .desc { color: var(--t-3); font-size: 13px; margin: 0 0 6px; }
+.gates { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 4px; }
+.gate { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; font-size: 11px; border: 1px solid var(--line-2); background: var(--bg-3); color: var(--t-2); }
+.gate.ok { background: var(--st-green-bg); border-color: var(--st-green-bd); color: var(--st-green); }
+.gate.fail { background: var(--st-red-bg); border-color: var(--st-red-bd); color: var(--st-red); }
+.gate .num { font-family: var(--ff-mono); font-size: 9px; opacity: 0.7; }
+.legend-row { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--t-4); }
+.dot-mini { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
+.flow-debugger { background: var(--bg-1); border: 1px solid var(--line-2); border-radius: 12px; padding: 18px 20px; margin-top: 28px; }
+.flow-debugger h2 { margin: 0 0 12px; font-size: 14px; }
+.intent-input { display: flex; gap: 8px; align-items: center; }
+.intent-input select, .intent-input input { padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px; color: var(--t-1); font-family: inherit; font-size: 12px; }
+.intent-input select { width: 200px; }
+.intent-input input { flex: 1; }
+.dryrun-out { margin-top: 12px; font-family: var(--ff-mono); font-size: 11.5px; color: var(--t-2); background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px; padding: 14px; line-height: 1.7; }
+.dryrun-out .step-line { color: var(--brand-cyan); }
+.dryrun-out .gate-line { color: var(--st-yellow); }
+.dryrun-out .ok-line { color: var(--st-green); }
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="routes-page">
+<h1>Gateway Routes</h1>
+<p class="lead">Every request follows the same path: <strong>Owner → Gateway → Agent Zero → tool/model/API → result</strong>. The Gateway enforces 9 sequential gates before any external write executes. If any gate fails, the audit row records it and the action is refused.</p>
+
+<div class="routes-row">
+  <div class="step"><div class="ti">Step 1</div><div class="nm">Owner</div><div class="sub">command issued</div></div>
+  <div class="arrow">→</div>
+  <div class="step gateway"><div class="ti">Step 2</div><div class="nm">Gateway Core</div><div class="sub">Discovery + RBAC + Bridge gates</div></div>
+  <div class="arrow">→</div>
+  <div class="step commander"><div class="ti">Step 3</div><div class="nm">Agent Zero</div><div class="sub">Commander resolves intent</div></div>
+  <div class="arrow">→</div>
+  <div class="step terminal"><div class="ti">Step 4</div><div class="nm">Tool / Model / API</div><div class="sub">Result + audit</div></div>
+</div>
+
+<div class="legend-row">
+  <span><span class="dot-mini" style="background:var(--brand-cyan)"></span>Gateway core</span>
+  <span><span class="dot-mini" style="background:var(--st-purple)"></span>Commander layer</span>
+  <span><span class="dot-mini" style="background:var(--st-orange)"></span>Runtime / worker</span>
+  <span><span class="dot-mini" style="background:var(--st-yellow)"></span>Gated</span>
+  <span><span class="dot-mini" style="background:var(--st-red)"></span>Blocked</span>
+</div>
+
+<div class="scenarios">
+  <div class="scenario">
+    <h2>Scenario A — Send mail to a customer</h2>
+    <div class="desc">Owner asks Agent Zero to email a status update. External write → Bridge Session required.</div>
+    <div class="routes-row" style="grid-template-columns: repeat(11,1fr);">
+      <div class="step"><div class="nm">Owner</div></div><div class="arrow">→</div>
+      <div class="step gateway"><div class="nm">Gateway</div></div><div class="arrow">→</div>
+      <div class="step commander"><div class="nm">Agent Zero</div></div><div class="arrow">→</div>
+      <div class="step gateway"><div class="nm">Gateway</div><div class="sub">Bridge check</div></div><div class="arrow">→</div>
+      <div class="step terminal"><div class="nm">AgentMail</div><div class="sub">send</div></div><div class="arrow">→</div>
+      <div class="step"><div class="nm">Audit</div></div>
+    </div>
+    <div class="gates">
+      <span class="gate ok"><span class="num">1</span> authn</span>
+      <span class="gate ok"><span class="num">2</span> discovery fresh (12s)</span>
+      <span class="gate ok"><span class="num">3</span> connected + configured</span>
+      <span class="gate ok"><span class="num">4</span> write enabled</span>
+      <span class="gate ok"><span class="num">5</span> RBAC: owner.send_mail</span>
+      <span class="gate ok"><span class="num">6</span> Bridge Session active</span>
+      <span class="gate ok"><span class="num">7</span> audit pre-write</span>
+      <span class="gate ok"><span class="num">8</span> execute</span>
+      <span class="gate ok"><span class="num">9</span> audit post-write</span>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <h2>Scenario B — Hermes publishes a workflow</h2>
+    <div class="desc">Hermes is gated until live chat is proven. Workflow author flow: discover → assemble → dryRun → publish.</div>
+    <div class="routes-row" style="grid-template-columns: repeat(9,1fr);">
+      <div class="step commander" style="background:linear-gradient(180deg,rgba(245,181,10,0.10),var(--bg-2));border-color:rgba(245,181,10,0.40);"><div class="nm">Hermes</div><div class="sub" style="color:var(--st-yellow)">gated</div></div><div class="arrow">→</div>
+      <div class="step gateway"><div class="nm">Gateway</div></div><div class="arrow">→</div>
+      <div class="step gated"><div class="nm">Tools registry</div><div class="sub">discover only</div></div><div class="arrow">→</div>
+      <div class="step blocked"><div class="nm">Publish</div><div class="sub">refused</div></div>
+    </div>
+    <div class="gates">
+      <span class="gate ok"><span class="num">1</span> authn</span>
+      <span class="gate ok"><span class="num">2</span> discovery fresh</span>
+      <span class="gate ok"><span class="num">3</span> connected</span>
+      <span class="gate fail"><span class="num">4</span> write refused — hermes_called:false</span>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <h2>Scenario C — Build-Wiki Run Now</h2>
+    <div class="desc">Owner triggers Build-Wiki. Scope locked to <code>opencloud-docs-farmer.service</code>; any other target refused.</div>
+    <div class="routes-row" style="grid-template-columns: repeat(11,1fr);">
+      <div class="step"><div class="nm">Owner</div></div><div class="arrow">→</div>
+      <div class="step gateway"><div class="nm">Gateway</div></div><div class="arrow">→</div>
+      <div class="step commander"><div class="nm">Agent Zero</div></div><div class="arrow">→</div>
+      <div class="step terminal" style="background:linear-gradient(180deg,rgba(255,138,61,0.10),var(--bg-2));border-color:rgba(255,138,61,0.35);"><div class="nm">OpenCloud</div><div class="sub">parent</div></div><div class="arrow">→</div>
+      <div class="step terminal" style="background:linear-gradient(180deg,rgba(255,138,61,0.10),var(--bg-2));border-color:rgba(255,138,61,0.35);"><div class="nm">Build-Wiki</div><div class="sub">opencloud-docs-farmer.service</div></div><div class="arrow">→</div>
+      <div class="step"><div class="nm">Audit</div></div>
+    </div>
+    <div class="gates">
+      <span class="gate ok"><span class="num">1-5</span> all base gates pass</span>
+      <span class="gate ok"><span class="num">6</span> Bridge Session active</span>
+      <span class="gate ok"><span class="num">+</span> Run Now scope = opencloud-docs-farmer.service ✓</span>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <h2>Scenario D — Fork 2 / SMB attempt</h2>
+    <div class="desc">Any execute against <code>oc.fork2</code> refuses. SMB connector unavailable.</div>
+    <div class="routes-row" style="grid-template-columns: repeat(9,1fr);">
+      <div class="step"><div class="nm">Owner</div></div><div class="arrow">→</div>
+      <div class="step gateway"><div class="nm">Gateway</div></div><div class="arrow">→</div>
+      <div class="step commander"><div class="nm">Agent Zero</div></div><div class="arrow">→</div>
+      <div class="step terminal" style="background:linear-gradient(180deg,rgba(255,138,61,0.10),var(--bg-2));border-color:rgba(255,138,61,0.35);"><div class="nm">OpenCloud</div></div><div class="arrow">→</div>
+      <div class="step blocked"><div class="nm">Fork 2 / SMB</div><div class="sub">denied_node_blocked</div></div>
+    </div>
+    <div class="gates">
+      <span class="gate ok"><span class="num">1-2</span> authn + discovery</span>
+      <span class="gate fail"><span class="num">3</span> node blocked — SMB connector unavailable / SMB mount not proven</span>
+    </div>
+  </div>
+</div>
+
+<div class="flow-debugger">
+  <h2>Route debugger (dry run)</h2>
+  <p style="color:var(--t-3);font-size:12px;margin:0 0 12px;">Resolves the route a request would take, without executing or auditing as <code>execute</code>. Calls <code>POST /api/gateway/route</code> in the live system.</p>
+  <div class="intent-input">
+    <select id="from"><option>input.owner</option><option>input.telegram</option><option>input.scheduled</option><option>input.webhook</option></select>
+    <input id="intent" value="send weekly status to customers" />
+    <button class="btn primary" id="dry">Dry-run route</button>
+  </div>
+  <div class="dryrun-out" id="out">
+<span class="step-line">→ resolve commander: agent.zero</span>
+<span class="step-line">→ resolve action: send_mail</span>
+<span class="step-line">→ resolve terminal: int.agentmail</span>
+<span class="gate-line">  gate 5/9 RBAC: owner.send_mail = ok</span>
+<span class="gate-line">  gate 6/9 bridge_session: bs.current (24m left) = ok</span>
+<span class="ok-line">→ resolved: input.owner → gateway.core → agent.zero → int.agentmail</span>
+<span class="ok-line">→ would emit gateway_audit row, action=execute, result=pending</span>
+<span style="color:var(--t-4);">(dry run — no execution, no audit row written)</span>
+  </div>
+</div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Gateway · Routes'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Gateway Routes.html'));
+document.getElementById('dry').onclick = () => {
+  const out = document.getElementById('out');
+  out.style.opacity = '0.4';
+  setTimeout(() => { out.style.opacity = '1'; }, 300);
+};
+</script>
+</body></html>

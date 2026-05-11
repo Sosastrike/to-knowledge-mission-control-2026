@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Mobile / Tablet</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.mt-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
+.mt-page h1{margin:0 0 6px;font-size:24px;}
+.lead{color:var(--t-3);margin:0 0 22px;max-width:760px;}
+.frame-row{display:flex;gap:24px;margin-bottom:30px;align-items:flex-start;flex-wrap:wrap;}
+.frame-cap{font-size:11px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;font-weight:600;}
+.phone{width:380px;height:780px;background:#000;border-radius:38px;padding:10px;border:2px solid #2a2a2a;box-shadow:0 30px 60px rgba(0,0,0,0.4);position:relative;}
+.phone .screen{width:100%;height:100%;background:var(--bg-1);border-radius:30px;overflow:hidden;position:relative;}
+.phone .notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#000;border-radius:18px;z-index:5;}
+.tablet{width:680px;height:520px;background:#000;border-radius:24px;padding:12px;border:2px solid #2a2a2a;box-shadow:0 30px 60px rgba(0,0,0,0.4);}
+.tablet .screen{width:100%;height:100%;background:var(--bg-1);border-radius:14px;overflow:hidden;position:relative;}
+.statusbar{height:32px;display:flex;align-items:center;justify-content:space-between;padding:8px 24px 0;font-size:11px;color:var(--t-2);font-family:var(--ff-mono);}
+.m-topbar{padding:14px 16px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:10px;background:var(--bg-2);}
+.m-topbar .logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#5eead4,#0d9488);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a1f1c;}
+.m-topbar h2{margin:0;font-size:14px;font-weight:600;flex:1;}
+.m-topbar .live{font-size:10px;color:var(--st-green);display:flex;align-items:center;gap:4px;}
+.m-topbar .live .pulse{width:6px;height:6px;border-radius:50%;background:var(--st-green);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.m-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:14px;background:var(--bg-2);}
+.m-summary .card{background:var(--bg-3);border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;}
+.m-summary .lbl{font-size:9px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;}
+.m-summary .val{font-size:18px;font-weight:700;margin-top:2px;}
+.m-summary .green .val{color:var(--st-green);} .m-summary .yellow .val{color:var(--st-yellow);}
+.m-summary .red .val{color:var(--st-red);} .m-summary .blue .val{color:var(--st-blue);}
+.m-section-title{padding:14px 16px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.10em;color:var(--t-4);font-weight:600;}
+.m-list{padding:0 14px;}
+.m-row{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:10px 12px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;margin-bottom:6px;}
+.m-row .nm{font-size:12.5px;font-weight:500;}
+.m-row .meta{font-size:10.5px;color:var(--t-4);margin-top:2px;}
+.m-row .dot{width:8px;height:8px;border-radius:50%;}
+.m-bridge{margin:14px;padding:14px;background:linear-gradient(180deg,rgba(245,158,11,0.10),var(--bg-2));border:1px solid var(--st-yellow-bd);border-radius:10px;}
+.m-bridge .tag{font-size:9.5px;color:var(--st-yellow);text-transform:uppercase;letter-spacing:0.10em;font-weight:700;}
+.m-bridge h4{margin:4px 0 6px;font-size:13px;}
+.m-bridge .timer{font-family:var(--ff-mono);font-size:11px;color:var(--t-3);margin-top:4px;}
+.m-bridge button{margin-top:10px;width:100%;padding:8px;border-radius:6px;background:var(--st-yellow);color:#1a1500;border:0;font-weight:600;font-size:12px;}
+.m-tabbar{position:absolute;bottom:0;left:0;right:0;height:64px;background:var(--bg-2);border-top:1px solid var(--line-2);display:grid;grid-template-columns:repeat(4,1fr);}
+.m-tabbar div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9.5px;color:var(--t-4);}
+.m-tabbar div.active{color:var(--st-green);}
+.m-tabbar div span:first-child{font-size:18px;}
+
+.t-grid{display:grid;grid-template-columns:200px 1fr;height:100%;}
+.t-side{background:var(--bg-2);border-right:1px solid var(--line-2);padding:12px 8px;}
+.t-side .item{padding:8px 12px;font-size:12px;color:var(--t-3);border-radius:6px;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.t-side .item.active{background:var(--bg-3);color:var(--t-1);border-left:3px solid var(--st-green);padding-left:9px;}
+.t-side .item .dot{width:6px;height:6px;border-radius:50%;}
+.t-side h5{font-size:9px;text-transform:uppercase;letter-spacing:0.10em;color:var(--t-5);margin:10px 12px 4px;font-weight:600;}
+.t-main{padding:14px;overflow-y:auto;}
+.t-main h3{margin:0 0 10px;font-size:14px;}
+.t-main .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.t-main .summary .c{background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;padding:10px;}
+.t-main .summary .lbl{font-size:9px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;}
+.t-main .summary .val{font-size:18px;font-weight:700;margin-top:2px;}
+.t-canvas{height:200px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--t-4);font-size:11px;position:relative;}
+.t-canvas::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,var(--line-2) 1px,transparent 1px);background-size:14px 14px;opacity:0.4;border-radius:8px;}
+.t-rows{margin-top:14px;}
+.t-row{display:grid;grid-template-columns:18px 1fr 80px 60px;gap:10px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:6px;margin-bottom:4px;font-size:11.5px;align-items:center;}
+.t-row .dot{width:7px;height:7px;border-radius:50%;}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="mt-page">
+<h1>Gateway · Mobile & Tablet</h1>
+<p class="lead">Responsive surfaces. Mobile prioritizes glance + approve flows (Bridge Session prompts, blocked nodes, today's denied count). Tablet collapses the desktop canvas to a vertical column with a sidebar.</p>
+
+<div class="frame-row">
+
+<div>
+<div class="frame-cap">📱 Mobile · iPhone · Owner approves Bridge</div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>14:24</span><span>5G ◉ 87%</span></div>
+  <div class="m-topbar"><div class="logo">G</div><h2>Gateway</h2><span class="live"><span class="pulse"></span>live</span></div>
+  <div class="m-summary">
+    <div class="card green"><div class="lbl">Operational</div><div class="val">9</div></div>
+    <div class="card yellow"><div class="lbl">Gated</div><div class="val">4</div></div>
+    <div class="card red"><div class="lbl">Blocked</div><div class="val">1</div></div>
+    <div class="card blue"><div class="lbl">Read-only</div><div class="val">2</div></div>
+  </div>
+
+  <div class="m-bridge">
+    <span class="tag">⚠ Approval needed</span>
+    <h4>Send broadcast email · 142 recipients</h4>
+    <div style="font-size:11px;color:var(--t-3);">Agent Zero · agentmail.send · high severity</div>
+    <div class="timer">expires in 23s</div>
+    <button>Approve · open Bridge Session</button>
+  </div>
+
+  <div class="m-section-title">Needs attention</div>
+  <div class="m-list">
+    <div class="m-row"><span class="dot" style="background:var(--st-red);"></span><div><div class="nm">Fork 2 (SMB)</div><div class="meta">denied_node_blocked · 14d</div></div><span class="pill red" style="font-size:9px;"><span class="dot"></span>red</span></div>
+    <div class="m-row"><span class="dot" style="background:var(--st-yellow);"></span><div><div class="nm">Build-Wiki</div><div class="meta">2 runs awaiting bridge</div></div><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>gated</span></div>
+    <div class="m-row"><span class="dot" style="background:var(--st-yellow);"></span><div><div class="nm">Hermes</div><div class="meta">draft awaiting your approval</div></div><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>gated</span></div>
+  </div>
+
+  <div class="m-tabbar">
+    <div class="active"><span>🌐</span><span>Map</span></div>
+    <div><span>📋</span><span>Registry</span></div>
+    <div><span>🛡</span><span>Policies</span></div>
+    <div><span>📊</span><span>Audit</span></div>
+  </div>
+</div></div>
+</div>
+
+<div>
+<div class="frame-cap">📱 Mobile · Node detail (Hermes)</div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>14:25</span><span>5G ◉ 87%</span></div>
+  <div class="m-topbar"><div class="logo" style="background:linear-gradient(135deg,#fbbf24,#d97706);color:#1a1500;">H</div><h2>Hermes</h2><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>gated</span></div>
+  <div style="padding:14px;">
+    <div style="font-size:12px;color:var(--t-3);line-height:1.55;margin-bottom:12px;">Sub-commander under Agent Zero. Read-biased. Writes gated by Bridge + AZ delegation.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="padding:10px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;"><div style="font-size:9px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;">Reads/h</div><div style="font-size:18px;font-weight:700;color:var(--st-green);margin-top:2px;">87</div></div>
+      <div style="padding:10px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;"><div style="font-size:9px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;">Writes/h</div><div style="font-size:18px;font-weight:700;color:var(--st-yellow);margin-top:2px;">3</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--t-4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Allowed scope</div>
+    <div class="m-row"><span class="dot" style="background:var(--st-green);"></span><div><div class="nm">brain.read</div></div><span class="pill green" style="font-size:9px;"><span class="dot"></span>R</span></div>
+    <div class="m-row"><span class="dot" style="background:var(--st-yellow);"></span><div><div class="nm">brain.write</div><div class="meta">append-only · bridge</div></div><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>W</span></div>
+    <div class="m-row"><span class="dot" style="background:var(--st-green);"></span><div><div class="nm">gdrive.read</div></div><span class="pill green" style="font-size:9px;"><span class="dot"></span>R</span></div>
+    <div class="m-row"><span class="dot" style="background:var(--st-yellow);"></span><div><div class="nm">agentmail.draft</div><div class="meta">draft only</div></div><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>W</span></div>
+  </div>
+  <div class="m-tabbar">
+    <div><span>🌐</span><span>Map</span></div>
+    <div class="active"><span>📋</span><span>Registry</span></div>
+    <div><span>🛡</span><span>Policies</span></div>
+    <div><span>📊</span><span>Audit</span></div>
+  </div>
+</div></div>
+</div>
+
+<div>
+<div class="frame-cap">📲 Tablet · iPad · Gateway overview (collapsed)</div>
+<div class="tablet"><div class="screen">
+  <div class="t-grid">
+    <div class="t-side">
+      <h5>Workspace</h5>
+      <div class="item active"><span class="dot" style="background:var(--st-green);"></span>Gateway</div>
+      <div class="item"><span class="dot" style="background:var(--st-green);"></span>Registry</div>
+      <div class="item"><span class="dot" style="background:var(--st-yellow);"></span>Policies</div>
+      <div class="item"><span class="dot" style="background:var(--st-green);"></span>Health</div>
+      <h5>Commander</h5>
+      <div class="item"><span class="dot" style="background:var(--st-green);"></span>Agent Zero</div>
+      <div class="item"><span class="dot" style="background:var(--st-yellow);"></span>Hermes</div>
+      <h5>Workers</h5>
+      <div class="item"><span class="dot" style="background:var(--st-purple,#a855f7);"></span>OpenCloud</div>
+      <div class="item"><span class="dot" style="background:var(--st-pink,#f472b6);"></span>OpenClaw+</div>
+    </div>
+    <div class="t-main">
+      <h3>Gateway · live</h3>
+      <div class="summary">
+        <div class="c"><div class="lbl">Total</div><div class="val">22</div></div>
+        <div class="c"><div class="lbl" style="color:var(--st-green);">Up</div><div class="val" style="color:var(--st-green);">15</div></div>
+        <div class="c"><div class="lbl" style="color:var(--st-yellow);">Gated</div><div class="val" style="color:var(--st-yellow);">4</div></div>
+        <div class="c"><div class="lbl" style="color:var(--st-red);">Blocked</div><div class="val" style="color:var(--st-red);">1</div></div>
+      </div>
+      <div class="t-canvas">[ canvas: owner → gateway → AZ → Hermes → tools ]</div>
+      <div class="t-rows">
+        <div class="t-row"><span class="dot" style="background:var(--st-yellow);"></span><span><strong>Build-Wiki</strong> · 2 runs need bridge</span><span class="pill yellow" style="font-size:9px;"><span class="dot"></span>gated</span><button class="btn sm">open</button></div>
+        <div class="t-row"><span class="dot" style="background:var(--st-red);"></span><span><strong>Fork 2 (SMB)</strong> · denied_node_blocked</span><span class="pill red" style="font-size:9px;"><span class="dot"></span>red</span><button class="btn sm">open</button></div>
+        <div class="t-row"><span class="dot" style="background:var(--st-green);"></span><span><strong>AgentMail</strong> · operational</span><span class="pill green" style="font-size:9px;"><span class="dot"></span>up</span><button class="btn sm">open</button></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+</div>
+
+<div style="background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:18px 20px;">
+<h2 style="margin:0 0 10px;font-size:14px;font-weight:600;">Responsive rules</h2>
+<ul style="margin:0;padding-left:18px;font-size:12.5px;color:var(--t-2);line-height:1.75;">
+<li><strong>≥1280px (desktop):</strong> full canvas, side panels, audit drawer.</li>
+<li><strong>768–1279 (tablet):</strong> sidebar collapses to icons + labels; canvas becomes a single column with the same data; audit moves to a footer drawer.</li>
+<li><strong>&lt;768 (mobile):</strong> top tally cards → bottom tab bar (Map / Registry / Policies / Audit). Canvas replaced with prioritized list. Bridge approval surfaces as a top-of-feed card with countdown. Node detail is push-navigated, not modal.</li>
+<li><strong>Notifications:</strong> Bridge requests, denied actions, and red-status changes can fire OS-level pushes. Approvals are signed with device-bound key — the phone is itself a Bridge factor.</li>
+</ul>
+</div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Gateway · Mobile / Tablet'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Gateway Mobile Tablet.html'));
+</script></body></html>

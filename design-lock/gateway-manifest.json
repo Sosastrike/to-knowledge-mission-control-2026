@@ -1,0 +1,163 @@
+{
+  "schema": "gateway-design-lock@1",
+  "generated_at": "2026-05-11T14:12:28.573Z",
+  "base": "public/design/gateway/",
+  "file_count": 31,
+  "files": [
+    {
+      "path": "00-design-brief.md",
+      "bytes": 9732,
+      "sha256": "a46df27e9c3135f6c9df4aea0b464fd1f6c4128a60c10a54e9acca29fad688cd"
+    },
+    {
+      "path": "Agent Hub.html",
+      "bytes": 38609,
+      "sha256": "220a5a3a04643ad59bf3fdcdca9c746fa43dfc104f16b0747ba3a205db30911c"
+    },
+    {
+      "path": "Agent Zero Commander.html",
+      "bytes": 10988,
+      "sha256": "80bc7ef9ddaa842065cb4029230b1d0bbb55b3130e055d5bf40f5e00eb85a0b9"
+    },
+    {
+      "path": "Brain Systems.html",
+      "bytes": 9935,
+      "sha256": "58682c37fc14c60c382b326813c857525df0fa8274f97e2e27f4ccd924b27c04"
+    },
+    {
+      "path": "Bridge Session Flow.html",
+      "bytes": 34194,
+      "sha256": "c4c7069be1b373c7ad46e3334d1161ac0c101f4002f039c98e9df729adb5d0a6"
+    },
+    {
+      "path": "Delivery Connectors.html",
+      "bytes": 9264,
+      "sha256": "fb16014ce587a496413dd3fe3df5865a62ef72321617b99f93c2d6e3c319792a"
+    },
+    {
+      "path": "Dispatcher.html",
+      "bytes": 30052,
+      "sha256": "3b9ad5a44e30bf434a47d88f4d50cc1983e9b272c87cae6c88b0232f13313068"
+    },
+    {
+      "path": "Gateway Health.html",
+      "bytes": 5597,
+      "sha256": "a6fcc9855a6ab9059c40fe14e012fe6491c6056b4589cdc1fe6f49c15dfe21a9"
+    },
+    {
+      "path": "Gateway Mobile Tablet.html",
+      "bytes": 15355,
+      "sha256": "19385403b049abf11561e9faceee5f998647ce3b585afa5f15b0388b7df1194f"
+    },
+    {
+      "path": "Gateway Node Detail.html",
+      "bytes": 9392,
+      "sha256": "a5a8b5facbd1e0d4c4a92b003b1d1fae41f6b5a9edb7f1caa8f1b44582fbaf80"
+    },
+    {
+      "path": "Gateway Overview v1.html",
+      "bytes": 24830,
+      "sha256": "3f52b1e5923a05d80a8b25823564803ab796d23d3d89f3d4fef10aaa3429046f"
+    },
+    {
+      "path": "Gateway Overview.html",
+      "bytes": 52375,
+      "sha256": "67354907fb9ab2906f0a65f88c5152a70901bbbbf0be1e970f7f54263d6a08a2"
+    },
+    {
+      "path": "Gateway Policies.html",
+      "bytes": 7123,
+      "sha256": "57a5e32c53478acdcd23090205d2b595693b0c9d59684efa078364c3b3e1a0fe"
+    },
+    {
+      "path": "Gateway Registry.html",
+      "bytes": 6752,
+      "sha256": "835f62a3e3fed6410b5d308de02dea31847b1c4c9432409c8c534d0fff07eae6"
+    },
+    {
+      "path": "Gateway Routes.html",
+      "bytes": 12634,
+      "sha256": "7b74c776751fbbe5f3f9619fc93c63ffcbe8f34969bba80ebf01c6d0a6e3cd8e"
+    },
+    {
+      "path": "Hermes Lieutenant.html",
+      "bytes": 8926,
+      "sha256": "49254d51e337fd74761705e1e2ceaef070b4b67fe00d8b8db88836f284f551ac"
+    },
+    {
+      "path": "Mission Control + Gateway.html",
+      "bytes": 31358,
+      "sha256": "7fc4d7c2a4ef2223a0a501dac1812afadcd91f4a51f1f4726332e7b59cc2610c"
+    },
+    {
+      "path": "OpenClaw+ Skills.html",
+      "bytes": 11554,
+      "sha256": "38637d5d9dad49db6213661bad72e40b061a12cd7dba3b02d44a6b9f4d32aebb"
+    },
+    {
+      "path": "OpenCloud Workers.html",
+      "bytes": 8852,
+      "sha256": "cf6f20c69975d23388d000ca668f141ec872b874e40febc030cf0733c8ab515e"
+    },
+    {
+      "path": "Paperclip.html",
+      "bytes": 29701,
+      "sha256": "4d2e1a5741a5632eb8d08f1b0fed9fc0bb5c5cb66e56dcd6c690d090adf48622"
+    },
+    {
+      "path": "Token Governor.html",
+      "bytes": 37312,
+      "sha256": "a762e21be34b3fc31c9f1e357a9aa548c8a9f21586f207cbcfffc12c09c7f4cd"
+    },
+    {
+      "path": "components.md",
+      "bytes": 18353,
+      "sha256": "5b33929193b93e2049a351a6648d5464b498dd798d408c3b094aefd738b59f20"
+    },
+    {
+      "path": "developer-handoff.md",
+      "bytes": 15962,
+      "sha256": "3c5cacf675bc44b6105bda87d2154cf45b195a5b121a303fe56b758fc691ecb9"
+    },
+    {
+      "path": "index.html",
+      "bytes": 10511,
+      "sha256": "29f19fff7c764f0c3a6eab253a1419d82c6c73ac823c554a969eb6988f89a0af"
+    },
+    {
+      "path": "open-questions.md",
+      "bytes": 10484,
+      "sha256": "3f25f0f6fea504941575465713ee871f1b6e31145f50954711a7d2d810de08db"
+    },
+    {
+      "path": "shared/agent-data.js",
+      "bytes": 29470,
+      "sha256": "43c196311b953105a7f9089bfe03258d778a185b1c124b7ccc87d92ac21989c5"
+    },
+    {
+      "path": "shared/gateway-data.js",
+      "bytes": 35807,
+      "sha256": "3c6be458b824ec9f68c66cb7ef12c6871354a2bce29fa8461793ecc242798734"
+    },
+    {
+      "path": "shared/node-card.css",
+      "bytes": 3453,
+      "sha256": "13f4cc29494937592e5f1c1174469898e90907e26276a726dd4e4f9c49d34a43"
+    },
+    {
+      "path": "shared/render.js",
+      "bytes": 5201,
+      "sha256": "e30ffa2a859ca795dce03bfaf3b037cd2ca06649147e4a38694406b4536ebd33"
+    },
+    {
+      "path": "shared/tokens.css",
+      "bytes": 10742,
+      "sha256": "b8d9f261353894a38c0bc63e0f1782ef98b76b435b93080cb90fe234935ab70a"
+    },
+    {
+      "path": "shared/topbar.html",
+      "bytes": 869,
+      "sha256": "e5de5adb7c6909d78f2b0922c549ff81dd2fc4f54756685b85078fddaa57d772"
+    }
+  ]
+}

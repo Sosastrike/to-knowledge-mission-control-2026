@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Health</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.h-page{padding:24px 32px;max-width:1480px;margin:0 auto;}
+.h-page h1{margin:0 0 6px;font-size:24px;}
+.lead{color:var(--t-3);margin:0 0 22px;max-width:760px;}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+.summary .card{background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:14px 16px;}
+.summary .card .lbl{font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:var(--t-4);}
+.summary .card .val{font-size:24px;font-weight:700;margin-top:4px;}
+.summary .green .val{color:var(--st-green);}.summary .yellow .val{color:var(--st-yellow);}
+.summary .blue .val{color:var(--st-blue);}.summary .red .val{color:var(--st-red);}
+.summary .gray .val{color:var(--st-gray);}
+.section{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+.section h2{margin:0 0 12px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;}
+.section h2 .count{color:var(--t-4);font-weight:400;font-size:12px;}
+.health-row{display:grid;grid-template-columns:24px 1fr 130px 120px 1fr 110px;gap:10px;padding:8px 12px;font-size:12px;border-bottom:1px solid var(--line-1);align-items:center;}
+.health-row:last-child{border-bottom:0;}
+.health-row .dot{width:8px;height:8px;border-radius:50%;}
+.health-row .nm{color:var(--t-1);font-weight:500;}
+.health-row .ts{color:var(--t-3);font-family:var(--ff-mono);font-size:11px;}
+.health-row .blocker{color:var(--st-yellow);font-size:11px;}
+.health-row .blocker.red{color:var(--st-red);}
+.health-row .actions{display:flex;gap:4px;justify-content:flex-end;}
+.uptime-bar{display:flex;gap:1px;height:18px;width:120px;}
+.uptime-bar span{flex:1;background:var(--st-green);border-radius:1px;}
+.uptime-bar span.y{background:var(--st-yellow);}.uptime-bar span.r{background:var(--st-red);}.uptime-bar span.g{background:var(--st-gray);}
+.live-indicator{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--st-green);}
+.live-indicator .pulse{width:8px;height:8px;border-radius:50%;background:var(--st-green);box-shadow:0 0 8px var(--st-green);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="h-page">
+<h1>Gateway Health <span class="live-indicator" style="font-size:13px;margin-left:12px;"><span class="pulse"></span>live · 5-min default TTL · refreshed 12s ago</span></h1>
+<p class="lead">Service status across every registered node. Stale data is labeled stale; "Refresh now" bypasses cache.</p>
+<div class="summary" id="summary"></div>
+<div class="section"><h2>⚠ Degraded / blocked <span class="count" id="degraded-count"></span></h2><div id="degraded"></div></div>
+<div class="section"><h2>✓ Operational <span class="count" id="ok-count"></span></h2><div id="ok"></div></div>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+const G=window.GATEWAY;
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Gateway · Health'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Gateway Health.html'));
+
+const counts={green:0,yellow:0,blue:0,red:0,gray:0,total:G.NODES.length};
+G.NODES.forEach(n=>{
+  const k=n.status==='purple'||n.status==='orange'?'green':n.status;
+  counts[k]=(counts[k]||0)+1;
+});
+document.getElementById('summary').innerHTML=`
+  <div class="card"><div class="lbl">Total nodes</div><div class="val">${counts.total}</div></div>
+  <div class="card green"><div class="lbl">Operational</div><div class="val">${counts.green}</div></div>
+  <div class="card yellow"><div class="lbl">Gated</div><div class="val">${counts.yellow}</div></div>
+  <div class="card blue"><div class="lbl">Read-only</div><div class="val">${counts.blue}</div></div>
+  <div class="card red"><div class="lbl">Blocked</div><div class="val">${counts.red}</div></div>
+  <div class="card gray"><div class="lbl">Not configured</div><div class="val">${counts.gray}</div></div>`;
+
+function bar(seed){
+  const arr=Array(40).fill('').map((_,i)=>{
+    const r=(seed+i*31)%97;
+    if(r<3)return 'r';if(r<8)return 'y';if(r<10)return 'g';return '';
+  });
+  return `<div class="uptime-bar">${arr.map(c=>`<span class="${c}"></span>`).join('')}</div>`;
+}
+function row(n,i){
+  const blockerCls=n.status==='red'?'red':'';
+  return `<div class="health-row">
+    <span class="dot" style="background:${G.statusColor(n.status)};"></span>
+    <span><span class="nm">${n.name}</span> ${n.blocked_reason?`<span class="blocker ${blockerCls}">⚠ ${n.blocked_reason}</span>`:''}</span>
+    <span class="ts">last check ${n.last_checked_at||'12s ago'}</span>
+    <span class="ts">success ${n.lastSuccess||'—'}</span>
+    ${bar(i)}
+    <span class="actions"><button class="btn sm">↻ refresh</button></span>
+  </div>`;
+}
+const degraded=G.NODES.filter(n=>['yellow','red','gray','blue'].includes(n.status));
+const ok=G.NODES.filter(n=>['green','purple','orange'].includes(n.status));
+document.getElementById('degraded').innerHTML=degraded.map(row).join('');
+document.getElementById('ok').innerHTML=ok.map(row).join('');
+document.getElementById('degraded-count').textContent=`${degraded.length} need attention`;
+document.getElementById('ok-count').textContent=`${ok.length} healthy`;
+</script></body></html>

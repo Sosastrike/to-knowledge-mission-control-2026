@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mission Control · Gateway tab</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<link rel="stylesheet" href="shared/node-card.css" />
+<style>
+/* ============================================================
+   Mission Control + Gateway integration mockup
+   Design-only. Shows the Gateway as the new tab replacing
+   Agent Network inside the Mission Control shell.
+   ============================================================ */
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); }
+
+.mc-shell {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+}
+
+/* Top bar — MC chrome */
+.mc-topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center;
+  padding: 0 18px; gap: 18px;
+  background: linear-gradient(180deg, #0c1219 0%, #0a0d12 100%);
+  border-bottom: 1px solid var(--line-2);
+  height: 56px;
+}
+.mc-topbar .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.mc-topbar .brand .logo {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: conic-gradient(from 215deg, #8b5cf6, #5eead4, #fbbf24, #8b5cf6);
+  position: relative;
+}
+.mc-topbar .brand .logo::after { content: ''; position: absolute; inset: 4px; background: var(--bg-1); border-radius: 4px; }
+.mc-topbar .brand .name { font-size: 13px; }
+.mc-topbar .brand .name .sub { color: var(--t-3); font-weight: 400; font-size: 11px; }
+.mc-topbar .crumbs { color: var(--t-3); font-size: 12px; display: flex; gap: 8px; align-items: center; }
+.mc-topbar .crumbs .here { color: var(--t-1); }
+.mc-topbar .crumbs .sep { color: var(--t-5); }
+.mc-topbar .grow { flex: 1; }
+.mc-topbar .search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px;
+  color: var(--t-3); font-size: 12px; min-width: 280px;
+}
+.mc-topbar .bridge-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px 5px 8px; border-radius: 999px;
+  background: var(--st-green-bg); border: 1px solid var(--st-green-bd);
+  color: var(--st-green); font-size: 12px; font-weight: 500;
+}
+.mc-topbar .bridge-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.mc-topbar .owner { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--t-2); }
+.mc-topbar .owner .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #5eead4, #8b5cf6);
+  display: grid; place-items: center; color: #0a0d12; font-weight: 700; font-size: 11px;
+}
+
+/* Workspace rail (left) */
+.mc-rail {
+  background: #07090d;
+  border-right: 1px solid var(--line-2);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 14px 0;
+  gap: 4px;
+}
+.rail-item {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  color: var(--t-3); font-size: 11px; font-weight: 600;
+  cursor: pointer; position: relative;
+}
+.rail-item:hover { background: var(--bg-3); color: var(--t-1); }
+.rail-item.active {
+  background: linear-gradient(180deg, rgba(94,234,212,0.18), rgba(94,234,212,0.06));
+  color: var(--brand-cyan);
+  box-shadow: inset 0 0 0 1px rgba(94,234,212,0.45);
+}
+.rail-item.active::before {
+  content: ''; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 3px;
+  background: var(--brand-cyan); border-radius: 0 3px 3px 0;
+}
+.rail-item .icon { font-family: var(--ff-mono); font-size: 14px; }
+.rail-item .badge {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--st-yellow); box-shadow: 0 0 6px var(--st-yellow);
+}
+.rail-sep { width: 28px; height: 1px; background: var(--line-2); margin: 8px 0; }
+
+/* Main work area */
+.mc-main {
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  overflow: hidden;
+}
+
+/* Tab bar */
+.mc-tabs {
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 18px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line-2);
+  overflow-x: auto;
+}
+.mc-tabs .tab {
+  color: var(--t-3); font-size: 12.5px;
+  padding: 8px 14px; border-radius: 6px;
+  white-space: nowrap; border: 1px solid transparent;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  font-weight: 500;
+}
+.mc-tabs .tab:hover { color: var(--t-1); background: var(--bg-3); }
+.mc-tabs .tab.active {
+  color: var(--t-1); background: var(--bg-3); border-color: var(--line-2);
+}
+.mc-tabs .tab.new {
+  color: var(--brand-cyan);
+}
+.mc-tabs .tab.new::after {
+  content: 'NEW';
+  font-size: 8.5px; letter-spacing: 0.10em; font-weight: 700;
+  color: var(--brand-cyan); background: rgba(94,234,212,0.14);
+  border: 1px solid rgba(94,234,212,0.45);
+  padding: 1px 4px; border-radius: 3px;
+}
+.mc-tabs .tab.legacy {
+  color: var(--t-4);
+  text-decoration: line-through;
+  text-decoration-color: var(--t-5);
+}
+.mc-tabs .tab.legacy::after {
+  content: 'replaced by Gateway';
+  font-size: 9.5px; color: var(--t-5);
+  text-decoration: none; margin-left: 4px;
+  font-weight: 400;
+}
+
+/* Gateway tab content */
+.gw-content {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  overflow: hidden;
+  background: var(--bg-1);
+}
+
+/* Gateway sub-nav (left) */
+.gw-subnav {
+  background: var(--bg-1);
+  border-right: 1px solid var(--line-2);
+  padding: 14px 8px;
+  overflow-y: auto;
+}
+.gw-subnav h5 {
+  margin: 0 0 6px; padding: 0 8px;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--t-4); font-weight: 600;
+}
+.gw-subnav .group { margin-bottom: 14px; }
+.gw-subnav a {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--t-3); font-size: 12.5px;
+  padding: 6px 8px; border-radius: 5px; text-decoration: none;
+  margin-bottom: 1px;
+}
+.gw-subnav a:hover { background: var(--bg-3); color: var(--t-1); }
+.gw-subnav a.active { background: var(--bg-3); color: var(--t-1); border-left: 2px solid var(--brand-cyan); padding-left: 10px; }
+.gw-subnav a .pdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.gw-subnav a .count {
+  margin-left: auto; font-family: var(--ff-mono); font-size: 10px; color: var(--t-4);
+}
+
+/* Gateway viewport */
+.gw-viewport {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(94,234,212,0.06) 0%, transparent 55%),
+    var(--bg-1);
+}
+.gw-viewport::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.55; pointer-events: none;
+}
+
+/* Hero header inside Gateway viewport */
+.gw-hero {
+  position: relative; z-index: 2;
+  padding: 18px 22px 0;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
+}
+.gw-hero h1 {
+  margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 10px;
+}
+.gw-hero h1 .replaces {
+  font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--t-4); font-weight: 500;
+  border: 1px solid var(--line-2); border-radius: 3px; padding: 2px 6px;
+}
+.gw-hero p { margin: 0; color: var(--t-3); font-size: 12.5px; max-width: 720px; }
+.gw-hero .actions { display: flex; gap: 6px; }
+
+/* Lane canvas — slimmed Nucleus-style strip showing Commander -> Lieutenant -> Workers chain */
+.canvas-strip {
+  position: relative; z-index: 2;
+  margin: 18px 22px 0;
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  gap: 18px;
+  align-items: stretch;
+  height: calc(100vh - 56px - 44px - 110px - 32px);
+}
+
+.lane-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.lane-panel header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t-3); font-weight: 600;
+}
+.lane-panel header .count { color: var(--t-4); font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0; }
+.lane-panel .body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Center column = Gateway core hero */
+.center-stack {
+  display: grid; grid-template-rows: auto 1fr auto; gap: 14px;
+  position: relative;
+}
+
+/* Core */
+.core-shell {
+  position: relative;
+  display: grid; place-items: center;
+  background: var(--bg-2);
+  border: 1px solid rgba(94,234,212,0.30);
+  border-radius: var(--r-3);
+  padding: 14px;
+}
+.core-disc {
+  width: 220px; aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(94,234,212,0.30), transparent 65%),
+    radial-gradient(circle at 30% 30%, rgba(167,139,250,0.18), transparent 60%),
+    linear-gradient(180deg, #0a1620 0%, #060c14 100%);
+  border: 1px solid rgba(94, 234, 212, 0.55);
+  box-shadow:
+    0 0 0 6px rgba(94, 234, 212, 0.06),
+    0 0 80px rgba(94, 234, 212, 0.20);
+  position: relative;
+  display: grid; place-items: center;
+}
+.ring { position: absolute; inset: 18px; border-radius: 50%; border: 1px dashed rgba(167,139,250,0.55); animation: spin 28s linear infinite; }
+.ring.inner { inset: 48px; border-color: rgba(94,234,212,0.55); animation: spin 18s linear infinite reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.disp {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 96px; aspect-ratio: 1; border-radius: 50%;
+  background: linear-gradient(180deg, rgba(167,139,250,0.32), rgba(94,234,212,0.22));
+  border: 1px solid rgba(167,139,250,0.65);
+  box-shadow: 0 0 26px rgba(167,139,250,0.45);
+  display: grid; place-items: center; text-align: center; z-index: 4;
+}
+.disp .gly { font-family: var(--ff-mono); font-size: 18px; color: var(--brand-cyan); }
+.disp .lbl { font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--t-2); margin-top: 1px; }
+.disp .ld  { font-family: var(--ff-mono); font-size: 9px; color: var(--brand-cyan); margin-top: 4px; }
+
+.commander-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+/* Bottom strip — engines + workers */
+.bottom-strip {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.bottom-strip h5 {
+  margin: 0 0 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--t-3); font-weight: 600;
+}
+.engine-pills, .worker-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.epill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--bg-3); border: 1px solid var(--line-2);
+  font-size: 11px; color: var(--t-2);
+}
+.epill .pdot { width: 6px; height: 6px; border-radius: 50%; }
+.epill .usd { font-family: var(--ff-mono); font-size: 10px; color: var(--t-4); margin-left: 2px; }
+
+/* Mini node cards inside lanes */
+.mini-node {
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+  padding: 8px 10px; display: grid; gap: 4px;
+  position: relative; cursor: pointer;
+}
+.mini-node:hover { border-color: var(--line-strong); }
+.mini-node::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+.mini-node.green::before  { background: var(--st-green); }
+.mini-node.yellow::before { background: var(--st-yellow); }
+.mini-node.blue::before   { background: var(--st-blue); }
+.mini-node.red::before    { background: var(--st-red); }
+.mini-node.gray::before   { background: var(--st-gray); }
+.mini-node.purple::before { background: var(--st-purple); }
+.mini-node.orange::before { background: var(--st-orange); }
+.mini-node .nm { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.mini-node .nm .pdot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+.mini-node .role { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t-4); font-weight: 600; }
+.mini-node .meta { font-size: 10.5px; color: var(--t-4); font-family: var(--ff-mono); }
+.mini-node .blocker {
+  font-size: 10px; color: var(--st-yellow); background: var(--st-yellow-bg);
+  border: 1px solid var(--st-yellow-bd); border-radius: 4px;
+  padding: 3px 5px; line-height: 1.3;
+}
+.mini-node.red .blocker { color: var(--st-red); background: var(--st-red-bg); border-color: var(--st-red-bd); }
+.mini-node.gray .blocker { color: var(--t-3); background: var(--st-gray-bg); border-color: var(--st-gray-bd); }
+.mini-node .lock {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 9px; color: var(--st-yellow);
+  background: var(--st-yellow-bg); border: 1px solid var(--st-yellow-bd);
+  padding: 1px 4px; border-radius: 3px;
+}
+
+/* Connection lines — purely decorative, hint at flow */
+.flow-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  font-family: var(--ff-mono); color: var(--brand-cyan); font-size: 14px;
+  opacity: 0.5;
+}
+.flow-arrow.left  { left: -16px; }
+.flow-arrow.right { right: -16px; }
+
+/* Footer banner — port note */
+.port-note {
+  position: absolute; bottom: 14px; left: 22px; right: 22px; z-index: 3;
+  background: rgba(13,18,26,0.90); backdrop-filter: blur(6px);
+  border: 1px solid rgba(94,234,212,0.30); border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 11.5px; color: var(--t-3);
+  display: flex; gap: 14px; align-items: center; justify-content: space-between;
+}
+.port-note strong { color: var(--brand-cyan); font-weight: 600; }
+.port-note .kbds { display: flex; gap: 6px; }
+.port-note .kbd {
+  font-family: var(--ff-mono); font-size: 9.5px;
+  padding: 1px 5px; border-radius: 3px;
+  background: var(--bg-4); border: 1px solid var(--line-3);
+  color: var(--t-2);
+}
+
+/* Tony retired banner inside the Brain group */
+.tony-retired {
+  background: var(--bg-3);
+  border: 1px dashed var(--line-3); border-radius: var(--r-2);
+  padding: 8px 10px;
+  font-size: 11px; color: var(--t-4);
+  display: grid; gap: 3px;
+}
+.tony-retired .head { color: var(--t-3); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.tony-retired .head::before {
+  content: 'archived'; font-size: 8.5px; letter-spacing: 0.12em;
+  background: var(--bg-4); border: 1px solid var(--line-3); color: var(--t-3);
+  padding: 1px 5px; border-radius: 3px;
+}
+</style>
+</head>
+<body>
+
+<div class="mc-shell">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="mc-topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="name">To Knowledge<br/><span class="sub">Mission Control</span></div>
+    </div>
+    <div class="crumbs">
+      <span>Workspace</span>
+      <span class="sep">›</span>
+      <span class="here">Gateway</span>
+    </div>
+    <div class="grow"></div>
+    <div class="search">⌕ &nbsp; Search nodes, routes, audit…  <span class="kbd" style="margin-left:auto;font-family:var(--ff-mono);font-size:9.5px;padding:1px 5px;border-radius:3px;background:var(--bg-4);border:1px solid var(--line-3);color:var(--t-2);">⌘K</span></div>
+    <div class="bridge-pill"><span class="dot"></span>Bridge Session · 24m left</div>
+    <div class="owner">
+      <div class="avatar">L</div>
+      <div><div style="color:var(--t-1);font-weight:500">Luis</div><div style="color:var(--t-3);font-size:11px">commander seat</div></div>
+    </div>
+  </header>
+
+  <!-- ============ WORKSPACE RAIL ============ -->
+  <aside class="mc-rail">
+    <div class="rail-item" title="Dashboard"><span class="icon">▦</span></div>
+    <div class="rail-item" title="Brain Sync"><span class="icon">◈</span></div>
+    <div class="rail-item" title="Mirofish"><span class="icon">≋</span></div>
+    <div class="rail-item" title="Meetings"><span class="icon">◐</span></div>
+    <div class="rail-item" title="Channels"><span class="icon">⌬</span></div>
+    <div class="rail-item" title="Alerts"><span class="icon">!</span><span class="badge"></span></div>
+    <div class="rail-item" title="Email"><span class="icon">✉</span></div>
+    <div class="rail-sep"></div>
+    <div class="rail-item active" title="Gateway"><span class="icon">⌖</span></div>
+    <div class="rail-sep"></div>
+    <div class="rail-item" title="Settings"><span class="icon">⚙</span></div>
+  </aside>
+
+  <!-- ============ MAIN AREA ============ -->
+  <main class="mc-main">
+
+    <!-- Tab bar — shows the Gateway tab as ACTIVE, Agent Network as legacy -->
+    <nav class="mc-tabs">
+      <div class="tab">Dashboard</div>
+      <div class="tab">Brain Sync</div>
+      <div class="tab">Mirofish</div>
+      <div class="tab">Meetings</div>
+      <div class="tab">Channels</div>
+      <div class="tab">Alerts</div>
+      <div class="tab">Email Profiles</div>
+      <div class="tab legacy">Agent Network</div>
+      <div class="tab active new">⌖ Gateway</div>
+      <div class="tab">Settings</div>
+    </nav>
+
+    <!-- Gateway tab content -->
+    <section class="gw-content">
+
+      <!-- Gateway sub-nav -->
+      <aside class="gw-subnav">
+        <div class="group">
+          <h5>Surfaces</h5>
+          <a href="Gateway Overview.html" class="active">⌖ Nucleus <span class="count">live</span></a>
+          <a href="Gateway Routes.html">→ Routes</a>
+          <a href="Gateway Registry.html">▦ Registry <span class="count">22</span></a>
+          <a href="Gateway Policies.html">⚖ Policies</a>
+          <a href="Gateway Health.html">♥ Health</a>
+          <a href="Dispatcher.html">⌬ Dispatcher</a>
+          <a href="Token Governor.html">$ Token Governor</a>
+          <a href="Bridge Session Flow.html">⊞ Bridge Session</a>
+        </div>
+        <div class="group">
+          <h5>Command tree</h5>
+          <a href="Agent Zero Commander.html"><span class="pdot" style="background:var(--st-purple)"></span> Agent Zero</a>
+          <a href="Hermes Lieutenant.html"><span class="pdot" style="background:var(--st-yellow)"></span> Hermes <span class="count">gated</span></a>
+        </div>
+        <div class="group">
+          <h5>Engines & workers</h5>
+          <a href="OpenCloud Workers.html"><span class="pdot" style="background:var(--st-orange)"></span> OpenCloud</a>
+          <a href="OpenClaw+ Skills.html"><span class="pdot" style="background:var(--st-orange)"></span> OpenClaw+</a>
+          <a href="Brain Systems.html"><span class="pdot" style="background:var(--st-green)"></span> Brain</a>
+          <a href="Delivery Connectors.html"><span class="pdot" style="background:var(--st-yellow)"></span> Delivery</a>
+        </div>
+      </aside>
+
+      <!-- Gateway viewport -->
+      <div class="gw-viewport">
+
+        <!-- Hero -->
+        <div class="gw-hero">
+          <div>
+            <h1>Gateway · Nucleus <span class="replaces">replaces Agent Network</span></h1>
+            <p>Single hop for every owner intent. Discovery-first, RBAC-respecting, Bridge-Session-gated, fully audited. Agent Zero commands · Hermes (gated) lieutenant · OpenCloud worker engine.</p>
+          </div>
+          <div class="actions">
+            <a href="Gateway Overview.html" style="text-decoration:none;color:inherit;font-family:inherit;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--line-3);background:var(--bg-3);color:var(--t-1);">Open full Nucleus →</a>
+            <a href="Dispatcher.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid rgba(255,255,255,0.18);background:linear-gradient(180deg,#8b5cf6,#6d3fe8);color:#fff;">Inspect Dispatcher</a>
+          </div>
+        </div>
+
+        <!-- Three-column condensed canvas: Inputs · Core · Integrations -->
+        <div class="canvas-strip">
+
+          <!-- LEFT: Inputs + Brain summary -->
+          <div class="lane-panel">
+            <header>Inputs &amp; Brain<span class="count">9 + 5</span></header>
+            <div class="body">
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Owner Commands</div>
+                <div class="role">Input</div>
+                <div class="meta">live</div>
+              </div>
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Telegram</div>
+                <span class="lock">🔒</span>
+                <div class="role">Input · bidirectional</div>
+                <div class="meta">1m ago</div>
+              </div>
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>AgentMail inbound</div>
+                <div class="role">Input</div>
+                <div class="meta">3m ago</div>
+              </div>
+              <div class="mini-node blue">
+                <div class="nm"><span class="pdot" style="background:var(--st-blue)"></span>Workflow triggers</div>
+                <div class="role">Input · read-only</div>
+                <div class="blocker">Gated by Hermes proof.</div>
+              </div>
+
+              <div style="height:8px;"></div>
+              <div style="font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--t-4);font-weight:600;padding:0 2px;">Brain</div>
+
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Obsidian Vault</div>
+                <span class="lock">🔒</span>
+                <div class="role">Brain</div>
+                <div class="meta">4m ago</div>
+              </div>
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>MemPalace</div>
+                <span class="lock">🔒</span>
+                <div class="role">Brain · associative</div>
+                <div class="meta">1m ago</div>
+              </div>
+              <div class="mini-node yellow">
+                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>Build-Wiki</div>
+                <span class="lock">🔒</span>
+                <div class="role">Brain · docs</div>
+                <div class="blocker">Bridge required for Run Now.</div>
+              </div>
+
+              <div class="tony-retired">
+                <div class="head">Tony memory</div>
+                <div>Read-only inheritance. Provenance source for Agent Zero. No commander surface.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: Gateway core + commander row -->
+          <div class="center-stack">
+
+            <!-- Commander + Lieutenant -->
+            <div class="commander-row">
+              <div class="mini-node purple" style="background:linear-gradient(180deg,rgba(167,139,250,0.10),var(--bg-3));">
+                <div class="nm"><span class="pdot" style="background:var(--st-purple)"></span>Agent Zero <span style="margin-left:auto;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--brand-violet);">Commander</span></div>
+                <div class="role">All intents land here</div>
+                <div class="meta">memory · Tony R/O · last 2m ago</div>
+              </div>
+              <div class="mini-node yellow" style="background:linear-gradient(180deg,rgba(245,181,10,0.06),var(--bg-3));">
+                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>Hermes <span style="margin-left:auto;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--st-yellow);">Lieutenant</span></div>
+                <span class="lock">🔒</span>
+                <div class="role">Skill / workflow specialist</div>
+                <div class="blocker">Yellow until <code style="color:var(--t-1);font-family:var(--ff-mono);">hermes_called:true</code> is proven.</div>
+              </div>
+            </div>
+
+            <!-- Core disc -->
+            <div class="core-shell">
+              <span class="flow-arrow left">⟶</span>
+              <span class="flow-arrow right">⟶</span>
+              <div class="core-disc">
+                <div class="ring"></div>
+                <div class="ring inner"></div>
+                <div class="disp">
+                  <div>
+                    <div class="gly">⌖</div>
+                    <div class="lbl">Dispatcher</div>
+                    <div class="ld">load 38%</div>
+                  </div>
+                </div>
+              </div>
+              <div style="position:absolute;bottom:10px;left:14px;right:14px;display:flex;gap:8px;justify-content:space-between;font-size:10.5px;color:var(--t-4);font-family:var(--ff-mono);">
+                <span>1,247 req today</span>
+                <span>312 fan-out</span>
+                <span>18 denied</span>
+              </div>
+            </div>
+
+            <!-- Bottom strip: engine + worker pills -->
+            <div class="bottom-strip">
+              <div>
+                <h5>Engines (today)</h5>
+                <div class="engine-pills">
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Claude Sonnet<span class="usd">$6.40</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Claude Haiku<span class="usd">$0.85</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-yellow)"></span>GPT-4o<span class="usd">$11.20</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Codex<span class="usd">$1.10</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Gemini<span class="usd">$1.80</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Groq<span class="usd">$0.18</span></span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Ollama<span class="usd">local</span></span>
+                  <span class="epill" style="opacity:0.55"><span class="pdot" style="background:var(--st-gray)"></span>NVIDIA<span class="usd">unconfigured</span></span>
+                </div>
+              </div>
+              <div>
+                <h5>Mini-agents (workers)</h5>
+                <div class="worker-pills">
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Researcher</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Crawler</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Classifier</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Writer</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Coder</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-yellow)"></span>Reviewer</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Archivist</span>
+                  <span class="epill"><span class="pdot" style="background:var(--st-green)"></span>Sub-dispatcher</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Integrations & Workers -->
+          <div class="lane-panel">
+            <header>Integrations &amp; Workers<span class="count">14</span></header>
+            <div class="body">
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>MCP Servers</div>
+                <span class="lock">🔒</span>
+                <div class="role">Discovery + execute</div>
+                <div class="meta">live</div>
+              </div>
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Tools Registry</div>
+                <div class="role">CRUD · search · file ops</div>
+                <div class="meta">12s ago</div>
+              </div>
+              <div class="mini-node yellow">
+                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>AgentMail</div>
+                <span class="lock">🔒</span>
+                <div class="role">Channel · send</div>
+                <div class="blocker">Bridge required for outbound.</div>
+              </div>
+              <div class="mini-node yellow">
+                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>Zapier</div>
+                <span class="lock">🔒</span>
+                <div class="role">Tool · per-exec scope</div>
+                <div class="blocker">Owner pre-approval per execution.</div>
+              </div>
+              <div class="mini-node orange">
+                <div class="nm"><span class="pdot" style="background:var(--st-orange)"></span>OpenCloud Workers</div>
+                <span class="lock">🔒</span>
+                <div class="role">Worker / Runtime engine</div>
+                <div class="meta">parent · 7 children</div>
+              </div>
+              <div class="mini-node orange">
+                <div class="nm"><span class="pdot" style="background:var(--st-orange)"></span>OpenClaw+</div>
+                <div class="role">Skills runtime</div>
+                <div class="meta">2m ago</div>
+              </div>
+              <div class="mini-node red">
+                <div class="nm"><span class="pdot" style="background:var(--st-red)"></span>Fork 2 · SMB</div>
+                <div class="role">OpenCloud child</div>
+                <div class="blocker">SMB connector unavailable. Fix path: SMB mount + creds.</div>
+              </div>
+              <div class="mini-node green">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Reports</div>
+                <span class="lock">🔒</span>
+                <div class="role">Builder + dispatcher</div>
+                <div class="meta">3m ago</div>
+              </div>
+              <div class="mini-node gray">
+                <div class="nm"><span class="pdot" style="background:var(--st-gray)"></span>NVIDIA NIM</div>
+                <div class="role">Reserved</div>
+                <div class="blocker">API key not registered.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Port note -->
+        <div class="port-note">
+          <span><strong>Integration plan:</strong> Gateway tab replaces Agent Network. Old Agent Network surfaces stay during cutover. Tony surfaces archived to memory provenance only.</span>
+          <span class="kbds"><span class="kbd">G</span><span class="kbd">N</span><span style="color:var(--t-4);">jump to Nucleus</span></span>
+        </div>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+</body>
+</html>

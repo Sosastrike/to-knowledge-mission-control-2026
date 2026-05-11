@@ -128,6 +128,25 @@ function buildDesignerMissionControlCsp(): string {
   ].join('; ')
 }
 
+function buildGatewayMockCsp(): string {
+  return [
+    `default-src 'self'`,
+    `base-uri 'self'`,
+    `object-src 'none'`,
+    `frame-ancestors 'self'`,
+    `script-src 'self' 'unsafe-inline'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `style-src-elem 'self' 'unsafe-inline'`,
+    `style-src-attr 'unsafe-inline'`,
+    `connect-src 'self'`,
+    `img-src 'self' data: blob:`,
+    `font-src 'self' data:`,
+    `frame-src 'self'`,
+    `worker-src 'self' blob:`,
+    `form-action 'self'`,
+  ].join('; ')
+}
+
 function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce?: string): NextResponse {
   const requestId = crypto.randomUUID()
   response.headers.set('X-Request-Id', requestId)
@@ -136,6 +155,12 @@ function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
   const pathname = _request.nextUrl.pathname
+  if (pathname === '/design/gateway' || pathname.startsWith('/design/gateway/')) {
+    response.headers.set('Content-Security-Policy', buildGatewayMockCsp())
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+    return response
+  }
+
   if (pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')) {
     response.headers.set('Content-Security-Policy', buildDesignerMissionControlCsp())
   } else {

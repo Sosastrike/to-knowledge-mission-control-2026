@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gateway · Agent Hub · Paperclip</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<style>
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); margin: 0; }
+
+.gw-crumbs { display:flex; align-items:center; gap:10px; padding:14px 24px; border-bottom:1px solid var(--line-2); background:var(--bg-1); font-size:12px; color:var(--t-3); }
+.gw-crumbs a { color:var(--t-3); text-decoration:none; }
+.gw-crumbs a:hover { color:var(--t-1); }
+.gw-crumbs .here { color:var(--t-1); font-weight:500; }
+.gw-crumbs .sep { color:var(--t-5); }
+
+/* hero */
+.hero { padding:24px 28px; border-bottom:1px solid var(--line-2); background:linear-gradient(180deg, rgba(167,139,250,0.06), var(--bg-1) 60%); display:grid; grid-template-columns:auto 1fr auto; gap:22px; align-items:center; }
+.hero .glyph { width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg, #c4b5fd, #8b5cf6); display:grid; place-items:center; font-family:var(--ff-mono); font-size:28px; font-weight:700; color:#0a0d12; box-shadow:0 0 0 1px rgba(167,139,250,0.45), 0 12px 30px rgba(139,92,246,0.20); }
+.hero h1 { margin:0 0 4px; font-size:26px; letter-spacing:-0.01em; display:flex; align-items:center; gap:12px; }
+.hero h1 .ver { font-family:var(--ff-mono); font-size:12px; color:var(--t-4); font-weight:400; }
+.hero .tag { color:var(--st-purple); font-size:13px; font-weight:600; letter-spacing:0.04em; }
+.hero .lede { margin:6px 0 0; color:var(--t-3); font-size:12.5px; max-width:760px; line-height:1.55; }
+
+.hero .right { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.btn { font-family:inherit; font-size:12px; padding:9px 14px; border-radius:6px; cursor:pointer; background:var(--bg-3); border:1px solid var(--line-3); color:var(--t-1); display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { border-color:var(--line-strong); }
+.btn.primary { background:rgba(94,234,212,0.12); border-color:rgba(94,234,212,0.45); color:var(--brand-cyan); }
+.btn.gated { border-color:var(--st-yellow-bd); color:var(--st-yellow); }
+.btn.gated::before { content:'🔒'; font-size:11px; }
+.btn.danger { border-color:var(--st-red-bd); color:var(--st-red); }
+
+/* status strip */
+.strip { display:grid; grid-template-columns:repeat(7, 1fr); gap:0; background:var(--bg-1); border-bottom:1px solid var(--line-2); }
+.strip .cell { padding:14px 18px; border-right:1px solid var(--line-1); }
+.strip .cell:last-child { border-right:none; }
+.strip .l { font-size:9.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-4); font-weight:600; margin-bottom:5px; }
+.strip .v { font-family:var(--ff-mono); font-size:18px; color:var(--t-1); }
+.strip .v small { font-size:12px; color:var(--t-4); margin-left:3px; }
+.strip .v.green  { color:var(--st-green); }
+.strip .v.yellow { color:var(--st-yellow); }
+.strip .v.red    { color:var(--st-red); }
+
+/* layout */
+.layout { display:grid; grid-template-columns:1fr 360px; min-height: calc(100vh - 49px - 130px - 70px); background:var(--bg-1); }
+.canvas { padding:24px 28px; overflow-y:auto; }
+.side { background:var(--bg-1); border-left:1px solid var(--line-2); padding:22px 20px; overflow-y:auto; display:grid; gap:18px; align-content:start; }
+
+.sec-head { display:flex; align-items:baseline; gap:12px; margin:0 0 12px; }
+.sec-head h3 { margin:0; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-3); font-weight:600; }
+.sec-head .meta { font-family:var(--ff-mono); font-size:11px; color:var(--t-4); }
+.sec-head .filler { flex:1; height:1px; background:var(--line-2); }
+
+/* Workforce ribbon */
+.ribbon { display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:22px; }
+.ribbon-cell { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); padding:14px 16px; }
+.ribbon-cell .l { font-size:9.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-4); font-weight:600; margin-bottom:6px; }
+.ribbon-cell .v { font-family:var(--ff-mono); font-size:22px; color:var(--t-1); }
+.ribbon-cell .v small { font-size:13px; color:var(--t-4); margin-left:3px; }
+.ribbon-cell .sub { font-size:10.5px; color:var(--t-3); margin-top:4px; }
+
+/* Two-column row */
+.two-col { display:grid; grid-template-columns:1.4fr 1fr; gap:14px; margin-bottom:22px; }
+
+/* Co-worker table */
+.panel { background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-3); overflow:hidden; }
+.panel header { padding:12px 16px; border-bottom:1px solid var(--line-2); display:flex; align-items:center; justify-content:space-between; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--t-3); font-weight:600; }
+.panel header .meta { font-family:var(--ff-mono); font-size:11px; color:var(--t-4); letter-spacing:0; }
+.panel .body { padding:14px 16px; }
+
+.tbl { width:100%; border-collapse:separate; border-spacing:0; font-size:11.5px; }
+.tbl th { text-align:left; font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--t-4); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line-2); }
+.tbl td { padding:9px 10px; border-bottom:1px solid var(--line-1); color:var(--t-2); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl td.mono { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-3); }
+.tbl td.name { color:var(--t-1); font-weight:500; }
+.tbl .pri { font-family:var(--ff-mono); font-size:9.5px; padding:1px 5px; border-radius:3px; font-weight:700; }
+.tbl .pri.P1 { color:var(--st-red);    background:var(--st-red-bg); }
+.tbl .pri.P2 { color:var(--st-orange); background:var(--st-orange-bg); }
+.tbl .pri.P3 { color:var(--t-3);       background:var(--bg-4); }
+.state-pill { font-family:var(--ff-mono); font-size:9.5px; letter-spacing:0.10em; text-transform:uppercase; padding:1px 6px; border-radius:3px; font-weight:700; }
+.state-pill.pending { color:var(--st-yellow); background:var(--st-yellow-bg); border:1px solid var(--st-yellow-bd); }
+.state-pill.active  { color:var(--st-green);  background:var(--st-green-bg);  border:1px solid var(--st-green-bd); }
+.state-pill.idle    { color:var(--t-4);       background:var(--bg-4); }
+
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+/* Approval card */
+.approval { background:var(--bg-3); border:1px solid var(--st-yellow-bd); border-radius:var(--r-2); padding:12px 14px; display:grid; gap:8px; }
+.approval .hd { display:flex; align-items:center; justify-content:space-between; }
+.approval .ttl { font-size:13px; font-weight:600; color:var(--t-1); }
+.approval .meta { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-4); }
+.approval .scopes { display:flex; gap:5px; flex-wrap:wrap; }
+.approval .scope { font-family:var(--ff-mono); font-size:10px; padding:2px 6px; border-radius:3px; background:var(--bg-4); color:var(--t-2); }
+.approval .row { display:flex; gap:6px; }
+
+.empty-mini { padding:18px; text-align:center; color:var(--t-4); font-size:11.5px; border:1px dashed var(--line-2); border-radius:var(--r-2); }
+
+/* Localhost embed */
+.localhost-embed { background:var(--bg-3); border:1px dashed var(--line-3); border-radius:var(--r-2); padding:18px; display:grid; gap:10px; place-items:center; text-align:center; }
+.localhost-embed.unsafe { border-color:var(--st-yellow-bd); background:rgba(245,181,10,0.04); }
+.localhost-embed .url { font-family:var(--ff-mono); font-size:11.5px; color:var(--brand-cyan); background:var(--bg-4); padding:5px 10px; border-radius:4px; }
+.localhost-embed .desc { font-size:11.5px; color:var(--t-3); max-width:380px; line-height:1.5; }
+.localhost-embed.unsafe .desc { color:var(--st-yellow); }
+
+/* Auth chips */
+.auth-grid { display:grid; gap:8px; }
+.auth-row { display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:center; padding:9px 12px; background:var(--bg-3); border:1px solid var(--line-2); border-radius:var(--r-2); font-size:11.5px; }
+.auth-row .ico { width:24px; height:24px; border-radius:5px; background:var(--bg-4); display:grid; place-items:center; font-family:var(--ff-mono); font-size:11px; font-weight:700; }
+.auth-row .nm { color:var(--t-1); }
+.auth-row .acc { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-3); display:block; margin-top:1px; }
+.auth-row .state { font-family:var(--ff-mono); font-size:9.5px; letter-spacing:0.10em; text-transform:uppercase; padding:2px 7px; border-radius:3px; font-weight:700; }
+.auth-row .state.ok      { color:var(--st-green);  background:var(--st-green-bg);  border:1px solid var(--st-green-bd); }
+.auth-row .state.pending { color:var(--st-yellow); background:var(--st-yellow-bg); border:1px solid var(--st-yellow-bd); }
+
+/* OpenClaw handoff schema */
+.schema-box { background:var(--bg-3); border:1px solid var(--line-2); border-radius:var(--r-2); padding:12px 14px; }
+.schema-row { display:flex; gap:10px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line-1); font-size:11.5px; }
+.schema-row:last-child { border-bottom:none; }
+.schema-row .k { font-family:var(--ff-mono); color:var(--brand-cyan); font-size:10.5px; min-width:140px; }
+.schema-row .desc { color:var(--t-3); font-size:10.5px; }
+
+.handoff-arrow { display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin:10px 0 14px; }
+.handoff-arrow .box { background:var(--bg-3); border:1px solid var(--line-2); border-radius:var(--r-2); padding:10px 14px; text-align:center; }
+.handoff-arrow .box .nm { font-size:13px; font-weight:600; color:var(--t-1); }
+.handoff-arrow .box .role { font-size:10.5px; color:var(--t-3); margin-top:2px; }
+.handoff-arrow .box.from { border-color:rgba(167,139,250,0.45); background:rgba(167,139,250,0.06); }
+.handoff-arrow .box.to   { border-color:rgba(255,138,61,0.45); background:rgba(255,138,61,0.06); }
+.handoff-arrow .arrow { font-family:var(--ff-mono); color:var(--t-4); font-size:13px; }
+
+/* Bridge modal */
+.modal-back { position:fixed; inset:0; background:rgba(7,10,14,0.78); display:none; align-items:center; justify-content:center; z-index:50; }
+.modal-back.show { display:flex; }
+.modal { background:var(--bg-2); border:1px solid var(--line-3); border-radius:var(--r-4); width:520px; max-width:92vw; padding:0; box-shadow:var(--shadow-3); overflow:hidden; }
+.modal header { padding:18px 22px; border-bottom:1px solid var(--line-2); display:flex; align-items:center; gap:12px; }
+.modal header .lock { width:32px; height:32px; border-radius:8px; background:var(--st-yellow-bg); border:1px solid var(--st-yellow-bd); color:var(--st-yellow); display:grid; place-items:center; font-size:14px; }
+.modal header h2 { margin:0; font-size:16px; }
+.modal header h2 small { display:block; font-size:11px; color:var(--t-3); font-weight:400; margin-top:2px; }
+.modal .body { padding:20px 22px; display:grid; gap:14px; font-size:12.5px; color:var(--t-2); line-height:1.55; }
+.modal .body .scopes { display:flex; gap:6px; flex-wrap:wrap; }
+.modal .body .scope { font-family:var(--ff-mono); font-size:10.5px; padding:3px 8px; border-radius:4px; background:var(--bg-3); color:var(--t-2); border:1px solid var(--line-2); }
+.modal .body .ttl-row { display:flex; justify-content:space-between; padding:10px 12px; background:var(--bg-3); border-radius:var(--r-2); border:1px solid var(--line-2); font-family:var(--ff-mono); font-size:11.5px; }
+.modal footer { padding:14px 22px; border-top:1px solid var(--line-2); display:flex; gap:8px; justify-content:flex-end; }
+
+/* Mobile layout */
+@media (max-width: 1100px) {
+  .layout { grid-template-columns:1fr; }
+  .side { border-left:none; border-top:1px solid var(--line-2); }
+  .ribbon { grid-template-columns:repeat(3, 1fr); }
+  .strip { grid-template-columns:repeat(3, 1fr); }
+  .strip .cell { border-bottom:1px solid var(--line-1); }
+  .two-col { grid-template-columns:1fr; }
+  .hero { grid-template-columns:auto 1fr; }
+  .hero .right { grid-column:1/-1; justify-content:flex-start; }
+}
+
+footer.repo-note { padding:14px 24px; border-top:1px solid var(--line-2); background:var(--bg-1); display:flex; justify-content:space-between; gap:14px; font-size:11px; color:var(--t-4); }
+footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-3); background:var(--bg-3); padding:1px 5px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="gw-crumbs">
+  <a href="index.html">Gateway design</a>
+  <span class="sep">›</span>
+  <a href="Gateway Overview.html">Nucleus</a>
+  <span class="sep">›</span>
+  <a href="Agent Hub.html">Agent Hub</a>
+  <span class="sep">›</span>
+  <span class="here">Paperclip</span>
+  <span style="flex:1"></span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/agents/paperclip</span>
+</div>
+
+<header class="hero">
+  <div class="glyph">P</div>
+  <div>
+    <h1>Paperclip <span class="ver">persona:paperclip@v0.2 · workforce control plane</span></h1>
+    <div class="tag">Sits before OpenClaw+ · organizes the workforce, not the runtime</div>
+    <p class="lede">Paperclip is the workforce manager. It owns co-worker registration, the task queue, daily budgets, heartbeats, approvals, and work products — and hands fully-prepped tasks to OpenClaw+, which runs the actual mini-agent execution. Agent Zero remains commander; Hermes builds skills and workflows; Pi recommends routes. Paperclip does not execute, it organizes.</p>
+  </div>
+  <div class="right">
+    <button class="btn primary" onclick="alert('Hybrid embed: not safe yet — opening in new tab is the supported path until Tailnet handshake passes.')">Open localhost</button>
+    <button class="btn">Send command</button>
+    <button class="btn">Pause queue</button>
+    <button class="btn gated" onclick="openBridge()">Bridge Session</button>
+    <button class="btn gated danger">Restart</button>
+    <button class="btn">Audit</button>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="cell"><div class="l">Status</div><div class="v yellow">GATED</div></div>
+  <div class="cell"><div class="l">Bridge</div><div class="v yellow">REQUIRED</div></div>
+  <div class="cell"><div class="l">R · W · X</div><div class="v">R · W · <span style="color:var(--t-5);">X</span></div></div>
+  <div class="cell"><div class="l">Localhost</div><div class="v" style="font-size:12px;">paperclip.tail-scale.ts.net</div></div>
+  <div class="cell"><div class="l">Today spend</div><div class="v">$0.00<small>/ $5.00</small></div></div>
+  <div class="cell"><div class="l">Heartbeat</div><div class="v yellow">PENDING</div></div>
+  <div class="cell"><div class="l">Repo grounding</div><div class="v" style="font-size:12px;color:var(--t-3);">PENDING</div></div>
+</div>
+
+<div class="layout">
+  <main class="canvas">
+
+    <!-- Workforce ribbon -->
+    <div class="sec-head"><h3>Workforce snapshot</h3><span class="meta">heartbeats: 60s window</span><span class="filler"></span></div>
+    <div class="ribbon" id="ribbon"></div>
+
+    <!-- Localhost + auth -->
+    <div class="two-col">
+      <div class="panel">
+        <header>Localhost · hybrid embed<span class="meta">paperclip.tail-scale.ts.net</span></header>
+        <div class="body">
+          <div class="localhost-embed unsafe">
+            <span class="url">paperclip.tail-scale.ts.net</span>
+            <div class="desc">Iframe not yet safe — Tailnet handshake unproven. Mission Control will not bypass Paperclip's own auth. Use <strong>Open in new tab</strong> until heartbeat is live, then re-evaluate.</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn">Open in new tab</button>
+              <button class="btn">Status only</button>
+              <button class="btn">Recheck handshake</button>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--t-4);margin-top:10px;line-height:1.5;">
+            <strong style="color:var(--t-3);">Hybrid rule.</strong> Native MC view is the default. Iframe preview becomes available only when (a) the agent serves a same-origin or proxied path through Gateway, (b) the agent's own auth is preserved, and (c) the agent declares <code style="font-family:var(--ff-mono);color:var(--brand-cyan);">embed_safe: true</code>.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <header>Auth · accounts<span class="meta">last check 13:55</span></header>
+        <div class="body">
+          <div class="auth-grid" id="auth-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Co-workers -->
+    <div class="sec-head"><h3>Co-workers · registered</h3><span class="meta">paperclip is the manager · openclaw+ runs the work</span><span class="filler"></span></div>
+    <div class="panel" style="margin-bottom:22px;">
+      <header>6 co-workers · 0 active<span class="meta">cap 24 mini-agents in flight</span></header>
+      <div class="body" style="padding:0;">
+        <table class="tbl">
+          <thead>
+            <tr><th>Co-worker</th><th>Role</th><th>Model</th><th>Tasks</th><th>Last seen</th><th>Status</th></tr>
+          </thead>
+          <tbody id="cw-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Task queue + Approvals -->
+    <div class="two-col">
+      <div class="panel">
+        <header>Task queue<span class="meta">P1 first · workforce-ledger.tasks</span></header>
+        <div class="body" style="padding:0;">
+          <table class="tbl">
+            <thead><tr><th>ID</th><th>Title</th><th>Assigned</th><th>Pri</th><th>State</th></tr></thead>
+            <tbody id="tk-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <header>Approvals · pending<span class="meta">awaiting bridge</span></header>
+        <div class="body" id="ap-list"></div>
+      </div>
+    </div>
+
+    <!-- OpenClaw+ handoff -->
+    <div class="sec-head"><h3>OpenClaw+ handoff</h3><span class="meta">paperclip → openclaw+ · contract v0.3</span><span class="filler"></span></div>
+
+    <div class="panel" style="margin-bottom:22px;">
+      <header>Handoff direction<span class="meta">workforce → runtime</span></header>
+      <div class="body">
+        <div class="handoff-arrow">
+          <div class="box from">
+            <div class="nm" style="color:var(--st-purple);">Paperclip</div>
+            <div class="role">Workforce Control Plane</div>
+            <div class="role" style="font-family:var(--ff-mono);font-size:10px;margin-top:6px;">prepares · scopes · approves</div>
+          </div>
+          <div class="arrow">━━ contract v0.3 ━━▶</div>
+          <div class="box to">
+            <div class="nm" style="color:var(--st-orange);">OpenClaw+</div>
+            <div class="role">Runtime · skills · mini-agent execution</div>
+            <div class="role" style="font-family:var(--ff-mono);font-size:10px;margin-top:6px;">runs · returns work products</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div>
+            <h5 style="margin:0 0 8px;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--t-3);font-weight:600;">Handoff schema</h5>
+            <div class="schema-box">
+              <div class="schema-row"><span class="k">task_id</span><span class="desc">stable id assigned by Paperclip</span></div>
+              <div class="schema-row"><span class="k">co_worker</span><span class="desc">which registered co-worker owns it</span></div>
+              <div class="schema-row"><span class="k">budget_usd</span><span class="desc">hard cap deducted from agent's daily envelope</span></div>
+              <div class="schema-row"><span class="k">tools[]</span><span class="desc">whitelist passed through to OpenClaw+</span></div>
+              <div class="schema-row"><span class="k">memory_scope</span><span class="desc">which memory store(s) the runtime may R/W</span></div>
+              <div class="schema-row"><span class="k">success_predicate</span><span class="desc">structured check Paperclip uses to mark task done</span></div>
+            </div>
+          </div>
+          <div>
+            <h5 style="margin:0 0 8px;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--t-3);font-weight:600;">Recent handoffs</h5>
+            <div class="empty-mini">No handoffs yet — workforce ledger not bootstrapped. Approve <strong style="color:var(--t-1);">ap_1</strong> to seed the first one.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision trace -->
+    <div class="sec-head"><h3>Decision trace</h3><span class="meta">action summary · no chain-of-thought</span><span class="filler"></span></div>
+    <div class="panel" style="margin-bottom:22px;">
+      <div class="body" id="dec-list" style="padding:6px 14px;"></div>
+    </div>
+
+  </main>
+
+  <aside class="side">
+
+    <div class="panel">
+      <header>Persona loaded<span class="meta">v0.2</span></header>
+      <div class="body" style="padding:14px 16px; font-size:11.5px; color:var(--t-2); line-height:1.55;">
+        <div style="font-family:var(--ff-mono); font-size:11px; color:var(--brand-cyan); margin-bottom:6px;">persona:paperclip@v0.2</div>
+        Tone: <strong>workforce manager</strong> · 870 words · last edit 2026-05-04.
+        <div style="margin-top:8px; color:var(--t-4); font-size:10.5px;">Persona body is summary only. Mission Control does not expose private chain-of-thought.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Token + cost meter<span class="meta">today · 00:00</span></header>
+      <div class="body" style="padding:14px 16px;">
+        <div style="font-family:var(--ff-mono);font-size:22px;color:var(--t-1);">$0.00 <small style="font-size:13px;color:var(--t-4);">/ $5.00</small></div>
+        <div style="font-size:11px;color:var(--t-3);margin-top:4px;">0 tokens · soft-cap $3.00</div>
+        <div style="height:6px; background:var(--bg-4); border-radius:3px; overflow:hidden; margin-top:10px;"><div style="height:100%; background:var(--st-green); width:0%;"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Connections<span class="meta">4 out</span></header>
+      <div class="body" style="padding:10px 14px; font-size:11.5px; color:var(--t-2);">
+        <div style="display:grid; gap:5px;">
+          <div>→ gateway <span style="color:var(--t-4);font-size:10.5px;">(router)</span></div>
+          <div>→ openclaw+ <span style="color:var(--t-4);font-size:10.5px;">(handoff)</span></div>
+          <div>→ agent-zero <span style="color:var(--t-4);font-size:10.5px;">(reports-up)</span></div>
+          <div>→ workforce-ledger <span style="color:var(--t-4);font-size:10.5px;">(memory:RW)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Errors + retry log<span class="meta">last 24h</span></header>
+      <div class="body">
+        <div class="empty-mini">No errors. Bridge approval is a request, not an error.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <header>Repo grounding<span class="meta">pending</span></header>
+      <div class="body" style="padding:14px 16px; font-size:11.5px; color:var(--t-3); line-height:1.55;">
+        <code style="font-family:var(--ff-mono);font-size:10.5px;color:var(--brand-cyan);">github.com/paperclipai/paperclip</code>
+        <div style="margin-top:8px;">URL provided · public read-only access not available in this design environment. Engineering wires real component names + ports + routes after handoff.</div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<footer class="repo-note">
+  <div>Mission Control → Gateway → Agent Hub → <strong style="color:var(--t-2);">Paperclip</strong> · workforce control plane · before OpenClaw+</div>
+  <div>tokens: <code>shared/tokens.css</code> · data: <code>shared/agent-data.js</code></div>
+</footer>
+
+<!-- Bridge Session modal -->
+<div class="modal-back" id="bridge-modal">
+  <div class="modal">
+    <header>
+      <div class="lock">🔒</div>
+      <h2>Open Bridge Session<small>Paperclip · workforce write + wiki write</small></h2>
+    </header>
+    <div class="body">
+      <div>Paperclip is requesting a 30-minute bridge to bootstrap the workforce ledger. While the bridge is live, Paperclip can write to <strong>workforce-ledger</strong> and <strong>build-wiki</strong>. All actions are logged in the audit trail.</div>
+      <div>
+        <div style="font-size:10.5px;letter-spacing:0.10em;text-transform:uppercase;color:var(--t-4);margin-bottom:6px;font-weight:600;">Scopes requested</div>
+        <div class="scopes">
+          <span class="scope">workforce:write</span>
+          <span class="scope">wiki:write</span>
+        </div>
+      </div>
+      <div class="ttl-row"><span style="color:var(--t-3);">TTL</span><span style="color:var(--t-1);">30 min</span></div>
+      <div style="font-size:11px;color:var(--t-4);">Dangerous actions (stop, restart, redeploy, rollback, external writes) remain gated even while the bridge is open and require an additional confirmation per call.</div>
+    </div>
+    <footer>
+      <button class="btn" onclick="closeBridge()">Cancel</button>
+      <button class="btn primary" onclick="closeBridge()">Open bridge for 30 min</button>
+    </footer>
+  </div>
+</div>
+
+<script src="shared/agent-data.js"></script>
+<script>
+(function () {
+  const A = window.AGENTS;
+  const P = A.paperclip;
+
+  // Ribbon
+  const ribbon = document.getElementById('ribbon');
+  const cells = [
+    { l:'Co-workers',          v: P.workforce.co_workers_active, sub:`/ ${P.workforce.co_workers_total} registered` },
+    { l:'Mini-agents in flight', v: P.workforce.mini_agents_in_flight, sub:`cap ${P.workforce.mini_agents_max}` },
+    { l:'Tasks today',         v: P.workforce.tasks_completed_today, sub:`/ ${P.workforce.tasks_today} total` },
+    { l:'Pending tasks',       v: P.workforce.tasks_pending, sub:'in queue' },
+    { l:'Approvals pending',   v: P.workforce.approvals_pending, sub:`${P.workforce.approvals_today} today` },
+    { l:'Heartbeats missed',   v: P.workforce.heartbeats_missed_today, sub:`${P.workforce.heartbeats_window} window` }
+  ];
+  ribbon.innerHTML = cells.map(c => `<div class="ribbon-cell"><div class="l">${c.l}</div><div class="v">${c.v}</div><div class="sub">${c.sub}</div></div>`).join('');
+
+  // Auth grid
+  const auth = document.getElementById('auth-grid');
+  const authMap = [
+    { k:'chatgpt',   nm:'ChatGPT · Codex',     ico:'C', tone:'#10a37f', d:P.auth.chatgpt },
+    { k:'anthropic', nm:'Claude · Anthropic',  ico:'A', tone:'#d97757', d:P.auth.anthropic },
+    { k:'tailnet',   nm:'Tailnet · localhost', ico:'T', tone:'#5eead4', d:P.auth.tailnet  }
+  ];
+  auth.innerHTML = authMap.map(r => `
+    <div class="auth-row">
+      <div class="ico" style="color:${r.tone};">${r.ico}</div>
+      <div><span class="nm">${r.nm}</span><span class="acc">${r.d.account}${r.d.detail ? ' · ' + r.d.detail : ''}</span></div>
+      <span class="state ${r.d.state}">${r.d.state}</span>
+    </div>
+  `).join('');
+
+  // Co-workers
+  const cw = document.getElementById('cw-rows');
+  cw.innerHTML = P.coWorkers.map(c => `
+    <tr>
+      <td class="name"><span class="dot" style="background:var(--st-${c.status});"></span>${c.name}</td>
+      <td>${c.role}</td>
+      <td class="mono">${c.model}</td>
+      <td class="mono">${c.tasks}</td>
+      <td class="mono">${c.last_seen}</td>
+      <td><span class="state-pill idle">idle</span></td>
+    </tr>
+  `).join('');
+
+  // Tasks
+  const tk = document.getElementById('tk-rows');
+  tk.innerHTML = P.taskQueue.map(t => `
+    <tr>
+      <td class="mono">${t.id}</td>
+      <td class="name">${t.title}<div style="font-size:10.5px;color:var(--t-4);margin-top:2px;">⚠ ${t.blocker}</div></td>
+      <td class="mono">${t.assigned_to}</td>
+      <td><span class="pri ${t.priority}">${t.priority}</span></td>
+      <td><span class="state-pill ${t.state}">${t.state}</span></td>
+    </tr>
+  `).join('');
+
+  // Approvals
+  const ap = document.getElementById('ap-list');
+  if (P.approvals.length) {
+    ap.innerHTML = P.approvals.map(a => `
+      <div class="approval">
+        <div class="hd"><span class="ttl">${a.title}</span><span class="meta">${a.id} · ${a.asked_at}</span></div>
+        <div class="scopes">${a.scopes.map(s=>`<span class="scope">${s}</span>`).join('')}</div>
+        <div class="row">
+          <button class="btn primary" onclick="openBridge()">Approve · open bridge ${a.ttl_min}m</button>
+          <button class="btn">Deny</button>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    ap.innerHTML = '<div class="empty-mini">No approvals pending.</div>';
+  }
+
+  // Decision trace
+  const dec = document.getElementById('dec-list');
+  const decRows = A.decisionTrace.paperclip || [];
+  dec.innerHTML = decRows.length
+    ? decRows.map(d => `<div style="padding:8px 0;border-bottom:1px dashed var(--line-1);font-size:11.5px;"><span style="font-family:var(--ff-mono);color:var(--t-3);font-size:10.5px;">${d.ts}</span> · <span style="color:var(--t-1);">${d.summary}</span><div style="font-family:var(--ff-mono);color:var(--t-4);font-size:10.5px;margin-top:2px;">${d.route}</div></div>`).join('')
+    : '<div class="empty-mini">No decisions yet. Paperclip is waiting for first bridge approval.</div>';
+
+  // Bridge modal
+  window.openBridge = function () {
+    document.getElementById('bridge-modal').classList.add('show');
+  };
+  window.closeBridge = function () {
+    document.getElementById('bridge-modal').classList.remove('show');
+  };
+  document.getElementById('bridge-modal').addEventListener('click', e => {
+    if (e.target.id === 'bridge-modal') closeBridge();
+  });
+})();
+</script>
+</body>
+</html>

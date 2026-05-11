@@ -68,7 +68,7 @@ function activeTabFrom(pathname: string | null, searchParams: URLSearchParams | 
   return TAB_BY_ID.get(DEFAULT_TAB_ID)!
 }
 
-export default function GatewayShell(): JSX.Element {
+export default function GatewayShell() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

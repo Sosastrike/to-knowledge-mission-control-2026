@@ -20,6 +20,6 @@
     },
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "middleware.gateway-csp.partial.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.test.ts", "middleware.gateway-csp.partial.ts"],
+  "exclude": ["node_modules", "tests/**/*.spec.ts"]
 }

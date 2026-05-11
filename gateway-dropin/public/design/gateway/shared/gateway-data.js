@@ -316,3 +316,71 @@ window.GATEWAY = (function () {
     get, byLane, statusOf, statusColor,
   };
 })();
+
+/* ============================================================
+   ENGINEERING WIRING LAYER — appended per Designer Contract
+   (README-FOR-DEVELOPER.md Data Wiring section).
+
+   Above this comment: the original designer mock data (IIFE).
+   Below this comment: API-backed overlay that fetches live state
+   from /api/gateway/* and updates window.GATEWAY in place.
+
+   Rules honoured:
+     - Rule 1: mock HTML/CSS untouched.
+     - Rule 5: status grammar comes from STATUS map above. No new states.
+     - Rule 6: every node FORCED to 'gray' on script load. Live status
+       only takes effect after the API confirms it. Auth-failed or
+       network-failed fetch leaves the node 'gray', never fake green.
+     - DDR-Gateway-005: iframe sandbox is allow-scripts allow-same-origin
+       so this fetch carries Mission Control session cookies.
+   ============================================================ */
+(function () {
+  var G = window.GATEWAY;
+  if (!G) return;
+  // Force gray on every node until a successful, authenticated fetch proves otherwise.
+  for (var i = 0; i < G.NODES.length; i += 1) {
+    var n = G.NODES[i];
+    if (n.type === 'agent') n.status = 'purple';          // marker preserved; live state added by overlay below
+    else if (n.type === 'runtime') n.status = 'orange';   // marker preserved
+    else n.status = 'gray';
+    n.live_state_known = false;
+  }
+
+  function hydrate(payload) {
+    if (!payload || !payload.nodes) return;
+    var byId = {};
+    for (var j = 0; j < G.NODES.length; j += 1) byId[G.NODES[j].id] = G.NODES[j];
+    for (var k = 0; k < payload.nodes.length; k += 1) {
+      var live = payload.nodes[k];
+      var dst = byId[live.id];
+      if (!dst) continue;
+      if (live.status) dst.status = live.status;
+      if (typeof live.connected === 'number') dst.connected = live.connected;
+      if (typeof live.configured === 'number') dst.configured = live.configured;
+      if (live.lastSuccess) dst.lastSuccess = live.lastSuccess;
+      if (live.cacheAge) dst.cacheAge = live.cacheAge;
+      dst.live_state_known = true;
+    }
+    if (payload.bridge && Array.isArray(payload.bridge)) G.BRIDGE_SESSIONS = payload.bridge;
+    if (payload.audit && Array.isArray(payload.audit))   G.AUDIT = payload.audit;
+    if (payload.health) G.HEALTH = payload.health;
+    document.dispatchEvent(new CustomEvent('gateway:hydrate', { detail: { source: 'gateway-data', payload: payload } }));
+  }
+
+  function fetchState() {
+    try {
+      fetch('/api/gateway/state', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (payload) { if (payload) hydrate(payload); })
+        .catch(function () { /* silent — gray remains; Rule 6 */ });
+    } catch (e) { /* fetch unavailable — gray remains */ }
+  }
+
+  // Run as soon as the script settles; mocks render on DOMContentLoaded.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fetchState, { once: true });
+  else fetchState();
+
+  // Re-fetch every 30s while the page is visible (Rule 6 — keep status honest as state changes).
+  var POLL_MS = 30000;
+  setInterval(function () { if (!document.hidden) fetchState(); }, POLL_MS);
+})();

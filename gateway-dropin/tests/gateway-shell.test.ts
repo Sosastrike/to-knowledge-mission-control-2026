@@ -37,9 +37,9 @@ describe('GATEWAY_TABS — contract with the static mocks', () => {
     }
   })
 
-  it('tab ids and routeSegments are unique', () => {
+  it('tab ids and segs are unique', () => {
     const ids = new Set(GATEWAY_TABS.map((t) => t.id))
-    const segs = new Set(GATEWAY_TABS.map((t) => t.routeSegment))
+    const segs = new Set(GATEWAY_TABS.map((t) => t.seg))
     expect(ids.size).toBe(GATEWAY_TABS.length)
     expect(segs.size).toBe(GATEWAY_TABS.length)
   })
@@ -92,7 +92,7 @@ describe('activeTabFrom — URL → tab resolution', () => {
     expect(activeTabFrom('/gateway', searchParamsOf('tab=governor')).id).toBe('governor')
   })
 
-  it('resolves /gateway/<routeSegment> path form', () => {
+  it('resolves /gateway/<seg> path form', () => {
     expect(activeTabFrom('/gateway/dispatcher', null).id).toBe('dispatcher')
     expect(activeTabFrom('/gateway/token-governor', null).id).toBe('governor')
     expect(activeTabFrom('/gateway/bridge-session', null).id).toBe('bridge')

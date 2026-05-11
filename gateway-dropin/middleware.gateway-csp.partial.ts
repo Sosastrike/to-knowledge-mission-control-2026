@@ -3,15 +3,28 @@
 // CSP exception that must be added inside the existing middleware for the
 // /design/gateway/* path scope, per D4.
 //
-// RULES (D4, enforced):
+// RULES (D4 + DDR-Gateway-005, enforced):
 //   - Parent Mission Control CSP is unchanged for every other route.
 //   - The exception applies only to /design/gateway/* responses.
 //   - script-src adds 'unsafe-inline' ONLY inside this scope, because the
 //     designer mock HTML has inline <script> blocks (verified in
-//     Agent Hub.html line 305). Adding 'unsafe-inline' here is safe because
-//     the iframe sandbox in GatewayShell.tsx is `allow-scripts` only (no
-//     `allow-same-origin`), so the iframe runs in a null origin and cannot
-//     reach Mission Control storage/cookies even if compromised.
+//     Agent Hub.html line 305).
+//   - As of 2026-05-11 the iframe sandbox in GatewayShell.tsx is
+//     `allow-scripts allow-same-origin`. Adding allow-same-origin is
+//     REQUIRED to fulfil the Designer Contract's data-wiring path: the
+//     replacement `shared/agent-data.js` and `shared/gateway-data.js`
+//     files fetch from same-origin `/api/gateway/*` endpoints and must
+//     carry Mission Control session cookies. A null-origin iframe
+//     (allow-scripts alone) sends fetches without cookies and authenticated
+//     API calls return 401.
+//   - Threat model under allow-same-origin: a compromised inline script
+//     in a mock CAN read Mission Control cookies / localStorage. Mitigation
+//     stack: (a) design-lock manifest (SHA-256) prevents any change to a
+//     mock file passing CI; (b) CODEOWNERS forces Owner approval on mock
+//     paths; (c) connect-src is locked to 'self' so even a compromised
+//     script cannot exfiltrate to a third-party host; (d) frame-ancestors
+//     stays 'self' so mocks can only be embedded by Mission Control.
+//   - connect-src is 'self' (required for the data-wiring fetch path).
 //   - The exception NEVER turns into a global default. It is path-scoped
 //     and the parent CSP fallback is preserved.
 //

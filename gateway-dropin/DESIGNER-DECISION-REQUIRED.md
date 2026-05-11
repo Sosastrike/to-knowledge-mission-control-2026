@@ -1,4 +1,27 @@
-# DESIGNER_DECISION_REQUIRED — Gateway lane (2026-05-11 update)
+# DESIGNER_DECISION_REQUIRED — Gateway lane (2026-05-11 third update)
+
+The Designer Contract (`memory/designer_contract.md`) and the new
+`Designer-FULL-PACKAGE-v1/README-FOR-DEVELOPER.md` resolve or supersede
+most of the prior DDRs. Summary at the top, full detail below.
+
+## Resolution roll-up
+
+| ID | Status | Resolution |
+| --- | --- | --- |
+| DDR-Gateway-001 | RESOLVED | **APPROVED** — README-FOR-DEVELOPER.md stamps it: "✅ APPROVED (accessibility)". `<button type="button">` for sub-rail tabs. Pre-approved per Contract Rule 3 (accessibility deviations). |
+| DDR-Gateway-002 | RESOLVED | **APPROVED** — README stamps it: "✅ APPROVED (visual parity)". Three CSS resets on `.gw-tab`. Pre-approved per Contract Rule 3. |
+| DDR-Gateway-003 | **WITHDRAWN** | I misread the screenshots — the standalone-mock view they show is what an *iframed* mock renders. The designer's 10-tab left-rail in `GatewayShell.jsx` IS canonical, confirmed by the new README: "It exposes a sub-rail with 10 tabs (Overview, Agent Hub, Paperclip, Dispatcher, Token Governor, Bridge Session, Health, Routes, Registry, Policies)." My original structure was right; nothing to change. |
+| DDR-Gateway-004 | OPEN — non-blocker | Three top-rail entries in `shared/render.js` (`node-card-spec.html`, `color-status-legend.html`, `mobile-tablet.html`) still reference files that don't exist in v1-FINAL or FULL-PACKAGE-v1. Does not block primary navigation (10 sub-rail tabs all resolve). Designer to fix in next package iteration. |
+| DDR-Gateway-005 | **AUTHORISED by README** | Iframe `sandbox="allow-scripts allow-same-origin"`. Required by README data-wiring section ("replace those two files with versions that fetch from your real API and assign to the same globals") — fetch must send Mission Control session cookies. Threat-model + mitigation stack documented in `middleware.gateway-csp.partial.ts`. |
+| DDR-Gateway-006 | **AUTHORISED by Luis directive** | Button event delegation in the engineering wiring tail of `shared/agent-data.js`. Maps unambiguous button labels to backend actions; unmapped labels fall back to "Action gated · request via Bridge Session" yellow notice (Rule 6 — no fake LIVE). |
+
+## Open audits
+
+Only DDR-Gateway-004 remains open and it's a designer-side cleanup
+that doesn't block production. CloudCode keeps the broken-link entries
+commented out in Option-A scaffold; primary navigation is unaffected.
+
+---
 
 ## Resolved (kept for record)
 
@@ -9,9 +32,10 @@ Approved by:  Luis Sosa + Designer Department
 Date:         2026-05-11
 Notes:        "C+C approved. Ship it. Then move on. Don't hold the
               build for accessibility wins."
+              README-FOR-DEVELOPER.md re-stamps APPROVED on both items.
 ```
 
-## Open — production audit raised these (2026-05-11 second update)
+## Original DDR-003 / DDR-004 filings (kept for audit trail)
 
 Luis reported the live `/gateway` does not match the approved designer
 screenshots. Production-truth audit found that the designer's own

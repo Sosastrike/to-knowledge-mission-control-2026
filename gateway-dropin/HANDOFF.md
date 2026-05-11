@@ -11,28 +11,46 @@ on 2026-05-11 ("C+C approved. Ship it. Then move on. Don't hold the
 build for accessibility wins." — Luis). DDR-Gateway-001 + DDR-Gateway-002
 resolved.
 
-**Production deploy status:** **FAILED IN PRODUCTION — ROOT CAUSE
-IDENTIFIED, DESIGNER DECISIONS PENDING.** Luis reported on 2026-05-11
-that the live web interface does NOT match the approved designer
-screenshots. CloudCode's audit (against the SMB v1-FINAL source —
-byte-identical to staged copy, 31/31 SHA match) found two structural
-design-side issues:
+**Production deploy status:** **PACKAGE-SIDE COMPLETE; DEPLOY OPERATOR-LED.**
 
-  - **DDR-Gateway-003** — designer's package ships TWO competing
-    navigations (10-tab left-rail in `GatewayShell.jsx` vs 15-tab
-    top-rail in `shared/render.js`). Production currently shows both
-    stacked; screenshots show only the top-rail. Designer must pick.
-  - **DDR-Gateway-004** — three top-rail entries (`node-card-spec.html`,
-    `color-status-legend.html`, `mobile-tablet.html`) reference files
-    that don't exist in the package.
+Designer Contract (2026-05-11, `memory/designer_contract.md`) is
+binding. Designer-FULL-PACKAGE-v1 (handed over via SMB) is the new
+canonical reference; `design/gateway/` and `src/gateway/GatewayShell.jsx`
+are BYTE-IDENTICAL to my previously-staged copy (verified by SHA-256).
+CloudCode rolled the contract in:
 
-Both DDRs are in `gateway-dropin/DESIGNER-DECISION-REQUIRED.md` with
-4 options each. CloudCode is not picking. The C+C resolution on
-DDR-Gateway-001/002 still stands; this is a separate, larger structural
-question that the audit surfaced.
+  - GatewayShell.tsx trimmed toward the Rule 1 "50-line iframe holder"
+    target (now 108 lines; designer's source is 96; the extra 12 are
+    Next 15 App Router hooks + TypeScript types + accessibility per
+    Rule 3 pre-approval).
+  - Status-grammar footer removed from the shell (legend lives in the
+    designer's `Legend.html` mock; chrome must not be invented).
+  - Iframe sandbox upgraded to `allow-scripts allow-same-origin` per
+    DDR-Gateway-005, with threat-model and mitigation stack documented
+    in `middleware.gateway-csp.partial.ts`.
+  - `shared/agent-data.js` and `shared/gateway-data.js` extended per
+    the README's data-wiring section: original IIFE preserved verbatim
+    (visual parity); engineering wiring tail appended that fetches
+    `/api/gateway/state` + `/api/gateway/agent-hub/agents`, overlays
+    live status with gray-until-proven semantics (Rule 6), and binds
+    button event delegation for the common in-mock actions
+    (DDR-Gateway-006).
+  - Design-lock manifest refreshed (`31/31 OK`); the two wired files
+    have new SHA-256s now reflected.
+  - CODEOWNERS added: designer + Owner gate every mock path; the two
+    data-wired files carry a `@cloudcode @luis-owner` joint stamp.
+  - Playwright + pixelmatch visual-regression scaffold added at
+    `tests/visual-regression.spec.ts` (excluded from default
+    vitest run; install Playwright + pixelmatch on srv1568353 to
+    enable, see file header).
+  - DDR-Gateway-001 / -002 are README-stamped APPROVED. DDR-003
+    WITHDRAWN. DDR-004 remains open (designer cleanup, non-blocker).
+    DDR-005 / -006 authorised by README + Luis directive.
 
 Audit plan in § 24. Operator-side apply checklist in § 22 still
-applies once the DDRs resolve.
+applies. CloudCode cannot SSH to srv1568353 from this Claude
+environment — the live `pnpm build` + deploy + curl/visual proof
+remains operator-led.
 
 ---
 

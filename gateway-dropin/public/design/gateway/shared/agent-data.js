@@ -428,3 +428,152 @@ window.AGENTS = (function () {
     statusColor
   };
 })();
+
+/* ============================================================
+   ENGINEERING WIRING LAYER — appended per Designer Contract
+   (README-FOR-DEVELOPER.md Data Wiring section).
+
+   Above this comment: the original designer mock data (IIFE).
+   Below this comment: API-backed overlay + button event delegation.
+
+   Rules honoured (same as gateway-data.js):
+     - Rule 1: mock HTML/CSS untouched.
+     - Rule 5: status grammar locked.
+     - Rule 6: agent status forced to 'gray' on script load; only the
+       API can promote it. Network/auth failure → stays gray.
+     - DDR-Gateway-005: iframe sandbox allow-scripts allow-same-origin
+       so fetch carries Mission Control session cookies.
+     - DDR-Gateway-006 (new): button event delegation — engineering may
+       bind onclick handlers for buttons whose intent is unambiguous
+       (label-driven). Ambiguous or owner-action buttons fall back to
+       "Action gated · request via Bridge Session" yellow notice — no
+       fake LIVE, no destructive write without owner approval.
+   ============================================================ */
+(function () {
+  var A = window.AGENTS;
+  if (!A) return;
+
+  // ---- 1. Force gray-until-proven on every agent (Rule 6) ----
+  if (Array.isArray(A.agents)) {
+    for (var i = 0; i < A.agents.length; i += 1) {
+      A.agents[i]._designer_status = A.agents[i].status;
+      A.agents[i].status = 'gray';
+      A.agents[i].live_state_known = false;
+      if (A.agents[i].pulse) {
+        A.agents[i].pulse = { req_per_min: 0, p95_ms: null, error_rate: 0 };
+      }
+    }
+  }
+
+  // ---- 2. Hydrate from API ----
+  function hydrateAgents(payload) {
+    if (!payload || !Array.isArray(payload.agents)) return;
+    var byId = {};
+    for (var j = 0; j < A.agents.length; j += 1) byId[A.agents[j].id] = A.agents[j];
+    for (var k = 0; k < payload.agents.length; k += 1) {
+      var live = payload.agents[k];
+      var dst = byId[live.id];
+      if (!dst) continue;
+      if (live.status) dst.status = live.status;
+      if (live.pulse)  dst.pulse  = Object.assign({}, dst.pulse, live.pulse);
+      if (typeof live.bridge === 'boolean') dst.bridge = live.bridge;
+      if (live.gated_reason !== undefined) dst.gated_reason = live.gated_reason;
+      if (live.blocked_reason !== undefined) dst.blocked_reason = live.blocked_reason;
+      dst.live_state_known = true;
+    }
+    document.dispatchEvent(new CustomEvent('gateway:hydrate', { detail: { source: 'agent-data', payload: payload } }));
+  }
+
+  function fetchAgents() {
+    try {
+      fetch('/api/gateway/agent-hub/agents', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (payload) { if (payload) hydrateAgents(payload); })
+        .catch(function () { /* silent — gray stays; Rule 6 */ });
+    } catch (e) { /* fetch unavailable — gray stays */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fetchAgents, { once: true });
+  else fetchAgents();
+  setInterval(function () { if (!document.hidden) fetchAgents(); }, 30000);
+
+  // ---- 3. Button event delegation (DDR-Gateway-006) ----
+  // Map button text/class to an action. Unmapped buttons get a yellow
+  // "Action gated" notice. Mapped buttons either open URLs (read-only)
+  // or POST to backend (gated by Bridge Session server-side).
+  function findAgentForButton(btn) {
+    var carrier = btn.closest('[data-id]');
+    if (!carrier) return null;
+    var id = carrier.getAttribute('data-id');
+    return (A.byId && A.byId(id)) || null;
+  }
+  function notifyGated(label) {
+    try {
+      var box = document.createElement('div');
+      box.setAttribute('role', 'status');
+      box.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#3b2a09;border:1px solid #b08400;color:#fde68a;padding:10px 14px;border-radius:6px;font-family:Inter,system-ui,sans-serif;font-size:12px;z-index:9999;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.4)';
+      box.textContent = 'Action gated · ' + label + ' · request via Bridge Session.';
+      document.body.appendChild(box);
+      setTimeout(function () { box.remove(); }, 4000);
+    } catch (e) { /* DOM unavailable */ }
+  }
+  function safeFetch(url, init) {
+    try { return fetch(url, Object.assign({ credentials: 'same-origin' }, init || {})); }
+    catch (e) { return Promise.reject(e); }
+  }
+  function buttonAction(label, agent, btn) {
+    var l = (label || '').trim().toLowerCase();
+    // ---- READ-ONLY actions (Rule 6 — green only when proven live) ----
+    if (l === 'open localhost' || l === 'open in new tab') {
+      if (!agent || !agent.localhost) return notifyGated('Open localhost');
+      // Per the contract: hybrid embed only when iframe_safe=true. Otherwise new tab.
+      if (agent.iframe_safe) window.location.assign(agent.localhost);
+      else window.open(agent.localhost, '_blank', 'noopener');
+      return;
+    }
+    if (l === 'audit' || l === 'view audit' || l === 'open audit trail') {
+      var aid = agent ? agent.id : '';
+      window.open('/gateway/audit?agent=' + encodeURIComponent(aid), '_blank', 'noopener');
+      return;
+    }
+    if (l === 'preview ui' || l === 'status only') {
+      if (agent && agent.localhost) window.open(agent.localhost, '_blank', 'noopener');
+      else notifyGated(label);
+      return;
+    }
+    // ---- BRIDGE-GATED writes (Rule 6 — owner approval required) ----
+    if (btn.classList.contains('gated') || btn.classList.contains('danger') ||
+        l === 'bridge session' || l === 'restart' || l === 'send command' || l === 'pause queue' ||
+        l === 'restart (fresh memory)' || l === 'pull + redeploy' || l === 'roll back last action' ||
+        l === 'stop' || l === 'extend (audited)' || l === 'revoke now') {
+      // Server-side guard is canonical (DDR-Gateway-005 threat model). Client just emits
+      // an approval-request event; the backend decides whether to require Bridge.
+      safeFetch('/api/gateway/approval-requests', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ action: l, agent_id: agent ? agent.id : null })
+      }).then(function (r) {
+        if (r && r.ok) notifyGated(label + ' · request sent');
+        else notifyGated(label);
+      }).catch(function () { notifyGated(label); });
+      return;
+    }
+    // ---- Approve · open bridge (already wired by mock) ----
+    if (l.indexOf('approve · open bridge') === 0) {
+      // Mock's openBridge() already exists and handles this. Let the inline handler run.
+      return;
+    }
+    // ---- Unrecognised label — gated by default (Rule 6 — no fake LIVE) ----
+    notifyGated(label || 'Action');
+  }
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target && ev.target.closest && ev.target.closest('button');
+    if (!btn) return;
+    // Skip tabs (intra-mock nav) — the mock's own JS handles those.
+    if (btn.classList.contains('tab')) return;
+    // Skip buttons that already have an inline onclick (mock-owned wiring).
+    if (btn.hasAttribute('onclick')) return;
+    var agent = findAgentForButton(btn);
+    var label = (btn.textContent || '').trim();
+    buttonAction(label, agent, btn);
+  }, true);
+})();

@@ -1,0 +1,36 @@
+# Designer Contract enforcement (2026-05-11) — operational change #3.
+#
+# Mock files under design/gateway/ and public/design/gateway/ are owned
+# by the Designer Department + Owner. Engineering cannot self-approve
+# changes to them; PRs touching these paths require @luis-owner review.
+#
+# Two carve-outs:
+#   shared/agent-data.js   — engineering-owned per README data-wiring section
+#   shared/gateway-data.js — engineering-owned per README data-wiring section
+# These two files combine the original designer mock data (verbatim,
+# above the IIFE return) with the engineering API-overlay layer
+# (appended below). Designer-side mock data MUST NOT be changed by
+# engineering — only the wiring tail.
+
+# Default ownership — engineering owns the integration package.
+*                                                          @cloudcode
+
+# Mock HTML / CSS — Designer + Owner only (Rule 1 + Rule 2).
+/gateway-dropin/public/design/gateway/*.html               @luis-owner
+/gateway-dropin/public/design/gateway/*.md                 @luis-owner
+/gateway-dropin/public/design/gateway/shared/*.css         @luis-owner
+/gateway-dropin/public/design/gateway/shared/*.html        @luis-owner
+/gateway-dropin/public/design/gateway/shared/render.js     @luis-owner
+/gateway-dropin/public/design/gateway/shared/topbar.html   @luis-owner
+
+# Data-wiring carve-outs (engineering may modify the appended wiring
+# tail; designer-authored mock data above the IIFE return MUST NOT
+# change without a DDR + Owner sign-off).
+/gateway-dropin/public/design/gateway/shared/agent-data.js     @cloudcode @luis-owner
+/gateway-dropin/public/design/gateway/shared/gateway-data.js   @cloudcode @luis-owner
+
+# Design-lock manifest must be regenerated, not hand-edited.
+/gateway-dropin/design-lock/gateway-manifest.json          @cloudcode @luis-owner
+
+# GatewayShell adapter — engineering-owned but visual changes require DDR.
+/gateway-dropin/src/components/gateway/GatewayShell.tsx    @cloudcode @luis-owner

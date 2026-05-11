@@ -1,6 +1,6 @@
 {
   "schema": "gateway-design-lock@1",
-  "generated_at": "2026-05-11T11:22:56.310Z",
+  "generated_at": "2026-05-11T14:12:28.573Z",
   "base": "public/design/gateway/",
   "file_count": 31,
   "files": [
@@ -131,13 +131,13 @@
     },
     {
       "path": "shared/agent-data.js",
-      "bytes": 22155,
-      "sha256": "72557bde0d2f84e197ff2644a8e9716fab1f0a170d554b65ecf11853bb112f18"
+      "bytes": 29470,
+      "sha256": "43c196311b953105a7f9089bfe03258d778a185b1c124b7ccc87d92ac21989c5"
     },
     {
       "path": "shared/gateway-data.js",
-      "bytes": 32545,
-      "sha256": "4e1de83d171061cb5d76c73660f4a0e2293d6e3e8f9a6e0e363f397594d9ab9e"
+      "bytes": 35807,
+      "sha256": "3c6be458b824ec9f68c66cb7ef12c6871354a2bce29fa8461793ecc242798734"
     },
     {
       "path": "shared/node-card.css",

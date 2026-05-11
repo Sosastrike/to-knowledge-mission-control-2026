@@ -1,0 +1,1 @@
+wrote 31 entries to design-lock/gateway-manifest.json

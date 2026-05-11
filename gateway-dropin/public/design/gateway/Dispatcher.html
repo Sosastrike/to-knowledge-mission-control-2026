@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gateway · Dispatcher</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<link rel="stylesheet" href="shared/node-card.css" />
+<style>
+/* ============================================================
+   Dispatcher — Gateway brain
+   Owner intent → Policy check → Engine selection → Fan-out plan → Execute
+   ============================================================ */
+
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); }
+
+/* ---------- Top crumbs ---------- */
+.gw-crumbs {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  font-size: 12px; color: var(--t-3);
+}
+.gw-crumbs a { color: var(--t-3); text-decoration: none; }
+.gw-crumbs a:hover { color: var(--t-1); }
+.gw-crumbs .here { color: var(--t-1); font-weight: 500; }
+.gw-crumbs .sep { color: var(--t-5); }
+
+/* ---------- Page header ---------- */
+.page-head {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+}
+.page-head h1 {
+  margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 12px;
+}
+.page-head h1 .icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, rgba(94,234,212,0.32), rgba(167,139,250,0.32));
+  border: 1px solid rgba(94,234,212,0.55);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); color: var(--brand-cyan); font-size: 16px;
+}
+.page-head .lede {
+  margin: 0; color: var(--t-3); font-size: 13px; max-width: 680px; line-height: 1.55;
+}
+.page-head .meta {
+  display: grid; grid-template-columns: repeat(4, auto); gap: 18px; align-items: center;
+}
+.page-head .meta .stat .v { font-family: var(--ff-mono); font-size: 18px; color: var(--t-1); font-weight: 500; }
+.page-head .meta .stat .l { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); }
+
+/* ---------- Layout ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+  height: calc(100vh - 49px - 96px);
+  overflow: hidden;
+}
+
+/* ---------- Pipeline canvas ---------- */
+.canvas {
+  padding: 22px 24px;
+  overflow-y: auto;
+  background: var(--bg-1);
+  position: relative;
+}
+.canvas::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.4; pointer-events: none;
+}
+.canvas > * { position: relative; }
+
+/* Section header */
+.sec-head {
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 12px;
+}
+.sec-head h3 { margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600; }
+.sec-head .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); }
+.sec-head .filler { flex: 1; height: 1px; background: var(--line-2); }
+
+/* Five-stage pipeline */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stage {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 14px;
+  display: grid; gap: 10px;
+  position: relative;
+}
+.stage::after {
+  content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 12px;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--brand-cyan) 100%);
+  clip-path: polygon(0 35%, 70% 35%, 70% 0, 100% 50%, 70% 100%, 70% 65%, 0 65%);
+  opacity: 0.55;
+}
+.pipeline .stage:last-child::after { display: none; }
+.stage .head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-4); font-weight: 700;
+}
+.stage .head .num {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--bg-4); border: 1px solid var(--line-3);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); font-size: 10px; color: var(--brand-cyan);
+}
+.stage h4 {
+  margin: 0; font-size: 14px; color: var(--t-1); font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.stage .desc { font-size: 11.5px; color: var(--t-3); line-height: 1.5; }
+.stage .latency {
+  font-family: var(--ff-mono); font-size: 10px; color: var(--t-4);
+  display: flex; align-items: center; gap: 6px;
+  border-top: 1px dashed var(--line-2); padding-top: 6px;
+}
+.stage .latency .v { color: var(--brand-cyan); }
+.stage.active {
+  border-color: rgba(94,234,212,0.55);
+  box-shadow: 0 0 0 1px rgba(94,234,212,0.20), 0 0 24px rgba(94,234,212,0.10);
+}
+.stage.active .head .num { background: rgba(94,234,212,0.18); border-color: rgba(94,234,212,0.65); color: var(--brand-cyan); }
+
+/* ---------- Live trace ---------- */
+.trace-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.trace-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.trace-head .id { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); }
+.trace-head .id .req { color: var(--brand-cyan); }
+.trace-head h4 { margin: 0; font-size: 14px; }
+.trace-head .pulse {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--brand-cyan); font-weight: 500;
+}
+.trace-head .pulse .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; box-shadow: 0 0 8px currentColor;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.trace-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr 110px 90px;
+  align-items: stretch;
+}
+.trace-grid > .tcol {
+  padding: 10px 16px;
+  border-right: 1px solid var(--line-2);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--t-4); font-weight: 600;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line-2);
+}
+.trace-grid > .tcol:last-child { border-right: none; }
+
+.trow {
+  display: contents;
+}
+.trow > div {
+  padding: 12px 16px;
+  border-right: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 12px;
+}
+.trow > div:last-child { border-right: none; }
+.trow:last-child > div { border-bottom: none; }
+.trow .step-num {
+  font-family: var(--ff-mono); color: var(--brand-cyan); font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.trow .step-num::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--st-green); box-shadow: 0 0 6px var(--st-green);
+}
+.trow.gated .step-num::before { background: var(--st-yellow); box-shadow: 0 0 6px var(--st-yellow); }
+.trow.read-only .step-num::before { background: var(--st-blue); box-shadow: 0 0 6px var(--st-blue); }
+.trow.fanout .step-num::before { background: var(--st-purple); box-shadow: 0 0 6px var(--st-purple); }
+
+.trow .what .title { color: var(--t-1); font-weight: 500; margin-bottom: 2px; }
+.trow .what .sub { color: var(--t-3); font-size: 11px; }
+.trow .what code {
+  font-family: var(--ff-mono); font-size: 10.5px;
+  background: var(--bg-3); padding: 1px 5px; border-radius: 3px; color: var(--brand-cyan);
+}
+.trow .when { font-family: var(--ff-mono); color: var(--t-3); font-size: 11px; }
+.trow .lat  { font-family: var(--ff-mono); color: var(--t-2); font-size: 11px; text-align: right; }
+.trow .lat .ms { color: var(--brand-cyan); }
+.trow.gated .what .title::after {
+  content: 'BRIDGE'; font-size: 8.5px; letter-spacing: 0.10em; font-weight: 700;
+  color: var(--st-yellow); background: var(--st-yellow-bg);
+  border: 1px solid var(--st-yellow-bd); padding: 1px 4px; border-radius: 3px;
+  margin-left: 8px;
+}
+
+/* ---------- Side: routing logic + queues ---------- */
+.side {
+  background: var(--bg-1);
+  border-left: 1px solid var(--line-2);
+  overflow-y: auto;
+  padding: 22px 20px;
+  display: grid; gap: 22px; align-content: start;
+}
+
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.panel header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600;
+}
+.panel header .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); letter-spacing: 0; }
+.panel .body { padding: 12px 14px; }
+
+/* Engine selector matrix */
+.engine-row {
+  display: grid;
+  grid-template-columns: 18px 1fr 60px 60px 50px;
+  gap: 10px; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-1);
+  font-size: 11.5px;
+}
+.engine-row:last-child { border-bottom: none; }
+.engine-row .pdot { width: 8px; height: 8px; border-radius: 50%; }
+.engine-row .name { color: var(--t-1); font-weight: 500; }
+.engine-row .name .sub { color: var(--t-4); font-size: 10px; font-family: var(--ff-mono); }
+.engine-row .num { font-family: var(--ff-mono); color: var(--t-3); font-size: 10.5px; text-align: right; }
+.engine-row .pick {
+  text-align: center; font-size: 9px; letter-spacing: 0.10em; font-weight: 700;
+  padding: 2px 4px; border-radius: 3px;
+}
+.engine-row .pick.win {
+  color: var(--brand-cyan); background: rgba(94,234,212,0.14); border: 1px solid rgba(94,234,212,0.45);
+}
+.engine-row .pick.skip { color: var(--t-5); }
+
+/* Fan-out tree */
+.tree {
+  font-family: var(--ff-mono); font-size: 11.5px; line-height: 1.7;
+  color: var(--t-2);
+}
+.tree .root { color: var(--brand-cyan); font-weight: 600; }
+.tree .branch { color: var(--brand-violet); }
+.tree .leaf { color: var(--t-2); }
+.tree .leaf .meta { color: var(--t-4); font-size: 10px; }
+.tree .leaf.gated::after {
+  content: '🔒'; margin-left: 4px; opacity: 0.7;
+}
+.tree .leaf.denied { color: var(--st-red); text-decoration: line-through; text-decoration-color: var(--st-red); }
+.tree .indent { color: var(--t-5); }
+
+/* Policy chips */
+.policy-list { display: grid; gap: 6px; }
+.policy-item {
+  display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center;
+  font-size: 11.5px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: var(--bg-3); border: 1px solid var(--line-2);
+}
+.policy-item .ck {
+  width: 14px; height: 14px; border-radius: 3px;
+  display: grid; place-items: center;
+  background: var(--st-green); color: #000; font-size: 9px; font-weight: 800;
+}
+.policy-item.warn .ck { background: var(--st-yellow); }
+.policy-item.fail .ck { background: var(--st-red); color: #fff; }
+.policy-item .name { color: var(--t-2); font-weight: 500; }
+.policy-item .name .v { font-family: var(--ff-mono); font-size: 10px; color: var(--t-4); margin-left: 4px; }
+.policy-item .lt { font-family: var(--ff-mono); font-size: 10px; color: var(--t-4); }
+
+/* Queue meter */
+.queue-meters { display: grid; gap: 10px; }
+.qmeter { display: grid; grid-template-columns: 90px 1fr 50px; gap: 10px; align-items: center; font-size: 11.5px; }
+.qmeter .nm { color: var(--t-2); }
+.qmeter .bar { height: 6px; background: var(--bg-4); border-radius: 3px; overflow: hidden; position: relative; }
+.qmeter .bar .fill { height: 100%; background: linear-gradient(90deg, var(--brand-cyan), var(--brand-violet)); border-radius: 3px; }
+.qmeter .bar .fill.warn { background: linear-gradient(90deg, var(--st-yellow), var(--st-orange)); }
+.qmeter .v { font-family: var(--ff-mono); color: var(--t-3); text-align: right; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- Crumbs -->
+<div class="gw-crumbs">
+  <a href="index.html">Gateway design</a>
+  <span class="sep">›</span>
+  <a href="Gateway Overview.html">Nucleus</a>
+  <span class="sep">›</span>
+  <span class="here">Dispatcher</span>
+  <span style="flex:1"></span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/dispatcher</span>
+</div>
+
+<!-- Page header -->
+<header class="page-head">
+  <div>
+    <h1><span class="icon">⌖</span>Dispatcher</h1>
+    <p class="lede">The brain of the Gateway. Every owner intent — typed, voiced, or relayed by Telegram — lands at Agent Zero, descends through Hermes when proven, and gets resolved into a fan-out execution plan with a single audited trace ID. Engine, route, and policy decisions are made <em>here</em>, once.</p>
+  </div>
+  <div class="meta">
+    <div class="stat"><div class="v">1,247</div><div class="l">requests today</div></div>
+    <div class="stat"><div class="v">312</div><div class="l">fan-outs</div></div>
+    <div class="stat"><div class="v" style="color:var(--st-yellow)">18</div><div class="l">denied</div></div>
+    <div class="stat"><div class="v" style="color:var(--brand-cyan)">38%</div><div class="l">load</div></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ===== Canvas ===== -->
+  <div class="canvas">
+
+    <!-- Five-stage pipeline -->
+    <div class="sec-head">
+      <h3>Pipeline</h3>
+      <span class="meta">5 stages · p50 380ms · p95 1.2s</span>
+      <span class="filler"></span>
+    </div>
+
+    <div class="pipeline">
+      <div class="stage active">
+        <div class="head"><span class="num">1</span><span>Intake</span></div>
+        <h4>Owner intent</h4>
+        <div class="desc">Typed, voiced, Telegram, AgentMail, or workflow trigger. Normalized into a signed <code style="font-family:var(--ff-mono);font-size:10.5px;color:var(--brand-cyan);background:var(--bg-3);padding:1px 4px;border-radius:3px;">Intent{}</code> object with owner identity, scope, and proof slot.</div>
+        <div class="latency"><span>p50</span><span class="v">12ms</span></div>
+      </div>
+      <div class="stage active">
+        <div class="head"><span class="num">2</span><span>Resolve</span></div>
+        <h4>Agent Zero</h4>
+        <div class="desc">Commander resolves what kind of work this is, pulls Tony memory provenance, and drafts a tool/skill plan. Either executes directly or hands to Hermes for specialist work.</div>
+        <div class="latency"><span>p50</span><span class="v">95ms</span></div>
+      </div>
+      <div class="stage active">
+        <div class="head"><span class="num">3</span><span>Gate</span></div>
+        <h4>Policy &amp; Bridge</h4>
+        <div class="desc">RBAC, scope, rate limits, Bridge Session proof. If <code style="font-family:var(--ff-mono);font-size:10.5px;color:var(--brand-cyan);background:var(--bg-3);padding:1px 4px;border-radius:3px;">hermes_called:false</code>, downgrades to read-only path. Denials are first-class events.</div>
+        <div class="latency"><span>p50</span><span class="v">28ms</span></div>
+      </div>
+      <div class="stage">
+        <div class="head"><span class="num">4</span><span>Plan</span></div>
+        <h4>Engine + fan-out</h4>
+        <div class="desc">Picks engine by capability × budget × latency × per-owner pinning. Builds fan-out tree across MCP servers, OpenCloud forks, and connectors. Token budget reserved.</div>
+        <div class="latency"><span>p50</span><span class="v">156ms</span></div>
+      </div>
+      <div class="stage">
+        <div class="head"><span class="num">5</span><span>Execute</span></div>
+        <h4>Run &amp; settle</h4>
+        <div class="desc">Streams worker output, settles tokens with the Governor, writes a single trace to Build-Wiki, and emits the result event back to the channel of origin.</div>
+        <div class="latency"><span>p95</span><span class="v">1.2s</span></div>
+      </div>
+    </div>
+
+    <!-- Live trace -->
+    <div class="trace-card">
+      <header class="trace-head">
+        <div>
+          <h4>Live trace · <span style="color:var(--t-3);font-weight:500;">"Build a Q3 marketing-ops report from Notion + email threads"</span></h4>
+          <div class="id">req <span class="req">req_8c41a92f</span> · trace <span class="req">tr_b07f1de4</span> · owner=luis · channel=telegram</div>
+        </div>
+        <div class="pulse"><span class="dot"></span>Streaming · stage 4 / 5</div>
+      </header>
+
+      <div class="trace-grid">
+        <div class="tcol">step</div>
+        <div class="tcol">action</div>
+        <div class="tcol">at</div>
+        <div class="tcol" style="text-align:right;">latency</div>
+
+        <div class="trow">
+          <div class="step-num">01</div>
+          <div class="what">
+            <div class="title">Intake from Telegram</div>
+            <div class="sub">message_id <code>tg:1284</code> · normalized to <code>Intent{kind:"build_report"}</code></div>
+          </div>
+          <div class="when">14:02:11.084</div>
+          <div class="lat"><span class="ms">12</span> ms</div>
+        </div>
+
+        <div class="trow">
+          <div class="step-num">02</div>
+          <div class="what">
+            <div class="title">Agent Zero plan</div>
+            <div class="sub">Commander drafted plan: <code>research → classify → write → review</code>. Pulled Tony provenance for "marketing-ops Q3" topic.</div>
+          </div>
+          <div class="when">14:02:11.179</div>
+          <div class="lat"><span class="ms">95</span> ms</div>
+        </div>
+
+        <div class="trow gated">
+          <div class="step-num">03</div>
+          <div class="what">
+            <div class="title">Hermes engaged</div>
+            <div class="sub">Specialist work detected (multi-source synthesis). Bridge Session proof <code>bs_4f12</code> verified · expires in 24m.</div>
+          </div>
+          <div class="when">14:02:11.207</div>
+          <div class="lat"><span class="ms">28</span> ms</div>
+        </div>
+
+        <div class="trow">
+          <div class="step-num">04</div>
+          <div class="what">
+            <div class="title">Engine selected</div>
+            <div class="sub">Picked <code>claude-sonnet-4.5</code> for plan, <code>claude-haiku-4.5</code> for classify pass. Reserved <code>~18,000 tok</code> with Governor.</div>
+          </div>
+          <div class="when">14:02:11.363</div>
+          <div class="lat"><span class="ms">156</span> ms</div>
+        </div>
+
+        <div class="trow fanout">
+          <div class="step-num">05</div>
+          <div class="what">
+            <div class="title">Fan-out dispatched</div>
+            <div class="sub">3 workers · <code>Researcher</code> → MCP <code>notion</code>, <code>Crawler</code> → MCP <code>email</code>, <code>Classifier</code> → OpenClaw+ <code>topic-tag</code>. <strong>Sub-dispatcher</strong> coordinates.</div>
+          </div>
+          <div class="when">14:02:11.371</div>
+          <div class="lat"><span class="ms">8</span> ms</div>
+        </div>
+
+        <div class="trow read-only">
+          <div class="step-num">06</div>
+          <div class="what">
+            <div class="title">MCP <code>notion</code> read</div>
+            <div class="sub">Resource <code>db:marketing-ops</code> · 47 pages returned · cached 5min</div>
+          </div>
+          <div class="when">14:02:11.812</div>
+          <div class="lat"><span class="ms">441</span> ms</div>
+        </div>
+
+        <div class="trow read-only">
+          <div class="step-num">07</div>
+          <div class="what">
+            <div class="title">MCP <code>email</code> read</div>
+            <div class="sub">Search <code>after:2024-07-01 label:marketing</code> · 312 threads scoped → 84 selected by Classifier</div>
+          </div>
+          <div class="when">14:02:12.049</div>
+          <div class="lat"><span class="ms">678</span> ms</div>
+        </div>
+
+        <div class="trow">
+          <div class="step-num">08</div>
+          <div class="what">
+            <div class="title">Writer composing</div>
+            <div class="sub">Streaming to <code>build-wiki/reports/q3-marketing-ops.md</code> · <strong>in progress</strong> · 2,184 / ~6,800 tok</div>
+          </div>
+          <div class="when">14:02:12.052</div>
+          <div class="lat"><span style="color:var(--t-4);">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dispatch heatmap -->
+    <div class="sec-head">
+      <h3>Dispatch heatmap · last 60 min</h3>
+      <span class="meta">vertical=channel · horizontal=minute · cell=count</span>
+      <span class="filler"></span>
+    </div>
+
+    <div style="background:var(--bg-2);border:1px solid var(--line-2);border-radius:var(--r-3);padding:14px;display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;font-family:var(--ff-mono);font-size:10.5px;color:var(--t-4);">
+      <div style="color:var(--t-3);">Telegram</div>
+      <div id="hm-1"></div>
+      <div style="color:var(--t-3);">AgentMail</div>
+      <div id="hm-2"></div>
+      <div style="color:var(--t-3);">Workflow</div>
+      <div id="hm-3"></div>
+      <div style="color:var(--t-3);">Web UI</div>
+      <div id="hm-4"></div>
+      <div style="color:var(--t-3);">Cron</div>
+      <div id="hm-5"></div>
+      <div></div>
+      <div id="hm-axis" style="display:grid;grid-template-columns:repeat(60,1fr);gap:1px;color:var(--t-5);font-size:9px;padding-top:4px;">
+        <span style="grid-column:1;text-align:left;">-60m</span>
+        <span style="grid-column:31;text-align:center;">-30m</span>
+        <span style="grid-column:60;text-align:right;">now</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Side ===== -->
+  <aside class="side">
+
+    <!-- Engine selector -->
+    <div class="panel">
+      <header>Engine selector · this request<span class="meta">scoring</span></header>
+      <div class="body">
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Claude Sonnet 4.5<br/><span class="sub">claude-sonnet-4.5</span></span>
+          <span class="num">$3/Mtk</span>
+          <span class="num">820ms</span>
+          <span class="pick win">PICK</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Claude Haiku 4.5<br/><span class="sub">claude-haiku-4.5</span></span>
+          <span class="num">$0.25</span>
+          <span class="num">280ms</span>
+          <span class="pick win">CLASSIFY</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-yellow)"></span>
+          <span class="name">GPT-4o<br/><span class="sub">gpt-4o-2024-11</span></span>
+          <span class="num">$5/Mtk</span>
+          <span class="num">680ms</span>
+          <span class="pick skip">over budget</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Codex<br/><span class="sub">code tasks only</span></span>
+          <span class="num">$2/Mtk</span>
+          <span class="num">540ms</span>
+          <span class="pick skip">capability mismatch</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Gemini 1.5<br/><span class="sub">gemini-1.5-pro</span></span>
+          <span class="num">$1.25</span>
+          <span class="num">920ms</span>
+          <span class="pick skip">runner-up</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Groq Llama<br/><span class="sub">fast tier</span></span>
+          <span class="num">$0.10</span>
+          <span class="num">90ms</span>
+          <span class="pick skip">quality floor</span>
+        </div>
+        <div class="engine-row">
+          <span class="pdot" style="background:var(--st-green)"></span>
+          <span class="name">Ollama (local)<br/><span class="sub">qwen 2.5</span></span>
+          <span class="num">free</span>
+          <span class="num">220ms</span>
+          <span class="pick skip">drafts only</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fan-out tree -->
+    <div class="panel">
+      <header>Fan-out plan<span class="meta">tr_b07f1de4</span></header>
+      <div class="body">
+        <div class="tree">
+          <div class="root">⌖ dispatcher.plan()</div>
+          <div><span class="indent">├─</span> <span class="branch">Agent Zero</span> · commander</div>
+          <div><span class="indent">│&nbsp;&nbsp; └─</span> <span class="branch">Hermes</span> · lieutenant <span style="color:var(--st-yellow);font-size:9px;letter-spacing:.1em;margin-left:4px;">GATED ✓</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Researcher</span> → MCP <span class="leaf gated">notion.read</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Crawler</span> → MCP <span class="leaf gated">email.read</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Classifier</span> → OpenClaw+ skill <span class="leaf">topic-tag</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Writer</span> → engine <span class="leaf">claude-sonnet-4.5</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Reviewer</span> → engine <span class="leaf">claude-haiku-4.5</span></div>
+          <div><span class="indent">├─</span> <span class="leaf">Archivist</span> → <span class="leaf gated">build-wiki.write</span></div>
+          <div><span class="indent">└─</span> <span class="leaf denied">Outbound publish</span> <span style="color:var(--t-4);font-size:10px;">no scope</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy stack -->
+    <div class="panel">
+      <header>Policy stack<span class="meta">7 checks</span></header>
+      <div class="body">
+        <div class="policy-list">
+          <div class="policy-item"><span class="ck">✓</span><span class="name">Owner identity <span class="v">luis</span></span><span class="lt">2ms</span></div>
+          <div class="policy-item"><span class="ck">✓</span><span class="name">RBAC scope <span class="v">read+write:reports</span></span><span class="lt">3ms</span></div>
+          <div class="policy-item"><span class="ck">✓</span><span class="name">Bridge Session <span class="v">bs_4f12 · 24m</span></span><span class="lt">5ms</span></div>
+          <div class="policy-item"><span class="ck">✓</span><span class="name">Hermes proof <span class="v">hermes_called:true</span></span><span class="lt">1ms</span></div>
+          <div class="policy-item warn"><span class="ck">!</span><span class="name">Token budget <span class="v">81% used</span></span><span class="lt">2ms</span></div>
+          <div class="policy-item"><span class="ck">✓</span><span class="name">Rate limit <span class="v">12/60 per min</span></span><span class="lt">1ms</span></div>
+          <div class="policy-item"><span class="ck">✓</span><span class="name">Audit sink <span class="v">build-wiki ready</span></span><span class="lt">14ms</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queues -->
+    <div class="panel">
+      <header>Worker queues<span class="meta">live</span></header>
+      <div class="body">
+        <div class="queue-meters">
+          <div class="qmeter"><span class="nm">Researcher</span><div class="bar"><div class="fill" style="width:48%"></div></div><span class="v">3 / 8</span></div>
+          <div class="qmeter"><span class="nm">Crawler</span><div class="bar"><div class="fill" style="width:62%"></div></div><span class="v">5 / 8</span></div>
+          <div class="qmeter"><span class="nm">Classifier</span><div class="bar"><div class="fill" style="width:24%"></div></div><span class="v">1 / 4</span></div>
+          <div class="qmeter"><span class="nm">Writer</span><div class="bar"><div class="fill warn" style="width:88%"></div></div><span class="v">7 / 8</span></div>
+          <div class="qmeter"><span class="nm">Coder</span><div class="bar"><div class="fill" style="width:12%"></div></div><span class="v">1 / 8</span></div>
+          <div class="qmeter"><span class="nm">Reviewer</span><div class="bar"><div class="fill" style="width:50%"></div></div><span class="v">2 / 4</span></div>
+          <div class="qmeter"><span class="nm">Archivist</span><div class="bar"><div class="fill" style="width:8%"></div></div><span class="v">1 / 12</span></div>
+          <div class="qmeter"><span class="nm">Sub-dispatcher</span><div class="bar"><div class="fill" style="width:33%"></div></div><span class="v">2 / 6</span></div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+// Build deterministic heatmap (no real data, just plausible-looking densities).
+(function() {
+  const seedRows = {
+    'hm-1': [3,1,0,2,4,5,3,2,1,0,1,2,5,8,6,4,3,2,1,0,2,3,4,2,1,0,0,1,3,5, 6,4,3,2,1,2,4,7,9,8, 5,3,2,1,0,1,2,3,4,5, 6,7,8,9,8,6,4,3,2,3],
+    'hm-2': [0,0,1,0,0,1,2,1,0,0,0,0,1,2,3,2,1,0,0,0,1,1,2,1,0,0,1,2,3,2, 1,1,0,0,1,2,3,4,3,2, 1,0,0,1,2,2,1,0,1,2, 3,4,3,2,1,1,0,0,1,2],
+    'hm-3': [1,2,1,0,1,1,0,1,2,1,0,0,1,2,1,0,0,1,1,0, 0,1,1,0,1,2,1,0,1,1, 1,0,0,1,2,1,1,0,0,1, 1,2,1,0,0,1,2,1,1,0, 0,1,2,3,2,1,0,1,2,1],
+    'hm-4': [2,3,2,1,2,3,4,3,2,1,2,3,4,5,4,3,2,1,2,3, 4,5,4,3,2,3,4,5,6,5, 4,3,2,3,4,5,6,7,6,5, 4,3,2,3,4,5,6,7,8,7, 6,5,4,5,6,7,8,7,6,5],
+    'hm-5': [0,0,0,0,0,5,0,0,0,0, 0,0,0,0,0,3,0,0,0,0, 0,0,0,0,0,4,0,0,0,0, 0,0,0,0,0,2,0,0,0,0, 0,0,0,0,0,3,0,0,0,0, 0,0,0,0,0,5,0,0,0,2],
+  };
+  const max = 9;
+  Object.entries(seedRows).forEach(([id, vals]) => {
+    const el = document.getElementById(id);
+    el.style.display = 'grid';
+    el.style.gridTemplateColumns = 'repeat(60, 1fr)';
+    el.style.gap = '1px';
+    el.innerHTML = vals.map(v => {
+      const a = v / max;
+      const bg = v === 0
+        ? 'rgba(255,255,255,0.025)'
+        : `rgba(94,234,212,${0.10 + a*0.55})`;
+      return `<div title="${v}" style="height:20px;background:${bg};border-radius:1px;"></div>`;
+    }).join('');
+  });
+})();
+</script>
+
+</body>
+</html>

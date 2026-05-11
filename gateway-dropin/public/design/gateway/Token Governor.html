@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gateway · Token Governor</title>
+<meta name="viewport" content="width=1480" />
+<link rel="stylesheet" href="shared/tokens.css" />
+<link rel="stylesheet" href="shared/node-card.css" />
+<style>
+body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); }
+
+/* Crumbs */
+.gw-crumbs {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  font-size: 12px; color: var(--t-3);
+}
+.gw-crumbs a { color: var(--t-3); text-decoration: none; }
+.gw-crumbs a:hover { color: var(--t-1); }
+.gw-crumbs .here { color: var(--t-1); font-weight: 500; }
+.gw-crumbs .sep { color: var(--t-5); }
+
+/* Header */
+.page-head {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line-2);
+  background: var(--bg-1);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+}
+.page-head h1 {
+  margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 12px;
+}
+.page-head h1 .icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.32), rgba(255,138,61,0.32));
+  border: 1px solid rgba(251,191,36,0.55);
+  display: grid; place-items: center;
+  font-family: var(--ff-mono); color: var(--brand-amber); font-size: 16px;
+}
+.page-head .lede { margin: 0; color: var(--t-3); font-size: 13px; max-width: 720px; line-height: 1.55; }
+.page-head .meta { display: grid; grid-template-columns: repeat(4, auto); gap: 22px; align-items: center; }
+.page-head .meta .stat .v { font-family: var(--ff-mono); font-size: 18px; color: var(--t-1); font-weight: 500; }
+.page-head .meta .stat .l { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); }
+.page-head .meta .stat .v.warn { color: var(--st-yellow); }
+
+/* Budget hero */
+.budget-hero {
+  padding: 24px;
+  display: grid; grid-template-columns: 380px 1fr; gap: 24px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* Daily ring */
+.budget-ring {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 18px;
+  display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center;
+}
+.ring-svg { width: 140px; height: 140px; }
+.ring-svg .track { stroke: var(--bg-4); }
+.ring-svg .arc-mod { stroke: var(--brand-cyan); }
+.ring-svg .arc-pln { stroke: var(--brand-violet); }
+.ring-svg .arc-bgt { stroke: var(--st-yellow); }
+.ring-svg text.big { font-family: var(--ff-mono); font-size: 22px; fill: var(--t-1); font-weight: 600; }
+.ring-svg text.lbl { font-family: var(--ff-mono); font-size: 9px; fill: var(--t-4); letter-spacing: 0.10em; }
+
+.budget-legend { display: grid; gap: 10px; }
+.budget-legend .row { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; font-size: 12px; }
+.budget-legend .row .pdot { width: 9px; height: 9px; border-radius: 2px; }
+.budget-legend .row .nm  { color: var(--t-2); }
+.budget-legend .row .v   { font-family: var(--ff-mono); color: var(--t-1); font-weight: 500; }
+.budget-legend .row .v .sub { color: var(--t-4); font-size: 10px; margin-left: 4px; }
+
+/* Sparkline */
+.spend-trend {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  padding: 18px;
+  display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+}
+.spend-trend .head {
+  display: flex; align-items: baseline; gap: 14px;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600;
+}
+.spend-trend .head .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); letter-spacing: 0; }
+.spend-trend .head .meta .v { color: var(--t-1); }
+.spend-trend .chart { width: 100%; height: 160px; }
+.spend-trend .chart .grid line { stroke: var(--bg-grid); stroke-width: 1; }
+.spend-trend .chart .area-mod { fill: rgba(94,234,212,0.18); }
+.spend-trend .chart .area-pln { fill: rgba(167,139,250,0.18); }
+.spend-trend .chart .line-mod { stroke: var(--brand-cyan); fill: none; stroke-width: 1.5; }
+.spend-trend .chart .line-pln { stroke: var(--brand-violet); fill: none; stroke-width: 1.5; }
+.spend-trend .chart .line-bgt { stroke: var(--st-yellow); fill: none; stroke-width: 1; stroke-dasharray: 4 3; }
+.spend-trend .chart text.axis { font-family: var(--ff-mono); font-size: 10px; fill: var(--t-5); }
+
+.spend-trend .legend {
+  display: flex; gap: 16px; font-size: 11px; color: var(--t-3); border-top: 1px solid var(--line-2); padding-top: 10px;
+}
+.spend-trend .legend .it { display: flex; align-items: center; gap: 6px; }
+.spend-trend .legend .it .ln { width: 14px; height: 2px; border-radius: 1px; }
+.spend-trend .legend .it .ln.dash { background: repeating-linear-gradient(90deg, var(--st-yellow) 0 4px, transparent 4px 7px); height: 1px; }
+
+/* Layout */
+.layout {
+  display: grid; grid-template-columns: 1fr 380px; gap: 0;
+  background: var(--bg-1);
+}
+
+/* Engine ledger */
+.canvas { padding: 22px 24px; overflow-y: auto; }
+.sec-head {
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 12px;
+}
+.sec-head h3 { margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600; }
+.sec-head .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); }
+.sec-head .filler { flex: 1; height: 1px; background: var(--line-2); }
+.sec-head .actions { display: flex; gap: 6px; }
+.sec-head .actions button {
+  font-family: inherit; font-size: 11px; color: var(--t-2);
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 5px;
+  padding: 5px 10px; cursor: pointer;
+}
+.sec-head .actions button.active { background: var(--bg-4); color: var(--t-1); border-color: var(--line-strong); }
+
+/* Engine card grid */
+.engine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.engine-card {
+  background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-3);
+  padding: 14px 16px;
+  display: grid; gap: 10px;
+}
+.engine-card .top { display: flex; align-items: center; justify-content: space-between; }
+.engine-card .top .nm {
+  display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--t-1);
+}
+.engine-card .top .nm .pdot { width: 9px; height: 9px; border-radius: 50%; }
+.engine-card .top .nm .sub { color: var(--t-4); font-size: 10.5px; font-family: var(--ff-mono); font-weight: 500; margin-left: 6px; }
+.engine-card .top .pinning {
+  font-size: 9px; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;
+  padding: 2px 6px; border-radius: 3px;
+  color: var(--brand-violet); background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.40);
+}
+.engine-card .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.engine-card .stats .s .v { font-family: var(--ff-mono); font-size: 15px; color: var(--t-1); font-weight: 500; }
+.engine-card .stats .s .l { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t-4); margin-top: 2px; }
+.engine-card .stats .s .v.warn { color: var(--st-yellow); }
+.engine-card .stats .s .v.over { color: var(--st-red); }
+.engine-card .bar-row {
+  display: grid; grid-template-columns: 60px 1fr auto; gap: 10px; align-items: center;
+  font-size: 11px;
+}
+.engine-card .bar-row .lbl { color: var(--t-3); font-size: 11px; }
+.engine-card .bar { height: 6px; background: var(--bg-4); border-radius: 3px; overflow: hidden; position: relative; }
+.engine-card .bar .fill { height: 100%; border-radius: 3px; }
+.engine-card .bar .fill.green  { background: linear-gradient(90deg, var(--st-green), var(--brand-cyan)); }
+.engine-card .bar .fill.warn   { background: linear-gradient(90deg, var(--brand-amber), var(--st-orange)); }
+.engine-card .bar .fill.over   { background: linear-gradient(90deg, var(--st-orange), var(--st-red)); }
+.engine-card .bar .marker {
+  position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--st-yellow);
+}
+.engine-card .bar .marker::before {
+  content: 'cap'; position: absolute; top: -14px; left: -10px; font-size: 9px; color: var(--st-yellow);
+  font-family: var(--ff-mono); letter-spacing: 0.06em;
+}
+.engine-card .bar-row .v { font-family: var(--ff-mono); font-size: 11px; color: var(--t-2); min-width: 90px; text-align: right; }
+
+/* Recent settlements */
+.ledger-tbl {
+  background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-3);
+  overflow: hidden;
+}
+.ledger-grid {
+  display: grid;
+  grid-template-columns: 110px 1fr 130px 80px 90px 80px;
+}
+.ledger-grid .hd {
+  padding: 10px 14px;
+  border-right: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t-4); font-weight: 600;
+  background: var(--bg-1);
+}
+.ledger-grid .hd:last-child { border-right: none; }
+
+.lrow > div {
+  padding: 10px 14px;
+  border-right: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 11.5px;
+}
+.lrow > div:last-child { border-right: none; }
+.lrow:last-child > div { border-bottom: none; }
+.lrow .req { font-family: var(--ff-mono); font-size: 10.5px; color: var(--brand-cyan); }
+.lrow .ti  { color: var(--t-1); }
+.lrow .ti .sub { color: var(--t-4); font-size: 10.5px; margin-top: 2px; }
+.lrow .eng { font-family: var(--ff-mono); font-size: 10.5px; color: var(--t-2); }
+.lrow .tk  { font-family: var(--ff-mono); color: var(--t-2); text-align: right; }
+.lrow .ct  { font-family: var(--ff-mono); color: var(--t-1); text-align: right; }
+.lrow .st  { font-family: var(--ff-mono); font-size: 10px; }
+.lrow .st.ok    { color: var(--st-green); }
+.lrow .st.over  { color: var(--st-yellow); }
+.lrow .st.deny  { color: var(--st-red); }
+
+/* Side: limits + deny stream */
+.side {
+  background: var(--bg-1);
+  border-left: 1px solid var(--line-2);
+  overflow-y: auto;
+  padding: 22px 20px;
+  display: grid; gap: 22px; align-content: start;
+}
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.panel header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t-3); font-weight: 600;
+}
+.panel header .meta { font-family: var(--ff-mono); font-size: 11px; color: var(--t-4); letter-spacing: 0; }
+.panel .body { padding: 12px 14px; }
+
+/* Limits */
+.limits-list { display: grid; gap: 10px; }
+.limit {
+  display: grid; gap: 6px;
+  padding: 10px;
+  background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+}
+.limit .top {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; color: var(--t-1); font-weight: 500;
+}
+.limit .top .scope {
+  font-size: 9px; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  color: var(--t-3); background: var(--bg-4); border: 1px solid var(--line-3);
+}
+.limit .top .scope.daily { color: var(--brand-cyan); border-color: rgba(94,234,212,0.40); background: rgba(94,234,212,0.10); }
+.limit .top .scope.req   { color: var(--brand-violet); border-color: rgba(167,139,250,0.40); background: rgba(167,139,250,0.10); }
+.limit .top .scope.engine{ color: var(--brand-amber); border-color: rgba(251,191,36,0.40); background: rgba(251,191,36,0.10); }
+.limit .bar { height: 5px; background: var(--bg-4); border-radius: 3px; overflow: hidden; }
+.limit .bar .fill { height: 100%; }
+.limit .bar .fill.green { background: var(--st-green); }
+.limit .bar .fill.warn { background: var(--st-yellow); }
+.limit .bar .fill.over { background: var(--st-red); }
+.limit .meta { display: flex; justify-content: space-between; font-family: var(--ff-mono); font-size: 10px; color: var(--t-4); }
+.limit .meta .right { color: var(--t-2); }
+
+/* Deny stream */
+.deny-list { display: grid; gap: 6px; }
+.deny {
+  background: rgba(245,181,10,0.08);
+  border: 1px solid var(--st-yellow-bd); border-radius: var(--r-2);
+  padding: 8px 10px;
+  display: grid; gap: 4px;
+  font-size: 11px; color: var(--t-2);
+}
+.deny.red { background: var(--st-red-bg); border-color: var(--st-red-bd); }
+.deny .h { display: flex; align-items: center; justify-content: space-between; font-weight: 500; color: var(--t-1); font-size: 11.5px; }
+.deny .h .ts { font-family: var(--ff-mono); font-size: 10px; color: var(--t-4); font-weight: 400; }
+.deny .h .tag {
+  font-size: 9px; letter-spacing: 0.10em; text-transform: uppercase; font-weight: 700;
+  color: var(--st-yellow); background: var(--st-yellow-bg);
+  border: 1px solid var(--st-yellow-bd);
+  padding: 1px 5px; border-radius: 3px;
+}
+.deny.red .h .tag { color: var(--st-red); background: var(--st-red-bg); border-color: var(--st-red-bd); }
+.deny .why { color: var(--t-3); font-size: 11px; }
+.deny .why code { font-family: var(--ff-mono); font-size: 10.5px; background: var(--bg-3); padding: 1px 4px; border-radius: 3px; color: var(--brand-cyan); }
+.deny .actions { display: flex; gap: 6px; margin-top: 2px; }
+.deny .actions a {
+  font-size: 10.5px; color: var(--t-2); background: var(--bg-3);
+  border: 1px solid var(--line-2); border-radius: 3px;
+  padding: 2px 6px; text-decoration: none;
+}
+.deny .actions a.primary { color: var(--brand-cyan); border-color: rgba(94,234,212,0.40); background: rgba(94,234,212,0.10); }
+
+/* Owner pinning */
+.pin-list { display: grid; gap: 6px; }
+.pin {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+  padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-2);
+  font-size: 11.5px;
+}
+.pin .nm { color: var(--t-1); font-weight: 500; }
+.pin .nm .sub { color: var(--t-4); font-size: 10px; margin-left: 4px; font-family: var(--ff-mono); }
+.pin .v { font-family: var(--ff-mono); font-size: 10.5px; color: var(--t-3); }
+.pin .v .pin-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-violet); margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- Crumbs -->
+<div class="gw-crumbs">
+  <a href="index.html">Gateway design</a>
+  <span class="sep">›</span>
+  <a href="Gateway Overview.html">Nucleus</a>
+  <span class="sep">›</span>
+  <span class="here">Token Governor</span>
+  <span style="flex:1"></span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/governor</span>
+</div>
+
+<!-- Page header -->
+<header class="page-head">
+  <div>
+    <h1><span class="icon">$</span>Token Governor</h1>
+    <p class="lede">Single source of truth for engine spend. Budgets are reserved at plan-time, settled at execute-time, and enforced before fan-out. Per-owner pinning, per-engine caps, daily ceilings — denials are loud, recoverable, and audited.</p>
+  </div>
+  <div class="meta">
+    <div class="stat"><div class="v">$21.53</div><div class="l">spent today</div></div>
+    <div class="stat"><div class="v">$28.20</div><div class="l">reserved · plan</div></div>
+    <div class="stat"><div class="v warn">81%</div><div class="l">of $35 cap</div></div>
+    <div class="stat"><div class="v">11</div><div class="l">denials · 24h</div></div>
+  </div>
+</header>
+
+<!-- Budget hero -->
+<section class="budget-hero">
+
+  <!-- Ring -->
+  <div class="budget-ring">
+    <svg class="ring-svg" viewBox="0 0 140 140">
+      <!-- track -->
+      <circle class="track" cx="70" cy="70" r="56" fill="none" stroke-width="14"/>
+      <!-- planned (violet) — total reserved arc, drawn first so 'modeled' overlays -->
+      <circle class="arc-pln" cx="70" cy="70" r="56" fill="none" stroke-width="14"
+        stroke-dasharray="351.86" stroke-dashoffset="69.5"
+        transform="rotate(-90 70 70)" stroke-linecap="round"/>
+      <!-- modeled spent (cyan) — actually settled -->
+      <circle class="arc-mod" cx="70" cy="70" r="56" fill="none" stroke-width="14"
+        stroke-dasharray="351.86" stroke-dashoffset="135.7"
+        transform="rotate(-90 70 70)" stroke-linecap="round"/>
+      <!-- daily cap tick -->
+      <line class="arc-bgt" x1="70" y1="6" x2="70" y2="20" stroke-width="2"/>
+
+      <text class="big" x="70" y="68" text-anchor="middle">61%</text>
+      <text class="lbl" x="70" y="84" text-anchor="middle">SPENT</text>
+    </svg>
+    <div class="budget-legend">
+      <div class="row">
+        <span class="pdot" style="background:var(--brand-cyan)"></span>
+        <span class="nm">Settled spend</span>
+        <span class="v">$21.53<span class="sub">61%</span></span>
+      </div>
+      <div class="row">
+        <span class="pdot" style="background:var(--brand-violet)"></span>
+        <span class="nm">Reserved (in flight)</span>
+        <span class="v">$6.67<span class="sub">19%</span></span>
+      </div>
+      <div class="row">
+        <span class="pdot" style="background:var(--st-yellow)"></span>
+        <span class="nm">Daily cap</span>
+        <span class="v">$35.00<span class="sub">100%</span></span>
+      </div>
+      <div class="row" style="border-top: 1px solid var(--line-2); padding-top: 8px; margin-top: 2px;">
+        <span class="pdot" style="background:transparent"></span>
+        <span class="nm" style="color:var(--t-3); font-size: 11px;">Headroom before warn (90%)</span>
+        <span class="v" style="color:var(--st-yellow)">$3.97</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sparkline -->
+  <div class="spend-trend">
+    <div class="head">
+      <span>Spend trend · today</span>
+      <span class="meta">range <span class="v">00:00 – 14:02</span> · resolution <span class="v">5 min</span></span>
+      <span style="flex:1;"></span>
+      <span class="meta" style="color:var(--t-3);">⌖ <span class="v">live</span></span>
+    </div>
+    <svg class="chart" viewBox="0 0 600 160" preserveAspectRatio="none">
+      <g class="grid">
+        <line x1="0" y1="40"  x2="600" y2="40"/>
+        <line x1="0" y1="80"  x2="600" y2="80"/>
+        <line x1="0" y1="120" x2="600" y2="120"/>
+      </g>
+      <!-- daily cap line at y ≈ 20 (top) -->
+      <line class="line-bgt" x1="0" y1="20" x2="600" y2="20"/>
+      <text class="axis" x="600" y="14" text-anchor="end">$35 cap</text>
+
+      <!-- planned area -->
+      <path class="area-pln" d="M0,150 L20,148 L50,142 L80,134 L110,128 L140,118 L170,106 L200,98 L230,88 L260,78 L290,70 L320,62 L350,55 L380,48 L410,42 L440,38 L470,34 L500,32 L520,30 L540,29 L560,28 L580,27 L600,26 L600,160 L0,160 Z"/>
+      <!-- modeled area -->
+      <path class="area-mod" d="M0,156 L20,154 L50,150 L80,145 L110,140 L140,132 L170,124 L200,118 L230,110 L260,102 L290,95 L320,87 L350,80 L380,72 L410,66 L440,60 L470,55 L500,52 L520,50 L540,48 L560,46 L580,44 L600,43 L600,160 L0,160 Z"/>
+      <!-- planned line -->
+      <path class="line-pln" d="M0,150 L20,148 L50,142 L80,134 L110,128 L140,118 L170,106 L200,98 L230,88 L260,78 L290,70 L320,62 L350,55 L380,48 L410,42 L440,38 L470,34 L500,32 L520,30 L540,29 L560,28 L580,27 L600,26"/>
+      <!-- modeled line -->
+      <path class="line-mod" d="M0,156 L20,154 L50,150 L80,145 L110,140 L140,132 L170,124 L200,118 L230,110 L260,102 L290,95 L320,87 L350,80 L380,72 L410,66 L440,60 L470,55 L500,52 L520,50 L540,48 L560,46 L580,44 L600,43"/>
+
+      <!-- now indicator -->
+      <line x1="600" y1="0" x2="600" y2="160" stroke="var(--brand-cyan)" stroke-width="1" stroke-dasharray="2 2" opacity="0.55"/>
+
+      <text class="axis" x="0"   y="155" text-anchor="start">00:00</text>
+      <text class="axis" x="200" y="155" text-anchor="middle">06:00</text>
+      <text class="axis" x="400" y="155" text-anchor="middle">10:00</text>
+      <text class="axis" x="598" y="155" text-anchor="end">14:02</text>
+    </svg>
+    <div class="legend">
+      <span class="it"><span class="ln" style="background:var(--brand-cyan)"></span>Settled spend</span>
+      <span class="it"><span class="ln" style="background:var(--brand-violet)"></span>Reserved</span>
+      <span class="it"><span class="ln dash"></span>Daily cap</span>
+      <span style="flex:1"></span>
+      <span style="color:var(--t-4); font-family: var(--ff-mono); font-size: 10.5px;">projected exhaustion · <span style="color:var(--st-yellow);">21:40</span> at current rate</span>
+    </div>
+  </div>
+</section>
+
+<div class="layout">
+
+  <!-- ===== Canvas ===== -->
+  <div class="canvas">
+
+    <!-- Engine ledger -->
+    <div class="sec-head">
+      <h3>Per-engine ledger</h3>
+      <span class="meta">7 active · 1 reserved · 1 unconfigured</span>
+      <span class="filler"></span>
+      <div class="actions">
+        <button class="active">Today</button>
+        <button>7d</button>
+        <button>30d</button>
+      </div>
+    </div>
+
+    <div class="engine-grid">
+
+      <!-- Claude Sonnet -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Claude Sonnet 4.5 <span class="sub">claude-sonnet-4.5</span></div>
+          <span class="pinning">Pinned · Writer</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$6.40</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">2.1M</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">214</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">820ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:64%"></div><div class="marker" style="left:80%"></div></div>
+          <span class="v">$6.40 / $10</span>
+        </div>
+      </div>
+
+      <!-- GPT-4o -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>GPT-4o <span class="sub">gpt-4o-2024-11</span></div>
+          <span class="pinning" style="color:var(--t-4); background:var(--bg-3); border-color:var(--line-3);">Fallback only</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v warn">$11.20</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">2.4M</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">88</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">680ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill warn" style="width:93%"></div><div class="marker" style="left:100%"></div></div>
+          <span class="v" style="color:var(--st-yellow);">$11.20 / $12</span>
+        </div>
+      </div>
+
+      <!-- Haiku -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Claude Haiku 4.5 <span class="sub">classify · review</span></div>
+          <span class="pinning">Pinned · Classifier</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$0.85</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">3.4M</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">612</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">280ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:21%"></div><div class="marker" style="left:80%"></div></div>
+          <span class="v">$0.85 / $4</span>
+        </div>
+      </div>
+
+      <!-- Codex -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Codex <span class="sub">code tasks only</span></div>
+          <span class="pinning">Pinned · Coder</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$1.10</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">540K</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">42</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">540ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:36%"></div><div class="marker" style="left:80%"></div></div>
+          <span class="v">$1.10 / $3</span>
+        </div>
+      </div>
+
+      <!-- Gemini -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Gemini 1.5 <span class="sub">gemini-1.5-pro</span></div>
+          <span class="pinning" style="color:var(--t-4); background:var(--bg-3); border-color:var(--line-3);">Runner-up</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$1.80</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">1.4M</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">38</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">920ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:30%"></div><div class="marker" style="left:80%"></div></div>
+          <span class="v">$1.80 / $6</span>
+        </div>
+      </div>
+
+      <!-- Groq -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Groq Llama <span class="sub">fast tier</span></div>
+          <span class="pinning" style="color:var(--t-4); background:var(--bg-3); border-color:var(--line-3);">Drafts</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$0.18</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">1.8M</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">156</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">90ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:9%"></div><div class="marker" style="left:80%"></div></div>
+          <span class="v">$0.18 / $2</span>
+        </div>
+      </div>
+
+      <!-- Ollama -->
+      <div class="engine-card">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Ollama <span class="sub">qwen 2.5 · local</span></div>
+          <span class="pinning" style="color:var(--brand-cyan); background:rgba(94,234,212,0.10); border-color:rgba(94,234,212,0.40);">Free · local</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v">$0.00</div><div class="l">spent</div></div>
+          <div class="s"><div class="v">880K</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v">204</div><div class="l">requests</div></div>
+          <div class="s"><div class="v">220ms</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl">vs cap</span>
+          <div class="bar"><div class="fill green" style="width:0%"></div></div>
+          <span class="v">no cap</span>
+        </div>
+      </div>
+
+      <!-- NVIDIA reserved -->
+      <div class="engine-card" style="opacity:0.65; border-style: dashed;">
+        <div class="top">
+          <div class="nm"><span class="pdot" style="background:var(--st-gray)"></span>NVIDIA NIM <span class="sub">reserved</span></div>
+          <span class="pinning" style="color:var(--t-4); background:var(--bg-3); border-color:var(--line-3);">Unconfigured</span>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v" style="color:var(--t-5);">—</div><div class="l">spent</div></div>
+          <div class="s"><div class="v" style="color:var(--t-5);">—</div><div class="l">tokens</div></div>
+          <div class="s"><div class="v" style="color:var(--t-5);">—</div><div class="l">requests</div></div>
+          <div class="s"><div class="v" style="color:var(--t-5);">—</div><div class="l">p50</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="lbl" style="color:var(--t-5);">setup</span>
+          <div class="bar"><div class="fill" style="width:0%"></div></div>
+          <span class="v" style="color:var(--t-4);">register key →</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent settlements -->
+    <div class="sec-head">
+      <h3>Recent settlements</h3>
+      <span class="meta">last 8 · click row to open trace</span>
+      <span class="filler"></span>
+    </div>
+
+    <div class="ledger-tbl">
+      <div class="ledger-grid">
+        <div class="hd">request</div>
+        <div class="hd">intent</div>
+        <div class="hd">engine</div>
+        <div class="hd" style="text-align:right;">tokens</div>
+        <div class="hd" style="text-align:right;">cost</div>
+        <div class="hd">status</div>
+
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a92f</div>
+          <div class="ti">Build Q3 marketing-ops report<div class="sub">channel=telegram · owner=luis</div></div>
+          <div class="eng">claude-sonnet-4.5</div>
+          <div class="tk">18,240</div>
+          <div class="ct">$0.0547</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a921</div>
+          <div class="ti">Classify inbox sweep<div class="sub">workflow=morning · owner=luis</div></div>
+          <div class="eng">claude-haiku-4.5</div>
+          <div class="tk">42,100</div>
+          <div class="ct">$0.0105</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a8e2</div>
+          <div class="ti">Weekly digest draft<div class="sub">cron=mon-09 · owner=luis</div></div>
+          <div class="eng">gpt-4o-2024-11</div>
+          <div class="tk">88,420</div>
+          <div class="ct" style="color:var(--st-yellow)">$0.4421</div>
+          <div class="st over">OVER-CAP · SHED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a8a4</div>
+          <div class="ti">Codify obsidian → wiki<div class="sub">channel=web · owner=luis</div></div>
+          <div class="eng">codex-mini</div>
+          <div class="tk">12,300</div>
+          <div class="ct">$0.0246</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a866</div>
+          <div class="ti">Search MemPalace · "Q2 hires"<div class="sub">channel=telegram · owner=luis</div></div>
+          <div class="eng">claude-haiku-4.5</div>
+          <div class="tk">2,100</div>
+          <div class="ct">$0.0005</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a82e</div>
+          <div class="ti">Outbound publish to AgentMail<div class="sub">channel=workflow · owner=luis</div></div>
+          <div class="eng" style="color:var(--t-5);">—</div>
+          <div class="tk" style="color:var(--t-5);">—</div>
+          <div class="ct" style="color:var(--t-5);">—</div>
+          <div class="st deny">DENIED · BUDGET</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a7f1</div>
+          <div class="ti">Crawl 12 URLs<div class="sub">channel=telegram · owner=luis</div></div>
+          <div class="eng">groq-llama</div>
+          <div class="tk">220,800</div>
+          <div class="ct">$0.0221</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+        <div class="lrow" style="display:contents;">
+          <div class="req">req_8c41a7b3</div>
+          <div class="ti">Rewrite onboarding doc<div class="sub">channel=web · owner=luis</div></div>
+          <div class="eng">claude-sonnet-4.5</div>
+          <div class="tk">9,440</div>
+          <div class="ct">$0.0283</div>
+          <div class="st ok">SETTLED</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Side ===== -->
+  <aside class="side">
+
+    <!-- Limits stack -->
+    <div class="panel">
+      <header>Limits stack<span class="meta">enforced top → bottom</span></header>
+      <div class="body">
+        <div class="limits-list">
+          <div class="limit">
+            <div class="top">Daily ceiling <span class="scope daily">DAILY</span></div>
+            <div class="bar"><div class="fill warn" style="width:81%"></div></div>
+            <div class="meta"><span>$28.20 reserved</span><span class="right">/ $35.00</span></div>
+          </div>
+          <div class="limit">
+            <div class="top">Per-request max <span class="scope req">REQUEST</span></div>
+            <div class="bar"><div class="fill green" style="width:18%"></div></div>
+            <div class="meta"><span>active req: $0.06</span><span class="right">/ $0.35 soft cap</span></div>
+          </div>
+          <div class="limit">
+            <div class="top">Per-engine: GPT-4o <span class="scope engine">ENGINE</span></div>
+            <div class="bar"><div class="fill warn" style="width:93%"></div></div>
+            <div class="meta"><span>$11.20</span><span class="right">/ $12.00</span></div>
+          </div>
+          <div class="limit">
+            <div class="top">Burst window · 5 min <span class="scope req">RATE</span></div>
+            <div class="bar"><div class="fill green" style="width:34%"></div></div>
+            <div class="meta"><span>17 req</span><span class="right">/ 50 / 5min</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Owner pinning -->
+    <div class="panel">
+      <header>Owner pinning · luis<span class="meta">role-aware</span></header>
+      <div class="body">
+        <div class="pin-list">
+          <div class="pin">
+            <span class="nm">Writer <span class="sub">long-form</span></span>
+            <span class="v"><span class="pin-dot"></span>claude-sonnet-4.5</span>
+          </div>
+          <div class="pin">
+            <span class="nm">Classifier <span class="sub">tags · sort</span></span>
+            <span class="v"><span class="pin-dot"></span>claude-haiku-4.5</span>
+          </div>
+          <div class="pin">
+            <span class="nm">Coder <span class="sub">edits · refactor</span></span>
+            <span class="v"><span class="pin-dot"></span>codex-mini</span>
+          </div>
+          <div class="pin">
+            <span class="nm">Researcher <span class="sub">read-heavy</span></span>
+            <span class="v"><span class="pin-dot"></span>gemini-1.5-pro</span>
+          </div>
+          <div class="pin">
+            <span class="nm">Drafts <span class="sub">throwaway</span></span>
+            <span class="v"><span class="pin-dot"></span>ollama:qwen-2.5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deny stream -->
+    <div class="panel">
+      <header>Denial stream<span class="meta">11 · 24h</span></header>
+      <div class="body">
+        <div class="deny-list">
+          <div class="deny">
+            <div class="h"><span>Outbound publish · AgentMail</span><span class="ts">2m ago</span></div>
+            <div class="why">Per-request cap exceeded. Reserve <code>$0.42</code> &gt; <code>$0.35</code> soft cap.</div>
+            <div class="actions"><a href="#" class="primary">Approve once</a><a href="#">Raise cap</a><a href="#">Trace</a></div>
+          </div>
+          <div class="deny">
+            <div class="h"><span>GPT-4o classify pass</span><span class="ts">14m ago</span></div>
+            <div class="why">Engine cap at <code>93%</code>. Falling back to <code>haiku</code>.</div>
+            <div class="actions"><a href="#">Trace</a></div>
+          </div>
+          <div class="deny red">
+            <div class="h"><span>Workflow trigger · weekly digest</span><span class="ts">1h ago</span><span class="tag" style="color:var(--st-red); background:var(--st-red-bg); border-color: var(--st-red-bd);">DENIED</span></div>
+            <div class="why">No <code>hermes_called:true</code>. Read-only path can't dispatch <code>sonnet</code>.</div>
+            <div class="actions"><a href="#" class="primary">Open Bridge</a><a href="#">Trace</a></div>
+          </div>
+          <div class="deny">
+            <div class="h"><span>Burst window · classifier</span><span class="ts">2h ago</span></div>
+            <div class="why">Throttled at <code>50 req / 5min</code>. Re-queued, served at <code>13:24</code>.</div>
+            <div class="actions"><a href="#">Trace</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+</body>
+</html>

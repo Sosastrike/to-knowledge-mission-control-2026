@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>Gateway · Registry</title>
+<link rel="stylesheet" href="shared/tokens.css"/><link rel="stylesheet" href="shared/node-card.css"/>
+<style>
+.reg-page { padding: 24px 32px; max-width: 1480px; margin: 0 auto; }
+.reg-page h1 { margin: 0 0 6px; font-size: 24px; }
+.lead { color: var(--t-3); margin: 0 0 18px; max-width: 760px; }
+.toolbar { display: flex; gap: 10px; margin: 0 0 16px; align-items: center; flex-wrap: wrap; }
+.toolbar input { flex: 1; min-width: 240px; padding: 8px 12px; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px; color: var(--t-1); font-family: inherit; font-size: 12.5px; }
+.toolbar select { padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: 6px; color: var(--t-1); font-family: inherit; font-size: 12px; }
+.tally { display: flex; gap: 12px; margin: 0 0 14px; flex-wrap: wrap; }
+.tally .t { background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 14px; min-width: 100px; }
+.tally .t .lbl { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); }
+.tally .t .val { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.tally .t.green .val { color: var(--st-green); } .tally .t.yellow .val { color: var(--st-yellow); }
+.tally .t.red .val { color: var(--st-red); } .tally .t.gray .val { color: var(--st-gray); }
+.tally .t.blue .val { color: var(--st-blue); }
+table.reg { width: 100%; border-collapse: collapse; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+table.reg th { text-align: left; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: var(--t-4); padding: 10px 12px; background: var(--bg-3); border-bottom: 1px solid var(--line-2); font-weight: 600; }
+table.reg td { padding: 10px 12px; font-size: 12.5px; border-bottom: 1px solid var(--line-1); vertical-align: middle; }
+table.reg tr:hover td { background: var(--bg-3); }
+table.reg .nm { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+table.reg .nm .dot { width: 8px; height: 8px; border-radius: 50%; }
+table.reg .id { font-family: var(--ff-mono); font-size: 10.5px; color: var(--t-4); }
+table.reg .ty { font-size: 10.5px; color: var(--t-3); text-transform: uppercase; letter-spacing: 0.06em; }
+table.reg .blocker { color: var(--st-yellow); font-size: 11px; }
+table.reg .blocker.red { color: var(--st-red); }
+.minirwx { display: inline-flex; gap: 2px; }
+.minirwx span { display: inline-block; width: 14px; height: 14px; font-size: 9px; line-height: 14px; text-align: center; border-radius: 3px; border: 1px solid var(--line-3); color: var(--t-5); font-weight: 700; }
+.minirwx span.on { color: var(--t-1); background: var(--bg-4); border-color: var(--line-strong); }
+</style></head><body>
+<div class="gw-shell">
+<div id="topbar-mount"></div><div id="pagenav-mount"></div>
+<main class="reg-page">
+<h1>Gateway Registry</h1>
+<p class="lead">Every node the Gateway can route to. Each row is a registered entity with its R/W/X capabilities, status, and Bridge Session requirement. Adding a node requires a registry entry, RBAC review, and a discovery contract — no drive-by connections.</p>
+<div class="tally" id="tally"></div>
+<div class="toolbar">
+  <input id="q" placeholder="Filter by name, id, type, role…"/>
+  <select id="filter-type"><option value="">All types</option></select>
+  <select id="filter-status"><option value="">All statuses</option><option>green</option><option>yellow</option><option>blue</option><option>red</option><option>gray</option><option>purple</option><option>orange</option></select>
+  <button class="btn">Export CSV</button>
+  <button class="btn primary">+ Register node</button>
+</div>
+<table class="reg">
+<thead><tr>
+<th style="width:30px;"></th><th style="width:200px;">Name</th><th>ID</th><th>Type</th><th>Role</th><th>Status</th><th>R / W / X</th><th>Bridge</th><th>Last success</th><th>Cache</th>
+</tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</main></div>
+<script src="shared/gateway-data.js"></script><script src="shared/render.js"></script>
+<script>
+const G=window.GATEWAY;
+document.getElementById('topbar-mount').replaceWith(GW.topbar('Gateway · Registry'));
+document.getElementById('pagenav-mount').replaceWith(GW.pagenav('Gateway Registry.html'));
+
+const types = [...new Set(G.NODES.map(n=>n.type))].sort();
+const sel=document.getElementById('filter-type');
+types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;sel.appendChild(o);});
+
+function tally(){
+  const counts={green:0,yellow:0,blue:0,red:0,gray:0,purple:0,orange:0};
+  G.NODES.forEach(n=>counts[n.status]=(counts[n.status]||0)+1);
+  document.getElementById('tally').innerHTML=
+    `<div class="t"><div class="lbl">Total</div><div class="val">${G.NODES.length}</div></div>`+
+    Object.entries(counts).filter(([_,v])=>v>0).map(([k,v])=>`<div class="t ${k}"><div class="lbl">${k}</div><div class="val">${v}</div></div>`).join('');
+}
+function render(){
+  const q=document.getElementById('q').value.toLowerCase();
+  const ft=document.getElementById('filter-type').value;
+  const fs=document.getElementById('filter-status').value;
+  const rows=G.NODES.filter(n=>(!q||(n.name+n.id+n.type+(n.role||'')).toLowerCase().includes(q))&&(!ft||n.type===ft)&&(!fs||n.status===fs));
+  document.getElementById('rows').innerHTML=rows.map(n=>`
+    <tr>
+      <td><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${G.statusColor(n.status)};"></span></td>
+      <td><div class="nm">${n.name}</div>${n.blocked_reason?`<div class="blocker ${n.status==='red'?'red':''}">⚠ ${n.blocked_reason}</div>`:''}</td>
+      <td><span class="id">${n.id}</span></td>
+      <td><span class="ty">${n.type}</span></td>
+      <td style="color:var(--t-2);">${n.role||'—'}</td>
+      <td><span class="pill ${n.status}"><span class="dot"></span>${G.STATUS[n.status]?.label||n.status}</span></td>
+      <td><span class="minirwx"><span class="${n.R?'on':''}">R</span><span class="${n.W?'on':''}">W</span><span class="${n.X?'on':''}">X</span></span></td>
+      <td>${n.bridge?'<span class="pill yellow" style="font-size:10px;">🔐 required</span>':'<span style="color:var(--t-5);font-size:11px;">—</span>'}</td>
+      <td style="color:var(--t-3);">${n.lastSuccess||'—'}</td>
+      <td style="font-family:var(--ff-mono);font-size:11px;color:var(--t-4);">${n.cacheAge||'—'}</td>
+    </tr>`).join('');
+}
+['q','filter-type','filter-status'].forEach(id=>document.getElementById(id).oninput=render);
+['filter-type','filter-status'].forEach(id=>document.getElementById(id).onchange=render);
+tally();render();
+</script></body></html>

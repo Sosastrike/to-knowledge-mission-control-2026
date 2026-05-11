@@ -1,0 +1,23 @@
+{
+  "name": "@cloudcode/gateway-dropin",
+  "private": true,
+  "version": "0.0.1",
+  "description": "CloudCode Gateway designer drop-in for Mission Control v2 (Next 15 App Router).",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "design-lock:compute": "node scripts/compute-design-lock.mjs",
+    "design-lock:verify": "node scripts/verify-design-lock.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.10",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "next": "15.0.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.6.3",
+    "vitest": "2.1.9"
+  }
+}

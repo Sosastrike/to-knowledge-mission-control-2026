@@ -214,6 +214,13 @@ export function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Public designer mock assets: allow direct static serving.
+  // These files are design-locked and must be iframe-loadable by /gateway.
+  // This does not weaken auth for Mission Control pages or API routes.
+  if (pathname === '/design/gateway' || pathname.startsWith('/design/gateway/')) {
+    return addSecurityHeaders(NextResponse.next(), request)
+  }
+
   // CSRF Origin validation for mutating requests
   const method = request.method.toUpperCase()
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {

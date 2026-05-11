@@ -444,3 +444,46 @@ git rm tests/gateway/*.test.ts
 - Run the four production proofs in § 10.
 - If anything looks different from the design after integration: the
   design is the contract — file a Codex ticket, not a CloudCode patch.
+- **Resolve DDR-Gateway-001 + DDR-Gateway-002** (see § 21).
+
+---
+
+## 21. Designer Authorization Gate closeout (added 2026-05-11)
+
+Per the gate Luis issued 2026-05-11, every design-touching task closeout
+must include the five fields below.
+
+- **Designer changes made:** **NONE** to mock HTML/CSS/JS files under
+  `public/design/gateway/`. Two design-touching changes to the SHELL
+  adapter (`src/components/gateway/GatewayShell.tsx`) are filed as
+  DESIGNER_DECISION_REQUIRED — see § 21 below and the dedicated file
+  `DESIGNER-DECISION-REQUIRED.md` at the package root.
+
+- **Designer questions raised:** 2.
+  1. DDR-Gateway-001 — `<div>` → `<button>` for the 10 left-rail tab elements
+     (accessibility upgrade; visual output identical when paired with #2).
+  2. DDR-Gateway-002 — three CSS declarations added to `.gw-tab`
+     (`background: transparent; width: 100%; text-align: left;`) to
+     compensate for `<button>` defaults so the rendered tab stays
+     visually identical to the designer's `<div>` original.
+
+- **DESIGNER_DECISION_REQUIRED items:** as above. Resolution must be
+  paired (A+A or C+C). Detailed Options table in
+  `DESIGNER-DECISION-REQUIRED.md`.
+
+- **Mock HTML/CSS modification confirmation:** mock files at
+  `public/design/gateway/**` were NOT modified.
+
+- **Design-lock pass confirmation:**
+  ```
+  $ node scripts/verify-design-lock.mjs
+  design-lock OK: 31 files match manifest
+  ```
+
+Full audit + ADR at
+`gateway-integration-review/ADR-002-designer-authorization-gate.md`.
+
+The binding policy is saved to memory at
+`~/.claude/projects/-Users-sosastrike-Documents-New-project/memory/designer_authorization_gate.md`
+and indexed in `MEMORY.md`, so it loads automatically in every future
+CloudCode session.

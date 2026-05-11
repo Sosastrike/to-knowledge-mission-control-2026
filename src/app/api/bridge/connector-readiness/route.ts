@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { requireRole } from '@/lib/auth'
+import { getAgentMailReadiness } from '@/lib/agentmail-readiness'
+import { getAgentZeroGoogleDriveDeliveryStatus } from '@/lib/agent-zero-google-drive-delivery'
+import { getAgentZeroOneDriveDeliveryStatus } from '@/lib/agent-zero-onedrive-delivery'
+import { getAgentZeroTelegramDeliveryStatus } from '@/lib/agent-zero-telegram-delivery'
 import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
 
 export const runtime = 'nodejs'
@@ -79,6 +83,24 @@ function envFileHasName(path: string, name: string): boolean {
   }
 }
 
+function readinessFromCanonical(status: string | null | undefined): ReadinessState {
+  switch (status) {
+    case 'CREDENTIAL_GATED':
+      return 'CREDENTIAL_REQUIRED'
+    case 'OWNER_GATED':
+      return 'OWNER_APPROVAL_REQUIRED'
+    case 'SERVICE_DOWN':
+    case 'BLOCKED':
+      return 'BACKEND_REQUIRED'
+    case 'DISABLED':
+      return 'DISABLED'
+    case 'LIVE':
+    case 'READY':
+    default:
+      return 'READ_ONLY'
+  }
+}
+
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -96,6 +118,36 @@ export async function GET(request: NextRequest) {
   const zapierBridge = await getZapierToolBridge('heygen')
   const zapierInventoryVisible = zapierBridge.connected
   const n8nMissing = missing(['N8N_BASE_URL', 'N8N_API_KEY'])
+  const telegramStatus = getAgentZeroTelegramDeliveryStatus()
+  const agentMailStatus = getAgentMailReadiness()
+  const googleDriveStatus = await getAgentZeroGoogleDriveDeliveryStatus()
+  const oneDriveStatus = await getAgentZeroOneDriveDeliveryStatus()
+  const telegramConnectorState = readinessFromCanonical(telegramStatus.canonical_status)
+  const agentMailConnectorState = readinessFromCanonical(agentMailStatus.canonical_status)
+  const googleDriveConnectorState = readinessFromCanonical(googleDriveStatus.canonical_status)
+  const oneDriveConnectorState = readinessFromCanonical(oneDriveStatus.canonical_status)
+  const telegramCredentialNames = ['TELEGRAM_BOT_TOKEN', 'AGENT_ZERO_OWNER_TELEGRAM_CHAT_ID', 'TELEGRAM_OWNER_CHAT_ID']
+  const agentMailCredentialNames = ['AGENTMAIL_API_KEY', 'AGENTMAIL_TOKEN', 'AGENTMAIL_SEND_ENDPOINT', 'AGENTMAIL_ALLOWED_DOMAINS']
+  const googleDriveCredentialNames = [
+    'GOOGLE_DRIVE_CREDENTIALS',
+    'GOOGLE_SERVICE_ACCOUNT_JSON',
+    'GOOGLE_DRIVE_CLIENT_ID',
+    'GOOGLE_DRIVE_ACCESS_TOKEN',
+    'GOOGLE_DRIVE_REFRESH_TOKEN',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_DRIVE_TARGET_FOLDER_ID',
+    'GOOGLE_DRIVE_REPORTS_FOLDER_ID',
+  ]
+  const oneDriveCredentialNames = [
+    'ONEDRIVE_ACCESS_TOKEN',
+    'ONEDRIVE_REFRESH_TOKEN',
+    'MICROSOFT_GRAPH_ACCESS_TOKEN',
+    'MICROSOFT_GRAPH_REFRESH_TOKEN',
+    'AZURE_AD_CLIENT_ID',
+    'AZURE_AD_CLIENT_SECRET',
+    'ONEDRIVE_TARGET_FOLDER_ID',
+    'ONEDRIVE_REPORTS_FOLDER_ID',
+  ]
 
   const connectors: ConnectorReadiness[] = [
     {
@@ -323,6 +375,258 @@ export async function GET(request: NextRequest) {
       next_action: zapierBridge.heygen_found
         ? 'Use Zapier HeyGen path for video planning; do not ask for direct HeyGen API keys first. Execution remains locked until scoped Telegram approval runner is implemented.'
         : 'Owner connects HeyGen in Zapier, then rerun Zapier resync/tool discovery. Do not request direct HeyGen API keys first.',
+    },
+    {
+      id: 'telegram',
+      label: 'Telegram',
+      role: 'owner command channel and report/PDF delivery connector',
+      state: telegramConnectorState,
+      risk_level: 'high',
+      read_only_endpoint: '/api/bridge/agent-zero/telegram/status',
+      execution_endpoint: '/api/bridge/agent-zero/telegram/upload-report',
+      canonical_paths: {
+        status: '/api/bridge/agent-zero/telegram/status',
+        inventory: '/api/bridge/agent-zero/telegram/status',
+        execution: '/api/bridge/agent-zero/telegram/upload-report',
+        approval: '/api/bridge/approval-requests',
+        setup: '/settings/tkmc/channels',
+      },
+      ui_contract: {
+        status_card_state: telegramConnectorState,
+        primary_button_state: telegramStatus.connector_configured ? 'OWNER_APPROVAL_REQUIRED' : 'CREDENTIAL_REQUIRED',
+        primary_button_label: telegramStatus.connector_configured ? 'Request Telegram PDF approval' : 'Configure owner Telegram',
+        disabled_message: telegramStatus.connector_configured
+          ? 'Telegram is configured, but every report attachment requires an active scoped Bridge Session.'
+          : 'Telegram delivery is missing the bot token or owner channel configuration.',
+      },
+      credential_names: telegramCredentialNames,
+      credentials_present_by_name: credentialMap(telegramCredentialNames),
+      approval_required_for_execution: true,
+      audit_required_for_execution: true,
+      writes_enabled: false,
+      execution_enabled: false,
+      current_safe_actions: ['delivery status only', 'owner route proof only', 'Telegram approval preview only'],
+      blocked_actions: ['send owner message', 'upload report PDF', 'create Telegram approval callback', 'rename bot display name'],
+      owner_approval_required_before: [
+        'sending any Telegram attachment',
+        'creating a Bridge approval callback message',
+        'changing Telegram bot display/name settings',
+      ],
+      deferred_or_redundant_paths: [
+        'Telegram BotFather display-name changes remain owner-side only',
+        'direct Telegram sends are not allowed from the connector panel; use Bridge approval scope telegram.upload_report_pdf',
+      ],
+      detail_checks: [
+        {
+          label: 'Agent Zero routing',
+          state: 'READ_ONLY',
+          detail: 'Owner command route is Agent Zero. Tony is not active in this delivery status contract.',
+          endpoint: '/api/bridge/agent-zero/telegram/status',
+        },
+        {
+          label: 'Report/PDF send',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'Report attachment uses telegram.upload_report_pdf and remains blocked without an active approved Bridge Session.',
+          endpoint: '/api/bridge/agent-zero/telegram/upload-report',
+        },
+      ],
+      verification_commands: [
+        'GET /api/bridge/agent-zero/telegram/status',
+        'POST /api/bridge/agent-zero/telegram/upload-report must remain Bridge-session-required',
+      ],
+      blocker: telegramStatus.blocked_reason || 'telegram_bridge_session_required',
+      next_action: telegramStatus.connector_configured
+        ? 'Create an exact-scope Bridge approval before sending one report PDF.'
+        : 'Configure Telegram bot token and owner chat through the approved credential path, then rerun readiness.',
+    },
+    {
+      id: 'agentmail',
+      label: 'AgentMail',
+      role: 'allow-listed email delivery connector',
+      state: agentMailConnectorState,
+      risk_level: 'high',
+      read_only_endpoint: '/api/bridge/agent-zero/agentmail/status',
+      execution_endpoint: '/api/bridge/agent-zero/agentmail/send',
+      canonical_paths: {
+        status: '/api/bridge/agent-zero/agentmail/status',
+        inventory: '/api/bridge/agent-zero/agentmail/status',
+        execution: '/api/bridge/agent-zero/agentmail/send',
+        approval: '/api/bridge/approval-requests',
+        setup: '/settings/tkmc/channels',
+      },
+      ui_contract: {
+        status_card_state: agentMailConnectorState,
+        primary_button_state: agentMailStatus.outgoing.status === 'ready' ? 'OWNER_APPROVAL_REQUIRED' : agentMailConnectorState,
+        primary_button_label: agentMailStatus.outgoing.status === 'ready' ? 'Request AgentMail send approval' : 'Configure AgentMail',
+        disabled_message: agentMailStatus.blocked_reason
+          ? `AgentMail is blocked: ${agentMailStatus.blocked_reason}.`
+          : 'AgentMail readiness is configured; sending still requires Bridge Session scope agentmail.send.',
+      },
+      credential_names: agentMailCredentialNames,
+      credentials_present_by_name: credentialMap(agentMailCredentialNames),
+      approval_required_for_execution: true,
+      audit_required_for_execution: true,
+      writes_enabled: false,
+      execution_enabled: false,
+      current_safe_actions: ['incoming readiness status', 'outgoing allow-list status'],
+      blocked_actions: ['send email', 'send unrestricted external email', 'bypass domain allow-list'],
+      owner_approval_required_before: [
+        'sending any email',
+        'changing recipient allow-list',
+        'changing AgentMail connector endpoint or credential settings',
+      ],
+      deferred_or_redundant_paths: [
+        'AgentMail send is a delivery connector, not an agent command route',
+        'unrestricted external send is never enabled from Mission Control',
+      ],
+      detail_checks: [
+        {
+          label: 'Incoming readiness',
+          state: agentMailStatus.incoming.status === 'ready' ? 'READ_ONLY' : readinessFromCanonical(agentMailStatus.canonical_status),
+          detail: agentMailStatus.incoming.blocked_reason || 'Incoming status endpoint is configured.',
+          endpoint: '/api/bridge/agent-zero/agentmail/status',
+        },
+        {
+          label: 'Outgoing send',
+          state: agentMailStatus.outgoing.status === 'ready' ? 'OWNER_APPROVAL_REQUIRED' : readinessFromCanonical(agentMailStatus.canonical_status),
+          detail: agentMailStatus.outgoing.blocked_reason || 'Outgoing send requires Bridge Session scope agentmail.send.',
+          endpoint: '/api/bridge/agent-zero/agentmail/send',
+        },
+      ],
+      verification_commands: [
+        'GET /api/bridge/agent-zero/agentmail/status',
+        'POST /api/bridge/agent-zero/agentmail/send must remain Bridge-session-required',
+      ],
+      blocker: agentMailStatus.blocked_reason || 'agentmail_bridge_session_required',
+      next_action: agentMailStatus.blocked_reason
+        ? 'Complete the missing AgentMail credential/backend/allow-list through the approved owner path.'
+        : 'Create exact-scope Bridge approval before sending one allowed-domain test.',
+    },
+    {
+      id: 'google_drive',
+      label: 'Google Drive',
+      role: 'report upload and folder delivery connector',
+      state: googleDriveConnectorState,
+      risk_level: 'high',
+      read_only_endpoint: '/api/bridge/agent-zero/google-drive/status',
+      execution_endpoint: '/api/bridge/agent-zero/google-drive/upload-report',
+      canonical_paths: {
+        status: '/api/bridge/agent-zero/google-drive/status',
+        inventory: '/api/bridge/agent-zero/google-drive/status',
+        execution: '/api/bridge/agent-zero/google-drive/upload-report',
+        approval: '/api/bridge/approval-requests',
+        setup: '/settings/tkmc/integrations',
+      },
+      ui_contract: {
+        status_card_state: googleDriveConnectorState,
+        primary_button_state: googleDriveStatus.upload_connector_configured ? 'OWNER_APPROVAL_REQUIRED' : googleDriveConnectorState,
+        primary_button_label: googleDriveStatus.upload_connector_configured ? 'Request Google Drive upload' : 'Configure Google Drive',
+        disabled_message: googleDriveStatus.blocked_reason,
+      },
+      credential_names: googleDriveCredentialNames,
+      credentials_present_by_name: credentialMap(googleDriveCredentialNames),
+      approval_required_for_execution: true,
+      audit_required_for_execution: true,
+      writes_enabled: false,
+      execution_enabled: false,
+      current_safe_actions: ['upload readiness status', 'folder/schema visibility status'],
+      blocked_actions: ['upload report PDF', 'upload test file', 'verify private Drive link by raw path', 'write outside target folder'],
+      owner_approval_required_before: [
+        'adding Google Drive credentials',
+        'selecting or changing target folder',
+        'uploading any report or test file',
+      ],
+      deferred_or_redundant_paths: [
+        'Zapier tool visibility is not enough to claim upload configured',
+        'Google Drive and OneDrive stay separate provider lanes',
+      ],
+      detail_checks: [
+        {
+          label: 'Credential and target folder',
+          state: googleDriveStatus.credential_present
+            ? (googleDriveStatus.target_folder_configured ? 'READ_ONLY' : 'OWNER_APPROVAL_REQUIRED')
+            : 'CREDENTIAL_REQUIRED',
+          detail: googleDriveStatus.blocked_reason,
+          endpoint: '/api/bridge/agent-zero/google-drive/status',
+        },
+        {
+          label: 'Upload execution',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'Uploads require google_drive.upload scope, target folder, adapter proof, and audit before execution.',
+          endpoint: '/api/bridge/agent-zero/google-drive/upload-report',
+        },
+      ],
+      verification_commands: [
+        'GET /api/bridge/agent-zero/google-drive/status',
+        'POST /api/bridge/agent-zero/google-drive/upload-report must return blocked until approved adapter exists',
+      ],
+      blocker: googleDriveStatus.blocked_reason,
+      next_action: googleDriveStatus.credential_present
+        ? 'Configure/verify target folder and scoped upload adapter before requesting Bridge approval.'
+        : 'Connect Google Drive through the approved OAuth/credential path, then rerun readiness.',
+    },
+    {
+      id: 'onedrive',
+      label: 'OneDrive',
+      role: 'report upload and Microsoft Graph delivery connector',
+      state: oneDriveConnectorState,
+      risk_level: 'high',
+      read_only_endpoint: '/api/bridge/agent-zero/onedrive/status',
+      execution_endpoint: '/api/bridge/agent-zero/onedrive/upload-report',
+      canonical_paths: {
+        status: '/api/bridge/agent-zero/onedrive/status',
+        inventory: '/api/bridge/agent-zero/onedrive/status',
+        execution: '/api/bridge/agent-zero/onedrive/upload-report',
+        approval: '/api/bridge/approval-requests',
+        setup: '/settings/tkmc/integrations',
+      },
+      ui_contract: {
+        status_card_state: oneDriveConnectorState,
+        primary_button_state: oneDriveStatus.upload_connector_configured ? 'OWNER_APPROVAL_REQUIRED' : oneDriveConnectorState,
+        primary_button_label: oneDriveStatus.upload_connector_configured ? 'Request OneDrive upload' : 'Configure OneDrive',
+        disabled_message: oneDriveStatus.blocked_reason,
+      },
+      credential_names: oneDriveCredentialNames,
+      credentials_present_by_name: credentialMap(oneDriveCredentialNames),
+      approval_required_for_execution: true,
+      audit_required_for_execution: true,
+      writes_enabled: false,
+      execution_enabled: false,
+      current_safe_actions: ['upload readiness status', 'folder/schema visibility status'],
+      blocked_actions: ['upload report PDF', 'upload test file', 'verify private OneDrive link by raw path', 'write outside target folder'],
+      owner_approval_required_before: [
+        'adding OneDrive/Microsoft Graph credentials',
+        'selecting or changing target folder',
+        'uploading any report or test file',
+      ],
+      deferred_or_redundant_paths: [
+        'OneDrive upload remains separate from Google Drive',
+        'Microsoft Graph credential presence alone is not enough to claim upload execution configured',
+      ],
+      detail_checks: [
+        {
+          label: 'Credential and target folder',
+          state: oneDriveStatus.credential_present
+            ? (oneDriveStatus.target_folder_configured ? 'READ_ONLY' : 'OWNER_APPROVAL_REQUIRED')
+            : 'CREDENTIAL_REQUIRED',
+          detail: oneDriveStatus.blocked_reason,
+          endpoint: '/api/bridge/agent-zero/onedrive/status',
+        },
+        {
+          label: 'Upload execution',
+          state: 'OWNER_APPROVAL_REQUIRED',
+          detail: 'Uploads require onedrive.upload scope, target folder, adapter proof, and audit before execution.',
+          endpoint: '/api/bridge/agent-zero/onedrive/upload-report',
+        },
+      ],
+      verification_commands: [
+        'GET /api/bridge/agent-zero/onedrive/status',
+        'POST /api/bridge/agent-zero/onedrive/upload-report must return blocked until approved adapter exists',
+      ],
+      blocker: oneDriveStatus.blocked_reason,
+      next_action: oneDriveStatus.credential_present
+        ? 'Configure/verify target folder and scoped upload adapter before requesting Bridge approval.'
+        : 'Connect OneDrive through the approved OAuth/credential path, then rerun readiness.',
     },
     {
       id: 'n8n',

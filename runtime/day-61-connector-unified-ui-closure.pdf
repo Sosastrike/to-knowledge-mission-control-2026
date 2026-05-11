@@ -1,0 +1,394 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3225 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-61-connector-unified-ui-closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 61 — Connector Unified UI Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-10) Tj
+0 -12 Td
+(Lane: Connector unified UI) Tj
+0 -12 Td
+(Status: PARTIAL GO — developer-side closure complete; delivery execution remains gated by creden) Tj
+0 -12 Td
+(tials/owner Bridge Session.) Tj
+0 -12 Td
+(Blocker class: CREDENTIAL_GATED / OWNER_GATED depending on connector.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Objective) Tj
+0 -12 Td
+(Unify the Mission Control connector readiness surface so delivery and connector panels render tr) Tj
+0 -12 Td
+(uthful states from one contract instead of implying fake LIVE readiness or leaving delivery lane) Tj
+0 -12 Td
+(s absent.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+(- Expanded `/api/bridge/connector-readiness` from 6 connectors to 10 connectors.) Tj
+0 -12 Td
+(- Added connector readiness entries for:) Tj
+0 -12 Td
+(  - Telegram) Tj
+0 -12 Td
+(  - AgentMail) Tj
+0 -12 Td
+(  - Google Drive) Tj
+0 -12 Td
+(  - OneDrive) Tj
+0 -12 Td
+(- Kept existing entries for:) Tj
+0 -12 Td
+(  - Zapier) Tj
+0 -12 Td
+(  - Firecrawl) Tj
+0 -12 Td
+(  - Viral Crawl Video Intelligence) Tj
+0 -12 Td
+(  - n8n) Tj
+0 -12 Td
+(  - MCP Tools) Tj
+0 -12 Td
+(  - Skills Registry) Tj
+0 -12 Td
+(- Updated `scripts/check-connector-readiness-live.mjs` so the live guard requires the 10-connect) Tj
+0 -12 Td
+(or unified surface.) Tj
+0 -12 Td
+(- Reused existing Agent Zero delivery status helpers instead of duplicating truth:) Tj
+0 -12 Td
+(  - `getAgentZeroTelegramDeliveryStatus\(\)`) Tj
+0 -12 Td
+(  - `getAgentMailReadiness\(\)`) Tj
+0 -12 Td
+(  - `getAgentZeroGoogleDriveDeliveryStatus\(\)`) Tj
+0 -12 Td
+(  - `getAgentZeroOneDriveDeliveryStatus\(\)`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/app/api/bridge/connector-readiness/route.ts`) Tj
+0 -12 Td
+(- `scripts/check-connector-readiness-live.mjs`) Tj
+0 -12 Td
+(- `runtime/day-61-connector-unified-ui-guard-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-61-route-rendering-smoke.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+(- `GET /api/bridge/connector-readiness`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(New connector rows reference these existing read-only status routes:) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/telegram/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/agentmail/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/google-drive/status`) Tj
+0 -12 Td
+(- `GET /api/bridge/agent-zero/onedrive/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Execution paths remain locked and approval-gated:) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/telegram/upload-report`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/agentmail/send`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/google-drive/upload-report`) Tj
+0 -12 Td
+(- `POST /api/bridge/agent-zero/onedrive/upload-report`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+(The existing Mission Control connector UI already consumes `/api/bridge/connector-readiness`. It) Tj
+0 -12 Td
+( now receives Telegram, AgentMail, Google Drive, OneDrive, and Zapier in the same normalized con) Tj
+0 -12 Td
+(nector matrix.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Every connector row includes:) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2748 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- canonical status path) Tj
+0 -12 Td
+(- inventory path) Tj
+0 -12 Td
+(- execution path) Tj
+0 -12 Td
+(- approval path) Tj
+0 -12 Td
+(- setup path) Tj
+0 -12 Td
+(- UI contract) Tj
+0 -12 Td
+(- current safe actions) Tj
+0 -12 Td
+(- blocked actions) Tj
+0 -12 Td
+(- owner-approval requirements) Tj
+0 -12 Td
+(- blocker) Tj
+0 -12 Td
+(- next action) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No connector row exposes a fake LIVE state. Primary action state is credential-gated, owner-appr) Tj
+0 -12 Td
+(oval-required, backend-required, disabled, or read-only.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(- No sends were performed.) Tj
+0 -12 Td
+(- No uploads were performed.) Tj
+0 -12 Td
+(- No approval request was created.) Tj
+0 -12 Td
+(- No connector execution was enabled.) Tj
+0 -12 Td
+(- No connector writes were enabled.) Tj
+0 -12 Td
+(- Runtime was rebuilt and restarted locally on `127.0.0.1:3337` from the rebuilt standalone outp) Tj
+0 -12 Td
+(ut.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Live Connector Proof) Tj
+0 -12 Td
+(Proof artifact: `runtime/day-61-connector-unified-ui-guard-smoke.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- `ok: true`) Tj
+0 -12 Td
+(- connector count: `10`) Tj
+0 -12 Td
+(- execution enabled: `0`) Tj
+0 -12 Td
+(- writes enabled: `0`) Tj
+0 -12 Td
+(- owner approval required for execution: `10`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Read-only endpoint status:) Tj
+0 -12 Td
+(- Firecrawl: 200) Tj
+0 -12 Td
+(- Viral Crawl Video: 200) Tj
+0 -12 Td
+(- Zapier tools: 200) Tj
+0 -12 Td
+(- Telegram: 200) Tj
+0 -12 Td
+(- AgentMail: 200) Tj
+0 -12 Td
+(- Google Drive: 200) Tj
+0 -12 Td
+(- OneDrive: 200) Tj
+0 -12 Td
+(- n8n: 200) Tj
+0 -12 Td
+(- MCP Tools: 200) Tj
+0 -12 Td
+(- Skills Registry: 200) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route Smoke) Tj
+0 -12 Td
+(Proof artifact: `runtime/day-61-route-rendering-smoke.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Result:) Tj
+0 -12 Td
+(- route smoke passed after mapping the runtime `API_KEY` to `MISSION_CONTROL_API_KEY` for the sm) Tj
+0 -12 Td
+(oke script.) Tj
+0 -12 Td
+(- protected routes remained auth-gated.) Tj
+0 -12 Td
+(- read-only Bridge APIs returned expected JSON when authenticated.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+(- `node --check scripts/check-connector-readiness-live.mjs` — PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS) Tj
+0 -12 Td
+(- `pnpm run build` — PASS) Tj
+0 -12 Td
+(- `set -a; . .data/.auto-generated; set +a; node scripts/check-connector-readiness-live.mjs http) Tj
+0 -12 Td
+(://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 181 files / 1414 tests) Tj
+0 -12 Td
+(- `MISSION_CONTROL_API_KEY="$API_KEY" node scripts/check-mission-control-route-rendering.mjs htt) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2061 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(p://127.0.0.1:3337` — PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- staged diff secret scan — PASS) Tj
+0 -12 Td
+(- `.env` diff check — PASS, no diff) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+(- Telegram: `CREDENTIAL_GATED` until bot token and owner channel are configured, then `OWNER_GAT) Tj
+0 -12 Td
+(ED` for actual PDF send.) Tj
+0 -12 Td
+(- AgentMail: `CREDENTIAL_GATED` / `OWNER_GATED` until credential/backend/allow-list are configur) Tj
+0 -12 Td
+(ed and Bridge Session exists.) Tj
+0 -12 Td
+(- Google Drive: `CREDENTIAL_GATED` until Drive auth exists; upload remains blocked until target ) Tj
+0 -12 Td
+(folder, scoped adapter, Bridge Session, and audit are proven.) Tj
+0 -12 Td
+(- OneDrive: `CREDENTIAL_GATED` until OneDrive/Microsoft Graph auth exists; upload remains blocke) Tj
+0 -12 Td
+(d until target folder, scoped adapter, Bridge Session, and audit are proven.) Tj
+0 -12 Td
+(- Firecrawl and n8n remain connector-specific gated/blocked lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public exposure added.) Tj
+0 -12 Td
+(- No raw local paths added to owner UI.) Tj
+0 -12 Td
+(- No fake send/upload/approval.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No HeyGen generation.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(After commit, rollback with:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-61-connector-unified-ui-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 62 — Connector Final Closeout is next. It should inventory the remaining connector gaps acro) Tj
+0 -12 Td
+(ss Telegram, AgentMail, Google Drive, OneDrive, Zapier, Firecrawl, n8n, MCP, and Skills, then cl) Tj
+0 -12 Td
+(ose developer-side readiness/proof harnesses while preserving exact owner/credential blockers.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003530 00000 n 
+0000003656 00000 n 
+0000006456 00000 n 
+0000006582 00000 n 
+0000008695 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8765
+%%EOF

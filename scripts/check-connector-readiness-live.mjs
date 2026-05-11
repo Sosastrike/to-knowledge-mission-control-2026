@@ -2,7 +2,7 @@
 import { execFileSync } from 'node:child_process'
 
 const baseUrl = (process.argv[2] || process.env.MISSION_CONTROL_BASE_URL || 'http://127.0.0.1:3337').replace(/\/+$/, '')
-const apiKey = process.env.MISSION_CONTROL_API_KEY || readApiKeyFromDb()
+const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || readApiKeyFromDb()).trim()
 
 if (!apiKey) {
   console.error(JSON.stringify({ ok: false, error: 'missing_api_key_for_local_check' }, null, 2))
@@ -58,11 +58,22 @@ if (summary.execution_enabled !== 0 || summary.writes_enabled !== 0) {
 }
 
 const connectors = Array.isArray(readiness.body?.connectors) ? readiness.body.connectors : []
-if (connectors.length < 6) {
-  failures.push({ path: readiness.path, error: 'expected_at_least_6_connectors', count: connectors.length })
+if (connectors.length < 10) {
+  failures.push({ path: readiness.path, error: 'expected_at_least_10_connectors', count: connectors.length })
 }
 
-const requiredConnectorIds = new Set(['firecrawl', 'viral_crawl_video', 'zapier', 'n8n', 'mcp_tools', 'skills_registry'])
+const requiredConnectorIds = new Set([
+  'telegram',
+  'agentmail',
+  'google_drive',
+  'onedrive',
+  'zapier',
+  'firecrawl',
+  'viral_crawl_video',
+  'n8n',
+  'mcp_tools',
+  'skills_registry',
+])
 const connectorById = new Map(connectors.map((connector) => [connector.id, connector]))
 for (const id of requiredConnectorIds) {
   if (!connectorById.has(id)) failures.push({ id, path: readiness.path, error: 'required_connector_missing' })

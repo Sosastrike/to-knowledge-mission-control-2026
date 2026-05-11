@@ -1,0 +1,267 @@
+{
+  "audit": "gateway-production-truth@1",
+  "generated_at": "2026-05-11T14:28:35.063Z",
+  "base_origin_redacted": "https://tkmc.knowledge-vs-ai.com",
+  "only": null,
+  "static_files": {
+    "total_expected": 31,
+    "reachable_200": 31,
+    "byte_identical": 0,
+    "drifted": [
+      {
+        "path": "00-design-brief.md",
+        "bytes": 100891,
+        "expected_bytes": 9732
+      },
+      {
+        "path": "Agent Hub.html",
+        "bytes": 100891,
+        "expected_bytes": 38609
+      },
+      {
+        "path": "Agent Zero Commander.html",
+        "bytes": 100891,
+        "expected_bytes": 10988
+      },
+      {
+        "path": "Brain Systems.html",
+        "bytes": 100891,
+        "expected_bytes": 9935
+      },
+      {
+        "path": "Bridge Session Flow.html",
+        "bytes": 100891,
+        "expected_bytes": 34194
+      },
+      {
+        "path": "Delivery Connectors.html",
+        "bytes": 100891,
+        "expected_bytes": 9264
+      },
+      {
+        "path": "Dispatcher.html",
+        "bytes": 100891,
+        "expected_bytes": 30052
+      },
+      {
+        "path": "Gateway Health.html",
+        "bytes": 100891,
+        "expected_bytes": 5597
+      },
+      {
+        "path": "Gateway Mobile Tablet.html",
+        "bytes": 100891,
+        "expected_bytes": 15355
+      },
+      {
+        "path": "Gateway Node Detail.html",
+        "bytes": 100891,
+        "expected_bytes": 9392
+      },
+      {
+        "path": "Gateway Overview v1.html",
+        "bytes": 100891,
+        "expected_bytes": 24830
+      },
+      {
+        "path": "Gateway Overview.html",
+        "bytes": 100891,
+        "expected_bytes": 52375
+      },
+      {
+        "path": "Gateway Policies.html",
+        "bytes": 100891,
+        "expected_bytes": 7123
+      },
+      {
+        "path": "Gateway Registry.html",
+        "bytes": 100891,
+        "expected_bytes": 6752
+      },
+      {
+        "path": "Gateway Routes.html",
+        "bytes": 100891,
+        "expected_bytes": 12634
+      },
+      {
+        "path": "Hermes Lieutenant.html",
+        "bytes": 100891,
+        "expected_bytes": 8926
+      },
+      {
+        "path": "Mission Control + Gateway.html",
+        "bytes": 100891,
+        "expected_bytes": 31358
+      },
+      {
+        "path": "OpenClaw+ Skills.html",
+        "bytes": 100891,
+        "expected_bytes": 11554
+      },
+      {
+        "path": "OpenCloud Workers.html",
+        "bytes": 100891,
+        "expected_bytes": 8852
+      },
+      {
+        "path": "Paperclip.html",
+        "bytes": 100891,
+        "expected_bytes": 29701
+      },
+      {
+        "path": "Token Governor.html",
+        "bytes": 100891,
+        "expected_bytes": 37312
+      },
+      {
+        "path": "components.md",
+        "bytes": 100891,
+        "expected_bytes": 18353
+      },
+      {
+        "path": "developer-handoff.md",
+        "bytes": 100891,
+        "expected_bytes": 15962
+      },
+      {
+        "path": "index.html",
+        "bytes": 100891,
+        "expected_bytes": 10511
+      },
+      {
+        "path": "open-questions.md",
+        "bytes": 100891,
+        "expected_bytes": 10484
+      },
+      {
+        "path": "shared/agent-data.js",
+        "bytes": 100891,
+        "expected_bytes": 29470
+      },
+      {
+        "path": "shared/gateway-data.js",
+        "bytes": 100891,
+        "expected_bytes": 35807
+      },
+      {
+        "path": "shared/node-card.css",
+        "bytes": 100891,
+        "expected_bytes": 3453
+      },
+      {
+        "path": "shared/render.js",
+        "bytes": 100891,
+        "expected_bytes": 5201
+      },
+      {
+        "path": "shared/tokens.css",
+        "bytes": 100891,
+        "expected_bytes": 10742
+      },
+      {
+        "path": "shared/topbar.html",
+        "bytes": 100891,
+        "expected_bytes": 869
+      }
+    ],
+    "missing": []
+  },
+  "static_files_agent_hub": {
+    "path": "Agent Hub.html",
+    "http_status": 200,
+    "bytes": 100891,
+    "expected_bytes": 38609,
+    "sha256": "10bf2f03191538c656492695297417526ee78ff9bf4035f51d24c8eef64d555c",
+    "expected_sha256": "220a5a3a04643ad59bf3fdcdca9c746fa43dfc104f16b0747ba3a205db30911c",
+    "byte_match": false,
+    "sha_match": false
+  },
+  "gateway_html": {
+    "http_status": 307,
+    "content_type": "text/plain; charset=utf-8",
+    "content_length": 0,
+    "contains_gateway_shell_class": false,
+    "contains_gw_tab_class": false,
+    "contains_GatewayShell_component_marker": false,
+    "iframe_srcs": [],
+    "legacy_hints": {
+      "designer_mission_control_catchall": false,
+      "old_iframe_wrapper": false,
+      "contains_GatewayWrapper": false,
+      "contains_old_class": false
+    },
+    "first_400_chars_redacted": ""
+  },
+  "deep_links": [
+    {
+      "segment": "overview",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "agent-hub",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "paperclip",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "dispatcher",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "token-governor",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "bridge-session",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "health",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "routes",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "registry",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    },
+    {
+      "segment": "policies",
+      "http_status": 307,
+      "location": "/login",
+      "is_rewrite_target": false
+    }
+  ],
+  "deep_links_summary": {
+    "total": 10,
+    "ok_200": 0,
+    "redirects": 10,
+    "missing": 0,
+    "other": 0
+  },
+  "diagnoses": [
+    "CAUSE_4_files_drifted"
+  ]
+}

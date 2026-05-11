@@ -12,12 +12,36 @@ are resolved. The shell adapter intended for production is
 `gateway-dropin/src/components/gateway/GatewayShell.tsx` (commit
 `7c51e68`).
 
-**PRODUCTION VERIFICATION STATUS (2026-05-11 — second update):**
-**NOT YET VERIFIED. Live web interface does NOT match the approved
-designer files** per Luis's report. Gateway integration is treated as
-**FAILED IN PRODUCTION** until the live `/gateway` matches the approved
-designer screenshots byte-identically. Production audit pending — plan
-documented in `gateway-dropin/HANDOFF.md` § 24.
+**PRODUCTION VERIFICATION STATUS (2026-05-11 — third update):**
+**FAILED IN PRODUCTION — ROOT CAUSE FULLY IDENTIFIED.** CloudCode ran
+the production-truth audit against `https://tkmc.knowledge-vs-ai.com`
+on 2026-05-11 and confirmed five simultaneous causes:
+
+- **CAUSE_1** — CloudCode commit `8489d81` is not in the production tree.
+- **CAUSE_3** — Hand-coded `src/app/gateway/agent-hub/page.tsx` +
+  `src/app/gateway/agent-hub/paperclip/page.tsx` are winning and render
+  their own UI.
+- **CAUSE_4 / CAUSE_6** — The legacy
+  `app/designer-mission-control/[[...path]]/page.tsx` catch-all eats
+  `/design/gateway/*` and rewrites every request to
+  `/designer-mission-control/Mission Control.html?page=mission`.
+- **CAUSE_5** — `/gateway` is not mounted to `GatewayShell` anywhere
+  in the production bundle.
+
+Fix is **operator-led** on `srv1568353:/home/tony/mission-control`.
+Three deliverables in this folder for the operator:
+
+1. **`OPERATOR-EXECUTE-NOW.md`** — full 7-step playbook with copy/paste
+   commands, expected output, and rollback.
+2. **`operator-apply-and-verify.sh`** — paste-and-run bash script that
+   does steps 1–7 with confirmations at the destructive points (git rm
+   competing pages, deploy/restart). Run it from inside `/home/tony/mission-control`.
+3. **`OPERATOR-RESULTS-TEMPLATE.md`** — fill-in-the-blanks file the
+   operator returns after the apply, with audit-confirmed checklist
+   rows for each fix point.
+
+Full audit JSON captured at `gateway-dropin/proof/audit-production.json`
+(also delivered inside the tarball).
 
 The Option A+A variant remains under `gateway-dropin/options/` purely
 as audit trail of the design decision. Not a live alternative; nothing
@@ -36,13 +60,18 @@ workflow; they are byte-equivalent and yield identical history.
 ## What is in this delivery
 
 - **Branch:** `cloudcode/gateway-dropin-integration`
-- **Branch tip:** `33035d4`
+- **Branch tip:** `8489d81`
 - **Commits included (in order):**
   1. `7c51e68` — `feat(gateway-dropin): mount Gateway designer mocks at /gateway under Next 15`
   2. `43f628c` — `docs(gateway-dropin): backfill commit SHA into closeout report`
   3. `b72a93b` — `docs(gateway-dropin): apply Designer Authorization Gate audit + raise DDR-Gateway-001/002`
   4. `b3f2603` — `docs(gateway-dropin): HOLD-pending-designer + Option A+A prep + CloudCode-owner wording`
   5. `33035d4` — `docs(gateway-dropin): C+C approved by Designer Dept — lift HOLD, ship-ready`
+  6. `fbc3f5d` — `docs(gateway-dropin): add operator results template for production application`
+  7. `45ee273` — `docs(gateway-dropin): production audit plan — Gateway integration FAILED in production`
+  8. `c92d743` — `docs(gateway-dropin): file DDR-Gateway-003 + DDR-Gateway-004 — root cause is designer-side`
+  9. `3fa91af` — `docs(gateway-dropin): pre-stage Option-A engineering scaffold for DDR-Gateway-003`
+  10. `8489d81` — `feat(gateway-dropin): roll in Designer Contract + wire data + buttons`
 - **Base commit (already on `main` / `claude/fervent-montalcini-62fba8`):** `354d632`
 - **Files added:** 54 new files under `gateway-dropin/`. **Zero** existing
   files were modified.

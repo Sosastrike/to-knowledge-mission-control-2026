@@ -1,10 +1,21 @@
 # Operator results — Gateway drop-in production application
 
-Fill this in after running the steps in
-[gateway-dropin/HANDOFF.md § 22](../gateway-dropin/HANDOFF.md). Reply
-to CloudCode with the completed file. CloudCode then folds these
-fields into the final HANDOFF.md closeout and the lane is fully
-closed.
+Fill this in after running [OPERATOR-EXECUTE-NOW.md](OPERATOR-EXECUTE-NOW.md)
+(or the paste-and-run [operator-apply-and-verify.sh](operator-apply-and-verify.sh)).
+Reply to CloudCode with the completed file. CloudCode then folds these
+fields into the final HANDOFF.md closeout and the lane is fully closed.
+
+## Audit-confirmed production state BEFORE apply (2026-05-11)
+
+- Production runs Next 15 at `https://tkmc.knowledge-vs-ai.com` with auth.
+- `/gateway` redirects to `/gateway/agent-hub` (hand-coded React page, not CloudCode shell).
+- `/gateway/agent-hub` + `/gateway/agent-hub/paperclip` are existing custom pages.
+- `/gateway/dispatcher`, `/gateway/token-governor`, `/gateway/bridge-session` fall through to `/gateway/agent-hub` (routes not implemented).
+- `/design/gateway/Agent%20Hub.html` rewrites to `/designer-mission-control/Mission Control.html?page=mission` (legacy catch-all).
+- `gateway-shell` class: absent. `GatewayShell` marker: absent. iframe `gw-frame`: absent.
+- CloudCode commit `8489d81` is not in the production tree.
+
+Confirm AFTER apply that each of those flips to the correct state below.
 
 If any step fails, paste the failing command + last 30 lines of output
 under "Notes / blockers" and stop. Do not edit the designer mock files
@@ -43,6 +54,31 @@ Time finished (UTC):
 
 ```
 [paste here, or "none"]
+```
+
+## Competing pages removed under src/app/gateway/
+
+(Audit found these. Confirm each one's outcome.)
+
+| Path | Outcome | Notes |
+| --- | --- | --- |
+| `src/app/gateway/agent-hub/page.tsx` | removed / archived / kept (reason: ____) |  |
+| `src/app/gateway/agent-hub/paperclip/page.tsx` | removed / archived / kept (reason: ____) |  |
+| Other `src/app/gateway/<segment>/page.tsx` found | _list paths_ |  |
+
+After this step: `find src/app/gateway -type f` should output ONE file → `src/app/gateway/page.tsx`.
+
+## Legacy designer-mission-control catch-all — fix applied
+
+(Audit confirmed `/design/gateway/Agent%20Hub.html` was rewritten to `/designer-mission-control/Mission Control.html?page=mission`. Choose your fix:)
+
+- [ ] **Option C-1** — added explicit `/design/gateway/:path*` no-op rewrite at the top of `next.config.js` async `rewrites()`
+- [ ] **Option C-2** — narrowed the legacy catch-all's match pattern in middleware/proxy from `/design*` to `/designer-mission-control*`
+
+Paste the diff for whichever you chose:
+
+```diff
+[paste diff here]
 ```
 
 ## Server-side verification

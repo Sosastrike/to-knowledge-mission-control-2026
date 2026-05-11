@@ -41,6 +41,7 @@ if [[ -f "$PROJECT_ROOT/.env" ]]; then
 fi
 
 # Next.js standalone server reads HOSTNAME to decide bind address.
-# Default to 0.0.0.0 so the server is accessible from outside the host.
-export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+# Bash populates HOSTNAME with the machine name, so use MC_HOSTNAME for
+# approved bind overrides and otherwise force localhost.
+export HOSTNAME="${MC_HOSTNAME:-127.0.0.1}"
 exec node server.js

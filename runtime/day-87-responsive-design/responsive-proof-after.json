@@ -1,0 +1,698 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T04:26:34.633Z",
+  "base_url": "http://127.0.0.1:3341",
+  "route": "/designer-mission-control/Mission Control.html?page=gateway&tab=agent-hub",
+  "harness": "local_visual_cookie_only; owner authenticated proof remains OWNER_GATED",
+  "mock_files_modified": false,
+  "assertions": {
+    "desktop_has_visible_gateway_frame": true,
+    "tablet_document_no_global_horizontal_overflow": true,
+    "mobile_document_no_global_horizontal_overflow": true,
+    "tablet_main_has_intentional_mock_horizontal_scroll": true,
+    "mobile_main_has_intentional_mock_horizontal_scroll": true,
+    "mobile_workspace_rail_horizontal_scrolls_inside_shell": true,
+    "mobile_frame_preserves_designer_width": true,
+    "raw_agent_hub_asset_loaded": true
+  },
+  "results": [
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "screenshot": "runtime/day-87-responsive-design/after-desktop.png",
+      "metrics": {
+        "href": "http://127.0.0.1:3341/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "document": {
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollHeight": 1043,
+          "clientHeight": 900,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "body": {
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollHeight": 1043,
+          "clientHeight": 900,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "root": {
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollHeight": 1043,
+          "clientHeight": 900,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "topbar": {
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 34,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollHeight": 33,
+          "clientHeight": 33,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "workspaceRail": {
+          "left": 0,
+          "right": 196,
+          "width": 196,
+          "height": 856,
+          "scrollWidth": 195,
+          "clientWidth": 195,
+          "scrollHeight": 856,
+          "clientHeight": 856,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "flex",
+          "flexDirection": "column",
+          "gridTemplateColumns": "none"
+        },
+        "appBody": {
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 713,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "scrollHeight": 856,
+          "clientHeight": 713,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "main": {
+          "left": 196,
+          "right": 1440,
+          "width": 1244,
+          "height": 713,
+          "scrollWidth": 1244,
+          "clientWidth": 1244,
+          "scrollHeight": 1915,
+          "clientHeight": 713,
+          "overflowX": "auto",
+          "overflowY": "auto",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "gatewayShell": {
+          "left": 240,
+          "right": 1396,
+          "width": 1156,
+          "height": 1813,
+          "scrollWidth": 1156,
+          "clientWidth": 1156,
+          "scrollHeight": 1813,
+          "clientHeight": 1813,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "grid",
+          "flexDirection": "row",
+          "gridTemplateColumns": "220px 936px"
+        },
+        "frameWrap": {
+          "left": 460,
+          "right": 1396,
+          "width": 936,
+          "height": 1813,
+          "scrollWidth": 936,
+          "clientWidth": 936,
+          "scrollHeight": 1813,
+          "clientHeight": 1813,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframe": {
+          "left": 460,
+          "right": 1396,
+          "width": 936,
+          "height": 1813,
+          "scrollWidth": 936,
+          "clientWidth": 936,
+          "scrollHeight": 1813,
+          "clientHeight": 1813,
+          "overflowX": "clip",
+          "overflowY": "clip",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframeSrc": "/design/gateway/Agent Hub.html",
+        "iframeTitle": "Gateway · Agent Hub"
+      },
+      "logs": [
+        {
+          "type": "error",
+          "text": "Refused to execute script from 'http://127.0.0.1:3341/designer-mission-control/src/notification-bus.jsx' because its MIME type ('text/jsx') is not executable, and strict MIME type checking is enabled."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "warning",
+          "text": "[tkmc] HTTP adapter offline · tried http://127.0.0.1:3341/api/health-check · Authentication required · the Credentials page will show \"Backend not wired\" until the server is running."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "name": "tablet",
+        "width": 820,
+        "height": 1180
+      },
+      "screenshot": "runtime/day-87-responsive-design/after-tablet.png",
+      "metrics": {
+        "href": "http://127.0.0.1:3341/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "document": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 1180,
+          "scrollWidth": 820,
+          "clientWidth": 820,
+          "scrollHeight": 1180,
+          "clientHeight": 1180,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "body": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 1180,
+          "scrollWidth": 820,
+          "clientWidth": 820,
+          "scrollHeight": 1180,
+          "clientHeight": 1180,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "root": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 1180,
+          "scrollWidth": 820,
+          "clientWidth": 820,
+          "scrollHeight": 1180,
+          "clientHeight": 1180,
+          "overflowX": "hidden",
+          "overflowY": "auto",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "topbar": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 31,
+          "scrollWidth": 820,
+          "clientWidth": 820,
+          "scrollHeight": 30,
+          "clientHeight": 30,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "workspaceRail": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 49,
+          "scrollWidth": 1168,
+          "clientWidth": 820,
+          "scrollHeight": 48,
+          "clientHeight": 48,
+          "overflowX": "auto",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "appBody": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 978,
+          "scrollWidth": 820,
+          "clientWidth": 820,
+          "scrollHeight": 978,
+          "clientHeight": 978,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "column",
+          "gridTemplateColumns": "none"
+        },
+        "main": {
+          "left": 0,
+          "right": 820,
+          "width": 820,
+          "height": 929,
+          "scrollWidth": 1724,
+          "clientWidth": 820,
+          "scrollHeight": 1507,
+          "clientHeight": 929,
+          "overflowX": "auto",
+          "overflowY": "auto",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "gatewayShell": {
+          "left": 12,
+          "right": 1712,
+          "width": 1700,
+          "height": 1437,
+          "scrollWidth": 1700,
+          "clientWidth": 1700,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "grid",
+          "flexDirection": "row",
+          "gridTemplateColumns": "220px 1480px"
+        },
+        "frameWrap": {
+          "left": 232,
+          "right": 1712,
+          "width": 1480,
+          "height": 1437,
+          "scrollWidth": 1480,
+          "clientWidth": 1480,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframe": {
+          "left": 232,
+          "right": 1712,
+          "width": 1480,
+          "height": 1437,
+          "scrollWidth": 1480,
+          "clientWidth": 1480,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "clip",
+          "overflowY": "clip",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframeSrc": "/design/gateway/Agent Hub.html",
+        "iframeTitle": "Gateway · Agent Hub"
+      },
+      "logs": [
+        {
+          "type": "error",
+          "text": "Refused to execute script from 'http://127.0.0.1:3341/designer-mission-control/src/notification-bus.jsx' because its MIME type ('text/jsx') is not executable, and strict MIME type checking is enabled."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "warning",
+          "text": "[tkmc] HTTP adapter offline · tried http://127.0.0.1:3341/api/health-check · Authentication required · the Credentials page will show \"Backend not wired\" until the server is running."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "screenshot": "runtime/day-87-responsive-design/after-mobile.png",
+      "metrics": {
+        "href": "http://127.0.0.1:3341/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollHeight": 844,
+          "clientHeight": 844,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "body": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollHeight": 844,
+          "clientHeight": 844,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "root": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollHeight": 844,
+          "clientHeight": 844,
+          "overflowX": "hidden",
+          "overflowY": "auto",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "topbar": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 31,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollHeight": 30,
+          "clientHeight": 30,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "workspaceRail": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 49,
+          "scrollWidth": 1168,
+          "clientWidth": 390,
+          "scrollHeight": 48,
+          "clientHeight": 48,
+          "overflowX": "auto",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "appBody": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 552,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "scrollHeight": 552,
+          "clientHeight": 552,
+          "overflowX": "hidden",
+          "overflowY": "hidden",
+          "display": "flex",
+          "flexDirection": "column",
+          "gridTemplateColumns": "none"
+        },
+        "main": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "height": 503,
+          "scrollWidth": 1724,
+          "clientWidth": 390,
+          "scrollHeight": 1507,
+          "clientHeight": 503,
+          "overflowX": "auto",
+          "overflowY": "auto",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "gatewayShell": {
+          "left": 12,
+          "right": 1712,
+          "width": 1700,
+          "height": 1437,
+          "scrollWidth": 1700,
+          "clientWidth": 1700,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "grid",
+          "flexDirection": "row",
+          "gridTemplateColumns": "220px 1480px"
+        },
+        "frameWrap": {
+          "left": 232,
+          "right": 1712,
+          "width": 1480,
+          "height": 1437,
+          "scrollWidth": 1480,
+          "clientWidth": 1480,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "visible",
+          "overflowY": "visible",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframe": {
+          "left": 232,
+          "right": 1712,
+          "width": 1480,
+          "height": 1437,
+          "scrollWidth": 1480,
+          "clientWidth": 1480,
+          "scrollHeight": 1437,
+          "clientHeight": 1437,
+          "overflowX": "clip",
+          "overflowY": "clip",
+          "display": "block",
+          "flexDirection": "row",
+          "gridTemplateColumns": "none"
+        },
+        "iframeSrc": "/design/gateway/Agent Hub.html",
+        "iframeTitle": "Gateway · Agent Hub"
+      },
+      "logs": [
+        {
+          "type": "error",
+          "text": "Refused to execute script from 'http://127.0.0.1:3341/designer-mission-control/src/notification-bus.jsx' because its MIME type ('text/jsx') is not executable, and strict MIME type checking is enabled."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        },
+        {
+          "type": "warning",
+          "text": "[tkmc] HTTP adapter offline · tried http://127.0.0.1:3341/api/health-check · Authentication required · the Credentials page will show \"Backend not wired\" until the server is running."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+        }
+      ]
+    }
+  ],
+  "blocker_class": "NONE",
+  "secrets_exposed": false,
+  "raw_paths_exposed_to_ui": false
+}

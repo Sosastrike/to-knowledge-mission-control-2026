@@ -98,4 +98,25 @@ describe('Mission Control shell ownership', () => {
     expect(gatewayShell).toContain("window.history.pushState({ page: 'gateway', tab: id }, '', url)")
     expect(gatewayShell).not.toContain("window.history.replaceState({}, '', url)")
   })
+
+  it('keeps the approved fixed-width Gateway mock accessible on mobile without editing mock HTML', () => {
+    const styles = readSource('public/designer-mission-control/styles.css')
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+
+    expect(styles).toContain('@media (max-width: 900px)')
+    expect(styles).toContain('flex-direction: column')
+    expect(styles).toContain('overflow-x: auto')
+    expect(styles).toContain('white-space: nowrap')
+    expect(styles).toContain('max-width: none')
+    expect(styles).toContain('#root,')
+    expect(styles).toContain('max-width: 100vw')
+    expect(styles).toContain('.topbar-search,')
+    expect(styles).toContain('.topbar .persona,')
+    expect(styles).toContain('text-overflow: ellipsis')
+
+    expect(gatewayShell).toContain('@media (max-width: 1200px)')
+    expect(gatewayShell).toContain('grid-template-columns: 220px 1480px')
+    expect(gatewayShell).toContain('min-width: 1700px')
+    expect(gatewayShell).toContain('.gateway-shell .gw-frame-wrap .gw-frame { width: 1480px; }')
+  })
 })

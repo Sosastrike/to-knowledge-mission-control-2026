@@ -1,0 +1,253 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3714 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-87-responsive-design) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 87 — Responsive Design) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+(Mission Control / Gateway / Agent Hub / Bridge responsive shell.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Status) Tj
+0 -12 Td
+(Developer-side responsive closure complete. Owner-authenticated visual proof remains owner-gated) Tj
+0 -12 Td
+( because no owner browser session was available in this runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Preserved the approved designer Gateway mock HTML/CSS/class names without editing mock files.) Tj
+0 -12 Td
+(- Kept the fixed-width `Agent Hub.html` and `Paperclip.html` surfaces mounted as raw static asse) Tj
+0 -12 Td
+(ts.) Tj
+0 -12 Td
+(- Added narrow-screen Mission Control shell rules so the outer document no longer creates global) Tj
+0 -12 Td
+( horizontal overflow.) Tj
+0 -12 Td
+(- Converted the Workspace rail into an internal horizontal scroller on tablet/mobile.) Tj
+0 -12 Td
+(- Kept the Gateway sub-rail to the left of the iframe and preserved the 1480px designer surface ) Tj
+0 -12 Td
+(inside the Mission Control page scroll area.) Tj
+0 -12 Td
+(- Added a regression test asserting the responsive shell behavior and fixed-width mock contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `public/designer-mission-control/styles.css`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(- `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/*`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+(- No API routes changed.) Tj
+0 -12 Td
+(- Existing protected shell route verified through `/designer-mission-control/Mission Control.htm) Tj
+0 -12 Td
+(l?page=gateway&tab=agent-hub`.) Tj
+0 -12 Td
+(- Existing Gateway deep-link flow remains `/gateway?tab=agent-hub`.) Tj
+0 -12 Td
+(- Existing raw design asset remains `/design/gateway/Agent Hub.html`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+(- Desktop still shows the mounted Gateway frame with the approved designer layout.) Tj
+0 -12 Td
+(- Tablet/mobile no longer create global document horizontal overflow from Mission Control topbar) Tj
+0 -12 Td
+( chrome.) Tj
+0 -12 Td
+(- Tablet/mobile keep intentional horizontal scrolling inside `main.main-solo` for the fixed 1480) Tj
+0 -12 Td
+(px approved mock.) Tj
+0 -12 Td
+(- Workspace rail scrolls horizontally inside the shell on narrow screens.) Tj
+0 -12 Td
+(- No fake buttons were added.) Tj
+0 -12 Td
+(- No mock HTML, CSS, or class names were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(- Local proof server used: `http://127.0.0.1:3341`.) Tj
+0 -12 Td
+(- Runtime proof was local-only and not publicly exposed.) Tj
+0 -12 Td
+(- No production restart was performed for this Day87 package.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+(- `git diff --check` — pass.) Tj
+0 -12 Td
+(- `.env` status check — pass, no `.env` changes.) Tj
+0 -12 Td
+(- `pnpm run typecheck` — pass.) Tj
+0 -12 Td
+(- `pnpm run build` — pass.) Tj
+0 -12 Td
+(- `pnpm test` — pass, 202 files and 1501 tests.) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3341` — pass, 44 routes chec) Tj
+0 -12 Td
+(ked.) Tj
+0 -12 Td
+(- `node scripts/authenticated-route-smoke-contract.mjs http://127.0.0.1:3341` — pass as owner-ga) Tj
+0 -12 Td
+(ted harness, no cookie value stored.) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — pass.) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` — pass.) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` — pass.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2021 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Proof Artifact) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/responsive-proof-after.json`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/after-desktop.png`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/after-tablet.png`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/after-mobile.png`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/protected-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/authenticated-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/secret-scan.json`) Tj
+0 -12 Td
+(- `runtime/day-87-responsive-design/raw-exposure-scan.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Assertions) Tj
+0 -12 Td
+(- Desktop Gateway frame visible: true.) Tj
+0 -12 Td
+(- Tablet document has no global horizontal overflow: true.) Tj
+0 -12 Td
+(- Mobile document has no global horizontal overflow: true.) Tj
+0 -12 Td
+(- Tablet main scroll contains intentional fixed mock overflow: true.) Tj
+0 -12 Td
+(- Mobile main scroll contains intentional fixed mock overflow: true.) Tj
+0 -12 Td
+(- Mobile Workspace rail scrolls horizontally inside shell: true.) Tj
+0 -12 Td
+(- Mobile frame preserves designer width of 1480px: true.) Tj
+0 -12 Td
+(- Raw Agent Hub asset loaded: true.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+(Owner-authenticated visual proof requires a real owner browser session. The authenticated smoke ) Tj
+0 -12 Td
+(harness is complete and reported `OWNER_GATED` without storing or printing cookie values.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Exact Blocker Classification) Tj
+0 -12 Td
+(OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+(`git revert <day-87-commit>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit Hash) Tj
+0 -12 Td
+(Pending until commit is created.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Push Result) Tj
+0 -12 Td
+(Pending until push completes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+(Day 88 — Accessibility Pass starts automatically after Day87 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004013 00000 n 
+0000004139 00000 n 
+0000006212 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6282
+%%EOF

@@ -1,0 +1,233 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T04:16:17.562Z",
+  "base_url": "http://127.0.0.1:3341",
+  "phase": "day_87_inventory_before_fix",
+  "results": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "screenshot": "runtime/day-87-responsive-design/before-desktop.png",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "documentScrollWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "horizontalOverflow": false,
+        "shell": {
+          "left": 240,
+          "top": 209,
+          "width": 1156,
+          "height": 1813,
+          "right": 1396,
+          "bottom": 2022
+        },
+        "shellGridColumns": "220px 936px",
+        "gatewaySide": {
+          "left": 240,
+          "top": 209,
+          "width": 220,
+          "height": 729,
+          "right": 460,
+          "bottom": 938
+        },
+        "gatewaySideDisplay": "block",
+        "gatewaySidePosition": "sticky",
+        "workspaceRail": {
+          "left": 0,
+          "top": 187,
+          "width": 196,
+          "height": 856,
+          "right": 196,
+          "bottom": 1043
+        },
+        "workspaceRailDisplay": "flex",
+        "workspaceRailPosition": "sticky",
+        "frameWrap": {
+          "left": 460,
+          "top": 209,
+          "width": 936,
+          "height": 1813,
+          "right": 1396,
+          "bottom": 2022
+        },
+        "frame": {
+          "left": 460,
+          "top": 209,
+          "width": 936,
+          "height": 1813,
+          "right": 1396,
+          "bottom": 2022
+        },
+        "frameDisplay": "block",
+        "frameVisibility": "visible",
+        "frameSrc": "/design/gateway/Agent Hub.html",
+        "main": {
+          "left": 196,
+          "top": 187,
+          "width": 1244,
+          "height": 713,
+          "right": 1440,
+          "bottom": 900
+        },
+        "mainOverflowX": "auto",
+        "mainScrollWidth": 1244,
+        "mainClientWidth": 1244,
+        "visibleGatewayTabs": 12
+      }
+    },
+    {
+      "name": "tablet",
+      "width": 820,
+      "height": 1180,
+      "screenshot": "runtime/day-87-responsive-design/before-tablet.png",
+      "metrics": {
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "documentScrollWidth": 848,
+        "bodyScrollWidth": 848,
+        "horizontalOverflow": true,
+        "shell": {
+          "left": 218,
+          "top": 268,
+          "width": 580,
+          "height": 2329,
+          "right": 798,
+          "bottom": 2597
+        },
+        "shellGridColumns": "220px 360px",
+        "gatewaySide": {
+          "left": 218,
+          "top": 268,
+          "width": 220,
+          "height": 729,
+          "right": 438,
+          "bottom": 997
+        },
+        "gatewaySideDisplay": "block",
+        "gatewaySidePosition": "sticky",
+        "workspaceRail": {
+          "left": 0,
+          "top": 250,
+          "width": 196,
+          "height": 1136,
+          "right": 196,
+          "bottom": 1386
+        },
+        "workspaceRailDisplay": "flex",
+        "workspaceRailPosition": "sticky",
+        "frameWrap": {
+          "left": 438,
+          "top": 268,
+          "width": 360,
+          "height": 2329,
+          "right": 798,
+          "bottom": 2597
+        },
+        "frame": {
+          "left": 438,
+          "top": 268,
+          "width": 360,
+          "height": 2329,
+          "right": 798,
+          "bottom": 2597
+        },
+        "frameDisplay": "block",
+        "frameVisibility": "visible",
+        "frameSrc": "/design/gateway/Agent Hub.html",
+        "main": {
+          "left": 196,
+          "top": 250,
+          "width": 624,
+          "height": 930,
+          "right": 820,
+          "bottom": 1180
+        },
+        "mainOverflowX": "auto",
+        "mainScrollWidth": 624,
+        "mainClientWidth": 624,
+        "visibleGatewayTabs": 12
+      }
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844,
+      "screenshot": "runtime/day-87-responsive-design/before-mobile.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "documentScrollWidth": 848,
+        "bodyScrollWidth": 848,
+        "horizontalOverflow": true,
+        "shell": {
+          "left": 218,
+          "top": 358,
+          "width": 150,
+          "height": 2456,
+          "right": 368,
+          "bottom": 2814
+        },
+        "shellGridColumns": "220px 0px",
+        "gatewaySide": {
+          "left": 218,
+          "top": 358,
+          "width": 220,
+          "height": 729,
+          "right": 438,
+          "bottom": 1087
+        },
+        "gatewaySideDisplay": "block",
+        "gatewaySidePosition": "sticky",
+        "workspaceRail": {
+          "left": 0,
+          "top": 340,
+          "width": 196,
+          "height": 800,
+          "right": 196,
+          "bottom": 1140
+        },
+        "workspaceRailDisplay": "flex",
+        "workspaceRailPosition": "sticky",
+        "frameWrap": {
+          "left": 438,
+          "top": 358,
+          "width": 0,
+          "height": 2456,
+          "right": 438,
+          "bottom": 2814
+        },
+        "frame": {
+          "left": 438,
+          "top": 358,
+          "width": 0,
+          "height": 2456,
+          "right": 438,
+          "bottom": 2814
+        },
+        "frameDisplay": "block",
+        "frameVisibility": "visible",
+        "frameSrc": "/design/gateway/Agent Hub.html",
+        "main": {
+          "left": 196,
+          "top": 340,
+          "width": 194,
+          "height": 504,
+          "right": 390,
+          "bottom": 844
+        },
+        "mainOverflowX": "auto",
+        "mainScrollWidth": 242,
+        "mainClientWidth": 194,
+        "visibleGatewayTabs": 10
+      }
+    }
+  ]
+}

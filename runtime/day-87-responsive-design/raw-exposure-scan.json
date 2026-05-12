@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T04:29:53.130Z",
+  "mode": "raw_path_public_exposure_sweep",
+  "blocker_class": "NONE",
+  "blockers": [],
+  "scan_targets": [
+    "src/app/[[...panel]]",
+    "src/app/gateway",
+    "src/app/login",
+    "src/app/settings",
+    "src/components",
+    "public/designer-mission-control",
+    "public/design",
+    "runtime/day-66-authenticated-route-smoke.json",
+    "runtime/day-66-authenticated-route-smoke.md",
+    "runtime/day-67-secret-scan.json",
+    "runtime/day-67-secret-scan.md",
+    "runtime/day-68-raw-path-public-exposure.json",
+    "runtime/day-68-raw-path-public-exposure.md"
+  ],
+  "values_printed": false,
+  "raw_paths_printed": false,
+  "urls_printed": false,
+  "allowlist": [
+    "scripts/authenticated-route-smoke-contract.mjs",
+    "scripts/protected-route-smoke-contract.mjs",
+    "scripts/raw-exposure-scan-contract.mjs",
+    "scripts/secret-scan-contract.mjs",
+    "src/lib/__tests__/paths.test.ts",
+    "src/lib/authenticated-route-smoke-contract.test.ts",
+    "src/lib/protected-route-smoke-contract.test.ts",
+    "src/lib/raw-exposure-scan-contract.test.ts"
+  ],
+  "raw_exposure_files": [],
+  "public_exposure_files": [
+    {
+      "path": "runtime/day-68-raw-path-public-exposure.md",
+      "disposition": "allowlisted_runtime_report",
+      "source": "public_local_exposure_hint"
+    }
+  ],
+  "unresolved_raw_exposure_files": [],
+  "unresolved_public_exposure_files": []
+}

@@ -179,6 +179,11 @@ function GatewayShell() {
         .gateway-shell .gw-frame-wrap .gw-frame { width: 100%; min-height: 100vh; border: 0; display: block; background: #0a0d12; overflow: hidden; }
         .gateway-shell .gw-side .gw-foot { margin-top: 18px; padding: 12px 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 10.5px; color: #6b7280; line-height: 1.55; }
         .gateway-shell .gw-side .gw-foot strong { color: #cdd4df; font-weight: 600; }
+        @media (max-width: 1200px) {
+          .gateway-shell { grid-template-columns: 220px 1480px; min-width: 1700px; }
+          .gateway-shell .gw-frame-wrap { width: 1480px; }
+          .gateway-shell .gw-frame-wrap .gw-frame { width: 1480px; }
+        }
       `}</style>
 
       <aside className="gw-side">

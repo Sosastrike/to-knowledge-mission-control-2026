@@ -635,7 +635,7 @@ function normalizeText(value: string): string {
 function sanitizeRequest(value: string): string {
   return String(value || '')
     .replace(/(?:sk-[A-Za-z0-9]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi, '[redacted]')
-    .replace(/(?:\/home\/tony|\/a0\/(?:usr|tmp|var)|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi, '[path redacted]')
+    .replace(/(?:\/home\/tony|\/Users\/[^/\s]+|\/a0\/(?:usr|tmp|var)|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi, '[path redacted]')
     .trim()
 }
 

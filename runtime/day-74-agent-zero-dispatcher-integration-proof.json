@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-05-12T01:09:37.310Z",
+  "base_url": "http://127.0.0.1:3337",
+  "endpoint": "/api/gateway/dispatcher/agent-zero",
+  "get_status": {
+    "status": 200,
+    "ok": true,
+    "mode": "agent_zero_dispatcher_status",
+    "commander": true,
+    "final_commander": "agent_zero",
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "external_writes_enabled": false,
+    "dispatch_executed": false,
+    "audit_event": "agent_zero.dispatcher.route_planned",
+    "safe_output": true
+  },
+  "post_normal": {
+    "status": 200,
+    "ok": true,
+    "mode": "agent_zero_dispatcher_route",
+    "final_commander": "agent_zero",
+    "agent_zero_in_route": true,
+    "dispatch_executed": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "audit_event": "agent_zero.dispatcher.route_planned",
+    "safe_output": true
+  },
+  "post_gated_action": {
+    "status": 200,
+    "ok": true,
+    "requires_bridge_session": true,
+    "dispatch_executed": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "external_writes_enabled": false,
+    "safe_output": true
+  },
+  "post_redaction": {
+    "status": 200,
+    "ok": true,
+    "safe_output": true
+  },
+  "ok": true
+}

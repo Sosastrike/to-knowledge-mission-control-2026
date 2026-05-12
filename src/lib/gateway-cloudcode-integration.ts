@@ -15,6 +15,7 @@ import {
   type RouteMetadata,
   type RouteSmokeReport,
 } from './cloudcode-backend-support'
+import { buildCanonicalAgentRegistryPayload } from './canonical-agent-registry'
 
 type AnyRecord = Record<string, any>
 
@@ -222,6 +223,7 @@ export function buildCloudCodeGatewayStatus(rawStatus: AnyRecord) {
         'classifyErrors',
       ],
     },
+    canonical_agent_registry: buildCanonicalAgentRegistryPayload('authority'),
     normalized_status,
     owner_status: normalized_status.overall_status,
     canonical_status: normalized_status.overall_status,
@@ -286,6 +288,15 @@ export function buildCloudCodeAgentHealth(agentHubPayload: AnyRecord): Component
   return buildAgentHealth(probes, {
     executionEnabled: agentHubPayload.execution_enabled === true,
   })
+}
+
+export function selectCloudCodeAgentHealthRows(agentHubAgentId: string, health: readonly ComponentStatus[]): ComponentStatus[] {
+  const ids = new Set(agentHubIdToCloudCodeIds(agentHubAgentId))
+  return health.filter((row) => ids.has(row.id))
+}
+
+export function selectCloudCodeAgentHealth(agentHubAgentId: string, health: readonly ComponentStatus[]): ComponentStatus | null {
+  return selectCloudCodeAgentHealthRows(agentHubAgentId, health)[0] || null
 }
 
 function spaceAgentBrowserAutomationProbes(browserAutomation: AnyRecord): AgentProbeInput[] {

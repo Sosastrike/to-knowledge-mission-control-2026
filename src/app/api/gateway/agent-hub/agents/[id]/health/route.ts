@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { buildCloudCodeAgentHealth } from '@/lib/gateway-cloudcode-integration'
+import {
+  buildCloudCodeAgentHealth,
+  selectCloudCodeAgentHealth,
+  selectCloudCodeAgentHealthRows,
+} from '@/lib/gateway-cloudcode-integration'
 import { buildAgentHubAgentHealthPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
 
@@ -28,7 +32,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
   }
 
-  const health = buildCloudCodeAgentHealth({
+  const cloudCodeHealth = buildCloudCodeAgentHealth({
     execution_enabled: false,
     agents: [{
       id: payload.agent_id,
@@ -50,6 +54,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       source: 'cloudcode-backend-support-handoff',
       helpers: ['buildAgentHealth'],
     },
-    cloudcode_agent_health: health[0] || null,
+    cloudcode_agent_health: selectCloudCodeAgentHealth(payload.agent_id, cloudCodeHealth),
+    cloudcode_agent_health_rows: selectCloudCodeAgentHealthRows(payload.agent_id, cloudCodeHealth),
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

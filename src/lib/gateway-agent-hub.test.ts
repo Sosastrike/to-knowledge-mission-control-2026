@@ -27,6 +27,12 @@ describe('Gateway Agent Hub', () => {
       raw_paths_exposed: false,
     })
     expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
+    expect(payload.canonical_agent_registry.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
+    expect(payload.canonical_agent_registry.find((agent) => agent.id === 'agent-zero')).toMatchObject({
+      commander: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
     expect(payload.agents_total).toBe(6)
     expect(payload.production_truth).toMatchObject({
       agent_zero: 'credential_gated_until_agent_zero_external_api_key_available',
@@ -131,7 +137,9 @@ describe('Gateway Agent Hub', () => {
     expect(audit?.audit_events.length).toBeGreaterThan(0)
     expect(serialized).not.toMatch(/\/home\/tony|\/a0\/|auth\.json|Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
     expect(agents.mock_data_used).toBe(false)
+    expect(agents.canonical_agent_registry.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
     expect(agents.execution_enabled).toBe(false)
     expect(registryPayload).toMatchObject({ mode: 'gateway_agent_hub_registry_read_only', mock_data_used: false, execution_enabled: false, writes_enabled: false })
+    expect(registryPayload.canonical_agent_registry.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
   })
 })

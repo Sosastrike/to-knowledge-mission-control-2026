@@ -4,6 +4,8 @@ import {
   buildCloudCodeBuildWikiTruth,
   buildCloudCodeGatewayStatus,
   buildCloudCodeNavigation,
+  selectCloudCodeAgentHealth,
+  selectCloudCodeAgentHealthRows,
 } from './gateway-cloudcode-integration'
 
 describe('CloudCode backend-support integration', () => {
@@ -74,6 +76,19 @@ describe('CloudCode backend-support integration', () => {
     expect(truth.normalized_status.agents.find((agent) => agent.id === 'agent_zero')?.status).toBe('READ_ONLY')
     expect(truth.normalized_status.blockers.some((blocker) => blocker.kind === 'OWNER_GATED')).toBe(true)
     expect(truth.owner_status).toBe(truth.normalized_status.overall_status)
+    expect(truth.canonical_agent_registry.map((agent) => agent.id)).toEqual([
+      'agent-zero',
+      'hermes',
+      'pi-mono',
+      'spaceagent',
+      'paperclip',
+      'openclaw-plus',
+    ])
+    expect(truth.canonical_agent_registry.find((agent) => agent.id === 'agent-zero')).toMatchObject({
+      commander: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
     expect(truth.route_metadata.breadcrumbs.map((crumb) => crumb.route)).toEqual(['/', '/gateway'])
     expect(JSON.stringify(truth)).not.toMatch(/\/Users\/|\/home\/|Bearer\s+|sk-[A-Za-z0-9_-]{20,}/)
   })
@@ -172,6 +187,49 @@ describe('CloudCode backend-support integration', () => {
       blocker: 'firecrawl_credential_required',
     })
     expect(health.every((agent) => agent.status !== 'LIVE')).toBe(true)
+  })
+
+  it('selects the requested Agent Hub health rows instead of the first CloudCode roster row', () => {
+    const health = buildCloudCodeAgentHealth({
+      execution_enabled: false,
+      agents: [
+        {
+          id: 'pi-mono',
+          name: 'Pi-mono',
+          connected: true,
+          configured: true,
+          blocked_reason: null,
+          live_interface_proven: true,
+          owner_status: { can_read: true },
+        },
+      ],
+    } as any)
+
+    expect(selectCloudCodeAgentHealth('pi-mono', health)).toMatchObject({
+      id: 'pi',
+      status: 'READ_ONLY',
+    })
+    expect(selectCloudCodeAgentHealthRows('pi-mono', health).map((agent) => agent.id)).toEqual(['pi'])
+    expect(selectCloudCodeAgentHealth('pi-mono', health)?.id).not.toBe('agent_zero')
+  })
+
+  it('selects all SpaceAgent browser automation health rows for the aggregate agent', () => {
+    const health = buildCloudCodeAgentHealth({
+      execution_enabled: false,
+      space_agent_browser_automation: {
+        cards: [
+          { id: 'playwright_mcp', configured: true, connected: false, blocker: 'playwright_mcp_service_unreachable' },
+          { id: 'youtube_research', configured: true, connected: true, blocker: null },
+          { id: 'firecrawl', configured: false, connected: false, blocker: 'firecrawl_credential_required' },
+        ],
+      },
+    } as any)
+
+    expect(selectCloudCodeAgentHealthRows('spaceagent', health).map((agent) => agent.id)).toEqual([
+      'spaceagent_playwright',
+      'spaceagent_youtube',
+      'spaceagent_firecrawl',
+    ])
   })
 
   it('returns route metadata for breadcrumbs, home, back, Gateway Overview, and Agent Hub', () => {

@@ -9,6 +9,7 @@ import {
   listExecutiveReports,
   reviewExecutiveReportsPlan,
 } from '@/lib/executive-reports'
+import { buildCanonicalAgentRegistryPayload } from '@/lib/canonical-agent-registry'
 import { logger } from '@/lib/logger'
 
 export const runtime = 'nodejs'
@@ -34,6 +35,7 @@ export async function GET(request: NextRequest) {
       limit: result.limit,
       offset: result.offset,
       summary: executiveReportsSummary(result.reports),
+      canonical_agent_registry: buildCanonicalAgentRegistryPayload('authority'),
       plan_review: reviewExecutiveReportsPlan(),
       safety: {
         execution_enabled: false,

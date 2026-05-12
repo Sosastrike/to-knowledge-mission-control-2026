@@ -1,5 +1,9 @@
 import type { GatewayCapability, GatewayRegistry } from './gateway-model'
 import type { MissionControlCanonicalStatus, MissionControlClosureBlockerClass } from './agent-zero-bridge'
+import {
+  buildCanonicalAgentRegistryPayload,
+  type CanonicalAgentRegistryPayloadEntry,
+} from './canonical-agent-registry'
 import { classifyGatewayOwnerRequest, planGatewayRoute, type GatewayRouteClassification } from './gateway-route-planner'
 
 export type PiOperationType = 'read' | 'write' | 'execute' | 'mixed'
@@ -58,6 +62,7 @@ export type PiDispatcherStatusPayload = {
   node_id: 'pi'
   agent_hub_id: 'pi-mono'
   canonical_gateway_node: 'pi_dispatcher'
+  canonical_agent_registry: CanonicalAgentRegistryPayloadEntry[]
   role: 'Dispatcher / Route Optimizer Candidate'
   authority: 'advisory_only'
   status: 'shadow_live'
@@ -262,6 +267,7 @@ export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, genera
     node_id: 'pi',
     agent_hub_id: 'pi-mono',
     canonical_gateway_node: 'pi_dispatcher',
+    canonical_agent_registry: buildCanonicalAgentRegistryPayload('authority'),
     role: 'Dispatcher / Route Optimizer Candidate',
     authority: 'advisory_only',
     status: 'shadow_live',

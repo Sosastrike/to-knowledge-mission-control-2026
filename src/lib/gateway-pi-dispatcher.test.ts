@@ -42,6 +42,19 @@ describe('Pi shadow dispatcher', () => {
         blocker: 'advisory_only_no_execution_authority',
       },
     })
+    expect(status.canonical_agent_registry.map((agent) => agent.id)).toEqual([
+      'agent-zero',
+      'hermes',
+      'pi-mono',
+      'spaceagent',
+      'paperclip',
+      'openclaw-plus',
+    ])
+    expect(status.canonical_agent_registry.find((agent) => agent.id === 'pi-mono')).toMatchObject({
+      advisory_only: true,
+      execution_enabled: false,
+      writes_enabled: false,
+    })
     expect(status.safe_probe.mode).toBe('pi_dispatcher_shadow_recommendation')
     expect(status.last_result).toEqual(status.safe_probe)
     expect(status.advisory_result_proven).toBe(true)

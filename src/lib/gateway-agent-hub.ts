@@ -1,5 +1,14 @@
 import type { SpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
 import type { GatewayApiNode } from './gateway-registry-api'
+import {
+  buildCanonicalAgentRegistryPayload,
+  getCanonicalAgentRegistry,
+  normalizeCanonicalAgentId,
+  type CanonicalAgentId,
+  type CanonicalAgentRegistryPayloadEntry,
+  type CanonicalAgentRegistryEntry,
+  type CanonicalAgentHubState,
+} from './canonical-agent-registry'
 import { describeOwnerFacingStatus, OWNER_FACING_STATUS_STATES, type OwnerFacingStatusDescriptor } from './owner-status'
 import {
   buildGatewayFlowsPayload,
@@ -8,9 +17,9 @@ import {
 } from './gateway-registry-api'
 import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from './gateway-model'
 
-export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'spaceagent' | 'pi-mono' | 'openclaw-plus'
+export type AgentHubAgentId = CanonicalAgentId
 
-export type AgentHubAgentState = 'partial_go' | 'gated' | 'pending' | 'blocked' | 'read_only'
+export type AgentHubAgentState = CanonicalAgentHubState
 
 export type AgentHubRuntimeSystem = {
   id: string
@@ -105,6 +114,7 @@ export type AgentHubStatusPayload = {
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
   }
+  canonical_agent_registry: CanonicalAgentRegistryPayloadEntry[]
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
@@ -128,6 +138,7 @@ export type AgentHubRegistryPayload = {
   generated_at: string
   source: 'gateway_registry'
   mock_data_used: false
+  canonical_agent_registry: CanonicalAgentRegistryPayloadEntry[]
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
@@ -144,6 +155,7 @@ export type AgentHubAgentsPayload = {
   generated_at: string
   source: 'gateway_registry'
   mock_data_used: false
+  canonical_agent_registry: CanonicalAgentRegistryPayloadEntry[]
   agents: AgentHubAgent[]
   execution_enabled: false
   writes_enabled: false
@@ -227,128 +239,9 @@ export type AgentHubAgentAuditPayload = {
   raw_paths_exposed: false
 }
 
-type AgentHubDefinition = {
-  id: AgentHubAgentId
-  registryNodeId: string
-  name: string
-  role: string
-  layer: string
-  productionTruth: string
-  status: AgentHubAgentState
-  liveInterfaceProven: boolean
-  calledTrueProven: boolean
-  interfaceSummary: string
-  localUiUrl: string | null
-  tailnetUrl: string | null
-  uiMode: AgentHubAgent['interface']['ui_mode']
-  bridgeStatusRoute: string | null
-  extraBlockers: string[]
-}
+type AgentHubDefinition = CanonicalAgentRegistryEntry
 
-const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
-  {
-    id: 'paperclip',
-    registryNodeId: 'paperclip',
-    name: 'Paperclip',
-    role: 'Workforce Control Plane',
-    layer: 'workforce_and_task_orchestration_before_openclaw_runtime',
-    productionTruth: 'service-down until the Paperclip sandbox/local or Tailnet-only runtime is running and owner login/session proof is available',
-    status: 'blocked',
-    liveInterfaceProven: false,
-    calledTrueProven: false,
-    interfaceSummary: 'Mission Control node visible; Paperclip sandbox service is not currently running',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'local_only_pending',
-    bridgeStatusRoute: '/api/bridge/paperclip/status',
-    extraBlockers: ['paperclip_sandbox_service_not_running'],
-  },
-  {
-    id: 'agent-zero',
-    registryNodeId: 'agent_zero',
-    name: 'Agent Zero',
-    role: 'Commander',
-    layer: 'command_authority',
-    productionTruth: 'commander track; status route is visible, but live test-chat remains credential-gated until the approved Agent Zero external API key is available',
-    status: 'blocked',
-    liveInterfaceProven: false,
-    calledTrueProven: false,
-    interfaceSummary: 'Mission Control bridge status surface is available; live commander chat proof is credential-gated',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'mission_control_proxy',
-    bridgeStatusRoute: '/api/bridge/agent-zero/status',
-    extraBlockers: ['agent_zero_external_api_key_missing'],
-  },
-  {
-    id: 'hermes',
-    registryNodeId: 'hermes',
-    name: 'Hermes',
-    role: 'Lieutenant / Skill + Workflow Builder',
-    layer: 'planning_and_skill_design',
-    productionTruth: 'safe test-chat adapter proof exists, but the standalone Hermes runtime status route remains service-down until hermes-gateway service/runtime is installed',
-    status: 'blocked',
-    liveInterfaceProven: true,
-    calledTrueProven: false,
-    interfaceSummary: 'Safe chat adapter has proof, but standalone Hermes runtime remains blocked',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'service_gated',
-    bridgeStatusRoute: '/api/bridge/hermes/status',
-    extraBlockers: ['hermes_not_installed'],
-  },
-  {
-    id: 'spaceagent',
-    registryNodeId: 'space_agent',
-    name: 'SpaceAgent',
-    role: 'Browser / Firecrawl / YouTube Research Specialist',
-    layer: 'web_research_specialist',
-    productionTruth: 'YouTube transcript connector is proven for public read-only research; Playwright MCP is currently service-down and Firecrawl remains credential/backend gated',
-    status: 'pending',
-    liveInterfaceProven: true,
-    calledTrueProven: false,
-    interfaceSummary: 'Gateway research node visible; YouTube research is proven, while Playwright MCP and Firecrawl remain blocked by exact runtime/credential gates',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'mission_control_proxy',
-    bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['playwright_mcp_service_unreachable', 'firecrawl_credential_required', 'interactive_browser_actions_require_bridge_session'],
-  },
-  {
-    id: 'pi-mono',
-    registryNodeId: 'pi',
-    name: 'Pi-mono',
-    role: 'Dispatcher / Route Optimizer Candidate',
-    layer: 'shadow_dispatch_recommendation',
-    productionTruth: 'Mission Control in-process shadow dispatcher is live for advisory route recommendations; execution and writes remain disabled',
-    status: 'read_only',
-    liveInterfaceProven: true,
-    calledTrueProven: false,
-    interfaceSummary: 'Shadow dispatcher candidate; recommendations only, no execution authority',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'mission_control_proxy',
-    bridgeStatusRoute: '/api/bridge/pi/status',
-    extraBlockers: [],
-  },
-  {
-    id: 'openclaw-plus',
-    registryNodeId: 'openclaw_plus',
-    name: 'OpenClaw+',
-    role: 'Runtime / Skills / Mini-Agent Execution Layer',
-    layer: 'runtime_skills_agents_mini_agent_execution_layer',
-    productionTruth: 'SERVICE_DOWN until an approved OpenClaw+ CLI/runtime binary is installed or exposed to the Mission Control runtime service user and the doctor route returns a real health payload',
-    status: 'blocked',
-    liveInterfaceProven: false,
-    calledTrueProven: false,
-    interfaceSummary: 'Runtime / skills / mini-agent execution layer remains visible but blocked until OpenClaw+ doctor runtime is reachable',
-    localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'service_gated',
-    bridgeStatusRoute: '/api/openclaw/doctor',
-    extraBlockers: ['openclaw_doctor_runtime_not_reachable'],
-  },
-]
+const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = getCanonicalAgentRegistry('agent_hub')
 
 const SUPPORTING_RUNTIME_NODE_IDS = [
   'gateway',
@@ -366,14 +259,7 @@ const SUPPORTING_RUNTIME_NODE_IDS = [
 ]
 
 export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null {
-  const normalized = value.trim().toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-')
-  if (normalized === 'paperclip') return 'paperclip'
-  if (normalized === 'agent-zero' || normalized === 'agentzero') return 'agent-zero'
-  if (normalized === 'hermes') return 'hermes'
-  if (normalized === 'space-agent' || normalized === 'spaceagent') return 'spaceagent'
-  if (normalized === 'pi' || normalized === 'pi-mono' || normalized === 'pimono') return 'pi-mono'
-  if (normalized === 'openclaw' || normalized === 'openclaw+' || normalized === 'openclaw-plus' || normalized === 'openclawplus') return 'openclaw-plus'
-  return null
+  return normalizeCanonicalAgentId(value)
 }
 
 export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubStatusPayload {
@@ -405,6 +291,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
     },
+    canonical_agent_registry: buildCanonicalAgentRegistryPayload('agent_hub'),
     agents,
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
     buildwiki_run_now: {
@@ -429,6 +316,7 @@ export function buildAgentHubAgentsPayload(registry: GatewayRegistry): AgentHubA
     generated_at: registry.generated_at,
     source: 'gateway_registry',
     mock_data_used: false,
+    canonical_agent_registry: buildCanonicalAgentRegistryPayload('agent_hub'),
     agents: buildAgentHubAgents(registry),
     execution_enabled: false,
     writes_enabled: false,
@@ -444,6 +332,7 @@ export function buildAgentHubRegistryPayload(registry: GatewayRegistry): AgentHu
     generated_at: registry.generated_at,
     source: 'gateway_registry',
     mock_data_used: false,
+    canonical_agent_registry: buildCanonicalAgentRegistryPayload('agent_hub'),
     agents: buildAgentHubAgents(registry),
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
     execution_enabled: false,
@@ -593,9 +482,9 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       ...(registryNode?.blockers || []),
     ]
     const blockers = ownerSafeList([...definition.extraBlockers, ...observedBlockers])
-    const readEnabled = Boolean(node?.read_enabled) || definition.status === 'partial_go' || definition.status === 'read_only'
+    const readEnabled = Boolean(node?.read_enabled) || definition.agentHubStatus === 'partial_go' || definition.agentHubStatus === 'read_only'
     const ownerStatus = describeOwnerFacingStatus({
-      rawStatus: definition.status,
+      rawStatus: definition.agentHubStatus,
       blockers,
       summary: definition.productionTruth,
       connected: definition.liveInterfaceProven && Boolean(node?.connected),
@@ -604,8 +493,8 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       writeEnabled: false,
       executionEnabled: false,
       requiresBridgeSession: true,
-      requiresOwnerApproval: definition.status === 'gated',
-      preferReadyWhenReadable: definition.status === 'partial_go' || definition.status === 'read_only',
+      requiresOwnerApproval: definition.agentHubStatus === 'gated',
+      preferReadyWhenReadable: definition.agentHubStatus === 'partial_go' || definition.agentHubStatus === 'read_only',
     })
     return {
       id: definition.id,
@@ -613,7 +502,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       name: definition.name,
       role: definition.role,
       layer: definition.layer,
-      status: definition.status,
+      status: definition.agentHubStatus,
       gateway_health: node?.status || 'missing',
       production_truth: definition.productionTruth,
       live_interface_proven: definition.liveInterfaceProven,
@@ -640,13 +529,13 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       interface: {
         mission_control_surface: '/gateway/agent-hub' + (definition.id === 'paperclip' ? '/paperclip' : ''),
         owner_access: definition.interfaceSummary,
-        local_ui_url: definition.localUiUrl,
-        tailnet_url: definition.tailnetUrl,
+        local_ui_url: null,
+        tailnet_url: null,
         ui_mode: definition.uiMode,
         iframe_allowed: false,
         auth_required: true,
-        local_ui_proven: definition.localUiUrl !== null && definition.liveInterfaceProven,
-        tailnet_ui_proven: definition.tailnetUrl !== null && definition.liveInterfaceProven,
+        local_ui_proven: false,
+        tailnet_ui_proven: false,
         public_exposure: false,
       },
       policy: {

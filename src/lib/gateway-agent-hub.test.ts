@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createGatewayRegistryFromAgentNetwork } from './gateway-model'
 import {
+  attachOpenClawGatewayRuntimeStatus,
   buildAgentHubAgentAuditPayload,
   buildAgentHubAgentHealthPayload,
   buildAgentHubAgentRoutesPayload,
@@ -10,6 +11,8 @@ import {
   getAgentHubAgentPayload,
   normalizeAgentHubAgentId,
 } from './gateway-agent-hub'
+import { buildOpenClawGatewayRuntimeStatus } from './openclaw-gateway-runtime'
+import { parseOpenClawDoctorOutput, withOpenClawDoctorClosure } from './openclaw-doctor'
 
 const registry = createGatewayRegistryFromAgentNetwork({ generatedAt: '2026-05-07T00:00:00.000Z' })
 
@@ -141,5 +144,30 @@ describe('Gateway Agent Hub', () => {
     expect(agents.execution_enabled).toBe(false)
     expect(registryPayload).toMatchObject({ mode: 'gateway_agent_hub_registry_read_only', mock_data_used: false, execution_enabled: false, writes_enabled: false })
     expect(registryPayload.canonical_agent_registry.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
+  })
+
+  it('can attach live OpenClaw+ doctor proof without changing the Agent Hub roster', () => {
+    const runtime = buildOpenClawGatewayRuntimeStatus(withOpenClawDoctorClosure(
+      parseOpenClawDoctorOutput('OK: configuration valid', 0),
+      { timestamp: '2026-05-11T00:00:00.000Z', serviceUser: 'mission-control' },
+    ))
+    const payload = attachOpenClawGatewayRuntimeStatus(buildAgentHubStatusPayload(registry), runtime)
+    const openclaw = payload.agents.find((agent) => agent.id === 'openclaw-plus')
+
+    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono', 'openclaw-plus'])
+    expect(payload.openclaw_plus_runtime).toMatchObject({ canonical_status: 'LIVE', execution_enabled: false, writes_enabled: false })
+    expect(openclaw).toMatchObject({
+      status: 'read_only',
+      gateway_health: 'read_only',
+      live_interface_proven: true,
+      called_true_proven: true,
+      connected: true,
+      configured: true,
+      read_enabled: true,
+      blocked_reason: null,
+      blockers: [],
+      owner_status: { status: 'LIVE', tone: 'green' },
+    })
+    expect(payload.owner_status_summary.LIVE).toBe(1)
   })
 })

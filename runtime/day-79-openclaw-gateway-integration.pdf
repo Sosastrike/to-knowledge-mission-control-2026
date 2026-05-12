@@ -1,0 +1,269 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3355 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-79-openclaw-gateway-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 79 - OpenClaw+ + Gateway Integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: SERVICE_DOWN) Tj
+0 -12 Td
+(Blocker class: SERVICE_DOWN) Tj
+0 -12 Td
+(Exact blocker: openclaw_doctor_runtime_not_reachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(OpenClaw+ now has a Gateway-safe runtime status adapter. Gateway and Agent Hub no longer have to) Tj
+0 -12 Td
+( rely only on the static registry assumption for OpenClaw+. The data contract now uses the exist) Tj
+0 -12 Td
+(ing OpenClaw+ doctor closure proof and converts it into owner-facing Gateway status without expo) Tj
+0 -12 Td
+(sing raw command output, secrets, or local paths.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(OpenClaw+ remains visible as the runtime / skills / agents / mini-agent execution layer. It is n) Tj
+0 -12 Td
+(ot marked GO or LIVE because the current runtime cannot reach the OpenClaw+ doctor CLI.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/openclaw-gateway-runtime.ts) Tj
+0 -12 Td
+(- src/lib/gateway-agent-hub.ts) Tj
+0 -12 Td
+(- src/lib/gateway-registry-api.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/agent-hub/status/route.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/agent-hub/agents/[id]/route.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/agent-hub/agents/[id]/health/route.ts) Tj
+0 -12 Td
+(- src/app/api/gateway/nodes/[id]/route.ts) Tj
+0 -12 Td
+(- src/lib/__tests__/openclaw-gateway-runtime.test.ts) Tj
+0 -12 Td
+(- src/lib/gateway-agent-hub.test.ts) Tj
+0 -12 Td
+(- runtime/day-79-openclaw-gateway-integration-proof.json) Tj
+0 -12 Td
+(- runtime/day-79-openclaw-gateway-integration.md) Tj
+0 -12 Td
+(- runtime/day-79-openclaw-gateway-integration.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /api/gateway/agent-hub/status now attaches openclaw_plus_runtime.) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/openclaw-plus now attaches openclaw_plus_runtime.) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/openclaw-plus/health now reflects OpenClaw+ doctor proof.) Tj
+0 -12 Td
+(- /api/gateway/nodes/openclaw-plus now aliases to the openclaw_plus Gateway node and overlays sa) Tj
+0 -12 Td
+(nitized runtime truth.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub can now render OpenClaw+ from current runtime proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- canonical status: SERVICE_DOWN) Tj
+0 -12 Td
+(- owner status: SERVICE_DOWN) Tj
+0 -12 Td
+(- blocker: openclaw_doctor_runtime_not_reachable) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- destructive repair enabled: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Gateway designer HTML, CSS, or class names were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The new adapter performs a safe read-only doctor check using OpenClaw+ doctor. It does not run d) Tj
+0 -12 Td
+(octor --fix, does not execute skills, does not write, and does not dispatch external actions.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof used a local-only standalone Mission Control server bound to 127.0.0.1:3337. The s) Tj
+0 -12 Td
+(erver was started for proof with PID 80407 and shut down after the smoke checks.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2170 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- git diff --check: PASS) Tj
+0 -12 Td
+(- pnpm run typecheck: PASS) Tj
+0 -12 Td
+(- pnpm run build: PASS) Tj
+0 -12 Td
+(- focused OpenClaw+/Agent Hub tests: PASS, 2 files, 8 tests) Tj
+0 -12 Td
+(- pnpm test: PASS, 199 files, 1485 tests) Tj
+0 -12 Td
+(- protected-file invariants: PASS) Tj
+0 -12 Td
+(- secret scan contract: PASS) Tj
+0 -12 Td
+(- raw exposure scan contract: PASS) Tj
+0 -12 Td
+(- .env diff check: clean) Tj
+0 -12 Td
+(- unauthenticated protected route smoke: PASS, 41 routes, 0 failures) Tj
+0 -12 Td
+(- local authenticated OpenClaw+ API smoke: PASS, 3 routes, API key not printed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: runtime/day-79-openclaw-gateway-integration-proof.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed OpenClaw+ runtime result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /api/gateway/nodes/openclaw-plus: 200, SERVICE_DOWN) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/openclaw-plus/health: 200, SERVICE_DOWN) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/status: 200, SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(All three proof routes reported no execution enabled, no writes enabled, no secrets exposed, and) Tj
+0 -12 Td
+( no raw paths exposed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(OpenClaw+ CLI/runtime doctor is not reachable from the Mission Control runtime service user.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This is truthful and safe to carry forward because the developer-side Gateway/Agent Hub integrat) Tj
+0 -12 Td
+(ion, tests, proof harness, and owner-facing blocker state are complete.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(git revert <day-79-openclaw-gateway-integration-commit>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Commit hash: recorded after commit in the final handoff.) Tj
+0 -12 Td
+(Push result: pending until commit is created and pushed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 80 - Multi-Agent Status Consistency has automatically started after this lane closes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003654 00000 n 
+0000003780 00000 n 
+0000006002 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6072
+%%EOF

@@ -5,8 +5,9 @@ import {
   selectCloudCodeAgentHealth,
   selectCloudCodeAgentHealthRows,
 } from '@/lib/gateway-cloudcode-integration'
-import { buildAgentHubAgentHealthPayload } from '@/lib/gateway-agent-hub'
+import { attachOpenClawGatewayRuntimeToHealthPayload, buildAgentHubAgentHealthPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
+import { getOpenClawGatewayRuntimeStatus, isOpenClawGatewayNodeId } from '@/lib/openclaw-gateway-runtime'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -32,29 +33,36 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
   }
 
+  const runtimePayload = isOpenClawGatewayNodeId(id)
+    ? attachOpenClawGatewayRuntimeToHealthPayload(
+      payload,
+      await getOpenClawGatewayRuntimeStatus({ generatedAt: payload.generated_at }),
+    )
+    : payload
+
   const cloudCodeHealth = buildCloudCodeAgentHealth({
     execution_enabled: false,
     agents: [{
-      id: payload.agent_id,
-      name: payload.agent_id,
-      connected: payload.connected,
-      configured: payload.configured,
-      blocked_reason: payload.blocker,
-      live_interface_proven: payload.live_interface_proven,
-      called_true_proven: payload.called_true_proven,
-      last_success: payload.last_success,
-      owner_status: payload.owner_status,
+      id: runtimePayload.agent_id,
+      name: runtimePayload.agent_id,
+      connected: runtimePayload.connected,
+      configured: runtimePayload.configured,
+      blocked_reason: runtimePayload.blocker,
+      live_interface_proven: runtimePayload.live_interface_proven,
+      called_true_proven: runtimePayload.called_true_proven,
+      last_success: runtimePayload.last_success,
+      owner_status: runtimePayload.owner_status,
     }],
   } as any)
 
   return NextResponse.json({
-    ...payload,
+    ...runtimePayload,
     cloudcode_backend_support: {
       applied: true,
       source: 'cloudcode-backend-support-handoff',
       helpers: ['buildAgentHealth'],
     },
-    cloudcode_agent_health: selectCloudCodeAgentHealth(payload.agent_id, cloudCodeHealth),
-    cloudcode_agent_health_rows: selectCloudCodeAgentHealthRows(payload.agent_id, cloudCodeHealth),
+    cloudcode_agent_health: selectCloudCodeAgentHealth(runtimePayload.agent_id, cloudCodeHealth),
+    cloudcode_agent_health_rows: selectCloudCodeAgentHealthRows(runtimePayload.agent_id, cloudCodeHealth),
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

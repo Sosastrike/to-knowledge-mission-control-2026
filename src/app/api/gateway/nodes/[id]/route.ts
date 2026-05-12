@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { getGatewayNodeDetail, loadGatewayRegistry } from '@/lib/gateway-registry-api'
+import { getOpenClawGatewayRuntimeStatus, isOpenClawGatewayNodeId } from '@/lib/openclaw-gateway-runtime'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -24,6 +25,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
       execution_enabled: false,
       writes_enabled: false,
     }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+  }
+
+  if (isOpenClawGatewayNodeId(id)) {
+    const openclawRuntime = await getOpenClawGatewayRuntimeStatus({ generatedAt: detail.generated_at })
+    return NextResponse.json({
+      ...detail,
+      node: {
+        ...detail.node,
+        status: openclawRuntime.gateway_health,
+        connected: openclawRuntime.connected,
+        configured: openclawRuntime.configured,
+        read_enabled: openclawRuntime.read_enabled,
+        write_enabled: false,
+        execution_enabled: false,
+        blocked_reason: openclawRuntime.blocker,
+        last_success: openclawRuntime.canonical_status === 'LIVE' ? openclawRuntime.generated_at : null,
+        last_error: openclawRuntime.blocker,
+      },
+      openclaw_plus_runtime: openclawRuntime,
+    }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
   return NextResponse.json(detail, { headers: { 'Cache-Control': 'no-store' } })

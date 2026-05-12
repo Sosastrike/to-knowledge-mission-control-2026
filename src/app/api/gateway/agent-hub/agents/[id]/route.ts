@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { getAgentHubAgentPayload } from '@/lib/gateway-agent-hub'
+import { attachOpenClawGatewayRuntimeToAgentPayload, getAgentHubAgentPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
+import { getOpenClawGatewayRuntimeStatus, isOpenClawGatewayNodeId } from '@/lib/openclaw-gateway-runtime'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
       execution_enabled: false,
       writes_enabled: false,
     }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+  }
+
+  if (isOpenClawGatewayNodeId(id)) {
+    const openclawRuntime = await getOpenClawGatewayRuntimeStatus({ generatedAt: payload.generated_at })
+    return NextResponse.json(
+      attachOpenClawGatewayRuntimeToAgentPayload(payload, openclawRuntime),
+      { headers: { 'Cache-Control': 'no-store' } },
+    )
   }
 
   return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } })

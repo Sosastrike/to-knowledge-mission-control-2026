@@ -514,6 +514,9 @@ export function getGatewayNodeDetail(registry: GatewayRegistry, id: string): Gat
 
 const GATEWAY_NODE_DETAIL_ALIASES: Record<string, string> = {
   firecrawl: 'integration_firecrawl',
+  openclaw: 'openclaw_plus',
+  openclawplus: 'openclaw_plus',
+  'openclaw-plus': 'openclaw_plus',
 }
 
 export function buildGatewayFlowsPayload(registry: GatewayRegistry): GatewayFlowsPayload {

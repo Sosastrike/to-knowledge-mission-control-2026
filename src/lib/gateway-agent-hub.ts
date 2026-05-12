@@ -1,4 +1,5 @@
 import type { SpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
+import type { OpenClawGatewayRuntimeStatus } from './openclaw-gateway-runtime'
 import type { GatewayApiNode } from './gateway-registry-api'
 import {
   buildCanonicalAgentRegistryPayload,
@@ -117,6 +118,7 @@ export type AgentHubStatusPayload = {
   canonical_agent_registry: CanonicalAgentRegistryPayloadEntry[]
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
+  openclaw_plus_runtime?: OpenClawGatewayRuntimeStatus
   supporting_runtime_systems: AgentHubRuntimeSystem[]
   buildwiki_run_now: {
     target_service: 'opencloud-docs-farmer.service'
@@ -173,6 +175,7 @@ export type AgentHubAgentPayload = {
   node: GatewayApiNode | null
   inbound_edges: GatewayEdge[]
   outbound_edges: GatewayEdge[]
+  openclaw_plus_runtime?: OpenClawGatewayRuntimeStatus
   execution_enabled: false
   writes_enabled: false
   secrets_exposed: false
@@ -195,6 +198,7 @@ export type AgentHubAgentHealthPayload = {
   last_error: string | null
   blocker: string | null
   owner_status: OwnerFacingStatusDescriptor
+  openclaw_plus_runtime?: OpenClawGatewayRuntimeStatus
   execution_enabled: false
   writes_enabled: false
   secrets_exposed: false
@@ -611,5 +615,79 @@ export function attachSpaceAgentBrowserAutomationStatus(
   return {
     ...payload,
     space_agent_browser_automation: browserAutomation,
+  }
+}
+
+function mergeOpenClawRuntimeAgent(
+  agent: AgentHubAgent,
+  openclawRuntime: OpenClawGatewayRuntimeStatus,
+): AgentHubAgent {
+  const blockers = openclawRuntime.blocker ? [openclawRuntime.blocker] : []
+  return {
+    ...agent,
+    status: openclawRuntime.agent_hub_state,
+    gateway_health: openclawRuntime.gateway_health,
+    production_truth: openclawRuntime.blocker
+      ? `OpenClaw+ doctor runtime is ${openclawRuntime.canonical_status}: ${openclawRuntime.blocker}`
+      : 'OpenClaw+ doctor runtime is live and visible to Gateway.',
+    live_interface_proven: openclawRuntime.live_interface_proven,
+    called_true_proven: openclawRuntime.called_true_proven,
+    connected: openclawRuntime.connected,
+    configured: openclawRuntime.configured,
+    read_enabled: openclawRuntime.read_enabled,
+    write_enabled: false,
+    execution_enabled: false,
+    blocked_reason: openclawRuntime.blocker,
+    blockers,
+    owner_status: openclawRuntime.owner_status,
+  }
+}
+
+export function attachOpenClawGatewayRuntimeStatus(
+  payload: AgentHubStatusPayload,
+  openclawRuntime: OpenClawGatewayRuntimeStatus,
+): AgentHubStatusPayload {
+  const agents = payload.agents.map((agent) =>
+    agent.id === 'openclaw-plus' ? mergeOpenClawRuntimeAgent(agent, openclawRuntime) : agent,
+  )
+
+  return {
+    ...payload,
+    agents,
+    openclaw_plus_runtime: openclawRuntime,
+    live_interfaces_proven: agents.filter((agent) => agent.live_interface_proven).length,
+    gated_or_blocked: agents.filter((agent) => ['gated', 'pending', 'blocked'].includes(agent.status)).length,
+    owner_status_summary: summarizeOwnerStatuses(agents.map((agent) => agent.owner_status)),
+  }
+}
+
+export function attachOpenClawGatewayRuntimeToAgentPayload(
+  payload: AgentHubAgentPayload,
+  openclawRuntime: OpenClawGatewayRuntimeStatus,
+): AgentHubAgentPayload {
+  return {
+    ...payload,
+    agent: mergeOpenClawRuntimeAgent(payload.agent, openclawRuntime),
+    openclaw_plus_runtime: openclawRuntime,
+  }
+}
+
+export function attachOpenClawGatewayRuntimeToHealthPayload(
+  payload: AgentHubAgentHealthPayload,
+  openclawRuntime: OpenClawGatewayRuntimeStatus,
+): AgentHubAgentHealthPayload {
+  return {
+    ...payload,
+    status: openclawRuntime.agent_hub_state,
+    gateway_health: openclawRuntime.gateway_health,
+    connected: openclawRuntime.connected,
+    configured: openclawRuntime.configured,
+    live_interface_proven: openclawRuntime.live_interface_proven,
+    called_true_proven: openclawRuntime.called_true_proven,
+    last_success: openclawRuntime.canonical_status === 'LIVE' ? openclawRuntime.generated_at : null,
+    last_error: openclawRuntime.blocker,
+    blocker: openclawRuntime.blocker,
+    owner_status: openclawRuntime.owner_status,
+    openclaw_plus_runtime: openclawRuntime,
   }
 }

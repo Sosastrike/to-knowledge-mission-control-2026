@@ -1,0 +1,134 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2288 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "ok": true,) Tj
+0 -12 Td
+(  "checked_at": "2026-05-12T06:51:09.416Z",) Tj
+0 -12 Td
+(  "day": 99,) Tj
+0 -12 Td
+(  "lane": "FINAL BLOCKER ELIMINATION",) Tj
+0 -12 Td
+(  "started_from_commit": "113d294acc8535554162c102aaffd0b71013377b",) Tj
+0 -12 Td
+(  "branch": "to-knowledge-mc",) Tj
+0 -12 Td
+(  "no_env_changes_confirmed": true,) Tj
+0 -12 Td
+(  "blockers": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "owner_authenticated_visual_proof",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "detail": "No safe owner-authenticated browser session/cookie available; Day 98 harness di) Tj
+0 -12 Td
+(d not claim screenshots.") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "day94",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "detail": "CREDENTIAL_GATED appears in day94 proof packet") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "day94",) Tj
+0 -12 Td
+(      "class": "SERVICE_DOWN",) Tj
+0 -12 Td
+(      "detail": "SERVICE_DOWN appears in day94 proof packet") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "day95",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "detail": "CREDENTIAL_GATED appears in day95 proof packet") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "day97",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "detail": "OWNER_GATED appears in day97 proof packet") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "day98",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "detail": "OWNER_GATED appears in day98 proof packet") Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "developer_side_scope": "Resolve/report all developer-side blockers; remaining external blocke) Tj
+0 -12 Td
+(rs must be classified only as OWNER_GATED, CREDENTIAL_GATED, HARD_RESET_REQUIRED, or NONE.",) Tj
+0 -12 Td
+(  "blocker_class": "OWNER_GATED",) Tj
+0 -12 Td
+(  "rollback": "rm -rf runtime/day-99-final-blocker-elimination && git checkout -- runtime/day-99) Tj
+0 -12 Td
+(-final-blocker-elimination.md runtime/day-99-final-blocker-elimination.pdf 2>/dev/null || true") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002581 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2651
+%%EOF

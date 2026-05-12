@@ -1,0 +1,47 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:55:51.460Z",
+  "day": 99,
+  "lane": "FINAL BLOCKER ELIMINATION",
+  "status": "DEVELOPER_SIDE_CLOSED_WITH_EXTERNAL_GATES",
+  "blocker_class": "OWNER_GATED",
+  "remaining_blockers_total": 25,
+  "final_classes": [
+    "CREDENTIAL_GATED",
+    "OWNER_GATED"
+  ],
+  "invalid_final_classes": [],
+  "checks": [
+    {
+      "name": "live_blocker_table",
+      "ok": true,
+      "blocker": "OWNER_GATED"
+    },
+    {
+      "name": "protected_route_smoke",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "authenticated_route_smoke",
+      "ok": true,
+      "blocker": "OWNER_GATED"
+    },
+    {
+      "name": "protected_file_invariants",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "secret_scan",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "raw_exposure_scan",
+      "ok": true,
+      "blocker": "NONE"
+    }
+  ],
+  "rollback": "git revert <day-99-final-blocker-elimination-commit>"
+}

@@ -1,0 +1,274 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:53:43.645Z",
+  "base_url": "http://127.0.0.1:3337",
+  "api_auth_configured": true,
+  "secret_printed": false,
+  "endpoints": [
+    {
+      "lane": "agents",
+      "path": "/api/gateway/agent-hub/proof-packet",
+      "status": 200,
+      "ok": true,
+      "content_type": "application/json"
+    },
+    {
+      "lane": "connectors",
+      "path": "/api/bridge/connector-proof-packet",
+      "status": 200,
+      "ok": true,
+      "content_type": "application/json"
+    },
+    {
+      "lane": "bridge",
+      "path": "/api/bridge/approval-proof-packet",
+      "status": 200,
+      "ok": true,
+      "content_type": "application/json"
+    },
+    {
+      "lane": "gateway_status",
+      "path": "/api/gateway/status",
+      "status": 200,
+      "ok": true,
+      "content_type": "application/json"
+    },
+    {
+      "lane": "agent_hub_status",
+      "path": "/api/gateway/agent-hub/status",
+      "status": 200,
+      "ok": true,
+      "content_type": "application/json"
+    }
+  ],
+  "blockers": [
+    {
+      "lane": "agents",
+      "id": "paperclip",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/paperclip/health"
+    },
+    {
+      "lane": "agents",
+      "id": "agent-zero",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/agent-zero/health"
+    },
+    {
+      "lane": "agents",
+      "id": "hermes",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/hermes/health"
+    },
+    {
+      "lane": "agents",
+      "id": "spaceagent",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/spaceagent/health"
+    },
+    {
+      "lane": "agents",
+      "id": "openclaw-plus",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/openclaw-plus/health"
+    },
+    {
+      "lane": "connectors",
+      "id": "telegram",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "telegram_report_delivery_adapter_not_configured",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/telegram/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "agentmail",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agentmail_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/agentmail/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "google_drive",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "google_drive_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/google-drive/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "onedrive",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "onedrive_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/onedrive/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "zapier",
+      "reported_class": "BLOCKED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "result": "BLOCKED",
+      "route": "/api/bridge/zapier/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "heygen",
+      "reported_class": "BLOCKED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "result": "BLOCKED",
+      "route": "/api/bridge/heygen/schema-readiness"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "BLOCKED",
+      "final_class": "OWNER_GATED",
+      "blocker": "production_install_blocked_by_dependency_audit",
+      "result": "BLOCKED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "OWNER_GATED",
+      "final_class": "OWNER_GATED",
+      "blocker": "execution_requires_gateway_bridge_session_scope",
+      "result": "OWNER_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "OWNER_GATED",
+      "final_class": "OWNER_GATED",
+      "blocker": "buildwiki_run_now_requires_bridge_session_and_owner_approval",
+      "result": "OWNER_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "BLOCKED",
+      "final_class": "OWNER_GATED",
+      "blocker": "brain_sync_status_blocked",
+      "result": "BLOCKED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "paperclip",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/paperclip/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent-zero",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/agent-zero/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "hermes",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/hermes/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "spaceagent",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/spaceagent/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "openclaw-plus",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/openclaw-plus/health"
+    }
+  ],
+  "invalid_final_classes": [],
+  "blocker_class": "OWNER_GATED",
+  "classification_rule": "Reported classes are preserved. Day 99 final_class is normalized to OWNER_GATED, CREDENTIAL_GATED, HARD_RESET_REQUIRED, or NONE after developer-side code/proof harnesses are present."
+}

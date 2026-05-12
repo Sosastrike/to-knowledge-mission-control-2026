@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:38:48.865Z",
+  "day": 97,
+  "lane": "PRODUCTION DEPLOY FINAL",
+  "deployed_commit": "f9c9fc1",
+  "base_url": "http://127.0.0.1:3337",
+  "blocker_class": "NONE",
+  "owner_gated_followup": [
+    {
+      "name": "authenticated_route_smoke",
+      "ok": true,
+      "blocker": "OWNER_GATED",
+      "tolerated_for_day97": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "standalone_deploy_proof",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "protected_route_smoke",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "authenticated_route_smoke",
+      "ok": true,
+      "blocker": "OWNER_GATED",
+      "tolerated_for_day97": true
+    },
+    {
+      "name": "protected_file_invariants",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "secret_scan",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "raw_exposure_scan",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "runtime_listener",
+      "ok": true,
+      "blocker": "NONE"
+    }
+  ],
+  "rollback": "screen -S mc-day97 -X quit; kill $(cat .next/standalone/server.pid 2>/dev/null) 2>/dev/null || true"
+}

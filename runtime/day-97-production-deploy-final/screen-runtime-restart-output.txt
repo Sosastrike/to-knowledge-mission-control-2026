@@ -1,0 +1,8 @@
+checked_at=2026-05-12T06:37:03Z
+stopping_screen=mc-day97
+stopping_leftover_pids=95794
+starting_screen=mc-day97
+login_ready_after_seconds=3
+pid_file=1862
+listeners=1862
+restart_status=ok

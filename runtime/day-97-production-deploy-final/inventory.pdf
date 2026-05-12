@@ -1,0 +1,136 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2187 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "day": 97,) Tj
+0 -12 Td
+(  "lane": "Production Deploy Final",) Tj
+0 -12 Td
+(  "status": "STARTED",) Tj
+0 -12 Td
+(  "started_at": "2026-05-12T06:16:28.758Z",) Tj
+0 -12 Td
+(  "started_from_commit": "f9c9fc114efe7dc4ce5fec65ce293b4f7147f7d2",) Tj
+0 -12 Td
+(  "branch": "to-knowledge-mc",) Tj
+0 -12 Td
+(  "safety": {) Tj
+0 -12 Td
+(    "env_changes_allowed": false,) Tj
+0 -12 Td
+(    "env_changed": false,) Tj
+0 -12 Td
+(    "secret_output_allowed": false,) Tj
+0 -12 Td
+(    "public_local_exposure_allowed": false,) Tj
+0 -12 Td
+(    "external_writes_allowed": false,) Tj
+0 -12 Td
+(    "zapier_writes_allowed": false,) Tj
+0 -12 Td
+(    "heygen_generation_allowed": false,) Tj
+0 -12 Td
+(    "smb_allowed": false,) Tj
+0 -12 Td
+(    "fork_2_allowed": false) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "deploy_target": {) Tj
+0 -12 Td
+(    "script": "scripts/deploy-standalone.sh",) Tj
+0 -12 Td
+(    "host": "127.0.0.1",) Tj
+0 -12 Td
+(    "port": 3337,) Tj
+0 -12 Td
+(    "persistent_runtime_expected": true,) Tj
+0 -12 Td
+(    "service_manager": "local standalone script") Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "rollback_plan": [) Tj
+0 -12 Td
+(    "kill $\(cat .next/standalone/server.pid\)",) Tj
+0 -12 Td
+(    "git revert <day-97-production-deploy-final-commit>",) Tj
+0 -12 Td
+(    "MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "checks_required": [) Tj
+0 -12 Td
+(    "git diff --check",) Tj
+0 -12 Td
+(    ".env diff check",) Tj
+0 -12 Td
+(    "pnpm run typecheck",) Tj
+0 -12 Td
+(    "pnpm run build",) Tj
+0 -12 Td
+(    "pnpm test",) Tj
+0 -12 Td
+(    "scripts/deploy-standalone.sh",) Tj
+0 -12 Td
+(    "scripts/check-standalone-deploy-proof.mjs",) Tj
+0 -12 Td
+(    "protected route smoke",) Tj
+0 -12 Td
+(    "authenticated route smoke",) Tj
+0 -12 Td
+(    "runtime health",) Tj
+0 -12 Td
+(    "protected-file invariant scan",) Tj
+0 -12 Td
+(    "secret scan",) Tj
+0 -12 Td
+(    "raw exposure scan") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "blocker_classification": "NONE",) Tj
+0 -12 Td
+(  "next_day": "Day 98 - Owner Authenticated Proof Packet") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002480 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2550
+%%EOF

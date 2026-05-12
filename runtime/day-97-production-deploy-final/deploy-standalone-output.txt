@@ -1,0 +1,369 @@
+==> fetching branch to-knowledge-mc
+From github.com:Sosastrike/to-knowledge-mission-control-2026
+ * branch            to-knowledge-mc -> FETCH_HEAD
+Already up to date.
+==> stopping existing standalone server before rebuild
+==> installing dependencies
+Already up to date
+Done in 148ms using pnpm v11.0.8
+==> rebuilding standalone bundle
+Already up to date
+Done in 142ms using pnpm v11.0.8
+$ pnpm run verify:node && next build --webpack
+$ node scripts/check-node-version.mjs
+▲ Next.js 16.2.3 (webpack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 44s
+  Running TypeScript ...
+  Finished TypeScript in 15.8s ...
+  Collecting page data using 27 workers ...
+  Generating static pages using 27 workers (0/133) ...
+  Generating static pages using 27 workers (33/133)
+  Generating static pages using 27 workers (66/133)
+  Generating static pages using 27 workers (99/133)
+✓ Generating static pages using 27 workers (133/133) in 521ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                                                        Revalidate  Expire
+┌ ƒ /_not-found
+├ ƒ /[[...panel]]
+├ ƒ /agents
+├ ƒ /api/activities
+├ ƒ /api/adapters
+├ ƒ /api/agent-runtimes
+├ ƒ /api/agent-zero/request
+├ ƒ /api/agents
+├ ƒ /api/agents/[id]
+├ ƒ /api/agents/[id]/advanced-config
+├ ƒ /api/agents/[id]/attribution
+├ ƒ /api/agents/[id]/diagnostics
+├ ƒ /api/agents/[id]/files
+├ ƒ /api/agents/[id]/heartbeat
+├ ƒ /api/agents/[id]/hide
+├ ƒ /api/agents/[id]/keys
+├ ƒ /api/agents/[id]/memory
+├ ƒ /api/agents/[id]/soul
+├ ƒ /api/agents/[id]/wake
+├ ƒ /api/agents/comms
+├ ƒ /api/agents/evals
+├ ƒ /api/agents/message
+├ ƒ /api/agents/optimize
+├ ƒ /api/agents/register
+├ ƒ /api/agents/sync
+├ ƒ /api/alerts
+├ ƒ /api/audit
+├ ƒ /api/auth/access-requests
+├ ƒ /api/auth/azure-ad
+├ ƒ /api/auth/azure-ad/status
+├ ƒ /api/auth/callback/azure-ad
+├ ƒ /api/auth/google
+├ ƒ /api/auth/google/disconnect
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/sso-readiness
+├ ƒ /api/auth/users
+├ ƒ /api/backup
+├ ƒ /api/bridge/agent-zero/agentmail/send
+├ ƒ /api/bridge/agent-zero/agentmail/status
+├ ƒ /api/bridge/agent-zero/bridge-session
+├ ƒ /api/bridge/agent-zero/bridge-session/audit
+├ ƒ /api/bridge/agent-zero/ecosystem
+├ ƒ /api/bridge/agent-zero/execute
+├ ƒ /api/bridge/agent-zero/google-drive/folder-lookup
+├ ƒ /api/bridge/agent-zero/google-drive/status
+├ ƒ /api/bridge/agent-zero/google-drive/upload-report
+├ ƒ /api/bridge/agent-zero/google-drive/upload-test-file
+├ ƒ /api/bridge/agent-zero/google-drive/verify-link
+├ ƒ /api/bridge/agent-zero/hermes-handoff
+├ ƒ /api/bridge/agent-zero/mempalace
+├ ƒ /api/bridge/agent-zero/obsidian
+├ ƒ /api/bridge/agent-zero/onedrive/folder-lookup
+├ ƒ /api/bridge/agent-zero/onedrive/status
+├ ƒ /api/bridge/agent-zero/onedrive/upload-report
+├ ƒ /api/bridge/agent-zero/onedrive/upload-test-file
+├ ƒ /api/bridge/agent-zero/onedrive/verify-link
+├ ƒ /api/bridge/agent-zero/reports
+├ ƒ /api/bridge/agent-zero/reports/[id]
+├ ƒ /api/bridge/agent-zero/reports/[id]/links
+├ ƒ /api/bridge/agent-zero/reports/[id]/markdown
+├ ƒ /api/bridge/agent-zero/reports/[id]/pdf
+├ ƒ /api/bridge/agent-zero/status
+├ ƒ /api/bridge/agent-zero/telegram/status
+├ ƒ /api/bridge/agent-zero/telegram/upload-report
+├ ƒ /api/bridge/agent-zero/test-chat
+├ ƒ /api/bridge/approval-contract
+├ ƒ /api/bridge/approval-proof-packet
+├ ƒ /api/bridge/approval-readiness
+├ ƒ /api/bridge/approval-requests
+├ ƒ /api/bridge/approval-requests/[id]/approve
+├ ƒ /api/bridge/approval-requests/[id]/deny
+├ ƒ /api/bridge/approval-requests/audit-report
+├ ƒ /api/bridge/brain-context
+├ ƒ /api/bridge/brain-sync/build-wiki/add-source
+├ ƒ /api/bridge/brain-sync/build-wiki/add-source/[id]
+├ ƒ /api/bridge/brain-sync/build-wiki/add-source/[id]/dispatch
+├ ƒ /api/bridge/brain-sync/build-wiki/files
+├ ƒ /api/bridge/brain-sync/build-wiki/files/[type]/[name]
+├ ƒ /api/bridge/brain-sync/build-wiki/logs
+├ ƒ /api/bridge/brain-sync/build-wiki/run-now
+├ ƒ /api/bridge/brain-sync/build-wiki/run-now/[id]
+├ ƒ /api/bridge/brain-sync/build-wiki/run-now/[id]/dispatch
+├ ƒ /api/bridge/brain-sync/build-wiki/status
+├ ƒ /api/bridge/brain-sync/build-wiki/timer-control
+├ ƒ /api/bridge/brain-sync/build-wiki/timer-control/[id]
+├ ƒ /api/bridge/brain-sync/build-wiki/timer-control/[id]/dispatch
+├ ƒ /api/bridge/brain-sync/knowledge-report
+├ ƒ /api/bridge/brain-sync/rebuild
+├ ƒ /api/bridge/brain-sync/status
+├ ƒ /api/bridge/button-contracts
+├ ƒ /api/bridge/capability-matrix
+├ ƒ /api/bridge/connector-proof-packet
+├ ƒ /api/bridge/connector-readiness
+├ ƒ /api/bridge/costs
+├ ƒ /api/bridge/execution-cycle
+├ ƒ /api/bridge/executive-report-preview
+├ ƒ /api/bridge/harness/status
+├ ƒ /api/bridge/hermes/status
+├ ƒ /api/bridge/hermes/test-chat
+├ ƒ /api/bridge/heygen/exact-scope-proof
+├ ƒ /api/bridge/heygen/schema-readiness
+├ ƒ /api/bridge/owner-gates
+├ ƒ /api/bridge/paperclip/agents
+├ ƒ /api/bridge/paperclip/companies
+├ ƒ /api/bridge/paperclip/dispatcher-recommendations
+├ ƒ /api/bridge/paperclip/issues
+├ ƒ /api/bridge/paperclip/proposals
+├ ƒ /api/bridge/paperclip/research-tasks
+├ ƒ /api/bridge/paperclip/status
+├ ƒ /api/bridge/paperclip/tasks
+├ ƒ /api/bridge/paperclip/test-chat
+├ ƒ /api/bridge/paperclip/workforce-flow
+├ ƒ /api/bridge/pi/status
+├ ƒ /api/bridge/playwright-mcp/smoke
+├ ƒ /api/bridge/playwright-mcp/status
+├ ƒ /api/bridge/preflight
+├ ƒ /api/bridge/providers
+├ ƒ /api/bridge/providers/[id]
+├ ƒ /api/bridge/space-agent/playwright-mcp/status
+├ ƒ /api/bridge/space-agent/status
+├ ƒ /api/bridge/space-agent/test-chat
+├ ƒ /api/bridge/telegram-approval-preview
+├ ƒ /api/bridge/tool-action-approval
+├ ƒ /api/bridge/tool-error-classifier
+├ ƒ /api/bridge/zapier/status
+├ ƒ /api/bridge/zapier/tools
+├ ƒ /api/bridge/zapier/tools/search
+├ ƒ /api/channels
+├ ƒ /api/chat/conversations
+├ ƒ /api/chat/messages
+├ ƒ /api/chat/messages/[id]
+├ ƒ /api/chat/session-prefs
+├ ƒ /api/claude-tasks
+├ ƒ /api/claude/sessions
+├ ƒ /api/cleanup
+├ ƒ /api/connect
+├ ƒ /api/cron
+├ ƒ /api/debug
+├ ƒ /api/diagnostics
+├ ƒ /api/docs
+├ ƒ /api/docs/content
+├ ƒ /api/docs/search
+├ ƒ /api/docs/tree
+├ ƒ /api/events
+├ ƒ /api/exec-approvals
+├ ƒ /api/export
+├ ƒ /api/firecrawl/[[...path]]
+├ ƒ /api/frameworks
+├ ƒ /api/gateway-config
+├ ƒ /api/gateway/agent-hub/agents
+├ ƒ /api/gateway/agent-hub/agents/[id]
+├ ƒ /api/gateway/agent-hub/agents/[id]/audit
+├ ƒ /api/gateway/agent-hub/agents/[id]/health
+├ ƒ /api/gateway/agent-hub/agents/[id]/routes
+├ ƒ /api/gateway/agent-hub/proof-packet
+├ ƒ /api/gateway/agent-hub/registry
+├ ƒ /api/gateway/agent-hub/status
+├ ƒ /api/gateway/data-layer/[tool]
+├ ƒ /api/gateway/data-layer/execute
+├ ƒ /api/gateway/data-layer/query
+├ ƒ /api/gateway/dispatcher/agent-zero
+├ ƒ /api/gateway/dispatcher/hermes
+├ ƒ /api/gateway/dispatcher/pi
+├ ƒ /api/gateway/docs
+├ ƒ /api/gateway/events
+├ ƒ /api/gateway/flows
+├ ƒ /api/gateway/mini-agents
+├ ƒ /api/gateway/navigation
+├ ƒ /api/gateway/nodes
+├ ƒ /api/gateway/nodes/[id]
+├ ƒ /api/gateway/nodes/playwright-mcp
+├ ƒ /api/gateway/nodes/space-agent
+├ ƒ /api/gateway/observability
+├ ƒ /api/gateway/policies
+├ ƒ /api/gateway/registry
+├ ƒ /api/gateway/replay
+├ ƒ /api/gateway/route-smoke
+├ ƒ /api/gateway/space-agent/browser/jobs
+├ ƒ /api/gateway/space-agent/browser/status
+├ ƒ /api/gateway/space-agent/jobs/[id]
+├ ƒ /api/gateway/space-agent/playwright-mcp/evidence
+├ ƒ /api/gateway/space-agent/research
+├ ƒ /api/gateway/space-agent/youtube/research
+├ ƒ /api/gateway/space-agent/youtube/status
+├ ƒ /api/gateway/status
+├ ƒ /api/gateway/token-governor
+├ ƒ /api/gateways
+├ ƒ /api/gateways/connect
+├ ƒ /api/gateways/control
+├ ƒ /api/gateways/discover
+├ ƒ /api/gateways/health
+├ ƒ /api/gateways/health/history
+├ ƒ /api/github
+├ ƒ /api/github/sync
+├ ƒ /api/gnap
+├ ƒ /api/health-check
+├ ƒ /api/hermes
+├ ƒ /api/hermes/events
+├ ƒ /api/hermes/memory
+├ ƒ /api/hermes/tasks
+├ ○ /api/index                                                             5m      1y
+├ ƒ /api/integrations
+├ ƒ /api/local/agents-doc
+├ ƒ /api/local/flight-deck
+├ ƒ /api/local/terminal
+├ ƒ /api/logs
+├ ƒ /api/mcp-audit/verify
+├ ƒ /api/mcp/[[...path]]
+├ ƒ /api/memory
+├ ƒ /api/memory/context
+├ ƒ /api/memory/graph
+├ ƒ /api/memory/health
+├ ƒ /api/memory/links
+├ ƒ /api/memory/process
+├ ƒ /api/memory/search
+├ ƒ /api/mentions
+├ ƒ /api/n8n/[[...path]]
+├ ƒ /api/nodes
+├ ƒ /api/notifications
+├ ƒ /api/notifications/deliver
+├ ƒ /api/onboarding
+├ ƒ /api/openclaw/doctor
+├ ƒ /api/openclaw/update
+├ ƒ /api/openclaw/version
+├ ƒ /api/pipelines
+├ ƒ /api/pipelines/run
+├ ƒ /api/projects
+├ ƒ /api/projects/[id]
+├ ƒ /api/projects/[id]/agents
+├ ƒ /api/projects/[id]/tasks
+├ ƒ /api/pty/attach
+├ ƒ /api/pty/setup
+├ ƒ /api/quality-review
+├ ƒ /api/releases/check
+├ ƒ /api/releases/update
+├ ƒ /api/reports
+├ ƒ /api/reports/[id]
+├ ƒ /api/reports/[id]/history
+├ ƒ /api/runtime/failure-states
+├ ƒ /api/runtime/health
+├ ƒ /api/schedule-parse
+├ ƒ /api/scheduler
+├ ƒ /api/search
+├ ƒ /api/security-audit
+├ ƒ /api/security-scan
+├ ƒ /api/security-scan/agent
+├ ƒ /api/security-scan/fix
+├ ƒ /api/sessions
+├ ƒ /api/sessions/[id]/control
+├ ƒ /api/sessions/continue
+├ ƒ /api/sessions/transcript
+├ ƒ /api/sessions/transcript/aggregate
+├ ƒ /api/sessions/transcript/gateway
+├ ƒ /api/settings
+├ ƒ /api/setup
+├ ƒ /api/skills
+├ ƒ /api/skills/[...path]
+├ ƒ /api/skills/registry
+├ ƒ /api/spawn
+├ ƒ /api/standup
+├ ƒ /api/status
+├ ƒ /api/super/os-users
+├ ƒ /api/super/provision-jobs
+├ ƒ /api/super/provision-jobs/[id]
+├ ƒ /api/super/provision-jobs/[id]/run
+├ ƒ /api/super/tenants
+├ ƒ /api/super/tenants/[id]/decommission
+├ ƒ /api/system-monitor
+├ ƒ /api/tasks
+├ ƒ /api/tasks/[id]
+├ ƒ /api/tasks/[id]/branch
+├ ƒ /api/tasks/[id]/broadcast
+├ ƒ /api/tasks/[id]/comments
+├ ƒ /api/tasks/outcomes
+├ ƒ /api/tasks/queue
+├ ƒ /api/tasks/regression
+├ ƒ /api/tokens
+├ ƒ /api/tokens/by-agent
+├ ƒ /api/tokens/rotate
+├ ƒ /api/v1/evals/leaderboard
+├ ƒ /api/v1/runs
+├ ƒ /api/v1/runs/[run_id]
+├ ƒ /api/v1/runs/[run_id]/eval
+├ ƒ /api/v1/runs/[run_id]/provenance
+├ ƒ /api/v1/runs/stream
+├ ƒ /api/viral-crawl/video/request-run
+├ ƒ /api/viral-crawl/video/status
+├ ƒ /api/webhooks
+├ ƒ /api/webhooks/deliveries
+├ ƒ /api/webhooks/retry
+├ ƒ /api/webhooks/test
+├ ƒ /api/webhooks/verify-docs
+├ ƒ /api/workflows
+├ ƒ /api/workload
+├ ƒ /api/workspaces
+├ ƒ /api/workspaces/[id]
+├ ƒ /api/zapier/[[...path]]
+├ ○ /apple-icon.png
+├ ƒ /design/gateway/[[...path]]
+├ ƒ /designer-mission-control/[[...path]]
+├ ƒ /docs
+├ ƒ /gateway
+├ ƒ /gateway/brain
+├ ƒ /gateway/space-agent
+├ ƒ /gateway/status
+├ ○ /icon.png
+├ ƒ /live-meeting
+├ ƒ /login
+├ ƒ /schedule
+├ ƒ /settings/tkmc
+├ ƒ /settings/tkmc/agents
+├ ƒ /settings/tkmc/alerts
+├ ƒ /settings/tkmc/audit
+├ ƒ /settings/tkmc/channels
+├ ƒ /settings/tkmc/integrations
+├ ƒ /settings/tkmc/models
+├ ƒ /settings/tkmc/roles
+├ ƒ /settings/tkmc/security
+├ ƒ /settings/tkmc/skills
+├ ƒ /settings/tkmc/users
+├ ƒ /setup
+├ ƒ /tkmc
+└ ƒ /viral-crawl
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+$ bash scripts/sync-static-to-standalone.sh
+sync-static-to-standalone: copied .next/static/ -> .next/standalone/.next/static/
+sync-static-to-standalone: copied public/ -> .next/standalone/public/
+sync-static-to-standalone: done.
+==> starting standalone server
+==> verifying process and static assets
+==> deployed commit f9c9fc1
+    pid=94273 port=3337 asset=/_next/static/css/0f8dc0fb86554783.css

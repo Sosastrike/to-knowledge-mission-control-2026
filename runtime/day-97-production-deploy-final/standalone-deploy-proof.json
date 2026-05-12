@@ -1,0 +1,46 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:37:30.670Z",
+  "source_branch": "to-knowledge-mc",
+  "source_commit": "f9c9fc1",
+  "base_url": "http://127.0.0.1:3337",
+  "bind_expectation": "127.0.0.1/local-only unless service manager explicitly overrides MC_HOSTNAME",
+  "no_public_exposure_added": true,
+  "api_auth_configured": true,
+  "standalone": {
+    "server_js_exists": true,
+    "pid_file": ".next/standalone/server.pid",
+    "pid_from_file": "1862",
+    "listener_pids": [
+      "1862"
+    ],
+    "port": "3337"
+  },
+  "probes": {
+    "login": {
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "mission_control_present": true
+    },
+    "static_asset": {
+      "path": "/_next/static/css/0f8dc0fb86554783.css",
+      "disk_exists": true,
+      "status": 200,
+      "content_type": "text/css; charset=UTF-8"
+    },
+    "protected_gateway_unauthenticated": {
+      "status": 307,
+      "location": "/login",
+      "protected": true
+    },
+    "connector_readiness_authenticated": {
+      "status": 200,
+      "ok": true,
+      "connector_count": 10,
+      "execution_enabled": 0,
+      "writes_enabled": 0
+    }
+  },
+  "failures": [],
+  "rollback": "git revert <day-63-commit-sha> && MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh"
+}

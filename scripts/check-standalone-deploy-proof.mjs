@@ -31,6 +31,14 @@ function readApiKeyFromDb() {
   ])
 }
 
+function readApiKeyFromStandaloneGeneratedFile() {
+  const file = join(projectRoot, '.next/standalone/.data/.auto-generated')
+  if (!existsSync(file)) return ''
+  const raw = readFileSync(file, 'utf8')
+  const match = raw.match(/^API_KEY=(.+)$/m)
+  return match?.[1]?.trim() || ''
+}
+
 function readPidFile() {
   if (!existsSync(pidFile)) return null
   const raw = readFileSync(pidFile, 'utf8').trim()
@@ -77,7 +85,12 @@ const sourceCommit = run('git', ['rev-parse', '--short', 'HEAD'])
 const sourceBranch = run('git', ['branch', '--show-current'])
 const pidFromFile = readPidFile()
 const listenerPids = listListenerPids()
-const apiKey = (process.env.MISSION_CONTROL_API_KEY || process.env.API_KEY || readApiKeyFromDb()).trim()
+const apiKey = (
+  process.env.MISSION_CONTROL_API_KEY ||
+  process.env.API_KEY ||
+  readApiKeyFromStandaloneGeneratedFile() ||
+  readApiKeyFromDb()
+).trim()
 
 const login = await fetchText('/login')
 const assetPath = login.status === 200 ? findStaticAsset(login.body) : null

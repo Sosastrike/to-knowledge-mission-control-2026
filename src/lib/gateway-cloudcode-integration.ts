@@ -103,6 +103,7 @@ function explicitBlocker(message: string, ownerMessage?: string): AnyRecord {
 }
 
 function gatewayShellTarget(route: string): string {
+  if (route === '/tkmc') return '/tkmc'
   if (route === '/gateway/agent-hub' || route === '/agent-network' || route === '/agents') return '/gateway?tab=agent-hub'
   if (route === '/gateway/agent-hub/paperclip') return '/gateway?tab=paperclip'
   if (route.startsWith('/gateway/agent-hub/')) return '/gateway?tab=agent-hub'
@@ -144,8 +145,8 @@ export function buildCloudCodeNavigation(route: string) {
       breadcrumbs,
       all_routes: ROUTE_METADATA,
       targets: {
-        mission_control_home: '/',
-        safe_back: '/',
+        mission_control_home: '/tkmc',
+        safe_back: '/tkmc',
         gateway_overview: '/gateway',
         agent_hub: '/gateway?tab=agent-hub',
       },

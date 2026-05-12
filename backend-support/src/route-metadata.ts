@@ -1,25 +1,36 @@
 import type { RouteMetadata } from './types'
 
+const MISSION_CONTROL_HOME = '/tkmc'
+
 // Canonical Mission Control / Gateway navigation map.
 // Codex consumes this for back/home/breadcrumb wiring — the UI never invents routes.
 // Adding a new section: append a row, do not reorder existing rows.
 export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
   {
     route: '/',
+    label: 'Mission Control Root Redirect',
+    parent_route: null,
+    breadcrumb_label: 'Mission Control',
+    safe_back_target: MISSION_CONTROL_HOME,
+    mission_control_home_target: MISSION_CONTROL_HOME,
+    owner_auth_required: false,
+  },
+  {
+    route: MISSION_CONTROL_HOME,
     label: 'Mission Control',
     parent_route: null,
     breadcrumb_label: 'Mission Control',
-    safe_back_target: '/',
-    mission_control_home_target: '/',
-    owner_auth_required: false,
+    safe_back_target: MISSION_CONTROL_HOME,
+    mission_control_home_target: MISSION_CONTROL_HOME,
+    owner_auth_required: true,
   },
   {
     route: '/gateway',
     label: 'Gateway',
-    parent_route: '/',
+    parent_route: MISSION_CONTROL_HOME,
     breadcrumb_label: 'Gateway',
-    safe_back_target: '/',
-    mission_control_home_target: '/',
+    safe_back_target: MISSION_CONTROL_HOME,
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -28,7 +39,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Overview',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -37,7 +48,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Agent Hub',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -46,7 +57,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway/agent-hub',
     breadcrumb_label: 'Paperclip',
     safe_back_target: '/gateway/agent-hub',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -55,7 +66,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway/agent-hub',
     breadcrumb_label: 'Agent Detail',
     safe_back_target: '/gateway/agent-hub',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -64,7 +75,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Routes',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -73,7 +84,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Registry',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -82,7 +93,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Policies',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -91,7 +102,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Health',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -100,7 +111,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Dispatcher',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -109,7 +120,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Status',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -118,7 +129,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Brain',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -127,7 +138,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'SpaceAgent',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -136,7 +147,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Node Detail',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -145,7 +156,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Mobile / Tablet',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -154,7 +165,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Token Governor',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -163,7 +174,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway',
     breadcrumb_label: 'Bridge Session',
     safe_back_target: '/gateway',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -172,7 +183,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway/agent-hub',
     breadcrumb_label: 'Agent Network',
     safe_back_target: '/gateway/agent-hub',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -181,25 +192,25 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/gateway/agent-hub',
     breadcrumb_label: 'Agents',
     safe_back_target: '/gateway/agent-hub',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
     route: '/reports',
     label: 'Reports',
-    parent_route: '/',
+    parent_route: MISSION_CONTROL_HOME,
     breadcrumb_label: 'Reports',
-    safe_back_target: '/',
-    mission_control_home_target: '/',
+    safe_back_target: MISSION_CONTROL_HOME,
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
     route: '/connectors',
     label: 'Connectors',
-    parent_route: '/',
+    parent_route: MISSION_CONTROL_HOME,
     breadcrumb_label: 'Connectors',
-    safe_back_target: '/',
-    mission_control_home_target: '/',
+    safe_back_target: MISSION_CONTROL_HOME,
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
   {
@@ -208,7 +219,7 @@ export const ROUTE_METADATA: ReadonlyArray<RouteMetadata> = [
     parent_route: '/agents',
     breadcrumb_label: 'Agent Detail',
     safe_back_target: '/agents',
-    mission_control_home_target: '/',
+    mission_control_home_target: MISSION_CONTROL_HOME,
     owner_auth_required: true,
   },
 ]

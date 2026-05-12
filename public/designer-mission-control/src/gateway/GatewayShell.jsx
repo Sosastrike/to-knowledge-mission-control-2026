@@ -122,12 +122,13 @@ function GatewayShell() {
   }, [observeFrameSize, resizeFrame]);
 
   const selectTab = (id) => {
+    if (id === active) return;
     setActive(id);
     setFrameHeight('100vh');
     const url = new URL(window.location.href);
     url.searchParams.set('page', 'gateway');
     url.searchParams.set('tab', id);
-    window.history.replaceState({}, '', url);
+    window.history.pushState({ page: 'gateway', tab: id }, '', url);
     const main = document.querySelector('.main-solo');
     if (main && typeof main.scrollTo === 'function') {
       main.scrollTo({ top: 0, behavior: 'smooth' });

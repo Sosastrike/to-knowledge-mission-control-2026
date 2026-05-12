@@ -1,0 +1,322 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3898 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-86-back-home-exit-acceptance) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 86 — Back / Home / Exit Acceptance) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-20 Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Latest commit at start: `8557ff6`) Tj
+0 -12 Td
+(- `.env` changes: none requested, none made) Tj
+0 -12 Td
+(- Secret risk: no secrets inspected or emitted) Tj
+0 -12 Td
+(- Scope: Mission Control / Gateway browser Back, workspace Home, Gateway Overview, Agent Hub, an) Tj
+0 -12 Td
+(d Paperclip exit behavior) Tj
+0 -12 Td
+(- Design constraint: approved Gateway mock HTML/CSS/class names remain untouched) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Findings) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Gateway sub-tab changes updated the URL with `history.replaceState`, so browser Back could not) Tj
+0 -12 Td
+( replay `Overview -> Agent Hub -> Paperclip`.) Tj
+0 -12 Td
+(- The workspace rail hard-reloaded `/gateway` for the Gateway entry instead of using the active ) Tj
+0 -12 Td
+(Mission Control shell state.) Tj
+0 -12 Td
+(- Workspace page changes updated React state but did not always create browser history entries, ) Tj
+0 -12 Td
+(which made app Back/Home behavior fragile inside the designer shell.) Tj
+0 -12 Td
+(- CloudCode route metadata still treated `/` as Mission Control Home even though the concrete Mi) Tj
+0 -12 Td
+(ssion Control route is `/tkmc`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GatewayShell.jsx` now uses `history.pushState` for real Gateway tab history and ignores same-) Tj
+0 -12 Td
+(tab clicks.) Tj
+0 -12 Td
+(- `WorkspaceRail.jsx` now calls the Mission Control shell navigator for every rail item instead ) Tj
+0 -12 Td
+(of hard-reloading Gateway.) Tj
+0 -12 Td
+(- `app.jsx` now keeps workspace page changes in URL query state, removes stale `tab` values when) Tj
+0 -12 Td
+( leaving Gateway, handles `popstate`, and resets the Mission Control scroll surface on page chan) Tj
+0 -12 Td
+(ges.) Tj
+0 -12 Td
+(- Settings/search page changes now use the same workspace navigator.) Tj
+0 -12 Td
+(- CloudCode route metadata now includes `/tkmc` as the canonical Mission Control home and return) Tj
+0 -12 Td
+(s `/tkmc` for owner-facing home targets.) Tj
+0 -12 Td
+(- API/navigation/status tests were updated to assert the `/tkmc` home target and Gateway/Papercl) Tj
+0 -12 Td
+(ip safe-back behavior.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local proof server: `http://127.0.0.1:3340` on loopback only; stopped after proof.) Tj
+0 -12 Td
+(- Browser proof: `runtime/day-86-back-home-exit-acceptance/proof.json`) Tj
+0 -12 Td
+(- Screenshot: `runtime/day-86-back-home-exit-acceptance/gateway-back-home-exit.png`) Tj
+0 -12 Td
+(- Result:) Tj
+0 -12 Td
+(  - Gateway Overview loaded in the Mission Control Gateway shell.) Tj
+0 -12 Td
+(  - Agent Hub click loaded `/design/gateway/Agent Hub.html`.) Tj
+0 -12 Td
+(  - Paperclip click loaded `/design/gateway/Paperclip.html`.) Tj
+0 -12 Td
+(  - Browser Back returned from Paperclip to Agent Hub.) Tj
+0 -12 Td
+(  - Browser Back returned from Agent Hub to Gateway Overview.) Tj
+0 -12 Td
+(  - Mission Control rail click switched to `?page=mission`.) Tj
+0 -12 Td
+(  - Gateway rail click switched back to `?page=gateway`.) Tj
+0 -12 Td
+(  - Browser Back returned from Gateway to Mission Control.) Tj
+0 -12 Td
+(  - Direct raw static check for `/design/gateway/Agent Hub.html` returned `200` and rendered the) Tj
+0 -12 Td
+( designer canvas/breadcrumbs/Agent Zero content.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route/Smoke Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Protected route smoke: `runtime/day-86-back-home-exit-acceptance/protected-route-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - routes checked: `44`) Tj
+0 -12 Td
+(  - failures: `[]`) Tj
+0 -12 Td
+(- Authenticated route smoke harness: `runtime/day-86-back-home-exit-acceptance/authenticated-rou) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3760 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(te-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+(  - owner visual proof claimed: `false`) Tj
+0 -12 Td
+(  - blocker: `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Validation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `.env` diff check — PASS, no output) Tj
+0 -12 Td
+(- `pnpm run build` — PASS; regenerated stale Next type surface and copied static assets to stand) Tj
+0 -12 Td
+(alone output) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS after build regenerated stale `.next/types`) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 202 files / 1500 tests) Tj
+0 -12 Td
+(- `npm test` in `backend-support/` — PASS, 9 files / 106 tests) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- Unsupported command recorded: direct root Vitest filter for `backend-support/src/__tests__/rou) Tj
+0 -12 Td
+(te-metadata.test.ts` exits with no files by root config; backend package `npm test` covers it.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Back / Home / Exit acceptance) Tj
+0 -12 Td
+(- Status: developer-side navigation/history proof complete; owner-auth production visual retest ) Tj
+0 -12 Td
+(remains gated) Tj
+0 -12 Td
+(- Blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+(- Files changed:) Tj
+0 -12 Td
+(  - `public/designer-mission-control/src/app.jsx`) Tj
+0 -12 Td
+(  - `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(  - `public/designer-mission-control/src/replicas/WorkspaceRail.jsx`) Tj
+0 -12 Td
+(  - `backend-support/src/route-metadata.ts`) Tj
+0 -12 Td
+(  - `backend-support/src/__tests__/route-metadata.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/gateway-cloudcode-integration.ts`) Tj
+0 -12 Td
+(  - `src/lib/gateway-cloudcode-integration.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/gateway/navigation/route.test.ts`) Tj
+0 -12 Td
+(  - `src/app/api/gateway/status/route.test.ts`) Tj
+0 -12 Td
+(  - `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(  - `runtime/day-86-back-home-exit-acceptance.md`) Tj
+0 -12 Td
+(  - `runtime/day-86-back-home-exit-acceptance/proof.json`) Tj
+0 -12 Td
+(  - `runtime/day-86-back-home-exit-acceptance/protected-route-smoke.json`) Tj
+0 -12 Td
+(  - `runtime/day-86-back-home-exit-acceptance/authenticated-route-smoke.json`) Tj
+0 -12 Td
+(  - `runtime/day-86-back-home-exit-acceptance/gateway-back-home-exit.png`) Tj
+0 -12 Td
+(- Routes/endpoints changed: no new Next route; `/api/gateway/navigation` and `/api/gateway/statu) Tj
+0 -12 Td
+(s` route metadata now report `/tkmc` as Mission Control Home.) Tj
+0 -12 Td
+(- UI behavior: Gateway/Agent Hub/Paperclip remain raw approved designer files; shell history now) Tj
+0 -12 Td
+( supports browser Back, Mission Control Home exit, Gateway re-entry, and Paperclip/Agent Hub tab) Tj
+0 -12 Td
+( Back.) Tj
+0 -12 Td
+(- Service/runtime behavior: no service behavior changed; local proof server started on loopback ) Tj
+0 -12 Td
+(and stopped.) Tj
+0 -12 Td
+(- Deploy/restart result: production restart not performed in this lane; build proof completed lo) Tj
+0 -12 Td
+(cally.) Tj
+0 -12 Td
+(- Proof artifact: `runtime/day-86-back-home-exit-acceptance/proof.json`) Tj
+0 -12 Td
+(- Remaining blocker: owner-authenticated production visual retest requires an owner browser sess) Tj
+0 -12 Td
+(ion.) Tj
+0 -12 Td
+(- Exact blocker classification: `OWNER_GATED`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-86-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 127 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- Automatically begin Day 87 after commit/push: Responsive Design.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000004203 00000 n 
+0000004329 00000 n 
+0000008141 00000 n 
+0000008267 00000 n 
+0000008445 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8515
+%%EOF

@@ -10,6 +10,7 @@ describe('ROUTE_METADATA', () => {
     const routes = ROUTE_METADATA.map((r) => r.route)
     for (const r of [
       '/',
+      '/tkmc',
       '/gateway',
       '/gateway/overview',
       '/gateway/agent-hub',
@@ -52,7 +53,7 @@ describe('ROUTE_METADATA', () => {
 
   it('home is reachable from every leaf', () => {
     for (const r of ROUTE_METADATA) {
-      expect(r.mission_control_home_target).toBe('/')
+      expect(r.mission_control_home_target).toBe('/tkmc')
     }
   })
 })
@@ -78,7 +79,7 @@ describe('getRouteMetadata', () => {
 describe('getBreadcrumbTrail', () => {
   it('produces a root → leaf trail', () => {
     const trail = getBreadcrumbTrail('/gateway/agent-hub').map((r) => r.route)
-    expect(trail).toEqual(['/', '/gateway', '/gateway/agent-hub'])
+    expect(trail).toEqual(['/tkmc', '/gateway', '/gateway/agent-hub'])
   })
 
   it('handles routes with no parent', () => {
@@ -88,7 +89,7 @@ describe('getBreadcrumbTrail', () => {
 
   it('produces the Paperclip route trail under Agent Hub', () => {
     const trail = getBreadcrumbTrail('/gateway/agent-hub/paperclip').map((r) => r.route)
-    expect(trail).toEqual(['/', '/gateway', '/gateway/agent-hub', '/gateway/agent-hub/paperclip'])
+    expect(trail).toEqual(['/tkmc', '/gateway', '/gateway/agent-hub', '/gateway/agent-hub/paperclip'])
   })
 
   it('returns [] for unknown route', () => {

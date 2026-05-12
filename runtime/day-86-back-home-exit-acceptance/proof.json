@@ -1,0 +1,130 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T04:06:34.031Z",
+  "base_url": "http://127.0.0.1:3340",
+  "screenshot": "runtime/day-86-back-home-exit-acceptance/gateway-back-home-exit.png",
+  "events": [
+    {
+      "label": "gateway_overview_initial",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway&tab=overview",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway&tab=overview",
+      "activeWorkspace": "Gateway",
+      "activeTab": "OverviewNucleus — primary",
+      "iframeSrc": "/design/gateway/Gateway%20Overview.html",
+      "iframeTitle": "Gateway · Overview",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "after_agent_hub_click",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway&tab=agent-hub",
+      "activeWorkspace": "Gateway",
+      "activeTab": "Agent Hub6 agents",
+      "iframeSrc": "/design/gateway/Agent%20Hub.html",
+      "iframeTitle": "Gateway · Agent Hub",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "after_paperclip_click",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway&tab=paperclip",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway&tab=paperclip",
+      "activeWorkspace": "Gateway",
+      "activeTab": "PaperclipWorkforce Control Plane",
+      "iframeSrc": "/design/gateway/Paperclip.html",
+      "iframeTitle": "Gateway · Paperclip",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "browser_back_to_agent_hub",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway&tab=agent-hub",
+      "activeWorkspace": "Gateway",
+      "activeTab": "Agent Hub6 agents",
+      "iframeSrc": "/design/gateway/Agent%20Hub.html",
+      "iframeTitle": "Gateway · Agent Hub",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "browser_back_to_gateway_overview",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway&tab=overview",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway&tab=overview",
+      "activeWorkspace": "Gateway",
+      "activeTab": "OverviewNucleus — primary",
+      "iframeSrc": "/design/gateway/Gateway%20Overview.html",
+      "iframeTitle": "Gateway · Overview",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "mission_control_home_click",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=mission",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=mission",
+      "activeWorkspace": "Mission Control",
+      "activeTab": null,
+      "iframeSrc": null,
+      "iframeTitle": null,
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": false
+    },
+    {
+      "label": "gateway_click_from_home",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=gateway",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=gateway",
+      "activeWorkspace": "Gateway",
+      "activeTab": "OverviewNucleus — primary",
+      "iframeSrc": "/design/gateway/Gateway%20Overview.html",
+      "iframeTitle": "Gateway · Overview",
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": true
+    },
+    {
+      "label": "browser_back_to_mission_home",
+      "href": "http://127.0.0.1:3340/designer-mission-control/Mission%20Control.html?page=mission",
+      "pathname": "/designer-mission-control/Mission%20Control.html",
+      "search": "?page=mission",
+      "activeWorkspace": "Mission Control",
+      "activeTab": null,
+      "iframeSrc": null,
+      "iframeTitle": null,
+      "mainScrollTop": 0,
+      "missionDashboardVisible": false,
+      "gatewayShellVisible": false
+    }
+  ],
+  "direct_static_mock_check": {
+    "status": 200,
+    "url": "/design/gateway/Agent Hub.html",
+    "title": "Gateway · Agent Hub",
+    "hasGatewayCanvas": true,
+    "hasDesignerBreadcrumbs": true,
+    "hasAgentZero": true
+  },
+  "assertions": {
+    "gateway_tab_clicks_push_history": true,
+    "mission_control_home_click_works": true,
+    "gateway_click_from_home_works": true,
+    "browser_back_to_mission_home_works": true,
+    "agent_hub_raw_static_renders": true
+  },
+  "blocker_class": "NONE",
+  "secrets_exposed": false,
+  "raw_paths_exposed_to_ui": false
+}

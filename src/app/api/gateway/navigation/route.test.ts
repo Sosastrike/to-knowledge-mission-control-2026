@@ -26,7 +26,7 @@ describe('Gateway navigation metadata route', () => {
       ok: true,
       mode: 'gateway_navigation_metadata',
       targets: {
-        mission_control_home: '/',
+        mission_control_home: '/tkmc',
         safe_back: '/gateway',
         gateway_overview: '/gateway',
         agent_hub: '/gateway?tab=agent-hub',
@@ -44,7 +44,7 @@ describe('Gateway navigation metadata route', () => {
       ok: true,
       mode: 'gateway_navigation_metadata',
       targets: {
-        mission_control_home: '/',
+        mission_control_home: '/tkmc',
         safe_back: '/gateway?tab=agent-hub',
         gateway_overview: '/gateway',
         agent_hub: '/gateway?tab=agent-hub',

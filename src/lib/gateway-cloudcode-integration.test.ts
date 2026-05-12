@@ -89,7 +89,7 @@ describe('CloudCode backend-support integration', () => {
       execution_enabled: false,
       writes_enabled: false,
     })
-    expect(truth.route_metadata.breadcrumbs.map((crumb) => crumb.route)).toEqual(['/', '/gateway'])
+    expect(truth.route_metadata.breadcrumbs.map((crumb) => crumb.route)).toEqual(['/tkmc', '/gateway'])
     expect(JSON.stringify(truth)).not.toMatch(/\/Users\/|\/home\/|Bearer\s+|sk-[A-Za-z0-9_-]{20,}/)
   })
 
@@ -237,7 +237,7 @@ describe('CloudCode backend-support integration', () => {
 
     expect(nav.current?.route).toBe('/gateway/agent-hub')
     expect(nav.targets).toMatchObject({
-      mission_control_home: '/',
+      mission_control_home: '/tkmc',
       safe_back: '/gateway',
       gateway_overview: '/gateway',
       agent_hub: '/gateway?tab=agent-hub',
@@ -250,7 +250,7 @@ describe('CloudCode backend-support integration', () => {
 
     expect(nav.current?.route).toBe('/gateway/agent-hub/paperclip')
     expect(nav.targets).toMatchObject({
-      mission_control_home: '/',
+      mission_control_home: '/tkmc',
       safe_back: '/gateway?tab=agent-hub',
       gateway_overview: '/gateway',
       agent_hub: '/gateway?tab=agent-hub',

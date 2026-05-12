@@ -83,7 +83,7 @@ describe('Gateway status route CloudCode truth', () => {
     })
     expect(payload.owner_status).toBe(payload.normalized_status.overall_status)
     expect(payload.route_metadata.targets).toMatchObject({
-      mission_control_home: '/',
+      mission_control_home: '/tkmc',
       gateway_overview: '/gateway',
       agent_hub: '/gateway?tab=agent-hub',
     })

@@ -30,10 +30,35 @@ function App() {
     const requested = new URLSearchParams(location.search).get('page');
     return requested || localStorage.getItem('cc.page') || 'mission';
   });
+  const writeWorkspaceUrl = React.useCallback((nextPage, mode = 'push') => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', nextPage);
+    if (nextPage !== 'gateway') url.searchParams.delete('tab');
+    const method = mode === 'replace' ? 'replaceState' : 'pushState';
+    if (url.toString() !== window.location.href) {
+      window.history[method]({ page: nextPage }, '', url);
+    }
+  }, []);
+  const navigateWorkspacePage = React.useCallback((nextPage, mode = 'push') => {
+    setPage(nextPage);
+    writeWorkspaceUrl(nextPage, mode);
+    const main = document.querySelector('.main-solo');
+    if (main && typeof main.scrollTo === 'function') {
+      main.scrollTo({ top: 0, behavior: mode === 'replace' ? 'auto' : 'smooth' });
+    }
+  }, [writeWorkspaceUrl]);
   React.useEffect(()=>localStorage.setItem('cc.page', page), [page]);
   React.useEffect(() => {
     if (page === 'agent-network') window.location.href = '/gateway?tab=agent-hub';
   }, [page]);
+  React.useEffect(() => {
+    const syncWorkspaceFromUrl = () => {
+      const requested = new URLSearchParams(window.location.search).get('page') || 'mission';
+      setPage(requested);
+    };
+    window.addEventListener('popstate', syncWorkspaceFromUrl);
+    return () => window.removeEventListener('popstate', syncWorkspaceFromUrl);
+  }, []);
   const [modules, setModules] = React.useState({ agents:true, meetings:true, hive:true, tasks:true, quick:true, schedule:true, alerts:true, health:true, memory:true, tokens:true, graphify:true, webops:true, obsidian:true, telemetry:true, policy:true, pacman:true });
 
   // Search palette + Notifications drawer
@@ -92,17 +117,17 @@ function App() {
 
   const goTo = (p) => {
     if (p.startsWith('settings:')) { setSettingsPage(p.split(':')[1]); setSettingsOpen(true); }
-    else if (p === 'mission')  { setPage('mission'); }
-    else if (p === 'brain-sync'){ setPage('brain-sync'); }
-    else if (p === 'mirofish')  { setPage('mirofish'); }
-    else if (p === 'gateway') { setPage('gateway'); }
+    else if (p === 'mission')  { navigateWorkspacePage('mission'); }
+    else if (p === 'brain-sync'){ navigateWorkspacePage('brain-sync'); }
+    else if (p === 'mirofish')  { navigateWorkspacePage('mirofish'); }
+    else if (p === 'gateway') { navigateWorkspacePage('gateway'); }
     else if (p === 'agent-network') { window.location.href = '/gateway?tab=agent-hub'; return; }
-    else if (p === 'firecrawl') { setPage('firecrawl'); }
-    else if (p === 'zapier') { setPage('zapier'); }
-    else if (p === 'n8n') { setPage('n8n'); }
-    else if (p === 'mcp-tools') { setPage('mcp-tools'); }
-    else if (p === 'skills') { setPage('skills'); }
-    else if (p === 'reports') { setPage('reports'); }
+    else if (p === 'firecrawl') { navigateWorkspacePage('firecrawl'); }
+    else if (p === 'zapier') { navigateWorkspacePage('zapier'); }
+    else if (p === 'n8n') { navigateWorkspacePage('n8n'); }
+    else if (p === 'mcp-tools') { navigateWorkspacePage('mcp-tools'); }
+    else if (p === 'skills') { navigateWorkspacePage('skills'); }
+    else if (p === 'reports') { navigateWorkspacePage('reports'); }
     else if (p === 'meeting' || p === 'meetings') {
       const live = (window.MEETINGS || []).find(m => m.live) || (window.MEETINGS || [])[0];
       if (live) { setMeeting(live); setMeetingOpen(true); }
@@ -112,7 +137,7 @@ function App() {
     else if (p === 'tasks') setTasksOpen(true);
     else if (p === 'settings') setSettingsOpen(true);
     // Aliases used by the dashboard for cross-page jumps:
-    else if (p === 'brain')   { setPage('brain-sync'); }
+    else if (p === 'brain')   { navigateWorkspacePage('brain-sync'); }
     else if (p === 'health' || p === 'system' || p === 'system-health') {
       setSettingsPage('system'); setSettingsOpen(true);
     }
@@ -137,7 +162,7 @@ function App() {
   const handleSearchRoute = (result) => {
     const r = result?.route || result;
     if (!r) return;
-    if (r.page) setPage(r.page);
+    if (r.page) navigateWorkspacePage(r.page);
     if (r.overlay === 'settings') {
       if (r.settingsPage) setSettingsPage(r.settingsPage);
       setSettingsOpen(true);
@@ -183,7 +208,7 @@ function App() {
       <DemoBanner/>
 
       <div className="app-body">
-        <WorkspaceRail page={page} onPage={setPage}/>
+        <WorkspaceRail page={page} onPage={navigateWorkspacePage}/>
         <main className="main-solo">
           {page === 'mission'    && <Dashboard onGo={goTo} onJoin={(m)=>{setMeeting(m); setMeetingOpen(true);}} editMode={editMode} setEditMode={setEditMode} modules={modules} toggleModule={toggleModule} onAgent={setAgent} onTicket={setTicket} onOpenTasks={openTasks} onOps={(k,arg1,arg2)=>{ setOpsDrawer(k); if (k==='pacman' && arg1) setPacmanTab(arg1); if (k==='telemetry') setTelemetryFocus({ tab:arg1||null, skillId:arg2||null }); }}/>}
           {page === 'brain-sync' && <BrainSyncPage/>}
@@ -207,7 +232,7 @@ function App() {
       {opsDrawer==='policy'    && <PolicyHealthDrawer   onClose={()=>setOpsDrawer(null)}/>}
       {opsDrawer==='pacman'    && <PacmanOpsDrawer      onClose={()=>setOpsDrawer(null)} initialTab={pacmanTab}/>}
 
-      {settingsOpen && <SettingsDrawer page={settingsPage} setPage={setSettingsPage} onClose={()=>setSettingsOpen(false)} onAgent={setAgent} onPageChange={setPage}/>}
+      {settingsOpen && <SettingsDrawer page={settingsPage} setPage={setSettingsPage} onClose={()=>setSettingsOpen(false)} onAgent={setAgent} onPageChange={navigateWorkspacePage}/>}
       {scheduleOpen && <ScheduleOverlay onClose={()=>setScheduleOpen(false)} onTicket={setTicket}/>}
       {tasksOpen && <TasksOverlay onClose={()=>setTasksOpen(false)} onTicket={setTicket} initialFilter={tasksFilter}/>}
       {quickOpen && <GearQuickPanel onClose={()=>setQuickOpen(false)} onOpenSettings={openSettings}/>}

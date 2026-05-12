@@ -49,6 +49,7 @@ describe('Mission Control shell ownership', () => {
     expect(shell).toContain("{ id: 'gateway',  label: 'Gateway'")
     expect(shell).toContain("icon: 'Network'")
     expect(app).toContain("{page === 'gateway' && <GatewayShell/>}")
+    expect(app).toContain('<WorkspaceRail page={page} onPage={navigateWorkspacePage}/>')
     expect(app).toContain("window.location.href = '/gateway?tab=agent-hub'")
     expect(app).not.toContain("if (page === 'gateway') window.location.href = '/gateway'")
     expect(gatewayShell).toContain("src: '/design/gateway/Agent Hub.html'")
@@ -74,5 +75,27 @@ describe('Mission Control shell ownership', () => {
     expect(gatewayShell).not.toMatch(/\.gateway-shell \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
     expect(gatewayShell).not.toMatch(/\.gw-frame-wrap \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
     expect(gatewayShell).not.toMatch(/\.gw-frame \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
+  })
+
+  it('keeps browser Back, Mission Control Home, and Gateway tab exits wired through real history', () => {
+    const app = readSource('public/designer-mission-control/src/app.jsx')
+    const workspaceRail = readSource('public/designer-mission-control/src/replicas/WorkspaceRail.jsx')
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+
+    expect(app).toContain('const writeWorkspaceUrl = React.useCallback')
+    expect(app).toContain("url.searchParams.set('page', nextPage)")
+    expect(app).toContain("if (nextPage !== 'gateway') url.searchParams.delete('tab')")
+    expect(app).toContain("window.history[method]({ page: nextPage }, '', url)")
+    expect(app).toContain("window.addEventListener('popstate', syncWorkspaceFromUrl)")
+    expect(app).toContain('<WorkspaceRail page={page} onPage={navigateWorkspacePage}/>')
+    expect(app).toContain('onPageChange={navigateWorkspacePage}')
+    expect(app).not.toContain('onPageChange={setPage}')
+
+    expect(workspaceRail).toContain('onClick={()=>onPage(p.id)}')
+    expect(workspaceRail).not.toContain("window.location.href = '/gateway'")
+
+    expect(gatewayShell).toContain('if (id === active) return;')
+    expect(gatewayShell).toContain("window.history.pushState({ page: 'gateway', tab: id }, '', url)")
+    expect(gatewayShell).not.toContain("window.history.replaceState({}, '', url)")
   })
 })

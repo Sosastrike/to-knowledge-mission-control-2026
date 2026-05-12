@@ -1,0 +1,265 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3476 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-85-mission-control-movement) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 85 — Mission Control Movement) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-20 Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Latest commit at start: `2fd9a36`) Tj
+0 -12 Td
+(- `.env` changes: none requested, none made) Tj
+0 -12 Td
+(- Secret risk: no secrets inspected or emitted) Tj
+0 -12 Td
+(- Scope: Mission Control/Gateway movement and scroll ownership only) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Findings) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- The approved Gateway mock pages are served raw from `/design/gateway/*.html`.) Tj
+0 -12 Td
+(- `GatewayShell.jsx` mounted those raw pages in an iframe, but the shell and iframe were both pi) Tj
+0 -12 Td
+(nned to `100vh`.) Tj
+0 -12 Td
+(- That made Gateway sub-tabs feel static/trapped because iframe height owned movement instead of) Tj
+0 -12 Td
+( the Mission Control main surface.) Tj
+0 -12 Td
+(- The Day 85 fix must stay outside the approved mock HTML/CSS/class names.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Planned Fix) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Keep the designer mock pages raw and unchanged.) Tj
+0 -12 Td
+(- Auto-size the same-origin iframe from its rendered document height.) Tj
+0 -12 Td
+(- Disable iframe scrollbars and let Mission Control's `.main-solo` surface own page movement.) Tj
+0 -12 Td
+(- Reset the Mission Control scroll position when switching Gateway sub-tabs.) Tj
+0 -12 Td
+(- Add tests and runtime proof for iframe sizing and scroll ownership.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Updated `public/designer-mission-control/src/gateway/GatewayShell.jsx` only.) Tj
+0 -12 Td
+(- Did not modify approved mock HTML, CSS, or class names.) Tj
+0 -12 Td
+(- Replaced the fixed `height: 100%; min-height: 100vh` shell/frame trap with shell-level iframe ) Tj
+0 -12 Td
+(auto-sizing.) Tj
+0 -12 Td
+(- The iframe now:) Tj
+0 -12 Td
+(  - loads the same raw `/design/gateway/*.html` assets,) Tj
+0 -12 Td
+(  - uses `scrolling="no"`,) Tj
+0 -12 Td
+(  - sizes to stable designer content,) Tj
+0 -12 Td
+(  - keeps the Gateway sub-rail sticky,) Tj
+0 -12 Td
+(  - lets Mission Control `.main-solo` own movement.) Tj
+0 -12 Td
+(- Added a regression test in `src/lib/mission-control-shell.test.ts` that rejects the old `100vh) Tj
+0 -12 Td
+(` trap and verifies the shell owns iframe sizing.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local proof server: `http://127.0.0.1:3339` on loopback only; stopped after proof.) Tj
+0 -12 Td
+(- Browser proof: `runtime/day-85-mission-control-movement/proof.json`) Tj
+0 -12 Td
+(- Screenshot: `runtime/day-85-mission-control-movement/gateway-agent-hub-movement.png`) Tj
+0 -12 Td
+(- Result:) Tj
+0 -12 Td
+(  - page status: `200`) Tj
+0 -12 Td
+(  - iframe source: `/design/gateway/Agent Hub.html`) Tj
+0 -12 Td
+(  - iframe title: `Gateway · Agent Hub`) Tj
+0 -12 Td
+(  - iframe `scrolling`: `no`) Tj
+0 -12 Td
+(  - stable content height: `1813`) Tj
+0 -12 Td
+(  - iframe client height: `1813`) Tj
+0 -12 Td
+(  - Mission Control `.main-solo` scroll height/client height: `1915 / 713`) Tj
+0 -12 Td
+(  - scroll proof: `.main-solo.scrollTop` changed from `0` to `520`) Tj
+0 -12 Td
+(  - raw mock rendered: `true`) Tj
+0 -12 Td
+(  - frame fits stable content: `true`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Route/Smoke Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Protected route smoke: `runtime/day-85-mission-control-movement/protected-route-smoke.json`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2314 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - routes checked: `44`) Tj
+0 -12 Td
+(  - failures: `[]`) Tj
+0 -12 Td
+(- Authenticated route smoke harness: `runtime/day-85-mission-control-movement/authenticated-rout) Tj
+0 -12 Td
+(e-smoke.json`) Tj
+0 -12 Td
+(  - `ok: true`) Tj
+0 -12 Td
+(  - blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+(  - owner visual proof claimed: `false`) Tj
+0 -12 Td
+(  - blocker: `owner_authenticated_browser_session_required`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closure Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Mission Control movement) Tj
+0 -12 Td
+(- Status: developer-side movement fix complete; owner-auth production visual retest remains gate) Tj
+0 -12 Td
+(d) Tj
+0 -12 Td
+(- Blocker class: `OWNER_GATED`) Tj
+0 -12 Td
+(- Files changed:) Tj
+0 -12 Td
+(  - `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(  - `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(  - `runtime/day-85-mission-control-movement.md`) Tj
+0 -12 Td
+(  - `runtime/day-85-mission-control-movement/proof.json`) Tj
+0 -12 Td
+(  - `runtime/day-85-mission-control-movement/protected-route-smoke.json`) Tj
+0 -12 Td
+(  - `runtime/day-85-mission-control-movement/authenticated-route-smoke.json`) Tj
+0 -12 Td
+(  - `runtime/day-85-mission-control-movement/gateway-agent-hub-movement.png`) Tj
+0 -12 Td
+(- Routes/endpoints changed: none) Tj
+0 -12 Td
+(- UI behavior: Gateway mock remains raw/unchanged; Mission Control owns page movement; Gateway i) Tj
+0 -12 Td
+(frame no longer traps vertical scroll.) Tj
+0 -12 Td
+(- Service/runtime behavior: no service behavior changed; proof server started on loopback and st) Tj
+0 -12 Td
+(opped.) Tj
+0 -12 Td
+(- Deploy/restart result: no production restart performed in this lane.) Tj
+0 -12 Td
+(- Proof artifact: `runtime/day-85-mission-control-movement/proof.json`) Tj
+0 -12 Td
+(- Remaining blocker: owner-authenticated production visual retest requires an owner browser sess) Tj
+0 -12 Td
+(ion.) Tj
+0 -12 Td
+(- Exact blocker classification: `OWNER_GATED`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-85-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Automatically begin Day 86 after commit/push: Back / Home / Exit acceptance.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003775 00000 n 
+0000003901 00000 n 
+0000006267 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6337
+%%EOF

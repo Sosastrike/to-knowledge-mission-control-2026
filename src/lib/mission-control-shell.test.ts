@@ -54,4 +54,25 @@ describe('Mission Control shell ownership', () => {
     expect(gatewayShell).toContain("src: '/design/gateway/Agent Hub.html'")
     expect(gatewayShell).toContain("src: '/design/gateway/Paperclip.html'")
   })
+
+  it('lets Mission Control own Gateway page movement instead of trapping iframe scroll', () => {
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+
+    expect(gatewayShell).toContain("const [frameHeight, setFrameHeight] = React.useState('100vh')")
+    expect(gatewayShell).toContain('const frameRef = React.useRef(null)')
+    expect(gatewayShell).toContain('const contentHeight = (element) =>')
+    expect(gatewayShell).toContain("Math.max(canvasHeight, sideHeight)")
+    expect(gatewayShell).toContain("outerHeight('.repo-note')")
+    expect(gatewayShell).toContain('new ResizeObserver(resizeFrame)')
+    expect(gatewayShell).toContain("document.querySelector('.main-solo')")
+    expect(gatewayShell).toContain("main.scrollTo({ top: 0, behavior: 'smooth' })")
+    expect(gatewayShell).toContain('grid-template-columns: 220px minmax(0, 1fr)')
+    expect(gatewayShell).toContain('position: sticky')
+    expect(gatewayShell).toContain('scrolling="no"')
+    expect(gatewayShell).toContain('style={{ height: frameHeight }}')
+
+    expect(gatewayShell).not.toMatch(/\.gateway-shell \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
+    expect(gatewayShell).not.toMatch(/\.gw-frame-wrap \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
+    expect(gatewayShell).not.toMatch(/\.gw-frame \{[^}]*height:\s*100%;[^}]*min-height:\s*100vh/)
+  })
 })

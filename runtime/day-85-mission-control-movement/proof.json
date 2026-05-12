@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T03:50:01.165Z",
+  "base_url": "http://127.0.0.1:3339",
+  "url": "/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+  "status": 200,
+  "screenshot": "runtime/day-85-mission-control-movement/gateway-agent-hub-movement.png",
+  "before_scroll": {
+    "top": 0,
+    "height": 1915,
+    "client": 713
+  },
+  "after_scroll": {
+    "top": 520,
+    "height": 1915,
+    "client": 713
+  },
+  "metrics": {
+    "title": "To-Knowledge Mission Control",
+    "active_tab_text": "Agent Hub6 agents",
+    "iframe_src": "/design/gateway/Agent Hub.html",
+    "iframe_title": "Gateway · Agent Hub",
+    "iframe_scrolling": "no",
+    "iframe_inline_height": "1812.92px",
+    "iframe_client_height": 1813,
+    "iframe_rect_height": 1813,
+    "stable_content_height": 1813,
+    "canvas_content_height": 1451,
+    "side_content_height": 1049,
+    "shell_rect_height": 1813,
+    "main_scroll_height": 1915,
+    "main_client_height": 713,
+    "main_overflow_y": "auto",
+    "side_position": "sticky",
+    "side_max_height": "900px",
+    "mission_control_scroll_owner": true,
+    "frame_fits_stable_content": true,
+    "raw_mock_rendered": true
+  },
+  "blocker_class": "NONE",
+  "secrets_exposed": false,
+  "raw_paths_exposed_to_ui": false
+}

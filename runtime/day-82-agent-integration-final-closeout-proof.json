@@ -1,0 +1,90 @@
+{
+  "ok": true,
+  "day": 82,
+  "lane": "Agent Integration Final Closeout",
+  "generated_at": "2026-05-12T02:59:00.000Z",
+  "runtime_commit_before_day82_commit": "1f86667037ba37d493f9d3b49c70f2b04cafa52f",
+  "covered_days": [
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81
+  ],
+  "covered_commits": [
+    "44e5e1a",
+    "5e60b89",
+    "f998642",
+    "ecaf484",
+    "4c429dd",
+    "651fccb",
+    "adb0598",
+    "789bc28",
+    "1f86667"
+  ],
+  "runtime_proof": {
+    "protected_route_smoke": {
+      "ok": true,
+      "routes_checked": 42,
+      "failures": 0,
+      "base_url": "http://127.0.0.1:3337"
+    },
+    "agent_integration_final": {
+      "ok": true,
+      "checked_routes": 7,
+      "checked_route_paths": [
+        "/api/gateway/agent-hub/status",
+        "/api/gateway/agent-hub/proof-packet",
+        "/api/gateway/dispatcher/agent-zero",
+        "/api/gateway/dispatcher/hermes",
+        "/api/gateway/dispatcher/pi",
+        "/api/gateway/agent-hub/agents/paperclip/health",
+        "/api/gateway/agent-hub/agents/openclaw-plus/health"
+      ],
+      "checked_agents": 6,
+      "proof_packets": 6,
+      "consistency_ok": true,
+      "consistency_issues": 0,
+      "dispatcher_routes_ok": true,
+      "detail_health_routes_ok": true,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false,
+      "api_key_printed": false
+    }
+  },
+  "reports_present": {
+    "day_73": true,
+    "day_74": true,
+    "day_75": true,
+    "day_76": true,
+    "day_77": true,
+    "day_78": true,
+    "day_79": true,
+    "day_80": true,
+    "day_81": true
+  },
+  "safety": {
+    "env_changed": false,
+    "secrets_printed": false,
+    "auth_weakened": false,
+    "external_writes_enabled": false,
+    "public_local_exposure_added": false,
+    "designer_assets_modified": false
+  },
+  "blocker_class": "NONE",
+  "remaining_runtime_blockers_are_individual_agent_truth_not_day82_blockers": [
+    "agent_zero_external_api_key_missing",
+    "hermes_not_installed",
+    "paperclip_sandbox_service_not_running",
+    "playwright_mcp_service_unreachable",
+    "firecrawl_credential_required",
+    "openclaw_doctor_runtime_not_reachable"
+  ]
+}

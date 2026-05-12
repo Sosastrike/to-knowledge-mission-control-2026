@@ -1,0 +1,336 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3202 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-82-agent-integration-final-closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 82 - Agent Integration Final Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS for developer-side agent integration final closeout) Tj
+0 -12 Td
+(Blocker class: NONE for this lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Close the Days 73-81 multi-agent integration block by proving the registry, dispatcher integrati) Tj
+0 -12 Td
+(ons, Bridge-gated protected agent actions, OpenClaw+ Gateway truth, status consistency, and proo) Tj
+0 -12 Td
+(f packets all line up in the current runtime.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day 73 canonical agent registry is present.) Tj
+0 -12 Td
+(- Day 74 Agent Zero dispatcher route is present and read-only.) Tj
+0 -12 Td
+(- Day 75 Hermes dispatcher route is present and read-only.) Tj
+0 -12 Td
+(- Day 76 Pi dispatcher route is present and advisory-only.) Tj
+0 -12 Td
+(- Day 77 Paperclip protected actions remain Bridge-gated.) Tj
+0 -12 Td
+(- Day 78 SpaceAgent protected research remains Bridge-gated.) Tj
+0 -12 Td
+(- Day 79 OpenClaw+ Gateway runtime truth is visible.) Tj
+0 -12 Td
+(- Day 80 Agent Hub status consistency reports 6 checked agents and 0 issues.) Tj
+0 -12 Td
+(- Day 81 multi-agent proof packet reports 6 proof packets and 0 consistency issues.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-82-agent-integration-final-closeout-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-82-agent-integration-final-closeout.md`) Tj
+0 -12 Td
+(- `runtime/day-82-agent-integration-final-closeout.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No source code was changed for Day 82. This lane closes the agent-integration block with proof a) Tj
+0 -12 Td
+(rtifacts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Verified) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status`) Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/proof-packet`) Tj
+0 -12 Td
+(- `GET /api/gateway/dispatcher/agent-zero`) Tj
+0 -12 Td
+(- `GET /api/gateway/dispatcher/hermes`) Tj
+0 -12 Td
+(- `GET /api/gateway/dispatcher/pi`) Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/agents/paperclip/health`) Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/agents/openclaw-plus/health`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Gateway designer HTML, CSS, class names, or visual assets were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control and Agent Hub now have backend truth available for:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- canonical agent registry) Tj
+0 -12 Td
+(- dispatcher status) Tj
+0 -12 Td
+(- Agent Hub health rows) Tj
+0 -12 Td
+(- CloudCode health ids) Tj
+0 -12 Td
+(- multi-agent consistency) Tj
+0 -12 Td
+(- proof packets) Tj
+0 -12 Td
+(- exact blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No lane is marked GO just because the route exists. Individual agent blockers remain visible.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof used a short-lived local-only standalone Mission Control runtime bound to `127.0.0) Tj
+0 -12 Td
+(.1:3337`. The proof server was started only for smoke verification and was shut down by the proo) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2784 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(f script.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No external writes were enabled. No Bridge action was executed. No `.env` file was changed. No A) Tj
+0 -12 Td
+(PI key was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 82 did not add source code. The closeout relies on the already-pushed Day 81 verification pl) Tj
+0 -12 Td
+(us a fresh runtime proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day 81 `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- Day 81 `pnpm run build`: PASS) Tj
+0 -12 Td
+(- Day 81 `pnpm test`: PASS, 201 files, 1493 tests) Tj
+0 -12 Td
+(- Day 81 `git diff --check`: PASS) Tj
+0 -12 Td
+(- Day 81 protected-file invariants: PASS) Tj
+0 -12 Td
+(- Day 81 secret scan contract: PASS) Tj
+0 -12 Td
+(- Day 81 raw exposure scan contract: PASS) Tj
+0 -12 Td
+(- Day 81 `.env` diff check: clean) Tj
+0 -12 Td
+(- Day 82 protected route smoke: PASS, 42 routes, 0 failures) Tj
+0 -12 Td
+(- Day 82 authenticated agent integration proof: PASS, 7 routes, 6 proof packets, 0 consistency i) Tj
+0 -12 Td
+(ssues) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-82-agent-integration-final-closeout-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed runtime proof:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Hub status: HTTP 200) Tj
+0 -12 Td
+(- Multi-agent proof packet: HTTP 200) Tj
+0 -12 Td
+(- Agent Zero dispatcher: HTTP 200) Tj
+0 -12 Td
+(- Hermes dispatcher: HTTP 200) Tj
+0 -12 Td
+(- Pi dispatcher: HTTP 200) Tj
+0 -12 Td
+(- Paperclip health: HTTP 200, owner status SERVICE_DOWN, blocker `paperclip_sandbox_service_not_) Tj
+0 -12 Td
+(running`) Tj
+0 -12 Td
+(- OpenClaw+ health: HTTP 200, owner status SERVICE_DOWN, blocker `openclaw_doctor_runtime_not_re) Tj
+0 -12 Td
+(achable`) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- external writes enabled: false) Tj
+0 -12 Td
+(- secrets exposed: false) Tj
+0 -12 Td
+(- raw paths exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Day 82 closeout blocker remains.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The following individual agent blockers remain truthful and are carried into later lanes:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `agent_zero_external_api_key_missing`) Tj
+0 -12 Td
+(- `hermes_not_installed`) Tj
+0 -12 Td
+(- `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- `playwright_mcp_service_unreachable`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification for Day 82: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-82-agent-integration-final-closeout-commit>) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 313 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report generation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 83 - Gateway Designer Side-by-Side automatically starts after this lane closes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003507 00000 n 
+0000003633 00000 n 
+0000006469 00000 n 
+0000006595 00000 n 
+0000006959 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7029
+%%EOF

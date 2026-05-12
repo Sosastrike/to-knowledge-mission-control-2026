@@ -1,0 +1,211 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3073 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-71-production-restart-proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 71 — Production Restart Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Status: PASS — local-only restart proof complete) Tj
+0 -12 Td
+(Blocker class: NONE for developer-side restart proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+(Runtime / deployment / restart recovery.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Added a restart proof contract script that verifies a controlled Mission Control standalone re) Tj
+0 -12 Td
+(start.) Tj
+0 -12 Td
+(- Added tests for restart proof success, failed PID change, local-only URL enforcement, and unsa) Tj
+0 -12 Td
+(fe text detection.) Tj
+0 -12 Td
+(- The restart proof checks the live listener PID, login page, runtime health, and monitoring fai) Tj
+0 -12 Td
+(lure-state endpoint.) Tj
+0 -12 Td
+(- The proof script reads the standalone runtime auth store when needed, but never prints auth va) Tj
+0 -12 Td
+(lues.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `scripts/restart-proof-contract.mjs`) Tj
+0 -12 Td
+(- `src/lib/restart-proof-contract.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-71-production-restart-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-71-production-restart-proof.md`) Tj
+0 -12 Td
+(- `runtime/day-71-production-restart-proof.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Proved) Tj
+0 -12 Td
+(- `GET /login`) Tj
+0 -12 Td
+(- `GET /api/runtime/health`) Tj
+0 -12 Td
+(- `GET /api/runtime/failure-states`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Service Behavior) Tj
+0 -12 Td
+(- No UI redesign.) Tj
+0 -12 Td
+(- No Gateway mock HTML/CSS/class changes.) Tj
+0 -12 Td
+(- Mission Control restart stayed on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- No public local exposure was added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof) Tj
+0 -12 Td
+(- Before restart PID: `69803`) Tj
+0 -12 Td
+(- After restart PID: `86113`) Tj
+0 -12 Td
+(- Listener PIDs after restart: `86113`) Tj
+0 -12 Td
+(- Login probe: HTTP 200, Mission Control present) Tj
+0 -12 Td
+(- Runtime health probe: HTTP 200, `runtime_status: LIVE`, bind expected host `127.0.0.1`) Tj
+0 -12 Td
+(- Failure states probe: HTTP 200, `no_fake_live_status: true`, `no_external_writes_executed: tru) Tj
+0 -12 Td
+(e`) Tj
+0 -12 Td
+(- Failures: none) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-71-production-restart-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks Run) Tj
+0 -12 Td
+(- `pnpm test src/lib/restart-proof-contract.test.ts`) Tj
+0 -12 Td
+(- Controlled local-only restart with `MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standal) Tj
+0 -12 Td
+(one.sh`) Tj
+0 -12 Td
+(- `node scripts/restart-proof-contract.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Full validation is run before commit/push in the final Day 71 closeout gate.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 632 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No public bind.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(Use:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-71-restart-proof-commit-sha>) Tj
+0 -12 Td
+(MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 72 — Runtime Final Closeout starts automatically after Day 71 commit/push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003372 00000 n 
+0000003498 00000 n 
+0000004181 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4251
+%%EOF

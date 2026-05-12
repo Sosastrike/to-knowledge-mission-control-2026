@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T00:13:53.347Z",
+  "mode": "production_restart_proof",
+  "blocker_class": "NONE",
+  "source_commit": "e474db6",
+  "source_branch": "to-knowledge-mc",
+  "base_url": "http://127.0.0.1:3337",
+  "no_public_exposure_added": true,
+  "secrets_printed": false,
+  "before_pid": "69803",
+  "after_pid": "86113",
+  "listener_pids": [
+    "86113"
+  ],
+  "probes": {
+    "login": {
+      "status": 200,
+      "mission_control_present": true,
+      "unsafe_text_detected": false
+    },
+    "runtime_health": {
+      "status": 200,
+      "payload_ok": true,
+      "runtime_status": "LIVE",
+      "bind_expected_host": "127.0.0.1",
+      "no_public_exposure_added": true,
+      "unsafe_text_detected": false
+    },
+    "failure_states": {
+      "status": 200,
+      "payload_ok": true,
+      "no_fake_live_status": true,
+      "no_external_writes_executed": true,
+      "unsafe_text_detected": false
+    }
+  },
+  "failures": [],
+  "rollback": "git revert <day-71-restart-proof-commit-sha> && MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh"
+}

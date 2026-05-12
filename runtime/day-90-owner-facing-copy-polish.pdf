@@ -1,0 +1,267 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3579 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-90-owner-facing-copy-polish) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 90 — Owner-Facing Copy Polish) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Mission Control / Gateway owner-facing copy) Tj
+0 -12 Td
+(- Status: Developer-side closed) Tj
+0 -12 Td
+(- Blocker class: NONE) Tj
+0 -12 Td
+(- Start commit: 25da42b) Tj
+0 -12 Td
+(- Scope: Replace vague developer copy with owner-facing language across the Mission Control shel) Tj
+0 -12 Td
+(l surfaces without modifying approved Gateway mock HTML/CSS/class names.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Reviewed owner-visible copy and error surfaces in:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- public/designer-mission-control/src/settings-pages.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/ops-intel.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/meetings-integrations.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/meeting-lobby.jsx) Tj
+0 -12 Td
+(- public/designer-mission-control/src/owner-error-copy.jsx) Tj
+0 -12 Td
+(- src/lib/tool-error-classifier.ts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Found developer-facing phrases such as `not wired`, `backend not wired`, direct `e.message` noti) Tj
+0 -12 Td
+(fication details, and route-missing copy that could read like implementation residue instead of ) Tj
+0 -12 Td
+(a truthful owner blocker.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a focused owner-facing copy contract test.) Tj
+0 -12 Td
+(- Replaced `not wired` style copy with explicit owner-facing states such as connector backend un) Tj
+0 -12 Td
+(available, credential gated, route unavailable, log service unavailable, or disabled until backe) Tj
+0 -12 Td
+(nd support exists.) Tj
+0 -12 Td
+(- Routed remaining shell notification failures through `ownerFacingErrorText` / `OwnerErrorCopy`) Tj
+0 -12 Td
+( so raw exception messages are not surfaced as owner copy.) Tj
+0 -12 Td
+(- Updated shared route-missing classifier language to: `This route is not available in this Miss) Tj
+0 -12 Td
+(ion Control runtime.`) Tj
+0 -12 Td
+(- Left approved Gateway designer mock HTML/CSS/class names untouched.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No route behavior changed.) Tj
+0 -12 Td
+(- Mission Control shell settings, ops, meeting integration, and lobby surfaces now avoid develop) Tj
+0 -12 Td
+(er implementation terms in visible disabled-button reasons and failure notifications.) Tj
+0 -12 Td
+(- Gateway raw mock assets remain the production design contract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No external writes executed.) Tj
+0 -12 Td
+(- No Bridge-protected action executed.) Tj
+0 -12 Td
+(- No .env files changed.) Tj
+0 -12 Td
+(- Standalone server proof used localhost only: http://127.0.0.1:3344) Tj
+0 -12 Td
+(- Server PID during proof: 55847) Tj
+0 -12 Td
+(- Restart/deploy action: local standalone proof only; production restart not performed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- RED test first: `pnpm exec vitest run src/lib/owner-facing-copy-polish.test.ts` failed on the ) Tj
+0 -12 Td
+(original copy.) Tj
+0 -12 Td
+(- Focused GREEN: `pnpm exec vitest run src/lib/owner-facing-copy-polish.test.ts src/lib/tool-err) Tj
+0 -12 Td
+(or-classifier.test.ts src/lib/mission-control-shell.test.ts` passed, 3 files / 25 tests.) Tj
+0 -12 Td
+(- `git diff --check` passed.) Tj
+0 -12 Td
+(- `.env` diff check passed.) Tj
+0 -12 Td
+(- `pnpm run typecheck` passed.) Tj
+0 -12 Td
+(- `pnpm run build` passed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2767 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `pnpm test` passed, 204 files / 1509 tests.) Tj
+0 -12 Td
+(- Protected route smoke passed, artifact: runtime/day-90-owner-facing-copy-polish/protected-rout) Tj
+0 -12 Td
+(e-smoke.json) Tj
+0 -12 Td
+(- Authenticated route smoke returned OWNER_GATED as expected without owner session, artifact: ru) Tj
+0 -12 Td
+(ntime/day-90-owner-facing-copy-polish/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- Protected-file invariant scan passed, artifact: runtime/day-90-owner-facing-copy-polish/protec) Tj
+0 -12 Td
+(ted-file-invariants.json) Tj
+0 -12 Td
+(- Secret scan passed, artifact: runtime/day-90-owner-facing-copy-polish/secret-scan.json) Tj
+0 -12 Td
+(- Raw exposure scan passed, artifact: runtime/day-90-owner-facing-copy-polish/raw-exposure-scan.) Tj
+0 -12 Td
+(json) Tj
+0 -12 Td
+(- Copy proof passed, artifact: runtime/day-90-owner-facing-copy-polish/copy-polish-proof.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Screenshot: runtime/day-90-owner-facing-copy-polish/owner-facing-copy-proof.png) Tj
+0 -12 Td
+(- Copy proof: runtime/day-90-owner-facing-copy-polish/copy-polish-proof.json) Tj
+0 -12 Td
+(- PDF report: runtime/day-90-owner-facing-copy-polish.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-90-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day number and lane: Day 90 — Owner-facing copy polish) Tj
+0 -12 Td
+(- What was implemented: Owner-facing copy cleanup and classifier-backed notification details for) Tj
+0 -12 Td
+( shell settings/ops/meeting surfaces.) Tj
+0 -12 Td
+(- Files changed: settings shell, ops shell, meeting shell, lobby shell, owner error helper, shar) Tj
+0 -12 Td
+(ed tool error classifier, copy contract test, runtime report/proofs.) Tj
+0 -12 Td
+(- Routes/endpoints changed: None.) Tj
+0 -12 Td
+(- UI behavior: Disabled reasons and error messages are owner-facing; no raw exception detail or ) Tj
+0 -12 Td
+(`not wired` implementation phrasing in targeted surfaces.) Tj
+0 -12 Td
+(- Service/runtime behavior: No external writes; local proof server only.) Tj
+0 -12 Td
+(- Tests run: see Tests And Checks above.) Tj
+0 -12 Td
+(- Deploy/restart/smoke result: Local standalone proof server started on 127.0.0.1:3344, route sm) Tj
+0 -12 Td
+(okes passed, server stopped.) Tj
+0 -12 Td
+(- Proof artifact: runtime/day-90-owner-facing-copy-polish/) Tj
+0 -12 Td
+(- Remaining blocker: None.) Tj
+0 -12 Td
+(- Exact blocker classification: NONE) Tj
+0 -12 Td
+(- Rollback command: `git revert <day-90-commit>`) Tj
+0 -12 Td
+(- Commit hash: pending) Tj
+0 -12 Td
+(- Push result: pending) Tj
+0 -12 Td
+(- Confirmation next day started: pending after commit/push) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003878 00000 n 
+0000004004 00000 n 
+0000006823 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6893
+%%EOF

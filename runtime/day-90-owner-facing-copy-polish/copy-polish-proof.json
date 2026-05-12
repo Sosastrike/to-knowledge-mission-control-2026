@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T05:10:27.383Z",
+  "banned_matches": [],
+  "owner_route_missing_copy": true,
+  "files_checked": [
+    "public/designer-mission-control/src/settings-pages.jsx",
+    "public/designer-mission-control/src/ops-intel.jsx",
+    "public/designer-mission-control/src/meetings-integrations.jsx",
+    "public/designer-mission-control/src/meeting-lobby.jsx",
+    "src/lib/tool-error-classifier.ts",
+    "public/designer-mission-control/src/owner-error-copy.jsx"
+  ]
+}

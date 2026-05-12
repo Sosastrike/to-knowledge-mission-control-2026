@@ -53,6 +53,12 @@ function useApi(loadFn, deps = []){
   return [data, { reload: load, error: err }];
 }
 
+function ownerCopyError(e){
+  return window.ownerFacingErrorText
+    ? window.ownerFacingErrorText(e)
+    : 'UNKNOWN: The blocker is not classified yet. Next: Codex must inspect safe logs and add a classifier rule for this signal.';
+}
+
 function useAdminStore(key, initial){
   const store = adminStore(key, initial);
   const [val, setVal] = React.useState(store.get());
@@ -133,7 +139,7 @@ function UsersRolesPage(){
         action:{ label:'Open Users', route:{ overlay:'settings', settingsPage:'users' } },
       });
     } catch(e){
-      window.Notifications?.emit({ kind:'error', source:'auth', title:'Update rejected', detail: e.message });
+      window.Notifications?.emit({ kind:'error', source:'auth', title:'Update rejected', error: e, detail: ownerCopyError(e) });
     }
   };
   const removeUser = async (id) => {
@@ -143,7 +149,7 @@ function UsersRolesPage(){
       await window.api.users.remove(id);
       window.Notifications?.emit({ kind:'warn', source:'auth', title:'User removed · audit written', detail:`${u.name} (${u.email})` });
     } catch(e){
-      window.Notifications?.emit({ kind:'error', source:'auth', title:'Remove rejected', detail: e.message });
+      window.Notifications?.emit({ kind:'error', source:'auth', title:'Remove rejected', error: e, detail: ownerCopyError(e) });
     }
   };
 
@@ -291,7 +297,7 @@ function UsersRolesPage(){
               });
               setShowInvite(false);
             } catch(e){
-              window.Notifications?.emit({ kind:'error', source:'auth', title:'Invite rejected', detail: e.message });
+              window.Notifications?.emit({ kind:'error', source:'auth', title:'Invite rejected', error: e, detail: ownerCopyError(e) });
             }
           }}
         />
@@ -650,12 +656,12 @@ function SecurityPage(){
         action:{ label:'Open Security', route:{ overlay:'settings', settingsPage:'security' } },
       });
     } catch(e){
-      window.Notifications?.emit({ kind:'error', source:'auth', title:'Policy change rejected', detail: e.message });
+      window.Notifications?.emit({ kind:'error', source:'auth', title:'Policy change rejected', error: e, detail: ownerCopyError(e) });
     }
   };
   const setSso = async (provider) => {
     try { await window.api.security.setSSO({ provider }); }
-    catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'SSO change rejected', detail: e.message }); }
+    catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'SSO change rejected', error: e, detail: ownerCopyError(e) }); }
   };
 
   const addToken = async ({ name, scope }) => {
@@ -666,16 +672,16 @@ function SecurityPage(){
         detail:`${t.name} · ${t.raw.slice(0,14)}… (raw token shown ONCE)`,
       });
     } catch(e){
-      window.Notifications?.emit({ kind:'error', source:'auth', title:'Token create rejected', detail: e.message });
+      window.Notifications?.emit({ kind:'error', source:'auth', title:'Token create rejected', error: e, detail: ownerCopyError(e) });
     }
   };
   const revokeToken = async (id) => {
     try { await window.api.security.revokeToken(id); }
-    catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'Revoke rejected', detail: e.message }); }
+    catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'Revoke rejected', error: e, detail: ownerCopyError(e) }); }
   };
 
-  const addIp    = async (cidr) => { try { await window.api.security.addIp(cidr); } catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'IP add rejected', detail: e.message }); } };
-  const removeIp = async (id)   => { try { await window.api.security.removeIp(id);   } catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'IP remove rejected', detail: e.message }); } };
+  const addIp    = async (cidr) => { try { await window.api.security.addIp(cidr); } catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'IP add rejected', error: e, detail: ownerCopyError(e) }); } };
+  const removeIp = async (id)   => { try { await window.api.security.removeIp(id);   } catch(e){ window.Notifications?.emit({ kind:'error', source:'auth', title:'IP remove rejected', error: e, detail: ownerCopyError(e) }); } };
 
   return (
     <>
@@ -872,7 +878,7 @@ function SecurityPage(){
                   URL.revokeObjectURL(url);
                   window.Notifications?.emit({ kind:'ok', source:'auth', title:'Audit exported', detail:'audit_events table exported as JSON.' });
                 } catch(e){
-                  window.Notifications?.emit({ kind:'error', source:'auth', title:'Export rejected', detail: e.message });
+                  window.Notifications?.emit({ kind:'error', source:'auth', title:'Export rejected', error: e, detail: ownerCopyError(e) });
                 }
               }}>
                 <I.Download size={11}/> Export local log
@@ -1197,7 +1203,7 @@ function ModelsPage(){
       await window.api.models.setRouting(agentKey, { ...cur, ...patch });
     } catch (e) {
       window.Notifications?.emit({
-        kind:'warn', source:'models', title:'Routing change rejected', detail: e.message,
+        kind:'warn', source:'models', title:'Routing change rejected', error: e, detail: ownerCopyError(e),
       });
     }
   };
@@ -1221,15 +1227,16 @@ function ModelsPage(){
       if (e.code === 'USE_CREDENTIALS_UI') {
         window.Notifications?.emit({
           kind:'warn', source:'models', title:'Use the Credentials UI',
-          detail: e.message,
+          error: e,
+          detail: ownerCopyError(e),
         });
       } else if (e.code === 'BACKEND_REQUIRED') {
         window.Notifications?.emit({
-          kind:'warn', source:'models', title:'Vault not wired',
+          kind:'warn', source:'models', title:'Credential storage unavailable',
           detail:`${m.id} · key rotation needs ${e.endpoint || 'a real vault service'}. Nothing was stored.`,
         });
       } else {
-        window.Notifications?.emit({ kind:'warn', source:'models', title:'Key action failed', detail: e.message });
+        window.Notifications?.emit({ kind:'warn', source:'models', title:'Key action failed', error: e, detail: ownerCopyError(e) });
       }
     }
   };
@@ -1252,10 +1259,11 @@ function ModelsPage(){
           : `${result.code || 'error'} · ${result.detail}`,
       });
     } catch (e) {
-      const out = { ok:false, status: e.status || 0, code: e.code || 'REQUEST_FAILED', detail: e.message, tested_at: new Date().toISOString() };
+      const safeDetail = ownerCopyError(e);
+      const out = { ok:false, status: e.status || 0, code: e.code || 'REQUEST_FAILED', detail: safeDetail, tested_at: new Date().toISOString() };
       setProbes(p => ({ ...p, [m.id]: out }));
       window.Notifications?.emit({
-        kind:'warn', source:'models', title:`Model probe failed · ${m.id}`, detail: e.message,
+        kind:'warn', source:'models', title:`Model probe failed · ${m.id}`, error: e, detail: safeDetail,
       });
     }
   };
@@ -1358,7 +1366,7 @@ function ModelsPage(){
                     <td>
                       {status === 'wired'
                         ? <span className="status-pill"><StatusDot s="ok"/> wired</span>
-                        : <BackendRequired id="models.keys" label="not wired" compact/>}
+                        : <BackendRequired id="models.keys" label="credential gated" compact/>}
                     </td>
                   </tr>
                 );
@@ -1403,7 +1411,7 @@ function ModelsPage(){
                   <td>
                     {m.wired
                       ? <span className="status-pill"><StatusDot s="ok"/> wired</span>
-                      : <span className="status-pill"><StatusDot s="warn"/> not wired</span>}
+                      : <span className="status-pill"><StatusDot s="warn"/> credential gated</span>}
                   </td>
                   <td className="xsmall">
                     {probing && <span className="muted">probing…</span>}
@@ -1477,13 +1485,13 @@ function IntegrationsProPage(){
       }
       await window.api.integrations.setEnabled(it.id, !it.enabled);
     } catch (e) {
-      window.Notifications?.emit({ kind:'warn', source:'integrations', title:'Toggle rejected', detail: e.message });
+      window.Notifications?.emit({ kind:'warn', source:'integrations', title:'Toggle rejected', error: e, detail: ownerCopyError(e) });
     }
   };
 
   const assign = async (id, agentId) => {
     try { await window.api.integrations.setAssignedAgent(id, agentId); }
-    catch (e) { window.Notifications?.emit({ kind:'warn', source:'integrations', title:'Assign failed', detail: e.message }); }
+    catch (e) { window.Notifications?.emit({ kind:'warn', source:'integrations', title:'Assign failed', error: e, detail: ownerCopyError(e) }); }
   };
 
   const test = async (id) => {
@@ -1493,7 +1501,7 @@ function IntegrationsProPage(){
     } catch (e) {
       window.Notifications?.emit({
         kind:'warn', source:'integrations',
-        title: e.code === 'BACKEND_REQUIRED' ? 'Test endpoint not wired' : 'Test failed',
+        title: e.code === 'BACKEND_REQUIRED' ? 'Test endpoint unavailable' : 'Test failed',
         detail: `Real connection test requires POST /api/integrations/${id}/test. Credential status remains as shown.`,
       });
     } finally { setTestingId(null); }
@@ -1682,9 +1690,10 @@ function AgentManagementPage(){
             : e.code === 'RECONNECT_TIMEOUT'
               ? `${a.name} · reconnect timed out`
               : e.code === 'BACKEND_REQUIRED'
-                ? `${a.name} · ${kind} needs the server`
+                ? `${a.name} · ${kind} requires the server`
                 : `${a.name} · ${kind} failed`,
-        detail: e.message,
+        error: e,
+        detail: ownerCopyError(e),
       });
     } finally {
       setActing(s => { const n = { ...s }; delete n[a.id]; return n; });
@@ -1838,7 +1847,7 @@ function AgentLogsModal({ agent, onClose }){
     (window.api?.agents?.logs
       ? window.api.agents.logs(agent.id)
       : Promise.resolve({
-          shadow: [`[${new Date().toISOString()}] backend not wired — logs unavailable`],
+          shadow: [`[${new Date().toISOString()}] warn · log service unavailable`],
           endpoint: `GET /api/agents/${agent.id}/logs`,
         })
     ).then(payload => {
@@ -1852,7 +1861,7 @@ function AgentLogsModal({ agent, onClose }){
       setStatus('offline');
     }).catch(e => {
       if (cancelled) return;
-      setLines([{ ts: new Date().toISOString(), level: 'error', message: `log fetch failed · ${e.message || e}` }]);
+      setLines([{ ts: new Date().toISOString(), level: 'error', message: ownerCopyError(e) }]);
       setStatus('offline');
     });
     return () => { cancelled = true; };
@@ -1863,7 +1872,7 @@ function AgentLogsModal({ agent, onClose }){
     if (!live) return;
     if (!window.api?.agents?.subscribeLogs) {
       setStatus('offline');
-      setLines([{ ts: new Date().toISOString(), level: 'warn', message: 'subscribeLogs not available on this build' }]);
+      setLines([{ ts: new Date().toISOString(), level: 'warn', message: 'Log streaming requires the server runtime.' }]);
       return;
     }
     setLines([]);

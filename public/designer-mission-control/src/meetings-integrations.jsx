@@ -348,10 +348,10 @@ function MeetingIntegrationsDrawer({ onClose, initialTab }) {
                       <>
                         <div className="muted xsmall">Connected {p.connectedAt}</div>
                         <div className="hstack" style={{gap:6}}>
-                          <button className="btn sm" disabled title="Provider-level connectivity test — not wired"><I.Activity size={12}/> Test</button>
-                          <button className="btn sm" disabled title="OAuth re-auth flow — not wired"><I.Refresh size={12}/> Re-auth</button>
+                          <button className="btn sm" disabled title="Provider test is disabled until the meeting connector backend is available."><I.Activity size={12}/> Test</button>
+                          <button className="btn sm" disabled title="OAuth re-auth is disabled until the meeting connector backend is available."><I.Refresh size={12}/> Re-auth</button>
                         </div>
-                        <button className="btn sm" style={{color:'var(--err)'}} disabled title="Disconnect — not wired">Disconnect</button>
+                        <button className="btn sm" style={{color:'var(--err)'}} disabled title="Disconnect is disabled until the meeting connector backend is available.">Disconnect</button>
                       </>
                     ) : (
                       <>
@@ -379,7 +379,7 @@ function MeetingIntegrationsDrawer({ onClose, initialTab }) {
                       <span style={{color:'var(--fg-1)'}} className="truncate">{p.lastEvent}</span>
                       {p.lastEventAt && <span className="mono xsmall muted">{p.lastEventAt}</span>}
                     </div>
-                    <button className="btn sm" disabled title="Webhook payload inspector — not wired"><I.External size={11}/> Webhook</button>
+                    <button className="btn sm" disabled title="Webhook inspection is disabled until connector diagnostics are available."><I.External size={11}/> Webhook</button>
                   </div>
                 )}
               </div>
@@ -424,7 +424,7 @@ function MeetingIntegrationsDrawer({ onClose, initialTab }) {
                       <Switch on={m.autoJoin && prov?.autoJoin}/>
                     </td>
                     <td>
-                      <button className="btn sm" disabled title="Join link not wired — meeting lobby reachable from the Meetings card."><I.Play size={11}/> Join now</button>
+                      <button className="btn sm" disabled title="Join link requires the meeting connector backend; use the Meetings card for the local lobby."><I.Play size={11}/> Join now</button>
                     </td>
                   </tr>
                 );

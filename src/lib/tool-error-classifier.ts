@@ -102,7 +102,7 @@ const TEMPLATES: Record<ToolErrorKind, {
     owner_action_required: false,
   },
   ROUTE_MISSING: {
-    owner: 'This route is not wired yet.',
+    owner: 'This route is not available in this Mission Control runtime.',
     next: 'Codex adds the missing Mission Control or Gateway route.',
     codex_can_fix: true,
     owner_action_required: false,

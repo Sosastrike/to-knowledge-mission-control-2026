@@ -66,7 +66,7 @@ function MeetingLobby({ meeting, onEnter, onCancel }) {
             <div className="hstack" style={{gap:10}}>
               <button className={`btn ${mic?'':'danger'}`} onClick={()=>setMic(!mic)}>{mic ? <I.Mic/> : <I.MicOff/>} {mic?'Mic on':'Mic muted'}</button>
               <button className={`btn ${cam?'primary':''}`} onClick={()=>setCam(!cam)}><I.Cam/> {cam?'Camera on':'Camera off'}</button>
-              <button className="btn" disabled title="Device picker — needs getUserMedia.enumerateDevices wired in."><I.Settings2/> Devices</button>
+              <button className="btn" disabled title="Device picker requires browser device permission support before it can be used."><I.Settings2/> Devices</button>
             </div>
 
             <button className="btn primary" style={{padding:'10px 22px', fontSize:14}} onClick={()=>onEnter({mic, cam})}>

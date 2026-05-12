@@ -367,8 +367,8 @@ function ObsidianSyncDrawer({ onClose }) {
             <div style={{fontSize:16, color:'var(--fg-0)'}}>{d.lastSync}</div>
             <div className="muted xsmall mono">{d.lastSyncAbs}</div>
             <div className="hstack" style={{marginTop:6}}>
-              <button className="btn sm" disabled title="Sync trigger — backend queue not wired (POST /api/intel/syncs)"><I.Refresh size={12}/> Sync now</button>
-              <button className="btn sm" disabled title="Pause sync — backend not wired"><I.Pause size={12}/> Pause</button>
+              <button className="btn sm" disabled title="Sync trigger is disabled until the backend queue is available."><I.Refresh size={12}/> Sync now</button>
+              <button className="btn sm" disabled title="Pause sync is disabled until the backend queue is available."><I.Pause size={12}/> Pause</button>
             </div>
           </div>
         </div>
@@ -489,7 +489,7 @@ function AgentTelemetryDrawer({ onClose, initialTab, initialSkillId }) {
                       <span style={{textTransform:'capitalize'}}>{s.state}</span>
                     </span>
                   </td>
-                  <td><button className="btn sm" disabled title="Skill threshold editor — not wired"><I.Edit size={11}/> Adjust</button></td>
+                  <td><button className="btn sm" disabled title="Skill threshold editing is disabled until policy persistence is available."><I.Edit size={11}/> Adjust</button></td>
                 </tr>
               ))}
             </tbody>
@@ -534,7 +534,7 @@ function AgentTelemetryDrawer({ onClose, initialTab, initialSkillId }) {
                       <option value="denied">Denied</option>
                     </select>
                   </td>
-                  <td><button className="btn sm" disabled title="Per-skill call log — needs GET /api/skills/:id/calls"><I.Eye size={11}/> View calls</button></td>
+                  <td><button className="btn sm" disabled title="Per-skill call logs require the skills diagnostics backend."><I.Eye size={11}/> View calls</button></td>
                 </tr>
               ))}
             </tbody>
@@ -656,8 +656,8 @@ function PacmanOpsDrawer({ onClose, initialTab }) {
           {value:'reports', label:'Report queue',   count: d.reports.length},
         ]}/>
         <span className="spacer"/>
-        <button className="btn" disabled title="Re-scan memory shards — backend not wired"><I.Refresh size={12}/> Re-scan</button>
-        <button className="btn" disabled title="Manual backup trigger — needs POST /api/memory/backup"><I.Plus size={12}/> Trigger backup</button>
+        <button className="btn" disabled title="Re-scan is disabled until the memory backend is available."><I.Refresh size={12}/> Re-scan</button>
+        <button className="btn" disabled title="Manual backup is disabled until the memory backup backend is available."><I.Plus size={12}/> Trigger backup</button>
       </div>
 
       {tab==='backups' && (
@@ -680,8 +680,8 @@ function PacmanOpsDrawer({ onClose, initialTab }) {
                     {q.note && <div className="muted xsmall" style={{marginTop:2}}>{q.note}</div>}
                   </td>
                   <td>
-                    <button className="btn sm" disabled title="Download archive — backend not wired"><I.Download size={11}/></button>
-                    {q.status !== 'ok' && <button className="btn sm" disabled title="Retry queued — backend not wired"><I.Refresh size={11}/> Retry</button>}
+                    <button className="btn sm" disabled title="Archive download is disabled until backup storage is available."><I.Download size={11}/></button>
+                    {q.status !== 'ok' && <button className="btn sm" disabled title="Retry is disabled until backup dispatch is available."><I.Refresh size={11}/> Retry</button>}
                   </td>
                 </tr>
               ))}
@@ -713,10 +713,10 @@ function PacmanOpsDrawer({ onClose, initialTab }) {
                   <td className="mono xsmall muted">{r.created}</td>
                   <td>
                     {r.state==='needs-fix'
-                      ? <button className="btn primary sm" disabled title="Citation fix flow — not wired"><I.Edit size={11}/> Correct</button>
+                      ? <button className="btn primary sm" disabled title="Citation fixes require report editing support before they can run."><I.Edit size={11}/> Correct</button>
                       : r.state==='draft'
-                        ? <button className="btn sm" disabled title="Draft preview — not wired"><I.Eye size={11}/> Preview</button>
-                        : <button className="btn sm" disabled title="Download PDF — not wired"><I.Download size={11}/> Download</button>}
+                        ? <button className="btn sm" disabled title="Draft preview requires report rendering support before it can run."><I.Eye size={11}/> Preview</button>
+                        : <button className="btn sm" disabled title="PDF download requires report delivery support before it can run."><I.Download size={11}/> Download</button>}
                   </td>
                 </tr>
               ))}

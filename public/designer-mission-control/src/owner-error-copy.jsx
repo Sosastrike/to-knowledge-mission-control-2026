@@ -30,7 +30,7 @@
       codex_can_fix: true,
     },
     ROUTE_MISSING: {
-      owner_message: 'This route is not wired yet.',
+      owner_message: 'This route is not available in this Mission Control runtime.',
       next_action: 'Codex must add the missing Mission Control or Gateway route.',
       owner_action_required: false,
       codex_can_fix: true,

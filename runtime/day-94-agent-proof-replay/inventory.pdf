@@ -1,0 +1,197 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2548 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "timestamp": "2026-05-12T05:38:07.193Z",) Tj
+0 -12 Td
+(  "runtimeCommit": "68d4df00399467889aeaf057f455d464c3dccb9e",) Tj
+0 -12 Td
+(  "lane": "Day 94 Agent Proof Replay",) Tj
+0 -12 Td
+(  "agents": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "agent-zero",) Tj
+0 -12 Td
+(      "label": "Agent Zero",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/bridge/agent-zero/status",) Tj
+0 -12 Td
+(        "/api/gateway/dispatcher/agent-zero",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/agent-zero/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "hermes",) Tj
+0 -12 Td
+(      "label": "Hermes",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/bridge/hermes/status",) Tj
+0 -12 Td
+(        "/api/gateway/dispatcher/hermes",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/hermes/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "pi",) Tj
+0 -12 Td
+(      "label": "Pi",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/bridge/pi/status",) Tj
+0 -12 Td
+(        "/api/gateway/dispatcher/pi",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/pi/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "paperclip",) Tj
+0 -12 Td
+(      "label": "Paperclip",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/bridge/paperclip/status",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/paperclip/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "space-agent",) Tj
+0 -12 Td
+(      "label": "SpaceAgent",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/bridge/space-agent/status",) Tj
+0 -12 Td
+(        "/api/gateway/nodes/space-agent",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/space-agent/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "openclaw-plus",) Tj
+0 -12 Td
+(      "label": "OpenClaw+",) Tj
+0 -12 Td
+(      "proof_routes": [) Tj
+0 -12 Td
+(        "/api/openclaw/doctor",) Tj
+0 -12 Td
+(        "/api/gateway/agent-hub/agents/openclaw-plus/health") Tj
+0 -12 Td
+(      ]) Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "required_checks": [) Tj
+0 -12 Td
+(    "replay backend proof paths",) Tj
+0 -12 Td
+(    "replay UI proof display where owner session permits",) Tj
+0 -12 Td
+(    "run proof replay tests",) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 412 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(    "generate final agent proof packet") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "safety": {) Tj
+0 -12 Td
+(    "external_writes_allowed": false,) Tj
+0 -12 Td
+(    "env_edits_allowed": false,) Tj
+0 -12 Td
+(    "fake_live_allowed": false,) Tj
+0 -12 Td
+(    "raw_paths_allowed": false) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "blocker_classification": "IN_PROGRESS") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000002847 00000 n 
+0000002973 00000 n 
+0000003436 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3506
+%%EOF

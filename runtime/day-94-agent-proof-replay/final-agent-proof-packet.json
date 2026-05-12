@@ -1,0 +1,205 @@
+{
+  "ok": true,
+  "mode": "multi_agent_proof_packet",
+  "generated_at": "2026-05-12T00:00:00.000Z",
+  "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+  "packets_total": 6,
+  "consistency_ok": true,
+  "consistency_issues": 0,
+  "proof_packets": [
+    {
+      "agent_id": "paperclip",
+      "name": "Paperclip",
+      "role": "Workforce Control Plane",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/paperclip/health",
+      "result": "SERVICE_DOWN",
+      "blocker_class": "SERVICE_DOWN",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "audit_pointer": "/api/gateway/agent-hub/agents/paperclip/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/paperclip/health",
+      "cloudcode_health_ids": [
+        "paperclip"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "paperclip",
+          "status": "BLOCKED",
+          "blocker": "paperclip_sandbox_service_not_running"
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    },
+    {
+      "agent_id": "agent-zero",
+      "name": "Agent Zero",
+      "role": "Commander",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/agent-zero/health",
+      "result": "CREDENTIAL_GATED",
+      "blocker_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "audit_pointer": "/api/gateway/agent-hub/agents/agent-zero/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/agent-zero/health",
+      "cloudcode_health_ids": [
+        "agent_zero"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "agent_zero",
+          "status": "BLOCKED",
+          "blocker": "agent_zero_external_api_key_missing"
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    },
+    {
+      "agent_id": "hermes",
+      "name": "Hermes",
+      "role": "Lieutenant / Skill + Workflow Builder",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/hermes/health",
+      "result": "SERVICE_DOWN",
+      "blocker_class": "SERVICE_DOWN",
+      "blocker": "hermes_not_installed",
+      "audit_pointer": "/api/gateway/agent-hub/agents/hermes/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/hermes/health",
+      "cloudcode_health_ids": [
+        "hermes"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "hermes",
+          "status": "BLOCKED",
+          "blocker": "hermes_not_installed"
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    },
+    {
+      "agent_id": "spaceagent",
+      "name": "SpaceAgent",
+      "role": "Browser / Firecrawl / YouTube Research Specialist",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/spaceagent/health",
+      "result": "CREDENTIAL_GATED",
+      "blocker_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "audit_pointer": "/api/gateway/agent-hub/agents/spaceagent/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/spaceagent/health",
+      "cloudcode_health_ids": [
+        "spaceagent_playwright",
+        "spaceagent_youtube",
+        "spaceagent_firecrawl"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "spaceagent_playwright",
+          "status": "BLOCKED",
+          "blocker": "playwright_mcp_service_unreachable"
+        },
+        {
+          "id": "spaceagent_youtube",
+          "status": "BLOCKED",
+          "blocker": "playwright_mcp_service_unreachable"
+        },
+        {
+          "id": "spaceagent_firecrawl",
+          "status": "BLOCKED",
+          "blocker": "playwright_mcp_service_unreachable"
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    },
+    {
+      "agent_id": "pi-mono",
+      "name": "Pi-mono",
+      "role": "Dispatcher / Route Optimizer Candidate",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/pi-mono/health",
+      "result": "READY",
+      "blocker_class": "NONE",
+      "blocker": null,
+      "audit_pointer": "/api/gateway/agent-hub/agents/pi-mono/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/pi-mono/health",
+      "cloudcode_health_ids": [
+        "pi"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "pi",
+          "status": "READ_ONLY",
+          "blocker": null
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    },
+    {
+      "agent_id": "openclaw-plus",
+      "name": "OpenClaw+",
+      "role": "Runtime / Skills / Mini-Agent Execution Layer",
+      "timestamp": "2026-05-12T00:00:00.000Z",
+      "runtime_commit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+      "route_or_service_checked": "/api/gateway/agent-hub/agents/openclaw-plus/health",
+      "result": "SERVICE_DOWN",
+      "blocker_class": "SERVICE_DOWN",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "audit_pointer": "/api/gateway/agent-hub/agents/openclaw-plus/audit",
+      "safe_log_pointer": "/api/gateway/agent-hub/agents/openclaw-plus/health",
+      "cloudcode_health_ids": [
+        "openclaw_plus"
+      ],
+      "cloudcode_statuses": [
+        {
+          "id": "openclaw_plus",
+          "status": "SERVICE_DOWN",
+          "blocker": "openclaw_doctor_runtime_not_reachable"
+        }
+      ],
+      "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    }
+  ],
+  "audit_pointer": "/api/gateway/agent-hub/status",
+  "safe_log_pointer": "/api/gateway/agent-hub/proof-packet",
+  "rollback_command": "git revert <day-81-multi-agent-proof-packet-commit>",
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "external_writes_enabled": false,
+  "secrets_exposed": false,
+  "raw_paths_exposed": false
+}

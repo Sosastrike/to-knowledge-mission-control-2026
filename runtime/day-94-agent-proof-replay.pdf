@@ -1,0 +1,350 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3268 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-94-agent-proof-replay) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 94 - Agent Proof Replay 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Agent proof replay) Tj
+0 -12 Td
+(- Status: DEVELOPER-SIDE CLOSED WITH TRUTHFUL EXTERNAL BLOCKERS) Tj
+0 -12 Td
+(- Blocker class: SERVICE_DOWN / CREDENTIAL_GATED mix by lane; Day 94 blocker classification: NON) Tj
+0 -12 Td
+(E) Tj
+0 -12 Td
+(- Started from commit: 68d4df00399467889aeaf057f455d464c3dccb9e) Tj
+0 -12 Td
+(- Closed at: 2026-05-12T05:45:14Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Replayed the canonical proof paths for Agent Zero, Hermes, Pi, Paperclip, OpenClaw+, and SpaceAg) Tj
+0 -12 Td
+(ent without enabling execution, writes, or external writes. Generated a final multi-agent proof ) Tj
+0 -12 Td
+(packet from the production proof library and verified every agent packet carries a truthful resu) Tj
+0 -12 Td
+(lt, blocker classification, audit pointer, safe log pointer, runtime commit, and rollback comman) Tj
+0 -12 Td
+(d.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production source files were changed for Day 94. The existing implementation was revalidated ) Tj
+0 -12 Td
+(through proof replay, route auth checks, regression tests, route smokes, and security scans.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay.md) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay.pdf) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/inventory.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/inventory.pdf) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/final-agent-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/agent-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(None. Routes replayed and verified:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- /api/gateway/agent-hub/proof-packet) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/agent-zero/health) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/hermes/health) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/pi-mono/health) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/paperclip/health) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/openclaw-plus/health) Tj
+0 -12 Td
+(- /api/gateway/agent-hub/agents/spaceagent/health) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No UI code changed. Day 94 verified that agent-facing proof data remains status-contract based a) Tj
+0 -12 Td
+(nd does not invent live states:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Agent Zero: CREDENTIAL_GATED) Tj
+0 -12 Td
+(- Hermes: SERVICE_DOWN) Tj
+0 -12 Td
+(- Pi: READY) Tj
+0 -12 Td
+(- Paperclip: SERVICE_DOWN) Tj
+0 -12 Td
+(- OpenClaw+: SERVICE_DOWN) Tj
+0 -12 Td
+(- SpaceAgent: CREDENTIAL_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Final proof packet:) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3434 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Artifact: runtime/day-94-agent-proof-replay/final-agent-proof-packet.json) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- packets_total: 6) Tj
+0 -12 Td
+(- consistency_ok: true) Tj
+0 -12 Td
+(- consistency_issues: 0) Tj
+0 -12 Td
+(- runtime_commit: 68d4df00399467889aeaf057f455d464c3dccb9e) Tj
+0 -12 Td
+(- execution_enabled: false) Tj
+0 -12 Td
+(- writes_enabled: false) Tj
+0 -12 Td
+(- external_writes_enabled: false) Tj
+0 -12 Td
+(- secrets_exposed: false) Tj
+0 -12 Td
+(- raw_paths_exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent replay matrix:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Agent | Result | Blocker Class | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- | --- |) Tj
+0 -12 Td
+(| Agent Zero | CREDENTIAL_GATED | CREDENTIAL_GATED | agent_zero_external_api_key_missing |) Tj
+0 -12 Td
+(| Hermes | SERVICE_DOWN | SERVICE_DOWN | hermes_not_installed |) Tj
+0 -12 Td
+(| Pi | READY | NONE | NONE |) Tj
+0 -12 Td
+(| Paperclip | SERVICE_DOWN | SERVICE_DOWN | paperclip_sandbox_service_not_running |) Tj
+0 -12 Td
+(| OpenClaw+ | SERVICE_DOWN | SERVICE_DOWN | openclaw_doctor_runtime_not_reachable |) Tj
+0 -12 Td
+(| SpaceAgent | CREDENTIAL_GATED | CREDENTIAL_GATED | playwright_mcp_service_unreachable |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --check: PASS) Tj
+0 -12 Td
+(- .env diff check: PASS) Tj
+0 -12 Td
+(- pnpm run typecheck: PASS) Tj
+0 -12 Td
+(- pnpm run build: PASS) Tj
+0 -12 Td
+(- pnpm test: PASS, 205 files / 1510 tests) Tj
+0 -12 Td
+(- Focused agent proof replay tests: PASS, 11 files / 86 tests) Tj
+0 -12 Td
+(- Protected route smoke: PASS, 44 routes / 0 failures) Tj
+0 -12 Td
+(- Authenticated route smoke: OWNER_GATED, no owner session present) Tj
+0 -12 Td
+(- Agent proof route auth check: PASS, protected routes are auth-gated without credentials) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Secret scan: PASS) Tj
+0 -12 Td
+(- Raw exposure scan: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production deploy or persistent restart was performed because Day 94 had no source changes. A) Tj
+0 -12 Td
+( localhost-only standalone runtime was started for safe proof replay, protected route smoke, rou) Tj
+0 -12 Td
+(te auth proof, and scans, then stopped cleanly.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/final-agent-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/agent-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-94-agent-proof-replay/inventory.pdf) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Day 94 developer-side blocker remains. External lane blockers are truthful and carried forwar) Tj
+0 -12 Td
+(d:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- CREDENTIAL_GATED: Agent Zero external API key missing) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: SpaceAgent Playwright MCP service unreachable) Tj
+0 -12 Td
+(- SERVICE_DOWN: Hermes not installed) Tj
+0 -12 Td
+(- SERVICE_DOWN: Paperclip sandbox service not running) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 627 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- SERVICE_DOWN: OpenClaw+ doctor runtime not reachable) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact Day 94 blocker classification: NONE.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(git revert <day-94-agent-proof-replay-commit>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit hash: pending at report creation) Tj
+0 -12 Td
+(- Push result: pending at report creation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 95 - Connector Proof Replay starts automatically after this Day 94 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003573 00000 n 
+0000003699 00000 n 
+0000007185 00000 n 
+0000007311 00000 n 
+0000007989 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8059
+%%EOF

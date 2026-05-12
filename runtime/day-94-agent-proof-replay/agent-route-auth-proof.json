@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-05-12T05:41:13.158Z",
+  "base": "http://127.0.0.1:3348",
+  "result": "PASS",
+  "note": "Agent proof replay routes are protected without owner/API credentials; backend proof packet was generated locally from the same library functions.",
+  "results": [
+    {
+      "route": "/api/bridge/agent-zero/status",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/dispatcher/agent-zero",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/agent-zero/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/bridge/hermes/status",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/dispatcher/hermes",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/hermes/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/bridge/pi/status",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/dispatcher/pi",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/pi-mono/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/bridge/paperclip/status",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/paperclip/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/bridge/space-agent/status",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/nodes/space-agent",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/spaceagent/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/openclaw/doctor",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/agents/openclaw-plus/health",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/proof-packet",
+      "status": 401,
+      "body_bytes": 24,
+      "auth_gated": true
+    }
+  ]
+}

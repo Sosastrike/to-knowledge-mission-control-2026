@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-05-12T05:38:07.193Z",
+  "runtimeCommit": "68d4df00399467889aeaf057f455d464c3dccb9e",
+  "lane": "Day 94 Agent Proof Replay",
+  "agents": [
+    {
+      "id": "agent-zero",
+      "label": "Agent Zero",
+      "proof_routes": [
+        "/api/bridge/agent-zero/status",
+        "/api/gateway/dispatcher/agent-zero",
+        "/api/gateway/agent-hub/agents/agent-zero/health"
+      ]
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "proof_routes": [
+        "/api/bridge/hermes/status",
+        "/api/gateway/dispatcher/hermes",
+        "/api/gateway/agent-hub/agents/hermes/health"
+      ]
+    },
+    {
+      "id": "pi",
+      "label": "Pi",
+      "proof_routes": [
+        "/api/bridge/pi/status",
+        "/api/gateway/dispatcher/pi",
+        "/api/gateway/agent-hub/agents/pi/health"
+      ]
+    },
+    {
+      "id": "paperclip",
+      "label": "Paperclip",
+      "proof_routes": [
+        "/api/bridge/paperclip/status",
+        "/api/gateway/agent-hub/agents/paperclip/health"
+      ]
+    },
+    {
+      "id": "space-agent",
+      "label": "SpaceAgent",
+      "proof_routes": [
+        "/api/bridge/space-agent/status",
+        "/api/gateway/nodes/space-agent",
+        "/api/gateway/agent-hub/agents/space-agent/health"
+      ]
+    },
+    {
+      "id": "openclaw-plus",
+      "label": "OpenClaw+",
+      "proof_routes": [
+        "/api/openclaw/doctor",
+        "/api/gateway/agent-hub/agents/openclaw-plus/health"
+      ]
+    }
+  ],
+  "required_checks": [
+    "replay backend proof paths",
+    "replay UI proof display where owner session permits",
+    "run proof replay tests",
+    "generate final agent proof packet"
+  ],
+  "safety": {
+    "external_writes_allowed": false,
+    "env_edits_allowed": false,
+    "fake_live_allowed": false,
+    "raw_paths_allowed": false
+  },
+  "blocker_classification": "IN_PROGRESS"
+}

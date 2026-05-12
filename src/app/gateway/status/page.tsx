@@ -35,6 +35,7 @@ export default async function GatewayStatusPage() {
             </div>
             <div className='flex flex-wrap gap-2'>
               <a href='/api/gateway/status' className='rounded-md border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/15'>Status API</a>
+              <a href='/api/bridge/connector-proof-packet' className='rounded-md border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/15'>Connector Proof</a>
               <a href='/api/bridge/button-contracts' className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-slate-200 hover:border-cyan-300/40'>Button Contracts</a>
             </div>
           </div>
@@ -74,6 +75,13 @@ export default async function GatewayStatusPage() {
             ['service', status.buildwiki_openclaw.service_state || 'unknown'],
             ['run now', 'Bridge Session + owner approval required'],
             ['target service', status.buildwiki_openclaw.run_now_target_service],
+          ]} />
+          <StatusCard title='Connector Proof Replay' rows={[
+            ['proof route', '/api/bridge/connector-proof-packet'],
+            ['connectors', 'Telegram, AgentMail, Google Drive, OneDrive, Zapier, HeyGen'],
+            ['writes', 'disabled'],
+            ['generation', 'disabled'],
+            ['uploads / sends', 'Bridge Session required'],
           ]} />
         </section>
 

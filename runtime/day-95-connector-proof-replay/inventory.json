@@ -1,0 +1,68 @@
+{
+  "ok": true,
+  "day": 95,
+  "lane": "Connector Proof Replay",
+  "generated_at": "2026-05-12T05:52:07.596Z",
+  "runtime_commit": "bff57f5f8cc392d0be259d4d1a4d4359eb1dcd6d",
+  "branch": "to-knowledge-mc",
+  "safety": {
+    "env_edits_allowed": false,
+    "external_writes_allowed": false,
+    "zapier_writes_allowed": false,
+    "heygen_generation_allowed": false,
+    "smb_allowed": false,
+    "fork_2_allowed": false,
+    "fake_success_allowed": false
+  },
+  "connectors": [
+    {
+      "id": "telegram",
+      "status_route": "/api/bridge/agent-zero/telegram/status",
+      "proof_focus": "PDF/report delivery status and owner channel gating"
+    },
+    {
+      "id": "agentmail",
+      "status_route": "/api/bridge/agent-zero/agentmail/status",
+      "proof_focus": "incoming/outgoing readiness and send gating"
+    },
+    {
+      "id": "google_drive",
+      "status_route": "/api/bridge/agent-zero/google-drive/status",
+      "proof_focus": "folder/upload readiness and no upload execution"
+    },
+    {
+      "id": "onedrive",
+      "status_route": "/api/bridge/agent-zero/onedrive/status",
+      "proof_focus": "folder/upload readiness and no upload execution"
+    },
+    {
+      "id": "zapier",
+      "status_route": "/api/bridge/zapier/status",
+      "proof_focus": "read-only tool inventory and write guard"
+    },
+    {
+      "id": "heygen",
+      "status_route": "/api/bridge/heygen/schema-readiness",
+      "proof_focus": "Zapier-visible schema readiness with generation disabled"
+    }
+  ],
+  "routes_owned": [
+    "/api/bridge/connector-proof-packet",
+    "/api/bridge/connector-readiness",
+    "/api/bridge/agent-zero/telegram/status",
+    "/api/bridge/agent-zero/agentmail/status",
+    "/api/bridge/agent-zero/google-drive/status",
+    "/api/bridge/agent-zero/onedrive/status",
+    "/api/bridge/zapier/status",
+    "/api/bridge/heygen/schema-readiness"
+  ],
+  "files_inventory": [
+    "src/lib/connector-proof-packet.ts",
+    "src/lib/connector-proof-packet.test.ts",
+    "src/app/api/bridge/connector-proof-packet/route.ts",
+    "src/app/api/bridge/connector-proof-packet/route.test.ts",
+    "scripts/authenticated-route-smoke-contract.mjs",
+    "src/app/gateway/status/page.tsx"
+  ],
+  "blockers": []
+}

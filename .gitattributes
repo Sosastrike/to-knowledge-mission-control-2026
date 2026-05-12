@@ -1,1 +1,2 @@
 runtime/*.pdf binary
+runtime/**/*.pdf binary

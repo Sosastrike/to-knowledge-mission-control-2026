@@ -1,0 +1,189 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2972 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "ok": true,) Tj
+0 -12 Td
+(  "day": 95,) Tj
+0 -12 Td
+(  "lane": "Connector Proof Replay",) Tj
+0 -12 Td
+(  "generated_at": "2026-05-12T05:52:07.596Z",) Tj
+0 -12 Td
+(  "runtime_commit": "bff57f5f8cc392d0be259d4d1a4d4359eb1dcd6d",) Tj
+0 -12 Td
+(  "branch": "to-knowledge-mc",) Tj
+0 -12 Td
+(  "safety": {) Tj
+0 -12 Td
+(    "env_edits_allowed": false,) Tj
+0 -12 Td
+(    "external_writes_allowed": false,) Tj
+0 -12 Td
+(    "zapier_writes_allowed": false,) Tj
+0 -12 Td
+(    "heygen_generation_allowed": false,) Tj
+0 -12 Td
+(    "smb_allowed": false,) Tj
+0 -12 Td
+(    "fork_2_allowed": false,) Tj
+0 -12 Td
+(    "fake_success_allowed": false) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "connectors": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "telegram",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/agent-zero/telegram/status",) Tj
+0 -12 Td
+(      "proof_focus": "PDF/report delivery status and owner channel gating") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "agentmail",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/agent-zero/agentmail/status",) Tj
+0 -12 Td
+(      "proof_focus": "incoming/outgoing readiness and send gating") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "google_drive",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/agent-zero/google-drive/status",) Tj
+0 -12 Td
+(      "proof_focus": "folder/upload readiness and no upload execution") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "onedrive",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/agent-zero/onedrive/status",) Tj
+0 -12 Td
+(      "proof_focus": "folder/upload readiness and no upload execution") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "zapier",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/zapier/status",) Tj
+0 -12 Td
+(      "proof_focus": "read-only tool inventory and write guard") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "heygen",) Tj
+0 -12 Td
+(      "status_route": "/api/bridge/heygen/schema-readiness",) Tj
+0 -12 Td
+(      "proof_focus": "Zapier-visible schema readiness with generation disabled") Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "routes_owned": [) Tj
+0 -12 Td
+(    "/api/bridge/connector-proof-packet",) Tj
+0 -12 Td
+(    "/api/bridge/connector-readiness",) Tj
+0 -12 Td
+(    "/api/bridge/agent-zero/telegram/status",) Tj
+0 -12 Td
+(    "/api/bridge/agent-zero/agentmail/status",) Tj
+0 -12 Td
+(    "/api/bridge/agent-zero/google-drive/status",) Tj
+0 -12 Td
+(    "/api/bridge/agent-zero/onedrive/status",) Tj
+0 -12 Td
+(    "/api/bridge/zapier/status",) Tj
+0 -12 Td
+(    "/api/bridge/heygen/schema-readiness") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "files_inventory": [) Tj
+0 -12 Td
+(    "src/lib/connector-proof-packet.ts",) Tj
+0 -12 Td
+(    "src/lib/connector-proof-packet.test.ts",) Tj
+0 -12 Td
+(    "src/app/api/bridge/connector-proof-packet/route.ts",) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 294 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(    "src/app/api/bridge/connector-proof-packet/route.test.ts",) Tj
+0 -12 Td
+(    "scripts/authenticated-route-smoke-contract.mjs",) Tj
+0 -12 Td
+(    "src/app/gateway/status/page.tsx") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "blockers": []) Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003271 00000 n 
+0000003397 00000 n 
+0000003742 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3812
+%%EOF

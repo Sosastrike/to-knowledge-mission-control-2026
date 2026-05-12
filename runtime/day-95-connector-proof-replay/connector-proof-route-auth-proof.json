@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T05:58:47.771Z",
+  "mode": "connector_proof_route_auth_check",
+  "base_url": "http://127.0.0.1:3349",
+  "routes_checked": 8,
+  "failures": [],
+  "results": [
+    {
+      "path": "/api/bridge/connector-proof-packet",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/connector-readiness",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/agent-zero/agentmail/status",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/status",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/zapier/status",
+      "status": 401,
+      "protected": true
+    },
+    {
+      "path": "/api/bridge/heygen/schema-readiness",
+      "status": 401,
+      "protected": true
+    }
+  ]
+}

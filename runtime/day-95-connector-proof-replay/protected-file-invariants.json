@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T05:58:33.892Z",
+  "protected_patterns": [
+    "env_file",
+    "database_file",
+    "data_directory",
+    "private_key",
+    "backup_archive",
+    "active_memory_file",
+    "active_memory_store",
+    "governance_file",
+    "legacy_tony_identity_store"
+  ],
+  "allowed_reference_changes": [],
+  "protected_changes": [],
+  "note": "This check inspects git status paths only. It does not read or print protected file contents."
+}

@@ -1,0 +1,370 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3464 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-95-connector-proof-replay) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 95 - Connector Proof Replay 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Connector proof replay) Tj
+0 -12 Td
+(- Status: DEVELOPER-SIDE CLOSED WITH TRUTHFUL EXTERNAL BLOCKERS) Tj
+0 -12 Td
+(- Day 95 blocker classification: NONE) Tj
+0 -12 Td
+(- Started from commit: bff57f5f8cc392d0be259d4d1a4d4359eb1dcd6d) Tj
+0 -12 Td
+(- Closed at: 2026-05-12T05:59:19Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a canonical connector proof replay packet for Telegram, AgentMail, Google Drive, OneDrive,) Tj
+0 -12 Td
+( Zapier, and HeyGen. The packet reuses the existing connector readiness/status helpers and prove) Tj
+0 -12 Td
+(s the current runtime truth without sending messages, sending email, uploading files, invoking Z) Tj
+0 -12 Td
+(apier tools, or generating HeyGen media.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a protected read-only API route for the proof packet and wired Gateway Status to expose th) Tj
+0 -12 Td
+(e proof route as an owner-facing read-only surface.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/connector-proof-packet.ts) Tj
+0 -12 Td
+(- src/lib/connector-proof-packet.test.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/connector-proof-packet/route.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/connector-proof-packet/route.test.ts) Tj
+0 -12 Td
+(- scripts/authenticated-route-smoke-contract.mjs) Tj
+0 -12 Td
+(- src/app/gateway/status/page.tsx) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay.md) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay.pdf) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/inventory.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/inventory.pdf) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/final-connector-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/connector-proof-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added: /api/bridge/connector-proof-packet) Tj
+0 -12 Td
+(- Updated authenticated route-smoke inventory to include /api/bridge/connector-proof-packet) Tj
+0 -12 Td
+(- Updated Gateway Status page with a read-only Connector Proof route link and connector replay s) Tj
+0 -12 Td
+(ummary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway Status now exposes a Connector Proof Replay card. It states:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- proof route: /api/bridge/connector-proof-packet) Tj
+0 -12 Td
+(- connectors: Telegram, AgentMail, Google Drive, OneDrive, Zapier, HeyGen) Tj
+0 -12 Td
+(- writes: disabled) Tj
+0 -12 Td
+(- generation: disabled) Tj
+0 -12 Td
+(- uploads / sends: Bridge Session required) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No approved designer mock HTML/CSS/class names were changed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Final proof packet:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Artifact: runtime/day-95-connector-proof-replay/final-connector-proof-packet.json) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3376 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- ok: true) Tj
+0 -12 Td
+(- connectors_total: 6) Tj
+0 -12 Td
+(- consistency_ok: true) Tj
+0 -12 Td
+(- consistency_issues: []) Tj
+0 -12 Td
+(- execution_enabled: false) Tj
+0 -12 Td
+(- writes_enabled: false) Tj
+0 -12 Td
+(- external_writes_enabled: false) Tj
+0 -12 Td
+(- no_telegram_send: true) Tj
+0 -12 Td
+(- no_agentmail_send: true) Tj
+0 -12 Td
+(- no_drive_upload: true) Tj
+0 -12 Td
+(- no_onedrive_upload: true) Tj
+0 -12 Td
+(- no_zapier_writes: true) Tj
+0 -12 Td
+(- no_heygen_generation: true) Tj
+0 -12 Td
+(- secrets_exposed: false) Tj
+0 -12 Td
+(- raw_paths_exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Connector replay matrix:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Connector | Result | Blocker Class | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- | --- |) Tj
+0 -12 Td
+(| Telegram | CREDENTIAL_GATED | CREDENTIAL_GATED | telegram_report_delivery_adapter_not_configur) Tj
+0 -12 Td
+(ed |) Tj
+0 -12 Td
+(| AgentMail | CREDENTIAL_GATED | CREDENTIAL_GATED | agentmail_credential_required |) Tj
+0 -12 Td
+(| Google Drive | CREDENTIAL_GATED | CREDENTIAL_GATED | google_drive_credential_required |) Tj
+0 -12 Td
+(| OneDrive | CREDENTIAL_GATED | CREDENTIAL_GATED | onedrive_credential_required |) Tj
+0 -12 Td
+(| Zapier | BLOCKED | BLOCKED | MCP server zapier is not present in the Claude MCP configuration.) Tj
+0 -12 Td
+( |) Tj
+0 -12 Td
+(| HeyGen | BLOCKED | BLOCKED | MCP server zapier is not present in the Claude MCP configuration.) Tj
+0 -12 Td
+( |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --check: PASS) Tj
+0 -12 Td
+(- .env diff check: PASS) Tj
+0 -12 Td
+(- pnpm run typecheck: PASS) Tj
+0 -12 Td
+(- pnpm run build: PASS) Tj
+0 -12 Td
+(- pnpm test: PASS, 207 files / 1513 tests) Tj
+0 -12 Td
+(- Focused connector replay tests: PASS, 13 files / 43 tests) Tj
+0 -12 Td
+(- Artifact generator smoke: PASS, 1 file / 1 test, removed before staging) Tj
+0 -12 Td
+(- Protected route smoke: PASS, 44 routes / 0 failures) Tj
+0 -12 Td
+(- Authenticated route smoke: OWNER_GATED, no owner session present) Tj
+0 -12 Td
+(- Connector proof route auth check: PASS, 8 protected connector routes require auth without cred) Tj
+0 -12 Td
+(entials) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Secret scan: PASS) Tj
+0 -12 Td
+(- Raw exposure scan: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production deploy or persistent restart was performed. A localhost-only standalone runtime wa) Tj
+0 -12 Td
+(s started on 127.0.0.1:3349 for route/proof smokes and then stopped cleanly. The build output in) Tj
+0 -12 Td
+(cludes /api/bridge/connector-proof-packet.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/final-connector-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/connector-proof-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-95-connector-proof-replay/inventory.json) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1237 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Day 95 developer-side blocker remains. External connector blockers are truthful and carried f) Tj
+0 -12 Td
+(orward:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- CREDENTIAL_GATED: Telegram delivery adapter/owner channel not configured for current runtime) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: AgentMail credential required) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: Google Drive credential required) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: OneDrive credential required) Tj
+0 -12 Td
+(- BLOCKED: Zapier MCP server not present in Claude MCP configuration) Tj
+0 -12 Td
+(- BLOCKED: HeyGen unavailable because Zapier MCP server is not present) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact Day 95 blocker classification: NONE.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(git revert <day-95-connector-proof-replay-commit>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit hash: pending at report creation) Tj
+0 -12 Td
+(- Push result: pending at report creation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 96 - Bridge Approval Proof Replay starts automatically after this Day 95 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003769 00000 n 
+0000003895 00000 n 
+0000007323 00000 n 
+0000007449 00000 n 
+0000008738 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8808
+%%EOF

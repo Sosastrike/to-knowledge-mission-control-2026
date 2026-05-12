@@ -247,7 +247,7 @@ export function buildCloudCodeGatewayStatus(rawStatus: AnyRecord) {
   }
 }
 
-function agentHubIdToCloudCodeIds(id: string): string[] {
+export function agentHubIdToCloudCodeIds(id: string): string[] {
   const normalized = id.toLowerCase().replace(/_/g, '-')
   if (normalized === 'agent-zero') return ['agent_zero']
   if (normalized === 'pi' || normalized === 'pi-mono') return ['pi']

@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "day": 80,
+  "lane": "Multi-Agent Status Consistency",
+  "generated_at": "2026-05-12T02:45:00.000Z",
+  "runtime_commit_before_day80_commit": "adb05986217c0b8b97d28cc2178951e2d6c1ebb1",
+  "mode": "multi_agent_status_consistency",
+  "protected_route_smoke": {
+    "ok": true,
+    "routes_checked": 41,
+    "failures": 0,
+    "base_url": "http://127.0.0.1:3337"
+  },
+  "agent_status_consistency": {
+    "ok": true,
+    "status": 200,
+    "api_key_printed": false,
+    "mode": "multi_agent_status_consistency",
+    "checked_agents": 6,
+    "issues": 0,
+    "canonical_agent_ids": [
+      "paperclip",
+      "agent-zero",
+      "hermes",
+      "spaceagent",
+      "pi-mono",
+      "openclaw-plus"
+    ],
+    "agent_hub_agent_ids": [
+      "paperclip",
+      "agent-zero",
+      "hermes",
+      "spaceagent",
+      "pi-mono",
+      "openclaw-plus"
+    ],
+    "cloudcode_health_ids": [
+      "agent_zero",
+      "hermes",
+      "pi",
+      "paperclip",
+      "openclaw_plus",
+      "spaceagent_playwright",
+      "spaceagent_youtube",
+      "spaceagent_firecrawl"
+    ],
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "secrets_exposed": false,
+    "raw_paths_exposed": false
+  },
+  "checks": {
+    "focused_tests": {
+      "ok": true,
+      "files": 3,
+      "tests": 17
+    },
+    "typecheck": "PASS",
+    "build": "PASS",
+    "full_tests": {
+      "ok": true,
+      "files": 200,
+      "tests": 1490
+    },
+    "git_diff_check": "PASS",
+    "protected_file_invariants": "PASS",
+    "secret_scan_contract": "PASS",
+    "raw_exposure_scan_contract": "PASS",
+    "env_diff": "clean"
+  },
+  "safety": {
+    "env_changed": false,
+    "secrets_printed": false,
+    "auth_weakened": false,
+    "external_writes_enabled": false,
+    "public_local_exposure_added": false,
+    "fake_live_status_allowed": false
+  },
+  "blocker_class": "NONE",
+  "remaining_runtime_blockers_are_individual_agent_truth_not_day80_blockers": [
+    "agent_zero_external_api_key_missing",
+    "hermes_not_installed",
+    "paperclip_sandbox_service_not_running",
+    "playwright_mcp_service_unreachable",
+    "firecrawl_credential_required",
+    "openclaw_doctor_runtime_not_reachable"
+  ]
+}

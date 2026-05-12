@@ -1,0 +1,326 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3150 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-80-multi-agent-status-consistency) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 80 - Multi-Agent Status Consistency) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS for developer-side consistency enforcement) Tj
+0 -12 Td
+(Blocker class: NONE for this lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control, Gateway, Agent Hub, dispatcher, and CloudCode support must agree on the same ca) Tj
+0 -12 Td
+(nonical agent statuses for Agent Zero, Hermes, Pi, Paperclip, SpaceAgent, and OpenClaw+.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a canonical multi-agent status consistency report builder.) Tj
+0 -12 Td
+(- Wired `/api/gateway/agent-hub/status` to include `agent_status_consistency`.) Tj
+0 -12 Td
+(- Reused the CloudCode `buildAgentHealth` output instead of creating a second health truth sourc) Tj
+0 -12 Td
+(e.) Tj
+0 -12 Td
+(- Exported the Agent Hub to CloudCode health id mapper for consistency checks.) Tj
+0 -12 Td
+(- Added regression tests that fail on duplicate agent rows, missing CloudCode health rows, fake ) Tj
+0 -12 Td
+(active owner status with blockers, and invalid live-interface proof conflicts.) Tj
+0 -12 Td
+(- Preserved truthful partial-runtime states where a Mission Control interface is proven but the ) Tj
+0 -12 Td
+(backend is blocked, such as Hermes service-down and SpaceAgent credential/service-gated lanes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/agent-status-consistency.ts`) Tj
+0 -12 Td
+(- `src/lib/agent-status-consistency.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-cloudcode-integration.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/agent-hub/status/route.ts`) Tj
+0 -12 Td
+(- `runtime/day-80-multi-agent-status-consistency-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-80-multi-agent-status-consistency.md`) Tj
+0 -12 Td
+(- `runtime/day-80-multi-agent-status-consistency.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The route now returns:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `cloudcode_agent_health`) Tj
+0 -12 Td
+(- `agent_status_consistency`) Tj
+0 -12 Td
+(- canonical registry ids) Tj
+0 -12 Td
+(- Agent Hub ids) Tj
+0 -12 Td
+(- CloudCode health ids) Tj
+0 -12 Td
+(- consistency issues) Tj
+0 -12 Td
+(- execution and write flags fixed to false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Gateway designer HTML, CSS, class names, or visual assets were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Agent Hub and Mission Control can now render a single consistency truth:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- no fake LIVE status when a runtime blocker exists) Tj
+0 -12 Td
+(- no duplicate agent status row) Tj
+0 -12 Td
+(- no missing canonical registry row) Tj
+0 -12 Td
+(- no missing CloudCode health row) Tj
+0 -12 Td
+(- no write or execution enabled unless the lane is truly LIVE) Tj
+0 -12 Td
+(- interface proof can coexist with blocked backend truth only for explicit partial-runtime block) Tj
+0 -12 Td
+(ers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2947 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Runtime proof used a short-lived local-only standalone Mission Control runtime bound to `127.0.0) Tj
+0 -12 Td
+(.1:3337`. The proof server was started only for smoke verification and was shut down by the proo) Tj
+0 -12 Td
+(f script.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No external writes were enabled. No Bridge action was executed. No `.env` file was changed. No A) Tj
+0 -12 Td
+(PI key was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm vitest run src/lib/agent-status-consistency.test.ts src/lib/gateway-cloudcode-integratio) Tj
+0 -12 Td
+(n.test.ts src/lib/gateway-agent-hub.test.ts --reporter=dot`: PASS, 3 files, 17 tests) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 200 files, 1490 tests) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`: PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- protected route smoke: PASS, 41 routes, 0 failures) Tj
+0 -12 Td
+(- local authenticated Agent Hub consistency smoke: PASS, 6 checked agents, 0 issues) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-80-multi-agent-status-consistency-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed consistency result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- canonical agents: Paperclip, Agent Zero, Hermes, SpaceAgent, Pi, OpenClaw+) Tj
+0 -12 Td
+(- Agent Hub rows: same 6 agents) Tj
+0 -12 Td
+(- CloudCode health rows: Agent Zero, Hermes, Pi, Paperclip, OpenClaw+, SpaceAgent Playwright, Sp) Tj
+0 -12 Td
+(aceAgent YouTube, SpaceAgent Firecrawl) Tj
+0 -12 Td
+(- consistency issues: 0) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- secrets exposed: false) Tj
+0 -12 Td
+(- raw paths exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Day 80 consistency blocker remains.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The following individual agent blockers remain truthful and are carried into later lanes:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `agent_zero_external_api_key_missing`) Tj
+0 -12 Td
+(- `hermes_not_installed`) Tj
+0 -12 Td
+(- `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- `playwright_mcp_service_unreachable`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification for Day 80: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-80-multi-agent-status-consistency-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report generation time.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 180 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 81 - Multi-Agent Proof Packet automatically starts after this lane closes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003455 00000 n 
+0000003581 00000 n 
+0000006580 00000 n 
+0000006706 00000 n 
+0000006937 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7007
+%%EOF

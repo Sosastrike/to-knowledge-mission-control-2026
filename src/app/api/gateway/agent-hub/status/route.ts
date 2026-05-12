@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { buildAgentStatusConsistencyReport } from '@/lib/agent-status-consistency'
 import { buildCloudCodeAgentHealth } from '@/lib/gateway-cloudcode-integration'
 import { attachOpenClawGatewayRuntimeStatus, attachSpaceAgentBrowserAutomationStatus, buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
@@ -37,14 +38,18 @@ export async function GET(request: NextRequest) {
     openclawRuntime,
   )
 
+  const cloudcodeAgentHealth = buildCloudCodeAgentHealth(payload as any)
+  const agentStatusConsistency = buildAgentStatusConsistencyReport(payload, cloudcodeAgentHealth)
+
   return NextResponse.json({
     ...payload,
+    agent_status_consistency: agentStatusConsistency,
     cloudcode_backend_support: {
       applied: true,
       source: 'cloudcode-backend-support-handoff',
       helpers: ['buildAgentHealth'],
     },
-    cloudcode_agent_health: buildCloudCodeAgentHealth(payload as any),
+    cloudcode_agent_health: cloudcodeAgentHealth,
   }, {
     headers: { 'Cache-Control': 'no-store' },
   })

@@ -1,0 +1,281 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3770 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-91-no-fake-ui-final-sweep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 91 — No Fake UI Final Sweep) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: developer-side closure passed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification: NONE for developer-side Day 91. Authenticated owner visual proof remains) Tj
+0 -12 Td
+( OWNER_GATED by missing owner browser session, as expected by the authenticated route smoke cont) Tj
+0 -12 Td
+(ract.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Removed owner-visible fake/wiring residue from Mission Control shell surfaces without editing ) Tj
+0 -12 Td
+(the approved Gateway mock HTML/CSS/class names.) Tj
+0 -12 Td
+(- Replaced `not wired`, `not implemented`, `coming soon`, `read_only_stub`, and admin wire-up wo) Tj
+0 -12 Td
+(rding with truthful states such as backend required, unavailable, disabled, or approval locked.) Tj
+0 -12 Td
+(- Added a no-fake UI regression test covering Mission Control shell surfaces, connector/status c) Tj
+0 -12 Td
+(opy, Bridge approval routes, Firecrawl proxy messaging, and runtime failure copy.) Tj
+0 -12 Td
+(- Updated Bridge approval queue mode from `approval_requests_read_only_stub` to `approval_reques) Tj
+0 -12 Td
+(ts_backend_required` when persistence is missing.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `public/designer-mission-control/src/app.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/backend/api-client.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/brain-sync.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/credentials-page.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/settings.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/surfaces.jsx`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/replicas/EmailProfilesPage.jsx`) Tj
+0 -12 Td
+(- `src/app/api/bridge/approval-requests/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/bridge/owner-gates/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/firecrawl/[[...path]]/route.ts`) Tj
+0 -12 Td
+(- `src/lib/monitoring-failure-states.ts`) Tj
+0 -12 Td
+(- `src/lib/no-fake-ui-final-sweep.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/*`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes/Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/api/bridge/approval-requests`: missing-persistence mode now reports `approval_requests_backe) Tj
+0 -12 Td
+(nd_required`.) Tj
+0 -12 Td
+(- `/api/bridge/owner-gates`: owner gate proof text now says protected-action responses and queue) Tj
+0 -12 Td
+( status, not stubs/placeholders.) Tj
+0 -12 Td
+(- `/api/firecrawl/[[...path]]`: unavailable SSE wording no longer uses implementation-placeholde) Tj
+0 -12 Td
+(r language.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Mission Control owner-facing copy no longer claims fake backend wiring or future features.) Tj
+0 -12 Td
+(- Agent/provider controls stay visibly disabled or unavailable with a truthful reason.) Tj
+0 -12 Td
+(- Email profile docs and verification states now show unavailable/backend-required language inst) Tj
+0 -12 Td
+(ead of coming-soon or not-implemented language.) Tj
+0 -12 Td
+(- Brain Sync report and Obsidian actions now explain the required backend/bridge state instead o) Tj
+0 -12 Td
+(f implying hidden wiring.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service/Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Runtime proof used a localhost-only standalone server on `127.0.0.1:3345`.) Tj
+0 -12 Td
+(- No external writes were executed.) Tj
+0 -12 Td
+(- No `.env` files were modified.) Tj
+0 -12 Td
+(- No approved designer mock HTML/CSS/class names were modified.) Tj
+0 -12 Td
+(- Proof server was stopped after route smoke and screenshot capture.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2767 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/no-fake-ui-final-sweep.test.ts`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `git diff -- .env .env.local .env.production --exit-code`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3345`) Tj
+0 -12 Td
+(- `node scripts/authenticated-route-smoke-contract.mjs http://127.0.0.1:3345`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy/Restart/Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Production build passed and synced static assets into `.next/standalone`.) Tj
+0 -12 Td
+(- Local proof restart: standalone server started on `127.0.0.1:3345`, route smokes completed, sc) Tj
+0 -12 Td
+(reenshot captured, server stopped.) Tj
+0 -12 Td
+(- Protected route smoke: `ok: true`, `routes_checked: 44`, `failures: 0`.) Tj
+0 -12 Td
+(- Authenticated owner smoke: `ok: true`, `blocker_class: OWNER_GATED`, `authenticated_smoke_prov) Tj
+0 -12 Td
+(en: false`, because no owner browser session was supplied.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/no-fake-ui-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/no-fake-ui-proof.png`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/protected-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/authenticated-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/protected-file-invariants.json`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/secret-scan.json`) Tj
+0 -12 Td
+(- `runtime/day-91-no-fake-ui-final-sweep/raw-exposure-scan.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- OWNER_GATED: authenticated owner visual proof requires an owner browser session.) Tj
+0 -12 Td
+(- Day 91 developer-side blocker: NONE.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert --no-edit <day-91-closure-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit/Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Base commit before Day 91 closeout: `fc825f6e340f2f43faaf3a6bcde761afd2dc91ce`) Tj
+0 -12 Td
+(- Closure commit hash: recorded in final closeout after exact-path staging and commit.) Tj
+0 -12 Td
+(- Push result: recorded in final closeout after push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 92 — UX Final Closeout automatically starts after Day 91 commit/push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004069 00000 n 
+0000004195 00000 n 
+0000007014 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+7084
+%%EOF

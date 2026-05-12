@@ -237,7 +237,7 @@ function IntegrationsPage() {
               <div className="muted xsmall">All tokens live in <span className="mono xsmall">~/.openclaw/.env</span> (16 secrets · perms 600). Never exposed in logs or the dashboard.</div>
             </div>
           </div>
-          <button className="btn" disabled title="Auto-rotation cadence planner — not wired."><I.Key size={12}/> Rotation checklist</button>
+          <button className="btn" disabled title="Auto-rotation planning is disabled until credential rotation support is available."><I.Key size={12}/> Rotation checklist</button>
         </div>
       </div>
       <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:12}}>

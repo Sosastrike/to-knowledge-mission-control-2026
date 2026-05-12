@@ -222,8 +222,8 @@ function GraphifyDrawer({ onClose, initialTab }) {
         <div className="card-head">
           <div className="card-title"><I.Activity/> Brain sync bar</div>
           <div className="hstack">
-            <button className="btn sm" disabled title="Bulk source refresh — needs POST /api/brain/resync"><I.Refresh size={11}/> Refresh all</button>
-            <button className="btn primary sm" disabled title="Full graph rebuild — expensive, needs backend job queue"><GraphGlyph size={11}/> Rebuild graph</button>
+            <button className="btn sm" disabled title="Bulk source refresh requires the Brain resync backend."><I.Refresh size={11}/> Refresh all</button>
+            <button className="btn primary sm" disabled title="Full graph rebuild requires the backend job queue."><GraphGlyph size={11}/> Rebuild graph</button>
           </div>
         </div>
         <div className="card-body">
@@ -351,7 +351,7 @@ function GraphifyDrawer({ onClose, initialTab }) {
               <option value="err">Error</option>
             </select>
             <span className="spacer"/>
-            <button className="btn" disabled title="Bulk event export — backend endpoint not wired"><I.Download size={12}/> Export events</button>
+            <button className="btn" disabled title="Bulk event export requires the Brain export backend."><I.Download size={12}/> Export events</button>
           </div>
           <div className="card">
             <table className="tbl">
@@ -439,13 +439,13 @@ function GraphifyDrawer({ onClose, initialTab }) {
               <button
                 className="btn sm"
                 onClick={()=>{
-                  const md = `# GRAPH_REPORT.md\n_generated ${d.lastRun.at}_\n\n(Full report generation requires backend — copied placeholder.)`;
+                  const md = `# GRAPH_REPORT.md\n_generated ${d.lastRun.at}_\n\nFull report generation requires the Brain report backend.`;
                   navigator.clipboard?.writeText(md);
-                  window.Notifications?.emit?.({ kind:'ok', source:'brain', title:'Copied (placeholder)', detail:'Full report needs backend generator.' });
+                  window.Notifications?.emit?.({ kind:'warn', source:'brain', title:'Report summary copied', detail:'Full report generation requires the Brain report backend.' });
                 }}
               ><I.Copy size={11}/> Copy</button>
-              <button className="btn sm" disabled title="Report download — needs backend generator"><I.Download size={11}/> Download</button>
-              <button className="btn sm" disabled title="Obsidian deep-link — not wired"><I.External size={11}/> Open in Obsidian</button>
+              <button className="btn sm" disabled title="Report download requires the Brain report backend."><I.Download size={11}/> Download</button>
+              <button className="btn sm" disabled title="Obsidian deep-link requires the Obsidian bridge service."><I.External size={11}/> Open in Obsidian</button>
             </div>
           </div>
           <div className="card-body">

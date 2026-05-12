@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-05-12T05:24:23.813Z",
+  "runtimeCommit": "fc825f6e340f2f43faaf3a6bcde761afd2dc91ce",
+  "checkedFiles": [
+    "public/designer-mission-control/src/app.jsx",
+    "public/designer-mission-control/src/backend/api-client.jsx",
+    "public/designer-mission-control/src/brain-sync.jsx",
+    "public/designer-mission-control/src/credentials-page.jsx",
+    "public/designer-mission-control/src/settings.jsx",
+    "public/designer-mission-control/src/surfaces.jsx",
+    "public/designer-mission-control/src/replicas/EmailProfilesPage.jsx",
+    "src/app/api/bridge/approval-requests/route.ts",
+    "src/app/api/bridge/owner-gates/route.ts",
+    "src/app/api/firecrawl/[[...path]]/route.ts",
+    "src/lib/monitoring-failure-states.ts"
+  ],
+  "bannedOwnerVisibleResidue": [
+    "/not\\s+wired/i",
+    "/api\\s+not\\s+wired/i",
+    "/backend\\s+not\\s+wired/i",
+    "/not\\s+implemented/i",
+    "/copied\\s+placeholder/i",
+    "/queue\\s+placeholder/i",
+    "/placeholder\\s+is\\s+visible/i",
+    "/read_only_stub/i",
+    "/protected-action\\s+stubs/i",
+    "/coming\\s+soon/i",
+    "/ADMIN\\s+WIRE-UP/i"
+  ],
+  "result": "PASS",
+  "findings": []
+}

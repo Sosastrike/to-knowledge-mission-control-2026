@@ -203,7 +203,7 @@ const security = {
 
   // SSO callback placeholder — real backend owns the redirect URI.
   async ssoCallback(_payload){
-    throw Object.assign(new Error('SSO_CALLBACK_NOT_WIRED'), { code: 'BACKEND_REQUIRED' });
+    throw Object.assign(new Error('SSO_CALLBACK_BACKEND_REQUIRED'), { code: 'BACKEND_REQUIRED' });
   },
 };
 
@@ -289,7 +289,7 @@ const models = {
       provider: model.provider,
       note: 'POST /api/models/:id/key → vault',
     }, 'warn');
-    const err = new Error('VAULT_NOT_WIRED');
+    const err = new Error('VAULT_BACKEND_REQUIRED');
     err.code = 'BACKEND_REQUIRED';
     err.target = 'vault';
     err.endpoint = 'POST /api/models/' + modelId + '/key';
@@ -337,7 +337,7 @@ const integrations = {
     await _audit('integration.connect.pending', id, {
       note: 'POST /api/integrations/:id/connect → vault',
     }, 'warn');
-    const err = new Error('VAULT_NOT_WIRED');
+    const err = new Error('VAULT_BACKEND_REQUIRED');
     err.code = 'BACKEND_REQUIRED';
     err.target = 'vault';
     err.endpoint = 'POST /api/integrations/' + id + '/connect';
@@ -352,12 +352,10 @@ const integrations = {
     });
     await _audit('integration.disconnect', id, null, 'warn');
   },
-  // Connection test — in real backend this calls the provider. Here it
-  // honestly reports that the test endpoint isn't wired.
   async test(id){
     _requireRole('integrations.test');
     await _audit('integration.test.pending', id, { note: 'POST /api/integrations/:id/test' }, 'info');
-    throw Object.assign(new Error('INTEGRATION_TEST_NOT_WIRED'), { code: 'BACKEND_REQUIRED', target: id });
+    throw Object.assign(new Error('INTEGRATION_TEST_BACKEND_REQUIRED'), { code: 'BACKEND_REQUIRED', target: id });
   },
 };
 
@@ -368,19 +366,19 @@ const agents = {
     _requireRole('agents.restart');
     // In real backend: POST to supervisor. Here we honestly fail.
     await _audit('agent.restart.pending', agentId, { endpoint: `POST /api/agents/${agentId}/restart` }, 'warn');
-    throw Object.assign(new Error('AGENT_SUPERVISOR_NOT_WIRED'), { code: 'BACKEND_REQUIRED', target: agentId });
+    throw Object.assign(new Error('AGENT_SUPERVISOR_BACKEND_REQUIRED'), { code: 'BACKEND_REQUIRED', target: agentId });
   },
   async reconnect(agentId){
     _requireRole('agents.reconnect');
     await _audit('agent.reconnect.pending', agentId, { endpoint: `POST /api/agents/${agentId}/reconnect` }, 'warn');
-    throw Object.assign(new Error('AGENT_SUPERVISOR_NOT_WIRED'), { code: 'BACKEND_REQUIRED', target: agentId });
+    throw Object.assign(new Error('AGENT_SUPERVISOR_BACKEND_REQUIRED'), { code: 'BACKEND_REQUIRED', target: agentId });
   },
   async logs(agentId){
     _requireRole('agents.logs');
     // Real backend streams from GET /api/agents/:id/logs
     await _audit('agent.logs.view', agentId, null, 'info');
     return {
-      stream: null, // null = not wired
+      stream: null,
       endpoint: `GET /api/agents/${agentId}/logs`,
       shadow: [
         `[${new Date().toISOString()}] ${agentId} supervisor · shadow stream (local adapter)`,
@@ -401,7 +399,7 @@ const email = {
     { id:'ses',       name:'AWS SES',       hint:'access key + secret + region',  auth_kind:'api_key' },
     { id:'postmark',  name:'Postmark',      hint:'server token',                  auth_kind:'api_key' },
     { id:'sendgrid',  name:'SendGrid',      hint:'API key',                       auth_kind:'api_key' },
-    { id:'agentmail', name:'AgentMail',     hint:'API not wired yet',             auth_kind:'unwired' },
+    { id:'agentmail', name:'AgentMail',     hint:'API unavailable',              auth_kind:'unwired' },
     { id:'generic',   name:'Generic',      hint:'Manual SMTP details',           auth_kind:'smtp' },
   ],
 
@@ -482,7 +480,7 @@ const email = {
     if (!p) return { ok:false, message:'Profile not found' };
     if (p.status === 'api_not_wired') {
       await _audit('email.profile.test', id, { result: 'api_not_wired' }, 'warn');
-      return { ok:false, message:'Test not available yet — API not wired', code:'BACKEND_REQUIRED' };
+      return { ok:false, message:'Test unavailable — AgentMail API backend required', code:'BACKEND_REQUIRED' };
     }
     if (p.status === 'needs_credentials' || !p.credential_ref) {
       await _audit('email.profile.test', id, { result: 'needs_credentials' }, 'warn');
@@ -497,7 +495,7 @@ const email = {
       ok: false,
       code: 'BACKEND_REQUIRED',
       endpoint: 'POST /api/email/profiles/' + id + '/test',
-      message: 'Test send not wired — needs SMTP or AgentMail transport.',
+      message: 'Test send unavailable — SMTP or AgentMail transport is required.',
     };
   },
   async testAll(){
@@ -537,7 +535,7 @@ const email = {
     await _audit('email.address.verify', id, { result: 'not_implemented' }, 'warn');
     return {
       ok: false,
-      message: 'Verification not implemented yet — set DKIM/SPF manually',
+      message: 'Verification unavailable — set DKIM/SPF manually',
       code: 'BACKEND_REQUIRED',
     };
   },

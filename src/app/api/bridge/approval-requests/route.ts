@@ -397,7 +397,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    mode: queue.persistence_ready ? 'approval_requests_read_only_queue' : 'approval_requests_read_only_stub',
+    mode: queue.persistence_ready ? 'approval_requests_read_only_queue' : 'approval_requests_backend_required',
     generated_at: new Date().toISOString(),
     ...APPROVAL_STUB,
     persistence: queue.persistence_ready ? 'read_only_connected' : 'not_applied',

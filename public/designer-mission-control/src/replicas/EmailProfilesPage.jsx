@@ -40,8 +40,8 @@ function ProfileStatus({ status }){
   const map = {
     active:                    { cls:'ok',   label:'Active',              kind:'live' },
     needs_credentials:         { cls:'warn', label:'Credential missing',  kind:'warn' },
-    api_not_wired:             { cls:'err',  label:'API not wired yet',   kind:'err'  },
-    verification_not_implemented: { cls:'warn', label:'Verification not implemented', kind:'warn' },
+    api_not_wired:             { cls:'err',  label:'API unavailable',     kind:'err'  },
+    verification_not_implemented: { cls:'warn', label:'Verification unavailable', kind:'warn' },
     needs_verification:        { cls:'warn', label:'Needs verification',  kind:'warn' },
     verified:                  { cls:'ok',   label:'Verified',            kind:'live' },
     unassigned:                { cls:'err',  label:'Unassigned',          kind:'err'  },
@@ -110,7 +110,7 @@ function ProfileModal({ mode, initial, onClose, onSave }){
           </label>
           {isAgentMail && (
             <div style={{padding:'8px 10px', borderRadius:6, background:'rgba(255,80,80,0.08)', border:'1px solid rgba(255,80,80,0.28)', color:'var(--fg-1)', fontSize:12}}>
-              <NotWiredBadge label="api not wired"/> &nbsp;AgentMail backend is not connected yet. Profile will save but will not send mail until wired.
+              <NotWiredBadge label="api unavailable"/> &nbsp;AgentMail backend is not connected yet. Profile will save but will not send mail until that backend is available.
             </div>
           )}
           <label className="field">
@@ -177,7 +177,7 @@ function AddressModal({ onClose, onSave }){
             <input className="input" autoFocus value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@domain.com"/>
           </label>
           <div style={{fontSize:11, color:'var(--fg-2)'}}>
-            <NotWiredBadge label="verification not implemented"/> DKIM/SPF verification is not wired yet. Address will be stored as "needs verification".
+            <NotWiredBadge label="verification unavailable"/> DKIM/SPF verification is unavailable. Address will be stored as "needs verification".
           </div>
         </div>
         <div className="modal-foot">
@@ -327,8 +327,8 @@ function EmailProfilesPage(){
           <div style={{color:'var(--fg-2)', fontSize:13, marginTop:4}}>Centralized email management for all outbound communications.</div>
         </div>
         <div className="hstack" style={{gap:8}}>
-          <button className="btn" disabled title="Coming soon">
-            <I.Book size={12}/> Documentation <span className="mock-badge sm" style={{marginLeft:4}}>soon</span>
+          <button className="btn" disabled title="Documentation requires the email provider docs package.">
+            <I.Book size={12}/> Documentation <span className="mock-badge sm" style={{marginLeft:4}}>unavailable</span>
           </button>
           <button className="btn primary" onClick={handleAdd}>
             <I.Plus size={12}/> Add Profile
@@ -357,7 +357,7 @@ function EmailProfilesPage(){
           <div className="stat-label"><I.Activity size={11} style={{marginRight:4, opacity:0.6}}/>Delivery success</div>
           <div className="hstack" style={{gap:6}}>
             <div className="stat-big">—</div>
-            <NotWiredBadge label="api not wired" title="No delivery metrics endpoint yet"/>
+            <NotWiredBadge label="api unavailable" title="Delivery metrics backend unavailable"/>
           </div>
           <div className="muted xsmall">Awaiting provider metrics</div>
         </div></div>
@@ -380,7 +380,7 @@ function EmailProfilesPage(){
               <option value="all">All statuses</option>
               <option value="active">Active</option>
               <option value="needs">Needs credentials</option>
-              <option value="notwired">API not wired</option>
+              <option value="notwired">API unavailable</option>
             </select>
             <button className="btn" onClick={handleTestAll}><I.Send size={11}/> Test all</button>
           </div>
@@ -514,7 +514,7 @@ function EmailProfilesPage(){
           onClose={()=>setModal(null)}
           onSave={async (payload) => {
             const p = await window.MockApi.addProfile(payload);
-            pushToast('ok', `Profile "${p.profile_name}" created · ${p.status === 'api_not_wired' ? 'API not wired yet' : 'configure credentials to activate'}`);
+            pushToast('ok', `Profile "${p.profile_name}" created · ${p.status === 'api_not_wired' ? 'API unavailable' : 'configure credentials to activate'}`);
             setModal(null);
           }}
         />
@@ -561,7 +561,7 @@ function EmailProfilesPage(){
           onClose={()=>setModal(null)}
           onSave={async (payload) => {
             await window.MockApi.addAddress(payload);
-            pushToast('warn', `Address added · verification not implemented yet`);
+            pushToast('warn', `Address added · verification unavailable`);
             setModal(null);
           }}
         />

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
     return NextResponse.json({ ok: false, error: 'no_jobs_table_yet', job_id: parts[1] }, { status: 404 })
   }
   if (parts[0] === 'jobs' && parts[1] && parts[2] === 'events') {
-    return new Response(`: backend_required - FireCrawl job stream is not wired\n\ndata: ${JSON.stringify({
+    return new Response(`: backend_required - FireCrawl job stream is unavailable\n\ndata: ${JSON.stringify({
       kind: 'backend_required',
       job_id: parts[1],
     })}\n\n`, {

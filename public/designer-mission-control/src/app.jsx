@@ -142,7 +142,7 @@ function App() {
       setSettingsPage('system'); setSettingsOpen(true);
     }
     else {
-      window.Notifications?.emit?.({ kind:'warn', source:'nav', title:'Route not wired', detail:`No destination registered for "${p}".` });
+      window.Notifications?.emit?.({ kind:'warn', source:'nav', title:'Route unavailable', detail:`No destination is registered for "${p}" in this Mission Control runtime.` });
     }
   };
 

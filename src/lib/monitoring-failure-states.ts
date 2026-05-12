@@ -294,7 +294,7 @@ function defaultBlockedReason(kind: ToolErrorKind): string {
     case 'BACKEND_MISSING':
       return 'backend wiring not ready'
     case 'ROUTE_MISSING':
-      return 'route not wired'
+      return 'route unavailable'
     case 'UNKNOWN':
       return 'unclassified blocker'
     default:

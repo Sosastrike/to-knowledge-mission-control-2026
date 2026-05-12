@@ -304,13 +304,13 @@ function CredentialsPage(){
         {header}
         <div className="card">
           <div className="card-head">
-            <div className="card-title">Backend not wired</div>
+            <div className="card-title">Backend unavailable</div>
             <span className="tag warn">BACKEND PENDING</span>
           </div>
           <div className="card-body vstack" style={{gap:10}}>
             <div className="muted">
-              The credential store runs on the Node backend in <code>server/</code>. Until
-              the UI is pointed at that server, this page is read-only and no keys can be saved here.
+              The credential store runs on the Node backend. Until that connection is active,
+              this page is read-only and no keys can be saved here.
             </div>
             <div className="muted">
               Next step: run the server locally (see <code>server/README.md</code>), then the UI

@@ -199,8 +199,8 @@ function MeetingRoom({ onClose, meeting }) {
                     </div>
                     <div className="mrx-tile-role">{a.role} · seat reserved locally</div>
                   </div>
-                  <div className="mrx-camoff-note" title="Provider dispatch not wired — seat is real, the agent isn't connected yet">
-                    <I.Info size={11}/> Dispatch not wired · not on call
+                  <div className="mrx-camoff-note" title="Provider dispatch is unavailable — seat is real, the agent is not connected yet">
+                    <I.Info size={11}/> Dispatch pending · not on call
                   </div>
                   <div className="mrx-tile-br">
                     <button className="icon-btn" onClick={()=>removeAgentFromRoom(a.id)} title="Remove from room" style={{background:'rgba(0,0,0,0.45)'}}>
@@ -263,7 +263,7 @@ function MeetingRoom({ onClose, meeting }) {
 
                 <div className="mrx-dock-sep"/>
 
-                <button className="mrx-ctrl" disabled title="Recording requires a connected provider (ADMIN WIRE-UP)">
+                <button className="mrx-ctrl" disabled title="Recording requires a connected meeting provider.">
                   <div className="mrx-ctrl-btn">
                     <I.Dot size={18}/>
                     <span className="mrx-ctrl-nw-dot"/>
@@ -271,7 +271,7 @@ function MeetingRoom({ onClose, meeting }) {
                   <span className="mrx-ctrl-label">Record</span>
                 </button>
 
-                <button className="mrx-ctrl" disabled title="Live transcript requires a connected provider (ADMIN WIRE-UP)">
+                <button className="mrx-ctrl" disabled title="Live transcript requires a connected meeting provider.">
                   <div className="mrx-ctrl-btn">
                     <I.FileLog size={18}/>
                     <span className="mrx-ctrl-nw-dot"/>
@@ -282,7 +282,7 @@ function MeetingRoom({ onClose, meeting }) {
                 <button
                   className={`mrx-ctrl ${panel === 'invite' ? 'is-on' : ''}`}
                   onClick={() => setPanel('invite')}
-                  title="Add an agent or saved group to this room (provider dispatch not wired until ADMIN WIRE-UP)">
+                  title="Add an agent or saved group to this room; provider dispatch remains unavailable until the meeting provider is connected.">
                   <div className="mrx-ctrl-btn">
                     <I.Agents size={18}/>
                   </div>
@@ -365,7 +365,7 @@ function MeetingRoom({ onClose, meeting }) {
 
                   <div className="mrx-not-wired-card">
                     <div className="mrx-not-wired-head">
-                      <I.Info size={11}/> Not wired in this build
+                      <I.Info size={11}/> Provider features unavailable in this build
                     </div>
                     These features need a connected conferencing provider
                     (Zoom / Teams / Meet / Webex) configured from
@@ -482,7 +482,7 @@ function MeetingRoom({ onClose, meeting }) {
                               <div style={{fontSize:12, color:'var(--fg-0)', fontWeight:500}}>{a.name}</div>
                               <div className="muted xsmall">{a.role}</div>
                             </div>
-                            <span className="tag warn" title="Seat reserved locally · provider dispatch not wired">Not wired</span>
+                            <span className="tag warn" title="Seat reserved locally · provider dispatch unavailable">Provider pending</span>
                             <button className="icon-btn" onClick={()=>removeAgentFromRoom(a.id)} title="Remove from room">
                               <I.X size={12}/>
                             </button>
@@ -494,7 +494,7 @@ function MeetingRoom({ onClose, meeting }) {
 
                   <div className="mrx-not-wired-card">
                     <div className="mrx-not-wired-head">
-                      <I.Info size={11}/> What's actually wired here
+                      <I.Info size={11}/> What is active here
                     </div>
                     Adding an agent or group is a real local action — they appear
                     as room seats and a <span className="mono">meeting.agent.invite</span> audit
@@ -633,9 +633,9 @@ function AgentDrawer({ agent, onClose }) {
             <div className="card-body hstack" style={{flexWrap:'wrap'}}>
               <button className="btn" disabled title="Use Settings → Agent Management · Restart is wired there with confirm + audit."><I.Restart/> Restart</button>
               <button className="btn" disabled title="Use Settings → Agent Management · Reconnect is wired there.">Reconnect</button>
-              <button className="btn" disabled title="Agent pause not wired — supervisor needs a pause/resume RPC."><I.Pause/> Pause intake</button>
-              <button className="btn" disabled title="Logs drawer — needs GET /api/agents/:id/logs"><I.FileLog/> Open logs</button>
-              <button className="btn danger" disabled title="Force-offline not wired — use Settings → Agent Management.">Force offline</button>
+              <button className="btn" disabled title="Agent pause requires supervisor pause/resume support."><I.Pause/> Pause intake</button>
+              <button className="btn" disabled title="Logs are available from Settings → Agent Management when the server is connected."><I.FileLog/> Open logs</button>
+              <button className="btn danger" disabled title="Force-offline is disabled here; use Settings → Agent Management.">Force offline</button>
             </div>
           </div>
 

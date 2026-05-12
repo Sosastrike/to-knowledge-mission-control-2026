@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-05-12T05:34:16.396Z",
+  "runtimeCommit": "aeedc167f7d95d954cc255e3326497024f1a961f",
+  "lane": "Day 93 Full Regression Test",
+  "scope": "typecheck, build, full tests, route smoke, secret scan, protected-file invariants, env diff, runtime health proof",
+  "checks": [
+    {
+      "id": "env_diff",
+      "command": "git diff -- .env .env.local .env.production --exit-code",
+      "owner": "security"
+    },
+    {
+      "id": "diff_check",
+      "command": "git diff --check",
+      "owner": "git"
+    },
+    {
+      "id": "typecheck",
+      "command": "pnpm run typecheck",
+      "owner": "typescript"
+    },
+    {
+      "id": "build",
+      "command": "pnpm run build",
+      "owner": "next"
+    },
+    {
+      "id": "tests",
+      "command": "pnpm test",
+      "owner": "vitest"
+    },
+    {
+      "id": "protected_route_smoke",
+      "command": "node scripts/protected-route-smoke-contract.mjs <base-url>",
+      "owner": "routes"
+    },
+    {
+      "id": "authenticated_route_smoke",
+      "command": "node scripts/authenticated-route-smoke-contract.mjs <base-url>",
+      "owner": "routes",
+      "expected_external_blocker": "OWNER_GATED without owner session"
+    },
+    {
+      "id": "protected_file_invariants",
+      "command": "node scripts/check-protected-file-invariants.mjs",
+      "owner": "security"
+    },
+    {
+      "id": "secret_scan",
+      "command": "node scripts/secret-scan-contract.mjs",
+      "owner": "security"
+    },
+    {
+      "id": "raw_exposure_scan",
+      "command": "node scripts/raw-exposure-scan-contract.mjs",
+      "owner": "security"
+    }
+  ],
+  "safety": {
+    "env_edits_allowed": false,
+    "external_writes_allowed": false,
+    "public_local_exposure_allowed": false,
+    "raw_secret_output_allowed": false
+  },
+  "blocker_classification": "IN_PROGRESS"
+}

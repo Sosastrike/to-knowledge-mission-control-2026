@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-05-12T05:36:40.227Z",
+  "base": "http://127.0.0.1:3347",
+  "result": "PASS",
+  "results": [
+    {
+      "id": "public_health",
+      "path": "/api/status?action=health",
+      "status": 200,
+      "location": null,
+      "body_bytes": 537,
+      "ok": true
+    },
+    {
+      "id": "login",
+      "path": "/login",
+      "status": 200,
+      "location": null,
+      "body_bytes": 100850,
+      "ok": true
+    },
+    {
+      "id": "gateway_protected",
+      "path": "/gateway",
+      "status": 307,
+      "location": "/login",
+      "body_bytes": 6,
+      "ok": true
+    },
+    {
+      "id": "runtime_health_protected",
+      "path": "/api/runtime/health",
+      "status": 401,
+      "location": null,
+      "body_bytes": 24,
+      "ok": true
+    }
+  ]
+}

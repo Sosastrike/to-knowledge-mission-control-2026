@@ -1,0 +1,187 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2623 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "timestamp": "2026-05-12T05:34:16.396Z",) Tj
+0 -12 Td
+(  "runtimeCommit": "aeedc167f7d95d954cc255e3326497024f1a961f",) Tj
+0 -12 Td
+(  "lane": "Day 93 Full Regression Test",) Tj
+0 -12 Td
+(  "scope": "typecheck, build, full tests, route smoke, secret scan, protected-file invariants, e) Tj
+0 -12 Td
+(nv diff, runtime health proof",) Tj
+0 -12 Td
+(  "checks": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "env_diff",) Tj
+0 -12 Td
+(      "command": "git diff -- .env .env.local .env.production --exit-code",) Tj
+0 -12 Td
+(      "owner": "security") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "diff_check",) Tj
+0 -12 Td
+(      "command": "git diff --check",) Tj
+0 -12 Td
+(      "owner": "git") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "typecheck",) Tj
+0 -12 Td
+(      "command": "pnpm run typecheck",) Tj
+0 -12 Td
+(      "owner": "typescript") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "build",) Tj
+0 -12 Td
+(      "command": "pnpm run build",) Tj
+0 -12 Td
+(      "owner": "next") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "tests",) Tj
+0 -12 Td
+(      "command": "pnpm test",) Tj
+0 -12 Td
+(      "owner": "vitest") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "protected_route_smoke",) Tj
+0 -12 Td
+(      "command": "node scripts/protected-route-smoke-contract.mjs <base-url>",) Tj
+0 -12 Td
+(      "owner": "routes") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "authenticated_route_smoke",) Tj
+0 -12 Td
+(      "command": "node scripts/authenticated-route-smoke-contract.mjs <base-url>",) Tj
+0 -12 Td
+(      "owner": "routes",) Tj
+0 -12 Td
+(      "expected_external_blocker": "OWNER_GATED without owner session") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "protected_file_invariants",) Tj
+0 -12 Td
+(      "command": "node scripts/check-protected-file-invariants.mjs",) Tj
+0 -12 Td
+(      "owner": "security") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "secret_scan",) Tj
+0 -12 Td
+(      "command": "node scripts/secret-scan-contract.mjs",) Tj
+0 -12 Td
+(      "owner": "security") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "id": "raw_exposure_scan",) Tj
+0 -12 Td
+(      "command": "node scripts/raw-exposure-scan-contract.mjs",) Tj
+0 -12 Td
+(      "owner": "security") Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "safety": {) Tj
+0 -12 Td
+(    "env_edits_allowed": false,) Tj
+0 -12 Td
+(    "external_writes_allowed": false,) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 233 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(    "public_local_exposure_allowed": false,) Tj
+0 -12 Td
+(    "raw_secret_output_allowed": false) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "blocker_classification": "IN_PROGRESS") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000002922 00000 n 
+0000003048 00000 n 
+0000003332 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+3402
+%%EOF

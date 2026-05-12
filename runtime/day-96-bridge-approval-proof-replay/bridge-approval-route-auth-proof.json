@@ -1,0 +1,71 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:12:17.582Z",
+  "base_url": "http://127.0.0.1:3350",
+  "mode": "bridge_approval_route_auth_proof",
+  "no_auth_headers_sent": true,
+  "no_cookie_sent": true,
+  "no_approval_created": true,
+  "no_execution_triggered": true,
+  "no_writes_triggered": true,
+  "routes_checked": 7,
+  "failures": [],
+  "results": [
+    {
+      "method": "GET",
+      "path": "/api/bridge/approval-proof-packet",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/bridge/approval-requests",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/bridge/approval-requests/audit-report",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/bridge/approval-readiness",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/bridge/tool-action-approval",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/bridge/approval-requests/apr_day96_probe/approve",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/bridge/approval-requests/apr_day96_probe/deny",
+      "status": 401,
+      "auth_blocked": true,
+      "body_bytes": 24,
+      "unsafe_text_detected": false
+    }
+  ]
+}

@@ -41,6 +41,7 @@ export const PROTECTED_API_ROUTES = [
   { path: '/api/bridge/pi/status', label: 'Pi status' },
   { path: '/api/bridge/paperclip/status', label: 'Paperclip status' },
   { path: '/api/bridge/approval-requests', label: 'Bridge approval requests' },
+  { path: '/api/bridge/approval-proof-packet', label: 'Bridge approval proof replay packet' },
   { path: '/api/bridge/connector-readiness', label: 'Connector readiness' },
   { path: '/api/bridge/brain-sync/build-wiki/status', label: 'Build-Wiki status' },
   { path: '/api/bridge/brain-sync/build-wiki/run-now', label: 'Build-Wiki Run Now' },

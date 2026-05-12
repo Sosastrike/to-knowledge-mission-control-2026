@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:12:17.696Z",
+  "base_url": "http://127.0.0.1:3350",
+  "bind_address": "127.0.0.1",
+  "port": 3350,
+  "process_started": true,
+  "process_stopped_by_trap": true,
+  "public_exposure": false,
+  "log_pointer": "runtime/day-96-bridge-approval-proof-replay/standalone-runtime.log"
+}

@@ -1,0 +1,354 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3710 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-96-bridge-approval-proof-replay) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 96 - Bridge Approval Proof Replay 100% Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Lane: Bridge approval proof replay) Tj
+0 -12 Td
+(- Status: DEVELOPER-SIDE CLOSED WITH TRUTHFUL OWNER SESSION GATE) Tj
+0 -12 Td
+(- Day 96 blocker classification: NONE) Tj
+0 -12 Td
+(- Started from commit: c208e70939a3591f7983aae6f42f1368bfb6ca5c) Tj
+0 -12 Td
+(- Closed at: 2026-05-12T06:12:17Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a canonical Bridge approval proof replay packet that exercises the owner approval lifecycl) Tj
+0 -12 Td
+(e in an isolated in-memory harness: pending, approve, deny, expired, execute projection, failed ) Tj
+0 -12 Td
+(run, completed run, and audit projection.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Added a protected read-only API route for the proof packet. The route does not create production) Tj
+0 -12 Td
+( approval requests, approve or deny real requests, dispatch Run Now, execute systemctl, trigger ) Tj
+0 -12 Td
+(connector writes, or call external tools.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- src/lib/bridge-approval-proof-packet.ts) Tj
+0 -12 Td
+(- src/lib/bridge-approval-proof-packet.test.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/approval-proof-packet/route.ts) Tj
+0 -12 Td
+(- src/app/api/bridge/approval-proof-packet/route.test.ts) Tj
+0 -12 Td
+(- scripts/protected-route-smoke-contract.mjs) Tj
+0 -12 Td
+(- scripts/authenticated-route-smoke-contract.mjs) Tj
+0 -12 Td
+(- src/app/gateway/status/page.tsx) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay.md) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay.pdf) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/inventory.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/inventory.pdf) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/bridge-approval-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/standalone-runtime-proof.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added: /api/bridge/approval-proof-packet) Tj
+0 -12 Td
+(- Updated protected route-smoke inventory to include /api/bridge/approval-proof-packet) Tj
+0 -12 Td
+(- Updated authenticated route-smoke inventory to include /api/bridge/approval-proof-packet) Tj
+0 -12 Td
+(- Updated Gateway Status with a read-only Bridge Proof route link and Bridge Approval Proof Repl) Tj
+0 -12 Td
+(ay summary) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Gateway Status now exposes a Bridge Approval Proof Replay card. It states:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- proof route: /api/bridge/approval-proof-packet) Tj
+0 -12 Td
+(- lifecycle: pending, approve, deny, expired, execute, failed, complete, audit) Tj
+0 -12 Td
+(- execution: disabled outside exact scoped dispatch) Tj
+0 -12 Td
+(- writes: disabled) Tj
+0 -12 Td
+(- Run Now target: opencloud-docs-farmer.service only) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No approved designer mock HTML/CSS/class names were changed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3445 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(Final proof packet:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Artifact: runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.json) Tj
+0 -12 Td
+(- ok: true) Tj
+0 -12 Td
+(- stages_total: 8) Tj
+0 -12 Td
+(- consistency_ok: true) Tj
+0 -12 Td
+(- consistency_issues: []) Tj
+0 -12 Td
+(- no_execution_enabled: true) Tj
+0 -12 Td
+(- no_connector_writes_enabled: true) Tj
+0 -12 Td
+(- no_external_writes_enabled: true) Tj
+0 -12 Td
+(- no_fake_approval_requests: true) Tj
+0 -12 Td
+(- secrets_exposed: false) Tj
+0 -12 Td
+(- raw_paths_exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Bridge replay matrix:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(| Stage | Approval State | Decision | Run State | Blocker |) Tj
+0 -12 Td
+(| --- | --- | --- | --- | --- |) Tj
+0 -12 Td
+(| pending | pending | none | none | none |) Tj
+0 -12 Td
+(| approve | approved | approved | none | none |) Tj
+0 -12 Td
+(| deny | denied | denied | none | none |) Tj
+0 -12 Td
+(| expired | expired | expired | none | approval_request_expired |) Tj
+0 -12 Td
+(| execute | approved | approved | none | exact_scoped_dispatch_route_required |) Tj
+0 -12 Td
+(| failed | approved | none | failed | simulated_service_failure |) Tj
+0 -12 Td
+(| complete | approved | none | completed | none |) Tj
+0 -12 Td
+(| audit | approved | none | completed | none |) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- git diff --check: PASS) Tj
+0 -12 Td
+(- .env diff check: PASS) Tj
+0 -12 Td
+(- pnpm run typecheck: PASS) Tj
+0 -12 Td
+(- pnpm run build: PASS) Tj
+0 -12 Td
+(- pnpm test: PASS, 209 files / 1517 tests) Tj
+0 -12 Td
+(- Focused Bridge approval proof tests: PASS, 12 files / 46 tests) Tj
+0 -12 Td
+(- Artifact generator smoke: PASS, 1 file / 1 test, removed before staging) Tj
+0 -12 Td
+(- Protected route smoke: PASS, 45 routes / 0 failures) Tj
+0 -12 Td
+(- Authenticated route smoke: OWNER_GATED, no owner session present) Tj
+0 -12 Td
+(- Bridge approval route auth proof: PASS, 7 protected Bridge routes require auth without credent) Tj
+0 -12 Td
+(ials) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Secret scan: PASS) Tj
+0 -12 Td
+(- Raw exposure scan: PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No production deploy or persistent restart was performed. A localhost-only standalone runtime wa) Tj
+0 -12 Td
+(s started on 127.0.0.1:3350 for route/proof smokes and then stopped by the cleanup trap. The bui) Tj
+0 -12 Td
+(ld output includes /api/bridge/approval-proof-packet.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifact) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/bridge-approval-route-auth-proof.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/protected-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/authenticated-route-smoke.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/secret-scan.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/raw-exposure-scan.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/protected-file-invariants.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/standalone-runtime-proof.json) Tj
+0 -12 Td
+(- runtime/day-96-bridge-approval-proof-replay/inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 831 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(No Day 96 developer-side blocker remains. Authenticated owner visual smoke remains OWNER_GATED b) Tj
+0 -12 Td
+(ecause no owner browser session/cookie was provided, but unauthenticated protection and read-onl) Tj
+0 -12 Td
+(y proof paths are proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Exact Day 96 blocker classification: NONE.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(git revert <day-96-bridge-approval-proof-replay-commit>) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit hash: pending at report creation) Tj
+0 -12 Td
+(- Push result: pending at report creation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 97 - Production Deploy Final starts automatically after this Day 96 commit and push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000004015 00000 n 
+0000004141 00000 n 
+0000007638 00000 n 
+0000007764 00000 n 
+0000008646 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8716
+%%EOF

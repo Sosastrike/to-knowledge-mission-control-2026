@@ -1,0 +1,356 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2998 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "day": 96,) Tj
+0 -12 Td
+(  "lane": "Bridge Approval Proof Replay",) Tj
+0 -12 Td
+(  "started_from_commit": "c208e70939a3591f7983aae6f42f1368bfb6ca5c",) Tj
+0 -12 Td
+(  "generated_at": "2026-05-12T06:09:00Z",) Tj
+0 -12 Td
+(  "safety": {) Tj
+0 -12 Td
+(    "env_changed": false,) Tj
+0 -12 Td
+(    "secrets_exposed": false,) Tj
+0 -12 Td
+(    "auth_weakened": false,) Tj
+0 -12 Td
+(    "external_writes_executed": false,) Tj
+0 -12 Td
+(    "zapier_writes_executed": false,) Tj
+0 -12 Td
+(    "heygen_generation_executed": false,) Tj
+0 -12 Td
+(    "smb_enabled": false,) Tj
+0 -12 Td
+(    "fork_2_enabled": false) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "source_files_inventory": [) Tj
+0 -12 Td
+(    "src/lib/bridge-approval-proof-packet.ts",) Tj
+0 -12 Td
+(    "src/lib/bridge-approval-proof-packet.test.ts",) Tj
+0 -12 Td
+(    "src/app/api/bridge/approval-proof-packet/route.ts",) Tj
+0 -12 Td
+(    "src/app/api/bridge/approval-proof-packet/route.test.ts",) Tj
+0 -12 Td
+(    "scripts/protected-route-smoke-contract.mjs",) Tj
+0 -12 Td
+(    "scripts/authenticated-route-smoke-contract.mjs",) Tj
+0 -12 Td
+(    "src/app/gateway/status/page.tsx") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "routes_inventory": [) Tj
+0 -12 Td
+(    "/api/bridge/approval-proof-packet",) Tj
+0 -12 Td
+(    "/api/bridge/approval-requests",) Tj
+0 -12 Td
+(    "/api/bridge/approval-requests/[id]/approve",) Tj
+0 -12 Td
+(    "/api/bridge/approval-requests/[id]/deny",) Tj
+0 -12 Td
+(    "/api/bridge/approval-requests/audit-report",) Tj
+0 -12 Td
+(    "/api/bridge/tool-action-approval",) Tj
+0 -12 Td
+(    "/gateway/status") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "proof_packet": {) Tj
+0 -12 Td
+(    "artifact": "runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.) Tj
+0 -12 Td
+(json",) Tj
+0 -12 Td
+(    "ok": true,) Tj
+0 -12 Td
+(    "stages_total": 8,) Tj
+0 -12 Td
+(    "stages": [) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "pending",) Tj
+0 -12 Td
+(        "approval_state": "pending",) Tj
+0 -12 Td
+(        "decision": null,) Tj
+0 -12 Td
+(        "run_state": null,) Tj
+0 -12 Td
+(        "accepted_for_execution": false,) Tj
+0 -12 Td
+(        "blocked_reason": null,) Tj
+0 -12 Td
+(        "audit_event_id": null,) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "approve",) Tj
+0 -12 Td
+(        "approval_state": "approved",) Tj
+0 -12 Td
+(        "decision": "approved",) Tj
+0 -12 Td
+(        "run_state": null,) Tj
+0 -12 Td
+(        "accepted_for_execution": false,) Tj
+0 -12 Td
+(        "blocked_reason": null,) Tj
+0 -12 Td
+(        "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3025 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "deny",) Tj
+0 -12 Td
+(        "approval_state": "denied",) Tj
+0 -12 Td
+(        "decision": "denied",) Tj
+0 -12 Td
+(        "run_state": null,) Tj
+0 -12 Td
+(        "accepted_for_execution": false,) Tj
+0 -12 Td
+(        "blocked_reason": null,) Tj
+0 -12 Td
+(        "audit_event_id": "audit_adcdbcfe-4d8e-4f46-a4d8-c559956ef0f0",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "expired",) Tj
+0 -12 Td
+(        "approval_state": "expired",) Tj
+0 -12 Td
+(        "decision": "expired",) Tj
+0 -12 Td
+(        "run_state": null,) Tj
+0 -12 Td
+(        "accepted_for_execution": false,) Tj
+0 -12 Td
+(        "blocked_reason": "approval_request_expired",) Tj
+0 -12 Td
+(        "audit_event_id": "audit_6c82cff3-b415-43cb-8fa0-321c8778d0e8",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "execute",) Tj
+0 -12 Td
+(        "approval_state": "approved",) Tj
+0 -12 Td
+(        "decision": "approved",) Tj
+0 -12 Td
+(        "run_state": null,) Tj
+0 -12 Td
+(        "accepted_for_execution": false,) Tj
+0 -12 Td
+(        "blocked_reason": "exact_scoped_dispatch_route_required",) Tj
+0 -12 Td
+(        "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "failed",) Tj
+0 -12 Td
+(        "approval_state": "approved",) Tj
+0 -12 Td
+(        "decision": null,) Tj
+0 -12 Td
+(        "run_state": "failed",) Tj
+0 -12 Td
+(        "accepted_for_execution": true,) Tj
+0 -12 Td
+(        "blocked_reason": "simulated_service_failure",) Tj
+0 -12 Td
+(        "audit_event_id": "audit_apr_day96_failed_failed",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "complete",) Tj
+0 -12 Td
+(        "approval_state": "approved",) Tj
+0 -12 Td
+(        "decision": null,) Tj
+0 -12 Td
+(        "run_state": "completed",) Tj
+0 -12 Td
+(        "accepted_for_execution": true,) Tj
+0 -12 Td
+(        "blocked_reason": null,) Tj
+0 -12 Td
+(        "audit_event_id": "audit_apr_day96_completed_completed",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      },) Tj
+0 -12 Td
+(      {) Tj
+0 -12 Td
+(        "stage": "audit",) Tj
+0 -12 Td
+(        "approval_state": "approved",) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 948 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(        "decision": null,) Tj
+0 -12 Td
+(        "run_state": "completed",) Tj
+0 -12 Td
+(        "accepted_for_execution": true,) Tj
+0 -12 Td
+(        "blocked_reason": null,) Tj
+0 -12 Td
+(        "audit_event_id": "audit_apr_day96_completed_completed",) Tj
+0 -12 Td
+(        "execution_enabled": false,) Tj
+0 -12 Td
+(        "writes_enabled": false,) Tj
+0 -12 Td
+(        "external_writes_enabled": false) Tj
+0 -12 Td
+(      }) Tj
+0 -12 Td
+(    ],) Tj
+0 -12 Td
+(    "consistency_ok": true,) Tj
+0 -12 Td
+(    "consistency_issues": [],) Tj
+0 -12 Td
+(    "safe_log_pointer": "/api/bridge/approval-requests/audit-report") Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "blocker_classification": "NONE",) Tj
+0 -12 Td
+(  "remaining_blocker": null,) Tj
+0 -12 Td
+(  "rollback_command": "git revert <day-96-bridge-approval-proof-replay-commit>",) Tj
+0 -12 Td
+(  "next_day": "Day 97 - Production Deploy Final") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003303 00000 n 
+0000003429 00000 n 
+0000006506 00000 n 
+0000006632 00000 n 
+0000007631 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7701
+%%EOF

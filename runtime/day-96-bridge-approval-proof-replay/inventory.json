@@ -1,0 +1,144 @@
+{
+  "day": 96,
+  "lane": "Bridge Approval Proof Replay",
+  "started_from_commit": "c208e70939a3591f7983aae6f42f1368bfb6ca5c",
+  "generated_at": "2026-05-12T06:09:00Z",
+  "safety": {
+    "env_changed": false,
+    "secrets_exposed": false,
+    "auth_weakened": false,
+    "external_writes_executed": false,
+    "zapier_writes_executed": false,
+    "heygen_generation_executed": false,
+    "smb_enabled": false,
+    "fork_2_enabled": false
+  },
+  "source_files_inventory": [
+    "src/lib/bridge-approval-proof-packet.ts",
+    "src/lib/bridge-approval-proof-packet.test.ts",
+    "src/app/api/bridge/approval-proof-packet/route.ts",
+    "src/app/api/bridge/approval-proof-packet/route.test.ts",
+    "scripts/protected-route-smoke-contract.mjs",
+    "scripts/authenticated-route-smoke-contract.mjs",
+    "src/app/gateway/status/page.tsx"
+  ],
+  "routes_inventory": [
+    "/api/bridge/approval-proof-packet",
+    "/api/bridge/approval-requests",
+    "/api/bridge/approval-requests/[id]/approve",
+    "/api/bridge/approval-requests/[id]/deny",
+    "/api/bridge/approval-requests/audit-report",
+    "/api/bridge/tool-action-approval",
+    "/gateway/status"
+  ],
+  "proof_packet": {
+    "artifact": "runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.json",
+    "ok": true,
+    "stages_total": 8,
+    "stages": [
+      {
+        "stage": "pending",
+        "approval_state": "pending",
+        "decision": null,
+        "run_state": null,
+        "accepted_for_execution": false,
+        "blocked_reason": null,
+        "audit_event_id": null,
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "approve",
+        "approval_state": "approved",
+        "decision": "approved",
+        "run_state": null,
+        "accepted_for_execution": false,
+        "blocked_reason": null,
+        "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "deny",
+        "approval_state": "denied",
+        "decision": "denied",
+        "run_state": null,
+        "accepted_for_execution": false,
+        "blocked_reason": null,
+        "audit_event_id": "audit_adcdbcfe-4d8e-4f46-a4d8-c559956ef0f0",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "expired",
+        "approval_state": "expired",
+        "decision": "expired",
+        "run_state": null,
+        "accepted_for_execution": false,
+        "blocked_reason": "approval_request_expired",
+        "audit_event_id": "audit_6c82cff3-b415-43cb-8fa0-321c8778d0e8",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "execute",
+        "approval_state": "approved",
+        "decision": "approved",
+        "run_state": null,
+        "accepted_for_execution": false,
+        "blocked_reason": "exact_scoped_dispatch_route_required",
+        "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "failed",
+        "approval_state": "approved",
+        "decision": null,
+        "run_state": "failed",
+        "accepted_for_execution": true,
+        "blocked_reason": "simulated_service_failure",
+        "audit_event_id": "audit_apr_day96_failed_failed",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "complete",
+        "approval_state": "approved",
+        "decision": null,
+        "run_state": "completed",
+        "accepted_for_execution": true,
+        "blocked_reason": null,
+        "audit_event_id": "audit_apr_day96_completed_completed",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      },
+      {
+        "stage": "audit",
+        "approval_state": "approved",
+        "decision": null,
+        "run_state": "completed",
+        "accepted_for_execution": true,
+        "blocked_reason": null,
+        "audit_event_id": "audit_apr_day96_completed_completed",
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false
+      }
+    ],
+    "consistency_ok": true,
+    "consistency_issues": [],
+    "safe_log_pointer": "/api/bridge/approval-requests/audit-report"
+  },
+  "blocker_classification": "NONE",
+  "remaining_blocker": null,
+  "rollback_command": "git revert <day-96-bridge-approval-proof-replay-commit>",
+  "next_day": "Day 97 - Production Deploy Final"
+}

@@ -26,6 +26,7 @@ export const AUTHENTICATED_API_ROUTES = [
   { path: '/api/gateway/agent-hub/status', label: 'Agent Hub status' },
   { path: '/api/gateway/navigation?route=/gateway/agent-hub', label: 'Gateway navigation metadata' },
   { path: '/api/bridge/approval-requests', label: 'Bridge approval requests' },
+  { path: '/api/bridge/approval-proof-packet', label: 'Bridge approval proof replay packet' },
   { path: '/api/bridge/connector-readiness', label: 'Connector readiness' },
   { path: '/api/bridge/connector-proof-packet', label: 'Connector proof replay packet' },
   { path: '/api/bridge/agent-zero/status', label: 'Agent Zero status' },

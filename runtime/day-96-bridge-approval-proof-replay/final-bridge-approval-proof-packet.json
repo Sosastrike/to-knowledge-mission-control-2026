@@ -1,0 +1,491 @@
+{
+  "ok": true,
+  "mode": "bridge_approval_proof_replay_packet",
+  "generated_at": "2026-05-12T06:08:30.447Z",
+  "runtime_commit": "c208e70939a3591f7983aae6f42f1368bfb6ca5c",
+  "stages_total": 8,
+  "stage_packets": [
+    {
+      "stage": "pending",
+      "result": "PASS",
+      "approval_id": "apr_day96_pending",
+      "approval_state": "pending",
+      "decision": null,
+      "run_state": null,
+      "audit_outcome": null,
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": null,
+      "audit_event_id": null,
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "51f4c24e10888d4fbbf7a1c0db850f60ff029024d311261534a8d616e1791ad2"
+        },
+        "lifecycle": {
+          "approval_state": "pending",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": null,
+          "approved_at": null,
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": null,
+          "run_id": null,
+          "run_state": null,
+          "result": null,
+          "error": null,
+          "started_at": null,
+          "completed_at": null,
+          "audit_event_id": null
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "approve",
+      "result": "PASS",
+      "approval_id": "apr_day96_approve",
+      "approval_state": "approved",
+      "decision": "approved",
+      "run_state": null,
+      "audit_outcome": "approved",
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": null,
+      "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "3f201c61eb5cee2a24e8d534e384719496db8842b11c27d19e3bc383d2b6d477"
+        },
+        "lifecycle": {
+          "approval_state": "approved",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:02:00.000Z",
+          "approved_at": "2026-05-12T00:02:00.000Z",
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "owner",
+          "run_id": null,
+          "run_state": null,
+          "result": null,
+          "error": null,
+          "started_at": null,
+          "completed_at": null,
+          "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "deny",
+      "result": "PASS",
+      "approval_id": "apr_day96_deny",
+      "approval_state": "denied",
+      "decision": "denied",
+      "run_state": null,
+      "audit_outcome": "denied",
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": null,
+      "audit_event_id": "audit_adcdbcfe-4d8e-4f46-a4d8-c559956ef0f0",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "4c27edb7e6e52cd021d553e7cf0b8c9f998eebad554f46828e6768b8b98e9c8a"
+        },
+        "lifecycle": {
+          "approval_state": "denied",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:02:00.000Z",
+          "approved_at": null,
+          "denied_at": "2026-05-12T00:02:00.000Z",
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "owner",
+          "run_id": null,
+          "run_state": null,
+          "result": null,
+          "error": null,
+          "started_at": null,
+          "completed_at": null,
+          "audit_event_id": "audit_adcdbcfe-4d8e-4f46-a4d8-c559956ef0f0"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "expired",
+      "result": "PASS",
+      "approval_id": "apr_day96_expired",
+      "approval_state": "expired",
+      "decision": "expired",
+      "run_state": null,
+      "audit_outcome": "expired",
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": "approval_request_expired",
+      "audit_event_id": "audit_6c82cff3-b415-43cb-8fa0-321c8778d0e8",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "b1b1406c3e8c4a30d7a7c54f89fd0b771f741e3f304d8d1ea08bb11dec2b36c6"
+        },
+        "lifecycle": {
+          "approval_state": "expired",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": "2026-05-12T00:01:00.000Z",
+          "resolved_at": "2026-05-12T00:02:00.000Z",
+          "approved_at": null,
+          "denied_at": null,
+          "expired_at": "2026-05-12T00:02:00.000Z"
+        },
+        "execution": {
+          "accepted_for_execution": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "owner",
+          "run_id": null,
+          "run_state": null,
+          "result": null,
+          "error": null,
+          "started_at": null,
+          "completed_at": null,
+          "audit_event_id": "audit_6c82cff3-b415-43cb-8fa0-321c8778d0e8"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "execute",
+      "result": "PASS",
+      "approval_id": "apr_day96_approve",
+      "approval_state": "approved",
+      "decision": "approved",
+      "run_state": null,
+      "audit_outcome": "approved",
+      "accepted_for_execution": false,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": "exact_scoped_dispatch_route_required",
+      "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "3f201c61eb5cee2a24e8d534e384719496db8842b11c27d19e3bc383d2b6d477"
+        },
+        "lifecycle": {
+          "approval_state": "approved",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:02:00.000Z",
+          "approved_at": "2026-05-12T00:02:00.000Z",
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "owner",
+          "run_id": null,
+          "run_state": null,
+          "result": null,
+          "error": null,
+          "started_at": null,
+          "completed_at": null,
+          "audit_event_id": "audit_34ca41f0-5f12-483e-8f61-c2477b1bb418"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "failed",
+      "result": "PASS",
+      "approval_id": "apr_day96_failed",
+      "approval_state": "approved",
+      "decision": null,
+      "run_state": "failed",
+      "audit_outcome": "failed",
+      "accepted_for_execution": true,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": "simulated_service_failure",
+      "audit_event_id": "audit_apr_day96_failed_failed",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "70608c727642a0921b4a0ea2ba6e9cb9f7eb7b15e2c3e2e8913bac0e3b8d2900"
+        },
+        "lifecycle": {
+          "approval_state": "approved",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:03:00.000Z",
+          "approved_at": "2026-05-12T00:03:00.000Z",
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": true,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "systemctl --user",
+          "run_id": "run_apr_day96_failed",
+          "run_state": "failed",
+          "result": "failed",
+          "error": "simulated_service_failure",
+          "started_at": "2026-05-12T00:04:00.000Z",
+          "completed_at": "2026-05-12T00:04:02.000Z",
+          "audit_event_id": "audit_apr_day96_failed_failed"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "complete",
+      "result": "PASS",
+      "approval_id": "apr_day96_completed",
+      "approval_state": "approved",
+      "decision": null,
+      "run_state": "completed",
+      "audit_outcome": "completed",
+      "accepted_for_execution": true,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": null,
+      "audit_event_id": "audit_apr_day96_completed_completed",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "3813a9642cb7e3e01429e44d8499d35bd2a565267456b5fe844f9cd94570fa14"
+        },
+        "lifecycle": {
+          "approval_state": "approved",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:03:00.000Z",
+          "approved_at": "2026-05-12T00:03:00.000Z",
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": true,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "systemctl --user",
+          "run_id": "run_apr_day96_completed",
+          "run_state": "completed",
+          "result": "opencloud-docs-farmer.service dispatch completed in replay harness",
+          "error": null,
+          "started_at": "2026-05-12T00:04:00.000Z",
+          "completed_at": "2026-05-12T00:04:02.000Z",
+          "audit_event_id": "audit_apr_day96_completed_completed"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    },
+    {
+      "stage": "audit",
+      "result": "PASS",
+      "approval_id": "apr_day96_completed",
+      "approval_state": "approved",
+      "decision": null,
+      "run_state": "completed",
+      "audit_outcome": "completed",
+      "accepted_for_execution": true,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "blocked_reason": null,
+      "audit_event_id": "audit_apr_day96_completed_completed",
+      "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+      "proof": {
+        "scope": {
+          "connector": "skill.build_wiki",
+          "action": "buildwiki.run_now",
+          "target": "opencloud-docs-farmer.service",
+          "target_key": "opencloud-docs-farmer.service",
+          "protected_category": "tooling",
+          "risk_level": "medium",
+          "approval_scope": {
+            "scope": "buildwiki.run_now",
+            "service": "opencloud-docs-farmer.service",
+            "bridge_session_required": true
+          },
+          "scope_hash": "3813a9642cb7e3e01429e44d8499d35bd2a565267456b5fe844f9cd94570fa14"
+        },
+        "lifecycle": {
+          "approval_state": "approved",
+          "requested_at": "2026-05-12T00:00:00.000Z",
+          "created_at": "2026-05-12T00:00:00.000Z",
+          "expires_at": null,
+          "resolved_at": "2026-05-12T00:03:00.000Z",
+          "approved_at": "2026-05-12T00:03:00.000Z",
+          "denied_at": null,
+          "expired_at": null
+        },
+        "execution": {
+          "accepted_for_execution": true,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "executor": "systemctl --user",
+          "run_id": "run_apr_day96_completed",
+          "run_state": "completed",
+          "result": "opencloud-docs-farmer.service dispatch completed in replay harness",
+          "error": null,
+          "started_at": "2026-05-12T00:04:00.000Z",
+          "completed_at": "2026-05-12T00:04:02.000Z",
+          "audit_event_id": "audit_apr_day96_completed_completed"
+        },
+        "rollback": {
+          "available": true,
+          "ref": "systemctl --user stop opencloud-docs-farmer.service"
+        }
+      }
+    }
+  ],
+  "no_execution_enabled": true,
+  "no_connector_writes_enabled": true,
+  "no_external_writes_enabled": true,
+  "no_fake_approval_requests": true,
+  "secrets_exposed": false,
+  "raw_paths_exposed": false,
+  "consistency_ok": true,
+  "consistency_issues": [],
+  "safe_log_pointer": "/api/bridge/approval-requests/audit-report",
+  "rollback_command": "git revert <day-96-bridge-approval-proof-replay-commit>"
+}

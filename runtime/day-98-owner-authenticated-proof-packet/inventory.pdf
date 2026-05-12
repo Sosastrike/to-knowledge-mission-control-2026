@@ -1,0 +1,118 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1925 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "ok": true,) Tj
+0 -12 Td
+(  "checked_at": "2026-05-12T06:42:29.662Z",) Tj
+0 -12 Td
+(  "day": 98,) Tj
+0 -12 Td
+(  "lane": "OWNER AUTHENTICATED PROOF PACKET",) Tj
+0 -12 Td
+(  "started_from_commit": "80c1462d14169de49187a35141cbe22fbc18e58d",) Tj
+0 -12 Td
+(  "branch": "to-knowledge-mc",) Tj
+0 -12 Td
+(  "no_env_changes_confirmed": true,) Tj
+0 -12 Td
+(  "no_secret_values_printed": true,) Tj
+0 -12 Td
+(  "scope": [) Tj
+0 -12 Td
+(    "/login",) Tj
+0 -12 Td
+(    "/gateway",) Tj
+0 -12 Td
+(    "/gateway/status",) Tj
+0 -12 Td
+(    "/design/gateway/Agent Hub.html",) Tj
+0 -12 Td
+(    "/design/gateway/Paperclip.html",) Tj
+0 -12 Td
+(    "/api/gateway/status",) Tj
+0 -12 Td
+(    "/api/gateway/agent-hub/status",) Tj
+0 -12 Td
+(    "/api/bridge/connector-proof-packet",) Tj
+0 -12 Td
+(    "/api/bridge/approval-proof-packet") Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "capture_model": "Capture unauthenticated protection and static designer proof locally. Owner-) Tj
+0 -12 Td
+(authenticated screenshots/video remain OWNER_GATED until a safe owner browser session is availab) Tj
+0 -12 Td
+(le.",) Tj
+0 -12 Td
+(  "current_runtime": {) Tj
+0 -12 Td
+(    "base_url": "http://127.0.0.1:3337",) Tj
+0 -12 Td
+(    "local_only": true) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "blocker_class": "OWNER_GATED",) Tj
+0 -12 Td
+(  "blockers": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "kind": "OWNER_GATED",) Tj
+0 -12 Td
+(      "detail": "No owner-authenticated browser session/cookie is available for authenticated sc) Tj
+0 -12 Td
+(reenshots/video.") Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "rollback": "rm -rf runtime/day-98-owner-authenticated-proof-packet && git checkout -- runtime) Tj
+0 -12 Td
+(/day-98-owner-authenticated-proof-packet.md runtime/day-98-owner-authenticated-proof-packet.pdf ) Tj
+0 -12 Td
+(2>/dev/null || true") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002218 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2288
+%%EOF

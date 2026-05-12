@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:42:29.662Z",
+  "day": 98,
+  "lane": "OWNER AUTHENTICATED PROOF PACKET",
+  "started_from_commit": "80c1462d14169de49187a35141cbe22fbc18e58d",
+  "branch": "to-knowledge-mc",
+  "no_env_changes_confirmed": true,
+  "no_secret_values_printed": true,
+  "scope": [
+    "/login",
+    "/gateway",
+    "/gateway/status",
+    "/design/gateway/Agent Hub.html",
+    "/design/gateway/Paperclip.html",
+    "/api/gateway/status",
+    "/api/gateway/agent-hub/status",
+    "/api/bridge/connector-proof-packet",
+    "/api/bridge/approval-proof-packet"
+  ],
+  "capture_model": "Capture unauthenticated protection and static designer proof locally. Owner-authenticated screenshots/video remain OWNER_GATED until a safe owner browser session is available.",
+  "current_runtime": {
+    "base_url": "http://127.0.0.1:3337",
+    "local_only": true
+  },
+  "blocker_class": "OWNER_GATED",
+  "blockers": [
+    {
+      "kind": "OWNER_GATED",
+      "detail": "No owner-authenticated browser session/cookie is available for authenticated screenshots/video."
+    }
+  ],
+  "rollback": "rm -rf runtime/day-98-owner-authenticated-proof-packet && git checkout -- runtime/day-98-owner-authenticated-proof-packet.md runtime/day-98-owner-authenticated-proof-packet.pdf 2>/dev/null || true"
+}

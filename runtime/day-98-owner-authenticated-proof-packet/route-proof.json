@@ -1,0 +1,76 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T06:46:52.280Z",
+  "base_url": "http://127.0.0.1:3337",
+  "mode": "day98_owner_auth_route_protection_probe",
+  "owner_session_available": false,
+  "blocker_class": "OWNER_GATED",
+  "probes": [
+    {
+      "route": "/login",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "location": null,
+      "protected": false
+    },
+    {
+      "route": "/gateway",
+      "status": 307,
+      "content_type": null,
+      "location": "/login",
+      "protected": true
+    },
+    {
+      "route": "/gateway/status",
+      "status": 307,
+      "content_type": null,
+      "location": "/login",
+      "protected": true
+    },
+    {
+      "route": "/design/gateway/Agent%20Hub.html",
+      "status": 307,
+      "content_type": null,
+      "location": "/login",
+      "protected": true
+    },
+    {
+      "route": "/design/gateway/Paperclip.html",
+      "status": 307,
+      "content_type": null,
+      "location": "/login",
+      "protected": true
+    },
+    {
+      "route": "/api/gateway/status",
+      "status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "protected": true
+    },
+    {
+      "route": "/api/gateway/agent-hub/status",
+      "status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "protected": true
+    },
+    {
+      "route": "/api/bridge/connector-proof-packet",
+      "status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "protected": true
+    },
+    {
+      "route": "/api/bridge/approval-proof-packet",
+      "status": 401,
+      "content_type": "application/json",
+      "location": null,
+      "protected": true
+    }
+  ],
+  "no_public_exposure_added": true,
+  "secrets_printed": false,
+  "rollback": "rm runtime/day-98-owner-authenticated-proof-packet/route-proof.json"
+}

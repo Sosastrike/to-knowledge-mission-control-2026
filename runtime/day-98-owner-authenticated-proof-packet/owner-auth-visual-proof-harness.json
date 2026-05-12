@@ -1,0 +1,89 @@
+{
+  "schema": "authenticated_visual_proof_v1",
+  "generated_at": "2026-05-12T06:45:42.695Z",
+  "base_origin": "http://127.0.0.1:3337",
+  "routes": [
+    "/tkmc",
+    "/gateway",
+    "/gateway/status",
+    "/design/gateway/Agent Hub.html",
+    "/design/gateway/Paperclip.html",
+    "/api/gateway/status",
+    "/api/gateway/agent-hub/status",
+    "/api/bridge/connector-proof-packet",
+    "/api/bridge/approval-proof-packet"
+  ],
+  "cookie_name": "mc-session",
+  "cookie_value_stored": false,
+  "session_kind": "none",
+  "owner_session_available": false,
+  "owner_visual_proof_claimed": false,
+  "blocker_class": "OWNER_GATED",
+  "blocker": "owner_authenticated_browser_session_required",
+  "capture_mode": "owner-session-required",
+  "screenshots": [],
+  "authenticated_results": [],
+  "unauthenticated_probes": [
+    {
+      "route": "/tkmc",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/gateway/status",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/design/gateway/Agent Hub.html",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/design/gateway/Paperclip.html",
+      "status": 307,
+      "protected": true,
+      "location": "/login"
+    },
+    {
+      "route": "/api/gateway/status",
+      "status": 401,
+      "protected": true,
+      "location": null
+    },
+    {
+      "route": "/api/gateway/agent-hub/status",
+      "status": 401,
+      "protected": true,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/connector-proof-packet",
+      "status": 401,
+      "protected": true,
+      "location": null
+    },
+    {
+      "route": "/api/bridge/approval-proof-packet",
+      "status": 401,
+      "protected": true,
+      "location": null
+    }
+  ],
+  "safety": {
+    "no_secret_values_written": true,
+    "no_env_changes": true,
+    "no_public_exposure_added": true,
+    "raw_path_scan": "passed",
+    "secret_shape_scan": "passed"
+  }
+}

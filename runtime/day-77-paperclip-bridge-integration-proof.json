@@ -1,0 +1,44 @@
+{
+  "lane": "Day 77 - Paperclip + Bridge integration",
+  "timestamp": "2026-05-12T01:56:26.423Z",
+  "runtime_commit": "ecaf484",
+  "auth_method": "local_process_api_key_not_written_to_env_file",
+  "route_or_service_checked": "/api/bridge/paperclip/tasks",
+  "status_probe": {
+    "route": "/api/bridge/paperclip/status",
+    "http_status": 200,
+    "ok": true,
+    "mode": "paperclip_status_read_only",
+    "status": null,
+    "blocker": "paperclip_sandbox_service_not_running"
+  },
+  "task_probe": {
+    "route": "/api/bridge/paperclip/tasks",
+    "http_status": 409,
+    "mode": "paperclip_gateway_task_handoff",
+    "owner_approval_required": true,
+    "bridge_session_required": true,
+    "approval_request_created": true,
+    "approval_request_reused": false,
+    "approval_id_present": true,
+    "approval_state": "pending",
+    "audit_event_id_present": true,
+    "approval_blocked_reason": null,
+    "accepted_for_execution": false,
+    "request_dispatched": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "protected_actions_enabled": false,
+    "next_action": "Owner must approve this exact request before protected execution can proceed."
+  },
+  "assertions": {
+    "bridge_gated": true,
+    "fresh_approval_and_audit_created_or_exact_blocker": true,
+    "no_paperclip_execution_or_write": true,
+    "no_secret_or_raw_path_in_captured_payload": true
+  },
+  "result": "PASS",
+  "blocker_class": "NONE",
+  "service_blocker_observed": "paperclip_sandbox_service_not_running",
+  "rollback_command": "git revert <day-77-paperclip-bridge-commit>"
+}

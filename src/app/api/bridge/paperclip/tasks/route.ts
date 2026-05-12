@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
+import { createBridgeApprovalRequest } from '@/lib/bridge-approval-request-store'
 import { buildPaperclipGatewayTaskPayload } from '@/lib/paperclip-bridge'
 
 export const runtime = 'nodejs'
@@ -57,7 +58,51 @@ export async function POST(request: NextRequest) {
     bridgeSessionActive: false,
   })
 
-  return NextResponse.json(payload, {
+  const approval = payload.policy_result === 'requires_session' && payload.requester === 'agent_zero' && payload.assignee !== 'blocked'
+    ? createBridgeApprovalRequest({
+      requester: {
+        userId: Number.isInteger(auth.user.id) ? auth.user.id : null,
+        username: auth.user.username || auth.user.display_name || 'mission-control',
+        workspaceId: auth.user.workspace_id || 1,
+        tenantId: auth.user.tenant_id || 1,
+      },
+      connector: 'paperclip',
+      action: 'paperclip.task.create',
+      target: payload.assignee,
+      targetKey: `paperclip.task.create:${payload.assignee}`,
+      riskLevel: 'medium',
+      protectedCategory: 'agent_execution',
+      approvalScope: {
+        route: '/api/bridge/paperclip/tasks',
+        requester: payload.requester,
+        assignee: payload.assignee,
+        title: payload.task_issue.title,
+        requested_action: payload.requested_action,
+        bridge_session_required: true,
+        write_adapter_configured: false,
+        direct_paperclip_access_allowed: false,
+      },
+      reason: `Paperclip task creation for ${payload.assignee} requires owner approval and an active Bridge Session before any Paperclip write.`,
+      rollbackAvailable: false,
+      rollbackRef: null,
+      idempotencyKey: `paperclip.task.create:${auth.user.workspace_id || 1}:${auth.user.tenant_id || 1}:${payload.assignee}:${payload.task_issue.title}`,
+    })
+    : null
+
+  return NextResponse.json({
+    ...payload,
+    owner_approval_required: true,
+    bridge_session_required: true,
+    approval_request_created: approval?.approval_request_created ?? false,
+    approval_request_reused: approval?.approval_request_reused ?? false,
+    approval_id: approval?.approval_request_id || null,
+    approval_state: approval?.approval_state || null,
+    audit_event_id: approval?.audit_event_id || null,
+    approval_blocked_reason: approval?.blocked_reason || null,
+    accepted_for_execution: false,
+    request_dispatched: false,
+    next_action: approval?.next_action || payload.response_text,
+  }, {
     status: payload.policy_result === 'requires_session' ? 409 : 503,
     headers: { 'Cache-Control': 'no-store' },
   })

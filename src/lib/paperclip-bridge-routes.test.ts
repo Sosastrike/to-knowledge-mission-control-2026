@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   buildPaperclipSpaceAgentResearchTaskPayload: vi.fn(),
   buildPaperclipTestTaskPayload: vi.fn(),
   buildPaperclipGatewayWorkforceFlowPayload: vi.fn(),
+  createBridgeApprovalRequest: vi.fn(),
 }))
 
 vi.mock('@/lib/auth', () => ({
@@ -32,6 +33,9 @@ vi.mock('@/lib/paperclip-bridge', () => ({
   buildPaperclipGatewayWorkforceFlowPayload: mocks.buildPaperclipGatewayWorkforceFlowPayload,
 }))
 
+vi.mock('@/lib/bridge-approval-request-store', () => ({
+  createBridgeApprovalRequest: mocks.createBridgeApprovalRequest,
+}))
 
 const safeFlags = {
   execution_enabled: false,
@@ -69,7 +73,27 @@ function expectOwnerSafe(payload: unknown) {
 }
 
 function configureAuthenticatedMocks() {
-  mocks.requireRole.mockReturnValue({ user: { id: 'owner' }, role: 'operator' })
+  mocks.requireRole.mockReturnValue({
+    user: {
+      id: 1,
+      username: 'owner',
+      display_name: 'Owner',
+      role: 'operator',
+      workspace_id: 1,
+      tenant_id: 1,
+    },
+  })
+  mocks.createBridgeApprovalRequest.mockReturnValue({
+    ok: true,
+    http_status: 201,
+    approval_request_created: true,
+    approval_request_reused: false,
+    approval_request_id: 'apr_paperclip_task',
+    approval_state: 'pending',
+    audit_event_id: 'audit_paperclip_task',
+    blocked_reason: null,
+    next_action: 'Owner must approve this exact request before protected execution can proceed.',
+  })
   mocks.buildPaperclipStatusPayload.mockResolvedValue({
     ok: true,
     mode: 'paperclip_status_read_only',
@@ -89,6 +113,7 @@ function configureAuthenticatedMocks() {
     mode: 'paperclip_gateway_task_handoff',
     requester: 'agent_zero',
     assignee: 'hermes',
+    requested_action: 'Create planning issue only.',
     policy_result: 'requires_session',
     task_issue: { paperclip_issue_recorded: false, title: 'Design email triage skill', status: 'not_created' },
     ...safeFlags,
@@ -227,15 +252,56 @@ describe('Paperclip bridge routes', () => {
     expect(testChat.status).toBe(503)
     expect(workforce.status).toBe(409)
 
+    const taskPayload = await task.json()
+    const proposalPayload = await proposal.json()
+    const dispatcherPayload = await dispatcher.json()
+    const researchPayload = await research.json()
+    const testChatPayload = await testChat.json()
+    const workforcePayload = await workforce.json()
+
+    expect(taskPayload).toMatchObject({
+      mode: 'paperclip_gateway_task_handoff',
+      owner_approval_required: true,
+      bridge_session_required: true,
+      approval_request_created: true,
+      approval_request_reused: false,
+      approval_id: 'apr_paperclip_task',
+      approval_state: 'pending',
+      audit_event_id: 'audit_paperclip_task',
+      accepted_for_execution: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      request_dispatched: false,
+    })
     expect(mocks.buildPaperclipGatewayTaskPayload).toHaveBeenCalledWith(expect.objectContaining({ requester: 'agent_zero', assignee: 'hermes', title: 'Design email triage skill', requestedAction: 'Create planning issue only.', bridgeSessionActive: false }))
+    expect(mocks.createBridgeApprovalRequest).toHaveBeenCalledTimes(1)
+    expect(mocks.createBridgeApprovalRequest).toHaveBeenCalledWith(expect.objectContaining({
+      connector: 'paperclip',
+      action: 'paperclip.task.create',
+      target: 'hermes',
+      targetKey: 'paperclip.task.create:hermes',
+      riskLevel: 'medium',
+      protectedCategory: 'agent_execution',
+      approvalScope: expect.objectContaining({
+        route: '/api/bridge/paperclip/tasks',
+        requester: 'agent_zero',
+        assignee: 'hermes',
+        title: 'Design email triage skill',
+        requested_action: 'Create planning issue only.',
+        bridge_session_required: true,
+        write_adapter_configured: false,
+        direct_paperclip_access_allowed: false,
+      }),
+    }))
+    expect(mocks.createBridgeApprovalRequest.mock.calls[0][0].approvalScope).not.toHaveProperty('body')
     expect(mocks.buildPaperclipHermesProposalPayload).toHaveBeenCalledWith(expect.objectContaining({ proposalKind: 'skill_proposal_document', title: 'Hermes skill proposal', objective: 'Plan only.' }))
     expect(mocks.buildPaperclipPiDispatcherRecommendationPayload).toHaveBeenCalledWith(expect.objectContaining({ ownerRequest: 'Recommend a worker for a skill task.' }))
     expect(mocks.buildPaperclipSpaceAgentResearchTaskPayload).toHaveBeenCalledWith(expect.objectContaining({ requester: 'agent_zero', taskType: 'web_research', request: 'Research a public source.', bridgeSessionActive: false }))
     expect(mocks.buildPaperclipTestTaskPayload).toHaveBeenCalledWith(expect.objectContaining({ message: 'Can you see Paperclip?' }))
     expect(mocks.buildPaperclipGatewayWorkforceFlowPayload).toHaveBeenCalledWith(expect.objectContaining({ ownerRequest: 'Route a workforce task.', assignee: 'hermes', workerResult: 'Read-only worker result.', bridgeSessionActive: false }))
 
-    for (const response of [task, proposal, dispatcher, research, testChat, workforce]) {
-      expectOwnerSafe(await response.json())
+    for (const payload of [taskPayload, proposalPayload, dispatcherPayload, researchPayload, testChatPayload, workforcePayload]) {
+      expectOwnerSafe(payload)
     }
     expect(mocks.requireRole).toHaveBeenCalledWith(expect.any(NextRequest), 'operator')
   })

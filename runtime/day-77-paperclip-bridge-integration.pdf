@@ -1,0 +1,326 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3136 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-77-paperclip-bridge-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 77 - Paperclip + Bridge Integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS for developer-side Bridge gating) Tj
+0 -12 Td
+(Blocker class: NONE for the gated task request path) Tj
+0 -12 Td
+(Service blocker still observed: paperclip_sandbox_service_not_running) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Paperclip protected actions through Bridge approval.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Wired `POST /api/bridge/paperclip/tasks` to create a Bridge approval request for the scoped Pa) Tj
+0 -12 Td
+(perclip task-create action.) Tj
+0 -12 Td
+(- Kept Paperclip writes and execution disabled.) Tj
+0 -12 Td
+(- Kept the request in pending owner approval state instead of dispatching it.) Tj
+0 -12 Td
+(- Added route tests proving the approval request payload is scoped and does not include the raw ) Tj
+0 -12 Td
+(request body.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/bridge/paperclip/tasks/route.ts`) Tj
+0 -12 Td
+(- `src/lib/paperclip-bridge-routes.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-77-paperclip-bridge-integration-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-77-paperclip-bridge-integration.md`) Tj
+0 -12 Td
+(- `runtime/day-77-paperclip-bridge-integration.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/bridge/paperclip/tasks`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Mission Control or Gateway designer HTML, CSS, class names, or visual assets were changed.) Tj
+0 -12 Td
+(This lane only changes the backend truth for Paperclip protected task creation.) Tj
+0 -12 Td
+(The owner-facing Paperclip state can now truthfully show:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- owner approval required) Tj
+0 -12 Td
+(- Bridge Session required) Tj
+0 -12 Td
+(- approval pending after request) Tj
+0 -12 Td
+(- execution disabled) Tj
+0 -12 Td
+(- writes disabled) Tj
+0 -12 Td
+(- request not dispatched) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof was performed against a short-lived local standalone Mission Control runtime on `1) Tj
+0 -12 Td
+(27.0.0.1:3337`.) Tj
+0 -12 Td
+(The proof used an in-process API key and did not write or modify any `.env` file.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/paperclip/status` returned HTTP 200 with blocker `paperclip_sandbox_service_n) Tj
+0 -12 Td
+(ot_running`.) Tj
+0 -12 Td
+(- `POST /api/bridge/paperclip/tasks` returned HTTP 409 because protected execution still require) Tj
+0 -12 Td
+(s approval/session.) Tj
+0 -12 Td
+(- The POST response created a fresh pending Bridge approval request.) Tj
+0 -12 Td
+(- The POST response included an audit event id.) Tj
+0 -12 Td
+(- The POST response kept `accepted_for_execution:false`.) Tj
+0 -12 Td
+(- The POST response kept `request_dispatched:false`.) Tj
+0 -12 Td
+(- The POST response kept `execution_enabled:false`.) Tj
+0 -12 Td
+(- The POST response kept `writes_enabled:false`.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2706 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- The POST response kept `protected_actions_enabled:false`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Paperclip sandbox service recovery remains a separate service lane, but the Bridge gating path f) Tj
+0 -12 Td
+(or Paperclip task creation is proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-77-paperclip-bridge-integration-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/paperclip-bridge-routes.test.ts src/lib/paperclip-bridge.test.ts) Tj
+0 -12 Td
+(`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Focused Paperclip tests: 42 passed) Tj
+0 -12 Td
+(- Full test suite: 198 files passed, 1480 tests passed) Tj
+0 -12 Td
+(- Protected route smoke: PASS, 41 routes checked) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Secret scan: PASS) Tj
+0 -12 Td
+(- Raw exposure scan: PASS) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+(- No persistent production restart is claimed in this lane.) Tj
+0 -12 Td
+(- A local standalone proof runtime was started on `127.0.0.1:3337`, used for the gated Paperclip) Tj
+0 -12 Td
+( task proof and route smoke, then stopped.) Tj
+0 -12 Td
+(- No listener remained on port 3337 after proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Paperclip sandbox service is still not running:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- blocker: `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- blocker classification for Paperclip sandbox service: SERVICE_DOWN) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(This does not block Day 77 developer-side Bridge gating because the protected Paperclip task act) Tj
+0 -12 Td
+(ion is now approval-gated and does not execute or write.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-77-paperclip-bridge-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report generation time.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 154 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 78 starts next: SpaceAgent + Bridge integration.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003441 00000 n 
+0000003567 00000 n 
+0000006325 00000 n 
+0000006451 00000 n 
+0000006656 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6726
+%%EOF

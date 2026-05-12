@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-05-12T05:28:37.889Z",
+  "runtimeCommit": "f23a5762c2be1eb640a42d323d662cb35c209825",
+  "lane": "Day 92 UX final closeout inventory",
+  "files": {
+    "gatewayShell": "public/designer-mission-control/src/gateway/GatewayShell.jsx",
+    "missionApp": "public/designer-mission-control/src/app.jsx",
+    "workspaceRail": "public/designer-mission-control/src/replicas/WorkspaceRail.jsx",
+    "styles": "public/designer-mission-control/styles.css",
+    "proxy": "src/proxy.ts",
+    "gatewayPage": "src/app/gateway/page.tsx"
+  },
+  "checks": {
+    "gateway_page_redirects_to_designer_shell": true,
+    "gateway_shell_loads_agent_hub_raw_design_asset": true,
+    "gateway_shell_loads_paperclip_raw_design_asset": true,
+    "gateway_shell_uses_history_push_for_tabs": true,
+    "gateway_shell_disables_iframe_scroll_and_resizes_to_content": true,
+    "mission_app_syncs_browser_back": true,
+    "mission_app_clears_gateway_tab_when_leaving_gateway": true,
+    "workspace_rail_uses_buttons": true,
+    "responsive_shell_allows_horizontal_scroll_on_mobile": true,
+    "gateway_leaf_routes_redirect_behind_auth": true,
+    "designer_frame_headers_allow_same_origin": true
+  },
+  "result": "PASS",
+  "failed": [],
+  "note": "Inventory checks validate existing UX closeout contracts before deciding whether Day 92 needs code changes."
+}

@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-05-12T05:30:52.734Z",
+  "base_origin": "http://127.0.0.1:3346",
+  "routes": [
+    "/tkmc",
+    "/gateway",
+    "/gateway/agent-hub",
+    "/gateway/bridge-session",
+    "/gateway/agent-hub/paperclip"
+  ],
+  "cookie_name": "mc-session",
+  "owner_session_available": false,
+  "capture_mode": "owner-session-required",
+  "can_capture_screenshots": false,
+  "blocker_class": "OWNER_GATED",
+  "blocker": "owner_authenticated_browser_session_required",
+  "note": "No owner session cookie was provided. Static designer fidelity was verified by source hashes; authenticated Mission Control/Gateway visual proof is gated."
+}

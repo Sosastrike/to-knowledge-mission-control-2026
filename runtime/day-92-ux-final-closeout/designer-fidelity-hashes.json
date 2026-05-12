@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-05-12T05:30:27.294Z",
+  "runtimeCommit": "f23a5762c2be1eb640a42d323d662cb35c209825",
+  "result": "PASS",
+  "results": [
+    {
+      "lane": "Agent Hub",
+      "accepted": "design/gateway/Agent Hub.html",
+      "mounted": "public/designer-mission-control/design/gateway/Agent Hub.html",
+      "runtime_path": "/design/gateway/Agent%20Hub.html",
+      "accepted_sha256": "7098cf2faf546df203e14dc51f14332b8f25706672a145add4de4ba78b7a63eb",
+      "mounted_sha256": "7098cf2faf546df203e14dc51f14332b8f25706672a145add4de4ba78b7a63eb",
+      "identical": true
+    },
+    {
+      "lane": "Paperclip",
+      "accepted": "design/gateway/paperclip-v1/Paperclip.html",
+      "mounted": "public/designer-mission-control/design/gateway/Paperclip.html",
+      "runtime_path": "/design/gateway/Paperclip.html",
+      "accepted_sha256": "4d2e1a5741a5632eb8d08f1b0fed9fc0bb5c5cb66e56dcd6c690d090adf48622",
+      "mounted_sha256": "4d2e1a5741a5632eb8d08f1b0fed9fc0bb5c5cb66e56dcd6c690d090adf48622",
+      "identical": true
+    }
+  ],
+  "note": "Raw mock HTML/CSS/class names remain the contract. Runtime route is auth-protected and owner visual rendering is OWNER_GATED without an owner session."
+}

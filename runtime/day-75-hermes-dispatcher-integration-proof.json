@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-05-12T01:26:47.014Z",
+  "base_url": "http://127.0.0.1:3337",
+  "endpoint": "/api/gateway/dispatcher/hermes",
+  "get_status": {
+    "status": 200,
+    "ok": true,
+    "mode": "hermes_dispatcher_status",
+    "canonical_status": "BLOCKED",
+    "blocker_class": "BLOCKED",
+    "blocker": "hermes_safe_live_chat_adapter_not_configured",
+    "commander": false,
+    "agent_zero_is_commander": true,
+    "hermes_called": false,
+    "final_commander": "agent_zero",
+    "dispatch_target": "hermes",
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "external_writes_enabled": false,
+    "dispatch_executed": false,
+    "audit_event": "hermes.dispatcher.route_planned",
+    "safe_output": true
+  },
+  "post_workflow": {
+    "status": 200,
+    "ok": true,
+    "mode": "hermes_dispatcher_route",
+    "final_commander": "agent_zero",
+    "dispatch_target": "hermes",
+    "hermes_in_route": true,
+    "hermes_called": false,
+    "live_adapter_status": "blocked_safe_live_chat_adapter_not_configured",
+    "dispatch_executed": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "audit_event": "hermes.dispatcher.route_planned",
+    "safe_output": true
+  },
+  "post_non_hermes": {
+    "status": 200,
+    "ok": true,
+    "dispatch_target": "agent_zero",
+    "hermes_in_route": false,
+    "blocker": "hermes_not_selected_for_this_request",
+    "hermes_called": false,
+    "dispatch_executed": false,
+    "safe_output": true
+  },
+  "post_redaction": {
+    "status": 200,
+    "ok": true,
+    "safe_output": true
+  },
+  "ok": true
+}

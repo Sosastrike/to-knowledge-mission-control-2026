@@ -1,0 +1,269 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3873 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-75-hermes-dispatcher-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 75 - Hermes + Dispatcher Integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: DEVELOPER-SIDE CLOSED) Tj
+0 -12 Td
+(Blocker class: BLOCKED) Tj
+0 -12 Td
+(Blocker: hermes_safe_live_chat_adapter_not_configured) Tj
+0 -12 Td
+(Started from commit: 5e60b89) Tj
+0 -12 Td
+(Runtime proof base: http://127.0.0.1:3337) Tj
+0 -12 Td
+(Proof artifact: runtime/day-75-hermes-dispatcher-integration-proof.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+(Day 75 closes the Hermes + Dispatcher integration work package at developer-side scope. Hermes i) Tj
+0 -12 Td
+(s now visible through a protected Gateway dispatcher endpoint as Agent Zero's lieutenant for ski) Tj
+0 -12 Td
+(ll and workflow design. This work does not claim Hermes live chat is proven. The endpoint is int) Tj
+0 -12 Td
+(entionally truthful: Hermes live adapter remains blocked until a safe no-tool/no-write adapter i) Tj
+0 -12 Td
+(s configured and proven.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Added a Gateway dispatcher planner for Hermes.) Tj
+0 -12 Td
+(- Added protected endpoint `GET /api/gateway/dispatcher/hermes` for Hermes dispatcher status.) Tj
+0 -12 Td
+(- Added protected endpoint `POST /api/gateway/dispatcher/hermes` for safe route planning from an) Tj
+0 -12 Td
+( owner request.) Tj
+0 -12 Td
+(- Added structured audit-event output: `hermes.dispatcher.route_planned`.) Tj
+0 -12 Td
+(- Confirmed workflow/skill design routes to Hermes through Agent Zero.) Tj
+0 -12 Td
+(- Confirmed non-Hermes requests do not pretend Hermes handled them.) Tj
+0 -12 Td
+(- Confirmed `hermes_called:false` until a safe Hermes live adapter is actually proven.) Tj
+0 -12 Td
+(- Confirmed execution, writes, and external writes stay disabled.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/gateway-hermes-dispatcher.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-hermes-dispatcher.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/dispatcher/hermes/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/dispatcher/hermes/route.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-75-hermes-dispatcher-integration-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-75-hermes-dispatcher-integration.md`) Tj
+0 -12 Td
+(- `runtime/day-75-hermes-dispatcher-integration.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+(- Added `GET /api/gateway/dispatcher/hermes`) Tj
+0 -12 Td
+(- Added `POST /api/gateway/dispatcher/hermes`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Both routes require viewer authentication through existing `requireRole` policy.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+(No Mission Control or Gateway designer HTML/CSS/class names were changed. No Gateway visual rede) Tj
+0 -12 Td
+(sign occurred in this day. The new endpoint gives Gateway, Agent Hub, and future dispatcher UI a) Tj
+0 -12 Td
+( truthful Hermes status and route-plan source.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(A fresh standalone Mission Control runtime was started at `127.0.0.1:3337` from the current buil) Tj
+0 -12 Td
+(d. Runtime proof confirmed:) Tj
+0 -12 Td
+(- Hermes is not commander.) Tj
+0 -12 Td
+(- Agent Zero remains final commander.) Tj
+0 -12 Td
+(- Hermes is selected for workflow/skill design route plans.) Tj
+0 -12 Td
+(- Normal commander questions stay routed to Agent Zero and do not claim Hermes handled them.) Tj
+0 -12 Td
+(- Hermes live adapter status is `blocked_safe_live_chat_adapter_not_configured`.) Tj
+0 -12 Td
+(- `hermes_called:false`.) Tj
+0 -12 Td
+(- `execution_enabled:false`.) Tj
+0 -12 Td
+(- `writes_enabled:false`.) Tj
+0 -12 Td
+(- `external_writes_enabled:false`.) Tj
+0 -12 Td
+(- `dispatch_executed:false`.) Tj
+0 -12 Td
+(- Audit event is emitted as data, not as a write side effect.) Tj
+0 -12 Td
+(- Synthetic secret/path probe returned safe redacted output.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2287 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Tests / Checks Run) Tj
+0 -12 Td
+(- `git diff --check` - PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` - PASS) Tj
+0 -12 Td
+(- `pnpm run build` - PASS) Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/gateway-hermes-dispatcher.test.ts src/app/api/gateway/dispatcher) Tj
+0 -12 Td
+(/hermes/route.test.ts` - PASS, 2 files / 6 tests) Tj
+0 -12 Td
+(- `pnpm test` - PASS, 197 files / 1474 tests) Tj
+0 -12 Td
+(- `MISSION_CONTROL_BASE_URL=http://127.0.0.1:3337 node scripts/protected-route-smoke-contract.mj) Tj
+0 -12 Td
+(s` - PASS, 41 routes checked) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` - PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` - PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` - PASS) Tj
+0 -12 Td
+(- `.env` status/diff check - PASS, no changes) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure added.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Bridge Session bypass.) Tj
+0 -12 Td
+(- No fake Hermes live status.) Tj
+0 -12 Td
+(- No fake Done / fake GO / fake live execution.) Tj
+0 -12 Td
+(- Agent Zero remains commander.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+(Local standalone proof runtime was restarted safely on `127.0.0.1:3337` with PID recorded during) Tj
+0 -12 Td
+( proof as 89431. This was a local proof runtime, not a public exposure. Production restart/deplo) Tj
+0 -12 Td
+(y is not claimed in this Day75 report.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day_75_commit_sha>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+(Pending at report creation. To be filled by git history after commit and push.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 76 - Pi + Dispatcher Integration starts next. The Day76 objective is to expose Pi advisory d) Tj
+0 -12 Td
+(ispatcher output through Gateway with truthful advisory-only status and no execution authority.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004172 00000 n 
+0000004298 00000 n 
+0000006637 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6707
+%%EOF

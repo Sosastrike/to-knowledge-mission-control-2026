@@ -1,0 +1,84 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T00:19:52.480Z",
+  "mode": "runtime_final_closeout",
+  "status": "PARTIAL GO",
+  "blocker_class": "OWNER_GATED",
+  "source_commit": "b17deb8",
+  "source_branch": "to-knowledge-mc",
+  "lanes_checked": 9,
+  "owner_gated_lanes": [
+    "authenticated_route_smoke"
+  ],
+  "failures": [],
+  "no_fake_go": true,
+  "no_fake_done": true,
+  "no_public_exposure_added": true,
+  "no_external_writes_executed": true,
+  "rollback": "git revert <day-72-runtime-final-closeout-commit-sha> && MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh",
+  "lanes": [
+    {
+      "id": "deployment_pipeline",
+      "label": "Day 63 deployment pipeline",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "runtime_health_dashboard",
+      "label": "Day 64 runtime health dashboard",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "protected_route_smoke",
+      "label": "Day 65 protected route smoke",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "authenticated_route_smoke",
+      "label": "Day 66 authenticated route smoke",
+      "ok": true,
+      "blocker_class": "OWNER_GATED",
+      "status": "OWNER_GATED"
+    },
+    {
+      "id": "secret_scan",
+      "label": "Day 67 secret scan",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "raw_path_public_exposure",
+      "label": "Day 68 raw path / public exposure sweep",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "rollback_plan",
+      "label": "Day 69 rollback plan",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "monitoring_failure_states",
+      "label": "Day 70 monitoring / failure states",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    },
+    {
+      "id": "restart_proof",
+      "label": "Day 71 production restart proof",
+      "ok": true,
+      "blocker_class": "NONE",
+      "status": "PASS"
+    }
+  ]
+}

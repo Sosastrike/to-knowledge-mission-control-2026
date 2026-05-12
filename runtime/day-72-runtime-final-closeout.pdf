@@ -1,0 +1,253 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3056 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-72-runtime-final-closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 72 — Runtime Final Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Status: PARTIAL GO — runtime/developer-side proof complete; owner-authenticated smoke remains OW) Tj
+0 -12 Td
+(NER_GATED) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+(Runtime / deployment / security final closeout for Days 63–71.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Added a runtime final closeout contract that consolidates the runtime/deployment/security lane) Tj
+0 -12 Td
+(s.) Tj
+0 -12 Td
+(- Added tests that prevent a fake GO when authenticated owner visual proof is not actually prove) Tj
+0 -12 Td
+(n.) Tj
+0 -12 Td
+(- Generated the final runtime closeout proof matrix from existing Day 63–71 artifacts.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/runtime-final-closeout-contract.ts`) Tj
+0 -12 Td
+(- `src/lib/runtime-final-closeout-contract.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-72-runtime-final-closeout-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-72-runtime-final-closeout.md`) Tj
+0 -12 Td
+(- `runtime/day-72-runtime-final-closeout.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Matrix) Tj
+0 -12 Td
+(Proof artifact: `runtime/day-72-runtime-final-closeout-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Included lanes:) Tj
+0 -12 Td
+(- Day 63 deployment pipeline) Tj
+0 -12 Td
+(- Day 64 runtime health dashboard) Tj
+0 -12 Td
+(- Day 65 protected route smoke) Tj
+0 -12 Td
+(- Day 66 authenticated route smoke) Tj
+0 -12 Td
+(- Day 67 secret scan) Tj
+0 -12 Td
+(- Day 68 raw path / public exposure sweep) Tj
+0 -12 Td
+(- Day 69 rollback plan) Tj
+0 -12 Td
+(- Day 70 monitoring / failure states) Tj
+0 -12 Td
+(- Day 71 production restart proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Result) Tj
+0 -12 Td
+(- Final runtime closeout status: PARTIAL GO) Tj
+0 -12 Td
+(- Overall proof artifact `ok`: true) Tj
+0 -12 Td
+(- Failures: none) Tj
+0 -12 Td
+(- Owner-gated lanes: `authenticated_route_smoke`) Tj
+0 -12 Td
+(- No fake GO: true) Tj
+0 -12 Td
+(- No fake Done: true) Tj
+0 -12 Td
+(- No public exposure added: true) Tj
+0 -12 Td
+(- No external writes executed: true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Why Not GO) Tj
+0 -12 Td
+(Authenticated owner visual smoke is still OWNER_GATED because no owner browser session/cookie wa) Tj
+0 -12 Td
+(s provided for this proof lane. The harness is complete and does not claim owner visual proof. T) Tj
+0 -12 Td
+(his keeps the closeout honest.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime / Service Behavior) Tj
+0 -12 Td
+(- Local Mission Control remains on `127.0.0.1:3337`.) Tj
+0 -12 Td
+(- Latest restart proof showed PID change and live runtime health.) Tj
+0 -12 Td
+(- Runtime health is LIVE.) Tj
+0 -12 Td
+(- Protected routes are blocked unauthenticated.) Tj
+0 -12 Td
+(- Monitoring failure states are normalized and do not fake live status.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks Run) Tj
+0 -12 Td
+(- `pnpm test src/lib/runtime-final-closeout-contract.test.ts`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1621 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Day 63 deploy proof artifact reviewed) Tj
+0 -12 Td
+(- Day 64 runtime health artifact reviewed) Tj
+0 -12 Td
+(- Day 70 protected route smoke artifact reviewed) Tj
+0 -12 Td
+(- Day 66 authenticated route smoke artifact reviewed) Tj
+0 -12 Td
+(- Day 71 secret scan artifact reviewed) Tj
+0 -12 Td
+(- Day 70 raw path scan artifact reviewed) Tj
+0 -12 Td
+(- Day 70 rollback plan artifact reviewed) Tj
+0 -12 Td
+(- Day 70 monitoring failure-state artifact reviewed) Tj
+0 -12 Td
+(- Day 71 restart proof artifact reviewed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Final validation before commit also runs:) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- focused runtime final closeout test) Tj
+0 -12 Td
+(- protected file invariant scan) Tj
+0 -12 Td
+(- staged secret scan) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No public local exposure.) Tj
+0 -12 Td
+(- No fake 100%.) Tj
+0 -12 Td
+(- No fake Done.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No Gateway designer mock modifications.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(Use:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-72-runtime-final-closeout-commit-sha>) Tj
+0 -12 Td
+(MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 73 — Agent Registry Integration starts automatically after Day 72 commit/push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003355 00000 n 
+0000003481 00000 n 
+0000005154 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5224
+%%EOF

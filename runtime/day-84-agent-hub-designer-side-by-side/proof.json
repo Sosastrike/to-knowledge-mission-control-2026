@@ -1,0 +1,129 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T03:34:00.436Z",
+  "base_url": "http://127.0.0.1:3338",
+  "direct": {
+    "status": 200,
+    "url": "http://127.0.0.1:3338/design/gateway/Agent%20Hub.html",
+    "screenshot": "runtime/day-84-agent-hub-designer-side-by-side/direct-agent-hub-truth.png",
+    "title": "Gateway · Agent Hub",
+    "text_has_six_agents": true,
+    "text_has_five_agents": false,
+    "agent_ids": [
+      "paperclip",
+      "agent-zero",
+      "hermes",
+      "space-agent",
+      "pi-mono",
+      "openclaw-plus"
+    ],
+    "statuses": {
+      "paperclip": "red",
+      "agent-zero": "yellow",
+      "hermes": "red",
+      "space-agent": "yellow",
+      "pi-mono": "blue",
+      "openclaw-plus": "red"
+    },
+    "owner_status_labels": {
+      "paperclip": "SERVICE_DOWN",
+      "agent-zero": "CREDENTIAL_GATED",
+      "hermes": "SERVICE_DOWN",
+      "space-agent": "CREDENTIAL_GATED",
+      "pi-mono": "READY",
+      "openclaw-plus": "SERVICE_DOWN"
+    },
+    "green_count": 0,
+    "decorated_buttons": [
+      {
+        "text": "Open localhost",
+        "state": "DISABLED_WITH_REASON",
+        "reason": "Disabled in the mounted designer surface. Use the approved Mission Control API or Bridge Session flow for live actions.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Send command",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Pause queue",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Bridge Session",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Restart",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Audit",
+        "state": "READY_READ_ONLY",
+        "reason": "Read-only proof/status is available from Mission Control APIs when an owner session is present.",
+        "ariaDisabled": "false"
+      },
+      {
+        "text": "Open localhost",
+        "state": "DISABLED_WITH_REASON",
+        "reason": "Disabled in the mounted designer surface. Use the approved Mission Control API or Bridge Session flow for live actions.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Send command",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Pause queue",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Bridge Session",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Restart",
+        "state": "APPROVAL_GATED",
+        "reason": "Approval-gated. A Bridge Session request is required before this action can execute.",
+        "ariaDisabled": "true"
+      },
+      {
+        "text": "Audit",
+        "state": "READY_READ_ONLY",
+        "reason": "Read-only proof/status is available from Mission Control APIs when an owner session is present.",
+        "ariaDisabled": "false"
+      }
+    ]
+  },
+  "shell": {
+    "status": 200,
+    "screenshot": "runtime/day-84-agent-hub-designer-side-by-side/gateway-shell-agent-hub-truth.png",
+    "url": "http://127.0.0.1:3338/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+    "activeTab": "Agent Hub6 agents",
+    "iframeSrc": "/design/gateway/Agent Hub.html",
+    "iframeTitle": "Gateway · Agent Hub"
+  },
+  "api": {
+    "status": 401,
+    "ok": false,
+    "agents_total": null,
+    "agent_ids": [],
+    "owner_status_summary": null
+  },
+  "secrets_exposed": false,
+  "raw_paths_exposed_to_ui": false
+}

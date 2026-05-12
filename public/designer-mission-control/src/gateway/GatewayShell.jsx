@@ -24,7 +24,7 @@
 
 const GATEWAY_TABS = [
   { id: 'overview',   label: 'Overview',           src: '/design/gateway/Gateway Overview.html',     hint: 'Nucleus — primary' },
-  { id: 'agent-hub',  label: 'Agent Hub',          src: '/design/gateway/Agent Hub.html',            hint: '5 agents' },
+  { id: 'agent-hub',  label: 'Agent Hub',          src: '/design/gateway/Agent Hub.html',            hint: '6 agents' },
   { id: 'paperclip',  label: 'Paperclip',          src: '/design/gateway/Paperclip.html',            hint: 'Workforce Control Plane' },
   { id: 'dispatcher', label: 'Dispatcher',         src: '/design/gateway/Dispatcher.html',           hint: '9-step gate' },
   { id: 'governor',   label: 'Token Governor',     src: '/design/gateway/Token Governor.html',       hint: 'budgets' },

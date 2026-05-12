@@ -21,93 +21,97 @@ window.AGENTS = (function () {
       name: 'Paperclip',
       role: 'Workforce Control Plane',
       tagline: 'Organizes the workforce. Hands work to OpenClaw+.',
-      status: 'yellow',                // planned/gated until localhost/Tailnet works
+      status: 'red',
       marker: 'purple',
       kind: 'workforce',
       bridge: true,
-      R: true, W: true, X: false,
-      localhost: 'http://paperclip.tail-scale.ts.net',
+      R: true, W: false, X: false,
+      localhost: 'service gated',
       iframe_safe: false,              // assumed unsafe until proven; default to "Open in new tab"
-      auth: 'tailnet + token',
+      auth: 'mission control session + runtime service',
       repo: 'github.com/paperclipai/paperclip',
       repo_grounding: 'pending',
       caps: ['workforce', 'task-queue', 'co-worker management', 'mini-agent requests', 'budgets', 'heartbeats', 'approvals', 'OpenClaw handoff'],
       models: ['claude-sonnet-4', 'gpt-5-codex'],
       tools: ['task-bus', 'workforce-ledger', 'budget-meter', 'approvals-bus'],
-      blocked_reason: null,
-      gated_reason: 'Localhost/Tailnet handshake unproven. Bridge required for first run.',
+      owner_status_label: 'SERVICE_DOWN',
+      blocked_reason: 'paperclip_sandbox_service_not_running',
+      gated_reason: null,
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Workforce manager. Sits before OpenClaw+. Owns task queue, budgets, approvals, and handoff to runtime.'
+      summary: 'Workforce manager. Sits before OpenClaw+. Service remains down until the Paperclip sandbox runtime and owner session are proven.'
     },
 
     {
       id: 'agent-zero',
       name: 'Agent Zero',
       role: 'Commander',
-      tagline: 'Sole commander. All owner intent lands here.',
-      status: 'green',                 // partial GO / commander track
+      tagline: 'CREDENTIAL_GATED: live commander chat proof requires the approved Agent Zero external API key.',
+      status: 'yellow',
       marker: 'purple',
       kind: 'commander',
-      bridge: false,
-      R: true, W: true, X: true,
-      localhost: 'http://localhost:50001',
-      iframe_safe: true,
-      auth: 'mission control session',
+      bridge: true,
+      R: true, W: false, X: false,
+      localhost: 'mission-control proxy',
+      iframe_safe: false,
+      auth: 'mission control session + credential',
       repo: 'github.com/Sosastrike/agent-zero',
       repo_grounding: 'pending',
       caps: ['plan', 'delegate', 'execute', 'legacy memory R/O', 'multi-tool'],
       models: ['claude-sonnet-4', 'gpt-5', 'openrouter:auto'],
       tools: ['gateway-router', 'plan-composer', 'memory:legacy', 'memory:obsidian', 'memory:mempalace'],
+      owner_status_label: 'CREDENTIAL_GATED',
       blocked_reason: null,
-      gated_reason: null,
+      gated_reason: 'Agent Zero is commander, but live command execution stays credential-gated until the approved external API key is available.',
       pulse: { req_per_min: 14.2, p95_ms: 940, error_rate: 0.012 },
-      summary: 'Commander. Plans, delegates, executes. Inherits legacy memory read-only.'
+      summary: 'Commander. Status surface is visible; live execution is disabled until credential proof exists.'
     },
 
     {
       id: 'hermes',
       name: 'Hermes',
       role: 'Lieutenant · Skill + Workflow Builder',
-      tagline: 'Yellow until hermes_called:true is proven.',
-      status: 'yellow',
+      tagline: 'SERVICE_DOWN: safe adapter proof exists, but the standalone Hermes runtime is not reachable.',
+      status: 'red',
       marker: 'purple',
       kind: 'lieutenant',
       bridge: true,
-      R: true, W: true, X: false,
-      localhost: 'http://localhost:7042',
-      iframe_safe: true,
+      R: true, W: false, X: false,
+      localhost: 'service gated',
+      iframe_safe: false,
       auth: 'mission control session + bridge',
       repo: 'github.com/Sosastrike/To-Knowledge-hermes-agent',
       repo_grounding: 'pending',
       caps: ['skill design', 'workflow design', 'specialist composition'],
       models: ['claude-sonnet-4', 'gpt-5-codex'],
       tools: ['skill-registry', 'workflow-canvas', 'openclaw-handoff'],
-      blocked_reason: null,
-      gated_reason: 'hermes_called:true not yet proven. Read-only until live chat heartbeat.',
+      owner_status_label: 'SERVICE_DOWN',
+      blocked_reason: 'hermes_not_installed',
+      gated_reason: null,
       pulse: { req_per_min: 2.1, p95_ms: 1280, error_rate: 0 },
-      summary: 'Lieutenant. Builds skills and workflows. Cannot delegate further. Read-biased until proven.'
+      summary: 'Lieutenant. Builds skills and workflows; runtime remains service-down until installed and reachable.'
     },
 
     {
       id: 'space-agent',
       name: 'SpaceAgent',
       role: 'Browser · Firecrawl · Playwright MCP · YouTube research',
-      tagline: 'Web research specialist. Uses Playwright MCP through Gateway policy.',
-      status: 'gray',                  // planned/gated unless installed/live
+      tagline: 'CREDENTIAL_GATED: YouTube read path is proven; Playwright MCP is service-down and Firecrawl needs credentials.',
+      status: 'yellow',
       marker: 'orange',
       kind: 'specialist',
       bridge: true,
       R: true, W: false, X: false,
-      localhost: 'http://localhost:8765',
+      localhost: 'mission-control proxy',
       iframe_safe: false,
-      auth: 'tailnet',
+      auth: 'mission control session + connector credentials',
       repo: 'github.com/Sosastrike/To-Knowledge-space-agent',
       repo_grounding: 'pending',
       caps: ['web browse', 'firecrawl scrape', 'playwright automation', 'youtube transcript', 'page summarize', 'screenshot evidence'],
       models: ['claude-haiku-4-5', 'gpt-5-mini'],
       tools: ['firecrawl', 'playwright-mcp', 'youtube-api', 'browser-headless'],
+      owner_status_label: 'CREDENTIAL_GATED',
       blocked_reason: null,
-      gated_reason: 'Not installed in this environment. Repo grounding pending.',
+      gated_reason: 'Playwright MCP service is unreachable and Firecrawl remains credential-gated; read-only YouTube transcript proof is the only proven path.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Browser, Firecrawl, Playwright MCP, and YouTube research. Read-only by design. Playwright MCP is a tool — SpaceAgent is the agent.'
     },
@@ -116,24 +120,25 @@ window.AGENTS = (function () {
       id: 'pi-mono',
       name: 'Pi-mono',
       role: 'Dispatcher · Route Optimizer (candidate)',
-      tagline: 'Recommends routes. Not in execution path yet.',
-      status: 'gray',
+      tagline: 'READY: advisory route recommendations are available; writes and execution remain disabled.',
+      status: 'blue',
       marker: 'orange',
       kind: 'dispatcher',
       bridge: false,
       R: true, W: false, X: false,
-      localhost: 'http://localhost:5174',
-      iframe_safe: true,
+      localhost: 'mission-control proxy',
+      iframe_safe: false,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
       repo_grounding: 'pending',
       caps: ['route recommendation', 'cost estimate', 'engine pick'],
       models: ['claude-haiku-4-5'],
       tools: ['router-cost-table', 'engine-ledger:read'],
+      owner_status_label: 'READY',
       blocked_reason: null,
-      gated_reason: 'Candidate. Recommendations only — not yet wired into execution path.',
+      gated_reason: null,
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Dispatcher candidate. Recommends routes by cost/latency/capability.'
+      summary: 'Dispatcher candidate. Recommends routes by cost/latency/capability; it has no execution authority.'
     },
 
     {
@@ -154,6 +159,7 @@ window.AGENTS = (function () {
       caps: ['runtime', 'skills', 'mini-agent execution', 'tool execution', 'doctor'],
       models: ['runtime-managed'],
       tools: ['openclaw doctor', 'skill registry', 'mini-agent lifecycle'],
+      owner_status_label: 'SERVICE_DOWN',
       blocked_reason: 'openclaw_doctor_runtime_not_reachable',
       gated_reason: null,
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
@@ -442,6 +448,81 @@ window.AGENTS = (function () {
 
   /* -- helpers ---------------------------------------------- */
   function byId(id) { return agents.find(a => a.id === id); }
+  const agentCountLabel = agents.length + ' agents';
+  const buttonPolicy = {
+    default_reason: 'Disabled in the mounted designer surface. Use the approved Mission Control API or Bridge Session flow for live actions.',
+    approval_reason: 'Approval-gated. A Bridge Session request is required before this action can execute.',
+    read_reason: 'Read-only proof/status is available from Mission Control APIs when an owner session is present.'
+  };
+
+  function replaceAgentCountText() {
+    if (typeof document === 'undefined' || !document.body) return;
+    const showText = typeof NodeFilter !== 'undefined' ? NodeFilter.SHOW_TEXT : 4;
+    const filterAccept = typeof NodeFilter !== 'undefined' ? NodeFilter.FILTER_ACCEPT : 1;
+    const filterReject = typeof NodeFilter !== 'undefined' ? NodeFilter.FILTER_REJECT : 2;
+    const walker = document.createTreeWalker(document.body, showText, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || ['SCRIPT', 'STYLE'].includes(parent.tagName)) return filterReject;
+        return filterAccept;
+      }
+    });
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach((node) => {
+      node.nodeValue = node.nodeValue
+        .replace(/\b5 agents\b/g, agentCountLabel)
+        .replace(/\b5 cards\b/g, agents.length + ' cards')
+        .replace(/\b5 of 5 pending\b/g, agents.length + ' of ' + agents.length + ' pending');
+    });
+  }
+
+  function buttonReason(button) {
+    const label = (button.textContent || '').trim().toLowerCase();
+    if (button.classList.contains('gated') || /bridge|restart|send|pause|start|interactive|authenticated|run|redeploy|rollback/.test(label)) {
+      return buttonPolicy.approval_reason;
+    }
+    if (/audit|status|evidence|check/.test(label)) return buttonPolicy.read_reason;
+    return buttonPolicy.default_reason;
+  }
+
+  function decorateDesignerButtons() {
+    if (typeof document === 'undefined' || !document.querySelectorAll) return;
+    document.querySelectorAll('button.ag-btn').forEach((button) => {
+      if (button.dataset.truthDecorated === 'true') return;
+      const reason = buttonReason(button);
+      const state = reason === buttonPolicy.approval_reason
+        ? 'APPROVAL_GATED'
+        : reason === buttonPolicy.read_reason
+          ? 'READY_READ_ONLY'
+          : 'DISABLED_WITH_REASON';
+      button.dataset.truthDecorated = 'true';
+      button.dataset.actionState = state;
+      button.dataset.blockerReason = reason;
+      button.setAttribute('aria-disabled', state === 'READY_READ_ONLY' ? 'false' : 'true');
+      button.setAttribute('title', reason);
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        button.dataset.lastBlockedReason = reason;
+      }, true);
+    });
+  }
+
+  function installAgentHubTruthDecorators() {
+    if (typeof document === 'undefined' || !document.body) return;
+    const apply = () => {
+      replaceAgentCountText();
+      decorateDesignerButtons();
+    };
+    apply();
+    if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') window.setTimeout(apply, 0);
+    if (typeof MutationObserver !== 'undefined') {
+      const observer = new MutationObserver(apply);
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
   function statusColor(status) {
     return getComputedStyle(document.documentElement).getPropertyValue('--st-' + status).trim() || '#6b7280';
   }
@@ -604,9 +685,12 @@ window.AGENTS = (function () {
 
   const livePayload = fetchLiveAgentHubStatus();
   if (livePayload) applyLiveAgentHubStatus(livePayload);
+  installAgentHubTruthDecorators();
 
   return {
     agents,
+    agentCountLabel,
+    buttonPolicy,
     gatewayLog,
     toolLog,
     decisionTrace,

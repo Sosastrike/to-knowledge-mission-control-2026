@@ -1,0 +1,275 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3867 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-84-agent-hub-designer-side-by-side) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 84 — Agent Hub Designer Side-by-Side Closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-10 — Safety, Branch, Runtime) Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`.) Tj
+0 -12 Td
+(- Runtime proof used local loopback only: `http://127.0.0.1:3338`.) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No external writes, SMB, Fork 2, Zapier writes, HeyGen generation, or auth weakening.) Tj
+0 -12 Td
+(- Designer mock HTML/CSS/class names were not edited. Day 84 only changed the approved data/scri) Tj
+0 -12 Td
+(pt layer and GatewayShell tab hint.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 10-20 — Inventory) Tj
+0 -12 Td
+(- Active production Gateway entry: `/gateway` redirects into the approved designer Mission Contr) Tj
+0 -12 Td
+(ol shell.) Tj
+0 -12 Td
+(- Active Agent Hub tab: `/gateway?tab=agent-hub`.) Tj
+0 -12 Td
+(- Raw designer asset: `/design/gateway/Agent Hub.html` served from `public/designer-mission-cont) Tj
+0 -12 Td
+(rol/design/gateway/Agent Hub.html`.) Tj
+0 -12 Td
+(- Agent Hub live API: `/api/gateway/agent-hub/status` remains protected.) Tj
+0 -12 Td
+(- Parked untracked duplicate wrapper routes remain unstaged and unused.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20-45 — Backend/Data Behavior) Tj
+0 -12 Td
+(- Updated `shared/agent-data.js` seed truth to match the canonical six-agent roster:) Tj
+0 -12 Td
+(  - Paperclip: SERVICE_DOWN/red.) Tj
+0 -12 Td
+(  - Agent Zero: CREDENTIAL_GATED/yellow, commander, no write/execute fake state.) Tj
+0 -12 Td
+(  - Hermes: SERVICE_DOWN/red.) Tj
+0 -12 Td
+(  - SpaceAgent: CREDENTIAL_GATED/yellow.) Tj
+0 -12 Td
+(  - Pi-mono: READY/blue advisory-only.) Tj
+0 -12 Td
+(  - OpenClaw+: SERVICE_DOWN/red.) Tj
+0 -12 Td
+(- Added data-layer truth decoration for designer buttons:) Tj
+0 -12 Td
+(  - approval-gated buttons carry `APPROVAL_GATED` and Bridge Session reason.) Tj
+0 -12 Td
+(  - read-only buttons carry `READY_READ_ONLY`.) Tj
+0 -12 Td
+(  - disabled controls carry `DISABLED_WITH_REASON`.) Tj
+0 -12 Td
+(- Kept live hydration path as `/api/gateway/agent-hub/status`; local proof classified API hydrat) Tj
+0 -12 Td
+(ion as owner-auth gated because it returned 401.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 45-65 — UI Behavior) Tj
+0 -12 Td
+(- `/design/gateway/Agent Hub.html` renders the designer mock as the production UI.) Tj
+0 -12 Td
+(- No HTML/CSS/class edits were made to the mock.) Tj
+0 -12 Td
+(- Visible stale copy is corrected through data/script runtime replacement: `5 agents` -> `6 agen) Tj
+0 -12 Td
+(ts`.) Tj
+0 -12 Td
+(- GatewayShell Agent Hub tab hint now says `6 agents`.) Tj
+0 -12 Td
+(- No fake LIVE/green status appears in the seeded Agent Hub proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 65-80 — Tests And Checks) Tj
+0 -12 Td
+(- Focused tests passed:) Tj
+0 -12 Td
+(  - `pnpm exec vitest run src/lib/gateway-agent-hub-designer-data.test.ts src/app/design/gateway) Tj
+0 -12 Td
+(/route.test.ts src/lib/gateway-native-frame-decision.test.ts`) Tj
+0 -12 Td
+(- Route smoke passed:) Tj
+0 -12 Td
+(  - `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3338`) Tj
+0 -12 Td
+(  - `ok: true`, failures: `[]`.) Tj
+0 -12 Td
+(- Full validation gate passed:) Tj
+0 -12 Td
+(  - `git diff --check`) Tj
+0 -12 Td
+(  - `pnpm run typecheck`) Tj
+0 -12 Td
+(  - `pnpm run build`) Tj
+0 -12 Td
+(  - `pnpm test` — 202 files, 1498 tests passed.) Tj
+0 -12 Td
+(  - `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(  - `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+(  - `node scripts/raw-exposure-scan-contract.mjs`) Tj
+0 -12 Td
+(  - `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 80-95 — Runtime Proof) Tj
+0 -12 Td
+(- Direct raw design route returned 200 with owner proof cookie.) Tj
+0 -12 Td
+(- Unauthenticated route smoke proved protected pages and APIs redirect/401 without exposing cont) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2959 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(ent.) Tj
+0 -12 Td
+(- Browser proof captured:) Tj
+0 -12 Td
+(  - direct Agent Hub screenshot: `runtime/day-84-agent-hub-designer-side-by-side/direct-agent-hu) Tj
+0 -12 Td
+(b-truth.png`) Tj
+0 -12 Td
+(  - GatewayShell Agent Hub screenshot: `runtime/day-84-agent-hub-designer-side-by-side/gateway-s) Tj
+0 -12 Td
+(hell-agent-hub-truth.png`) Tj
+0 -12 Td
+(- Proof JSON:) Tj
+0 -12 Td
+(  - `runtime/day-84-agent-hub-designer-side-by-side/proof.json`) Tj
+0 -12 Td
+(  - direct agent IDs: `paperclip`, `agent-zero`, `hermes`, `space-agent`, `pi-mono`, `openclaw-p) Tj
+0 -12 Td
+(lus`) Tj
+0 -12 Td
+(  - green status count: `0`) Tj
+0 -12 Td
+(  - visible six-agent text: `true`) Tj
+0 -12 Td
+(  - stale five-agent text: `false`) Tj
+0 -12 Td
+(  - decorated button samples: `12`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 95-100 — Closeout) Tj
+0 -12 Td
+(- Status: developer-side closed; owner-auth API hydration retest remains gated.) Tj
+0 -12 Td
+(- Blocker classification: `OWNER_GATED`.) Tj
+0 -12 Td
+(- Remaining blocker: production owner session/API proof is required to verify live Agent Hub hyd) Tj
+0 -12 Td
+(ration through `/api/gateway/agent-hub/status`; local browser proof received API `401` without a) Tj
+0 -12 Td
+( real owner session.) Tj
+0 -12 Td
+(- Deploy/restart: not performed. Local proof used bounded Next dev server and stopped it after p) Tj
+0 -12 Td
+(roof. Production restart remains owner/runtime gated.) Tj
+0 -12 Td
+(- CloudCode package: no new backend-support apply in Day 84; previously consumed backend truth A) Tj
+0 -12 Td
+(PIs remained in place. Day 84 consumed the approved designer drop-in data surface only.) Tj
+0 -12 Td
+(- Rollback command after commit: `git revert <day-84-commit>`.) Tj
+0 -12 Td
+(- Before commit rollback:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git restore public/designer-mission-control/design/gateway/shared/agent-data.js public/designer-) Tj
+0 -12 Td
+(mission-control/src/gateway/GatewayShell.jsx src/lib/gateway-agent-hub-designer-data.test.ts) Tj
+0 -12 Td
+(rm -rf runtime/day-84-agent-hub-designer-side-by-side) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `public/designer-mission-control/design/gateway/shared/agent-data.js`) Tj
+0 -12 Td
+(- `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub-designer-data.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-84-agent-hub-designer-side-by-side/*`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+(- No new route file.) Tj
+0 -12 Td
+(- `/gateway?tab=agent-hub` now presents the Agent Hub tab with a truthful six-agent hint.) Tj
+0 -12 Td
+(- `/design/gateway/Agent Hub.html` keeps serving the raw designer asset and uses truthful data-l) Tj
+0 -12 Td
+(ayer state.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+(Day 85 — Mission Control Movement has automatically started after this Day 84 developer-side clo) Tj
+0 -12 Td
+(sure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004166 00000 n 
+0000004292 00000 n 
+0000007303 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+7373
+%%EOF

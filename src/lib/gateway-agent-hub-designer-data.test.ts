@@ -58,12 +58,37 @@ describe('Gateway Agent Hub designer data hydration', () => {
       'pi-mono',
       'openclaw-plus',
     ])
+    expect(agents.agentCountLabel).toBe('6 agents')
+    expect(Object.fromEntries(agents.agents.map((agent: any) => [agent.id, agent.status]))).toMatchObject({
+      paperclip: 'red',
+      'agent-zero': 'yellow',
+      hermes: 'red',
+      'space-agent': 'yellow',
+      'pi-mono': 'blue',
+      'openclaw-plus': 'red',
+    })
+    expect(agents.agents.some((agent: any) => agent.status === 'green')).toBe(false)
+    expect(agents.byId('agent-zero')).toMatchObject({
+      owner_status_label: 'CREDENTIAL_GATED',
+      W: false,
+      X: false,
+    })
+    expect(agents.byId('pi-mono')).toMatchObject({
+      owner_status_label: 'READY',
+      status: 'blue',
+      W: false,
+      X: false,
+    })
     expect(agents.byId('openclaw-plus')).toMatchObject({
       name: 'OpenClaw+',
       status: 'red',
       blocked_reason: 'openclaw_doctor_runtime_not_reachable',
     })
     expect(agents.cost['openclaw-plus']).toMatchObject({ today_usd: 0, day_cap_usd: 5 })
+    expect(agents.buttonPolicy).toMatchObject({
+      approval_reason: expect.stringContaining('Bridge Session request'),
+      default_reason: expect.stringContaining('Disabled'),
+    })
   })
 
   it('hydrates the OpenClaw+ card instead of silently dropping live Agent Hub status', () => {
@@ -136,5 +161,7 @@ describe('Gateway Agent Hub designer data hydration', () => {
     expect(agentHubHtml).toContain('Playwright MCP + YouTube')
     expect(agentHubHtml).toContain('selectTab(t.dataset.id)')
     expect(agentHubHtml).not.toContain('data-action="open-route"')
+    expect(agentDataSource).toContain('installAgentHubTruthDecorators')
+    expect(agentDataSource).toContain('dataset.actionState')
   })
 })

@@ -1,0 +1,65 @@
+{
+  "lane": "Day 78 - SpaceAgent + Bridge integration",
+  "timestamp": "2026-05-12T02:07:36.185Z",
+  "runtime_commit": "4c429dd",
+  "auth_method": "local_process_api_key_not_written_to_env_file",
+  "route_or_service_checked": "/api/gateway/space-agent/research",
+  "status_probe": {
+    "route": "/api/bridge/space-agent/status",
+    "http_status": 200,
+    "ok": true,
+    "mode": "space_agent_status_read_only",
+    "health": "blocked",
+    "blockers": [
+      "firecrawl_missing_credential",
+      "firecrawl_missing_credential; interactive_browser_actions_require_bridge_session",
+      "playwright_mcp_service_unreachable"
+    ],
+    "execution_enabled": false,
+    "writes_enabled": false
+  },
+  "protected_research_probe": {
+    "route": "/api/gateway/space-agent/research",
+    "http_status": 423,
+    "mode": "space_agent_research_packet_planning",
+    "blocked_reason": "owner_credentials_not_approved",
+    "bridge_session_required": true,
+    "owner_approval_required": true,
+    "approval_request_created": true,
+    "approval_request_reused": false,
+    "approval_id_present": true,
+    "approval_state": "pending",
+    "audit_event_id_present": true,
+    "accepted_for_execution": false,
+    "research_performed": false,
+    "execution_enabled": false,
+    "writes_enabled": false,
+    "protected_actions_enabled": false,
+    "request_summary_redacted": true,
+    "research_operation": "browser_interaction"
+  },
+  "public_packet_probe": {
+    "route": "/api/gateway/space-agent/research",
+    "http_status": 200,
+    "mode": "space_agent_research_packet_planning",
+    "approval_request_created": false,
+    "accepted_for_execution": false,
+    "execution_enabled": false,
+    "writes_enabled": false
+  },
+  "assertions": {
+    "protected_research_created_pending_approval": true,
+    "protected_research_no_browser_youtube_firecrawl_or_write_execution": true,
+    "public_read_only_packet_did_not_create_approval_or_execute": true,
+    "secret_like_input_redacted": true,
+    "no_secret_or_raw_path_in_captured_payload": true
+  },
+  "result": "PASS",
+  "blocker_class": "NONE",
+  "runtime_blockers_observed": [
+    "firecrawl_missing_credential",
+    "firecrawl_missing_credential; interactive_browser_actions_require_bridge_session",
+    "playwright_mcp_service_unreachable"
+  ],
+  "rollback_command": "git revert <day-78-spaceagent-bridge-commit>"
+}

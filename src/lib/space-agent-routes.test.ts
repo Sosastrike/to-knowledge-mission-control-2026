@@ -8,6 +8,7 @@ const loadGatewayRegistryMock = vi.hoisted(() => vi.fn())
 const getPlaywrightMcpStatusMock = vi.hoisted(() => vi.fn())
 const createPlaywrightBrowserEvidencePacketMock = vi.hoisted(() => vi.fn())
 const runPlaywrightMcpMissionControlSmokeMock = vi.hoisted(() => vi.fn())
+const createBridgeApprovalRequestMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
   requireRole: requireRoleMock,
@@ -31,6 +32,10 @@ vi.mock('@/lib/playwright-mcp', async () => {
   }
 })
 
+vi.mock('@/lib/bridge-approval-request-store', () => ({
+  createBridgeApprovalRequest: createBridgeApprovalRequestMock,
+}))
+
 function request(url: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
   return new NextRequest(url, init)
 }
@@ -52,6 +57,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
     getPlaywrightMcpStatusMock.mockReset()
     createPlaywrightBrowserEvidencePacketMock.mockReset()
     runPlaywrightMcpMissionControlSmokeMock.mockReset()
+    createBridgeApprovalRequestMock.mockReset()
     clearSpaceAgentJobStoreForTests()
     loadGatewayRegistryMock.mockResolvedValue(createGatewayRegistryFromAgentNetwork({
       generatedAt: '2026-05-06T00:00:00.000Z',
@@ -122,6 +128,17 @@ describe('Space Agent Gateway and Bridge routes', () => {
       bridge_session_required: false,
       no_secrets_exposed: true,
       raw_paths_exposed: false,
+    })
+    createBridgeApprovalRequestMock.mockReturnValue({
+      ok: true,
+      http_status: 201,
+      approval_request_created: true,
+      approval_request_reused: false,
+      approval_request_id: 'apr_space_agent_research',
+      approval_state: 'pending',
+      audit_event_id: 'audit_space_agent_research',
+      blocked_reason: null,
+      next_action: 'Owner must approve this exact SpaceAgent research request before protected browser work can proceed.',
     })
   })
 
@@ -334,10 +351,11 @@ describe('Space Agent Gateway and Bridge routes', () => {
     expect(jobResponse.status).toBe(200)
     expect(jobPayload.job.id).toBe(jobId)
     expectOwnerSafe(plannedPayload)
+    expect(createBridgeApprovalRequestMock).not.toHaveBeenCalled()
 
     const blocked = await research.POST(request('http://localhost/api/gateway/space-agent/research', {
       method: 'POST',
-      body: JSON.stringify({ request: 'Log in with owner credentials and inspect a private dashboard.' }),
+      body: JSON.stringify({ request: 'Log in with owner credentials API_KEY=abc123 and inspect a private dashboard.' }),
     }))
     const blockedPayload = await json(blocked)
 
@@ -347,10 +365,38 @@ describe('Space Agent Gateway and Bridge routes', () => {
       accepted_for_execution: false,
       research_performed: false,
       bridge_session_required: true,
+      owner_approval_required: true,
+      approval_request_created: true,
+      approval_request_reused: false,
+      approval_id: 'apr_space_agent_research',
+      approval_state: 'pending',
+      audit_event_id: 'audit_space_agent_research',
       execution_enabled: false,
       writes_enabled: false,
     })
     expect(blockedPayload.blocked_reason).toBe('owner_credentials_not_approved')
+    expect(blockedPayload.next_action).toBe('Owner must approve this exact SpaceAgent research request before protected browser work can proceed.')
+    expect(createBridgeApprovalRequestMock).toHaveBeenCalledTimes(1)
+    expect(createBridgeApprovalRequestMock).toHaveBeenCalledWith(expect.objectContaining({
+      connector: 'space_agent',
+      action: 'spaceagent.research.request',
+      target: 'space_agent',
+      targetKey: expect.stringContaining('spaceagent.research.request:'),
+      riskLevel: 'medium',
+      protectedCategory: 'agent_execution',
+      approvalScope: expect.objectContaining({
+        route: '/api/gateway/space-agent/research',
+        requester: 'owner',
+        responsible_agent: 'agent_zero',
+        research_operation: 'browser_interaction',
+        bridge_session_required: true,
+        execution_enabled: false,
+        writes_enabled: false,
+        external_writes_enabled: false,
+      }),
+    }))
+    expect(createBridgeApprovalRequestMock.mock.calls[0][0].approvalScope).not.toHaveProperty('body')
+    expect(createBridgeApprovalRequestMock.mock.calls[0][0].approvalScope.request_summary).toContain('[redacted-secret]')
     expectOwnerSafe(blockedPayload)
   })
 })

@@ -1626,7 +1626,7 @@ export function classifySpaceAgentResearchOperation(request: string): SpaceAgent
   if (firecrawl && /\bcrawl(?:ing)?\b/.test(text)) return 'firecrawl_crawl'
   if (firecrawl && /\bscrape|scraping|scraper\b/.test(text)) return 'firecrawl_scrape'
   if (/youtube|you tube|video inspection|inspect (?:this |the )?video|video source|video transcript|video metadata|\bvideo\b/.test(text)) return 'youtube_video_inspection'
-  if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse/.test(text)) return 'browser_interaction'
+  if (/browser interaction|page interaction|interact with (?:a |the )?page|click|navigate|open (?:a |the )?(?:browser|site|page)|browse|inspect (?:a |the |this )?(?:private )?(?:dashboard|account dashboard|site|website|webpage|web page|page|browser)/.test(text)) return 'browser_interaction'
   if (/web search|search the web|search web|live search|online search|search online/.test(text)) return 'web_search'
   if (/read (?:a |the |this )?(?:website|webpage|web page|page|article)|website reading|page reading|webpage reading|article|webpage|web page|product page|pricing page|page details|url/.test(text)) return 'page_read'
   if (/\bweb\b|online research|live web|public site|public page|\bresearch\b|\bcrawl\b|crawl scope|competitor|competitive|compare assigned|verify assigned|source verifier|citation confidence/.test(text)) return 'web_search'

@@ -1,0 +1,336 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3287 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-78-spaceagent-bridge-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 78 - SpaceAgent + Bridge Integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS for developer-side Bridge gating) Tj
+0 -12 Td
+(Blocker class: NONE for protected SpaceAgent research approval gating) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(SpaceAgent protected actions through Bridge approval.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Wired protected SpaceAgent research requests through Bridge approval.) Tj
+0 -12 Td
+(- Kept public read-only research packet planning unchanged and ungated when no protected boundar) Tj
+0 -12 Td
+(y is requested.) Tj
+0 -12 Td
+(- Kept browser execution, YouTube execution, Firecrawl execution, external writes, and protected) Tj
+0 -12 Td
+( actions disabled.) Tj
+0 -12 Td
+(- Improved the SpaceAgent research classifier so private dashboard inspection is labeled as prot) Tj
+0 -12 Td
+(ected browser interaction instead of a vague no-research path.) Tj
+0 -12 Td
+(- Added route tests proving protected research creates a scoped approval request and does not in) Tj
+0 -12 Td
+(clude the raw request body.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/app/api/gateway/space-agent/research/route.ts`) Tj
+0 -12 Td
+(- `src/lib/space-agent-research.ts`) Tj
+0 -12 Td
+(- `src/lib/space-agent-routes.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-78-spaceagent-bridge-integration-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-78-spaceagent-bridge-integration.md`) Tj
+0 -12 Td
+(- `runtime/day-78-spaceagent-bridge-integration.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `POST /api/gateway/space-agent/research`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Mission Control or Gateway designer HTML, CSS, class names, or visual assets were changed.) Tj
+0 -12 Td
+(This lane only changes the backend truth for SpaceAgent protected research.) Tj
+0 -12 Td
+(Gateway and Agent Hub can now truthfully show:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- public read-only research packet planning stays non-executing) Tj
+0 -12 Td
+(- protected browser/private-boundary research requires owner approval) Tj
+0 -12 Td
+(- Bridge Session is required before protected browser work) Tj
+0 -12 Td
+(- approval pending after protected request) Tj
+0 -12 Td
+(- execution disabled) Tj
+0 -12 Td
+(- writes disabled) Tj
+0 -12 Td
+(- no fake completed research) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof was performed against a short-lived local standalone Mission Control runtime on `1) Tj
+0 -12 Td
+(27.0.0.1:3337`.) Tj
+0 -12 Td
+(The proof used an in-process API key and did not write or modify any `.env` file.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof result:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/bridge/space-agent/status` returned HTTP 200.) Tj
+0 -12 Td
+(- Status still reported runtime blockers: Firecrawl missing credential and Playwright MCP servic) Tj
+0 -12 Td
+(e unreachable.) Tj
+0 -12 Td
+(- `POST /api/gateway/space-agent/research` with protected private-dashboard input returned HTTP ) Tj
+0 -12 Td
+(423.) Tj
+0 -12 Td
+(- The protected request created a fresh pending Bridge approval request.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3017 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- The protected request included an audit event id.) Tj
+0 -12 Td
+(- Secret-like owner input was redacted to `[redacted-secret]`.) Tj
+0 -12 Td
+(- The protected request kept `accepted_for_execution:false`.) Tj
+0 -12 Td
+(- The protected request kept `research_performed:false`.) Tj
+0 -12 Td
+(- The protected request kept `execution_enabled:false`.) Tj
+0 -12 Td
+(- The protected request kept `writes_enabled:false`.) Tj
+0 -12 Td
+(- The protected request kept `protected_actions_enabled:false`.) Tj
+0 -12 Td
+(- A public read-only research packet request did not create approval and did not execute.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-78-spaceagent-bridge-integration-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/space-agent-routes.test.ts src/lib/space-agent-research.test.ts`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Results:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Focused SpaceAgent tests: 34 passed) Tj
+0 -12 Td
+(- Typecheck: PASS) Tj
+0 -12 Td
+(- Build: PASS) Tj
+0 -12 Td
+(- Full test suite: 198 files passed, 1480 tests passed) Tj
+0 -12 Td
+(- Protected route smoke: PASS, 41 routes checked) Tj
+0 -12 Td
+(- Diff whitespace check: PASS) Tj
+0 -12 Td
+(- Protected-file invariant scan: PASS) Tj
+0 -12 Td
+(- Secret scan: PASS) Tj
+0 -12 Td
+(- Raw exposure scan: PASS) Tj
+0 -12 Td
+(- `.env` diff: clean) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+(- No persistent production restart is claimed in this lane.) Tj
+0 -12 Td
+(- A local standalone proof runtime was started on `127.0.0.1:3337`, used for SpaceAgent proof an) Tj
+0 -12 Td
+(d route smoke, then stopped.) Tj
+0 -12 Td
+(- No listener remained on port 3337 after proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed runtime blockers remain truthful and are not hidden:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `firecrawl_missing_credential`) Tj
+0 -12 Td
+(- `firecrawl_missing_credential; interactive_browser_actions_require_bridge_session`) Tj
+0 -12 Td
+(- `playwright_mcp_service_unreachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(These do not block Day 78 developer-side Bridge gating because protected SpaceAgent research now) Tj
+0 -12 Td
+( creates an approval request and still does not execute.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-78-spaceagent-bridge-commit>) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 282 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report generation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 79 starts next: OpenClaw+ + Gateway integration.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003592 00000 n 
+0000003718 00000 n 
+0000006787 00000 n 
+0000006913 00000 n 
+0000007246 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+7316
+%%EOF

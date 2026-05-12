@@ -26,10 +26,12 @@ function WorkspaceRail({ page, onPage }) {
         const active = page === p.id;
         return (
           <button
+            type="button"
             key={p.id}
             className={`ws-rail-btn ${active ? 'active' : ''}`}
             onClick={()=>onPage(p.id)}
             title={p.label}
+            aria-label={p.label}
             aria-current={active ? 'page' : undefined}
           >
             <IconCmp size={16}/>

@@ -119,4 +119,38 @@ describe('Mission Control shell ownership', () => {
     expect(gatewayShell).toContain('min-width: 1700px')
     expect(gatewayShell).toContain('.gateway-shell .gw-frame-wrap .gw-frame { width: 1480px; }')
   })
+
+  it('keeps shell controls keyboard and screen-reader accessible without modifying mock pages', () => {
+    const styles = readSource('public/designer-mission-control/styles.css')
+    const shell = readSource('public/designer-mission-control/src/shell.jsx')
+    const workspaceRail = readSource('public/designer-mission-control/src/replicas/WorkspaceRail.jsx')
+    const notifications = readSource('public/designer-mission-control/src/notifications-drawer.jsx')
+    const gatewayShell = readSource('public/designer-mission-control/src/gateway/GatewayShell.jsx')
+
+    expect(styles).toContain('.icon-btn:focus-visible')
+    expect(styles).toContain('.topbar-search:focus-visible')
+    expect(styles).toContain('.persona:focus-visible')
+    expect(styles).toContain('.ws-rail-btn:focus-visible')
+
+    expect(shell).toContain('<button type="button" className="topbar-search"')
+    expect(shell).toContain('aria-label="Open Mission Control search"')
+    expect(shell).toContain('aria-label="Open settings quick panel"')
+    expect(shell).toContain('aria-label={`Preview role permissions as ${persona.name}`}')
+    expect(shell).not.toContain('<input placeholder="Search tickets, agents, settings…" readOnly/>')
+
+    expect(workspaceRail).toContain('<nav className="ws-rail" aria-label="Workspace">')
+    expect(workspaceRail).toContain('type="button"')
+    expect(workspaceRail).toContain('aria-label={p.label}')
+    expect(workspaceRail).toContain("aria-current={active ? 'page' : undefined}")
+
+    expect(notifications).toContain('aria-label={label}')
+    expect(notifications).toContain('aria-label="Close notifications"')
+
+    expect(gatewayShell).toContain('<button')
+    expect(gatewayShell).toContain('type="button"')
+    expect(gatewayShell).toContain('.gateway-shell .gw-side .gw-tab:focus-visible')
+    expect(gatewayShell).toContain('aria-label={t.label + ')
+    expect(gatewayShell).toContain("aria-current={t.id === active ? 'page' : undefined}")
+    expect(gatewayShell).toContain("aria-label={'Gateway frame showing ' + tab.label}")
+  })
 })

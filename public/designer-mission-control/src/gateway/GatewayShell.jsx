@@ -170,9 +170,10 @@ function GatewayShell() {
         .gateway-shell .gw-side { position: sticky; top: 0; align-self: start; max-height: 100vh; background: #0e1218; border-right: 1px solid rgba(255,255,255,0.10); padding: 20px 12px; overflow-y: auto; }
         .gateway-shell .gw-side h3 { margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #9aa3b2; padding: 0 10px; }
         .gateway-shell .gw-side .sub { font-size: 10.5px; color: #6b7280; padding: 0 10px; margin-bottom: 14px; }
-        .gateway-shell .gw-side .gw-tab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: #cdd4df; border: 1px solid transparent; margin-bottom: 2px; }
+        .gateway-shell .gw-side .gw-tab { width: 100%; appearance: none; background: transparent; font: inherit; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: #cdd4df; border: 1px solid transparent; margin-bottom: 2px; }
         .gateway-shell .gw-side .gw-tab:hover { background: #131923; color: #f1f4f9; }
         .gateway-shell .gw-side .gw-tab.active { background: #1a212d; color: #f1f4f9; border-color: rgba(255,255,255,0.10); }
+        .gateway-shell .gw-side .gw-tab:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
         .gateway-shell .gw-side .gw-tab .hint { font-size: 10px; color: #6b7280; font-weight: 400; }
         .gateway-shell .gw-side .gw-tab.active .hint { color: #9aa3b2; }
         .gateway-shell .gw-frame-wrap { position: relative; min-width: 0; min-height: 100%; background: #0a0d12; }
@@ -190,14 +191,17 @@ function GatewayShell() {
         <h3>Gateway</h3>
         <div className="sub">Mission Control · Gateway</div>
         {GATEWAY_TABS.map(t => (
-          <div
+          <button
+            type="button"
             key={t.id}
             className={'gw-tab' + (t.id === active ? ' active' : '')}
             onClick={() => selectTab(t.id)}
+            aria-current={t.id === active ? 'page' : undefined}
+            aria-label={t.label + ' — ' + t.hint}
           >
             <span>{t.label}</span>
             <span className="hint">{t.hint}</span>
-          </div>
+          </button>
         ))}
         <div className="gw-foot">
           <strong>Status grammar</strong><br/>
@@ -216,6 +220,7 @@ function GatewayShell() {
           className="gw-frame"
           src={tab.src}
           title={'Gateway · ' + tab.label}
+          aria-label={'Gateway frame showing ' + tab.label}
           loading="lazy"
           scrolling="no"
           style={{ height: frameHeight }}

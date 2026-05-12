@@ -1,0 +1,245 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 4109 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-88-accessibility-pass) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 88 — Accessibility Pass) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-20 Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Start commit: `95ea7b8`) Tj
+0 -12 Td
+(- `.env` changes: none requested, none made) Tj
+0 -12 Td
+(- Secret risk: no secrets inspected or emitted) Tj
+0 -12 Td
+(- Scope: Mission Control shell, Gateway shell wrapper, approved raw Gateway mock mount, visible ) Tj
+0 -12 Td
+(controls, keyboard/focus/labels/disabled-state behavior) Tj
+0 -12 Td
+(- Design constraint: approved raw mock HTML/CSS/class names remain untouched unless a designer-p) Tj
+0 -12 Td
+(rovided patch explicitly owns those files.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Initial Targets) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Verify top-level shell controls have keyboard-accessible button/link semantics.) Tj
+0 -12 Td
+(- Verify iframe has descriptive title text for Gateway tabs.) Tj
+0 -12 Td
+(- Verify narrow-screen controls hidden for responsive layout do not create dead keyboard traps.) Tj
+0 -12 Td
+(- Verify disabled/gated visible controls expose truthful state and do not fake execution.) Tj
+0 -12 Td
+(- Add/adjust shell-level tests for accessible labels and focus-visible behavior where code-owned) Tj
+0 -12 Td
+( shell markup exists.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20-65 Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Converted the code-owned Gateway sub-rail tab controls from clickable `div` elements into real) Tj
+0 -12 Td
+( buttons with `type="button"`, descriptive labels, and `aria-current` for the active tab.) Tj
+0 -12 Td
+(- Added a descriptive `aria-label` to the Gateway iframe while keeping the iframe pointed at the) Tj
+0 -12 Td
+( approved raw designer HTML assets.) Tj
+0 -12 Td
+(- Converted the topbar command-search affordance from a clickable wrapper with a read-only input) Tj
+0 -12 Td
+( into a real button with safe visible text, removing the keyboard trap caused by a non-editable ) Tj
+0 -12 Td
+(input.) Tj
+0 -12 Td
+(- Added labels and `type="button"` semantics to the settings, persona, workspace rail, notificat) Tj
+0 -12 Td
+(ion bell, and notification close controls.) Tj
+0 -12 Td
+(- Added visible focus outlines for shell-level buttons, links, workspace rail controls, persona ) Tj
+0 -12 Td
+(control, and Gateway sub-rail controls.) Tj
+0 -12 Td
+(- Did not modify approved raw mock HTML/CSS/class names under `public/designer-mission-control/d) Tj
+0 -12 Td
+(esign/gateway/`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 65-80 Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `.env` diff check — PASS) Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/mission-control-shell.test.ts` — PASS, 8 tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS after removing stale generated `.next/dev/types` output; no source) Tj
+0 -12 Td
+( files changed for that cleanup) Tj
+0 -12 Td
+(- `pnpm run build` — PASS) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 202 files, 1502 tests) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3342` — PASS, 44 routes) Tj
+0 -12 Td
+(- `node scripts/authenticated-route-smoke-contract.mjs http://127.0.0.1:3342` — PASS as `OWNER_G) Tj
+0 -12 Td
+(ATED`; no owner authenticated browser session was available and no cookie value was stored) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 80-95 Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local proof server: `127.0.0.1:3342`) Tj
+0 -12 Td
+(- Server stop result: stopped after proof; no production restart performed) Tj
+0 -12 Td
+(- Keyboard proof artifact: `runtime/day-88-accessibility-pass/keyboard-accessibility-proof.json`) Tj
+0 -12 Td
+(- Screenshot proof artifact: `runtime/day-88-accessibility-pass/keyboard-accessibility-proof.png) Tj
+0 -12 Td
+(`) Tj
+0 -12 Td
+(- Route smoke artifact: `runtime/day-88-accessibility-pass/protected-route-smoke.json`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2701 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- Authenticated smoke artifact: `runtime/day-88-accessibility-pass/authenticated-route-smoke.jso) Tj
+0 -12 Td
+(n`) Tj
+0 -12 Td
+(- Protected-file artifact: `runtime/day-88-accessibility-pass/protected-file-invariants.json`) Tj
+0 -12 Td
+(- Secret scan artifact: `runtime/day-88-accessibility-pass/secret-scan.json`) Tj
+0 -12 Td
+(- Raw exposure artifact: `runtime/day-88-accessibility-pass/raw-exposure-scan.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 95-100 Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day number and lane: Day 88 — Accessibility Pass) Tj
+0 -12 Td
+(- Status: developer-side closed with owner-auth visual proof gated) Tj
+0 -12 Td
+(- Exact blocker classification: `OWNER_GATED`) Tj
+0 -12 Td
+(- Remaining blocker: owner authenticated browser session required for true owner-session visual ) Tj
+0 -12 Td
+(proof; local visual-cookie proof and unauthenticated protection proof are complete) Tj
+0 -12 Td
+(- What was implemented: shell-level keyboard semantics, labels, focus visibility, active-tab sta) Tj
+0 -12 Td
+(te, and iframe label for the Mission Control/Gateway wrapper) Tj
+0 -12 Td
+(- Files changed: `public/designer-mission-control/src/gateway/GatewayShell.jsx`, `public/designe) Tj
+0 -12 Td
+(r-mission-control/src/notifications-drawer.jsx`, `public/designer-mission-control/src/replicas/W) Tj
+0 -12 Td
+(orkspaceRail.jsx`, `public/designer-mission-control/src/shell.jsx`, `public/designer-mission-con) Tj
+0 -12 Td
+(trol/styles.css`, `src/lib/mission-control-shell.test.ts`, `runtime/day-88-accessibility-pass.md) Tj
+0 -12 Td
+(`, `runtime/day-88-accessibility-pass/*`) Tj
+0 -12 Td
+(- Routes/endpoints changed: none; `/gateway` and Gateway query-tab routing remain the production) Tj
+0 -12 Td
+( shell surface) Tj
+0 -12 Td
+(- UI behavior: keyboard users can tab to and identify topbar controls, workspace rail entries, G) Tj
+0 -12 Td
+(ateway tab controls, notification controls, persona, and settings; active Gateway tab is exposed) Tj
+0 -12 Td
+( with `aria-current`; focus state is visible) Tj
+0 -12 Td
+(- Service/runtime behavior: no service behavior changed; proof server was local-only and stopped) Tj
+0 -12 Td
+( after smoke) Tj
+0 -12 Td
+(- Deploy/restart/smoke result: no production deploy/restart performed; local route smoke passed) Tj
+0 -12 Td
+(- Proof artifact: `runtime/day-88-accessibility-pass/keyboard-accessibility-proof.json`) Tj
+0 -12 Td
+(- Rollback command: `git revert <day-88-commit>`) Tj
+0 -12 Td
+(- Commit hash: pending commit) Tj
+0 -12 Td
+(- Push result: pending push) Tj
+0 -12 Td
+(- Confirmation that next day has automatically started: Day 89 — Error Message Polish starts aft) Tj
+0 -12 Td
+(er Day88 commit/push) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004408 00000 n 
+0000004534 00000 n 
+0000007287 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+7357
+%%EOF

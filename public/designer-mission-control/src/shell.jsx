@@ -120,26 +120,26 @@ function Topbar({ persona, onPersonaCycle, onGear, onSettings, inSettings, bread
       <div className="topbar-sep"/>
       <div className="breadcrumb">{breadcrumb}</div>
       <div className="topbar-spacer"/>
-      <div className="topbar-search" onClick={onCommand} title="Search loaded Mission Control data (⌘K)">
+      <button type="button" className="topbar-search" onClick={onCommand} title="Search loaded Mission Control data (⌘K)" aria-label="Open Mission Control search">
         <I.Search size={13}/>
-        <input placeholder="Search tickets, agents, settings…" readOnly/>
+        <span className="topbar-search-label">Search tickets, agents, settings…</span>
         <span className="kbd">⌘K</span>
-      </div>
+      </button>
       <NotifBell onOpen={onNotifications}/>
-      <button className={`icon-btn ${inSettings?'':''}`} title="Settings" onClick={onGear}>
+      <button type="button" className={`icon-btn ${inSettings?'':''}`} title="Settings" aria-label="Open settings quick panel" onClick={onGear}>
         <I.Gear size={15}/>
       </button>
       <div className="topbar-sep"/>
       {window.SessionBadge ? <window.SessionBadge/> : null}
       <div className="topbar-sep"/>
-      <div className="persona" onClick={onPersonaCycle} title="Preview role permissions">
+      <button type="button" className="persona" onClick={onPersonaCycle} title="Preview role permissions" aria-label={`Preview role permissions as ${persona.name}`}>
         <Avatar name={persona.name}/>
         <div style={{display:'flex', flexDirection:'column', lineHeight:1.1}}>
           <span style={{fontSize:12, color:'var(--fg-0)'}}>{persona.name.split(' ')[0]}</span>
           <span className="persona-role mono">{persona.id.toUpperCase()}</span>
         </div>
         <I.ChevronDown size={12}/>
-      </div>
+      </button>
     </header>
   );
 }

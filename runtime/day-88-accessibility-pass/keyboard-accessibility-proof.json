@@ -1,0 +1,671 @@
+{
+  "ok": true,
+  "generated_at": "2026-05-12T04:36:57.820Z",
+  "base_url": "http://127.0.0.1:3342",
+  "route": "/designer-mission-control/Mission Control.html?page=gateway&tab=overview",
+  "harness": "local_visual_cookie_only; owner authenticated proof remains OWNER_GATED",
+  "mock_files_modified": false,
+  "assertions": {
+    "topbar_search_is_button_with_label": true,
+    "topbar_search_no_readonly_input_trap": true,
+    "settings_button_has_label": true,
+    "notifications_button_has_label": true,
+    "persona_is_button_with_label": true,
+    "workspace_rail_buttons_labeled": true,
+    "gateway_tabs_are_buttons_labeled": true,
+    "gateway_active_tab_has_aria_current": true,
+    "iframe_has_descriptive_label": true,
+    "keyboard_focus_reaches_workspace_gateway": true,
+    "keyboard_focus_reaches_gateway_agent_hub": true,
+    "visible_focused_controls_have_outline": true
+  },
+  "initialMetrics": {
+    "topbarSearch": {
+      "tag": "BUTTON",
+      "type": "button",
+      "ariaLabel": "Open Mission Control search",
+      "title": "Search loaded Mission Control data (⌘K)",
+      "ariaCurrent": null,
+      "tabIndex": 0
+    },
+    "settings": {
+      "tag": "BUTTON",
+      "type": "button",
+      "ariaLabel": "Open settings quick panel",
+      "title": "Settings",
+      "ariaCurrent": null,
+      "tabIndex": 0
+    },
+    "notif": {
+      "tag": "BUTTON",
+      "type": "button",
+      "ariaLabel": "Open notifications",
+      "title": "Notifications",
+      "ariaCurrent": null,
+      "tabIndex": 0
+    },
+    "persona": {
+      "tag": "BUTTON",
+      "type": "button",
+      "ariaLabel": "Preview role permissions as Owner",
+      "title": "Preview role permissions",
+      "ariaCurrent": null,
+      "tabIndex": 0
+    },
+    "workspaceButtons": [
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Mission Control",
+        "title": "Mission Control",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Brain sync",
+        "title": "Brain sync",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "MiroFish",
+        "title": "MiroFish",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Gateway",
+        "title": "Gateway",
+        "ariaCurrent": "page",
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "FireCrawl",
+        "title": "FireCrawl",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Zapier",
+        "title": "Zapier",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "n8n",
+        "title": "n8n",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "MCP Tools",
+        "title": "MCP Tools",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Skills",
+        "title": "Skills",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Reports",
+        "title": "Reports",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Email & SMTP",
+        "title": "Email & SMTP",
+        "ariaCurrent": null,
+        "tabIndex": 0
+      }
+    ],
+    "gatewayButtons": [
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Overview — Nucleus — primary",
+        "title": null,
+        "ariaCurrent": "page",
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Agent Hub — 6 agents",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Paperclip — Workforce Control Plane",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Dispatcher — 9-step gate",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Token Governor — budgets",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Bridge Session — gating",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Health — live status",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Routes — engine routes",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Registry — nodes",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Policies — R/W/X",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Node spec — drilldown",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      },
+      {
+        "tag": "BUTTON",
+        "type": "button",
+        "ariaLabel": "Mobile — responsive",
+        "title": null,
+        "ariaCurrent": null,
+        "tabIndex": 0
+      }
+    ],
+    "iframe": {
+      "tag": "IFRAME",
+      "type": null,
+      "ariaLabel": "Gateway frame showing Overview",
+      "title": "Gateway · Overview",
+      "ariaCurrent": null,
+      "tabIndex": 0
+    },
+    "gatewayButtonCount": 12,
+    "workspaceButtonCount": 11,
+    "searchInputStillPresent": false
+  },
+  "focusTrail": [
+    {
+      "tag": "BUTTON",
+      "className": "topbar-search",
+      "text": "Search tickets, agents, settings…⌘K",
+      "ariaLabel": "Open Mission Control search",
+      "ariaCurrent": null,
+      "title": "Search loaded Mission Control data (⌘K)",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "icon-btn notif-bell",
+      "text": "",
+      "ariaLabel": "Open notifications",
+      "ariaCurrent": null,
+      "title": "Notifications",
+      "outlineStyle": "solid",
+      "outlineWidth": "0px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "icon-btn ",
+      "text": "",
+      "ariaLabel": "Open settings quick panel",
+      "ariaCurrent": null,
+      "title": "Settings",
+      "outlineStyle": "solid",
+      "outlineWidth": "0px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "",
+      "text": "Sign in",
+      "ariaLabel": null,
+      "ariaCurrent": null,
+      "title": "Sign in with your workspace credentials",
+      "outlineStyle": "auto",
+      "outlineWidth": "1px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "persona",
+      "text": "OOwnerOWNER",
+      "ariaLabel": "Preview role permissions as Owner",
+      "ariaCurrent": null,
+      "title": "Preview role permissions",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "close-x",
+      "text": "✕",
+      "ariaLabel": "Dismiss",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "auto",
+      "outlineWidth": "1px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Mission Control",
+      "ariaLabel": "Mission Control",
+      "ariaCurrent": null,
+      "title": "Mission Control",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Brain sync",
+      "ariaLabel": "Brain sync",
+      "ariaCurrent": null,
+      "title": "Brain sync",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "MiroFish",
+      "ariaLabel": "MiroFish",
+      "ariaCurrent": null,
+      "title": "MiroFish",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn active",
+      "text": "Gateway",
+      "ariaLabel": "Gateway",
+      "ariaCurrent": "page",
+      "title": "Gateway",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "FireCrawl",
+      "ariaLabel": "FireCrawl",
+      "ariaCurrent": null,
+      "title": "FireCrawl",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Zapier",
+      "ariaLabel": "Zapier",
+      "ariaCurrent": null,
+      "title": "Zapier",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "n8n",
+      "ariaLabel": "n8n",
+      "ariaCurrent": null,
+      "title": "n8n",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "MCP Tools",
+      "ariaLabel": "MCP Tools",
+      "ariaCurrent": null,
+      "title": "MCP Tools",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Skills",
+      "ariaLabel": "Skills",
+      "ariaCurrent": null,
+      "title": "Skills",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Reports",
+      "ariaLabel": "Reports",
+      "ariaCurrent": null,
+      "title": "Reports",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "ws-rail-btn ",
+      "text": "Email & SMTP",
+      "ariaLabel": "Email & SMTP",
+      "ariaCurrent": null,
+      "title": "Email & SMTP",
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab active",
+      "text": "OverviewNucleus — primary",
+      "ariaLabel": "Overview — Nucleus — primary",
+      "ariaCurrent": "page",
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Agent Hub6 agents",
+      "ariaLabel": "Agent Hub — 6 agents",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "PaperclipWorkforce Control Plane",
+      "ariaLabel": "Paperclip — Workforce Control Plane",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Dispatcher9-step gate",
+      "ariaLabel": "Dispatcher — 9-step gate",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Token Governorbudgets",
+      "ariaLabel": "Token Governor — budgets",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Bridge Sessiongating",
+      "ariaLabel": "Bridge Session — gating",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Healthlive status",
+      "ariaLabel": "Health — live status",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Routesengine routes",
+      "ariaLabel": "Routes — engine routes",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Registrynodes",
+      "ariaLabel": "Registry — nodes",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "PoliciesR/W/X",
+      "ariaLabel": "Policies — R/W/X",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Node specdrilldown",
+      "ariaLabel": "Node spec — drilldown",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "BUTTON",
+      "className": "gw-tab",
+      "text": "Mobileresponsive",
+      "ariaLabel": "Mobile — responsive",
+      "ariaCurrent": null,
+      "title": null,
+      "outlineStyle": "solid",
+      "outlineWidth": "2px",
+      "visible": true
+    },
+    {
+      "tag": "IFRAME",
+      "className": "gw-frame",
+      "text": "",
+      "ariaLabel": "Gateway frame showing Overview",
+      "ariaCurrent": null,
+      "title": "Gateway · Overview",
+      "outlineStyle": "none",
+      "outlineWidth": "0px",
+      "visible": true
+    },
+    {
+      "tag": "IFRAME",
+      "className": "gw-frame",
+      "text": "",
+      "ariaLabel": "Gateway frame showing Overview",
+      "ariaCurrent": null,
+      "title": "Gateway · Overview",
+      "outlineStyle": "none",
+      "outlineWidth": "0px",
+      "visible": true
+    },
+    {
+      "tag": "IFRAME",
+      "className": "gw-frame",
+      "text": "",
+      "ariaLabel": "Gateway frame showing Overview",
+      "ariaCurrent": null,
+      "title": "Gateway · Overview",
+      "outlineStyle": "none",
+      "outlineWidth": "0px",
+      "visible": true
+    }
+  ],
+  "screenshot": "runtime/day-88-accessibility-pass/keyboard-accessibility-proof.png",
+  "consoleMessages": [
+    {
+      "type": "error",
+      "text": "Refused to execute script from 'http://127.0.0.1:3342/designer-mission-control/src/notification-bus.jsx' because its MIME type ('text/jsx') is not executable, and strict MIME type checking is enabled."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "blocker_class": "NONE",
+  "secrets_exposed": false,
+  "raw_paths_exposed_to_ui": false
+}

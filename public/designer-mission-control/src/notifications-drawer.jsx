@@ -23,8 +23,9 @@ function useNotificationsStore(){
 
 function NotifBell({ onOpen }) {
   const { unread } = useNotificationsStore();
+  const label = unread > 0 ? `Open notifications, ${unread} unread` : 'Open notifications';
   return (
-    <button className="icon-btn notif-bell" title={unread > 0 ? `${unread} unread notification${unread===1?'':'s'}` : 'Notifications'} onClick={onOpen}>
+    <button type="button" className="icon-btn notif-bell" title={unread > 0 ? `${unread} unread notification${unread===1?'':'s'}` : 'Notifications'} aria-label={label} onClick={onOpen}>
       <I.Bell size={15}/>
       {unread > 0 && (
         <span className="notif-badge">{unread > 99 ? '99+' : unread}</span>
@@ -78,7 +79,7 @@ function NotificationsDrawer({ open, onClose, onNavigate }) {
                 Clear
               </button>
             )}
-            <button className="icon-btn" onClick={onClose}><I.X size={14}/></button>
+            <button type="button" className="icon-btn" onClick={onClose} aria-label="Close notifications"><I.X size={14}/></button>
           </div>
         </header>
 

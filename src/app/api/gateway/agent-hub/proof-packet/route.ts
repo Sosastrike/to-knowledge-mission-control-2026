@@ -5,6 +5,7 @@ import { buildCloudCodeAgentHealth } from '@/lib/gateway-cloudcode-integration'
 import { attachOpenClawGatewayRuntimeStatus, attachSpaceAgentBrowserAutomationStatus, buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
 import { loadGatewayRegistry } from '@/lib/gateway-registry-api'
 import { buildMultiAgentProofPacket } from '@/lib/multi-agent-proof-packet'
+import { buildRuntimeHealthPayload } from '@/lib/runtime-health'
 import { getFirecrawlStatus } from '@/lib/firecrawl-status'
 import { getOpenClawGatewayRuntimeStatus } from '@/lib/openclaw-gateway-runtime'
 import { getPlaywrightMcpStatus } from '@/lib/playwright-mcp'
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   ])
   const firecrawl = getFirecrawlStatus()
   const youtube = getYouTubeTranscriptConnectorStatus()
-  const payload = attachOpenClawGatewayRuntimeStatus(
+  const agentHubPayload = attachOpenClawGatewayRuntimeStatus(
     attachSpaceAgentBrowserAutomationStatus(
       buildAgentHubStatusPayload(registry),
       buildSpaceAgentBrowserAutomationPayload({
@@ -38,26 +39,22 @@ export async function GET(request: NextRequest) {
     ),
     openclawRuntime,
   )
-
-  const cloudcodeAgentHealth = buildCloudCodeAgentHealth(payload as any)
-  const agentStatusConsistency = buildAgentStatusConsistencyReport(payload, cloudcodeAgentHealth)
-  const multiAgentProofPacket = buildMultiAgentProofPacket({
-    agentHubPayload: payload,
-    cloudcodeHealth: cloudcodeAgentHealth,
-    consistencyReport: agentStatusConsistency,
-    runtimeCommit: process.env.MISSION_CONTROL_RUNTIME_COMMIT || process.env.SOURCE_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || null,
+  const cloudcodeHealth = buildCloudCodeAgentHealth(agentHubPayload as any)
+  const consistencyReport = buildAgentStatusConsistencyReport(agentHubPayload, cloudcodeHealth)
+  const runtimeHealth = buildRuntimeHealthPayload({ port: new URL(request.url).port || process.env.PORT || '3337' })
+  const proofPacket = buildMultiAgentProofPacket({
+    agentHubPayload,
+    cloudcodeHealth,
+    consistencyReport,
+    runtimeCommit: runtimeHealth.source_commit,
   })
 
   return NextResponse.json({
-    ...payload,
-    agent_status_consistency: agentStatusConsistency,
-    multi_agent_proof_packet: multiAgentProofPacket,
-    cloudcode_backend_support: {
-      applied: true,
-      source: 'cloudcode-backend-support-handoff',
-      helpers: ['buildAgentHealth'],
+    ...proofPacket,
+    agent_status_consistency: {
+      ok: consistencyReport.ok,
+      issues: consistencyReport.issues,
     },
-    cloudcode_agent_health: cloudcodeAgentHealth,
   }, {
     headers: { 'Cache-Control': 'no-store' },
   })

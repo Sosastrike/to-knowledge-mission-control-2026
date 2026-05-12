@@ -21,6 +21,7 @@ describe('protected route smoke contract', () => {
       '/api/runtime/failure-states',
       '/api/gateway/status',
       '/api/gateway/agent-hub/status',
+      '/api/gateway/agent-hub/proof-packet',
       '/api/bridge/agent-zero/status',
       '/api/bridge/approval-requests',
     ]))

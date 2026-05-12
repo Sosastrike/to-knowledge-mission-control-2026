@@ -67,6 +67,7 @@ export type AgentHubAgent = {
     audit: string
     bridge_status: string | null
   }
+  cloudcode_health_ids: string[]
   interface: {
     mission_control_surface: string
     owner_access: string
@@ -530,6 +531,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
         audit: '/api/gateway/agent-hub/agents/' + definition.id + '/audit',
         bridge_status: definition.bridgeStatusRoute,
       },
+      cloudcode_health_ids: [...definition.cloudCodeHealthIds],
       interface: {
         mission_control_surface: '/gateway/agent-hub' + (definition.id === 'paperclip' ? '/paperclip' : ''),
         owner_access: definition.interfaceSummary,

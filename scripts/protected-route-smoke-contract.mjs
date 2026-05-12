@@ -30,6 +30,7 @@ export const PROTECTED_API_ROUTES = [
   { path: '/api/gateway/status', label: 'Gateway status' },
   { path: '/api/gateway/route-smoke', label: 'Gateway route smoke' },
   { path: '/api/gateway/agent-hub/status', label: 'Agent Hub status' },
+  { path: '/api/gateway/agent-hub/proof-packet', label: 'Agent Hub proof packet' },
   { path: '/api/gateway/agent-hub/registry', label: 'Agent Hub registry' },
   { path: '/api/gateway/nodes/pi', label: 'Pi node' },
   { path: '/api/gateway/nodes/space-agent', label: 'SpaceAgent node' },

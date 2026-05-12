@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "day": 81,
+  "lane": "Multi-Agent Proof Packet",
+  "generated_at": "2026-05-12T02:56:00.000Z",
+  "runtime_commit_before_day81_commit": "789bc2836ed19c7f4a99189046d5ad9559a92926",
+  "endpoint_added": "/api/gateway/agent-hub/proof-packet",
+  "local_runtime_proof": {
+    "protected_route_smoke": {
+      "ok": true,
+      "routes_checked": 42,
+      "failures": 0,
+      "base_url": "http://127.0.0.1:3337"
+    },
+    "multi_agent_proof_packet": {
+      "ok": true,
+      "status": 200,
+      "mode": "multi_agent_proof_packet",
+      "api_key_printed": false,
+      "packets_total": 6,
+      "packet_ids": [
+        "paperclip",
+        "agent-zero",
+        "hermes",
+        "spaceagent",
+        "pi-mono",
+        "openclaw-plus"
+      ],
+      "consistency_ok": true,
+      "consistency_issues": 0,
+      "execution_enabled": false,
+      "writes_enabled": false,
+      "external_writes_enabled": false,
+      "secrets_exposed": false,
+      "raw_paths_exposed": false
+    }
+  },
+  "checks": {
+    "focused_tests": {
+      "ok": true,
+      "files": 4,
+      "tests": 17
+    },
+    "typecheck": "PASS",
+    "build": "PASS",
+    "full_tests": {
+      "ok": true,
+      "files": 201,
+      "tests": 1493
+    },
+    "git_diff_check": "PASS",
+    "protected_file_invariants": "PASS",
+    "secret_scan_contract": "PASS",
+    "raw_exposure_scan_contract": "PASS",
+    "env_diff": "clean"
+  },
+  "safety": {
+    "env_changed": false,
+    "secrets_printed": false,
+    "auth_weakened": false,
+    "external_writes_enabled": false,
+    "public_local_exposure_added": false,
+    "designer_assets_modified": false
+  },
+  "blocker_class": "NONE",
+  "remaining_runtime_blockers_are_individual_agent_truth_not_day81_blockers": [
+    "agent_zero_external_api_key_missing",
+    "hermes_not_installed",
+    "paperclip_sandbox_service_not_running",
+    "playwright_mcp_service_unreachable",
+    "firecrawl_credential_required",
+    "openclaw_doctor_runtime_not_reachable"
+  ]
+}

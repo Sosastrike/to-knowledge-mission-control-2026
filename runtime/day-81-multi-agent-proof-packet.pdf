@@ -1,0 +1,334 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3208 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-81-multi-agent-proof-packet) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 81 - Multi-Agent Proof Packet) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: PASS for developer-side proof packet closure) Tj
+0 -12 Td
+(Blocker class: NONE for this lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Generate one canonical proof packet covering Agent Zero, Hermes, Pi, Paperclip, SpaceAgent, and ) Tj
+0 -12 Td
+(OpenClaw+ with timestamp, runtime commit, checked route/service, result, blocker, audit pointer,) Tj
+0 -12 Td
+( safe log pointer, and rollback command.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a shared multi-agent proof packet builder.) Tj
+0 -12 Td
+(- Added authenticated `GET /api/gateway/agent-hub/proof-packet`.) Tj
+0 -12 Td
+(- Added `multi_agent_proof_packet` to `GET /api/gateway/agent-hub/status`.) Tj
+0 -12 Td
+(- Added CloudCode health ids to each Agent Hub agent row so proof packets can bind each card to ) Tj
+0 -12 Td
+(its backend truth rows.) Tj
+0 -12 Td
+(- Added route-smoke coverage for the new proof-packet endpoint.) Tj
+0 -12 Td
+(- Added tests proving the packet contains all six canonical agents, keeps blocked backend truth ) Tj
+0 -12 Td
+(separate from ready advisory truth, and does not expose secret-shaped or raw-path text.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `src/lib/multi-agent-proof-packet.ts`) Tj
+0 -12 Td
+(- `src/lib/multi-agent-proof-packet.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-agent-hub.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/agent-hub/status/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/agent-hub/proof-packet/route.ts`) Tj
+0 -12 Td
+(- `scripts/protected-route-smoke-contract.mjs`) Tj
+0 -12 Td
+(- `src/lib/protected-route-smoke-contract.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-81-multi-agent-proof-packet-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-81-multi-agent-proof-packet.md`) Tj
+0 -12 Td
+(- `runtime/day-81-multi-agent-proof-packet.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/proof-packet` was added.) Tj
+0 -12 Td
+(- `GET /api/gateway/agent-hub/status` now includes `multi_agent_proof_packet`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Gateway designer HTML, CSS, class names, or visual assets were modified.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Mission Control and Agent Hub can now read one aggregate proof packet that includes:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- one proof packet per canonical agent) Tj
+0 -12 Td
+(- route/service checked) Tj
+0 -12 Td
+(- owner-facing result) Tj
+0 -12 Td
+(- blocker and blocker class) Tj
+0 -12 Td
+(- audit pointer) Tj
+0 -12 Td
+(- safe log pointer) Tj
+0 -12 Td
+(- CloudCode health row ids) Tj
+0 -12 Td
+(- rollback command) Tj
+0 -12 Td
+(- no execution, writes, or external writes enabled) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Runtime proof used a short-lived local-only standalone Mission Control runtime bound to `127.0.0) Tj
+0 -12 Td
+(.1:3337`. The proof server was started only for smoke verification and was shut down by the proo) Tj
+0 -12 Td
+(f script.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2607 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(No external writes were enabled. No Bridge action was executed. No `.env` file was changed. No A) Tj
+0 -12 Td
+(PI key was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm vitest run src/lib/multi-agent-proof-packet.test.ts src/lib/agent-status-consistency.tes) Tj
+0 -12 Td
+(t.ts src/lib/gateway-agent-hub.test.ts src/lib/protected-route-smoke-contract.test.ts --reporter) Tj
+0 -12 Td
+(=dot`: PASS, 4 files, 17 tests) Tj
+0 -12 Td
+(- `pnpm run typecheck`: PASS) Tj
+0 -12 Td
+(- `pnpm run build`: PASS) Tj
+0 -12 Td
+(- `pnpm test`: PASS, 201 files, 1493 tests) Tj
+0 -12 Td
+(- `git diff --check`: PASS) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`: PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`: PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`: PASS) Tj
+0 -12 Td
+(- `.env` diff check: clean) Tj
+0 -12 Td
+(- protected route smoke: PASS, 42 routes, 0 failures) Tj
+0 -12 Td
+(- local authenticated proof-packet smoke: PASS, 6 packets, 0 consistency issues) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-81-multi-agent-proof-packet-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed packet ids:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Paperclip) Tj
+0 -12 Td
+(- Agent Zero) Tj
+0 -12 Td
+(- Hermes) Tj
+0 -12 Td
+(- SpaceAgent) Tj
+0 -12 Td
+(- Pi) Tj
+0 -12 Td
+(- OpenClaw+) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed proof flags:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- consistency ok: true) Tj
+0 -12 Td
+(- consistency issues: 0) Tj
+0 -12 Td
+(- execution enabled: false) Tj
+0 -12 Td
+(- writes enabled: false) Tj
+0 -12 Td
+(- external writes enabled: false) Tj
+0 -12 Td
+(- secrets exposed: false) Tj
+0 -12 Td
+(- raw paths exposed: false) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blockers) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(No Day 81 proof-packet blocker remains.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(The following individual agent blockers remain truthful and are carried into later lanes:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `agent_zero_external_api_key_missing`) Tj
+0 -12 Td
+(- `hermes_not_installed`) Tj
+0 -12 Td
+(- `paperclip_sandbox_service_not_running`) Tj
+0 -12 Td
+(- `playwright_mcp_service_unreachable`) Tj
+0 -12 Td
+(- `firecrawl_credential_required`) Tj
+0 -12 Td
+(- `openclaw_doctor_runtime_not_reachable`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Blocker classification for Day 81: NONE) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-81-multi-agent-proof-packet-commit>) Tj
+0 -12 Td
+(```) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 298 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Pending at report generation time.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 82 - Agent Integration Final Closeout automatically starts after this lane closes.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003513 00000 n 
+0000003639 00000 n 
+0000006298 00000 n 
+0000006424 00000 n 
+0000006773 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+6843
+%%EOF

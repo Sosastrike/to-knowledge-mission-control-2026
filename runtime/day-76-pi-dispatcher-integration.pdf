@@ -1,0 +1,243 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3611 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-76-pi-dispatcher-integration) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 76 — Pi + Dispatcher Integration Closeout) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Status: developer-side closed) Tj
+0 -12 Td
+(Blocker class: NONE) Tj
+0 -12 Td
+(Generated: 2026-05-12T01:42:00Z) Tj
+0 -12 Td
+(Lane: Pi advisory dispatcher) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Scope) Tj
+0 -12 Td
+(Day 76 wires Pi into the Gateway dispatcher surface as an advisory-only route optimizer. Pi rema) Tj
+0 -12 Td
+(ins a Dispatcher / Route Optimizer Candidate. Agent Zero remains commander. Pi cannot execute, w) Tj
+0 -12 Td
+(rite, call tools, bypass Gateway, replace Agent Zero, replace Hermes, replace Paperclip, replace) Tj
+0 -12 Td
+( SpaceAgent, or replace OpenClaw+.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Added protected Gateway endpoint `/api/gateway/dispatcher/pi`.) Tj
+0 -12 Td
+(- `GET /api/gateway/dispatcher/pi` returns the canonical Pi shadow dispatcher status from the ex) Tj
+0 -12 Td
+(isting Pi truth source.) Tj
+0 -12 Td
+(- `POST /api/gateway/dispatcher/pi` returns a route recommendation and audit event without execu) Tj
+0 -12 Td
+(ting or writing.) Tj
+0 -12 Td
+(- Extended the Pi proof packet route pointer so Gateway dispatcher proofs can point at `/api/gat) Tj
+0 -12 Td
+(eway/dispatcher/pi`.) Tj
+0 -12 Td
+(- Hardened Pi owner-input sanitization to redact `/Users/<owner>/...` paths in addition to exist) Tj
+0 -12 Td
+(ing local path and secret-like redaction.) Tj
+0 -12 Td
+(- Preserved Pi's existing advisory-only model and did not broaden connector execution.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/app/api/gateway/dispatcher/pi/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/gateway/dispatcher/pi/route.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-pi-dispatcher.ts`) Tj
+0 -12 Td
+(- `runtime/day-76-pi-dispatcher-integration-proof.json`) Tj
+0 -12 Td
+(- `runtime/day-76-pi-dispatcher-integration.md`) Tj
+0 -12 Td
+(- `runtime/day-76-pi-dispatcher-integration.pdf`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes Changed) Tj
+0 -12 Td
+(- Added `/api/gateway/dispatcher/pi`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+(No designer UI or mock HTML/CSS/class names were modified. This is backend dispatcher truth only) Tj
+0 -12 Td
+(. Gateway and Agent Hub can consume this endpoint to show Pi as advisory-only, not as a live exe) Tj
+0 -12 Td
+(cutor.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(Runtime proof was performed against a local standalone Mission Control server on `127.0.0.1:3337) Tj
+0 -12 Td
+(` with an in-process proof API key. No `.env` file was changed and no key value was printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof checks passed:) Tj
+0 -12 Td
+(- status returns `mode: pi_dispatcher_shadow_status`) Tj
+0 -12 Td
+(- Pi authority is `advisory_only`) Tj
+0 -12 Td
+(- Pi commander is `false`) Tj
+0 -12 Td
+(- Pi does not replace Agent Zero) Tj
+0 -12 Td
+(- SpaceAgent recommendation for web research) Tj
+0 -12 Td
+(- Hermes recommendation for workflow design while preserving Agent Zero authority) Tj
+0 -12 Td
+(- Unknown connector blocks with `unknown_connector_not_registered`) Tj
+0 -12 Td
+(- Build-Wiki Run Now remains non-executing and gated) Tj
+0 -12 Td
+(- `/Users/...` and secret-like owner input are redacted) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Proof artifact: `runtime/day-76-pi-dispatcher-integration-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS) Tj
+0 -12 Td
+(- `pnpm run build` — PASS; route list includes `/api/gateway/dispatcher/pi`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1685 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- `pnpm exec vitest run src/app/api/gateway/dispatcher/pi/route.test.ts src/lib/gateway-pi-dispa) Tj
+0 -12 Td
+(tcher.test.ts` — PASS, 15 tests) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 198 files / 1480 tests) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3337` — PASS, 41 routes chec) Tj
+0 -12 Td
+(ked) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- `.env` diff check — PASS, no output) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Deploy / Restart / Smoke Result) Tj
+0 -12 Td
+(No production deploy or restart was claimed in this day. A short-lived local standalone proof se) Tj
+0 -12 Td
+(rver was started and stopped. No listener remained on port 3337 after proof.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Security Notes) Tj
+0 -12 Td
+(- No `.env` edits.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No raw paths exposed in Pi proof output.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No fake Done/GO wording added.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+(`git revert <day-76-pi-dispatcher-commit>`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+(Pending at report creation. Exact files will be staged only after this report and PDF are genera) Tj
+0 -12 Td
+(ted.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(After commit and push, Day 77 starts: Paperclip + Bridge integration.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003910 00000 n 
+0000004036 00000 n 
+0000005773 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+5843
+%%EOF

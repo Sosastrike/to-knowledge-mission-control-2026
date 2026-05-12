@@ -1,0 +1,557 @@
+{
+  "generated_at": "2026-05-12T01:41:03.724Z",
+  "route": "/api/gateway/dispatcher/pi",
+  "runtime_base": "http://127.0.0.1:3337",
+  "auth_method": "local_process_api_key_not_written_to_env_file",
+  "checks": {
+    "status": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_status",
+        "generated_at": "2026-05-12T01:41:04.360Z",
+        "canonical_status": "LIVE",
+        "blocker_class": "NONE",
+        "proof_packet": {
+          "lane": "Pi",
+          "timestamp": "2026-05-12T01:41:04.360Z",
+          "runtime_commit": null,
+          "route_or_service_checked": "/api/gateway/dispatcher/pi",
+          "result": "LIVE",
+          "blocker": null,
+          "blocker_class": "NONE",
+          "audit_pointer": "/api/gateway/dispatcher/pi",
+          "safe_log_pointer": null,
+          "rollback_command": "git revert <day-03-pi-commit>",
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "raw_paths_exposed": false
+        },
+        "node_id": "pi",
+        "agent_hub_id": "pi-mono",
+        "canonical_gateway_node": "pi_dispatcher",
+        "canonical_agent_registry": [
+          {
+            "id": "agent-zero",
+            "registry_node_id": "agent_zero",
+            "cloudcode_health_ids": [
+              "agent_zero"
+            ],
+            "name": "Agent Zero",
+            "role": "Commander",
+            "layer": "command_authority",
+            "authority_rank": 1,
+            "commander": true,
+            "advisory_only": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "blocked",
+            "production_truth": "commander track; status route is visible, but live test-chat remains credential-gated until the approved Agent Zero external API key is available",
+            "bridge_status_route": "/api/bridge/agent-zero/status"
+          },
+          {
+            "id": "hermes",
+            "registry_node_id": "hermes",
+            "cloudcode_health_ids": [
+              "hermes"
+            ],
+            "name": "Hermes",
+            "role": "Lieutenant / Skill + Workflow Builder",
+            "layer": "planning_and_skill_design",
+            "authority_rank": 2,
+            "commander": false,
+            "advisory_only": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "blocked",
+            "production_truth": "safe test-chat adapter proof exists, but the standalone Hermes runtime status route remains service-down until hermes-gateway service/runtime is installed",
+            "bridge_status_route": "/api/bridge/hermes/status"
+          },
+          {
+            "id": "pi-mono",
+            "registry_node_id": "pi",
+            "cloudcode_health_ids": [
+              "pi"
+            ],
+            "name": "Pi-mono",
+            "role": "Dispatcher / Route Optimizer Candidate",
+            "layer": "shadow_dispatch_recommendation",
+            "authority_rank": 3,
+            "commander": false,
+            "advisory_only": true,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "read_only",
+            "production_truth": "Mission Control in-process shadow dispatcher is live for advisory route recommendations; execution and writes remain disabled",
+            "bridge_status_route": "/api/bridge/pi/status"
+          },
+          {
+            "id": "spaceagent",
+            "registry_node_id": "space_agent",
+            "cloudcode_health_ids": [
+              "spaceagent_playwright",
+              "spaceagent_youtube",
+              "spaceagent_firecrawl"
+            ],
+            "name": "SpaceAgent",
+            "role": "Browser / Firecrawl / YouTube Research Specialist",
+            "layer": "web_research_specialist",
+            "authority_rank": 4,
+            "commander": false,
+            "advisory_only": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "pending",
+            "production_truth": "YouTube transcript connector is proven for public read-only research; Playwright MCP is currently service-down and Firecrawl remains credential/backend gated",
+            "bridge_status_route": "/api/bridge/space-agent/status"
+          },
+          {
+            "id": "paperclip",
+            "registry_node_id": "paperclip",
+            "cloudcode_health_ids": [
+              "paperclip"
+            ],
+            "name": "Paperclip",
+            "role": "Workforce Control Plane",
+            "layer": "workforce_and_task_orchestration_before_openclaw_runtime",
+            "authority_rank": 5,
+            "commander": false,
+            "advisory_only": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "blocked",
+            "production_truth": "service-down until the Paperclip sandbox/local or Tailnet-only runtime is running and owner login/session proof is available",
+            "bridge_status_route": "/api/bridge/paperclip/status"
+          },
+          {
+            "id": "openclaw-plus",
+            "registry_node_id": "openclaw_plus",
+            "cloudcode_health_ids": [
+              "openclaw_plus"
+            ],
+            "name": "OpenClaw+",
+            "role": "Runtime / Skills / Mini-Agent Execution Layer",
+            "layer": "runtime_skills_agents_mini_agent_execution_layer",
+            "authority_rank": 6,
+            "commander": false,
+            "advisory_only": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "agent_hub_status": "blocked",
+            "production_truth": "SERVICE_DOWN until an approved OpenClaw+ CLI/runtime binary is installed or exposed to the Mission Control runtime service user and the doctor route returns a real health payload",
+            "bridge_status_route": "/api/openclaw/doctor"
+          }
+        ],
+        "role": "Dispatcher / Route Optimizer Candidate",
+        "authority": "advisory_only",
+        "status": "shadow_live",
+        "runtime": {
+          "installed": true,
+          "reachable": true,
+          "mode": "mission_control_in_process_shadow",
+          "service_mode": false,
+          "cli_mode": false,
+          "rpc_mode": false,
+          "sdk_mode": true,
+          "public_exposure": false,
+          "blocker": "advisory_only_no_execution_authority"
+        },
+        "capabilities": {
+          "route_recommendations": true,
+          "model_recommendations": true,
+          "agent_recommendations": true,
+          "mini_agent_recommendations": true,
+          "policy_explanation": true
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "tools_enabled": false,
+        "can_bypass_gateway": false,
+        "commander": false,
+        "replaces_agent_zero": false,
+        "replaces_hermes": false,
+        "replaces_paperclip": false,
+        "replaces_spaceagent": false,
+        "replaces_openclaw_plus": false,
+        "supervisors": [
+          "gateway",
+          "agent_zero"
+        ],
+        "blockers": [],
+        "safe_probe": {
+          "ok": true,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:04.360Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Given this owner request, which route would you recommend?",
+          "classification": "plan",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "agent_zero",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero"
+            ]
+          },
+          "recommended_agent": "agent_zero",
+          "recommended_model": null,
+          "recommended_mini_agent_type": null,
+          "policy_result": "allowed",
+          "blocked_reason": null,
+          "confidence": "medium",
+          "rationale": "Owner commands route to Agent Zero by default.",
+          "fallback_route": null,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi recommends agent_zero in shadow mode; Agent Zero remains commander."
+        },
+        "last_result": {
+          "ok": true,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:04.360Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Given this owner request, which route would you recommend?",
+          "classification": "plan",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "agent_zero",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero"
+            ]
+          },
+          "recommended_agent": "agent_zero",
+          "recommended_model": null,
+          "recommended_mini_agent_type": null,
+          "policy_result": "allowed",
+          "blocked_reason": null,
+          "confidence": "medium",
+          "rationale": "Owner commands route to Agent Zero by default.",
+          "fallback_route": null,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi recommends agent_zero in shadow mode; Agent Zero remains commander."
+        },
+        "advisory_result_proven": true,
+        "audit_trail": [
+          {
+            "event": "pi.dispatcher.recommendation.generated",
+            "route_target": "agent_zero",
+            "decision": "allowed",
+            "blocked_reason": null,
+            "external_write": false,
+            "execution_enabled": false,
+            "writes_enabled": false,
+            "secrets_exposed": false,
+            "recorded_at": "2026-05-12T01:41:04.360Z"
+          }
+        ],
+        "no_secrets_exposed": true,
+        "owner_visible_summary": "Pi is live as a Mission Control in-process shadow dispatcher. It recommends routes but cannot execute, write, call tools, or replace Agent Zero."
+      }
+    },
+    "web_research": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_recommendation_route",
+        "generated_at": "2026-05-12T01:41:04.377Z",
+        "recommendation": {
+          "ok": true,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:04.377Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Search the web for current sources",
+          "classification": "research",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "space_agent",
+            "via": [
+              "owner",
+              "gateway",
+              "pi",
+              "gateway",
+              "agent_zero",
+              "gateway",
+              "space_agent"
+            ]
+          },
+          "recommended_agent": "space_agent",
+          "recommended_model": null,
+          "recommended_mini_agent_type": "research",
+          "policy_result": "allowed",
+          "blocked_reason": null,
+          "confidence": "medium",
+          "rationale": "Web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research should route through Pi recommendation and Agent Zero approval to Space Agent.",
+          "fallback_route": null,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi recommends space_agent in shadow mode; Agent Zero remains commander."
+        },
+        "audit_event": {
+          "event": "pi.dispatcher.recommendation.generated",
+          "route_target": "space_agent",
+          "decision": "allowed",
+          "blocked_reason": null,
+          "external_write": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "recorded_at": "2026-05-12T01:41:04.377Z"
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "secrets_exposed": false,
+        "raw_paths_exposed": false
+      }
+    },
+    "workflow_design": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_recommendation_route",
+        "generated_at": "2026-05-12T01:41:04.911Z",
+        "recommendation": {
+          "ok": false,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:04.911Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Design a workflow skill for customer email triage",
+          "classification": "skill",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "hermes",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero",
+              "hermes"
+            ]
+          },
+          "recommended_agent": "hermes",
+          "recommended_model": null,
+          "recommended_mini_agent_type": "workflow",
+          "policy_result": "blocked",
+          "blocked_reason": "hermes_degraded_or_pending_live_proof",
+          "confidence": "high",
+          "rationale": "Gateway policy blocks the route because hermes_degraded_or_pending_live_proof.",
+          "fallback_route": "agent_zero_manual_review",
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi recommends blocking or gating this route under Agent Zero review: hermes_degraded_or_pending_live_proof."
+        },
+        "audit_event": {
+          "event": "pi.dispatcher.recommendation.generated",
+          "route_target": "hermes",
+          "decision": "blocked",
+          "blocked_reason": "hermes_degraded_or_pending_live_proof",
+          "external_write": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "recorded_at": "2026-05-12T01:41:04.911Z"
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "secrets_exposed": false,
+        "raw_paths_exposed": false
+      }
+    },
+    "unknown_connector": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_recommendation_route",
+        "generated_at": "2026-05-12T01:41:05.403Z",
+        "recommendation": {
+          "ok": false,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:05.403Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Use UnknownCRM to update a record",
+          "classification": "unknown",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "blocked",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero"
+            ]
+          },
+          "recommended_agent": "agent_zero",
+          "recommended_model": null,
+          "recommended_mini_agent_type": null,
+          "policy_result": "blocked",
+          "blocked_reason": "unknown_connector_not_registered",
+          "confidence": "high",
+          "rationale": "Pi cannot recommend unknowncrm because it is not present in Gateway registry.",
+          "fallback_route": "agent_zero_manual_review",
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi blocked the route in shadow mode: unknown_connector_not_registered."
+        },
+        "audit_event": {
+          "event": "pi.dispatcher.recommendation.generated",
+          "route_target": "blocked",
+          "decision": "blocked",
+          "blocked_reason": "unknown_connector_not_registered",
+          "external_write": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "recorded_at": "2026-05-12T01:41:05.403Z"
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "secrets_exposed": false,
+        "raw_paths_exposed": false
+      }
+    },
+    "buildwiki_gate": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_recommendation_route",
+        "generated_at": "2026-05-12T01:41:05.907Z",
+        "recommendation": {
+          "ok": false,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:05.907Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Execute Build-Wiki Run Now",
+          "classification": "unknown",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "blocked",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero"
+            ]
+          },
+          "recommended_agent": "agent_zero",
+          "recommended_model": null,
+          "recommended_mini_agent_type": null,
+          "policy_result": "blocked",
+          "blocked_reason": "unknown_connector_not_registered",
+          "confidence": "high",
+          "rationale": "Pi cannot recommend now because it is not present in Gateway registry.",
+          "fallback_route": "agent_zero_manual_review",
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi blocked the route in shadow mode: unknown_connector_not_registered."
+        },
+        "audit_event": {
+          "event": "pi.dispatcher.recommendation.generated",
+          "route_target": "blocked",
+          "decision": "blocked",
+          "blocked_reason": "unknown_connector_not_registered",
+          "external_write": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "recorded_at": "2026-05-12T01:41:05.907Z"
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "secrets_exposed": false,
+        "raw_paths_exposed": false
+      }
+    },
+    "redaction": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "mode": "pi_dispatcher_shadow_recommendation_route",
+        "generated_at": "2026-05-12T01:41:06.406Z",
+        "recommendation": {
+          "ok": true,
+          "mode": "pi_dispatcher_shadow_recommendation",
+          "generated_at": "2026-05-12T01:41:06.406Z",
+          "shadow_mode": true,
+          "requester": "gateway",
+          "owner_request": "Search [redacted-path] with [redacted-secret]",
+          "classification": "chat",
+          "operation_type": "read",
+          "selected_route": {
+            "source": "gateway",
+            "target": "agent_zero",
+            "via": [
+              "owner",
+              "gateway",
+              "agent_zero"
+            ]
+          },
+          "recommended_agent": "agent_zero",
+          "recommended_model": null,
+          "recommended_mini_agent_type": null,
+          "policy_result": "allowed",
+          "blocked_reason": null,
+          "confidence": "high",
+          "rationale": "Owner commands route to Agent Zero by default.",
+          "fallback_route": null,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "audit_required": true,
+          "no_secrets_exposed": true,
+          "owner_visible_summary": "Pi recommends agent_zero in shadow mode; Agent Zero remains commander."
+        },
+        "audit_event": {
+          "event": "pi.dispatcher.recommendation.generated",
+          "route_target": "agent_zero",
+          "decision": "allowed",
+          "blocked_reason": null,
+          "external_write": false,
+          "execution_enabled": false,
+          "writes_enabled": false,
+          "secrets_exposed": false,
+          "recorded_at": "2026-05-12T01:41:06.406Z"
+        },
+        "execution_enabled": false,
+        "writes_enabled": false,
+        "external_writes_enabled": false,
+        "secrets_exposed": false,
+        "raw_paths_exposed": false
+      }
+    }
+  },
+  "result": "PASS",
+  "blocker_class": "NONE",
+  "execution_enabled": false,
+  "writes_enabled": false,
+  "external_writes_enabled": false,
+  "rollback_command": "git revert <day-76-pi-dispatcher-commit>"
+}

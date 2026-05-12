@@ -47,11 +47,11 @@ export type PiDispatcherStatusPayload = {
     lane: 'Pi'
     timestamp: string
     runtime_commit: string | null
-    route_or_service_checked: '/api/bridge/pi/status'
+    route_or_service_checked: '/api/bridge/pi/status' | '/api/gateway/dispatcher/pi'
     result: MissionControlCanonicalStatus
     blocker: string | null
     blocker_class: MissionControlClosureBlockerClass
-    audit_pointer: '/api/bridge/pi/status'
+    audit_pointer: '/api/bridge/pi/status' | '/api/gateway/dispatcher/pi'
     safe_log_pointer: null
     rollback_command: string
     execution_enabled: false
@@ -231,12 +231,16 @@ export function recommendPiGatewayRoute(
     audit_required: true,
     no_secrets_exposed: true,
     owner_visible_summary: routeBlocked
-      ? `Pi recommends blocking or gating this route: ${blockedReason || policyResult}.`
+      ? `Pi recommends blocking or gating this route under Agent Zero review: ${blockedReason || policyResult}.`
       : `Pi recommends ${target} in shadow mode; Agent Zero remains commander.`,
   }
 }
 
-export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, generatedAt = registry.generated_at): PiDispatcherStatusPayload {
+export function buildPiDispatcherStatusPayload(
+  registry: GatewayRegistry,
+  generatedAt = registry.generated_at,
+  routeOrServiceChecked: PiDispatcherStatusPayload['proof_packet']['route_or_service_checked'] = '/api/bridge/pi/status',
+): PiDispatcherStatusPayload {
   const safeProbe = recommendPiGatewayRoute(registry, {
     ownerRequest: 'Given this owner request, which route would you recommend?',
     requester: 'gateway',
@@ -252,11 +256,11 @@ export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, genera
       lane: 'Pi',
       timestamp: generatedAt,
       runtime_commit: null,
-      route_or_service_checked: '/api/bridge/pi/status',
+      route_or_service_checked: routeOrServiceChecked,
       result: 'LIVE',
       blocker: null,
       blocker_class: 'NONE',
-      audit_pointer: '/api/bridge/pi/status',
+      audit_pointer: routeOrServiceChecked,
       safe_log_pointer: null,
       rollback_command: 'git revert <day-03-pi-commit>',
       execution_enabled: false,
@@ -518,7 +522,7 @@ function findUnknownConnector(registry: GatewayRegistry, ownerRequest: string): 
 
 function sanitize(value: string): string {
   return String(value || '')
-    .replace(/(?:\/home\/tony|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi, '[redacted-path]')
+    .replace(/(?:\/home\/tony|\/Users\/[^/\s]+|\/a0\/|\/tmp|\/var\/folders)[^\s`'"\])}]*/gi, '[redacted-path]')
     .replace(/(sk-[A-Za-z0-9_-]{16,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:SECRET|TOKEN|PASSWORD|API[_-]?KEY)\s*[:=]\s*[^,\s}]+)/gi, '[redacted-secret]')
     .trim()
 }

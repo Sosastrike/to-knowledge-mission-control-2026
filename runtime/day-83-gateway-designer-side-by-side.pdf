@@ -1,0 +1,366 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3574 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-83-gateway-designer-side-by-side) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 83 — Gateway Designer Side-by-Side) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Lane: Gateway UX final pass) Tj
+0 -12 Td
+(Status: Developer-side closed, production owner-auth retest gated) Tj
+0 -12 Td
+(Blocker class: OWNER_GATED) Tj
+0 -12 Td
+(Checked at: 2026-05-12T03:20:00Z) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added a protected raw Gateway design asset route at `/design/gateway/[[...path]]`.) Tj
+0 -12 Td
+(- Pointed `GatewayShell.jsx` iframe tabs at `/design/gateway/*.html`, matching the designer's di) Tj
+0 -12 Td
+(rect verification path.) Tj
+0 -12 Td
+(- Kept approved mock HTML/CSS/class names untouched.) Tj
+0 -12 Td
+(- Kept the live read-only `window.AGENTS` / Gateway data hydration files in place.) Tj
+0 -12 Td
+(- Added route/security tests proving the new raw design route serves mounted designer files with) Tj
+0 -12 Td
+(out rewriting and remains behind the owner session gate.) Tj
+0 -12 Td
+(- Added the new raw design URLs to the protected route smoke contract so future smokes fail if t) Tj
+0 -12 Td
+(hey become public.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `public/designer-mission-control/src/gateway/GatewayShell.jsx`) Tj
+0 -12 Td
+(- `scripts/protected-route-smoke-contract.mjs`) Tj
+0 -12 Td
+(- `src/app/design/gateway/[[...path]]/route.ts`) Tj
+0 -12 Td
+(- `src/app/design/gateway/route.test.ts`) Tj
+0 -12 Td
+(- `src/lib/gateway-native-frame-decision.test.ts`) Tj
+0 -12 Td
+(- `src/lib/mission-control-shell.test.ts`) Tj
+0 -12 Td
+(- `src/lib/protected-route-smoke-contract.test.ts`) Tj
+0 -12 Td
+(- `src/proxy.ts`) Tj
+0 -12 Td
+(- `src/proxy.test.ts`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/proof.json`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/protected-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/direct-design-agent-hub.png`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/gateway-shell-agent-hub.png`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added `GET /design/gateway/[[...path]]`) Tj
+0 -12 Td
+(- Added `HEAD /design/gateway/[[...path]]`) Tj
+0 -12 Td
+(- Gateway shell now frames:) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Overview.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Agent Hub.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Paperclip.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Dispatcher.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Token Governor.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Bridge Session Flow.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Health.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Routes.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Registry.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Policies.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Node Detail.html`) Tj
+0 -12 Td
+(  - `/design/gateway/Gateway Mobile Tablet.html`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `/gateway?tab=agent-hub` redirects to the designer Mission Control shell and opens Gateway wit) Tj
+0 -12 Td
+(h the Agent Hub tab active.) Tj
+0 -12 Td
+(- The Agent Hub iframe source is `/design/gateway/Agent Hub.html`.) Tj
+0 -12 Td
+(- `/design/gateway/Agent Hub.html` is directly verifiable as the raw mounted designer file once ) Tj
+0 -12 Td
+(an owner session exists.) Tj
+0 -12 Td
+(- Unauthenticated `/design/gateway/*` requests redirect to `/login`, preserving no-public-local-) Tj
+0 -12 Td
+(exposure.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3423 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- No React reimplementation, Next page wrapper, HTML rewrite, CSS rewrite, or class-name rewrite) Tj
+0 -12 Td
+( was introduced.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local proof server: `pnpm exec next dev --hostname 127.0.0.1 --port 3337`) Tj
+0 -12 Td
+(- Runtime proof:) Tj
+0 -12 Td
+(  - unauthenticated `/design/gateway/Agent%20Hub.html` -> `/login`) Tj
+0 -12 Td
+(  - authenticated local proof cookie `/design/gateway/Agent%20Hub.html` -> `200`, `Content-Type:) Tj
+0 -12 Td
+( text/html; charset=utf-8`) Tj
+0 -12 Td
+(  - fetched route SHA-256 matched `public/designer-mission-control/design/gateway/Agent Hub.html) Tj
+0 -12 Td
+(`) Tj
+0 -12 Td
+(  - `/gateway?tab=agent-hub` -> `/designer-mission-control/Mission%20Control.html?page=gateway&t) Tj
+0 -12 Td
+(ab=agent-hub`) Tj
+0 -12 Td
+(  - Gateway iframe source -> `/design/gateway/Agent Hub.html`) Tj
+0 -12 Td
+(- Production/systemd restart was not performed in this local runtime because `systemctl` is not ) Tj
+0 -12 Td
+(available.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests Run) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm exec vitest run src/app/design/gateway/route.test.ts src/proxy.test.ts src/lib/gateway-n) Tj
+0 -12 Td
+(ative-frame-decision.test.ts src/lib/mission-control-shell.test.ts src/lib/protected-route-smoke) Tj
+0 -12 Td
+(-contract.test.ts`) Tj
+0 -12 Td
+(  - 5 files passed, 25 tests passed) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+(  - passed; build output includes dynamic `/design/gateway/[[...path]]`) Tj
+0 -12 Td
+(- `pnpm test`) Tj
+0 -12 Td
+(  - 202 files passed, 1498 tests passed) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs`) Tj
+0 -12 Td
+(  - passed; no protected changes) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs`) Tj
+0 -12 Td
+(  - passed; blocker class `NONE`) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs`) Tj
+0 -12 Td
+(  - passed; blocker class `NONE`) Tj
+0 -12 Td
+(- `git diff --check`) Tj
+0 -12 Td
+(  - passed) Tj
+0 -12 Td
+(- `.env` diff check) Tj
+0 -12 Td
+(  - no diff) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3337`) Tj
+0 -12 Td
+(  - passed after warming `/docs`; 44 routes checked, 0 failures) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Proof Artifacts) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/proof.json`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/protected-route-smoke.json`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/direct-design-agent-hub.png`) Tj
+0 -12 Td
+(- `runtime/day-83-gateway-designer-side-by-side/gateway-shell-agent-hub.png`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Remaining Blocker) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(OWNER_GATED:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Owner-authenticated production browser retest is still required after the deployed runtime is ) Tj
+0 -12 Td
+(restarted to this commit.) Tj
+0 -12 Td
+(- This local proof environment does not expose `systemctl`, so production service restart proof ) Tj
+0 -12 Td
+(could not be executed here.) Tj
+0 -12 Td
+(- Live API hydration inside the static iframe returned 401 under a synthetic local cookie, which) Tj
+0 -12 Td
+( is expected without a real owner session. The raw mock serving path and iframe mount are proven) Tj
+0 -12 Td
+(.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback Command) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 988 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(After commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-83-commit>) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Before commit:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git restore public/designer-mission-control/src/gateway/GatewayShell.jsx scripts/protected-route) Tj
+0 -12 Td
+(-smoke-contract.mjs src/proxy.ts src/proxy.test.ts src/lib/gateway-native-frame-decision.test.ts) Tj
+0 -12 Td
+( src/lib/mission-control-shell.test.ts src/lib/protected-route-smoke-contract.test.ts) Tj
+0 -12 Td
+(rm -rf src/app/design runtime/day-83-gateway-designer-side-by-side) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Commit / Push) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Commit hash: pending) Tj
+0 -12 Td
+(- Push result: pending) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Day 84 — Agent Hub Designer Side-by-Side has automatically started after this Day 83 developer-s) Tj
+0 -12 Td
+(ide closure.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000003879 00000 n 
+0000004005 00000 n 
+0000007480 00000 n 
+0000007606 00000 n 
+0000008645 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8715
+%%EOF

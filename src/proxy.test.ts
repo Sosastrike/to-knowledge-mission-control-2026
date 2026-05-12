@@ -128,9 +128,9 @@ describe('proxy host matching', () => {
       nextUrl: {
         host: 'localhost:3000',
         hostname: 'localhost',
-        pathname: '/designer-mission-control/design/gateway/Agent%20Hub.html',
+        pathname: '/design/gateway/Agent%20Hub.html',
         searchParams: new URLSearchParams(),
-        clone: () => ({ pathname: '/designer-mission-control/design/gateway/Agent%20Hub.html' }),
+        clone: () => ({ pathname: '/design/gateway/Agent%20Hub.html' }),
       },
       method: 'GET',
       cookies: { get: (name: string) => name === 'mc-session' ? { value: 'local-proof-session' } : undefined },
@@ -141,6 +141,34 @@ describe('proxy host matching', () => {
     delete process.env.MC_ALLOW_ANY_HOST
 
     const response = proxy(request)
+    expect(response.headers.get('X-Frame-Options')).toBe('SAMEORIGIN')
+    expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'self'`)
+  })
+
+  it('keeps raw Gateway design assets behind the owner session gate', async () => {
+    vi.resetModules()
+    vi.doMock('node:os', () => ({
+      default: { hostname: () => 'hetzner-jarv' },
+      hostname: () => 'hetzner-jarv',
+    }))
+
+    const { proxy } = await import('./proxy')
+    const location = nextUrlFor('http://localhost:3000/design/gateway/Agent%20Hub.html')
+    const request = {
+      headers: new Headers({ host: 'localhost:3000' }),
+      nextUrl: location,
+      method: 'GET',
+      cookies: { get: () => undefined },
+    } as any
+
+    setNodeEnv('production')
+    process.env.MC_ALLOWED_HOSTS = 'localhost,127.0.0.1'
+    delete process.env.MC_ALLOW_ANY_HOST
+
+    const response = proxy(request)
+    const target = new URL(response.headers.get('Location') || 'http://invalid.local')
+    expect(response.status).toBe(307)
+    expect(target.pathname).toBe('/login')
     expect(response.headers.get('X-Frame-Options')).toBe('SAMEORIGIN')
     expect(response.headers.get('Content-Security-Policy')).toContain(`frame-ancestors 'self'`)
   })

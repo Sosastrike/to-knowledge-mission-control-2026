@@ -132,12 +132,14 @@ function addSecurityHeaders(response: NextResponse, _request: NextRequest, nonce
   const requestId = crypto.randomUUID()
   const pathname = _request.nextUrl.pathname
   const isDesignerMissionControl = pathname === '/designer-mission-control' || pathname.startsWith('/designer-mission-control/')
+  const isGatewayDesignAsset = pathname === '/design/gateway' || pathname.startsWith('/design/gateway/')
+  const allowsDesignerFrame = isDesignerMissionControl || isGatewayDesignAsset
   response.headers.set('X-Request-Id', requestId)
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', isDesignerMissionControl ? 'SAMEORIGIN' : 'DENY')
+  response.headers.set('X-Frame-Options', allowsDesignerFrame ? 'SAMEORIGIN' : 'DENY')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  if (isDesignerMissionControl) {
+  if (allowsDesignerFrame) {
     response.headers.set('Content-Security-Policy', buildDesignerMissionControlCsp())
   } else {
     const googleEnabled = isGoogleAuthConfigured()

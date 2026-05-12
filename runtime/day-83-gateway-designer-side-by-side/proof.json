@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-05-12T03:13:40.403Z",
+  "direct_url": "http://127.0.0.1:3337/design/gateway/Agent%20Hub.html",
+  "gateway_url": "http://127.0.0.1:3337/designer-mission-control/Mission%20Control.html?page=gateway&tab=agent-hub",
+  "iframe_src": "/design/gateway/Agent Hub.html",
+  "tab_count": 12,
+  "active_tab_text": "Agent Hub\n5 agents",
+  "direct_has_agent_hub": true,
+  "iframe_has_agent_hub": true,
+  "iframe_has_openclaw_plus": true,
+  "screenshots": [
+    "/Users/sosastrike/Documents/to-knowledge-mission-control-2026/runtime/day-83-gateway-designer-side-by-side/direct-design-agent-hub.png",
+    "/Users/sosastrike/Documents/to-knowledge-mission-control-2026/runtime/day-83-gateway-designer-side-by-side/gateway-shell-agent-hub.png"
+  ]
+}

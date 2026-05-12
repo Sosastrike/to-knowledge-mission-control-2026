@@ -15,6 +15,8 @@ describe('protected route smoke contract', () => {
       '/gateway/agent-hub',
       '/agents',
       '/settings/tkmc',
+      '/design/gateway/Agent%20Hub.html',
+      '/design/gateway/Paperclip.html',
     ]))
     expect(PROTECTED_API_ROUTES.map((route) => route.path)).toEqual(expect.arrayContaining([
       '/api/runtime/health',

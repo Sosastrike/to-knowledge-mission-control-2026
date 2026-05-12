@@ -45,8 +45,8 @@ describe('Gateway native frame architecture decision', () => {
 
     expect(gatewayPage).toContain('redirect(')
     expect(gatewayPage).toContain('/designer-mission-control/Mission%20Control.html?page=gateway')
-    expect(gatewayShell).toContain("src: '/designer-mission-control/design/gateway/Agent Hub.html'")
-    expect(gatewayShell).toContain("src: '/designer-mission-control/design/gateway/Paperclip.html'")
+    expect(gatewayShell).toContain("src: '/design/gateway/Agent Hub.html'")
+    expect(gatewayShell).toContain("src: '/design/gateway/Paperclip.html'")
 
     for (const [source, destination] of gatewayRedirectRules) {
       expect(nextConfig).not.toContain(`source: '${source}'`)
@@ -66,6 +66,8 @@ describe('Gateway native frame architecture decision', () => {
     expect(gatewayShell).toContain('<iframe')
     expect(gatewayShell).not.toContain("src: 'design/gateway/Agent Hub.html'")
     expect(gatewayShell).not.toContain("src: 'design/gateway/Paperclip.html'")
+    expect(gatewayShell).not.toContain('/designer-mission-control/design/gateway/Agent Hub.html')
+    expect(gatewayShell).not.toContain('/designer-mission-control/design/gateway/Paperclip.html')
   })
 
   it('routes Agent Hub agent detail URLs into the GatewayShell Agent Hub deep link', () => {
@@ -79,6 +81,7 @@ describe('Gateway native frame architecture decision', () => {
     const proxy = readSource('src/proxy.ts')
 
     expect(proxy).toContain("frame-ancestors 'self'")
-    expect(proxy).toContain("isDesignerMissionControl ? 'SAMEORIGIN' : 'DENY'")
+    expect(proxy).toContain("allowsDesignerFrame ? 'SAMEORIGIN' : 'DENY'")
+    expect(proxy).toContain("pathname.startsWith('/design/gateway/')")
   })
 })

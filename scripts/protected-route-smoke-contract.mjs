@@ -19,6 +19,8 @@ export const PROTECTED_PAGE_ROUTES = [
   { path: '/agents', label: 'Agents alias' },
   { path: '/settings/tkmc', label: 'TKMC settings' },
   { path: '/settings/tkmc/security', label: 'TKMC security settings' },
+  { path: '/design/gateway/Agent%20Hub.html', label: 'Raw Gateway Agent Hub design asset' },
+  { path: '/design/gateway/Paperclip.html', label: 'Raw Gateway Paperclip design asset' },
   { path: '/designer-mission-control/design/gateway/Agent%20Hub.html', label: 'Designer Agent Hub asset' },
   { path: '/designer-mission-control/design/gateway/Paperclip.html', label: 'Designer Paperclip asset' },
 ]

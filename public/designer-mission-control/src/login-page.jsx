@@ -33,7 +33,9 @@
       e?.preventDefault?.();
       if (!email || !pw) { setErr('Email + password required'); return; }
       if (!window.api?.session?.login) {
-        setErr('HTTP backend not reachable. Start the server (cd server && npm start) or use legacy bearer.');
+        setErr(window.ownerFacingErrorText
+          ? window.ownerFacingErrorText({ message: 'backend adapter missing for session login', context: { has_backend: false } })
+          : 'BACKEND_MISSING: Backend wiring for this feature is not in place yet.');
         return;
       }
       setLoading(true); setErr(null); setAttemptsRemaining(null);
@@ -58,7 +60,9 @@
         } else if (code === 'AGENT_ACCOUNT_NOT_HUMAN') {
           setErr('That email belongs to an agent. Agents cannot sign in.');
         } else {
-          setErr(`${code}: ${msg}`);
+          setErr(window.ownerFacingErrorText
+            ? window.ownerFacingErrorText({ message: msg, technical_detail: code, http_status: e.status })
+            : 'UNKNOWN: The blocker is not classified yet.');
         }
       } finally {
         setLoading(false);

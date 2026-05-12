@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "helper_present": true,
+  "classified_kind": "SERVICE_DOWN",
+  "classified_message": "The backing service is unreachable.",
+  "notification_detail": "CREDENTIAL_GATED: A required credential is missing. Next: Add the credential through the approved secret path, then retry.",
+  "leaked_secret_value": false,
+  "leaked_raw_path": false,
+  "leaked_private_host": false
+}

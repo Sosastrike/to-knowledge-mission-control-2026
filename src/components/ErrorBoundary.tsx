@@ -4,6 +4,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClientLogger } from '@/lib/client-logger'
 import { Button } from '@/components/ui/button'
+import { classifyToolError } from '@/lib/tool-error-classifier'
 
 const log = createClientLogger('ErrorBoundary')
 
@@ -20,6 +21,11 @@ interface State {
 function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () => void }) {
   const t = useTranslations('errorBoundary')
   const tc = useTranslations('common')
+  const classified = classifyToolError({
+    message: error?.message || null,
+    technical_detail: error?.stack || null,
+  })
+
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[200px] p-8 text-center">
       <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
@@ -31,7 +37,10 @@ function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () =>
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">{t('somethingWentWrong')}</h3>
       <p className="text-sm text-muted-foreground mb-4 max-w-md">
-        {error?.message || t('unexpectedError')}
+        {classified.owner_message || t('unexpectedError')}
+      </p>
+      <p className="text-xs text-muted-foreground mb-4 max-w-md">
+        Blocker: {classified.kind}. Next: {classified.next_action}
       </p>
       <Button
         onClick={onRetry}

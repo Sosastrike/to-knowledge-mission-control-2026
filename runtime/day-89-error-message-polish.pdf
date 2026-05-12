@@ -1,0 +1,243 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 4449 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-89-error-message-polish) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 89 — Error Message Polish) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 0-20 Inventory) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Branch: `to-knowledge-mc`) Tj
+0 -12 Td
+(- Start commit: `3555a9f`) Tj
+0 -12 Td
+(- `.env` changes: none requested, none made) Tj
+0 -12 Td
+(- Secret risk: no secrets inspected or emitted) Tj
+0 -12 Td
+(- Scope: owner-facing error surfaces across Mission Control shell, Gateway, Agent Hub, Bridge, a) Tj
+0 -12 Td
+(gents, connectors, reports, and diagnostics.) Tj
+0 -12 Td
+(- Design constraint: approved raw mock HTML/CSS/class names remain untouched unless a designer-p) Tj
+0 -12 Td
+(rovided patch explicitly owns those files.) Tj
+0 -12 Td
+(- Status contract preserved: `LIVE`, `READY`, `OWNER_GATED`, `CREDENTIAL_GATED`, `SERVICE_DOWN`,) Tj
+0 -12 Td
+( `BLOCKED`, `DISABLED`; error-classifier states include `BACKEND_MISSING`, `ROUTE_MISSING`, `AUT) Tj
+0 -12 Td
+(H_REQUIRED`, `EXECUTION_DISABLED`, `WRITE_DISABLED`, `EXTERNAL_WRITE_DISABLED`, `UNKNOWN`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 20-65 Implementation) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Added `src/lib/owner-facing-error.ts` as a shared Next/React owner-facing error helper backed ) Tj
+0 -12 Td
+(by the existing tool-error classifier.) Tj
+0 -12 Td
+(- Added `public/designer-mission-control/src/owner-error-copy.jsx` for the approved static Missi) Tj
+0 -12 Td
+(on Control shell so browser-side errors use the same blocker vocabulary and redaction behavior.) Tj
+0 -12 Td
+(- Updated the generic Next error boundary to show safe owner message, blocker kind, and next act) Tj
+0 -12 Td
+(ion instead of raw exception messages.) Tj
+0 -12 Td
+(- Routed high-risk Gateway, Agent Hub, Bridge approval, Gateway config, Project Manager, login, ) Tj
+0 -12 Td
+(skills, and notification surfaces through owner-facing error copy.) Tj
+0 -12 Td
+(- Redacted approval overlay command/tool metadata before display so CWD, resolved paths, private) Tj
+0 -12 Td
+( hosts, auth files, and secret-like values are not exposed.) Tj
+0 -12 Td
+(- Updated redaction tokens from path-shaped strings to non-path tokens like `[redacted-user-path) Tj
+0 -12 Td
+(]` so safety scans do not see redacted output as a raw path.) Tj
+0 -12 Td
+(- Did not modify approved raw Gateway mock HTML/CSS/class names under `public/designer-mission-c) Tj
+0 -12 Td
+(ontrol/design/gateway/`.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 65-80 Tests And Checks) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm exec vitest run src/lib/owner-facing-error.test.ts src/lib/mission-control-shell.test.ts) Tj
+0 -12 Td
+( src/lib/tool-error-classifier.test.ts src/app/api/bridge/tool-error-classifier/route.test.ts` —) Tj
+0 -12 Td
+( PASS, 29 tests) Tj
+0 -12 Td
+(- `pnpm run typecheck` — PASS) Tj
+0 -12 Td
+(- `pnpm run build` — PASS) Tj
+0 -12 Td
+(- `pnpm test` — PASS, 203 files, 1507 tests) Tj
+0 -12 Td
+(- `git diff --check` — PASS) Tj
+0 -12 Td
+(- `.env` diff check — PASS) Tj
+0 -12 Td
+(- `node scripts/protected-route-smoke-contract.mjs http://127.0.0.1:3343` — PASS, 44 routes) Tj
+0 -12 Td
+(- `node scripts/authenticated-route-smoke-contract.mjs http://127.0.0.1:3343` — PASS as `OWNER_G) Tj
+0 -12 Td
+(ATED`; no owner authenticated browser session was available and no cookie value was stored) Tj
+0 -12 Td
+(- `node scripts/check-protected-file-invariants.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/secret-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+(- `node scripts/raw-exposure-scan-contract.mjs` — PASS) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Phase 80-95 Runtime Proof) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Local proof server: `127.0.0.1:3343`) Tj
+0 -12 Td
+(- Server stop result: stopped after proof; no production restart performed) Tj
+0 -12 Td
+(- Error copy proof: `runtime/day-89-error-message-polish/error-copy-proof.json`) Tj
+0 -12 Td
+(- Visual proof screenshot: `runtime/day-89-error-message-polish/error-message-polish-proof.png`) Tj
+0 -12 Td
+(- Route smoke artifact: `runtime/day-89-error-message-polish/protected-route-smoke.json`) Tj
+0 -12 Td
+(- Authenticated smoke artifact: `runtime/day-89-error-message-polish/authenticated-route-smoke.j) Tj
+0 -12 Td
+(son`) Tj
+0 -12 Td
+(- Protected-file artifact: `runtime/day-89-error-message-polish/protected-file-invariants.json`) Tj
+0 -12 Td
+(- Secret scan artifact: `runtime/day-89-error-message-polish/secret-scan.json`) Tj
+0 -12 Td
+(- Raw exposure artifact: `runtime/day-89-error-message-polish/raw-exposure-scan.json`) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2684 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+() Tj
+0 -12 Td
+(## Phase 95-100 Closeout Ledger) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- Day number and lane: Day 89 — Error Message Polish) Tj
+0 -12 Td
+(- Status: developer-side closed with owner-auth visual proof gated) Tj
+0 -12 Td
+(- Exact blocker classification: `OWNER_GATED`) Tj
+0 -12 Td
+(- Remaining blocker: owner authenticated browser session required for true owner-session visual ) Tj
+0 -12 Td
+(proof; local proof and unauthenticated protection proof are complete) Tj
+0 -12 Td
+(- What was implemented: safe owner-facing error copy, blocker classification, next-action text, ) Tj
+0 -12 Td
+(raw detail redaction, and approval metadata redaction across code-owned Mission Control/Gateway ) Tj
+0 -12 Td
+(surfaces) Tj
+0 -12 Td
+(- Files changed: `public/designer-mission-control/Mission Control.html`, `public/designer-missio) Tj
+0 -12 Td
+(n-control/src/owner-error-copy.jsx`, `public/designer-mission-control/src/login-page.jsx`, `publ) Tj
+0 -12 Td
+(ic/designer-mission-control/src/notification-bus.jsx`, `public/designer-mission-control/src/skil) Tj
+0 -12 Td
+(ls-page.jsx`, `src/components/ErrorBoundary.tsx`, `src/components/agent-network/AgentNetworkClie) Tj
+0 -12 Td
+(nt.tsx`, `src/components/modals/exec-approval-overlay.tsx`, `src/components/modals/project-manag) Tj
+0 -12 Td
+(er-modal.tsx`, `src/components/panels/gateway-config-panel.tsx`, `src/lib/owner-facing-error.ts`) Tj
+0 -12 Td
+(, `src/lib/owner-facing-error.test.ts`, `src/lib/tool-error-classifier.ts`, `src/lib/mission-con) Tj
+0 -12 Td
+(trol-shell.test.ts`, `runtime/day-89-error-message-polish.md`, `runtime/day-89-error-message-pol) Tj
+0 -12 Td
+(ish/*`) Tj
+0 -12 Td
+(- Routes/endpoints changed: none; UI copy consumes existing classifier and Gateway/Bridge APIs) Tj
+0 -12 Td
+(- UI behavior: error surfaces now show blocker class and next action; raw exception strings, pri) Tj
+0 -12 Td
+(vate hosts, auth-file names, raw local paths, and secret-looking values are redacted before disp) Tj
+0 -12 Td
+(lay) Tj
+0 -12 Td
+(- Service/runtime behavior: no service behavior changed; no external writes executed; proof serv) Tj
+0 -12 Td
+(er was local-only and stopped after smoke) Tj
+0 -12 Td
+(- Deploy/restart/smoke result: no production deploy/restart performed; local route smoke passed) Tj
+0 -12 Td
+(- Proof artifact: `runtime/day-89-error-message-polish/error-copy-proof.json`) Tj
+0 -12 Td
+(- Rollback command: `git revert <day-89-commit>`) Tj
+0 -12 Td
+(- Commit hash: pending commit) Tj
+0 -12 Td
+(- Push result: pending push) Tj
+0 -12 Td
+(- Confirmation that next day has automatically started: Day 90 — Owner-Facing Copy Polish starts) Tj
+0 -12 Td
+( after Day89 commit/push) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004748 00000 n 
+0000004874 00000 n 
+0000007610 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+7680
+%%EOF

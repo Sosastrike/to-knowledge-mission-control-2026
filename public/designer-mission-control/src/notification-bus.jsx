@@ -35,16 +35,19 @@
 
   function emit(entry){
     if (!entry || !entry.title) return;
+    const safeEntry = window.OwnerErrorCopy?.notificationEntry
+      ? window.OwnerErrorCopy.notificationEntry(entry)
+      : entry;
     const n = {
       id: 'n_' + Math.random().toString(36).slice(2, 10),
       t: new Date().toISOString(),
       read: false,
-      kind: entry.kind || 'info',         // info | ok | warn | err
-      source: entry.source || 'system',   // meetings | auth | email | agents | brain | system
-      title: entry.title,
-      detail: entry.detail || '',
+      kind: safeEntry.kind || 'info',         // info | ok | warn | err
+      source: safeEntry.source || 'system',   // meetings | auth | email | agents | brain | system
+      title: safeEntry.title,
+      detail: safeEntry.detail || '',
       // Optional action: { label, pageRoute } — router destination within shell
-      action: entry.action || null,
+      action: safeEntry.action || null,
     };
     _list = [n, ..._list].slice(0, MAX);
     save(_list);

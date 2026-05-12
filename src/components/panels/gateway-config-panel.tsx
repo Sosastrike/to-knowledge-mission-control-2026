@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { schemaType, normalizeSchema, extractSchemaTags } from '@/lib/config-schema-utils'
+import { ownerFacingErrorText } from '@/lib/owner-facing-error'
 import type { JsonSchema } from '@/lib/config-schema-utils'
 
 type FormMode = 'form' | 'json'
@@ -165,10 +166,10 @@ export function GatewayConfigPanel() {
       if (res.status === 403) { setError('Admin access required'); return }
       if (res.status === 404) {
         const data = await res.json()
-        setError(data.error || 'Config not found')
+        setError(ownerFacingErrorText({ status: res.status, body: data }, 'Config not found'))
         return
       }
-      if (!res.ok) { setError('Failed to load config'); return }
+      if (!res.ok) { setError(ownerFacingErrorText({ status: res.status }, 'Failed to load config')); return }
       const data = await res.json()
       setConfig(data.config)
       setOriginalConfig(data.config)
@@ -176,8 +177,8 @@ export function GatewayConfigPanel() {
       setConfigHash(data.hash ?? null)
       setJsonText(JSON.stringify(data.config, null, 2))
       setError(null)
-    } catch {
-      setError('Failed to load gateway config')
+    } catch (err) {
+      setError(ownerFacingErrorText(err, 'Failed to load gateway config'))
     } finally {
       setLoading(false)
     }
@@ -287,12 +288,12 @@ export function GatewayConfigPanel() {
         setConfigHash(data.hash ?? null)
         fetchConfig()
       } else if (res.status === 409) {
-        showFeedback(false, data.error || 'Conflict - please reload')
+        showFeedback(false, ownerFacingErrorText({ status: res.status, body: data }, 'Conflict - please reload'))
       } else {
-        showFeedback(false, data.error || 'Failed to save')
+        showFeedback(false, ownerFacingErrorText({ status: res.status, body: data }, 'Failed to save'))
       }
-    } catch {
-      showFeedback(false, 'Network error')
+    } catch (err) {
+      showFeedback(false, ownerFacingErrorText(err, 'Network error'))
     } finally {
       setSaving(false)
     }
@@ -315,10 +316,10 @@ export function GatewayConfigPanel() {
       if (res.ok) {
         showFeedback(true, 'Config applied (hot reload)')
       } else {
-        showFeedback(false, data.error || 'Apply failed')
+        showFeedback(false, ownerFacingErrorText({ status: res.status, body: data }, 'Apply failed'))
       }
-    } catch {
-      showFeedback(false, 'Network error')
+    } catch (err) {
+      showFeedback(false, ownerFacingErrorText(err, 'Network error'))
     } finally {
       setApplying(false)
     }
@@ -337,10 +338,10 @@ export function GatewayConfigPanel() {
       if (res.ok) {
         showFeedback(true, 'System update initiated')
       } else {
-        showFeedback(false, data.error || 'Update failed')
+        showFeedback(false, ownerFacingErrorText({ status: res.status, body: data }, 'Update failed'))
       }
-    } catch {
-      showFeedback(false, 'Network error')
+    } catch (err) {
+      showFeedback(false, ownerFacingErrorText(err, 'Network error'))
     } finally {
       setUpdating(false)
     }

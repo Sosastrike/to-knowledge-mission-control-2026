@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { useMissionControl, type ExecApprovalRequest } from '@/store'
 import { useWebSocket } from '@/lib/websocket'
+import { ownerFacingErrorText, ownerSafeText } from '@/lib/owner-facing-error'
 
 const RISK_BORDER: Record<ExecApprovalRequest['risk'], string> = {
   low: 'border-l-green-500',
@@ -31,10 +32,11 @@ function formatRemaining(ms: number): string {
 
 function MetaRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null
+  const safeValue = ownerSafeText(value)
   return (
     <div className="flex justify-between text-xs py-0.5">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-foreground truncate ml-4 max-w-[300px]">{value}</span>
+      <span className="font-mono text-foreground truncate ml-4 max-w-[300px]">{safeValue}</span>
     </div>
   )
 }
@@ -88,12 +90,12 @@ export function ExecApprovalOverlay() {
         })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
-          setError(data.error || 'Failed to send decision')
+          setError(ownerFacingErrorText({ status: res.status, body: data }, 'Failed to send decision'))
           setBusy(false)
           return
         }
-      } catch {
-        setError('Failed to reach gateway')
+      } catch (err) {
+        setError(ownerFacingErrorText(err, 'Failed to reach gateway'))
         setBusy(false)
         return
       }
@@ -143,14 +145,14 @@ export function ExecApprovalOverlay() {
         {/* Command */}
         {active.command && (
           <pre className="bg-secondary rounded p-3 text-xs font-mono overflow-auto max-h-24 text-foreground mb-3 border border-border">
-            <code>$ {active.command}</code>
+            <code>$ {ownerSafeText(active.command)}</code>
           </pre>
         )}
 
         {/* Tool args (if no command) */}
         {!active.command && active.toolArgs && Object.keys(active.toolArgs).length > 0 && (
           <pre className="bg-secondary rounded p-3 text-xs font-mono overflow-auto max-h-32 text-foreground mb-3">
-            {JSON.stringify(active.toolArgs, null, 2)}
+            {ownerSafeText(JSON.stringify(active.toolArgs, null, 2))}
           </pre>
         )}
 

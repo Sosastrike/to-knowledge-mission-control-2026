@@ -20,7 +20,9 @@ function useApiSkills() {
       const r = await window.api.skills.list();
       setRows(r); setError(null);
     } catch (e) {
-      setError(e.message || 'Failed to load skills');
+      setError(window.ownerFacingErrorText
+        ? window.ownerFacingErrorText(e)
+        : 'UNKNOWN: Failed to load skills.');
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,8 @@ function SkillsPage(){
     try { await fn(); }
     catch (e) {
       if (e.code === 'PERMISSION_DENIED') showToast(`Permission denied — ${callerRole} cannot do this.`, 'err');
-      else if (e.code === 'BACKEND_REQUIRED') showToast(e.message, 'warn');
-      else showToast(e.message || 'Action failed', 'err');
+      else if (e.code === 'BACKEND_REQUIRED') showToast(window.ownerFacingErrorText ? window.ownerFacingErrorText(e) : 'BACKEND_MISSING: Backend wiring is required.', 'warn');
+      else showToast(window.ownerFacingErrorText ? window.ownerFacingErrorText(e) : 'UNKNOWN: Action failed.', 'err');
     }
   };
 

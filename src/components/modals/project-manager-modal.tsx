@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useFocusTrap } from '@/lib/use-focus-trap'
 import { Button } from '@/components/ui/button'
+import { ownerFacingErrorText } from '@/lib/owner-facing-error'
 
 interface Project {
   id: number
@@ -78,7 +79,7 @@ export function ProjectManagerModal({
       }
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load projects')
+      setError(ownerFacingErrorText(err, 'Failed to load projects'))
     } finally {
       setLoading(false)
     }
@@ -107,7 +108,7 @@ export function ProjectManagerModal({
       await load()
       await onChanged?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create project')
+      setError(ownerFacingErrorText(err, 'Failed to create project'))
     }
   }
 
@@ -123,7 +124,7 @@ export function ProjectManagerModal({
       await load()
       await onChanged?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update project')
+      setError(ownerFacingErrorText(err, 'Failed to update project'))
     }
   }
 
@@ -136,7 +137,7 @@ export function ProjectManagerModal({
       await load()
       await onChanged?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete project')
+      setError(ownerFacingErrorText(err, 'Failed to delete project'))
     }
   }
 
@@ -198,7 +199,7 @@ export function ProjectManagerModal({
       await load()
       await onChanged?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update project')
+      setError(ownerFacingErrorText(err, 'Failed to update project'))
     }
   }
 

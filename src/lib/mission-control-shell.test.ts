@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { runInNewContext } from 'node:vm'
 import { describe, expect, it } from 'vitest'
 
 function readSource(relativePath: string): string {
@@ -152,5 +153,62 @@ describe('Mission Control shell ownership', () => {
     expect(gatewayShell).toContain('aria-label={t.label + ')
     expect(gatewayShell).toContain("aria-current={t.id === active ? 'page' : undefined}")
     expect(gatewayShell).toContain("aria-label={'Gateway frame showing ' + tab.label}")
+  })
+
+  it('keeps owner-facing shell errors classified and redacted', () => {
+    const missionControlHtml = readSource('public/designer-mission-control/Mission Control.html')
+    const ownerErrorCopy = readSource('public/designer-mission-control/src/owner-error-copy.jsx')
+    const notificationBus = readSource('public/designer-mission-control/src/notification-bus.jsx')
+    const loginPage = readSource('public/designer-mission-control/src/login-page.jsx')
+    const skillsPage = readSource('public/designer-mission-control/src/skills-page.jsx')
+    const errorBoundary = readSource('src/components/ErrorBoundary.tsx')
+
+    expect(missionControlHtml).toContain('src/owner-error-copy.jsx')
+    expect(ownerErrorCopy).toContain('OWNER_GATED')
+    expect(ownerErrorCopy).toContain('CREDENTIAL_GATED')
+    expect(ownerErrorCopy).toContain('SERVICE_DOWN')
+    expect(ownerErrorCopy).toContain('BACKEND_MISSING')
+    expect(ownerErrorCopy).toContain('ROUTE_MISSING')
+    expect(ownerErrorCopy).toContain('AUTH_REQUIRED')
+    expect(ownerErrorCopy).toContain('EXECUTION_DISABLED')
+    expect(ownerErrorCopy).toContain('WRITE_DISABLED')
+    expect(ownerErrorCopy).toContain('EXTERNAL_WRITE_DISABLED')
+    expect(ownerErrorCopy).toContain('UNKNOWN')
+    expect(ownerErrorCopy).toContain('[redacted-user-path]')
+    expect(ownerErrorCopy).toContain('[redacted-secret]')
+    expect(ownerErrorCopy).toContain('[redacted-host]')
+
+    expect(notificationBus).toContain('window.OwnerErrorCopy.notificationEntry(entry)')
+    expect(loginPage).toContain('window.ownerFacingErrorText')
+    expect(skillsPage).toContain('window.ownerFacingErrorText')
+    expect(errorBoundary).toContain('classifyToolError')
+    expect(errorBoundary).not.toContain(`{error?.message || t('unexpectedError')}`)
+  })
+
+  it('classifies browser shell errors without exposing raw paths, hosts, or secrets', () => {
+    const ownerErrorCopy = readSource('public/designer-mission-control/src/owner-error-copy.jsx')
+    const context: { window: any } = { window: {} }
+    runInNewContext(ownerErrorCopy, context)
+
+    const classified = context.window.OwnerErrorCopy.classify({
+      status: 503,
+      message: 'connect ECONNREFUSED http://127.0.0.1:9999',
+      technical_detail: 'service failed with API_KEY=secret-value at /Users/sosastrike/private/auth.json',
+    })
+    const notification = context.window.OwnerErrorCopy.notificationEntry({
+      kind: 'error',
+      title: 'Probe failed',
+      detail: 'API_KEY=secret-value /Users/sosastrike/private http://127.0.0.1:9999',
+    })
+
+    expect(classified).toMatchObject({
+      kind: 'SERVICE_DOWN',
+      owner_message: 'The backing service is unreachable.',
+    })
+    expect(notification.detail).toContain('CREDENTIAL_GATED:')
+    expect(JSON.stringify({ classified, notification })).not.toContain('secret-value')
+    expect(JSON.stringify({ classified, notification })).not.toContain('/Users/sosastrike')
+    expect(JSON.stringify({ classified, notification })).not.toContain('127.0.0.1')
+    expect(JSON.stringify({ classified, notification })).not.toContain('auth.json')
   })
 })

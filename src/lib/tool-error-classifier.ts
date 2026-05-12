@@ -155,8 +155,8 @@ function redactString(value: string): string {
     .replace(SECRET_KEY_RE, '[redacted]')
     .replace(ENV_KV_RE, (_match, key) => `${key}=[redacted]`)
     .replace(AUTH_FILE_RE, '[redacted-auth-file]')
-    .replace(USER_PATH_RE, '/Users/[redacted]')
-    .replace(HOME_PATH_RE, '/home/[redacted]')
+    .replace(USER_PATH_RE, '[redacted-user-path]')
+    .replace(HOME_PATH_RE, '[redacted-home-path]')
     .replace(PRIVATE_HOST_RE, '[redacted-host]')
     .replace(ABS_PATH_RE, (match) =>
       /^\/api(?:\/|$)/.test(match) || /^\/gateway(?:\/|$)/.test(match) || /^\/agent[s-]/.test(match)

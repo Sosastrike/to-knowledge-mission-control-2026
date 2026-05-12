@@ -32,6 +32,7 @@ import {
   isCanonicalAgentNetworkSeedId,
   isActiveTonyHierarchyId,
 } from '@/lib/agent-network-hierarchy'
+import { ownerFacingErrorText } from '@/lib/owner-facing-error'
 import styles from './agent-network.module.css'
 
 interface AgentRow {
@@ -3563,11 +3564,13 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       const data = await response.json().catch(() => ({}))
       const called = data?.hermes_called === true ? 'called' : 'not called'
       const blocker = data?.blocker ? ` Blocker: ${String(data.blocker).replace(/[_-]+/g, ' ')}.` : ''
-      const reply = typeof data?.response_text === 'string' ? data.response_text : (data?.error || `HTTP ${response.status}`)
+      const reply = typeof data?.response_text === 'string'
+        ? data.response_text
+        : ownerFacingErrorText({ status: response.status, body: data }, 'Hermes test failed')
       setTestResult(`Hermes ${called}. ${reply}${blocker}`)
       setTestState(response.ok && data?.hermes_called === true ? 'ok' : 'error')
     } catch (error) {
-      setTestResult((error as Error).message || 'Hermes test failed')
+      setTestResult(ownerFacingErrorText(error, 'Hermes test failed'))
       setTestState('error')
     }
   }
@@ -4002,7 +4005,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setErrorMsg((err as Error).message || 'fetch failed')
+        setErrorMsg(ownerFacingErrorText(err, 'fetch failed'))
         setLoadState('error')
       })
     return () => {
@@ -4027,7 +4030,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setProviderError((err as Error).message || 'fetch failed')
+        setProviderError(ownerFacingErrorText(err, 'fetch failed'))
         setProviderState('error')
       })
     return () => {
@@ -4052,7 +4055,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setCapabilityError((err as Error).message || 'fetch failed')
+        setCapabilityError(ownerFacingErrorText(err, 'fetch failed'))
         setCapabilityState('error')
       })
     return () => {
@@ -4077,7 +4080,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setConnectorError((err as Error).message || 'fetch failed')
+        setConnectorError(ownerFacingErrorText(err, 'fetch failed'))
         setConnectorState('error')
       })
     return () => {
@@ -4103,7 +4106,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setGatewayEventsError((err as Error).message || 'fetch failed')
+        setGatewayEventsError(ownerFacingErrorText(err, 'fetch failed'))
         setGatewayEventsState('error')
       })
     return () => {
@@ -4129,7 +4132,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setSpaceAgentDetailError((err as Error).message || 'fetch failed')
+        setSpaceAgentDetailError(ownerFacingErrorText(err, 'fetch failed'))
         setSpaceAgentDetailState('error')
       })
     return () => {
@@ -4155,7 +4158,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setPaperclipStatusError((err as Error).message || 'fetch failed')
+        setPaperclipStatusError(ownerFacingErrorText(err, 'fetch failed'))
         setPaperclipStatusState('error')
       })
     return () => {
@@ -4181,7 +4184,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setGatewayObservabilityError((err as Error).message || 'fetch failed')
+        setGatewayObservabilityError(ownerFacingErrorText(err, 'fetch failed'))
         setGatewayObservabilityState('error')
       })
     return () => {
@@ -4207,7 +4210,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setHarnessStatusError((err as Error).message || 'fetch failed')
+        setHarnessStatusError(ownerFacingErrorText(err, 'fetch failed'))
         setHarnessStatusState('error')
       })
     return () => {
@@ -4233,7 +4236,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setAgentZeroReviewerError((err as Error).message || 'fetch failed')
+        setAgentZeroReviewerError(ownerFacingErrorText(err, 'fetch failed'))
         setAgentZeroReviewerState('error')
       })
     return () => {
@@ -4259,7 +4262,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setHermesSandboxError((err as Error).message || 'fetch failed')
+        setHermesSandboxError(ownerFacingErrorText(err, 'fetch failed'))
         setHermesSandboxState('error')
       })
     return () => {
@@ -4285,7 +4288,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setAgentZeroHermesHandoffError((err as Error).message || 'fetch failed')
+        setAgentZeroHermesHandoffError(ownerFacingErrorText(err, 'fetch failed'))
         setAgentZeroHermesHandoffState('error')
       })
     return () => {
@@ -4310,7 +4313,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setButtonContractsError((err as Error).message || 'fetch failed')
+        setButtonContractsError(ownerFacingErrorText(err, 'fetch failed'))
         setButtonContractsState('error')
       })
     return () => {
@@ -4335,7 +4338,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setCostsError((err as Error).message || 'fetch failed')
+        setCostsError(ownerFacingErrorText(err, 'fetch failed'))
         setCostsState('error')
       })
     return () => {
@@ -4360,7 +4363,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setOwnerGatesError((err as Error).message || 'fetch failed')
+        setOwnerGatesError(ownerFacingErrorText(err, 'fetch failed'))
         setOwnerGatesState('error')
       })
     return () => {
@@ -4385,7 +4388,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setExecutionCycleError((err as Error).message || 'fetch failed')
+        setExecutionCycleError(ownerFacingErrorText(err, 'fetch failed'))
         setExecutionCycleState('error')
       })
     return () => {
@@ -4434,7 +4437,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setPreflightError((err as Error).message || 'fetch failed')
+        setPreflightError(ownerFacingErrorText(err, 'fetch failed'))
         setPreflightState('error')
       })
 
@@ -4460,7 +4463,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setZapierToolsError((err as Error).message || 'fetch failed')
+        setZapierToolsError(ownerFacingErrorText(err, 'fetch failed'))
         setZapierToolsState('error')
       })
     return () => {
@@ -4485,7 +4488,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setApprovalReadinessError((err as Error).message || 'fetch failed')
+        setApprovalReadinessError(ownerFacingErrorText(err, 'fetch failed'))
         setApprovalReadinessState('error')
       })
     return () => {
@@ -4511,7 +4514,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelledRef?.cancelled) return
-        setApprovalQueueError((err as Error).message || 'fetch failed')
+        setApprovalQueueError(ownerFacingErrorText(err, 'fetch failed'))
         setApprovalQueueState('error')
       })
   }
@@ -4543,7 +4546,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       .catch((err) => {
         if (cancelledRef?.cancelled) return
         if (!opts.silent) {
-          setBuildWikiRunNow({ ok: false, error: (err as Error).message || 'run-now fetch failed' })
+          setBuildWikiRunNow({ ok: false, error: ownerFacingErrorText(err, 'run-now fetch failed') })
           setBuildWikiRunNowState('error')
         }
       })
@@ -4577,7 +4580,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setBrainSyncStatusError((err as Error).message || 'fetch failed')
+        setBrainSyncStatusError(ownerFacingErrorText(err, 'fetch failed'))
         setBrainSyncStatusState('error')
       })
     return () => {
@@ -4601,7 +4604,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setBuildWikiStatusError((err as Error).message || 'fetch failed')
+        setBuildWikiStatusError(ownerFacingErrorText(err, 'fetch failed'))
         setBuildWikiStatusState('error')
       })
     return () => {
@@ -4635,7 +4638,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setBuildWikiArtifactsError((err as Error).message || 'fetch failed')
+        setBuildWikiArtifactsError(ownerFacingErrorText(err, 'fetch failed'))
         setBuildWikiArtifactsState('error')
       })
 
@@ -4687,7 +4690,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setExecutivePreviewError((err as Error).message || 'fetch failed')
+        setExecutivePreviewError(ownerFacingErrorText(err, 'fetch failed'))
         setExecutivePreviewState('error')
       })
 
@@ -4733,7 +4736,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
       })
       .catch((err) => {
         if (cancelled) return
-        setTelegramApprovalPreviewError((err as Error).message || 'fetch failed')
+        setTelegramApprovalPreviewError(ownerFacingErrorText(err, 'fetch failed'))
         setTelegramApprovalPreviewState('error')
       })
 
@@ -4766,7 +4769,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
     } catch (err) {
       setBuildWikiRunNow({
         ok: false,
-        error: (err as Error).message || 'request failed',
+        error: ownerFacingErrorText(err, 'request failed'),
       })
       setBuildWikiRunNowState('error')
     }

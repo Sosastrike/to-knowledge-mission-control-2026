@@ -22,6 +22,7 @@ describe('authenticated route smoke contract', () => {
     ]))
     expect(AUTHENTICATED_API_ROUTES.map((route) => route.path)).toEqual(expect.arrayContaining([
       '/api/runtime/health',
+      '/api/runtime/failure-states',
       '/api/gateway/status',
       '/api/gateway/agent-hub/status',
       '/api/bridge/approval-requests',

@@ -1,0 +1,257 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3642 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(day-70-monitoring-failure-states) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(# Day 70 — Monitoring / Failure States) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Date: 2026-05-11) Tj
+0 -12 Td
+(Status: PASS — developer-side implementation and local runtime proof complete) Tj
+0 -12 Td
+(Blocker class: NONE for developer-side Day 70 closure) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Lane) Tj
+0 -12 Td
+(Monitoring / failure states across Mission Control runtime, core agents, Bridge, delivery connec) Tj
+0 -12 Td
+(tors, and external tools.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## What Was Implemented) Tj
+0 -12 Td
+(- Added a canonical monitoring failure-state model backed by the existing owner-facing status co) Tj
+0 -12 Td
+(ntract.) Tj
+0 -12 Td
+(- Added protected `GET /api/runtime/failure-states`.) Tj
+0 -12 Td
+(- Added runtime surfaces for Mission Control runtime, Agent Zero, Hermes, Pi, Paperclip, OpenCla) Tj
+0 -12 Td
+(w+, SpaceAgent, Bridge Session, Build-Wiki Run Now, Telegram, AgentMail, Google Drive, OneDrive,) Tj
+0 -12 Td
+( Zapier, HeyGen, and Gateway Route Smoke.) Tj
+0 -12 Td
+(- Added failure-state catalog for: OWNER_GATED, CREDENTIAL_GATED, SERVICE_DOWN, BACKEND_MISSING,) Tj
+0 -12 Td
+( ROUTE_MISSING, AUTH_REQUIRED, EXECUTION_DISABLED, WRITE_DISABLED, EXTERNAL_WRITE_DISABLED, UNKN) Tj
+0 -12 Td
+(OWN.) Tj
+0 -12 Td
+(- Added route smoke coverage for the new protected endpoint in both unauthenticated and authenti) Tj
+0 -12 Td
+(cated smoke inventories.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Files Changed) Tj
+0 -12 Td
+(- `src/lib/monitoring-failure-states.ts`) Tj
+0 -12 Td
+(- `src/lib/monitoring-failure-states.test.ts`) Tj
+0 -12 Td
+(- `src/app/api/runtime/failure-states/route.ts`) Tj
+0 -12 Td
+(- `src/app/api/runtime/failure-states/route.test.ts`) Tj
+0 -12 Td
+(- `scripts/protected-route-smoke-contract.mjs`) Tj
+0 -12 Td
+(- `scripts/authenticated-route-smoke-contract.mjs`) Tj
+0 -12 Td
+(- `src/lib/protected-route-smoke-contract.test.ts`) Tj
+0 -12 Td
+(- `src/lib/authenticated-route-smoke-contract.test.ts`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Routes / Endpoints Changed) Tj
+0 -12 Td
+(- Added `GET /api/runtime/failure-states`.) Tj
+0 -12 Td
+(- Added `/api/runtime/failure-states` to protected route smoke inventory.) Tj
+0 -12 Td
+(- Added `/api/runtime/failure-states` to authenticated route smoke inventory.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## UI / Owner-Facing Behavior) Tj
+0 -12 Td
+(- No raw JSON owner UI was added.) Tj
+0 -12 Td
+(- No fake LIVE status was added.) Tj
+0 -12 Td
+(- The endpoint returns normalized owner-facing status descriptors only.) Tj
+0 -12 Td
+(- Protected/auth-required surfaces report OWNER_GATED with AUTH_REQUIRED failure detail instead ) Tj
+0 -12 Td
+(of fake live status.) Tj
+0 -12 Td
+(- Paperclip reports SERVICE_DOWN when the known sandbox service is not running.) Tj
+0 -12 Td
+(- Build-Wiki Run Now reports OWNER_GATED and remains approval-gated.) Tj
+0 -12 Td
+(- Zapier and AgentMail external writes report disabled unless scoped by Bridge Session.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Service / Runtime Behavior) Tj
+0 -12 Td
+(- Local standalone was rebuilt and restarted on `127.0.0.1:3337` only.) Tj
+0 -12 Td
+(- New runtime PID observed: `34165`.) Tj
+0 -12 Td
+(- No public exposure was added.) Tj
+0 -12 Td
+(- Runtime proof for `/api/runtime/failure-states` returned HTTP 200 with standalone auth store a) Tj
+0 -12 Td
+(nd no key printed.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Runtime Proof Summary) Tj
+0 -12 Td
+(Proof artifact: `runtime/day-70-monitoring-failure-states-proof.json`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(Observed summary from local runtime:) Tj
+0 -12 Td
+(- Runtime: LIVE) Tj
+0 -12 Td
+(- Surfaces checked: 16) Tj
+0 -12 Td
+(- LIVE: 1) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1864 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(- OWNER_GATED: 9) Tj
+0 -12 Td
+(- CREDENTIAL_GATED: 2) Tj
+0 -12 Td
+(- SERVICE_DOWN: 1 \(Paperclip sandbox service not running\)) Tj
+0 -12 Td
+(- DISABLED: 3) Tj
+0 -12 Td
+(- No fake live status: true) Tj
+0 -12 Td
+(- No external writes executed: true) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Tests / Checks Run) Tj
+0 -12 Td
+(- `pnpm test src/lib/monitoring-failure-states.test.ts`) Tj
+0 -12 Td
+(- `pnpm test src/lib/monitoring-failure-states.test.ts src/app/api/runtime/failure-states/route.) Tj
+0 -12 Td
+(test.ts src/lib/protected-route-smoke-contract.test.ts src/lib/authenticated-route-smoke-contrac) Tj
+0 -12 Td
+(t.test.ts`) Tj
+0 -12 Td
+(- `pnpm run typecheck`) Tj
+0 -12 Td
+(- `pnpm run build`) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(- `pnpm test` — 189 files / 1448 tests passed) Tj
+0 -12 Td
+(- Final `pnpm run build` after Paperclip classifier correction) Tj
+0 -12 Td
+(- Local-only standalone restart on `127.0.0.1:3337`, PID `69803`) Tj
+0 -12 Td
+(- Authenticated local runtime proof: `GET /api/runtime/failure-states` returned HTTP 200 using s) Tj
+0 -12 Td
+(tandalone auth store without printing the key) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Safety Confirmation) Tj
+0 -12 Td
+(- No `.env` changes.) Tj
+0 -12 Td
+(- No secrets printed.) Tj
+0 -12 Td
+(- No auth weakening.) Tj
+0 -12 Td
+(- No external writes.) Tj
+0 -12 Td
+(- No Zapier writes.) Tj
+0 -12 Td
+(- No SMB/Fork 2.) Tj
+0 -12 Td
+(- No designer Gateway HTML/CSS/class changes.) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Rollback) Tj
+0 -12 Td
+(Use:) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(```bash) Tj
+0 -12 Td
+(git revert <day-70-monitoring-failure-states-commit-sha>) Tj
+0 -12 Td
+(MC_HOSTNAME=127.0.0.1 PORT=3337 bash scripts/start-standalone.sh) Tj
+0 -12 Td
+(```) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+(## Next Day Started) Tj
+0 -12 Td
+(Day 71 — Production Restart Proof starts automatically after Day 70 commit/push.) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000003941 00000 n 
+0000004067 00000 n 
+0000005983 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+6053
+%%EOF

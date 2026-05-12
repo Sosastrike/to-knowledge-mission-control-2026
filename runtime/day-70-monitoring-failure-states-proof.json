@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "mode": "monitoring_failure_states",
+  "source_commit": "1c2ebf7",
+  "runtime": {
+    "status": "LIVE",
+    "ok": true,
+    "blockers": []
+  },
+  "summary": {
+    "surfaces_checked": 16,
+    "owner_status_counts": {
+      "LIVE": 1,
+      "READY": 0,
+      "OWNER_GATED": 9,
+      "CREDENTIAL_GATED": 2,
+      "SERVICE_DOWN": 1,
+      "BLOCKED": 0,
+      "DISABLED": 3
+    },
+    "failure_state_counts": {
+      "OWNER_GATED": 3,
+      "CREDENTIAL_GATED": 2,
+      "SERVICE_DOWN": 1,
+      "BACKEND_MISSING": 0,
+      "ROUTE_MISSING": 0,
+      "AUTH_REQUIRED": 6,
+      "EXECUTION_DISABLED": 1,
+      "WRITE_DISABLED": 0,
+      "EXTERNAL_WRITE_DISABLED": 2,
+      "UNKNOWN": 0
+    }
+  },
+  "no_fake_live_status": true,
+  "no_external_writes_executed": true,
+  "surfaces": [
+    {
+      "id": "mission-control-runtime",
+      "status": "LIVE",
+      "failure": null
+    },
+    {
+      "id": "agent-zero",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    },
+    {
+      "id": "hermes",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    },
+    {
+      "id": "pi",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    },
+    {
+      "id": "paperclip",
+      "status": "SERVICE_DOWN",
+      "failure": "SERVICE_DOWN"
+    },
+    {
+      "id": "openclaw-plus",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    },
+    {
+      "id": "spaceagent",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    },
+    {
+      "id": "bridge-session",
+      "status": "OWNER_GATED",
+      "failure": "OWNER_GATED"
+    },
+    {
+      "id": "buildwiki-run-now",
+      "status": "OWNER_GATED",
+      "failure": "OWNER_GATED"
+    },
+    {
+      "id": "telegram-delivery",
+      "status": "OWNER_GATED",
+      "failure": "OWNER_GATED"
+    },
+    {
+      "id": "agentmail",
+      "status": "DISABLED",
+      "failure": "EXTERNAL_WRITE_DISABLED"
+    },
+    {
+      "id": "google-drive",
+      "status": "CREDENTIAL_GATED",
+      "failure": "CREDENTIAL_GATED"
+    },
+    {
+      "id": "onedrive",
+      "status": "CREDENTIAL_GATED",
+      "failure": "CREDENTIAL_GATED"
+    },
+    {
+      "id": "zapier",
+      "status": "DISABLED",
+      "failure": "EXTERNAL_WRITE_DISABLED"
+    },
+    {
+      "id": "heygen",
+      "status": "DISABLED",
+      "failure": "EXECUTION_DISABLED"
+    },
+    {
+      "id": "gateway-route-smoke",
+      "status": "OWNER_GATED",
+      "failure": "AUTH_REQUIRED"
+    }
+  ]
+}

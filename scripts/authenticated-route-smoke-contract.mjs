@@ -20,6 +20,7 @@ export const AUTHENTICATED_PAGE_ROUTES = [
 
 export const AUTHENTICATED_API_ROUTES = [
   { path: '/api/runtime/health', label: 'Runtime health' },
+  { path: '/api/runtime/failure-states', label: 'Runtime failure states' },
   { path: '/api/status?action=dashboard', label: 'Dashboard status' },
   { path: '/api/gateway/status', label: 'Gateway status' },
   { path: '/api/gateway/agent-hub/status', label: 'Agent Hub status' },

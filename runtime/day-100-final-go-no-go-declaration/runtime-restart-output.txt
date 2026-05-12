@@ -1,0 +1,7 @@
+checked_at=2026-05-12T07:07:53Z
+stopping_leftover_pids=1862
+login_ready_after_seconds=3
+pid_file=11224
+listeners=11224
+screen_session=mc-day100
+restart_status=ok

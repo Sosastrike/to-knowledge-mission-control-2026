@@ -1,0 +1,424 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [3 0 R 5 0 R 7 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2661 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(inventory.json) Tj
+0 -12 Td
+() Tj
+0 -12 Td
+({) Tj
+0 -12 Td
+(  "ok": true,) Tj
+0 -12 Td
+(  "checked_at": "2026-05-12T07:00:54.899Z",) Tj
+0 -12 Td
+(  "day": 100,) Tj
+0 -12 Td
+(  "lane": "FINAL GO / NO-GO DECLARATION",) Tj
+0 -12 Td
+(  "started_from_commit": "2e633a60a2d8dfb38a717bcda585dbbfaf41e8bc",) Tj
+0 -12 Td
+(  "branch": "to-knowledge-mc",) Tj
+0 -12 Td
+(  "matrix": [) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Mission Control",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "owner-authenticated visual proof still requires owner session") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Gateway",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "owner-authenticated visual proof still requires owner session") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Agent Hub",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "owner-authenticated visual proof still requires owner session") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Agent Zero",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "agent_zero_external_api_key_missing") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Hermes",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "hermes_not_installed") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Pi",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "Pi dispatcher proof is READY/read-only; no execution claimed") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Paperclip",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "paperclip_sandbox_service_not_running") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "OpenClaw+",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "openclaw_doctor_runtime_not_reachable") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "SpaceAgent Playwright",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "playwright_mcp_service_unreachable / credentials or local service required") Tj
+0 -12 Td
+(    },) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2757 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "SpaceAgent YouTube",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "playwright_mcp_service_unreachable / credentials or local service required") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "SpaceAgent Firecrawl",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "playwright_mcp_service_unreachable / credentials or local service required") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Tony/Telegram",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "telegram_report_delivery_adapter_not_configured") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Bridge",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "Bridge proof replay ok; execution remains approval-scoped") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Build-Wiki/Farmer",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "Bridge-gated owner approval/service runtime required for writes") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Brain",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "Bridge-gated owner approval/service runtime required for writes") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "MCP",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "external MCP connectors need configured servers") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Zapier",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "Zapier MCP server not present/configured") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "HeyGen",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "HeyGen/Zapier schema server not present/configured") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "AgentMail",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "agentmail_credential_required") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Google Drive",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 2121 >>
+stream
+BT
+/F1 10 Tf
+50 780 Td
+(      "basis": "google_drive_credential_required") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "OneDrive",) Tj
+0 -12 Td
+(      "status": "BLOCKED",) Tj
+0 -12 Td
+(      "class": "CREDENTIAL_GATED",) Tj
+0 -12 Td
+(      "basis": "onedrive_credential_required") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Token Governor",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "developer-side proof present; no external write claimed") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "Dispatcher",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "developer-side proof present; no external write claimed") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "security",) Tj
+0 -12 Td
+(      "status": "GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "secret/raw/protected-file scans pass") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "deployment",) Tj
+0 -12 Td
+(      "status": "GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "Day 97 local-only deploy proof pass") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "runtime",) Tj
+0 -12 Td
+(      "status": "GO",) Tj
+0 -12 Td
+(      "class": "NONE",) Tj
+0 -12 Td
+(      "basis": "Day 97 local-only deploy proof pass") Tj
+0 -12 Td
+(    },) Tj
+0 -12 Td
+(    {) Tj
+0 -12 Td
+(      "lane": "UX",) Tj
+0 -12 Td
+(      "status": "PARTIAL GO",) Tj
+0 -12 Td
+(      "class": "OWNER_GATED",) Tj
+0 -12 Td
+(      "basis": "owner-authenticated visual proof still requires owner session") Tj
+0 -12 Td
+(    }) Tj
+0 -12 Td
+(  ],) Tj
+0 -12 Td
+(  "day99_blockers": 25,) Tj
+0 -12 Td
+(  "no_env_changes_confirmed": true,) Tj
+0 -12 Td
+(  "runtime": {) Tj
+0 -12 Td
+(    "base_url": "http://127.0.0.1:3337",) Tj
+0 -12 Td
+(    "local_only": true) Tj
+0 -12 Td
+(  },) Tj
+0 -12 Td
+(  "rollback": "git revert <day-100-final-go-no-go-declaration-commit>") Tj
+0 -12 Td
+(}) Tj
+0 -12 Td
+() Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000253 00000 n 
+0000002966 00000 n 
+0000003092 00000 n 
+0000005901 00000 n 
+0000006027 00000 n 
+0000008200 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+8270
+%%EOF

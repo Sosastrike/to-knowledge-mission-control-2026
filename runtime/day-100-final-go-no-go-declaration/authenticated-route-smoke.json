@@ -1,0 +1,187 @@
+{
+  "ok": true,
+  "authenticated_smoke_proven": false,
+  "owner_visual_proof_claimed": false,
+  "blocker_class": "OWNER_GATED",
+  "blocker": "owner_authenticated_browser_session_required",
+  "checked_at": "2026-05-12T07:08:16.223Z",
+  "base_url": "http://127.0.0.1:3337",
+  "mode": "authenticated_route_smoke",
+  "session_kind": "none",
+  "cookie_name": "mc-session",
+  "cookie_value_stored": false,
+  "page_routes_inventory": [
+    {
+      "path": "/tkmc",
+      "label": "Mission Control home"
+    },
+    {
+      "path": "/gateway",
+      "label": "Gateway overview"
+    },
+    {
+      "path": "/gateway?tab=agent-hub",
+      "label": "Gateway Agent Hub tab"
+    },
+    {
+      "path": "/gateway?tab=paperclip",
+      "label": "Gateway Paperclip tab"
+    },
+    {
+      "path": "/gateway?tab=bridge",
+      "label": "Gateway Bridge Session tab"
+    },
+    {
+      "path": "/gateway?tab=dispatcher",
+      "label": "Gateway Dispatcher tab"
+    },
+    {
+      "path": "/gateway?tab=governor",
+      "label": "Gateway Token Governor tab"
+    },
+    {
+      "path": "/gateway/status",
+      "label": "Gateway status page"
+    },
+    {
+      "path": "/gateway/space-agent",
+      "label": "SpaceAgent page"
+    },
+    {
+      "path": "/gateway/brain",
+      "label": "Brain page"
+    },
+    {
+      "path": "/agents",
+      "label": "Agents alias"
+    },
+    {
+      "path": "/agent-network",
+      "label": "Agent Network alias"
+    },
+    {
+      "path": "/settings/tkmc",
+      "label": "TKMC settings"
+    },
+    {
+      "path": "/settings/tkmc/integrations",
+      "label": "TKMC integrations settings"
+    },
+    {
+      "path": "/settings/tkmc/security",
+      "label": "TKMC security settings"
+    }
+  ],
+  "api_routes_inventory": [
+    {
+      "path": "/api/runtime/health",
+      "label": "Runtime health"
+    },
+    {
+      "path": "/api/runtime/failure-states",
+      "label": "Runtime failure states"
+    },
+    {
+      "path": "/api/status?action=dashboard",
+      "label": "Dashboard status"
+    },
+    {
+      "path": "/api/gateway/status",
+      "label": "Gateway status"
+    },
+    {
+      "path": "/api/gateway/agent-hub/status",
+      "label": "Agent Hub status"
+    },
+    {
+      "path": "/api/gateway/navigation?route=/gateway/agent-hub",
+      "label": "Gateway navigation metadata"
+    },
+    {
+      "path": "/api/bridge/approval-requests",
+      "label": "Bridge approval requests"
+    },
+    {
+      "path": "/api/bridge/approval-proof-packet",
+      "label": "Bridge approval proof replay packet"
+    },
+    {
+      "path": "/api/bridge/connector-readiness",
+      "label": "Connector readiness"
+    },
+    {
+      "path": "/api/bridge/connector-proof-packet",
+      "label": "Connector proof replay packet"
+    },
+    {
+      "path": "/api/bridge/agent-zero/status",
+      "label": "Agent Zero status"
+    },
+    {
+      "path": "/api/bridge/hermes/status",
+      "label": "Hermes status"
+    },
+    {
+      "path": "/api/bridge/pi/status",
+      "label": "Pi status"
+    },
+    {
+      "path": "/api/bridge/paperclip/status",
+      "label": "Paperclip status"
+    },
+    {
+      "path": "/api/bridge/brain-sync/build-wiki/status",
+      "label": "Build-Wiki status"
+    },
+    {
+      "path": "/api/bridge/agent-zero/reports",
+      "label": "Agent Zero reports"
+    },
+    {
+      "path": "/api/bridge/agent-zero/telegram/status",
+      "label": "Telegram status"
+    },
+    {
+      "path": "/api/bridge/agent-zero/agentmail/status",
+      "label": "AgentMail status"
+    },
+    {
+      "path": "/api/bridge/agent-zero/google-drive/status",
+      "label": "Google Drive status"
+    },
+    {
+      "path": "/api/bridge/agent-zero/onedrive/status",
+      "label": "OneDrive status"
+    },
+    {
+      "path": "/api/bridge/zapier/status",
+      "label": "Zapier status"
+    },
+    {
+      "path": "/api/bridge/heygen/schema-readiness",
+      "label": "HeyGen schema readiness"
+    },
+    {
+      "path": "/api/gateway/space-agent/browser/status",
+      "label": "SpaceAgent browser status"
+    },
+    {
+      "path": "/api/gateway/space-agent/youtube/status",
+      "label": "YouTube status"
+    }
+  ],
+  "base_probe": {
+    "path": "/login",
+    "status": 200,
+    "body_bytes": 100850,
+    "mission_control_present": true,
+    "unsafe_text_detected": false
+  },
+  "routes_checked": 0,
+  "pages_checked": 0,
+  "apis_checked": 0,
+  "no_cookie_value_written": true,
+  "no_response_bodies_written": true,
+  "failures": [],
+  "results": []
+}

@@ -1,0 +1,179 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T07:00:54.899Z",
+  "day": 100,
+  "lane": "FINAL GO / NO-GO DECLARATION",
+  "started_from_commit": "2e633a60a2d8dfb38a717bcda585dbbfaf41e8bc",
+  "branch": "to-knowledge-mc",
+  "matrix": [
+    {
+      "lane": "Mission Control",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Gateway",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Agent Hub",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Agent Zero",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "agent_zero_external_api_key_missing"
+    },
+    {
+      "lane": "Hermes",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "hermes_not_installed"
+    },
+    {
+      "lane": "Pi",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "Pi dispatcher proof is READY/read-only; no execution claimed"
+    },
+    {
+      "lane": "Paperclip",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "paperclip_sandbox_service_not_running"
+    },
+    {
+      "lane": "OpenClaw+",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "openclaw_doctor_runtime_not_reachable"
+    },
+    {
+      "lane": "SpaceAgent Playwright",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "SpaceAgent YouTube",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "SpaceAgent Firecrawl",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "Tony/Telegram",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "telegram_report_delivery_adapter_not_configured"
+    },
+    {
+      "lane": "Bridge",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "Bridge proof replay ok; execution remains approval-scoped"
+    },
+    {
+      "lane": "Build-Wiki/Farmer",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "Bridge-gated owner approval/service runtime required for writes"
+    },
+    {
+      "lane": "Brain",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "Bridge-gated owner approval/service runtime required for writes"
+    },
+    {
+      "lane": "MCP",
+      "status": "PARTIAL GO",
+      "class": "CREDENTIAL_GATED",
+      "basis": "external MCP connectors need configured servers"
+    },
+    {
+      "lane": "Zapier",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "Zapier MCP server not present/configured"
+    },
+    {
+      "lane": "HeyGen",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "HeyGen/Zapier schema server not present/configured"
+    },
+    {
+      "lane": "AgentMail",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "agentmail_credential_required"
+    },
+    {
+      "lane": "Google Drive",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "google_drive_credential_required"
+    },
+    {
+      "lane": "OneDrive",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "onedrive_credential_required"
+    },
+    {
+      "lane": "Token Governor",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "developer-side proof present; no external write claimed"
+    },
+    {
+      "lane": "Dispatcher",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "developer-side proof present; no external write claimed"
+    },
+    {
+      "lane": "security",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "secret/raw/protected-file scans pass"
+    },
+    {
+      "lane": "deployment",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "Day 97 local-only deploy proof pass"
+    },
+    {
+      "lane": "runtime",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "Day 97 local-only deploy proof pass"
+    },
+    {
+      "lane": "UX",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    }
+  ],
+  "day99_blockers": 25,
+  "no_env_changes_confirmed": true,
+  "runtime": {
+    "base_url": "http://127.0.0.1:3337",
+    "local_only": true
+  },
+  "rollback": "git revert <day-100-final-go-no-go-declaration-commit>"
+}

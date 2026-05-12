@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T07:08:16.451Z",
+  "base_url": "http://127.0.0.1:3337",
+  "pid_from_file": "11224",
+  "listener_pids": [
+    "11224"
+  ],
+  "screen_session_visible": true,
+  "screen_session": "mc-day100",
+  "no_public_exposure_added": true,
+  "rollback": "screen -S mc-day100 -X quit; kill $(cat .next/standalone/server.pid 2>/dev/null) 2>/dev/null || true"
+}

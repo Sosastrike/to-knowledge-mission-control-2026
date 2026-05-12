@@ -1,0 +1,459 @@
+{
+  "ok": true,
+  "checked_at": "2026-05-12T07:09:19.406Z",
+  "day": 100,
+  "lane": "FINAL GO / NO-GO DECLARATION",
+  "final_recommendation": "PARTIAL GO",
+  "status_counts": {
+    "PARTIAL GO": 11,
+    "BLOCKED": 13,
+    "GO": 3
+  },
+  "lanes": [
+    {
+      "lane": "Mission Control",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Gateway",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Agent Hub",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    },
+    {
+      "lane": "Agent Zero",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "agent_zero_external_api_key_missing"
+    },
+    {
+      "lane": "Hermes",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "hermes_not_installed"
+    },
+    {
+      "lane": "Pi",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "Pi dispatcher proof is READY/read-only; no execution claimed"
+    },
+    {
+      "lane": "Paperclip",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "paperclip_sandbox_service_not_running"
+    },
+    {
+      "lane": "OpenClaw+",
+      "status": "BLOCKED",
+      "class": "OWNER_GATED",
+      "basis": "openclaw_doctor_runtime_not_reachable"
+    },
+    {
+      "lane": "SpaceAgent Playwright",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "SpaceAgent YouTube",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "SpaceAgent Firecrawl",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "playwright_mcp_service_unreachable / credentials or local service required"
+    },
+    {
+      "lane": "Tony/Telegram",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "telegram_report_delivery_adapter_not_configured"
+    },
+    {
+      "lane": "Bridge",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "Bridge proof replay ok; execution remains approval-scoped"
+    },
+    {
+      "lane": "Build-Wiki/Farmer",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "Bridge-gated owner approval/service runtime required for writes"
+    },
+    {
+      "lane": "Brain",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "Bridge-gated owner approval/service runtime required for writes"
+    },
+    {
+      "lane": "MCP",
+      "status": "PARTIAL GO",
+      "class": "CREDENTIAL_GATED",
+      "basis": "external MCP connectors need configured servers"
+    },
+    {
+      "lane": "Zapier",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "Zapier MCP server not present/configured"
+    },
+    {
+      "lane": "HeyGen",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "HeyGen/Zapier schema server not present/configured"
+    },
+    {
+      "lane": "AgentMail",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "agentmail_credential_required"
+    },
+    {
+      "lane": "Google Drive",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "google_drive_credential_required"
+    },
+    {
+      "lane": "OneDrive",
+      "status": "BLOCKED",
+      "class": "CREDENTIAL_GATED",
+      "basis": "onedrive_credential_required"
+    },
+    {
+      "lane": "Token Governor",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "developer-side proof present; no external write claimed"
+    },
+    {
+      "lane": "Dispatcher",
+      "status": "PARTIAL GO",
+      "class": "NONE",
+      "basis": "developer-side proof present; no external write claimed"
+    },
+    {
+      "lane": "security",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "secret/raw/protected-file scans pass"
+    },
+    {
+      "lane": "deployment",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "Day 97 local-only deploy proof pass"
+    },
+    {
+      "lane": "runtime",
+      "status": "GO",
+      "class": "NONE",
+      "basis": "Day 97 local-only deploy proof pass"
+    },
+    {
+      "lane": "UX",
+      "status": "PARTIAL GO",
+      "class": "OWNER_GATED",
+      "basis": "owner-authenticated visual proof still requires owner session"
+    }
+  ],
+  "unresolved_blockers": [
+    {
+      "lane": "agents",
+      "id": "paperclip",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/paperclip/health"
+    },
+    {
+      "lane": "agents",
+      "id": "agent-zero",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/agent-zero/health"
+    },
+    {
+      "lane": "agents",
+      "id": "hermes",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/hermes/health"
+    },
+    {
+      "lane": "agents",
+      "id": "spaceagent",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/spaceagent/health"
+    },
+    {
+      "lane": "agents",
+      "id": "openclaw-plus",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/openclaw-plus/health"
+    },
+    {
+      "lane": "connectors",
+      "id": "telegram",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "telegram_report_delivery_adapter_not_configured",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/telegram/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "agentmail",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agentmail_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/agentmail/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "google_drive",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "google_drive_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/google-drive/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "onedrive",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "onedrive_credential_required",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/bridge/agent-zero/onedrive/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "zapier",
+      "reported_class": "BLOCKED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "result": "BLOCKED",
+      "route": "/api/bridge/zapier/status"
+    },
+    {
+      "lane": "connectors",
+      "id": "heygen",
+      "reported_class": "BLOCKED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "MCP server zapier is not present in the Claude MCP configuration.",
+      "result": "BLOCKED",
+      "route": "/api/bridge/heygen/schema-readiness"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "BLOCKED",
+      "final_class": "OWNER_GATED",
+      "blocker": "production_install_blocked_by_dependency_audit",
+      "result": "BLOCKED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "OWNER_GATED",
+      "final_class": "OWNER_GATED",
+      "blocker": "execution_requires_gateway_bridge_session_scope",
+      "result": "OWNER_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "OWNER_GATED",
+      "final_class": "OWNER_GATED",
+      "blocker": "buildwiki_run_now_requires_bridge_session_and_owner_approval",
+      "result": "OWNER_GATED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent_hub_status",
+      "reported_class": "BLOCKED",
+      "final_class": "OWNER_GATED",
+      "blocker": "brain_sync_status_blocked",
+      "result": "BLOCKED",
+      "route": null
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "paperclip",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "paperclip_sandbox_service_not_running",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/paperclip/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "agent-zero",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "agent_zero_external_api_key_missing",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/agent-zero/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "hermes",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "hermes_not_installed",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/hermes/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "spaceagent",
+      "reported_class": "CREDENTIAL_GATED",
+      "final_class": "CREDENTIAL_GATED",
+      "blocker": "playwright_mcp_service_unreachable",
+      "result": "CREDENTIAL_GATED",
+      "route": "/api/gateway/agent-hub/agents/spaceagent/health"
+    },
+    {
+      "lane": "agent_hub_status",
+      "id": "openclaw-plus",
+      "reported_class": "SERVICE_DOWN",
+      "final_class": "OWNER_GATED",
+      "blocker": "openclaw_doctor_runtime_not_reachable",
+      "result": "SERVICE_DOWN",
+      "route": "/api/gateway/agent-hub/agents/openclaw-plus/health"
+    }
+  ],
+  "checks": [
+    {
+      "name": "deploy_proof",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "runtime_listener",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "protected_route_smoke",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "authenticated_route_smoke",
+      "ok": true,
+      "blocker": "OWNER_GATED"
+    },
+    {
+      "name": "protected_file_invariants",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "secret_scan",
+      "ok": true,
+      "blocker": "NONE"
+    },
+    {
+      "name": "raw_exposure_scan",
+      "ok": true,
+      "blocker": "NONE"
+    }
+  ],
+  "deployed_commit": "2e633a6",
+  "commit_at_declaration": "2e633a60a2d8dfb38a717bcda585dbbfaf41e8bc",
+  "base_url": "http://127.0.0.1:3337",
+  "runtime_pid": "11224",
+  "screen_session": "mc-day100",
+  "rollback": "screen -S mc-day100 -X quit; kill $(cat .next/standalone/server.pid 2>/dev/null) 2>/dev/null || true; git revert <day-100-final-go-no-go-declaration-commit>",
+  "proof_links": [
+    "runtime/day-94-agent-proof-replay/final-agent-proof-packet.json",
+    "runtime/day-95-connector-proof-replay/final-connector-proof-packet.json",
+    "runtime/day-96-bridge-approval-proof-replay/final-bridge-approval-proof-packet.json",
+    "runtime/day-97-production-deploy-final/post-deploy-proof-summary.json",
+    "runtime/day-98-owner-authenticated-proof-packet/proof-summary.json",
+    "runtime/day-99-final-blocker-elimination/live-blocker-table.json",
+    "runtime/day-100-final-go-no-go-declaration/deploy-proof.json",
+    "runtime/day-100-final-go-no-go-declaration/protected-route-smoke.json",
+    "runtime/day-100-final-go-no-go-declaration/authenticated-route-smoke.json",
+    "runtime/day-100-final-go-no-go-declaration/secret-scan.json",
+    "runtime/day-100-final-go-no-go-declaration/raw-exposure-scan.json"
+  ]
+}

@@ -44,25 +44,32 @@ function connectorEndpoint(text: string): string | null {
 }
 
 function ownerUiLink(text: string): string | null {
+  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'http://100.116.35.95:3100/ECO/dashboard'
   if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return 'http://100.116.35.95:50080/'
-  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'http://100.116.35.95:3100/'
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return 'http://127.0.0.1:18789/'
   return null
 }
 
 function agentControlSlug(text: string): string | null {
+  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'paperclip'
   if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return 'agent-zero'
   if (hasAny(text, 'hermes')) return 'hermes'
   if (hasAny(text, 'pi-mono', 'pi ', 'dispatcher candidate', 'route optimizer')) return 'pi'
   if (hasAny(text, 'spaceagent', 'space agent', 'playwright', 'browser research')) return 'spaceagent'
-  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'paperclip'
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'openclaw')) return 'openclaw'
   return null
 }
 
-function agentControlHref(text: string, mode: 'config' | 'chat' | 'recommend' | 'research'): string | null {
+function agentControlHref(
+  text: string,
+  mode: 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help',
+): string | null {
   const slug = agentControlSlug(text)
   if (!slug) return null
+  if (mode === 'tools') return slug === 'paperclip' ? shellHref('/gateway/agent-hub/paperclip/tools') : null
+  if (['companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(mode)) {
+    return slug === 'paperclip' ? shellHref(`/gateway/agent-hub/paperclip/${mode}`) : null
+  }
   if (mode === 'chat') {
     if (slug === 'agent-zero' || slug === 'hermes') return shellHref(`/gateway/agent-hub/${slug}/chat`)
     if (slug === 'pi') return shellHref('/gateway/agent-hub/pi/recommend')
@@ -124,6 +131,15 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label === 'open tools' || label === 'tools') {
+    const href = agentControlHref(text, 'tools')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening agent tools',
+        detail: 'Opening the human-readable agent tools page. The JSON API remains machine-only.',
+      }
+    }
     return {
       kind: 'navigate',
       href: shellHref('/gateway/tools'),
@@ -132,8 +148,46 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
+  if (label === 'companies') {
+    const href = agentControlHref(text, 'companies')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening Paperclip companies',
+        detail: 'Opening the read-only ECO company inventory. TOK remains a separate legacy blocker.',
+      }
+    }
+  }
+
+  if (label === 'agents' || label === 'agent clip') {
+    const href = agentControlHref(text, 'agents')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening Paperclip agents',
+        detail: 'Opening the read-only Paperclip workforce roster for ECO.',
+      }
+    }
+  }
+
+  if (label === 'issues' || label === 'tasks') {
+    const href = agentControlHref(text, 'issues')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening Paperclip issues',
+        detail: 'Opening the read-only Paperclip issue/task queue. Writes stay Bridge-gated.',
+      }
+    }
+  }
+
   if (label === 'health' || label === 'status') {
-    const href = agentControlHref(text, 'config')
+    const href = hasAny(text, 'paperclip', 'workforce control plane')
+      ? agentControlHref(text, 'status')
+      : agentControlHref(text, 'config')
     return {
       kind: 'navigate',
       href: href || shellHref('/gateway/tools'),
@@ -159,11 +213,32 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label === 'view audit' || label === 'audit' || label.includes('audit')) {
+    const href = agentControlHref(text, 'audit')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening Paperclip audit',
+        detail: 'Opening the readable Paperclip audit page. If no audit source exists yet, the page shows an empty state.',
+      }
+    }
     return {
       kind: 'navigate',
       href: shellHref('/gateway/health'),
       title: 'Opening Gateway audit',
       detail: 'Routing to the Gateway Health and audit surface.',
+    }
+  }
+
+  if (label === 'help' || label.includes('help')) {
+    const href = agentControlHref(text, 'help')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening Paperclip help',
+        detail: 'Opening the readable Paperclip help page with button behavior and current blockers.',
+      }
     }
   }
 
@@ -321,7 +396,25 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
-  if (label.includes('status only') || label.includes('recheck handshake')) {
+  if (label.includes('status only')) {
+    const href = agentControlHref(text, 'status')
+    if (href) {
+      return {
+        kind: 'navigate',
+        href,
+        title: 'Opening readable Paperclip status',
+        detail: 'Opening the human-readable status page backed by the Paperclip JSON bridge.',
+      }
+    }
+    return {
+      kind: 'status',
+      endpoint: hasAny(text, 'paperclip') ? '/api/bridge/paperclip/status' : '/api/bridge/runtime-services',
+      title: 'Runtime service status',
+      detail: 'Checking the JSON service readiness route. No HTML page is parsed as JSON.',
+    }
+  }
+
+  if (label.includes('recheck handshake')) {
     return {
       kind: 'status',
       endpoint: hasAny(text, 'paperclip') ? '/api/bridge/paperclip/status' : '/api/bridge/runtime-services',

@@ -101,7 +101,7 @@ function capabilityMatrix(): GatewayStatusPayload {
     { id: 'hermes', status: 'partial', can_open_ui: false, can_execute: false, blocker: 'hermes_owner_proxy_not_wired' },
     { id: 'pi', status: 'advisory', can_open_ui: false, can_execute: false, blocker: 'pi_runtime_session_not_proven' },
     { id: 'spaceagent', status: 'partial', can_open_ui: false, can_execute: false, blocker: 'no_standalone_spaceagent_ui' },
-    { id: 'paperclip', status: 'partial', can_open_ui: true, can_execute: false, blocker: 'paperclip_owner_company_claim_required' },
+    { id: 'paperclip', status: 'ready_read_only', can_open_ui: true, can_execute: false, blocker: 'paperclip_writes_bridge_gated' },
     { id: 'openclaw-plus', status: 'partial', can_open_ui: true, can_execute: false, blocker: 'openclaw_doctor_runtime_not_reachable' },
   ]
 
@@ -208,20 +208,66 @@ function openClawPlusStatus(): GatewayStatusPayload {
 }
 
 function paperclipBridge(resource: string): GatewayStatusPayload {
+  const companyDashboard = 'http://100.116.35.95:3100/ECO/dashboard'
+  const agentsUrl = 'http://100.116.35.95:3100/ECO/agents'
+  const issuesUrl = 'http://100.116.35.95:3100/ECO/issues'
+  const companies = [
+    {
+      name: 'E copier Solutions',
+      issue_prefix: 'ECO',
+      access: 'owner_accessible',
+      active_user_members: 3,
+      agents: 2,
+      issues: 6,
+    },
+    {
+      name: 'To Knowledge Gateway',
+      issue_prefix: 'TOK',
+      access: 'legacy_membership_warning',
+      active_user_members: 11,
+      agents: 10,
+      issues: 0,
+      blocker: 'tok_owner_membership_not_repaired',
+    },
+  ]
+  const items = resource === 'companies'
+    ? companies
+    : resource === 'agents'
+      ? [
+        { company: 'E copier Solutions', issue_prefix: 'ECO', count: 2, state: 'read_only_visible' },
+        { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 10, state: 'blocked_for_owner_until_membership_repair' },
+      ]
+      : resource === 'issues'
+        ? [
+          { company: 'E copier Solutions', issue_prefix: 'ECO', count: 6, state: 'read_only_visible' },
+          { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 0, state: 'blocked_for_owner_until_membership_repair' },
+        ]
+        : []
   return {
     ok: true,
     route: `bridge.paperclip.${resource}`,
-    state: resource === 'status' ? 'READ_ONLY' : 'OWNER_GATED',
-    blocker_class: resource === 'status' ? 'NONE' : 'OWNER_GATED',
+    state: 'READ_ONLY',
+    blocker_class: 'NONE',
+    overall_status: 'INSTALLED / READY - WRITES BRIDGE-GATED',
+    transport_status: 'reachable',
+    ui_status: 'reachable',
+    health_status: 'ok',
+    auth_status: 'owner_signed_in_to_paperclip',
+    company_access_status: 'ready',
+    bridge_read_status: 'read_only_live',
+    write_status: 'bridge_gated',
+    exact_blocker: 'paperclip_writes_bridge_gated',
+    active_company: companies[0],
+    legacy_company_warning: 'To Knowledge Gateway (TOK) still returns an owner access warning for Luis. Mission Control routes Paperclip owner work to E copier Solutions (ECO) until TOK membership is repaired.',
     service_process: 'paperclip-lab dev runner (node/tsx)',
     paperclip_sandbox_service_not_running: false,
-    paperclip_owner_session_required: true,
+    paperclip_owner_session_required: false,
     local_url: null,
-    tailnet_url: 'http://100.116.35.95:3100/',
-    owner_login_url: 'http://100.116.35.95:3100/',
-    company_dashboard_url: 'http://100.116.35.95:3100/companies',
-    agent_roster_url: 'http://100.116.35.95:3100/agents',
-    task_queue_url: 'http://100.116.35.95:3100/issues',
+    tailnet_url: companyDashboard,
+    owner_login_url: companyDashboard,
+    company_dashboard_url: companyDashboard,
+    agent_roster_url: agentsUrl,
+    task_queue_url: issuesUrl,
     health_endpoint: 'http://100.116.35.95:3100/api/health',
     health_probe: {
       http_status: 200,
@@ -229,12 +275,11 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
       bootstrap_status: 'ready',
       bootstrap_invite_active: false,
     },
-    items: [],
+    items,
+    company_data_enabled: true,
     ...SAFE_READ_ONLY,
     ...SERVICE_CONTROL_BLOCKED,
-    next_action: resource === 'status'
-      ? 'Owner opens the Tailnet UI and completes Paperclip login; keep Mission Control health-only until an authenticated owner session is available.'
-      : 'Complete Paperclip owner login/session first; then add authenticated read-only bridge inventory without storing credentials in Mission Control.',
+    next_action: 'Use the owner-accessible ECO Paperclip company for live reads. Keep writes Bridge-gated; repair TOK membership only if that legacy company must stay in the active route.',
   }
 }
 
@@ -255,7 +300,7 @@ function agentLocalInterfaces(): GatewayStatusPayload {
       { name: 'Hermes', status: 'partial_service_active', local_url: null, mission_control_route: '/api/hermes/status', blocker: 'hermes_owner_proxy_not_wired' },
       { name: 'Pi', status: 'advisory_runtime_not_proven', mission_control_route: '/api/bridge/dispatcher/status', blocker: 'pi_runtime_session_not_proven' },
       { name: 'SpaceAgent', status: 'partial_mission_control_panel_only', mission_control_route: '/api/bridge/space-agent/status', blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven' },
-      { name: 'Paperclip', status: 'partial_ui_reachable', tailnet_url: 'http://100.116.35.95:3100/', mission_control_route: '/api/bridge/paperclip/status', blocker: 'paperclip_owner_company_claim_required' },
+      { name: 'Paperclip', status: 'installed_ready_writes_bridge_gated', tailnet_url: 'http://100.116.35.95:3100/ECO/dashboard', mission_control_route: '/api/bridge/paperclip/status', blocker: 'paperclip_writes_bridge_gated' },
       { name: 'OpenClaw+', status: 'tunnel_live_doctor_cli_blocked', owner_tunnel_url: 'http://127.0.0.1:18789/', mission_control_route: '/api/openclaw-plus/status', blocker: 'openclaw_doctor_runtime_not_reachable' },
     ],
     ...SAFE_READ_ONLY,
@@ -268,15 +313,18 @@ function brainReadiness(): GatewayStatusPayload {
     ok: true,
     route: 'bridge.brain-readiness',
     state: 'READ_ONLY',
-    blocker_class: 'NONE',
+    blocker_class: 'OWNER_GATED',
+    pipeline_state: 'PARTIAL',
     systems: [
       { name: 'Obsidian', state: 'READ_ONLY', writes_enabled: false },
       { name: 'Main policy', state: 'READ_ONLY', writes_enabled: false },
       { name: 'Brain synchronization system', state: 'READ_ONLY', writes_enabled: false },
-      { name: 'Tony memory inheritance', state: 'READ_ONLY', writes_enabled: false },
+      { name: 'Agent Brain visibility', state: 'READ_ONLY', agents: ['Agent Zero', 'Hermes', 'Pi', 'SpaceAgent', 'Paperclip', 'OpenClaw+'], writes_enabled: false },
+      { name: 'Build-Wiki / Farmer', state: 'OWNER_GATED', allowed_target: 'opencloud-docs-farmer.service', writes_enabled: false },
     ],
+    exact_blocker: 'brain_write_sync_requires_bridge_and_backend_proof',
     ...SAFE_READ_ONLY,
-    next_action: 'Brain synchronization is visible as read-only provenance until the write path has owner approval and audit persistence.',
+    next_action: 'Keep Brain status readable for every agent. Do not claim full synchronization until Obsidian, main policy, Brain Sync, Graphify, and Build-Wiki read paths are proven and all writes are Bridge-gated.',
   }
 }
 

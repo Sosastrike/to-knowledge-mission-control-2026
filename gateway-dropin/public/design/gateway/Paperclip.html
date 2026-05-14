@@ -156,10 +156,15 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 
 footer.repo-note { padding:14px 24px; border-top:1px solid var(--line-2); background:var(--bg-1); display:flex; justify-content:space-between; gap:14px; font-size:11px; color:var(--t-4); }
 footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(--t-3); background:var(--bg-3); padding:1px 5px; border-radius:3px; }
+
+.gw-back-btn { display:inline-flex; align-items:center; gap:6px; padding:6px 10px 6px 8px; margin-right:12px; border-radius:6px; border:1px solid var(--line-3, rgba(255,255,255,0.16)); background:var(--bg-3, #1a212d); color:var(--t-2, #cdd4df); font-size:12px; font-weight:500; text-decoration:none; cursor:pointer; transition:all 120ms ease; }
+.gw-back-btn:hover { background:var(--bg-4, #232c3a); color:var(--t-1, #f1f4f9); border-color:var(--line-strong, rgba(255,255,255,0.28)); text-decoration:none; }
+.gw-back-btn svg { width:12px; height:12px; }
 </style>
 </head>
 <body>
 
+<a href="../../Mission Control.html" class="gw-back-btn" title="Back to Mission Control"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4L6 8l4 4"/></svg>Back to Mission Control</a>
 <div class="gw-crumbs">
   <a href="index.html">Gateway design</a>
   <span class="sep">›</span>
@@ -169,7 +174,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   <span class="sep">›</span>
   <span class="here">Paperclip</span>
   <span style="flex:1"></span>
-  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/agents/paperclip</span>
+  <span style="font-family:var(--ff-mono);color:var(--t-4);">/gateway/agent-hub/paperclip/status</span>
 </div>
 
 <header class="hero">
@@ -180,20 +185,21 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     <p class="lede">Paperclip is the workforce manager. It owns co-worker registration, the task queue, daily budgets, heartbeats, approvals, and work products — and hands fully-prepped tasks to OpenClaw+, which runs the actual mini-agent execution. Agent Zero remains commander; Hermes builds skills and workflows; Pi recommends routes. Paperclip does not execute, it organizes.</p>
   </div>
   <div class="right">
-    <button class="btn primary" onclick="alert('Hybrid embed: not safe yet — opening in new tab is the supported path until Tailnet handshake passes.')">Open localhost</button>
-    <button class="btn">Send command</button>
-    <button class="btn">Pause queue</button>
+    <button class="btn primary" onclick="window.open('http://100.116.35.95:3100/ECO/dashboard','_blank','noopener,noreferrer')">Open UI</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/config'">Open Config</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/tools'">Open Tools</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/status'">Health</button>
     <button class="btn gated" onclick="openBridge()">Bridge Session</button>
-    <button class="btn gated danger">Restart</button>
-    <button class="btn">Audit</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/audit'">Audit</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/help'">Help</button>
   </div>
 </header>
 
 <div class="strip">
-  <div class="cell"><div class="l">Status</div><div class="v yellow">GATED</div></div>
+  <div class="cell"><div class="l">Status</div><div class="v yellow">INSTALLED / PARTIAL</div></div>
   <div class="cell"><div class="l">Bridge</div><div class="v yellow">REQUIRED</div></div>
   <div class="cell"><div class="l">R · W · X</div><div class="v">R · W · <span style="color:var(--t-5);">X</span></div></div>
-  <div class="cell"><div class="l">Localhost</div><div class="v" style="font-size:12px;">paperclip.tail-scale.ts.net</div></div>
+  <div class="cell"><div class="l">Owner URL</div><div class="v" style="font-size:12px;">100.116.35.95:3100/ECO</div></div>
   <div class="cell"><div class="l">Today spend</div><div class="v">$0.00<small>/ $5.00</small></div></div>
   <div class="cell"><div class="l">Heartbeat</div><div class="v yellow">PENDING</div></div>
   <div class="cell"><div class="l">Repo grounding</div><div class="v" style="font-size:12px;color:var(--t-3);">PENDING</div></div>
@@ -209,15 +215,15 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     <!-- Localhost + auth -->
     <div class="two-col">
       <div class="panel">
-        <header>Localhost · hybrid embed<span class="meta">paperclip.tail-scale.ts.net</span></header>
+        <header>Owner UI · Tailnet<span class="meta">100.116.35.95:3100/ECO</span></header>
         <div class="body">
           <div class="localhost-embed unsafe">
-            <span class="url">paperclip.tail-scale.ts.net</span>
-            <div class="desc">Iframe not yet safe — Tailnet handshake unproven. Mission Control will not bypass Paperclip's own auth. Use <strong>Open in new tab</strong> until heartbeat is live, then re-evaluate.</div>
+            <span class="url">http://100.116.35.95:3100/ECO/dashboard</span>
+            <div class="desc">Paperclip UI and health are reachable for E copier Solutions (ECO). Legacy To Knowledge Gateway (TOK) remains a separate company-access warning and is not used for owner routing here. Mission Control will not bypass Paperclip's own auth.</div>
             <div style="display:flex; gap:8px;">
-              <button class="btn">Open in new tab</button>
-              <button class="btn">Status only</button>
-              <button class="btn">Recheck handshake</button>
+              <button class="btn" onclick="window.open('http://100.116.35.95:3100/ECO/dashboard','_blank','noopener,noreferrer')">Open in new tab</button>
+              <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/status'">Status only</button>
+              <button class="btn">Recheck health</button>
             </div>
           </div>
           <div style="font-size:11px;color:var(--t-4);margin-top:10px;line-height:1.5;">

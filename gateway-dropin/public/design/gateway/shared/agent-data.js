@@ -20,23 +20,24 @@ window.AGENTS = (function () {
       name: 'Paperclip',
       role: 'Workforce Control Plane',
       tagline: 'Organizes the workforce. Hands work to OpenClaw+.',
-      status: 'yellow',                // planned/gated until localhost/Tailnet works
+      status: 'green',                 // installed: owner-accessible ECO company, writes bridge-gated
+      status_label: 'INSTALLED / READY - WRITES BRIDGE-GATED',
       marker: 'purple',
       kind: 'workforce',
       bridge: true,
       R: true, W: true, X: false,
-      localhost: 'http://paperclip.tail-scale.ts.net',
+      localhost: 'http://100.116.35.95:3100/ECO/dashboard',
       iframe_safe: false,              // assumed unsafe until proven; default to "Open in new tab"
-      auth: 'tailnet + token',
+      auth: 'Paperclip login + owner company ECO',
       repo: 'github.com/paperclipai/paperclip',
       repo_grounding: 'pending',
       caps: ['workforce', 'task-queue', 'co-worker management', 'mini-agent requests', 'budgets', 'heartbeats', 'approvals', 'OpenClaw handoff'],
       models: ['claude-sonnet-4', 'gpt-5-codex'],
       tools: ['task-bus', 'workforce-ledger', 'budget-meter', 'approvals-bus'],
       blocked_reason: null,
-      gated_reason: 'Localhost/Tailnet handshake unproven. Bridge required for first run.',
+      gated_reason: 'paperclip_writes_bridge_gated. Owner-accessible company is E copier Solutions (ECO); legacy To Knowledge Gateway (TOK) still needs owner membership repair before routing there.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Workforce manager. Sits before OpenClaw+. Owns task queue, budgets, approvals, and handoff to runtime.'
+      summary: 'Workforce manager. Sits before OpenClaw+. ECO company reads are available; real task writes stay Bridge-gated.'
     },
 
     {
@@ -44,12 +45,12 @@ window.AGENTS = (function () {
       name: 'Agent Zero',
       role: 'Commander',
       tagline: 'Sole commander. All owner intent lands here.',
-      status: 'green',                 // partial GO / commander track
+      status: 'green',                 // partial: UI restored, fd guard pending
       marker: 'purple',
       kind: 'commander',
       bridge: false,
       R: true, W: true, X: true,
-      localhost: 'http://localhost:50001',
+      localhost: 'http://100.116.35.95:50080/',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/agent-zero',
@@ -58,7 +59,7 @@ window.AGENTS = (function () {
       models: ['claude-sonnet-4', 'gpt-5', 'openrouter:auto'],
       tools: ['gateway-router', 'plan-composer', 'memory:tony', 'memory:obsidian', 'memory:mempalace'],
       blocked_reason: null,
-      gated_reason: null,
+      gated_reason: 'agent_zero_fd_exhaustion_guard_pending. Safe UI opens do not require Bridge Session; protected execution still does.',
       pulse: { req_per_min: 14.2, p95_ms: 940, error_rate: 0.012 },
       summary: 'Commander. Plans, delegates, executes. Inherits Tony memory read-only.'
     },
@@ -67,13 +68,13 @@ window.AGENTS = (function () {
       id: 'hermes',
       name: 'Hermes',
       role: 'Lieutenant · Skill + Workflow Builder',
-      tagline: 'Yellow until hermes_called:true is proven.',
+      tagline: 'Service active; owner proxy not wired.',
       status: 'yellow',
       marker: 'purple',
       kind: 'lieutenant',
       bridge: true,
       R: true, W: true, X: false,
-      localhost: 'http://localhost:7042',
+      localhost: 'server-local only: 127.0.0.1:3000',
       iframe_safe: true,
       auth: 'mission control session + bridge',
       repo: 'github.com/Sosastrike/To-Knowledge-hermes-agent',
@@ -82,7 +83,7 @@ window.AGENTS = (function () {
       models: ['claude-sonnet-4', 'gpt-5-codex'],
       tools: ['skill-registry', 'workflow-canvas', 'openclaw-handoff'],
       blocked_reason: null,
-      gated_reason: 'hermes_called:true not yet proven. Read-only until live chat heartbeat.',
+      gated_reason: 'hermes_owner_proxy_not_wired. Service/live adapter is proven, but no safe owner Tailnet/proxy UI exists yet.',
       pulse: { req_per_min: 2.1, p95_ms: 1280, error_rate: 0 },
       summary: 'Lieutenant. Builds skills and workflows. Cannot delegate further. Read-biased until proven.'
     },
@@ -92,12 +93,12 @@ window.AGENTS = (function () {
       name: 'SpaceAgent',
       role: 'Browser · Firecrawl · Playwright MCP · YouTube research',
       tagline: 'Web research specialist. Uses Playwright MCP through Gateway policy.',
-      status: 'gray',                  // planned/gated unless installed/live
+      status: 'yellow',                // partial: Mission Control panel only
       marker: 'orange',
       kind: 'specialist',
       bridge: true,
       R: true, W: false, X: false,
-      localhost: 'http://localhost:8765',
+      localhost: 'Mission Control panel only; Playwright MCP local-only 127.0.0.1:8931',
       iframe_safe: false,
       auth: 'tailnet',
       repo: 'github.com/Sosastrike/To-Knowledge-space-agent',
@@ -106,7 +107,7 @@ window.AGENTS = (function () {
       models: ['claude-haiku-4-5', 'gpt-5-mini'],
       tools: ['firecrawl', 'playwright-mcp', 'youtube-api', 'browser-headless'],
       blocked_reason: null,
-      gated_reason: 'Not installed in this environment. Repo grounding pending.',
+      gated_reason: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Browser, Firecrawl, Playwright MCP, and YouTube research. Read-only by design. Playwright MCP is a tool — SpaceAgent is the agent.'
     },
@@ -116,12 +117,12 @@ window.AGENTS = (function () {
       name: 'Pi-mono',
       role: 'Dispatcher · Route Optimizer (candidate)',
       tagline: 'Recommends routes. Not in execution path yet.',
-      status: 'gray',
+      status: 'blue',
       marker: 'orange',
       kind: 'dispatcher',
       bridge: false,
       R: true, W: false, X: false,
-      localhost: 'http://localhost:5174',
+      localhost: 'Mission Control advisory panel only',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
@@ -130,7 +131,7 @@ window.AGENTS = (function () {
       models: ['claude-haiku-4-5'],
       tools: ['router-cost-table', 'engine-ledger:read'],
       blocked_reason: null,
-      gated_reason: 'Candidate. Recommendations only — not yet wired into execution path.',
+      gated_reason: 'pi_runtime_session_not_proven. Advisory recommendations only; execution and writes disabled.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Dispatcher candidate. Recommends routes by cost/latency/capability.'
     }
@@ -222,7 +223,7 @@ window.AGENTS = (function () {
       working_set: ['Bootstrap workforce ledger', 'First co-worker registration'],
       co_workers: 0, tasks: 0, work_products: 0
     },
-    'space-agent': { working_set: [], note: 'Not installed' },
+    'space-agent': { working_set: ['Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'Mission Control panel only; no standalone SpaceAgent UI.' },
     'pi-mono': { working_set: ['Engine cost table cache (5m TTL)'], routes_observed: 27 }
   };
 
@@ -254,7 +255,7 @@ window.AGENTS = (function () {
     ],
     'paperclip':   [],
     'space-agent': [
-      { ts: '00:00:00', code: 'NOT_INSTALLED',  target: '—',              detail: 'service not running',     retried: 0, resolved: false }
+      { ts: '00:00:00', code: 'NO_STANDALONE_UI', target: 'SpaceAgent panel', detail: 'Mission Control panel only; Playwright MCP remains local-only.', retried: 0, resolved: false }
     ],
     'pi-mono':     []
   };
@@ -284,13 +285,13 @@ window.AGENTS = (function () {
   /* ========== Paperclip-specific drill-down data ========== */
   const paperclip = {
     workforce: {
-      co_workers_total: 6,
+      co_workers_total: 2,
       co_workers_active: 0,
       mini_agents_max: 24,
       mini_agents_in_flight: 0,
       tasks_today: 0,
       tasks_completed_today: 0,
-      tasks_pending: 0,
+      tasks_pending: 6,
       budget_today_usd: 0.00,
       budget_cap_usd: 5.00,
       heartbeats_window: '60s',
@@ -323,7 +324,7 @@ window.AGENTS = (function () {
     auth: {
       chatgpt:   { state: 'ok',     account: 'codex@to-knowledge', last_check: '13:55' },
       anthropic: { state: 'ok',     account: 'mc-mission@to-knowledge', last_check: '13:55' },
-      tailnet:   { state: 'pending',account: '—', last_check: '13:55', detail: 'paperclip.tail-scale.ts.net not seen in last 60s' }
+      tailnet:   { state: 'ok',account: 'owner', last_check: '13:55', detail: 'http://100.116.35.95:3100/ECO/dashboard reachable; To Knowledge Gateway (TOK) still needs membership repair' }
     },
     openclawHandoff: {
       contract_version: 'v0.3',
@@ -347,22 +348,22 @@ window.AGENTS = (function () {
           id: 'firecrawl',
           name: 'Firecrawl',
           role: 'search / scrape / crawl / extract',
-          status: 'gray',                       // not installed in this env
+          status: 'red',
           installed: false,
           endpoint: 'localhost only',
           auth: 'token',
           requires_bridge: false,
           bridge_for_writes: true,
           last_job: null,
-          gated_reason: 'Not installed in this environment.',
-          blocked_reason: null
+          gated_reason: null,
+          blocked_reason: 'firecrawl_credential_required; firecrawl_backend_adapter_not_configured'
         },
         {
           id: 'playwright-mcp',
           name: 'Playwright MCP',
           role: 'live browser automation · UI verification · screenshots · console · network · forms',
-          status: 'gray',                       // gray / not installed until developer proves service
-          installed: false,
+          status: 'blue',
+          installed: true,
           endpoint: 'localhost only',
           browser_mode: 'headless',             // headless / headed / isolated
           auth: 'token',
@@ -373,22 +374,22 @@ window.AGENTS = (function () {
           last_a11y_snapshot: null,
           last_console_capture: null,
           last_network_capture: null,
-          gated_reason: 'Service not yet proven. Once installed: interactive browser actions remain yellow/gated until a Bridge Session is open.',
+          gated_reason: 'Playwright MCP is connected local-only on 127.0.0.1:8931; interactive browser actions remain Bridge Session gated.',
           blocked_reason: null
         },
         {
           id: 'youtube-research',
           name: 'YouTube research',
           role: 'transcript / metadata / summary / evidence packet',
-          status: 'gray',
+          status: 'red',
           installed: false,
           endpoint: 'localhost only',
           auth: 'youtube api key',
           requires_bridge: false,
           bridge_for_writes: false,
           last_job: null,
-          gated_reason: 'Not installed in this environment.',
-          blocked_reason: null
+          gated_reason: null,
+          blocked_reason: 'youtube_transcript_connector_not_proven'
         }
       ],
       // safe owner buttons; UI-only in design — no live calls.
@@ -427,153 +428,4 @@ window.AGENTS = (function () {
     byId,
     statusColor
   };
-})();
-
-/* ============================================================
-   ENGINEERING WIRING LAYER — appended per Designer Contract
-   (README-FOR-DEVELOPER.md Data Wiring section).
-
-   Above this comment: the original designer mock data (IIFE).
-   Below this comment: API-backed overlay + button event delegation.
-
-   Rules honoured (same as gateway-data.js):
-     - Rule 1: mock HTML/CSS untouched.
-     - Rule 5: status grammar locked.
-     - Rule 6: agent status forced to 'gray' on script load; only the
-       API can promote it. Network/auth failure → stays gray.
-     - DDR-Gateway-005: iframe sandbox allow-scripts allow-same-origin
-       so fetch carries Mission Control session cookies.
-     - DDR-Gateway-006 (new): button event delegation — engineering may
-       bind onclick handlers for buttons whose intent is unambiguous
-       (label-driven). Ambiguous or owner-action buttons fall back to
-       "Action gated · request via Bridge Session" yellow notice — no
-       fake LIVE, no destructive write without owner approval.
-   ============================================================ */
-(function () {
-  var A = window.AGENTS;
-  if (!A) return;
-
-  // ---- 1. Force gray-until-proven on every agent (Rule 6) ----
-  if (Array.isArray(A.agents)) {
-    for (var i = 0; i < A.agents.length; i += 1) {
-      A.agents[i]._designer_status = A.agents[i].status;
-      A.agents[i].status = 'gray';
-      A.agents[i].live_state_known = false;
-      if (A.agents[i].pulse) {
-        A.agents[i].pulse = { req_per_min: 0, p95_ms: null, error_rate: 0 };
-      }
-    }
-  }
-
-  // ---- 2. Hydrate from API ----
-  function hydrateAgents(payload) {
-    if (!payload || !Array.isArray(payload.agents)) return;
-    var byId = {};
-    for (var j = 0; j < A.agents.length; j += 1) byId[A.agents[j].id] = A.agents[j];
-    for (var k = 0; k < payload.agents.length; k += 1) {
-      var live = payload.agents[k];
-      var dst = byId[live.id];
-      if (!dst) continue;
-      if (live.status) dst.status = live.status;
-      if (live.pulse)  dst.pulse  = Object.assign({}, dst.pulse, live.pulse);
-      if (typeof live.bridge === 'boolean') dst.bridge = live.bridge;
-      if (live.gated_reason !== undefined) dst.gated_reason = live.gated_reason;
-      if (live.blocked_reason !== undefined) dst.blocked_reason = live.blocked_reason;
-      dst.live_state_known = true;
-    }
-    document.dispatchEvent(new CustomEvent('gateway:hydrate', { detail: { source: 'agent-data', payload: payload } }));
-  }
-
-  function fetchAgents() {
-    try {
-      fetch('/api/gateway/agent-hub/agents', { credentials: 'same-origin', headers: { accept: 'application/json' } })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (payload) { if (payload) hydrateAgents(payload); })
-        .catch(function () { /* silent — gray stays; Rule 6 */ });
-    } catch (e) { /* fetch unavailable — gray stays */ }
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fetchAgents, { once: true });
-  else fetchAgents();
-  setInterval(function () { if (!document.hidden) fetchAgents(); }, 30000);
-
-  // ---- 3. Button event delegation (DDR-Gateway-006) ----
-  // Map button text/class to an action. Unmapped buttons get a yellow
-  // "Action gated" notice. Mapped buttons either open URLs (read-only)
-  // or POST to backend (gated by Bridge Session server-side).
-  function findAgentForButton(btn) {
-    var carrier = btn.closest('[data-id]');
-    if (!carrier) return null;
-    var id = carrier.getAttribute('data-id');
-    return (A.byId && A.byId(id)) || null;
-  }
-  function notifyGated(label) {
-    try {
-      var box = document.createElement('div');
-      box.setAttribute('role', 'status');
-      box.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#3b2a09;border:1px solid #b08400;color:#fde68a;padding:10px 14px;border-radius:6px;font-family:Inter,system-ui,sans-serif;font-size:12px;z-index:9999;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.4)';
-      box.textContent = 'Action gated · ' + label + ' · request via Bridge Session.';
-      document.body.appendChild(box);
-      setTimeout(function () { box.remove(); }, 4000);
-    } catch (e) { /* DOM unavailable */ }
-  }
-  function safeFetch(url, init) {
-    try { return fetch(url, Object.assign({ credentials: 'same-origin' }, init || {})); }
-    catch (e) { return Promise.reject(e); }
-  }
-  function buttonAction(label, agent, btn) {
-    var l = (label || '').trim().toLowerCase();
-    // ---- READ-ONLY actions (Rule 6 — green only when proven live) ----
-    if (l === 'open localhost' || l === 'open in new tab') {
-      if (!agent || !agent.localhost) return notifyGated('Open localhost');
-      // Per the contract: hybrid embed only when iframe_safe=true. Otherwise new tab.
-      if (agent.iframe_safe) window.location.assign(agent.localhost);
-      else window.open(agent.localhost, '_blank', 'noopener');
-      return;
-    }
-    if (l === 'audit' || l === 'view audit' || l === 'open audit trail') {
-      var aid = agent ? agent.id : '';
-      window.open('/gateway/audit?agent=' + encodeURIComponent(aid), '_blank', 'noopener');
-      return;
-    }
-    if (l === 'preview ui' || l === 'status only') {
-      if (agent && agent.localhost) window.open(agent.localhost, '_blank', 'noopener');
-      else notifyGated(label);
-      return;
-    }
-    // ---- BRIDGE-GATED writes (Rule 6 — owner approval required) ----
-    if (btn.classList.contains('gated') || btn.classList.contains('danger') ||
-        l === 'bridge session' || l === 'restart' || l === 'send command' || l === 'pause queue' ||
-        l === 'restart (fresh memory)' || l === 'pull + redeploy' || l === 'roll back last action' ||
-        l === 'stop' || l === 'extend (audited)' || l === 'revoke now') {
-      // Server-side guard is canonical (DDR-Gateway-005 threat model). Client just emits
-      // an approval-request event; the backend decides whether to require Bridge.
-      safeFetch('/api/gateway/approval-requests', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ action: l, agent_id: agent ? agent.id : null })
-      }).then(function (r) {
-        if (r && r.ok) notifyGated(label + ' · request sent');
-        else notifyGated(label);
-      }).catch(function () { notifyGated(label); });
-      return;
-    }
-    // ---- Approve · open bridge (already wired by mock) ----
-    if (l.indexOf('approve · open bridge') === 0) {
-      // Mock's openBridge() already exists and handles this. Let the inline handler run.
-      return;
-    }
-    // ---- Unrecognised label — gated by default (Rule 6 — no fake LIVE) ----
-    notifyGated(label || 'Action');
-  }
-  document.addEventListener('click', function (ev) {
-    var btn = ev.target && ev.target.closest && ev.target.closest('button');
-    if (!btn) return;
-    // Skip tabs (intra-mock nav) — the mock's own JS handles those.
-    if (btn.classList.contains('tab')) return;
-    // Skip buttons that already have an inline onclick (mock-owned wiring).
-    if (btn.hasAttribute('onclick')) return;
-    var agent = findAgentForButton(btn);
-    var label = (btn.textContent || '').trim();
-    buttonAction(label, agent, btn);
-  }, true);
 })();

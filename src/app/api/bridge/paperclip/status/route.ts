@@ -1,16 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth'
-import { buildPaperclipStatusPayload } from '@/lib/paperclip-bridge'
+import { NextRequest } from 'next/server'
+import { authRequired, readOnly } from '@/lib/mission-control-contracts'
+import { paperclipLiveStatus } from '@/lib/paperclip-live-status'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const auth = requireRole(request, 'viewer')
-  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  const auth = authRequired(request, 'viewer')
+  if (auth) return auth
 
-  const payload = await buildPaperclipStatusPayload({ generatedAt: new Date().toISOString() })
-  return NextResponse.json(payload, {
-    headers: { 'Cache-Control': 'no-store' },
+  const status = await paperclipLiveStatus('status')
+  return readOnly({
+    ...status,
+    route: 'bridge.paperclip.status',
+    resource_note: 'Paperclip health and owner-accessible company status. No writes are performed.',
   })
 }

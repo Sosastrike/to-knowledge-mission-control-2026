@@ -15,6 +15,7 @@ import {
   AGENT_INTERFACE_LINKS,
   GATEWAY_TABS,
   activeTabFrom,
+  controlViewFromPath,
   gatewayActionForButton,
   iframeSrcFor,
   type GatewayTab,
@@ -180,7 +181,15 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
     })).toMatchObject({
       kind: 'openExternal',
-      href: 'http://100.116.35.95:3100/',
+      href: 'http://100.116.35.95:3100/ECO/dashboard',
+    })
+    expect(gatewayActionForButton({
+      label: 'Open localhost',
+      pageTitle: 'Agent Hub · Control Center',
+      nearbyText: 'Owner → Gateway → Agent Zero / Pi / Hermes → Paperclip workforce control plane',
+    })).toMatchObject({
+      kind: 'openExternal',
+      href: 'http://100.116.35.95:3100/ECO/dashboard',
     })
     expect(gatewayActionForButton({
       label: 'Open UI',
@@ -222,12 +231,65 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       href: '/gateway/tools',
     })
     expect(gatewayActionForButton({
+      label: 'Open Tools',
+      nearbyText: 'Paperclip workforce control plane company claim required',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/paperclip/tools',
+    })
+    expect(gatewayActionForButton({
       label: 'Health',
       nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
     })).toMatchObject({
       kind: 'navigate',
-      href: '/gateway/agent-hub/paperclip/config',
+      href: '/gateway/agent-hub/paperclip/status',
     })
+    expect(gatewayActionForButton({
+      label: 'Status only',
+      nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/paperclip/status',
+    })
+    expect(gatewayActionForButton({
+      label: 'Audit',
+      nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/paperclip/audit',
+    })
+    expect(gatewayActionForButton({
+      label: 'Help',
+      nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/paperclip/help',
+    })
+  })
+})
+
+describe('controlViewFromPath — Paperclip normalized owner routes', () => {
+  it('normalizes the stale /gateway/agents/paperclip route to the readable Paperclip status page', () => {
+    expect(controlViewFromPath('/gateway/agents/paperclip', null)).toMatchObject({
+      kind: 'agent',
+      slug: 'paperclip',
+      mode: 'status',
+    })
+    expect(controlViewFromPath('/gateway/agent-hub/paperclip', null)).toMatchObject({
+      kind: 'agent',
+      slug: 'paperclip',
+      mode: 'status',
+    })
+  })
+
+  it('supports the full Paperclip ECO control route map', () => {
+    for (const mode of ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help']) {
+      expect(controlViewFromPath(`/gateway/agent-hub/paperclip/${mode}`, null)).toMatchObject({
+        kind: 'agent',
+        slug: 'paperclip',
+        mode,
+      })
+    }
   })
 })
 
@@ -283,7 +345,11 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     expect(byName.get('Playwright MCP')?.localUrl).toBe('server-local only: 127.0.0.1:8931')
     expect(byName.get('Paperclip')?.buttons.ui).toMatchObject({
       enabled: true,
-      href: 'http://100.116.35.95:3100/',
+      href: 'http://100.116.35.95:3100/ECO/dashboard',
+    })
+    expect(byName.get('Paperclip')?.buttons.health).toMatchObject({
+      enabled: true,
+      href: '/gateway/agent-hub/paperclip/status',
     })
   })
 
@@ -327,7 +393,11 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     for (const row of AGENT_INTERFACE_LINKS) {
       const tools = row.buttons.tools
       if (!tools.enabled || !tools.href) continue
-      expect(tools.href, `${row.name} tools should be a human UI wrapper`).toBe('/gateway/tools')
+      if (row.name === 'Paperclip') {
+        expect(tools.href, 'Paperclip tools should be a Paperclip-specific human UI wrapper').toBe('/gateway/agent-hub/paperclip/tools')
+      } else {
+        expect(tools.href, `${row.name} tools should be a human UI wrapper`).toBe('/gateway/tools')
+      }
     }
   })
 
@@ -341,8 +411,8 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     expect(byName.get('Pi')?.blocker).toContain('pi_runtime_session_not_proven')
     expect(byName.get('SpaceAgent')?.status).toContain('Mission Control panel only')
     expect(byName.get('SpaceAgent')?.blocker).toContain('no_standalone_spaceagent_ui')
-    expect(byName.get('Paperclip')?.status).toContain('UI reachable')
-    expect(byName.get('Paperclip')?.blocker).toContain('paperclip_owner_company_claim_required')
+    expect(byName.get('Paperclip')?.status).toContain('INSTALLED / READY')
+    expect(byName.get('Paperclip')?.blocker).toContain('paperclip_writes_bridge_gated')
     expect(byName.get('OpenClaw+')?.status).toContain('tunnel live')
     expect(byName.get('OpenClaw+')?.blocker).toContain('openclaw_doctor_runtime_not_reachable')
   })
@@ -373,5 +443,8 @@ describe('AgentInterfaceInventory layout contract', () => {
     expect(GATEWAY_SHELL_SOURCE).toContain('Chat / Test')
     expect(GATEWAY_SHELL_SOURCE).toContain('Recommendations')
     expect(GATEWAY_SHELL_SOURCE).toContain('Research')
+    expect(GATEWAY_SHELL_SOURCE).toContain('Issues / Tasks')
+    expect(GATEWAY_SHELL_SOURCE).toContain('BRAIN_READINESS_FALLBACK')
+    expect(GATEWAY_SHELL_SOURCE).toContain('brain_readiness_endpoint_not_readable_or_owner_auth_required')
   })
 })

@@ -119,6 +119,7 @@ const disabled = (blocker: string): AgentAccessButton => ({ enabled: false, href
 const GATEWAY_TOOLS_ROUTE = '/gateway/tools'
 const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
+const paperclipControlRoute = (mode: string): string => agentControlRoute('paperclip', mode)
 
 export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   {
@@ -211,19 +212,19 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     localBind: '100.116.35.95',
     port: '3100',
     localUrl: null,
-    tailnetUrl: 'http://100.116.35.95:3100/',
+    tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
     proxyRoute: '/api/bridge/paperclip/status',
     authRequired: true,
-    status: 'partial · UI reachable · company claim required',
-    blocker: 'paperclip_owner_company_claim_required · Paperclip health is live on Tailnet; owner Paperclip login/session is required before company/agent/task data can be read.',
-    nextFix: 'Complete Paperclip owner company membership/bootstrap, then re-run companies/agents/issues bridge reads.',
+    status: 'INSTALLED / READY - WRITES BRIDGE-GATED',
+    blocker: 'paperclip_writes_bridge_gated · Owner-accessible Paperclip company is E copier Solutions (ECO). Legacy To Knowledge Gateway (TOK) still needs owner membership repair before that company route can be used.',
+    nextFix: 'Use the ECO Paperclip dashboard for owner work now. Keep real task creation Bridge-gated; repair TOK membership separately if that legacy company must remain active.',
     buttons: {
-      ui: enabled('http://100.116.35.95:3100/'),
-      config: enabled(agentControlRoute('paperclip', 'config')),
-      brain: enabled(GATEWAY_BRAIN_ROUTE),
-      chat: disabled('Paperclip chat/write actions remain blocked until Bridge Session and adapter proof exist.'),
-      tools: enabled(GATEWAY_TOOLS_ROUTE),
-      health: enabled(agentControlRoute('paperclip', 'config')),
+      ui: enabled('http://100.116.35.95:3100/ECO/dashboard'),
+      config: enabled(paperclipControlRoute('config')),
+      brain: disabled('paperclip_brain_surface_not_configured · Paperclip work-product/memory surface has not been proven yet.'),
+      chat: disabled('paperclip_chat_surface_not_configured · No safe Paperclip chat/task-prompt surface is proven.'),
+      tools: enabled(paperclipControlRoute('tools')),
+      health: enabled(paperclipControlRoute('status')),
     },
   },
   {
@@ -455,7 +456,7 @@ function AgentInterfaceInventory({
             <button type="button" onClick={onCollapse} data-testid="agent-interface-collapse">Collapse</button>
           )}
           <button type="button" onClick={onClose} data-testid="agent-interface-close">Close</button>
-          <a href="/api/agent-local-interfaces" target="_blank" rel="noreferrer">Inventory API</a>
+          <a href="/gateway/tools?panel=agent-interfaces">Inventory Panel</a>
         </div>
       </div>
       {isCollapsed ? (
@@ -497,7 +498,7 @@ function AgentInterfaceInventory({
 }
 
 type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'paperclip' | 'openclaw'
-type AgentPanelMode = 'config' | 'chat' | 'recommend' | 'research'
+type AgentPanelMode = 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help'
 type GatewayControlView =
   | { kind: 'tools' }
   | { kind: 'brain' }
@@ -564,12 +565,12 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     slug: 'paperclip',
     name: 'Paperclip',
     role: 'Workforce control plane',
-    status: 'partial · UI reachable · company claim required',
+    status: 'INSTALLED / READY - WRITES BRIDGE-GATED',
     endpoint: '/api/bridge/paperclip/status',
-    uiHref: 'http://100.116.35.95:3100/',
-    blocker: 'paperclip_owner_company_claim_required',
-    nextAction: 'Open Paperclip through the Tailnet UI and complete the official company claim/invite/admin path. Mission Control must not spoof membership.',
-    modes: ['config'],
+    uiHref: 'http://100.116.35.95:3100/ECO/dashboard',
+    blocker: 'paperclip_writes_bridge_gated',
+    nextAction: 'Use the owner-accessible ECO company dashboard for Paperclip. Real task writes remain Bridge-gated; the legacy TOK company still needs membership repair before routing there.',
+    modes: ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help'],
   },
   openclaw: {
     slug: 'openclaw',
@@ -589,13 +590,22 @@ const CONTROL_MODE_LABELS: Record<AgentPanelMode, string> = {
   chat: 'Chat / Test',
   recommend: 'Recommendations',
   research: 'Research',
+  tools: 'Tools',
+  companies: 'Companies',
+  agents: 'Agents',
+  issues: 'Issues / Tasks',
+  status: 'Status',
+  audit: 'Audit',
+  help: 'Help',
 }
+
+const CONTROL_MODE_MATCH = '(config|chat|recommend|research|tools|companies|agents|issues|status|audit|help)'
 
 function controlViewFrom(pathname: string | null, q: URLSearchParams | null): GatewayControlView | null {
   const control = q?.get('control')
   if (control === 'tools') return { kind: 'tools' }
   if (control === 'brain') return { kind: 'brain' }
-  const controlMatch = control?.match(/^(agent-zero|hermes|pi|spaceagent|paperclip|openclaw)-(config|chat|recommend|research)$/)
+  const controlMatch = control?.match(new RegExp(`^(agent-zero|hermes|pi|spaceagent|paperclip|openclaw)-${CONTROL_MODE_MATCH}$`))
   if (controlMatch) {
     return { kind: 'agent', slug: controlMatch[1] as AgentSlug, mode: controlMatch[2] as AgentPanelMode }
   }
@@ -604,12 +614,22 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   if (parts[0] !== 'gateway') return null
   if (parts[1] === 'tools') return { kind: 'tools' }
   if (parts[1] === 'brain') return { kind: 'brain' }
+  if (parts[1] === 'agent-hub' && parts[2] === 'paperclip' && !parts[3]) {
+    return { kind: 'agent', slug: 'paperclip', mode: 'status' }
+  }
   if (parts[1] === 'agent-hub' && parts[2] && parts[3]) {
     const slug = parts[2] as AgentSlug
     const mode = parts[3] as AgentPanelMode
-    if (AGENT_CONTROL_DEFS[slug] && ['config', 'chat', 'recommend', 'research'].includes(mode)) {
+    if (AGENT_CONTROL_DEFS[slug] && ['config', 'chat', 'recommend', 'research', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(mode)) {
       return { kind: 'agent', slug, mode }
     }
+  }
+  if (parts[1] === 'agents' && parts[2] === 'paperclip') {
+    const requestedMode = parts[3] as AgentPanelMode | undefined
+    const mode = requestedMode && ['config', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(requestedMode)
+      ? requestedMode
+      : 'status'
+    return { kind: 'agent', slug: 'paperclip', mode }
   }
   return null
 }
@@ -625,7 +645,32 @@ function summarizeValue(value: unknown): string {
   return 'available'
 }
 
-function ReadableStatusPanel({ endpoint }: { endpoint: string }) {
+function firstStatusString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return null
+}
+
+const BRAIN_READINESS_FALLBACK: Record<string, unknown> = {
+  ok: false,
+  state: 'READABLE_FALLBACK',
+  pipeline_state: 'PARTIAL',
+  endpoint: '/api/bridge/brain-readiness',
+  blocker: 'brain_readiness_endpoint_not_readable_or_owner_auth_required',
+  obsidian: 'read-only provenance surface expected; writes Bridge-gated',
+  main_policy: 'read-only policy surface expected; writes Bridge-gated',
+  brain_sync: 'status panel fallback active until backend JSON route is readable',
+  graphify: 'backend status required before claiming full sync',
+  build_wiki: 'Fork 1 Run Now remains Bridge-gated',
+  agent_visibility: 'Agent Zero, Hermes, Pi, SpaceAgent, Paperclip, and OpenClaw+ must consume Brain through Gateway status/contracts only',
+  next_action: 'Restore readable /api/bridge/brain-readiness JSON for owner sessions, then prove each agent can read the Brain status packet. Do not enable Brain writes without Bridge approval.',
+  execution_enabled: false,
+  writes_enabled: false,
+  protected_execution_enabled: false,
+}
+
+function ReadableStatusPanel({ endpoint, fallbackPayload }: { endpoint: string; fallbackPayload?: Record<string, unknown> }) {
   const [state, setState] = useState<{
     phase: 'loading' | 'ready' | 'error'
     status?: number
@@ -641,12 +686,36 @@ function ReadableStatusPanel({ endpoint }: { endpoint: string }) {
         const payload = await response.json().catch(() => null)
         if (cancelled) return
         if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-          setState({ phase: 'ready', status: response.status, payload: payload as Record<string, unknown> })
+          const record = payload as Record<string, unknown>
+          if (!response.ok && response.status === 401) {
+            setState({
+              phase: 'ready',
+              status: response.status,
+              payload: {
+                ok: false,
+                state: 'OWNER_AUTH_REQUIRED',
+                endpoint,
+                blocker: firstStatusString(record.error, record.blocker, record.reason) || 'owner_auth_required',
+                next_action: 'Sign in to Mission Control as owner, then reopen this status panel. Brain writes remain Bridge-gated.',
+                execution_enabled: false,
+                writes_enabled: false,
+                protected_execution_enabled: false,
+              },
+            })
+            return
+          }
+          setState({ phase: 'ready', status: response.status, payload: record })
+        } else if (fallbackPayload) {
+          setState({ phase: 'ready', status: response.status, payload: fallbackPayload })
         } else {
           setState({ phase: 'error', status: response.status, error: 'Endpoint did not return a readable JSON status packet.' })
         }
       })
       .catch((error: unknown) => {
+        if (!cancelled && fallbackPayload) {
+          setState({ phase: 'ready', payload: fallbackPayload })
+          return
+        }
         if (!cancelled) setState({ phase: 'error', error: error instanceof Error ? error.message : 'unknown error' })
       })
     return () => { cancelled = true }
@@ -723,7 +792,7 @@ function BrainControlPanel() {
         <h1>Brain & Memory Status</h1>
         <span>Read-only provenance for Obsidian, main policy, Brain Sync, and memory surfaces. Writes remain Bridge-gated.</span>
       </header>
-      <ReadableStatusPanel endpoint="/api/bridge/brain-readiness" />
+      <ReadableStatusPanel endpoint="/api/bridge/brain-readiness" fallbackPayload={BRAIN_READINESS_FALLBACK} />
     </main>
   )
 }
@@ -736,7 +805,21 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
     chat: 'Safe chat/test surface. If a real chat route is not proven, this page only shows status and the exact blocker.',
     recommend: 'Advisory recommendations only. Execution and writes remain disabled.',
     research: 'Research control surface for browser evidence packets, Firecrawl readiness, and YouTube transcript state.',
+    tools: 'Readable tool inventory. Real task creation remains Bridge-gated; this page does not perform writes.',
+    companies: 'Read-only company inventory from the Paperclip bridge. ECO is owner-accessible; TOK remains a legacy membership warning.',
+    agents: 'Read-only Paperclip workforce roster for the owner-accessible company. No task execution happens from this page.',
+    issues: 'Read-only issue/task queue for Paperclip. Creating or changing tasks still requires Bridge approval.',
+    status: 'Readable Paperclip health and owner-accessible ECO status. This page does not parse HTML as JSON.',
+    audit: 'Read-only Paperclip audit surface. If no audit sink is connected, this page shows an empty state instead of redirecting.',
+    help: 'Paperclip owner help for the current buttons, ECO routing, and Bridge-gated write policy.',
   }
+  const isPaperclip = slug === 'paperclip'
+  const statusEndpoint = isPaperclip && ['companies', 'agents', 'issues'].includes(mode)
+    ? `/api/bridge/paperclip/${mode}`
+    : agent.endpoint
+  const brainDisabled = isPaperclip
+  const chatDisabled = isPaperclip
+  const toolsHref = isPaperclip ? paperclipControlRoute('tools') : GATEWAY_TOOLS_ROUTE
 
   return (
     <main className="control-page" data-testid={`agent-control-${slug}-${mode}`}>
@@ -748,11 +831,17 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
       <section className="control-actions-row" aria-label={`${agent.name} actions`}>
         <ControlLink href={agent.uiHref}>Open UI</ControlLink>
         <ControlLink href={agentControlRoute(slug, 'config')}>Open Config</ControlLink>
-        <ControlLink href={GATEWAY_BRAIN_ROUTE}>Open Brain</ControlLink>
-        {agent.modes.includes('chat') && <ControlLink href={agentControlRoute(slug, 'chat')}>Open Chat</ControlLink>}
+        <ControlLink href={brainDisabled ? null : GATEWAY_BRAIN_ROUTE} disabled={brainDisabled}>Open Brain</ControlLink>
+        {agent.modes.includes('chat') && <ControlLink href={chatDisabled ? null : agentControlRoute(slug, 'chat')} disabled={chatDisabled}>Open Chat</ControlLink>}
         {agent.modes.includes('recommend') && <ControlLink href={agentControlRoute(slug, 'recommend')}>Open Recommendations</ControlLink>}
         {agent.modes.includes('research') && <ControlLink href={agentControlRoute(slug, 'research')}>Open Research</ControlLink>}
-        <ControlLink href={GATEWAY_TOOLS_ROUTE}>Open Tools</ControlLink>
+        {isPaperclip && <ControlLink href={paperclipControlRoute('companies')}>Companies</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('agents')}>Agents</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('issues')}>Issues</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('status')}>Status</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('audit')}>Audit</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('help')}>Help</ControlLink>}
+        <ControlLink href={toolsHref}>Open Tools</ControlLink>
       </section>
       <section className="control-grid">
         <article className="control-card">
@@ -768,7 +857,71 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           <span>{agent.nextAction}</span>
         </article>
       </section>
-      <ReadableStatusPanel endpoint={agent.endpoint} />
+      {isPaperclip && (
+        <section className="control-grid paperclip-only">
+          <article className="control-card">
+            <strong>Company access</strong>
+            <span>E copier Solutions (ECO) is the owner-accessible Paperclip company. To Knowledge Gateway (TOK) still shows a membership warning and is not used for owner routing.</span>
+          </article>
+          <article className="control-card">
+            <strong>Readable routes</strong>
+            <span>Companies, agents, and issues are exposed as read-only bridge checks. Mission Control does not store Paperclip passwords or cookies.</span>
+          </article>
+          <article className="control-card">
+            <strong>Write policy</strong>
+            <span>Real Paperclip task creation requires Bridge Session, company access, adapter proof, audit, and rollback.</span>
+          </article>
+        </section>
+      )}
+      {isPaperclip && mode === 'tools' && (
+        <section className="control-grid paperclip-only">
+          <article className="control-card">
+            <strong>Read-only tools</strong>
+            <span>Open UI, config, status, companies, agents, issues, audit, and help are inspection routes only.</span>
+          </article>
+          <article className="control-card">
+            <strong>Bridge-gated tools</strong>
+            <span>Task creation, comments, issue edits, uploads, sends, and workforce mutations remain locked until Bridge Session approval, adapter proof, audit, and rollback exist.</span>
+          </article>
+          <article className="control-card">
+            <strong>Company scope</strong>
+            <span>ECO only for owner-facing Paperclip work. TOK remains a separate legacy company blocker and is not repaired in this hop.</span>
+          </article>
+        </section>
+      )}
+      {isPaperclip && mode === 'audit' && (
+        <section className="control-grid paperclip-only">
+          <article className="control-card">
+            <strong>Audit source</strong>
+            <span>No Paperclip audit source connected yet.</span>
+          </article>
+          <article className="control-card">
+            <strong>Write audit policy</strong>
+            <span>Future Paperclip writes must create an audit row before and after Bridge-approved dispatch.</span>
+          </article>
+          <article className="control-card">
+            <strong>Current state</strong>
+            <span>Read-only ECO status is available. No Paperclip write or task mutation is enabled from Mission Control.</span>
+          </article>
+        </section>
+      )}
+      {isPaperclip && mode === 'help' && (
+        <section className="control-grid paperclip-only">
+          <article className="control-card">
+            <strong>Open UI</strong>
+            <span>Opens the ECO Paperclip dashboard at 100.116.35.95:3100/ECO/dashboard in a new tab. It does not require Bridge Session.</span>
+          </article>
+          <article className="control-card">
+            <strong>Read buttons</strong>
+            <span>Config, status, companies, agents, issues, tools, audit, and help are safe read-only Mission Control pages.</span>
+          </article>
+          <article className="control-card">
+            <strong>Write buttons</strong>
+            <span>Any task creation, issue edit, comment, send, upload, or execution returns WRITES_BRIDGE_GATED until Bridge Session, adapter proof, scope, audit, and rollback exist.</span>
+          </article>
+        </section>
+      )}
+      <ReadableStatusPanel endpoint={statusEndpoint} />
     </main>
   )
 }
@@ -969,4 +1122,7 @@ export default function GatewayShell() {
 export { TABS as GATEWAY_TABS, resolveTab as activeTabFrom }
 export { gatewayActionForButton } from './gateway-actions'
 export function iframeSrcFor(t: Tab): string { return encodeURI(`${BASE}/design/gateway/${t.src}`) }
+export function controlViewFromPath(pathname: string | null, q: URLSearchParams | null): GatewayControlView | null {
+  return controlViewFrom(pathname, q)
+}
 export type { Tab as GatewayTab }

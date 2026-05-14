@@ -1,6 +1,6 @@
 {
   "schema": "gateway-design-lock@1",
-  "generated_at": "2026-05-11T14:12:28.573Z",
+  "generated_at": "2026-05-14T17:22:54.065Z",
   "base": "public/design/gateway/",
   "file_count": 31,
   "files": [
@@ -11,48 +11,48 @@
     },
     {
       "path": "Agent Hub.html",
-      "bytes": 38609,
-      "sha256": "220a5a3a04643ad59bf3fdcdca9c746fa43dfc104f16b0747ba3a205db30911c"
+      "bytes": 40146,
+      "sha256": "bd52a9406e2208a127c9ab7463c134827f7cedce4c944f8fc63e7d23295136ba"
     },
     {
       "path": "Agent Zero Commander.html",
-      "bytes": 10988,
-      "sha256": "80bc7ef9ddaa842065cb4029230b1d0bbb55b3130e055d5bf40f5e00eb85a0b9"
+      "bytes": 11813,
+      "sha256": "2e090b01fbee3618fcdfd4c1e53f281cf293b29fc02732938a5173dc30b62753"
     },
     {
       "path": "Brain Systems.html",
-      "bytes": 9935,
-      "sha256": "58682c37fc14c60c382b326813c857525df0fa8274f97e2e27f4ccd924b27c04"
+      "bytes": 10760,
+      "sha256": "1167cc374df3ca25e54eb0236c2c22cfc54e837f7cab872249d8ae20804c8ab1"
     },
     {
       "path": "Bridge Session Flow.html",
-      "bytes": 34194,
-      "sha256": "c4c7069be1b373c7ad46e3334d1161ac0c101f4002f039c98e9df729adb5d0a6"
+      "bytes": 35019,
+      "sha256": "c38b9234832056f7e395f8eaa41ef7af623c2022cb538cc5b6a8ec327df4c86a"
     },
     {
       "path": "Delivery Connectors.html",
-      "bytes": 9264,
-      "sha256": "fb16014ce587a496413dd3fe3df5865a62ef72321617b99f93c2d6e3c319792a"
+      "bytes": 10089,
+      "sha256": "671ea13cd1ac8638f462febd8490693c750720794fdd813fe8d81fcf938a07df"
     },
     {
       "path": "Dispatcher.html",
-      "bytes": 30052,
-      "sha256": "3b9ad5a44e30bf434a47d88f4d50cc1983e9b272c87cae6c88b0232f13313068"
+      "bytes": 30877,
+      "sha256": "17dc579e5bcfd3d8bc2256b90a070edbdfd61f9cf7adcdb431ff93a622a2c51d"
     },
     {
       "path": "Gateway Health.html",
-      "bytes": 5597,
-      "sha256": "a6fcc9855a6ab9059c40fe14e012fe6491c6056b4589cdc1fe6f49c15dfe21a9"
+      "bytes": 6422,
+      "sha256": "33587e3bbfeac0512fb2cddc96d6231f6a4eb1601f9563b269f5d5d29d3db9f6"
     },
     {
       "path": "Gateway Mobile Tablet.html",
-      "bytes": 15355,
-      "sha256": "19385403b049abf11561e9faceee5f998647ce3b585afa5f15b0388b7df1194f"
+      "bytes": 16180,
+      "sha256": "2b411fa52415b892430ec11cfa5ac7c990d5648aee2aa9a9e80c3167577b60de"
     },
     {
       "path": "Gateway Node Detail.html",
-      "bytes": 9392,
-      "sha256": "a5a8b5facbd1e0d4c4a92b003b1d1fae41f6b5a9edb7f1caa8f1b44582fbaf80"
+      "bytes": 10217,
+      "sha256": "8c5e68c796970ea1b50451b9e42f514b933c2e2c4707d573c8eede964eda09e9"
     },
     {
       "path": "Gateway Overview v1.html",
@@ -61,23 +61,23 @@
     },
     {
       "path": "Gateway Overview.html",
-      "bytes": 52375,
-      "sha256": "67354907fb9ab2906f0a65f88c5152a70901bbbbf0be1e970f7f54263d6a08a2"
+      "bytes": 53200,
+      "sha256": "9cf782c812e2656ba474b5ca46645d97461c8451c5facd23a625ce61197b7ca5"
     },
     {
       "path": "Gateway Policies.html",
-      "bytes": 7123,
-      "sha256": "57a5e32c53478acdcd23090205d2b595693b0c9d59684efa078364c3b3e1a0fe"
+      "bytes": 7948,
+      "sha256": "baac7a5552ca99b04ec9f2ba6e42e7cff518a345877fd0cf534267f504ffd9ad"
     },
     {
       "path": "Gateway Registry.html",
-      "bytes": 6752,
-      "sha256": "835f62a3e3fed6410b5d308de02dea31847b1c4c9432409c8c534d0fff07eae6"
+      "bytes": 7577,
+      "sha256": "27e7f00c8ed8a6a780829dda7dc5348754583aed13898ede01a7284021e43862"
     },
     {
       "path": "Gateway Routes.html",
-      "bytes": 12634,
-      "sha256": "7b74c776751fbbe5f3f9619fc93c63ffcbe8f34969bba80ebf01c6d0a6e3cd8e"
+      "bytes": 13459,
+      "sha256": "ce31a92c02ce22ec84eb3e530988cd94dc09727cc1972a7b2b42386442260cd5"
     },
     {
       "path": "Hermes Lieutenant.html",
@@ -101,13 +101,13 @@
     },
     {
       "path": "Paperclip.html",
-      "bytes": 29701,
-      "sha256": "4d2e1a5741a5632eb8d08f1b0fed9fc0bb5c5cb66e56dcd6c690d090adf48622"
+      "bytes": 31113,
+      "sha256": "e967d87cead3601c2887b846817e2c71d7833c82bf50f657f8f4f32914444d43"
     },
     {
       "path": "Token Governor.html",
-      "bytes": 37312,
-      "sha256": "a762e21be34b3fc31c9f1e357a9aa548c8a9f21586f207cbcfffc12c09c7f4cd"
+      "bytes": 38137,
+      "sha256": "bacdf53ff791c164be18c20d1a2e37fda4f5668115d8c11614f136ff6dcee1a4"
     },
     {
       "path": "components.md",
@@ -131,13 +131,13 @@
     },
     {
       "path": "shared/agent-data.js",
-      "bytes": 29470,
-      "sha256": "43c196311b953105a7f9089bfe03258d778a185b1c124b7ccc87d92ac21989c5"
+      "bytes": 22865,
+      "sha256": "0163efcecca4bbaa5d4855132a7af21825b1ecb3c2b5c16b5ae8a15b4981c472"
     },
     {
       "path": "shared/gateway-data.js",
-      "bytes": 35807,
-      "sha256": "3c6be458b824ec9f68c66cb7ef12c6871354a2bce29fa8461793ecc242798734"
+      "bytes": 32545,
+      "sha256": "4e1de83d171061cb5d76c73660f4a0e2293d6e3e8f9a6e0e363f397594d9ab9e"
     },
     {
       "path": "shared/node-card.css",

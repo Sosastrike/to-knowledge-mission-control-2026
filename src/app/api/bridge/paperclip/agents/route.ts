@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth'
-import { listPaperclipAgents } from '@/lib/paperclip-bridge'
+import { NextRequest } from 'next/server'
+import { authRequired, readOnly } from '@/lib/mission-control-contracts'
+import { paperclipLiveStatus } from '@/lib/paperclip-live-status'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const auth = requireRole(request, 'viewer')
-  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  const auth = authRequired(request, 'viewer')
+  if (auth) return auth
 
-  const companyId = request.nextUrl.searchParams.get('companyId')
-  const payload = await listPaperclipAgents({ generatedAt: new Date().toISOString(), companyId })
-  return NextResponse.json(payload, {
-    status: payload.ok ? 200 : 503,
-    headers: { 'Cache-Control': 'no-store' },
+  const status = await paperclipLiveStatus('agents')
+  return readOnly({
+    ...status,
+    route: 'bridge.paperclip.agents',
+    mode: 'paperclip_agents_read_only',
+    resource_note: 'Read-only Paperclip agent/workforce inventory. Task execution remains Bridge-gated.',
   })
 }

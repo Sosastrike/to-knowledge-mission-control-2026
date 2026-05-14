@@ -1,6 +1,6 @@
 # Agent Hub Functional Control Center Report
 
-Status: LOCAL PARTIAL GO - production visibility still requires deploy/owner confirmation.
+Status: PARTIAL GO - deployed to production runtime, owner browser confirmation still required.
 
 ## Scope Completed
 
@@ -70,11 +70,20 @@ Note: root `pnpm test` is not available in this repository because the root pack
 
 ## Local Commit
 
-Commit: pending at report creation time.
+Functional local commit:
+
+- `15a701a55908b27235dfa0ff5010ffefb5630278`
+
+Production commits created on server:
+
+- `921e6d2` - gateway-dropin control-center files and reports.
+- `b3f3212` - root production Gateway shell port, which is the code path used by the live `/gateway` route.
+
+The production runtime needed the root shell port because the live Mission Control `/gateway` route imports `src/components/gateway/GatewayShell.tsx`, not only `gateway-dropin/src/components/gateway/GatewayShell.tsx`.
 
 ## Remaining Blockers
 
-- Production Mission Control must be deployed/restarted with this commit before the owner can see it in the browser.
+- Owner must confirm the authenticated production browser shows the Agent Control Center. Unauthenticated route smoke correctly redirects protected Gateway routes to `/login`.
 - Paperclip company access still requires an official owner company membership/claim/bootstrap path.
 - Hermes owner proxy/chat remains a safe Mission Control panel, not a public local service.
 - Pi runtime is not proven and is intentionally not faked.
@@ -82,4 +91,4 @@ Commit: pending at report creation time.
 
 ## Final Local Recommendation
 
-Ship this scoped commit to Mission Control production, then have the owner retest `/gateway/agent-hub` and the new control pages. Do not call final GO until the owner confirms the production browser shows the fixed Agent Control Center.
+Have the owner hard-refresh and retest `/gateway/agent-hub` and the new control pages. Do not call final GO until the owner confirms the production browser shows the fixed Agent Control Center.

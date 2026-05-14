@@ -1,6 +1,6 @@
 # Agent Hub Access UI Production Deploy Report
 
-Status: PENDING DEPLOY ATTEMPT.
+Status: PARTIAL GO - deployed/restarted, owner browser confirmation still pending.
 
 ## Target
 
@@ -39,7 +39,12 @@ Files included in the local deployment candidate:
 
 Local candidate commit:
 
-- pending at report creation time.
+- `15a701a55908b27235dfa0ff5010ffefb5630278`
+
+Production commits:
+
+- `921e6d2` - gateway-dropin control-center files and reports.
+- `b3f3212` - root production Gateway shell port used by the live `/gateway` route.
 
 ## Validation Before Deploy
 
@@ -59,23 +64,36 @@ Note: root `pnpm test` is not available in this repository because the root pack
 
 ## Production Promotion Status
 
-Deploy/restart: pending.
+Deploy/restart: completed for Mission Control standalone runtime.
 
-Production HEAD: pending.
+Production HEAD after code deploy: `b3f3212`.
 
-Mission Control restart PID/timestamp: pending.
+Mission Control restart:
+
+- Previous active Next PID after first deploy attempt: `2869446`.
+- Final active Next PID after root shell port: `2899312`.
+- Tailnet proxy process on `100.116.35.95:3337` was left running; only the Next standalone process was restarted.
 
 Route smoke:
 
-- `/login`: pending.
-- `/gateway`: pending.
-- `/gateway/agent-hub`: pending.
-- `/gateway/tools`: pending.
-- `/agent-network`: pending.
-- `/agents`: pending.
+- `/login`: HTTP 200.
+- `/gateway`: HTTP 307 unauthenticated redirect to login.
+- `/gateway/agent-hub`: HTTP 307 unauthenticated redirect to login.
+- `/gateway/tools`: HTTP 307 unauthenticated redirect to login.
+- `/gateway/agent-hub/hermes/config`: HTTP 307 unauthenticated redirect to login.
+- `/agent-network`: HTTP 307 unauthenticated redirect to login.
+- `/agents`: HTTP 307 unauthenticated redirect to login.
+- `/api/agent-local-interfaces`: HTTP 401 without owner auth.
+- `/api/bridge/paperclip/status`: HTTP 401 without owner auth.
+
+Production bundle proof:
+
+- Built standalone bundle contains `Agent Control Center`.
+- Built standalone bundle contains `/gateway/tools`.
+- Built standalone bundle contains the new control rewrites for agent config/chat/recommend/research pages.
 
 ## Owner Retest Status
 
 Owner confirmation: pending.
 
-Final deploy status is not GO until the owner confirms the production browser shows the fixed Agent Control Center.
+Final deploy status is not GO until the owner confirms the authenticated production browser shows the fixed Agent Control Center. Current status remains PARTIAL GO because server deploy and smoke passed, but the owner-only UI view must still be visually confirmed.

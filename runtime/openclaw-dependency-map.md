@@ -35,3 +35,53 @@ Scope: Phase 1 read-only inventory. Secret-bearing files such as `.env*`, cookie
 ## Next Safe Lane
 
 Continue Phase 2 direct-line registry enforcement and Phase 3 message envelope refusal tests before any runtime cutover.
+
+## Phase 6 Tool / MCP Migration Addendum
+
+Generated: 2026-05-28
+
+Phase 6 adds an owner-safe Nuclear Gateway tool migration map at:
+
+- `src/lib/nuclear-gateway-tool-migration.ts`
+- `GET /api/bridge/nuclear-gateway/tool-migration`
+
+The map classifies OpenClaw/OpenCloud tool dependencies without inspecting secret values:
+
+- `READ_ONLY`: session transcript reads, skill inventory, cron inventory, runtime health/version diagnostics.
+- `WRITE_GATED`: session send/control, skill activation, cron run/update/delete.
+- `CREDENTIAL_REQUIRED`: integration credential-name catalog, brokered by Nuclear Gateway by name only.
+- `PERMISSION_REQUIRED`: backup creation or other production-sensitive actions.
+- `UNSAFE_DISABLED`: OpenClaw update/doctor repair surfaces under the owner directive to not repair OpenClaw.
+
+Safety proof:
+
+- OpenClaw is not the tool broker of record.
+- Nuclear Gateway is the tool broker of record.
+- OpenClaw cannot be conversation owner, hidden intermediary, credential broker, default gateway, or commander.
+- All writes/execution remain disabled in this map until exact-scope adapter, Jarvis concurrence, audit, and rollback proof exist.
+- Credential names are listed only when needed; values are not inspected or exposed.
+
+## Phase 6 Tool / MCP Migration Addendum
+
+Generated: 2026-05-28
+
+Phase 6 adds an owner-safe Nuclear Gateway tool migration map at:
+
+- `src/lib/nuclear-gateway-tool-migration.ts`
+- `GET /api/bridge/nuclear-gateway/tool-migration`
+
+The map classifies OpenClaw/OpenCloud tool dependencies without inspecting secret values:
+
+- `READ_ONLY`: session transcript reads, skill inventory, cron inventory, runtime health/version diagnostics.
+- `WRITE_GATED`: session send/control, skill activation, cron run/update/delete.
+- `CREDENTIAL_REQUIRED`: integration credential-name catalog, brokered by Nuclear Gateway by name only.
+- `PERMISSION_REQUIRED`: backup creation or other production-sensitive actions.
+- `UNSAFE_DISABLED`: OpenClaw update/doctor repair surfaces under the owner directive to not repair OpenClaw.
+
+Safety proof:
+
+- OpenClaw is not the tool broker of record.
+- Nuclear Gateway is the tool broker of record.
+- OpenClaw cannot be conversation owner, hidden intermediary, credential broker, default gateway, or commander.
+- All writes/execution remain disabled in this map until exact-scope adapter, Jarvis concurrence, audit, and rollback proof exist.
+- Credential names are listed only when needed; values are not inspected or exposed.

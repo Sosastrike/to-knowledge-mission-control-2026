@@ -1,0 +1,22 @@
+[Unit]
+Description=Ron Weasley WebUI - Nuclear Dispatcher Interface
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tony/To-Knowledge-hermes-webui
+Environment=HERMES_HOME=/home/tony/.hermes
+Environment=HERMES_WEBUI_HOST=127.0.0.1
+Environment=HERMES_WEBUI_PORT=8787
+Environment="HERMES_WEBUI_BOT_NAME=Ron Weasley"
+ExecStart=/home/tony/.hermes/hermes-agent/venv/bin/python /home/tony/To-Knowledge-hermes-webui/server.py
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+StandardOutput=append:/home/tony/To-Knowledge-hermes-webui/runtime/server.log
+StandardError=append:/home/tony/To-Knowledge-hermes-webui/runtime/server.log
+
+[Install]
+WantedBy=default.target

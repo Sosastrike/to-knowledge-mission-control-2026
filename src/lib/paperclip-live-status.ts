@@ -1,14 +1,23 @@
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { buildPaperclipGatewayInventorySummary } from '@/lib/paperclip-gateway-inventory'
 
 type PaperclipCompany = {
   name: string
   issue_prefix: string
+  route_prefix: string
   access: 'owner_accessible' | 'legacy_membership_warning'
   active_user_members: number
   agents: number
   issues: number
   blocker?: string
+}
+
+type PaperclipExpectedWorkspace = {
+  name: string
+  issue_prefix: string
+  route_prefix: string
+  aliases: string[]
 }
 
 type PaperclipSnapshot = {
@@ -21,7 +30,18 @@ type PaperclipSnapshot = {
 
 const PAPERCLIP_ROOT = '/home/tony/paperclip-lab/paperclip'
 const PAPERCLIP_BASE_URL = 'http://100.116.35.95:3100'
-const PAPERCLIP_OWNER_PREFIX = 'ECO'
+const PAPERCLIP_DEFAULT_ROUTE_PREFIX = 'ECO'
+const PAPERCLIP_EXPECTED_WORKSPACES: PaperclipExpectedWorkspace[] = [
+  { name: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', aliases: ['TKG', 'TOK'] },
+  { name: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', aliases: ['ECO'] },
+  { name: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', aliases: ['E Copier ITT', 'eCoppier ITT', 'ITT', 'ECOA'] },
+]
+const PAPERCLIP_ROUTE_PREFIX_BY_ISSUE_PREFIX = new Map(
+  PAPERCLIP_EXPECTED_WORKSPACES.map((workspace) => [workspace.issue_prefix, workspace.route_prefix]),
+)
+const PAPERCLIP_EXPECTED_ISSUE_PREFIXES = new Set(
+  PAPERCLIP_EXPECTED_WORKSPACES.map((workspace) => workspace.issue_prefix),
+)
 
 const FALLBACK_SNAPSHOT: PaperclipSnapshot = {
   source: 'static_owner_observation',
@@ -29,40 +49,52 @@ const FALLBACK_SNAPSHOT: PaperclipSnapshot = {
     {
       name: 'E copier Solutions',
       issue_prefix: 'ECO',
+      route_prefix: 'ECO',
       access: 'owner_accessible',
-      active_user_members: 3,
-      agents: 2,
-      issues: 6,
+      active_user_members: 2,
+      agents: 7,
+      issues: 38,
     },
     {
       name: 'To Knowledge Gateway',
       issue_prefix: 'TOK',
-      access: 'legacy_membership_warning',
-      active_user_members: 11,
+      route_prefix: 'TKG',
+      access: 'owner_accessible',
+      active_user_members: 2,
       agents: 10,
       issues: 0,
-      blocker: 'tok_owner_membership_not_repaired',
+    },
+    {
+      name: 'E copier ITT',
+      issue_prefix: 'ECOA',
+      route_prefix: 'ITT',
+      access: 'owner_accessible',
+      active_user_members: 1,
+      agents: 2,
+      issues: 31,
     },
   ],
   agents: [
-    { company: 'E copier Solutions', issue_prefix: 'ECO', count: 2, state: 'read_only_visible' },
-    { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 10, state: 'blocked_for_owner_until_membership_repair' },
+    { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 7, state: 'read_only_visible' },
+    { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 10, state: 'read_only_visible' },
+    { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 2, state: 'read_only_visible' },
   ],
   issues: [
-    { company: 'E copier Solutions', issue_prefix: 'ECO', count: 6, state: 'read_only_visible' },
-    { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 0, state: 'blocked_for_owner_until_membership_repair' },
+    { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 38, state: 'read_only_visible' },
+    { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 0, state: 'read_only_visible' },
+    { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 31, state: 'read_only_visible' },
   ],
 }
 
-function safeDashboard(prefix = PAPERCLIP_OWNER_PREFIX) {
+function safeDashboard(prefix = PAPERCLIP_DEFAULT_ROUTE_PREFIX) {
   return `${PAPERCLIP_BASE_URL}/${prefix}/dashboard`
 }
 
-function safeAgents(prefix = PAPERCLIP_OWNER_PREFIX) {
+function safeAgents(prefix = PAPERCLIP_DEFAULT_ROUTE_PREFIX) {
   return `${PAPERCLIP_BASE_URL}/${prefix}/agents`
 }
 
-function safeIssues(prefix = PAPERCLIP_OWNER_PREFIX) {
+function safeIssues(prefix = PAPERCLIP_DEFAULT_ROUTE_PREFIX) {
   return `${PAPERCLIP_BASE_URL}/${prefix}/issues`
 }
 
@@ -82,11 +114,19 @@ async function readPaperclipDbSnapshot(): Promise<PaperclipSnapshot> {
   if (!existsSync(PAPERCLIP_ROOT)) return FALLBACK_SNAPSHOT
 
   const script = `
-const postgresMod = await import('postgres');
-const postgres = postgresMod.default || postgresMod;
-const sql = postgres('postgres://127.0.0.1:54329/postgres', { max: 1, idle_timeout: 1, connect_timeout: 2 });
-try {
-  const companies = await sql\`
+	const postgresMod = await import('postgres');
+	const { existsSync, readFileSync } = await import('node:fs');
+	const postgres = postgresMod.default || postgresMod;
+	const configPath = '/home/tony/.paperclip/instances/default/config.json';
+	const config = existsSync(configPath) ? JSON.parse(readFileSync(configPath, 'utf8')) : {};
+	const port = Number(config?.database?.embeddedPostgresPort || 54329);
+	const configuredUrl = config?.database?.mode === 'postgres' && typeof config?.database?.connectionString === 'string'
+	  ? config.database.connectionString.trim()
+	  : '';
+	const databaseUrl = process.env.PAPERCLIP_STATUS_DATABASE_URL || configuredUrl || \`postgres://paperclip:paperclip@127.0.0.1:\${port}/paperclip\`;
+	const sql = postgres(databaseUrl, { max: 1, idle_timeout: 1, connect_timeout: 2 });
+	try {
+	  const companies = await sql\`
     select c.name, c.issue_prefix,
       count(distinct cm.id) filter (where cm.status = 'active' and cm.principal_type = 'user')::int as active_user_members,
       count(distinct a.id)::int as agents,
@@ -132,14 +172,19 @@ try {
     const companies = (parsed.companies || [])
       .map((company): PaperclipCompany => {
         const issuePrefix = String(company.issue_prefix || '')
+        const routePrefix = PAPERCLIP_ROUTE_PREFIX_BY_ISSUE_PREFIX.get(issuePrefix) || issuePrefix
+        const activeUserMembers = Number(company.active_user_members || 0)
+        const expectedWorkspace = PAPERCLIP_EXPECTED_ISSUE_PREFIXES.has(issuePrefix)
+        const ownerAccessible = expectedWorkspace && activeUserMembers > 0
         return {
           name: String(company.name || ''),
           issue_prefix: issuePrefix,
-          access: issuePrefix === PAPERCLIP_OWNER_PREFIX ? 'owner_accessible' : 'legacy_membership_warning',
-          active_user_members: Number(company.active_user_members || 0),
+          route_prefix: routePrefix,
+          access: ownerAccessible ? 'owner_accessible' : 'legacy_membership_warning',
+          active_user_members: activeUserMembers,
           agents: Number(company.agents || 0),
           issues: Number(company.issues || 0),
-          blocker: issuePrefix === PAPERCLIP_OWNER_PREFIX ? undefined : 'tok_owner_membership_not_repaired',
+          blocker: ownerAccessible ? undefined : 'paperclip_owner_membership_missing_or_unverified',
         }
       })
       .filter((company) => company.name && company.issue_prefix)
@@ -184,9 +229,13 @@ async function probeHealth() {
 
 export async function paperclipLiveStatus(resource = 'status') {
   const [health, snapshot] = await Promise.all([probeHealth(), readPaperclipDbSnapshot()])
-  const activeCompany = snapshot.companies.find((company) => company.issue_prefix === PAPERCLIP_OWNER_PREFIX) || snapshot.companies[0]
-  const companyReady = Boolean(health.ok && activeCompany?.access === 'owner_accessible')
-  const ownerPrefix = activeCompany?.issue_prefix || PAPERCLIP_OWNER_PREFIX
+  const activeCompany = snapshot.companies.find((company) => company.route_prefix === PAPERCLIP_DEFAULT_ROUTE_PREFIX) || snapshot.companies[0]
+  const expectedWorkspacesReady = PAPERCLIP_EXPECTED_WORKSPACES.every((expected) => {
+    return snapshot.companies.some((company) => company.issue_prefix === expected.issue_prefix && company.access === 'owner_accessible')
+  })
+  const companyReady = Boolean(health.ok && expectedWorkspacesReady)
+  const ownerPrefix = activeCompany?.route_prefix || PAPERCLIP_DEFAULT_ROUTE_PREFIX
+  const gatewayInventory = buildPaperclipGatewayInventorySummary()
   const items = resource === 'companies'
     ? snapshot.companies
     : resource === 'agents'
@@ -214,11 +263,19 @@ export async function paperclipLiveStatus(resource = 'status') {
     writes_bridge_gated: true,
     active_company: activeCompany || null,
     companies: snapshot.companies,
+    expected_workspaces: PAPERCLIP_EXPECTED_WORKSPACES,
+    expected_workspaces_ready: expectedWorkspacesReady,
+    workspace_route_aliases: PAPERCLIP_EXPECTED_WORKSPACES.map((workspace) => ({
+      issue_prefix: workspace.issue_prefix,
+      route_prefix: workspace.route_prefix,
+      aliases: workspace.aliases,
+    })),
     items,
     items_state: companyReady ? 'read_only_live' : 'blocked_until_official_company_claim',
     data_source: snapshot.source,
     read_error: snapshot.read_error || null,
-    legacy_company_warning: 'To Knowledge Gateway (TOK) can still show owner access errors. Mission Control routes owner Paperclip work to E copier Solutions (ECO) until TOK membership is repaired.',
+    legacy_company_warning: null,
+    workspace_reconciliation_note: 'Workspace truth and Paperclip live status now track the same three owner workspaces: TKG, ECO, and ITT. Open UI must preserve the selected workspace and must not silently fall back to ECO.',
     tailnet_url: safeDashboard(ownerPrefix),
     owner_login_url: safeDashboard(ownerPrefix),
     company_dashboard_url: safeDashboard(ownerPrefix),
@@ -231,11 +288,13 @@ export async function paperclipLiveStatus(resource = 'status') {
     external_writes_enabled: false,
     protected_execution_enabled: false,
     credential_values_exposed: false,
+    gateway_inventory: gatewayInventory,
+    gateway_inventory_endpoint: '/api/bridge/paperclip/gateway-inventory',
     fake_success_allowed: false,
     no_go_claim: true,
     go_claim_allowed: false,
     next_action: companyReady
-      ? 'Use the owner-accessible ECO Paperclip company for live reads. Keep writes Bridge-gated; repair TOK membership only if that legacy company must stay active.'
+      ? 'Use the AgentHub workspace selector or workspace-truth route to launch TKG, ECO, or ITT. Keep all Paperclip writes Bridge-gated and exact-scope.'
       : 'Complete the official Paperclip company claim in the owner browser, then re-run the bridge reads. Mission Control will not store Paperclip credentials.',
   }
 }

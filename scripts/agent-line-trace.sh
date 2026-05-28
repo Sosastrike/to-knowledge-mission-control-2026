@@ -422,10 +422,24 @@ fi
 python3 - <<PY
 import json, pathlib
 mission_control_route_trace = json.loads('''$ROUTE_TRACE_JSON''' or '[]')
+def normalize_route_trace(trace):
+    normalized = []
+    for hop in trace:
+        if hop in ("mission_control_gateway", "mission-control-gateway"):
+            normalized.append("nuclear-gateway")
+        elif hop == "hermes":
+            normalized.append("ron-weasley")
+        else:
+            normalized.append(hop)
+    if normalized and normalized[0] == "owner" and (len(normalized) == 1 or normalized[1] != "mission-control"):
+        normalized.insert(1, "mission-control")
+    return normalized
+mission_control_route_trace = normalize_route_trace(mission_control_route_trace)
 local_signal_route_trace = ["owner", "mission-control", "nuclear-gateway"] + (["$TARGET"] if bool($FOUND_RECEIVE) else [])
 report = {
   "trace_id": "$NONCE",
   "nonce": "$NONCE",
+  "source_channel": "terminal",
   "requested_agent": "$REQUESTED_AGENT",
   "target_agent": "$TARGET",
   "display_agent": "$DISPLAY_AGENT",
@@ -434,7 +448,10 @@ report = {
   "source_surface": "$SOURCE_SURFACE",
   "expected_bot": "$EXPECTED_BOT",
   "direct_line_expected": True,
+  "direct_line_used": bool($FOUND_RECEIVE) and not bool($FOUND_OPENCLOUD),
+  "message_received_by_agent": bool($FOUND_RECEIVE),
   "message_received_signal": bool($FOUND_RECEIVE),
+  "response_sent": bool($FOUND_RESPONSE),
   "response_signal": bool($FOUND_RESPONSE),
   "voice_trace": bool($VOICE),
   "local_gateway_probe": bool($LOCAL_PROBE),
@@ -442,7 +459,10 @@ report = {
   "voice_transcribed_signal": bool($FOUND_TRANSCRIPT),
   "opencloud_signal": bool($FOUND_OPENCLOUD),
   "opencloud_intermediary": bool($FOUND_OPENCLOUD),
+  "opencloud_used": bool($FOUND_OPENCLOUD),
   "opencloud_role": "forbidden_hidden_intermediary" if bool($FOUND_OPENCLOUD) else "not_used",
+  "openclaw_used": bool($FOUND_OPENCLOUD),
+  "openclaw_role": "forbidden_hidden_intermediary" if bool($FOUND_OPENCLOUD) else "not_used",
   "route_trace": mission_control_route_trace or local_signal_route_trace,
   "mission_control_route_trace": mission_control_route_trace,
   "status": "$STATUS",

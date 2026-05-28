@@ -32,6 +32,8 @@ describe('Direct Agent Line Trace Kit', () => {
       direct_line_used: true,
       opencloud_used: false,
       opencloud_role: 'not_used',
+      openclaw_used: false,
+      openclaw_role: 'not_used',
       local_gateway_probe: false,
       verification_sources: [],
       message_received_by_agent: true,
@@ -115,6 +117,7 @@ describe('Direct Agent Line Trace Kit', () => {
         fail: 1,
         hidden_intermediary_detected: 1,
         opencloud_hidden_intermediary_detected: 0,
+        openclaw_hidden_intermediary_detected: 0,
         latest_status: 'FAIL',
         latest_blocker: 'HIDDEN_INTERMEDIARY_DETECTED',
         blockers: {
@@ -139,6 +142,8 @@ describe('Direct Agent Line Trace Kit', () => {
       direct_line_used: true,
       opencloud_used: true,
       opencloud_role: 'supporting_tool_only',
+      openclaw_used: true,
+      openclaw_role: 'supporting_tool_only',
       intermediaries: [],
       tools_called: ['openclaw'],
     })
@@ -352,6 +357,16 @@ describe('Direct Agent Line Trace Kit', () => {
     expect(script).toContain('CONVERSATION_OWNER="ron-weasley"')
     expect(script).toContain('DISPLAY_AGENT="Ron Weasley"')
     expect(script).toContain('"conversation_owner": "$CONVERSATION_OWNER"')
+    expect(script).toContain('"source_channel": "terminal"')
+    expect(script).toContain('"direct_line_used": bool($FOUND_RECEIVE) and not bool($FOUND_OPENCLOUD)')
+    expect(script).toContain('"message_received_by_agent": bool($FOUND_RECEIVE)')
+    expect(script).toContain('"response_sent": bool($FOUND_RESPONSE)')
+    expect(script).toContain('"openclaw_used": bool($FOUND_OPENCLOUD)')
+    expect(script).toContain('"openclaw_role": "forbidden_hidden_intermediary" if bool($FOUND_OPENCLOUD) else "not_used"')
+    expect(script).toContain('def normalize_route_trace(trace):')
+    expect(script).toContain('mission_control_gateway')
+    expect(script).toContain('normalized.insert(1, "mission-control")')
+    expect(script).toContain('nuclear-gateway')
     expect(script).toContain('"legacy_target_agent": "$LEGACY_TARGET_AGENT" or None')
     expect(script).toContain('SOURCE_SURFACE="hermes-webui"')
     expect(script).toContain('create_visible_task_on_failure')
@@ -464,6 +479,7 @@ describe('Direct Agent Line Trace Kit', () => {
         fail: 1,
         hidden_intermediary_detected: 1,
         opencloud_hidden_intermediary_detected: 1,
+        openclaw_hidden_intermediary_detected: 1,
         latest_status: 'FAIL',
         latest_blocker: 'OPENCLOUD_HIDDEN_INTERMEDIARY_DETECTED',
         blockers: {

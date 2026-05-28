@@ -42,6 +42,8 @@ export type AgentLineTraceRecord = {
   tools_called: string[]
   opencloud_used: boolean
   opencloud_role: 'supporting_tool_only' | 'not_used' | 'forbidden_hidden_intermediary'
+  openclaw_used: boolean
+  openclaw_role: 'supporting_tool_only' | 'not_used' | 'forbidden_hidden_intermediary'
   telegram_bot_username: string | null
   message_received_by_agent: boolean
   voice_transcribed: boolean
@@ -63,6 +65,7 @@ export type AgentLineTraceLiveSummary = {
   local_gateway_probe: number
   external_message_probe: number
   opencloud_hidden_intermediary_detected: number
+  openclaw_hidden_intermediary_detected: number
   hidden_intermediary_detected: number
   blockers: Record<string, number>
   latest_status: AgentLineTraceStatus | null
@@ -236,6 +239,12 @@ export function buildAgentLineTraceRecord(input: AgentLineTraceProbeInput = {}):
   )
   const nonce = safeNonce(input.nonce)
   const auditId = `audit_${hashText(`${nonce}:${targetAgent}`).slice(0, 20)}`
+  const opencloudUsed = intermediaries.some(isOpenCloudIdentity) || toolsCalled.some(isOpenCloudIdentity)
+  const opencloudRole = intermediaries.some(isOpenCloudIdentity)
+    ? 'forbidden_hidden_intermediary'
+    : toolsCalled.some(isOpenCloudIdentity)
+      ? 'supporting_tool_only'
+      : 'not_used'
   const record: AgentLineTraceRecord = {
     trace_id: `trace_${hashText(`${nonce}:${targetAgent}:${Date.now()}`).slice(0, 24)}`,
     nonce,
@@ -249,12 +258,10 @@ export function buildAgentLineTraceRecord(input: AgentLineTraceProbeInput = {}):
     route_trace: routeTrace,
     intermediaries,
     tools_called: toolsCalled,
-    opencloud_used: intermediaries.some(isOpenCloudIdentity) || toolsCalled.some(isOpenCloudIdentity),
-    opencloud_role: intermediaries.some(isOpenCloudIdentity)
-      ? 'forbidden_hidden_intermediary'
-      : toolsCalled.some(isOpenCloudIdentity)
-        ? 'supporting_tool_only'
-        : 'not_used',
+    opencloud_used: opencloudUsed,
+    opencloud_role: opencloudRole,
+    openclaw_used: opencloudUsed,
+    openclaw_role: opencloudRole,
     telegram_bot_username: telegramBotUsername,
     message_received_by_agent: messageReceived,
     voice_transcribed: voiceTranscribed,
@@ -312,6 +319,7 @@ export function buildAgentLineTraceLive(input: { agent?: string | null; nonce?: 
     if (!record.local_gateway_probe) acc.external_message_probe += 1
     if (record.blocker === 'OPENCLOUD_HIDDEN_INTERMEDIARY_DETECTED') {
       acc.opencloud_hidden_intermediary_detected += 1
+      acc.openclaw_hidden_intermediary_detected += 1
     }
     if (record.blocker === 'OPENCLOUD_HIDDEN_INTERMEDIARY_DETECTED' || record.blocker === 'HIDDEN_INTERMEDIARY_DETECTED') {
       acc.hidden_intermediary_detected += 1
@@ -331,6 +339,7 @@ export function buildAgentLineTraceLive(input: { agent?: string | null; nonce?: 
     local_gateway_probe: 0,
     external_message_probe: 0,
     opencloud_hidden_intermediary_detected: 0,
+    openclaw_hidden_intermediary_detected: 0,
     hidden_intermediary_detected: 0,
     blockers: {},
     latest_status: null,

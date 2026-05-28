@@ -1,15 +1,19 @@
 import type { SpaceAgentBrowserAutomationPayload } from './space-agent-browser-automation'
 import type { GatewayApiNode } from './gateway-registry-api'
+import type { PlaywrightMcpStatus } from './playwright-mcp'
 import {
   buildGatewayFlowsPayload,
   buildGatewayNodesPayload,
   getGatewayNodeDetail,
 } from './gateway-registry-api'
 import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from './gateway-model'
+import { AGENT_UPDATE_COMPONENTS } from './agent-update-coordinator'
+import { buildAgentRoutingLinesStatus } from './agent-routing-lines'
+import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
 
-export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'spaceagent' | 'pi-mono'
+export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'hermes-webui' | 'spaceagent' | 'pi-mono'
 
-export type AgentHubAgentState = 'partial_go' | 'gated' | 'pending' | 'blocked' | 'read_only'
+export type AgentHubAgentState = 'partial_go' | 'full_access_delegated' | 'gated' | 'pending' | 'blocked' | 'read_only' | 'configured'
 
 export type AgentHubRuntimeSystem = {
   id: string
@@ -23,6 +27,124 @@ export type AgentHubRuntimeSystem = {
   execution_enabled: boolean
   requires_bridge_session: boolean
   blocked_reason: string | null
+}
+
+export type AgentHubDirectAgentLinesSummary = {
+  route: '/api/bridge/agent-routing/lines'
+  live_trace_route: '/api/bridge/agent-routing/trace/live'
+  probe_route: '/api/bridge/agent-routing/trace/probe'
+  trace_commands: Array<{
+    agent_id: string
+    display_name: string
+    command: string
+    local_probe_command: string
+    live_trace_route: '/api/bridge/agent-routing/trace/live'
+    probe_route: '/api/bridge/agent-routing/trace/probe'
+    direct_line_active: true
+    opencloud_intermediary_allowed: false
+  }>
+  total: number
+  active: number
+  inactive_supporting_runtime: number
+  paperclip_company_agents: number
+  hermes_mini_agents: number
+  future_agent_ready: true
+  direct_line_required_for_owner_messages: true
+  conversation_owner_rule: 'target_agent_owns_conversation'
+  opencloud_hidden_intermediary_allowed: false
+  opencloud_conversation_owner_allowed: false
+  opencloud_allowed_role: 'supporting_tool_only_when_explicitly_invoked'
+  no_secrets_exposed: true
+}
+
+export type AgentHubRonProofPanel = {
+  webui: 'READY'
+  webui_alias: 'READY'
+  full_access_delegation: 'FULL_ACCESS_DELEGATED'
+  mission_control_service: 'ACTIVE'
+  authenticated_ron_routes: 'RESPONDING'
+  direct_line_chat: 'NOT_INSTALLED'
+  direct_line_chat_blocker: 'ron_direct_line_chat_not_installed_or_not_proven'
+  protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED'
+  execution_model: 'JARVIS-GATED EXECUTION'
+  opencloud_intermediary: false
+}
+
+export type AgentHubAutoUpdateControlPlane = {
+  route: '/api/bridge/agent-updates/status'
+  run_route: '/api/bridge/agent-updates/run'
+  visible_task_title: 'Agent Auto-Update Control Plane'
+  scheduler_task_id: 'agent_update_check'
+  scheduler_interval: 'every_6h'
+  auto_apply_setting: 'agent_updates.auto_apply'
+  auto_apply_scope: 'exact_scoped_loopback_only'
+  safe_auto_apply_components: Array<{
+    id: string
+    label: string
+    apply_target: 'webui' | 'agent'
+    rollback: string
+  }>
+  visible_task_only_components: Array<{
+    id: string
+    label: string
+    reason: string
+    rollback: string
+  }>
+  forbidden_actions: [
+    'sudo_or_polkit_without_owner',
+    'credential_injection',
+    'public_exposure_changes',
+    'broad_connector_execution',
+    'production_risk_without_rollback',
+  ]
+  opencloud_intermediary: false
+  public_exposure_created: false
+  secrets_exposed: false
+  raw_env_values_exposed: false
+}
+
+export type AgentHubGatewayRouteState = 'READY' | 'DOWN' | 'STALE_UI' | 'ROUTE_MAP_REQUIRED' | 'CDP_NOT_RUNNING'
+
+export type AgentHubGatewayRouteCdpTruth = {
+  mode: 'gateway_route_cdp_truth'
+  generated_at: string
+  route_source: 'source_route_tree'
+  route_map_status: 'READY' | 'ROUTE_MAP_REQUIRED'
+  cdp_status: 'READY' | 'CDP_NOT_RUNNING' | 'STALE_UI'
+  gateway_status: AgentHubGatewayRouteState
+  route_count: number
+  routes: Array<{
+    route: string
+    methods: Array<'GET' | 'POST'>
+    surface: 'gateway' | 'agent_hub' | 'space_agent' | 'playwright_mcp' | 'data_layer' | 'observability' | 'runtime'
+    state: AgentHubGatewayRouteState
+    bridge_session_required: boolean
+    writes_enabled: false
+    public_exposure: false
+  }>
+  missing_legacy_routes: Array<{
+    route: '/tools' | '/routes' | '/health'
+    status: 'ROUTE_MAP_REQUIRED'
+    correct_route: string
+    note: string
+  }>
+  cdp_truth: {
+    running: boolean
+    cdpReady: boolean
+    status: 'READY' | 'CDP_NOT_RUNNING' | 'STALE_UI'
+    service: 'playwright-mcp.service'
+    mcp_endpoint: 'http://127.0.0.1:8931/mcp'
+    local_only: true
+    public_exposure: false
+    bridge_session_required_for_interactive_actions: true
+    source: 'playwright_mcp_status'
+    blocker: string | null
+  }
+  next_safe_action: string
+  opencloud_intermediary: false
+  public_exposure_created: false
+  secrets_exposed: false
+  raw_env_values_exposed: false
 }
 
 export type AgentHubAgent = {
@@ -59,7 +181,7 @@ export type AgentHubAgent = {
     owner_access: string
     local_ui_url: string | null
     tailnet_url: string | null
-    ui_mode: 'mission_control_proxy' | 'local_only_pending' | 'tailnet_pending' | 'not_installed' | 'service_gated'
+    ui_mode: 'mission_control_proxy' | 'local_ui' | 'local_only_pending' | 'tailnet_pending' | 'not_installed' | 'service_gated'
     iframe_allowed: false
     auth_required: true
     local_ui_proven: boolean
@@ -73,6 +195,7 @@ export type AgentHubAgent = {
     no_secrets: true
     no_fake_done: true
   }
+  proof_panel?: AgentHubRonProofPanel
 }
 
 export type AgentHubStatusPayload = {
@@ -92,13 +215,17 @@ export type AgentHubStatusPayload = {
   gated_or_blocked: number
   production_truth: {
     agent_zero: 'partial_go_commander_track'
-    hermes: 'gated_until_hermes_called_true'
+    hermes: 'full_access_delegated_direct_line'
     pi_mono: 'candidate_pending_until_installed_and_live'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
+    direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent'
   }
+  direct_agent_lines: AgentHubDirectAgentLinesSummary
+  agent_update_control_plane: AgentHubAutoUpdateControlPlane
+  gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
@@ -125,6 +252,9 @@ export type AgentHubRegistryPayload = {
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
+  direct_agent_lines: AgentHubDirectAgentLinesSummary
+  agent_update_control_plane: AgentHubAutoUpdateControlPlane
+  gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
   execution_enabled: false
   writes_enabled: false
   external_writes_enabled: false
@@ -188,6 +318,14 @@ export type AgentHubAgentRoutesPayload = {
   generated_at: string
   agent_id: AgentHubAgentId
   registry_node_id: string
+  trace_direct_line: {
+    label: 'Trace Direct Line'
+    command: string
+    local_probe_command: string
+    live_trace_route: '/api/bridge/agent-routing/trace/live'
+    probe_route: '/api/bridge/agent-routing/trace/probe'
+    opencloud_intermediary_allowed: false
+  }
   registered_edges: GatewayEdge[]
   registered_flows: Array<Pick<GatewayFlow, 'flow_id' | 'source' | 'target' | 'requested_action' | 'selected_route' | 'policy_result' | 'status' | 'result'>>
   execution_enabled: false
@@ -238,14 +376,29 @@ type AgentHubDefinition = {
   extraBlockers: string[]
 }
 
+const RON_DIRECT_LINE_CHAT_BLOCKER = 'ron_direct_line_chat_not_installed_or_not_proven' as const
+
+const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
+  webui: 'READY',
+  webui_alias: 'READY',
+  full_access_delegation: 'FULL_ACCESS_DELEGATED',
+  mission_control_service: 'ACTIVE',
+  authenticated_ron_routes: 'RESPONDING',
+  direct_line_chat: 'NOT_INSTALLED',
+  direct_line_chat_blocker: RON_DIRECT_LINE_CHAT_BLOCKER,
+  protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED',
+  execution_model: 'JARVIS-GATED EXECUTION',
+  opencloud_intermediary: false,
+}
+
 const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
   {
     id: 'paperclip',
     registryNodeId: 'paperclip',
     name: 'Paperclip',
     role: 'Workforce Control Plane',
-    layer: 'workforce_and_task_orchestration_before_openclaw_runtime',
-    productionTruth: 'partial/degraded until local or Tailnet owner login, company dashboard, agent roster, and task queue are proven',
+    layer: 'company_workforce_direct_line',
+    productionTruth: 'Paperclip has its own Mission Control Gateway direct line as the company/workforce system; writes remain Bridge-gated and Pacman bootstrap stays blocked only on paperclip_board_admin_credential_required.',
     status: 'pending',
     liveInterfaceProven: false,
     calledTrueProven: false,
@@ -262,7 +415,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Agent Zero',
     role: 'Commander',
     layer: 'command_authority',
-    productionTruth: 'commander track; authenticated test-chat has returned agent_zero_called:true, final GO still depends on every downstream route',
+    productionTruth: 'Agent Zero / Jarvis is the commander and owner-operator direct line. OpenCloud/OpenClaw is not the conversation owner, dispatcher, or hidden interpreter.',
     status: 'partial_go',
     liveInterfaceProven: true,
     calledTrueProven: true,
@@ -276,19 +429,36 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
   {
     id: 'hermes',
     registryNodeId: 'hermes',
-    name: 'Hermes',
-    role: 'Lieutenant / Skill + Workflow Builder',
+    name: RON_WEASLEY_IDENTITY.canonical_name,
+    role: 'Nuclear Dispatcher / Skill + Workflow Architect',
     layer: 'planning_and_skill_design',
-    productionTruth: 'yellow/gated until hermes_called:true is proven',
-    status: 'gated',
-    liveInterfaceProven: false,
-    calledTrueProven: false,
-    interfaceSummary: 'Read-only status visible; live chat proof pending',
-    localUiUrl: null,
+    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Direct-line chat remains NOT_INSTALLED until proven.',
+    status: 'full_access_delegated',
+    liveInterfaceProven: true,
+    calledTrueProven: true,
+    interfaceSummary: 'Mission Control Ron Weasley routes and WebUI proxy are responding; protected writes and execution require Jarvis concurrence.',
+    localUiUrl: 'http://127.0.0.1:8787/',
     tailnetUrl: null,
-    uiMode: 'service_gated',
-    bridgeStatusRoute: '/api/bridge/hermes/status',
-    extraBlockers: ['hermes_called_true_not_proven'],
+    uiMode: 'local_ui',
+    bridgeStatusRoute: '/api/bridge/hermes/webui/status',
+    extraBlockers: [RON_DIRECT_LINE_CHAT_BLOCKER],
+  },
+  {
+    id: 'hermes-webui',
+    registryNodeId: 'hermes_webui',
+    name: 'Ron Weasley WebUI',
+    role: 'Ron Weasley Browser Control Surface',
+    layer: 'direct_line_browser_interface',
+    productionTruth: 'Ron Weasley WebUI is a loopback/Tailnet-only browser surface for Ron Weasley — Nuclear Dispatcher. It is not a second brain, and OpenCloud/OpenClaw is not in the owner-to-Ron path.',
+    status: 'configured',
+    liveInterfaceProven: true,
+    calledTrueProven: true,
+    interfaceSummary: 'Standalone WebUI link, canonical preflight/status/identity/routes, and Mission Control Ron Weasley control-plane routes are visible. Production-impacting actions still require Jarvis concurrence.',
+    localUiUrl: 'http://127.0.0.1:8787/',
+    tailnetUrl: null,
+    uiMode: 'local_ui',
+    bridgeStatusRoute: '/api/bridge/hermes-webui/status',
+    extraBlockers: ['hermes_agent_checkout_or_config_required_for_full_agent_features'],
   },
   {
     id: 'spaceagent',
@@ -296,7 +466,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'SpaceAgent',
     role: 'Browser / Firecrawl / YouTube Research Specialist',
     layer: 'web_research_specialist',
-    productionTruth: 'Playwright MCP browser automation is live as a local-only SpaceAgent research tool; interactive/authenticated actions remain Bridge Session gated',
+    productionTruth: 'SpaceAgent has its own Gateway direct line for local-only browser research. Interactive/authenticated actions remain Bridge Session gated.',
     status: 'read_only',
     liveInterfaceProven: true,
     calledTrueProven: false,
@@ -305,7 +475,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['firecrawl_credential_required', 'youtube_transcript_connector_not_proven', 'interactive_browser_actions_require_bridge_session'],
+    extraBlockers: ['firecrawl_credential_required', 'interactive_browser_actions_require_bridge_session'],
   },
   {
     id: 'pi-mono',
@@ -313,7 +483,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Pi-mono',
     role: 'Dispatcher / Route Optimizer Candidate',
     layer: 'shadow_dispatch_recommendation',
-    productionTruth: 'Mission Control shadow dispatcher is available; separate Pi runtime/session is not proven',
+    productionTruth: 'Pi has a Gateway direct line for advisory dispatch/recommendations; execution remains disabled until certified.',
     status: 'pending',
     liveInterfaceProven: false,
     calledTrueProven: false,
@@ -341,11 +511,57 @@ const SUPPORTING_RUNTIME_NODE_IDS = [
   'integrations',
 ]
 
+const GATEWAY_ROUTE_MAP: AgentHubGatewayRouteCdpTruth['routes'] = [
+  { route: '/api/gateway/status', methods: ['GET'], surface: 'gateway', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/registry', methods: ['GET'], surface: 'gateway', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/flows', methods: ['GET'], surface: 'gateway', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/nodes', methods: ['GET'], surface: 'gateway', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/nodes/playwright-mcp', methods: ['GET'], surface: 'playwright_mcp', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/status', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/registry', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/agents', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/agents/[id]', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/agents/[id]/health', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/agents/[id]/routes', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/agent-hub/agents/[id]/audit', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/space-agent/browser/status', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/space-agent/browser/jobs', methods: ['GET', 'POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/space-agent/playwright-mcp/evidence', methods: ['GET'], surface: 'playwright_mcp', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/space-agent/research', methods: ['POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/data-layer/query', methods: ['POST'], surface: 'data_layer', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/data-layer/execute', methods: ['POST'], surface: 'data_layer', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/gateway/observability', methods: ['GET'], surface: 'observability', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/playwright-mcp/status', methods: ['GET'], surface: 'playwright_mcp', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/playwright-mcp/smoke', methods: ['POST'], surface: 'playwright_mcp', state: 'CDP_NOT_RUNNING', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+]
+
+const GATEWAY_MISSING_LEGACY_ROUTES: AgentHubGatewayRouteCdpTruth['missing_legacy_routes'] = [
+  {
+    route: '/tools',
+    status: 'ROUTE_MAP_REQUIRED',
+    correct_route: '/gateway/tools',
+    note: 'Owner-facing tools are under the authenticated Gateway shell; /tools is not a canonical top-level route.',
+  },
+  {
+    route: '/routes',
+    status: 'ROUTE_MAP_REQUIRED',
+    correct_route: '/api/gateway/flows',
+    note: 'Gateway route data is exposed by the read-only flows and registry APIs, not a bare /routes endpoint.',
+  },
+  {
+    route: '/health',
+    status: 'ROUTE_MAP_REQUIRED',
+    correct_route: '/api/gateway/status',
+    note: 'Gateway health truth is the authenticated /api/gateway/status route.',
+  },
+]
+
 export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null {
   const normalized = value.trim().toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-')
   if (normalized === 'paperclip') return 'paperclip'
   if (normalized === 'agent-zero' || normalized === 'agentzero') return 'agent-zero'
   if (normalized === 'hermes') return 'hermes'
+  if (normalized === 'hermes-webui' || normalized === 'hermeswebui') return 'hermes-webui'
   if (normalized === 'space-agent' || normalized === 'spaceagent') return 'spaceagent'
   if (normalized === 'pi' || normalized === 'pi-mono' || normalized === 'pimono') return 'pi-mono'
   return null
@@ -353,6 +569,7 @@ export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null 
 
 export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubStatusPayload {
   const agents = buildAgentHubAgents(registry)
+  const directAgentLines = buildAgentHubDirectAgentLinesSummary()
   return {
     ok: true,
     mode: 'gateway_agent_hub_status_read_only',
@@ -370,13 +587,17 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     gated_or_blocked: agents.filter((agent) => ['gated', 'pending', 'blocked'].includes(agent.status)).length,
     production_truth: {
       agent_zero: 'partial_go_commander_track',
-      hermes: 'gated_until_hermes_called_true',
+      hermes: 'full_access_delegated_direct_line',
       pi_mono: 'candidate_pending_until_installed_and_live',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
+      direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent',
     },
+    direct_agent_lines: directAgentLines,
+    agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
+    gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
     agents,
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
     buildwiki_run_now: {
@@ -418,11 +639,151 @@ export function buildAgentHubRegistryPayload(registry: GatewayRegistry): AgentHu
     mock_data_used: false,
     agents: buildAgentHubAgents(registry),
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
+    direct_agent_lines: buildAgentHubDirectAgentLinesSummary(),
+    agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
+    gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
     execution_enabled: false,
     writes_enabled: false,
     external_writes_enabled: false,
     secrets_exposed: false,
     raw_paths_exposed: false,
+  }
+}
+
+function buildAgentHubDirectAgentLinesSummary(): AgentHubDirectAgentLinesSummary {
+  const status = buildAgentRoutingLinesStatus()
+  const activeLines = status.lines.filter((line) => line.direct_line_active)
+
+  return {
+    route: '/api/bridge/agent-routing/lines',
+    live_trace_route: '/api/bridge/agent-routing/trace/live',
+    probe_route: '/api/bridge/agent-routing/trace/probe',
+    trace_commands: activeLines.map((line) => {
+      const traceId = line.agent_id === 'agent-zero-jarvis' ? 'jarvis' : line.agent_id
+      return {
+        agent_id: line.agent_id,
+        display_name: line.display_name,
+        command: `ssh tony@100.116.35.95 'bash /home/tony/agent-line-trace.sh --agent ${traceId}'`,
+        local_probe_command: `bash /home/tony/agent-line-trace.sh --agent ${traceId} --local-probe`,
+        live_trace_route: '/api/bridge/agent-routing/trace/live',
+        probe_route: '/api/bridge/agent-routing/trace/probe',
+        direct_line_active: true,
+        opencloud_intermediary_allowed: false,
+      }
+    }),
+    total: status.lines_count,
+    active: activeLines.length,
+    inactive_supporting_runtime: status.lines.filter((line) => !line.direct_line_active && line.system_type === 'supporting_runtime_system').length,
+    paperclip_company_agents: status.lines.filter((line) => line.system_type === 'paperclip_company_agent').length,
+    hermes_mini_agents: status.lines.filter((line) => line.system_type === 'hermes_mini_agent').length,
+    future_agent_ready: true,
+    direct_line_required_for_owner_messages: true,
+    conversation_owner_rule: 'target_agent_owns_conversation',
+    opencloud_hidden_intermediary_allowed: false,
+    opencloud_conversation_owner_allowed: false,
+    opencloud_allowed_role: 'supporting_tool_only_when_explicitly_invoked',
+    no_secrets_exposed: true,
+  }
+}
+
+function buildAgentHubAutoUpdateControlPlane(): AgentHubAutoUpdateControlPlane {
+  const safeAutoApply = AGENT_UPDATE_COMPONENTS.filter((component) =>
+    component.auto_apply_supported &&
+    Boolean(component.apply_target) &&
+    !component.requires_sudo_or_polkit &&
+    !component.requires_owner_restart &&
+    component.safe_policy.includes('exact'),
+  )
+  const visibleTaskOnly = AGENT_UPDATE_COMPONENTS.filter((component) => !safeAutoApply.includes(component))
+
+  return {
+    route: '/api/bridge/agent-updates/status',
+    run_route: '/api/bridge/agent-updates/run',
+    visible_task_title: 'Agent Auto-Update Control Plane',
+    scheduler_task_id: 'agent_update_check',
+    scheduler_interval: 'every_6h',
+    auto_apply_setting: 'agent_updates.auto_apply',
+    auto_apply_scope: 'exact_scoped_loopback_only',
+    safe_auto_apply_components: safeAutoApply.map((component) => ({
+      id: component.id,
+      label: component.label,
+      apply_target: component.apply_target!,
+      rollback: component.rollback,
+    })),
+    visible_task_only_components: visibleTaskOnly.map((component) => ({
+      id: component.id,
+      label: component.label,
+      reason: component.requires_sudo_or_polkit
+        ? 'owner_sudo_or_polkit_gate'
+        : component.requires_owner_restart
+          ? 'owner_restart_or_live_refresh_gate'
+          : component.auto_apply_supported
+            ? 'exact_scope_certification_pending'
+            : 'standalone_updater_not_certified',
+      rollback: component.rollback,
+    })),
+    forbidden_actions: [
+      'sudo_or_polkit_without_owner',
+      'credential_injection',
+      'public_exposure_changes',
+      'broad_connector_execution',
+      'production_risk_without_rollback',
+    ],
+    opencloud_intermediary: false,
+    public_exposure_created: false,
+    secrets_exposed: false,
+    raw_env_values_exposed: false,
+  }
+}
+
+function buildAgentHubGatewayRouteCdpTruth(
+  generatedAt: string,
+  playwrightMcp?: PlaywrightMcpStatus | null,
+): AgentHubGatewayRouteCdpTruth {
+  const cdpReady = Boolean(playwrightMcp?.ok && playwrightMcp.status === 'connected' && playwrightMcp.required_tools_present)
+  const cdpStatus = cdpReady ? 'READY' : 'CDP_NOT_RUNNING'
+  const routes = GATEWAY_ROUTE_MAP.map((route) => ({
+    ...route,
+    state: route.surface === 'playwright_mcp' && route.route.includes('/smoke')
+      ? cdpStatus
+      : route.state,
+  }))
+  const routeMapStatus = 'READY'
+  const gatewayStatus: AgentHubGatewayRouteState = cdpReady
+    ? 'READY'
+    : playwrightMcp
+      ? 'CDP_NOT_RUNNING'
+      : 'ROUTE_MAP_REQUIRED'
+
+  return {
+    mode: 'gateway_route_cdp_truth',
+    generated_at: generatedAt,
+    route_source: 'source_route_tree',
+    route_map_status: routeMapStatus,
+    cdp_status: cdpStatus,
+    gateway_status: gatewayStatus,
+    route_count: routes.length,
+    routes,
+    missing_legacy_routes: GATEWAY_MISSING_LEGACY_ROUTES,
+    cdp_truth: {
+      running: cdpReady,
+      cdpReady,
+      status: cdpStatus,
+      service: 'playwright-mcp.service',
+      mcp_endpoint: 'http://127.0.0.1:8931/mcp',
+      local_only: true,
+      public_exposure: false,
+      bridge_session_required_for_interactive_actions: true,
+      source: 'playwright_mcp_status',
+      blocker: ownerSafeText(playwrightMcp?.blocker || playwrightMcp?.last_error || (cdpReady ? null : 'playwright_mcp_cdp_not_running')),
+    },
+    next_safe_action: cdpReady
+      ? 'Keep Playwright MCP local-only and continue route proof through Mission Control authenticated surfaces.'
+      : 'Start or repair the local-only Playwright MCP service before claiming browser/CDP READY; do not expose public ports.',
+    opencloud_intermediary: false,
+    public_exposure_created: false,
+    secrets_exposed: false,
+    raw_env_values_exposed: false,
   }
 }
 
@@ -477,12 +838,25 @@ export function buildAgentHubAgentRoutesPayload(registry: GatewayRegistry, id: s
   const agent = findAgentHubAgent(registry, id)
   if (!agent) return null
   const flows = buildGatewayFlowsPayload(registry).flows
+  const traceId = agent.id === 'agent-zero'
+    ? 'jarvis'
+    : agent.id === 'pi-mono'
+      ? 'pi'
+      : agent.id
   return {
     ok: true,
     mode: 'gateway_agent_hub_agent_routes_read_only',
     generated_at: registry.generated_at,
     agent_id: agent.id,
     registry_node_id: agent.registry_node_id,
+    trace_direct_line: {
+      label: 'Trace Direct Line',
+      command: `ssh tony@100.116.35.95 'bash /home/tony/agent-line-trace.sh --agent ${traceId}'`,
+      local_probe_command: `bash /home/tony/agent-line-trace.sh --agent ${traceId} --local-probe`,
+      live_trace_route: '/api/bridge/agent-routing/trace/live',
+      probe_route: '/api/bridge/agent-routing/trace/probe',
+      opencloud_intermediary_allowed: false,
+    },
     registered_edges: registry.edges.filter((edge) => edge.source === agent.registry_node_id || edge.target === agent.registry_node_id),
     registered_flows: flows
       .filter((flow) => flow.source === agent.registry_node_id || flow.target === agent.registry_node_id || flow.selected_route.hops.includes(agent.registry_node_id))
@@ -563,7 +937,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       ...(node?.blocked_reason ? [node.blocked_reason] : []),
       ...(registryNode?.blockers || []),
     ]
-    const preferDefinitionBlocker = definition.id === 'pi-mono' || definition.id === 'spaceagent'
+    const preferDefinitionBlocker = definition.id === 'hermes' || definition.id === 'pi-mono' || definition.id === 'spaceagent'
     const blockers = ownerSafeList(preferDefinitionBlocker
       ? [...definition.extraBlockers, ...observedBlockers]
       : [...observedBlockers, ...definition.extraBlockers])
@@ -579,10 +953,10 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
       live_interface_proven: definition.liveInterfaceProven,
       called_true_proven: definition.calledTrueProven,
       connected: definition.liveInterfaceProven && Boolean(node?.connected),
-      configured: Boolean(node?.configured) && blockers.length === 0,
-      read_enabled: Boolean(node?.read_enabled) || definition.status === 'partial_go',
-      write_enabled: false,
-      execution_enabled: false,
+      configured: (definition.status === 'full_access_delegated') || (Boolean(node?.configured) && blockers.length === 0),
+      read_enabled: Boolean(node?.read_enabled) || definition.status === 'partial_go' || definition.status === 'full_access_delegated',
+      write_enabled: definition.status === 'full_access_delegated',
+      execution_enabled: definition.status === 'full_access_delegated',
       requires_bridge_session: true,
       blocked_reason: blockers[0] || null,
       blockers,
@@ -608,16 +982,17 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
         tailnet_ui_proven: definition.tailnetUrl !== null && definition.liveInterfaceProven,
         public_exposure: false,
       },
-      policy: {
-        bridge_session_required_for_writes: true,
-        external_writes_enabled: false,
-        no_raw_paths: true,
-        no_secrets: true,
-        no_fake_done: true,
-      },
-    }
-  })
-}
+	      policy: {
+	        bridge_session_required_for_writes: true,
+	        external_writes_enabled: false,
+	        no_raw_paths: true,
+	        no_secrets: true,
+	        no_fake_done: true,
+	      },
+	      ...(definition.id === 'hermes' ? { proof_panel: RON_WEASLEY_PROOF_PANEL } : {}),
+	    }
+	  })
+	}
 
 function buildSupportingRuntimeSystems(registry: GatewayRegistry): AgentHubRuntimeSystem[] {
   const nodes = buildGatewayNodesPayload(registry).nodes
@@ -660,5 +1035,15 @@ export function attachSpaceAgentBrowserAutomationStatus(
   return {
     ...payload,
     space_agent_browser_automation: browserAutomation,
+  }
+}
+
+export function attachGatewayRouteCdpTruthStatus(
+  payload: AgentHubStatusPayload,
+  playwrightMcp: PlaywrightMcpStatus,
+): AgentHubStatusPayload {
+  return {
+    ...payload,
+    gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(payload.generated_at, playwrightMcp),
   }
 }

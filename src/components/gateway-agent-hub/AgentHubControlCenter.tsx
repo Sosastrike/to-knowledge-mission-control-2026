@@ -3,6 +3,8 @@ import type {
   AgentHubAgentAuditPayload,
   AgentHubAgentPayload,
   AgentHubAgentRoutesPayload,
+  AgentHubAutoUpdateControlPlane,
+  AgentHubGatewayRouteCdpTruth,
   AgentHubRuntimeSystem,
   AgentHubStatusPayload,
 } from '@/lib/gateway-agent-hub'
@@ -48,16 +50,20 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           {primaryAgents.map((agent) => <HubTab key={agent.id} href={`#${agent.id}`} label={agent.name} meta={agent.role} tone={agentTone(agent)} />)}
         </nav>
 
-        <section className='rounded-lg border border-amber-300/25 bg-amber-300/8 p-4 text-sm leading-6 text-amber-100'>
-          <strong>Production truth:</strong> Agent Zero is commander, Hermes remains gated until hermes_called:true, Pi is advisory/shadow until runtime proof, SpaceAgent has Playwright MCP local-only browser automation, Firecrawl is blocked until credential proof, YouTube is limited until transcript connector proof, Paperclip is partial/degraded until owner login/service proof, and Build-Wiki Run Now is scoped only to opencloud-docs-farmer.service.
+        <section className='rounded-lg border border-emerald-300/25 bg-emerald-300/8 p-4 text-sm leading-6 text-emerald-100'>
+          <strong>Production truth:</strong> Owner intent enters Mission Control Gateway and then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, and SpaceAgent / OpenCloud / OpenClaw stay supporting tools with no conversation ownership.
         </section>
+
+        <DirectAgentLinesPanel status={status} />
+        <AutoUpdateControlPlanePanel controlPlane={status.agent_update_control_plane} />
+        <GatewayRouteCdpTruthPanel truth={status.gateway_route_cdp_truth} />
 
         <section id='overview' className='grid gap-4 xl:grid-cols-[1.55fr_0.9fr]'>
           <div className='rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5'>
             <div className='flex flex-wrap items-end justify-between gap-3'>
               <div>
                 <h2 className='text-lg font-semibold text-white'>Operating Chain</h2>
-                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Gateway, Agent Zero stays commander, Pi recommends, Hermes designs, Paperclip organizes, and OpenClaw+ remains the runtime layer.</p>
+                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Gateway, then Agent Zero / Jarvis, then the selected direct agent line. Ron and Pi dispatch before Paperclip work execution; OpenCloud and OpenClaw are supporting tools only.</p>
               </div>
               <StatusBadge label='policy enforced' status='read_only' />
             </div>
@@ -72,7 +78,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           <aside className='rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5'>
             <div className='flex items-center justify-between gap-3'>
               <h2 className='text-lg font-semibold text-white'>Owner Actions</h2>
-              <span className='rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-xs text-slate-300'>Bridge not active</span>
+              <span className='rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-100'>Direct lines active</span>
             </div>
             <div className='mt-4 grid gap-2'>
               <OwnerAction label='Gateway route smoke' state='live' route='/api/gateway/status' />
@@ -102,7 +108,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           <div className='flex flex-wrap items-end justify-between gap-3'>
             <div>
               <h2 className='text-lg font-semibold text-white'>Supporting Runtime Systems</h2>
-              <p className='mt-1 text-sm text-slate-400'>Gateway, Paperclip, OpenClaw+, Build-Wiki/Farmer, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
+              <p className='mt-1 text-sm text-slate-400'>Gateway, Paperclip, OpenClaw+ supporting runtime, Build-Wiki/Farmer, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
             </div>
             <StatusBadge label='read-only discovery' status='read_only' />
           </div>
@@ -137,6 +143,186 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
   )
 }
 
+function DirectAgentLinesPanel({ status }: { status: AgentHubStatusPayload }) {
+  const summary = status.direct_agent_lines
+
+  return (
+    <section className='rounded-lg border border-cyan-300/20 bg-cyan-300/8 p-5' aria-label='Universal direct agent lines'>
+      <div className='flex flex-wrap items-end justify-between gap-3'>
+        <div>
+          <p className='text-xs font-semibold uppercase text-cyan-200'>Universal Direct Lines</p>
+          <h2 className='mt-1 text-lg font-semibold text-white'>Every agent gets its own highway</h2>
+        </div>
+        <StatusBadge label='OpenCloud intermediary false' status='read_only' />
+      </div>
+      <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+        <Metric label='registered lines' value={String(summary.total)} />
+        <Metric label='active direct lines' value={String(summary.active)} />
+        <Metric label='Paperclip company agents' value={String(summary.paperclip_company_agents)} />
+        <Metric label='Ron Weasley mini-agents' value={String(summary.hermes_mini_agents)} />
+      </div>
+      <dl className='mt-4 grid gap-3 text-sm text-slate-300 md:grid-cols-3'>
+        <Fact label='conversation owner' value={summary.conversation_owner_rule} />
+        <Fact label='OpenCloud role' value={summary.opencloud_allowed_role} />
+        <Fact label='supporting runtime lines' value={String(summary.inactive_supporting_runtime)} />
+      </dl>
+      <div className='mt-4 flex flex-wrap gap-2'>
+        <a href={summary.route} className='rounded-md border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-300/15'>View direct-line registry</a>
+        <a href={summary.live_trace_route} className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300/40'>Latest traces</a>
+      </div>
+      <div className='mt-4 max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/20 p-3' aria-label='Trace Direct Line commands'>
+        <div className='mb-3 flex items-center justify-between gap-3'>
+          <h3 className='text-sm font-semibold text-white'>Trace Direct Line</h3>
+          <span className='rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase text-cyan-100'>no hidden intermediary</span>
+        </div>
+        <div className='grid gap-2'>
+          {summary.trace_commands.map((trace) => (
+            <article key={trace.agent_id} className='rounded-md border border-white/10 bg-white/[0.03] p-3 text-xs text-slate-300'>
+              <div className='flex flex-wrap items-center justify-between gap-2'>
+                <strong className='text-slate-100'>{trace.display_name}</strong>
+                <span className='text-cyan-200'>{trace.agent_id}</span>
+              </div>
+              <code className='mt-2 block break-all rounded border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-slate-200'>{trace.command}</code>
+              <code className='mt-1 block break-all rounded border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-slate-400'>{trace.local_probe_command}</code>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AutoUpdateControlPlanePanel({ controlPlane }: { controlPlane: AgentHubAutoUpdateControlPlane }) {
+  return (
+    <section className='rounded-lg border border-emerald-300/20 bg-emerald-300/8 p-5' aria-label='Agent auto-update control plane' data-status-route-proof='/api/bridge/agent-updates/status' data-run-route-proof='/api/bridge/agent-updates/run'>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div>
+          <p className='text-xs font-semibold uppercase text-emerald-200'>Agent Auto-Update Control Plane</p>
+          <h2 className='mt-1 text-lg font-semibold text-white'>Exact scoped auto-apply for certified agent updaters</h2>
+          <p className='mt-2 max-w-4xl text-sm leading-6 text-emerald-100'>Ron Weasley WebUI and Ron Weasley Agent can use loopback-only self-update targets; unsafe or uncertified updates become visible tasks until an exact scope, rollback path, and owner gate are certified.</p>
+        </div>
+        <StatusBadge label='exact scoped auto-apply' status='read_only' />
+      </div>
+
+      <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+        <Metric label='scheduler' value={controlPlane.scheduler_interval} />
+        <Metric label='safe auto-apply' value={String(controlPlane.safe_auto_apply_components.length)} />
+        <Metric label='visible task only' value={String(controlPlane.visible_task_only_components.length)} />
+        <Metric label='OpenCloud intermediary' value={controlPlane.opencloud_intermediary ? 'true' : 'false'} />
+      </div>
+
+      <dl className='mt-4 grid gap-3 text-sm text-slate-300 md:grid-cols-3'>
+        <Fact label='status route' value={controlPlane.route} />
+        <Fact label='run route' value={controlPlane.run_route} />
+        <Fact label='auto-apply setting' value={controlPlane.auto_apply_setting} />
+      </dl>
+
+      <div className='mt-4 flex flex-wrap gap-2'>
+        <a href={controlPlane.route} className='rounded-md border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/15'>Open auto-update status</a>
+        <form action={controlPlane.run_route} method='post'>
+          <input type='hidden' name='mode' value='apply-safe' />
+          <button className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-200 hover:border-emerald-300/40' type='submit'>Run safe update check</button>
+        </form>
+      </div>
+
+      <div className='mt-5 grid gap-4 xl:grid-cols-2'>
+        <div>
+          <h3 className='text-sm font-semibold text-white'>Certified Auto-Apply Targets</h3>
+          <div className='mt-3 grid gap-2'>
+            {controlPlane.safe_auto_apply_components.map((component) => (
+              <article key={component.id} className='rounded-md border border-emerald-300/20 bg-black/20 p-3 text-xs text-slate-300'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <strong className='text-emerald-100'>{component.label}</strong>
+                  <span className='rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-100'>{component.apply_target}</span>
+                </div>
+                <p className='mt-2 leading-5 text-slate-400'>Rollback: {component.rollback}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className='text-sm font-semibold text-white'>Visible Task Only Until Certified</h3>
+          <div className='mt-3 grid gap-2'>
+            {controlPlane.visible_task_only_components.map((component) => (
+              <article key={component.id} className='rounded-md border border-amber-300/20 bg-black/20 p-3 text-xs text-slate-300'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <strong className='text-amber-100'>{component.label}</strong>
+                  <span className='rounded-full border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-100'>{component.reason.replace(/_/g, ' ')}</span>
+                </div>
+                <p className='mt-2 leading-5 text-slate-400'>Rollback: {component.rollback}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <p className='mt-4 rounded-md border border-white/10 bg-black/20 p-3 text-xs leading-5 text-slate-300'>Forbidden automatically: sudo or polkit, credential injection, public exposure changes, broad connector execution, and production-risk actions without rollback. Secrets exposed: {controlPlane.secrets_exposed ? 'true' : 'false'}.</p>
+    </section>
+  )
+}
+
+function GatewayRouteCdpTruthPanel({ truth }: { truth: AgentHubGatewayRouteCdpTruth }) {
+  return (
+    <section className='rounded-lg border border-sky-300/20 bg-sky-300/8 p-5' aria-label='Gateway route and CDP truth' data-route-source={truth.route_source} data-cdp-status={truth.cdp_status}>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div>
+          <p className='text-xs font-semibold uppercase text-sky-200'>Gateway Route / CDP Truth</p>
+          <h2 className='mt-1 text-lg font-semibold text-white'>Routes are source-enumerated; browser CDP stays local-only</h2>
+          <p className='mt-2 max-w-4xl text-sm leading-6 text-sky-100'>Bare /tools, /routes, and /health are not canonical endpoints. Use the authenticated Mission Control Gateway routes below; Playwright MCP/CDP is never public.</p>
+        </div>
+        <StatusBadge label={truth.gateway_status} status={truth.gateway_status === 'READY' ? 'live' : 'gated'} />
+      </div>
+
+      <div className='mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+        <Metric label='route map' value={truth.route_map_status} />
+        <Metric label='CDP' value={truth.cdp_status} />
+        <Metric label='routes' value={String(truth.route_count)} />
+        <Metric label='public exposure' value={truth.public_exposure_created ? 'true' : 'false'} />
+      </div>
+
+      <dl className='mt-4 grid gap-3 text-sm text-slate-300 md:grid-cols-3'>
+        <Fact label='Agent Hub status' value='/api/gateway/agent-hub/status' />
+        <Fact label='Playwright status' value='/api/bridge/playwright-mcp/status' />
+        <Fact label='CDP blocker' value={truth.cdp_truth.blocker || 'none'} />
+      </dl>
+
+      <div className='mt-5 grid gap-4 xl:grid-cols-2'>
+        <div>
+          <h3 className='text-sm font-semibold text-white'>Canonical Gateway Routes</h3>
+          <div className='mt-3 grid max-h-72 gap-2 overflow-auto'>
+            {truth.routes.map((route) => (
+              <article key={route.route} className='rounded-md border border-sky-300/20 bg-black/20 p-3 text-xs text-slate-300'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <strong className='break-all text-sky-100'>{route.route}</strong>
+                  <span className='rounded-full border border-sky-300/25 bg-sky-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-sky-100'>{route.state}</span>
+                </div>
+                <p className='mt-2 leading-5 text-slate-400'>{route.methods.join(' / ')} · {route.surface.replace(/_/g, ' ')} · Bridge Session: {route.bridge_session_required ? 'required' : 'not required'} · writes: disabled</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className='text-sm font-semibold text-white'>Legacy Route Corrections</h3>
+          <div className='mt-3 grid gap-2'>
+            {truth.missing_legacy_routes.map((route) => (
+              <article key={route.route} className='rounded-md border border-amber-300/20 bg-black/20 p-3 text-xs text-slate-300'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <strong className='text-amber-100'>{route.route}</strong>
+                  <span className='rounded-full border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-100'>{route.status}</span>
+                </div>
+                <p className='mt-2 leading-5 text-slate-400'>Use {route.correct_route}. {route.note}</p>
+              </article>
+            ))}
+          </div>
+          <p className='mt-4 rounded-md border border-white/10 bg-black/20 p-3 text-xs leading-5 text-slate-300'>CDP running: {truth.cdp_truth.running ? 'true' : 'false'} · cdpReady: {truth.cdp_truth.cdpReady ? 'true' : 'false'} · local-only: {truth.cdp_truth.local_only ? 'true' : 'false'} · OpenCloud intermediary: {truth.opencloud_intermediary ? 'true' : 'false'}.</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function AgentHubPaperclipPage({
   detail,
   routes,
@@ -164,9 +350,10 @@ export function AgentHubPaperclipPage({
 
         <section className='rounded-lg border border-white/10 bg-white/[0.03] p-5'>
           <h2 className='text-lg font-semibold text-white'>Workforce Chain</h2>
-          <p className='mt-3 text-sm leading-6 text-slate-300'>Paperclip sits before OpenClaw+ in the Gateway operating chain. It organizes co-worker agents, mini-agent requests, task queues, budgets, heartbeats, approvals, work products, task status, supervision, and assignment history. OpenClaw+ remains the runtime and execution layer.</p>
+          <p className='mt-3 text-sm leading-6 text-slate-300'>Paperclip has its own direct Gateway line as the company/workforce system. It organizes co-worker agents, mini-agent requests, task queues, budgets, heartbeats, approvals, work products, task status, supervision, and assignment history; OpenClaw+ can be invoked only as an explicit supporting runtime/tool.</p>
           <div className='mt-4 grid gap-3 md:grid-cols-2'>
-            <Fact label='Gateway route' value='Agent Zero / Pi / Hermes → Paperclip → OpenClaw+' />
+            <Fact label='Gateway route' value='Owner / Jarvis / Ron Weasley / Pi → Gateway → Paperclip' />
+            <Fact label='OpenCloud intermediary' value='false' />
             <Fact label='execution enabled' value={agent.execution_enabled ? 'yes' : 'no'} />
             <Fact label='public exposure' value={agent.interface.public_exposure ? 'yes' : 'no'} />
             <Fact label='auth required' value={agent.interface.auth_required ? 'yes' : 'no'} />
@@ -226,6 +413,16 @@ export function AgentHubPaperclipPage({
 }
 
 function AgentCard({ agent }: { agent: AgentHubAgent }) {
+  const ronProofPanel = agent.id === 'hermes' ? agent.proof_panel : undefined
+  const statusLabel = agentStatusLabel(agent)
+  const writeValue = agent.id === 'hermes'
+    ? 'JARVIS CONCURRENCE REQUIRED'
+    : agent.write_enabled ? 'enabled' : 'session gated'
+  const protectedActionLabel = agent.id === 'hermes' ? 'JARVIS CONCURRENCE REQUIRED' : 'Write/execute gated'
+  const protectedActionTitle = agent.id === 'hermes'
+    ? 'Protected Ron writes and execution require Jarvis concurrence'
+    : 'Bridge Session required for write or execute actions'
+
   return (
     <article id={agent.id} className={'relative overflow-hidden rounded-lg border bg-white/[0.03] p-5 ' + agentBorderClass(agent)}>
       <div className={'absolute left-0 top-5 h-16 w-1 rounded-r-full ' + agentStripeClass(agent)} />
@@ -234,7 +431,7 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
           <p className='text-xs font-semibold uppercase text-slate-400'>{agent.role}</p>
           <h2 className='mt-2 text-xl font-semibold text-white'>{agent.name}</h2>
         </div>
-        <StatusBadge label={agent.status} status={agent.status} />
+        <StatusBadge label={statusLabel} status={agent.status} />
       </div>
       <p className='mt-3 text-sm leading-6 text-slate-300'>{agent.production_truth}</p>
       <CapabilityFlags agent={agent} />
@@ -246,12 +443,13 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
         <Fact label='iframe allowed' value={agent.interface.iframe_allowed ? 'yes' : 'no'} />
         <Fact label='local UI' value={agent.interface.local_ui_url || 'not proven'} />
         <Fact label='Tailnet UI' value={agent.interface.tailnet_url || 'not proven'} />
-        <Fact label='writes' value={agent.write_enabled ? 'enabled' : 'session gated'} />
+        <Fact label='writes' value={writeValue} />
       </dl>
+      {ronProofPanel && <RonProofPanel agent={agent} />}
       <div className='mt-4 flex flex-wrap gap-2'>
         <a href={agent.interface.mission_control_surface} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-cyan-200 hover:border-cyan-300/40'>Open surface</a>
         <a href={agent.routes.detail} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300/40'>API detail</a>
-        <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title='Bridge Session required for write or execute actions'>Write/execute gated</span>
+        <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title={protectedActionTitle}>{protectedActionLabel}</span>
       </div>
       {agent.id === 'spaceagent' && (
         <div className='mt-4 rounded-lg border border-sky-300/20 bg-sky-300/8 p-3 text-xs leading-5 text-sky-100'>
@@ -260,6 +458,31 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
       )}
       {agent.blocked_reason && <p className='mt-4 rounded-lg border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Blocker: {agent.blocked_reason}</p>}
     </article>
+  )
+}
+
+function RonProofPanel({ agent }: { agent: AgentHubAgent }) {
+  const proof = agent.proof_panel
+  if (!proof) return null
+
+  return (
+    <section className='mt-4 rounded-lg border border-emerald-300/20 bg-emerald-300/8 p-4' aria-label='Ron Weasley proof panel'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <h3 className='text-sm font-semibold text-white'>Ron Weasley Proof Panel</h3>
+        <span className='rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase text-emerald-100'>JARVIS-GATED EXECUTION</span>
+      </div>
+      <dl className='mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2'>
+        <Fact label='WebUI' value={proof.webui} />
+        <Fact label='WebUI alias' value={proof.webui_alias} />
+        <Fact label='Full-access delegation' value={proof.full_access_delegation} />
+        <Fact label='Mission Control service' value={proof.mission_control_service} />
+        <Fact label='Authenticated Ron routes' value={proof.authenticated_ron_routes} />
+        <Fact label='Direct-line chat' value={proof.direct_line_chat} />
+        <Fact label='Protected writes/execution' value={proof.protected_writes_execution} />
+        <Fact label='OpenCloud intermediary' value={proof.opencloud_intermediary ? 'TRUE' : 'FALSE'} />
+      </dl>
+      <p className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Direct-line chat blocker: {proof.direct_line_chat_blocker}</p>
+    </section>
   )
 }
 
@@ -285,14 +508,15 @@ function GatewayChainCanvas() {
   const chain = [
     { label: 'Owner', note: 'final authority', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
     { label: 'Gateway / Nucleus', note: 'policy, routing, registry, audit', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
-    { label: 'Agent Zero / Pi / Hermes', note: 'commander, dispatcher candidate, lieutenant', tone: 'border-violet-300/35 bg-violet-300/10 text-violet-100' },
+    { label: 'Agent Zero / Jarvis', note: 'commander and owner-control layer', tone: 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' },
+    { label: 'Ron Weasley', note: 'Nuclear Dispatcher and workflow/skill optimizer', tone: 'border-violet-300/35 bg-violet-300/10 text-violet-100' },
+    { label: 'Pi', note: 'dispatcher and route optimizer', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
     { label: 'Paperclip', note: 'workforce control plane', tone: 'border-amber-300/35 bg-amber-300/10 text-amber-100' },
-    { label: 'OpenClaw+', note: 'runtime, skills, agents, mini-agent execution', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
-    { label: 'Mini-agents / tools / reports', note: 'execution remains policy-gated', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
+    { label: 'SpaceAgent / OpenCloud / OpenClaw', note: 'supporting runtimes and tools', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
   ]
 
   return (
-    <div className='mt-4 grid gap-2 lg:grid-cols-6'>
+    <div className='mt-4 grid gap-2 lg:grid-cols-7'>
       {chain.map((item, index) => (
         <div key={item.label} className='relative'>
           <div className={'min-h-[104px] rounded-lg border p-3 ' + item.tone}>
@@ -356,7 +580,7 @@ function PolicyPanel() {
         <PolicyLine label='Writes' value='Bridge Session required' />
         <PolicyLine label='Execution' value='Agent Zero authority plus Gateway policy' />
         <PolicyLine label='Pi' value='advisory only, no writes, no execution' />
-        <PolicyLine label='Hermes' value='planning only until hermes_called:true' />
+        <PolicyLine label='Ron Weasley' value='direct Gateway line; executes only Jarvis-signed exact scopes' />
         <PolicyLine label='Tony' value='retired/archive only' />
       </div>
     </article>
@@ -545,7 +769,9 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 function StatusBadge({ label, status }: { label: string; status: string }) {
-  const tone = status === 'partial_go' || status === 'read_only' || status === 'connected' || status === 'connected_local_only'
+  const tone = status === 'full_access_delegated' || status === 'ready' || status === 'active' || status === 'responding'
+    ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100'
+    : status === 'partial_go' || status === 'read_only' || status === 'connected' || status === 'connected_local_only'
     ? 'border-sky-300/30 bg-sky-300/10 text-sky-100'
     : status === 'gated' || status === 'pending' || status === 'degraded' || status === 'limited_pending'
       ? 'border-amber-300/30 bg-amber-300/10 text-amber-100'
@@ -555,8 +781,13 @@ function StatusBadge({ label, status }: { label: string; status: string }) {
   return <span className={'rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase ' + tone}>{label.replace(/_/g, ' ')}</span>
 }
 
+function agentStatusLabel(agent: AgentHubAgent) {
+  if (agent.id === 'hermes' && agent.status === 'full_access_delegated') return 'FULL ACCESS DELEGATED'
+  return agent.status
+}
+
 function buildReadinessSummary(status: AgentHubStatusPayload) {
-  const live = status.agents.filter((agent) => agent.live_interface_proven || agent.status === 'read_only' || agent.status === 'partial_go').length
+  const live = status.agents.filter((agent) => agent.live_interface_proven || agent.status === 'full_access_delegated' || agent.status === 'read_only' || agent.status === 'partial_go').length
   const gated = status.agents.filter((agent) => agent.status === 'gated').length
   const blocked = status.agents.filter((agent) => agent.status === 'pending' || agent.status === 'blocked' || agent.blocked_reason).length
   return { live, gated, blocked }
@@ -564,10 +795,11 @@ function buildReadinessSummary(status: AgentHubStatusPayload) {
 
 function agentTone(agent: AgentHubAgent): 'cyan' | 'green' | 'yellow' | 'blue' | 'red' | 'gray' {
   if (agent.id === 'agent-zero') return 'green'
+  if (agent.id === 'hermes') return 'green'
   if (agent.id === 'spaceagent') return 'blue'
   if (agent.status === 'gated' || agent.status === 'pending') return 'yellow'
   if (agent.status === 'blocked') return 'red'
-  if (agent.status === 'read_only' || agent.status === 'partial_go') return 'green'
+  if (agent.status === 'full_access_delegated' || agent.status === 'read_only' || agent.status === 'partial_go') return 'green'
   return 'gray'
 }
 

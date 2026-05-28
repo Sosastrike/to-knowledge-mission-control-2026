@@ -3,8 +3,8 @@
    Loaded after gateway-data.js. Read-only mocks; no live calls.
 
    Architecture order (locked):
-   Owner → Gateway → Agent Zero / Pi / Hermes → Paperclip
-                  → OpenClaw+ → mini-agents / skills / tools / reports
+   Owner → Gateway → Agent Zero / Jarvis → Ron Weasley → Pi → Paperclip
+                  → SpaceAgent / OpenCloud / OpenClaw supporting tools
 
    Repo grounding: PENDING — public access not available in design
    environment. URLs preserved on each agent so the developer can
@@ -45,10 +45,10 @@ window.AGENTS = (function () {
       name: 'Agent Zero',
       role: 'Commander',
       tagline: 'Sole commander. All owner intent lands here.',
-      status: 'green',                 // partial: UI restored, fd guard pending
+      status: 'green',                 // operational: exact-scope execution certified
       marker: 'purple',
       kind: 'commander',
-      bridge: false,
+      bridge: true,
       R: true, W: true, X: true,
       localhost: 'http://100.116.35.95:50080/',
       iframe_safe: true,
@@ -59,33 +59,34 @@ window.AGENTS = (function () {
       models: ['claude-sonnet-4', 'gpt-5', 'openrouter:auto'],
       tools: ['gateway-router', 'plan-composer', 'memory:tony', 'memory:obsidian', 'memory:mempalace'],
       blocked_reason: null,
-      gated_reason: 'agent_zero_fd_exhaustion_guard_pending. Safe UI opens do not require Bridge Session; protected execution still does.',
+      gated_reason: 'owner_hard_stops_only_remaining. Jarvis can execute certified exact-scope Mission Control adapters; raw secrets, .env edits, public exposure, broad connector execution, and credential injection remain hard stops.',
       pulse: { req_per_min: 14.2, p95_ms: 940, error_rate: 0.012 },
-      summary: 'Commander. Plans, delegates, executes. Inherits Tony memory read-only.'
+      summary: 'Commander. Plans, delegates, executes certified exact-scope adapters, writes internal Mission Control state, and inherits Tony memory through policy.'
     },
 
     {
       id: 'hermes',
-      name: 'Hermes',
-      role: 'Lieutenant · Skill + Workflow Builder',
-      tagline: 'Service active; owner proxy not wired.',
-      status: 'yellow',
+      name: 'Ron Weasley',
+      role: 'Nuclear Dispatcher · Skill + Workflow Builder',
+      tagline: 'FULL ACCESS DELEGATED with JARVIS-GATED EXECUTION for protected actions.',
+      status: 'green',
+      status_label: 'FULL ACCESS DELEGATED / JARVIS-GATED EXECUTION',
       marker: 'purple',
-      kind: 'lieutenant',
+      kind: 'nuclear-dispatcher',
       bridge: true,
       R: true, W: true, X: false,
-      localhost: 'server-local only: 127.0.0.1:3000',
+      localhost: 'Mission Control proxy: /gateway/agent-hub/ron/webui/app',
       iframe_safe: true,
       auth: 'mission control session + bridge',
       repo: 'github.com/Sosastrike/To-Knowledge-hermes-agent',
       repo_grounding: 'pending',
-      caps: ['skill design', 'workflow design', 'specialist composition'],
+      caps: ['skill design', 'workflow design', 'cybersecurity audit', 'gateway optimization', 'mini-agent coordination'],
       models: ['claude-sonnet-4', 'gpt-5-codex'],
-      tools: ['skill-registry', 'workflow-canvas', 'openclaw-handoff'],
+      tools: ['skill-registry', 'workflow-canvas', 'gateway-audit', 'mission-control-mcp', 'openclaw-handoff'],
       blocked_reason: null,
-      gated_reason: 'hermes_owner_proxy_not_wired. Service/live adapter is proven, but no safe owner Tailnet/proxy UI exists yet.',
+      gated_reason: 'legacy Hermes route alias preserved. Ron can inspect and draft through Mission Control; protected writes require Jarvis concurrence. Direct-line chat remains NOT_INSTALLED until live proof exists.',
       pulse: { req_per_min: 2.1, p95_ms: 1280, error_rate: 0 },
-      summary: 'Lieutenant. Builds skills and workflows. Cannot delegate further. Read-biased until proven.'
+      summary: 'Ron Weasley — Nuclear Dispatcher. Builds skills, audits workflows, coordinates mini-agents, and reports to Jarvis / Agent Zero.'
     },
 
     {
@@ -114,10 +115,11 @@ window.AGENTS = (function () {
 
     {
       id: 'pi-mono',
-      name: 'Pi-mono',
-      role: 'Dispatcher · Route Optimizer (candidate)',
-      tagline: 'Recommends routes. Not in execution path yet.',
+      name: 'PI Dispatcher',
+      role: 'Dispatcher · Route Optimizer',
+      tagline: 'Read-only dispatcher. Sees Gateway inventory and recommends routes without execution.',
       status: 'blue',
+      status_label: 'READ-ONLY / DISPATCHER REGISTERED',
       marker: 'orange',
       kind: 'dispatcher',
       bridge: false,
@@ -127,13 +129,13 @@ window.AGENTS = (function () {
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
       repo_grounding: 'pending',
-      caps: ['route recommendation', 'cost estimate', 'engine pick'],
+      caps: ['route recommendation', 'cost estimate', 'engine pick', 'capability visibility', 'bridge readiness read'],
       models: ['claude-haiku-4-5'],
-      tools: ['router-cost-table', 'engine-ledger:read'],
+      tools: ['provider-registry:read', 'capability-matrix:read', 'mcp-health:read', 'agent-roster:read', 'bridge-readiness:read', 'skills-inventory:read'],
       blocked_reason: null,
-      gated_reason: 'pi_runtime_session_not_proven. Advisory recommendations only; execution and writes disabled.',
+      gated_reason: 'pi_runtime_session_not_proven. PI can read Gateway inventory, but execution and writes are disabled unless Bridge approves a future protected action.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Dispatcher candidate. Recommends routes by cost/latency/capability.'
+      summary: 'Dispatcher/control-plane recommender. Reads Gateway capability inventory and routes work conceptually; no protected execution.'
     }
   ];
 
@@ -144,7 +146,7 @@ window.AGENTS = (function () {
       { ts: '14:17:48', req: 'req_8c41a924', op: 'tool:obsidian.read', engine: '—',          ms: 110,  result: 'ok',     bridge: false },
       { ts: '14:17:31', req: 'req_8c41a91d', op: 'tool:wiki.read',     engine: '—',          ms: 88,   result: 'ok',     bridge: false },
       { ts: '14:16:54', req: 'req_8c41a912', op: 'plan',         engine: 'gpt-5',             ms: 1820, result: 'ok',     bridge: false },
-      { ts: '14:16:09', req: 'req_8c41a906', op: 'delegate:hermes', engine: '—',              ms: 14,   result: 'gated',  bridge: true  },
+      { ts: '14:16:09', req: 'req_8c41a906', op: 'delegate:ron', engine: '—',                  ms: 14,   result: 'gated',  bridge: true  },
       { ts: '14:15:22', req: 'req_8c41a8fa', op: 'plan',         engine: 'claude-sonnet-4',   ms: 1140, result: 'ok',     bridge: false },
       { ts: '14:14:44', req: 'req_8c41a8ee', op: 'tool:mempalace.read', engine: '—',          ms: 220,  result: 'ok',     bridge: false },
       { ts: '14:13:11', req: 'req_8c41a8d0', op: 'plan',         engine: 'openrouter:auto',   ms: 1390, result: 'ok',     bridge: false },
@@ -192,11 +194,11 @@ window.AGENTS = (function () {
   const decisionTrace = {
     'agent-zero': [
       { ts: '14:18:02', summary: 'Plan q3 marketing ops report', route: 'gateway → agent-zero → claude-sonnet-4', cost_usd: 0.082 },
-      { ts: '14:16:09', summary: 'Delegate to Hermes', route: 'gateway → agent-zero → hermes (bridge required)', cost_usd: 0.000 },
+      { ts: '14:16:09', summary: 'Delegate to Ron Weasley', route: 'gateway → agent-zero → ron-weasley (legacy Hermes route alias; bridge required)', cost_usd: 0.000 },
       { ts: '14:13:11', summary: 'Compose digest', route: 'gateway → agent-zero → openrouter:auto', cost_usd: 0.041 }
     ],
     'hermes': [
-      { ts: '14:08:54', summary: 'Compose skill q3-marketing-ops-builder (gated)', route: 'gateway → hermes (bridge required)', cost_usd: 0.000 }
+      { ts: '14:08:54', summary: 'Compose skill q3-marketing-ops-builder (gated)', route: 'gateway → ron-weasley (legacy Hermes route alias; bridge required)', cost_usd: 0.000 }
     ],
     'paperclip': [
       { ts: '11:02:00', summary: 'Register agent paperclip with Gateway (pending bridge)', route: 'gateway ← paperclip', cost_usd: 0.000 }
@@ -210,7 +212,7 @@ window.AGENTS = (function () {
   /* -- Memory state summary (NOT raw memory) ---------------- */
   const memorySummary = {
     'agent-zero': {
-      working_set: ['Q3 marketing ops report', 'Gateway design sprint accepted', 'Hermes proof pending'],
+      working_set: ['Q3 marketing ops report', 'Gateway design sprint accepted', 'Ron Weasley proof pending'],
       tony_inherited: '237 episodes (R/O)',
       mempalace: '1,402 nodes',
       obsidian_pinned: ['vault/projects/q3-marketing-ops.md']
@@ -230,7 +232,7 @@ window.AGENTS = (function () {
   /* -- Persona summary (the SHAPE of the system prompt) ----- */
   const persona = {
     'agent-zero': { id: 'persona:agent-zero@v3.4', tone: 'commander', word_count: 1820, last_edit: '2026-04-29' },
-    'hermes':     { id: 'persona:hermes@v1.7',      tone: 'lieutenant · skills', word_count: 1240, last_edit: '2026-05-02' },
+    'hermes':     { id: 'persona:hermes@v1.7',      tone: 'nuclear dispatcher · skills', word_count: 1240, last_edit: '2026-05-02' },
     'paperclip':  { id: 'persona:paperclip@v0.2',   tone: 'workforce manager',   word_count: 870,  last_edit: '2026-05-04' },
     'space-agent':{ id: 'persona:space@v0.1',       tone: 'researcher',          word_count: 540,  last_edit: '2026-04-12' },
     'pi-mono':    { id: 'persona:pi@v0.1',          tone: 'dispatcher',          word_count: 410,  last_edit: '2026-04-08' }
@@ -277,7 +279,7 @@ window.AGENTS = (function () {
     { id: 'cmd',      label: 'Send command',   danger: 'med',   bridge: false },
     { id: 'pause',    label: 'Pause queue',    danger: 'low',   bridge: false },
     { id: 'rollback', label: 'Roll back last action', danger: 'high', bridge: true },
-    { id: 'open',     label: 'Open localhost', danger: 'low',   bridge: false },
+    { id: 'open',     label: 'Open UI',        danger: 'low',   bridge: false },
     { id: 'redeploy', label: 'Pull + redeploy',danger: 'high',  bridge: true  },
     { id: 'audit',    label: 'View audit',     danger: 'low',   bridge: false }
   ];

@@ -32,6 +32,7 @@ describe('Gateway Agent Hub', () => {
       route: '/api/bridge/agent-routing/lines',
       live_trace_route: '/api/bridge/agent-routing/trace/live',
       probe_route: '/api/bridge/agent-routing/trace/probe',
+      gateway_architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line',
       direct_line_required_for_owner_messages: true,
       conversation_owner_rule: 'target_agent_owns_conversation',
       opencloud_hidden_intermediary_allowed: false,
@@ -43,6 +44,7 @@ describe('Gateway Agent Hub', () => {
     expect(payload.direct_agent_lines.active).toBeGreaterThan(20)
     expect(payload.direct_agent_lines.paperclip_company_agents).toBeGreaterThanOrEqual(7)
     expect(payload.direct_agent_lines.hermes_mini_agents).toBeGreaterThanOrEqual(2)
+    expect(payload.direct_agent_lines.ron_mini_agents).toBeGreaterThanOrEqual(2)
     expect(payload.direct_agent_lines.inactive_supporting_runtime).toBeGreaterThanOrEqual(1)
     expect(payload.direct_agent_lines.trace_commands.length).toBe(payload.direct_agent_lines.active)
     expect(payload.direct_agent_lines.trace_commands).toEqual(expect.arrayContaining([
@@ -57,15 +59,15 @@ describe('Gateway Agent Hub', () => {
         local_probe_command: expect.stringContaining('--local-probe'),
       }),
       expect.objectContaining({
-        agent_id: 'hermes-mini-agent.workflow-drafter',
-        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent hermes-mini-agent.workflow-drafter'),
+        agent_id: 'ron-mini-agent.workflow-drafter',
+        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent ron-mini-agent.workflow-drafter'),
       }),
       expect.objectContaining({
-        agent_id: 'brain-sync',
-        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent brain-sync'),
+        agent_id: 'brain-bridge',
+        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent brain-bridge'),
       }),
     ]))
-    expect(payload.direct_agent_lines.trace_commands.some((trace) => trace.agent_id === 'opencloud')).toBe(false)
+    expect(payload.direct_agent_lines.trace_commands.some((trace) => trace.agent_id === 'openclaw' || trace.agent_id === 'opencloud')).toBe(false)
     expect(payload.agent_update_control_plane).toMatchObject({
       route: '/api/bridge/agent-updates/status',
       run_route: '/api/bridge/agent-updates/run',
@@ -89,7 +91,7 @@ describe('Gateway Agent Hub', () => {
       'SpaceAgent',
       'Pi Dispatcher',
       'Paperclip',
-      'OpenClaw / OpenCloud Runtime Layer',
+      'OpenClaw / OpenCloud Supporting Runtime Only',
     ]))
     expect(JSON.stringify(payload.agent_update_control_plane)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
     expect(payload.gateway_route_cdp_truth).toMatchObject({
@@ -319,6 +321,7 @@ describe('Gateway Agent Hub', () => {
     expect(source).toContain('Ron Weasley')
     expect(source).toContain('Pi')
     expect(source).toContain('SpaceAgent / OpenCloud / OpenClaw')
+    expect(source).toContain('Nuclear Gateway')
     expect(source).not.toContain('Bridge not active')
     expect(source).not.toContain('OpenCloud intermediary true')
     expect(source).not.toContain('Ron Wegsley')

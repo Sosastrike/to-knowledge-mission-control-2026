@@ -25,7 +25,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
     <main className='min-h-screen bg-[#070912] px-4 py-6 text-slate-100 sm:px-6 lg:px-8'>
       <div className='mx-auto flex w-full max-w-[1480px] flex-col gap-5'>
         <header className='border-b border-white/10 pb-5'>
-          <p className='text-xs font-semibold uppercase text-cyan-300'>Mission Control / Gateway / Agent Hub</p>
+          <p className='text-xs font-semibold uppercase text-cyan-300'>Mission Control / Nuclear Gateway / Agent Hub</p>
           <div className='mt-3 flex flex-wrap items-end justify-between gap-4'>
             <div>
               <h1 className='text-3xl font-semibold text-white sm:text-4xl'>Agent Hub / Control Center</h1>
@@ -51,7 +51,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </nav>
 
         <section className='rounded-lg border border-emerald-300/25 bg-emerald-300/8 p-4 text-sm leading-6 text-emerald-100'>
-          <strong>Production truth:</strong> Owner intent enters Mission Control Gateway and then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, and SpaceAgent / OpenCloud / OpenClaw stay supporting tools with no conversation ownership.
+          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, and SpaceAgent / OpenCloud / OpenClaw stay supporting tools with no conversation ownership.
         </section>
 
         <DirectAgentLinesPanel status={status} />
@@ -63,7 +63,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
             <div className='flex flex-wrap items-end justify-between gap-3'>
               <div>
                 <h2 className='text-lg font-semibold text-white'>Operating Chain</h2>
-                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Gateway, then Agent Zero / Jarvis, then the selected direct agent line. Ron and Pi dispatch before Paperclip work execution; OpenCloud and OpenClaw are supporting tools only.</p>
+                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Mission Control, then Nuclear Gateway, then the selected direct agent line. Ron and Pi dispatch before Paperclip work execution; OpenCloud and OpenClaw are supporting tools only.</p>
               </div>
               <StatusBadge label='policy enforced' status='read_only' />
             </div>
@@ -108,7 +108,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           <div className='flex flex-wrap items-end justify-between gap-3'>
             <div>
               <h2 className='text-lg font-semibold text-white'>Supporting Runtime Systems</h2>
-              <p className='mt-1 text-sm text-slate-400'>Gateway, Paperclip, OpenClaw+ supporting runtime, Build-Wiki/Farmer, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
+              <p className='mt-1 text-sm text-slate-400'>Nuclear Gateway, Paperclip, OpenClaw/OpenCloud supporting runtime, Build-Wiki/Farmer, Brain, Bridge/MCP, models, tools, skills, and integrations.</p>
             </div>
             <StatusBadge label='read-only discovery' status='read_only' />
           </div>
@@ -159,7 +159,8 @@ function DirectAgentLinesPanel({ status }: { status: AgentHubStatusPayload }) {
         <Metric label='registered lines' value={String(summary.total)} />
         <Metric label='active direct lines' value={String(summary.active)} />
         <Metric label='Paperclip company agents' value={String(summary.paperclip_company_agents)} />
-        <Metric label='Ron Weasley mini-agents' value={String(summary.hermes_mini_agents)} />
+        <Metric label='Ron Weasley mini-agents' value={String(summary.ron_mini_agents)} />
+        <Metric label='Nuclear Gateway path' value={summary.gateway_architecture.replaceAll('_', ' ')} />
       </div>
       <dl className='mt-4 grid gap-3 text-sm text-slate-300 md:grid-cols-3'>
         <Fact label='conversation owner' value={summary.conversation_owner_rule} />
@@ -269,7 +270,7 @@ function GatewayRouteCdpTruthPanel({ truth }: { truth: AgentHubGatewayRouteCdpTr
         <div>
           <p className='text-xs font-semibold uppercase text-sky-200'>Gateway Route / CDP Truth</p>
           <h2 className='mt-1 text-lg font-semibold text-white'>Routes are source-enumerated; browser CDP stays local-only</h2>
-          <p className='mt-2 max-w-4xl text-sm leading-6 text-sky-100'>Bare /tools, /routes, and /health are not canonical endpoints. Use the authenticated Mission Control Gateway routes below; Playwright MCP/CDP is never public.</p>
+          <p className='mt-2 max-w-4xl text-sm leading-6 text-sky-100'>Bare /tools, /routes, and /health are not canonical endpoints. Use the authenticated Mission Control Nuclear Gateway routes below; Playwright MCP/CDP is never public.</p>
         </div>
         <StatusBadge label={truth.gateway_status} status={truth.gateway_status === 'READY' ? 'live' : 'gated'} />
       </div>
@@ -350,9 +351,9 @@ export function AgentHubPaperclipPage({
 
         <section className='rounded-lg border border-white/10 bg-white/[0.03] p-5'>
           <h2 className='text-lg font-semibold text-white'>Workforce Chain</h2>
-          <p className='mt-3 text-sm leading-6 text-slate-300'>Paperclip has its own direct Gateway line as the company/workforce system. It organizes co-worker agents, mini-agent requests, task queues, budgets, heartbeats, approvals, work products, task status, supervision, and assignment history; OpenClaw+ can be invoked only as an explicit supporting runtime/tool.</p>
+          <p className='mt-3 text-sm leading-6 text-slate-300'>Paperclip has its own direct Nuclear Gateway line as the company/workforce system. It organizes co-worker agents, mini-agent requests, task queues, budgets, heartbeats, approvals, work products, task status, supervision, and assignment history; OpenClaw/OpenCloud can be invoked only as an explicit supporting runtime/tool.</p>
           <div className='mt-4 grid gap-3 md:grid-cols-2'>
-            <Fact label='Gateway route' value='Owner / Jarvis / Ron Weasley / Pi → Gateway → Paperclip' />
+            <Fact label='Gateway route' value='Owner / Jarvis / Ron Weasley / Pi -> Nuclear Gateway -> Paperclip' />
             <Fact label='OpenCloud intermediary' value='false' />
             <Fact label='execution enabled' value={agent.execution_enabled ? 'yes' : 'no'} />
             <Fact label='public exposure' value={agent.interface.public_exposure ? 'yes' : 'no'} />
@@ -515,12 +516,12 @@ function HubTab({ href, label, meta, tone }: { href: string; label: string; meta
 function GatewayChainCanvas() {
   const chain = [
     { label: 'Owner', note: 'final authority', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
-    { label: 'Gateway / Nucleus', note: 'policy, routing, registry, audit', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
+    { label: 'Nuclear Gateway', note: 'policy, routing, registry, audit, credentials', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
     { label: 'Agent Zero / Jarvis', note: 'commander and owner-control layer', tone: 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' },
     { label: 'Ron Weasley', note: 'Nuclear Dispatcher and workflow/skill optimizer', tone: 'border-violet-300/35 bg-violet-300/10 text-violet-100' },
     { label: 'Pi', note: 'dispatcher and route optimizer', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
     { label: 'Paperclip', note: 'workforce control plane', tone: 'border-amber-300/35 bg-amber-300/10 text-amber-100' },
-    { label: 'SpaceAgent / OpenCloud / OpenClaw', note: 'supporting runtimes and tools', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
+    { label: 'SpaceAgent / OpenCloud / OpenClaw', note: 'supporting runtimes and tools only', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
   ]
 
   return (
@@ -586,9 +587,9 @@ function PolicyPanel() {
       <div className='mt-4 grid gap-2 text-sm text-slate-300'>
         <PolicyLine label='Read actions' value='allowed through authenticated routes' />
         <PolicyLine label='Writes' value='Bridge Session required' />
-        <PolicyLine label='Execution' value='Agent Zero authority plus Gateway policy' />
+        <PolicyLine label='Execution' value='Agent Zero authority plus Nuclear Gateway policy' />
         <PolicyLine label='Pi' value='advisory only, no writes, no execution' />
-        <PolicyLine label='Ron Weasley' value='direct Gateway line; executes only Jarvis-signed exact scopes' />
+        <PolicyLine label='Ron Weasley' value='direct Nuclear Gateway line; executes only Jarvis-signed exact scopes' />
         <PolicyLine label='Tony' value='retired/archive only' />
       </div>
     </article>

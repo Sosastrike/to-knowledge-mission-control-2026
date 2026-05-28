@@ -48,7 +48,9 @@ export type AgentHubDirectAgentLinesSummary = {
   inactive_supporting_runtime: number
   paperclip_company_agents: number
   hermes_mini_agents: number
+  ron_mini_agents: number
   future_agent_ready: true
+  gateway_architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line'
   direct_line_required_for_owner_messages: true
   conversation_owner_rule: 'target_agent_owns_conversation'
   opencloud_hidden_intermediary_allowed: false
@@ -221,7 +223,7 @@ export type AgentHubStatusPayload = {
     paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
-    direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent'
+    direct_agent_lines: 'owner_to_mission_control_to_nuclear_gateway_to_target_agent'
   }
   direct_agent_lines: AgentHubDirectAgentLinesSummary
   agent_update_control_plane: AgentHubAutoUpdateControlPlane
@@ -415,7 +417,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Agent Zero',
     role: 'Commander',
     layer: 'command_authority',
-    productionTruth: 'Agent Zero / Jarvis is the commander and owner-operator direct line. OpenCloud/OpenClaw is not the conversation owner, dispatcher, or hidden interpreter.',
+    productionTruth: 'Agent Zero / Jarvis is the commander and owner-operator direct line. Nuclear Gateway brokers direct agent lines; OpenClaw/OpenCloud is not the conversation owner, dispatcher, default gateway, or hidden interpreter.',
     status: 'partial_go',
     liveInterfaceProven: true,
     calledTrueProven: true,
@@ -449,7 +451,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Ron Weasley WebUI',
     role: 'Ron Weasley Browser Control Surface',
     layer: 'direct_line_browser_interface',
-    productionTruth: 'Ron Weasley WebUI is a loopback/Tailnet-only browser surface for Ron Weasley — Nuclear Dispatcher. It is not a second brain, and OpenCloud/OpenClaw is not in the owner-to-Ron path.',
+    productionTruth: 'Ron Weasley WebUI is a loopback/Tailnet-only browser surface for Ron Weasley — Nuclear Dispatcher. It is not a second brain, and OpenClaw/OpenCloud is not in the owner-to-Ron path.',
     status: 'configured',
     liveInterfaceProven: true,
     calledTrueProven: true,
@@ -593,7 +595,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
-      direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent',
+      direct_agent_lines: 'owner_to_mission_control_to_nuclear_gateway_to_target_agent',
     },
     direct_agent_lines: directAgentLines,
     agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
@@ -659,7 +661,11 @@ function buildAgentHubDirectAgentLinesSummary(): AgentHubDirectAgentLinesSummary
     live_trace_route: '/api/bridge/agent-routing/trace/live',
     probe_route: '/api/bridge/agent-routing/trace/probe',
     trace_commands: activeLines.map((line) => {
-      const traceId = line.agent_id === 'agent-zero-jarvis' ? 'jarvis' : line.agent_id
+      const traceId = line.agent_id === 'agent-zero-jarvis'
+        ? 'jarvis'
+        : line.agent_id === 'ron-weasley'
+          ? 'ron'
+          : line.agent_id
       return {
         agent_id: line.agent_id,
         display_name: line.display_name,
@@ -675,8 +681,10 @@ function buildAgentHubDirectAgentLinesSummary(): AgentHubDirectAgentLinesSummary
     active: activeLines.length,
     inactive_supporting_runtime: status.lines.filter((line) => !line.direct_line_active && line.system_type === 'supporting_runtime_system').length,
     paperclip_company_agents: status.lines.filter((line) => line.system_type === 'paperclip_company_agent').length,
-    hermes_mini_agents: status.lines.filter((line) => line.system_type === 'hermes_mini_agent').length,
+    hermes_mini_agents: status.lines.filter((line) => line.system_type === 'hermes_mini_agent' || line.system_type === 'ron_mini_agent').length,
+    ron_mini_agents: status.lines.filter((line) => line.system_type === 'ron_mini_agent').length,
     future_agent_ready: true,
+    gateway_architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line',
     direct_line_required_for_owner_messages: true,
     conversation_owner_rule: 'target_agent_owns_conversation',
     opencloud_hidden_intermediary_allowed: false,
@@ -1000,7 +1008,7 @@ function buildSupportingRuntimeSystems(registry: GatewayRegistry): AgentHubRunti
     .filter((node): node is GatewayApiNode => Boolean(node))
     .map((node) => ({
       id: node.id,
-      name: node.name,
+      name: node.id === 'openclaw_plus' ? 'OpenClaw / OpenCloud Supporting Runtime Only' : node.name,
       type: node.type,
       status: node.status,
       connected: node.connected,
@@ -1009,7 +1017,9 @@ function buildSupportingRuntimeSystems(registry: GatewayRegistry): AgentHubRunti
       write_enabled: false,
       execution_enabled: false,
       requires_bridge_session: node.requires_bridge_session,
-      blocked_reason: ownerSafeText(node.blocked_reason),
+      blocked_reason: node.id === 'openclaw_plus'
+        ? 'Supporting runtime only — not an agent line.'
+        : ownerSafeText(node.blocked_reason),
     }))
 }
 

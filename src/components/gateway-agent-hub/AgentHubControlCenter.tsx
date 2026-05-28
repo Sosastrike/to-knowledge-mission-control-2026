@@ -362,6 +362,12 @@ export function AgentHubPaperclipPage({
             <Fact label='Tailnet UI' value={agent.interface.tailnet_url || 'not proven'} />
             <Fact label='owner access' value={agent.interface.owner_access} />
           </div>
+          {agent.interface.tailnet_url && (
+            <div className='mt-4 flex flex-wrap gap-2'>
+              <a href={agent.interface.tailnet_url} target='_blank' rel='noreferrer' className='rounded-md border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/15'>Open Paperclip Tailnet UI</a>
+              <a href='/api/bridge/paperclip/status' className='rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300/40'>Paperclip status route</a>
+            </div>
+          )}
         </section>
 
         <section className='grid gap-4 lg:grid-cols-2'>
@@ -415,6 +421,7 @@ export function AgentHubPaperclipPage({
 function AgentCard({ agent }: { agent: AgentHubAgent }) {
   const ronProofPanel = agent.id === 'hermes' ? agent.proof_panel : undefined
   const statusLabel = agentStatusLabel(agent)
+  const tailnetUiHref = agent.interface.tailnet_url
   const writeValue = agent.id === 'hermes'
     ? 'JARVIS CONCURRENCE REQUIRED'
     : agent.write_enabled ? 'enabled' : 'session gated'
@@ -447,6 +454,7 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
       </dl>
       {ronProofPanel && <RonProofPanel agent={agent} />}
       <div className='mt-4 flex flex-wrap gap-2'>
+        {tailnetUiHref && <a href={tailnetUiHref} target='_blank' rel='noreferrer' className='rounded-md border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/15'>Open Tailnet UI</a>}
         <a href={agent.interface.mission_control_surface} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-cyan-200 hover:border-cyan-300/40'>Open surface</a>
         <a href={agent.routes.detail} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300/40'>API detail</a>
         <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title={protectedActionTitle}>{protectedActionLabel}</span>
@@ -769,7 +777,7 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 function StatusBadge({ label, status }: { label: string; status: string }) {
-  const tone = status === 'full_access_delegated' || status === 'ready' || status === 'active' || status === 'responding'
+  const tone = status === 'full_access_delegated' || status === 'ready' || status === 'active' || status === 'responding' || status === 'configured'
     ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100'
     : status === 'partial_go' || status === 'read_only' || status === 'connected' || status === 'connected_local_only'
     ? 'border-sky-300/30 bg-sky-300/10 text-sky-100'
@@ -783,6 +791,7 @@ function StatusBadge({ label, status }: { label: string; status: string }) {
 
 function agentStatusLabel(agent: AgentHubAgent) {
   if (agent.id === 'hermes' && agent.status === 'full_access_delegated') return 'FULL ACCESS DELEGATED'
+  if (agent.id === 'paperclip' && agent.status === 'partial_go') return 'TAILNET UI READY'
   return agent.status
 }
 

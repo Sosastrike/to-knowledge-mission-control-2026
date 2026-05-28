@@ -165,7 +165,16 @@ describe('Gateway Agent Hub', () => {
         local_ui_url: 'http://127.0.0.1:8787/',
       },
     })
-    expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({ role: 'Workforce Control Plane', status: 'pending', live_interface_proven: false })
+    expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({
+      role: 'Workforce Control Plane',
+      status: 'partial_go',
+      live_interface_proven: true,
+      interface: {
+        tailnet_url: 'http://100.116.35.95:3100/ECO/dashboard',
+        ui_mode: 'tailnet_authenticated',
+        tailnet_ui_proven: true,
+      },
+    })
     expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
@@ -184,7 +193,11 @@ describe('Gateway Agent Hub', () => {
       if (agent.id !== 'hermes' && agent.id !== 'hermes-webui') {
         expect(agent.interface.local_ui_url).toBeNull()
       }
-      expect(agent.interface.tailnet_url).toBeNull()
+      if (agent.id === 'paperclip') {
+        expect(agent.interface.tailnet_url).toBe('http://100.116.35.95:3100/ECO/dashboard')
+      } else {
+        expect(agent.interface.tailnet_url).toBeNull()
+      }
     }
   })
 

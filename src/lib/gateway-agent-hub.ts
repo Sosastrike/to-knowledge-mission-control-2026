@@ -181,7 +181,7 @@ export type AgentHubAgent = {
     owner_access: string
     local_ui_url: string | null
     tailnet_url: string | null
-    ui_mode: 'mission_control_proxy' | 'local_ui' | 'local_only_pending' | 'tailnet_pending' | 'not_installed' | 'service_gated'
+    ui_mode: 'mission_control_proxy' | 'local_ui' | 'local_only_pending' | 'tailnet_authenticated' | 'tailnet_pending' | 'not_installed' | 'service_gated'
     iframe_allowed: false
     auth_required: true
     local_ui_proven: boolean
@@ -218,7 +218,7 @@ export type AgentHubStatusPayload = {
     hermes: 'full_access_delegated_direct_line'
     pi_mono: 'candidate_pending_until_installed_and_live'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
-    paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven'
+    paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
     direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent'
@@ -398,16 +398,16 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: 'Paperclip',
     role: 'Workforce Control Plane',
     layer: 'company_workforce_direct_line',
-    productionTruth: 'Paperclip has its own Mission Control Gateway direct line as the company/workforce system; writes remain Bridge-gated and Pacman bootstrap stays blocked only on paperclip_board_admin_credential_required.',
-    status: 'pending',
-    liveInterfaceProven: false,
+    productionTruth: 'Paperclip Tailnet UI is reachable at 100.116.35.95:3100. ECO, TKG, and ITT company dashboard aliases are recovered; writes remain Bridge-gated and Pacman bootstrap stays blocked only on paperclip_board_admin_credential_required.',
+    status: 'partial_go',
+    liveInterfaceProven: true,
     calledTrueProven: false,
-    interfaceSummary: 'Mission Control node visible; Paperclip service and owner session proof pending',
+    interfaceSummary: 'Open Paperclip through the Tailnet UI, not server localhost. ECO, TKG, and ITT dashboards resolve through the owner-accessible Paperclip service.',
     localUiUrl: null,
-    tailnetUrl: null,
-    uiMode: 'local_only_pending',
+    tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
+    uiMode: 'tailnet_authenticated',
     bridgeStatusRoute: '/api/bridge/paperclip/status',
-    extraBlockers: ['paperclip_localhost_or_tailnet_ui_not_proven'],
+    extraBlockers: ['paperclip_writes_bridge_gated', 'paperclip_board_admin_credential_required_for_pacman_bootstrap'],
   },
   {
     id: 'agent-zero',
@@ -590,7 +590,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       hermes: 'full_access_delegated_direct_line',
       pi_mono: 'candidate_pending_until_installed_and_live',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
-      paperclip: 'partial_degraded_until_local_or_tailnet_owner_ui_proven',
+      paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
       direct_agent_lines: 'owner_to_mission_control_gateway_to_target_agent',

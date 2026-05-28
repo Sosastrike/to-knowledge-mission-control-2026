@@ -8,8 +8,8 @@
 // Responsibilities:
 //   - Fetch live agent list from existing /api/agents (mission-control's
 //     own registry, behind requireRole('viewer'))
-//   - Render tier-laned canvas (commander · lieutenant · specialist · worker)
-//   - Render external/tailnet section (Agent Zero · Hermes lieutenant ·
+//   - Render tier-laned canvas (commander · dispatcher · specialist · worker)
+//   - Render external/tailnet section (Agent Zero · Ron Weasley — Nuclear Dispatcher ·
 //     OpenClaw Gateway · Bridge Mode)
 //   - Show "PHASE A — READ-ONLY" header chip
 //   - Every disabled mutation control carries a visible
@@ -25,7 +25,7 @@ import { useEffect, useState } from 'react'
 import {
   CANONICAL_AGENT_NETWORK_HIERARCHY,
   CANONICAL_AGENT_TIER_OF,
-  HERMES_LIEUTENANT_CAPABILITIES,
+  HERMES_NUCLEAR_DISPATCHER_CAPABILITIES,
   getCanonicalAgentNetworkRows,
   getCanonicalAgentNetworkTierDefs,
   getHermesHierarchyStatus,
@@ -714,9 +714,33 @@ interface BrainSyncSourceStatus {
   details?: Record<string, unknown>
 }
 
+interface BrainBridgeLaneStatus {
+  id?: string
+  display_name?: string
+  state?: string
+  read_state?: string
+  write_state?: string
+  event_stream_state?: string
+  credential_state?: string
+  last_sync?: string | null
+  blockers?: string[]
+  exact_action_availability?: string[]
+  no_secret_proof?: boolean
+  no_secrets_exposed?: boolean
+}
+
 interface BrainSyncReadOnlyPayload {
   ok?: boolean
   mode?: string
+  route?: string
+  brain_bridge_mode?: string
+  gateway_connected?: boolean
+  jarvis_connected?: boolean
+  hermes_connected?: boolean
+  memory_write_layer?: string
+  event_stream?: string
+  exact_blockers?: string[]
+  lanes?: Record<string, BrainBridgeLaneStatus>
   generated_at?: string
   canonical_sources?: Record<string, string>
   sources?: BrainSyncSourceStatus[]
@@ -1489,7 +1513,7 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
   { id: 'memory', label: 'Memory', lane: 'data', eyebrow: 'memory', status: 'gated', statusLabel: 'adapter gated', capabilities: ['MemPalace', 'Graphify'], blockers: ['writes require Bridge Session'], lastTest: 'Brain adapter status' },
   { id: 'gateway', label: 'Gateway', lane: 'core', eyebrow: 'traffic core', status: 'connected', statusLabel: 'control plane', capabilities: ['route', 'govern', 'observe', 'audit', 'registry'], blockers: [], lastTest: '/api/gateway/registry' },
   { id: 'agent_zero', label: 'Agent Zero', lane: 'core', eyebrow: 'commander', status: 'connected', statusLabel: 'commander', capabilities: ['owner command', 'live-query', 'Bridge Session'], blockers: [], lastTest: '/api/bridge/agent-zero/status' },
-  { id: 'hermes', label: 'Hermes', lane: 'core', eyebrow: 'lieutenant', status: 'gated', statusLabel: 'read-only/degraded', capabilities: ['skill design', 'workflow planning'], blockers: ['live chat must prove hermes_called:true for GO'], lastTest: '/api/bridge/hermes/status' },
+  { id: 'hermes', label: 'Ron Weasley', lane: 'core', eyebrow: 'nuclear dispatcher', status: 'connected', statusLabel: 'FULL_ACCESS_DELEGATED', capabilities: ['full ecosystem visibility', 'Jarvis command registry parity', 'delegated exact-scope execution'], blockers: ['jarvis_signed_exact_scope_delegation_required'], lastTest: '/api/bridge/hermes/full-access/status' },
   {
     id: 'space_agent',
     label: 'Space Agent',
@@ -1549,7 +1573,7 @@ const GATEWAY_MAP_NODES: GatewayVisualNode[] = [
 const GATEWAY_MAP_FLOWS: GatewayVisualFlow[] = [
   { id: 'input_gateway', label: 'owner and events into Gateway', from: 'Inputs', to: 'Gateway', status: 'connected' },
   { id: 'gateway_policy', label: 'policy check', from: 'Gateway', to: 'Policy', status: 'connected' },
-  { id: 'gateway_agents', label: 'command dispatch', from: 'Gateway', to: 'Agent Zero / Hermes', status: 'gated' },
+  { id: 'gateway_agents', label: 'command dispatch', from: 'Gateway', to: 'Agent Zero / Ron Weasley', status: 'gated' },
   { id: 'gateway_data', label: 'knowledge and memory', from: 'Gateway', to: 'Data stores', status: 'gated' },
   { id: 'gateway_models', label: 'LLM routing', from: 'Gateway', to: 'LLM layer', status: 'gated' },
   { id: 'gateway_outputs', label: 'approved outputs', from: 'Gateway', to: 'APIs / reports / delivery', status: 'gated' },
@@ -1800,11 +1824,15 @@ function sanitizePaperclipUiLink(value: string | null): string | null {
   try {
     const url = new URL(value)
     const host = url.hostname.toLowerCase()
-    const allowedHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.startsWith('100.')
+    const serverLocalHost = host === 'localhost' || host === '127.0.0.1' || host === '::1'
+    const allowedHost = serverLocalHost || host.startsWith('100.')
     const allowedProtocol = url.protocol === 'http:' || url.protocol === 'https:'
     if (!allowedHost || !allowedProtocol) return null
     if (/[?&](token|api[_-]?key|secret|password)=/i.test(url.search)) return null
-    return url.origin
+    if (serverLocalHost && (url.port === '3100' || url.port === '')) {
+      return 'http://100.116.35.95:3100/ECO/dashboard'
+    }
+    return url.toString()
   } catch {
     return null
   }
@@ -2444,9 +2472,55 @@ function brainSyncStatusLabel(status: string | undefined) {
 }
 
 function brainSyncDotStatus(status: string | undefined) {
-  if (status === 'read_only') return 'active'
-  if (status === 'needs_owner_setup') return 'degraded'
+  if (status === 'read_only' || status === 'READY' || status === 'LIVE_READ_ONLY' || status === 'WRITE_GATED') return 'active'
+  if (status === 'needs_owner_setup' || status === 'EVENT_STREAM_REQUIRED' || status === 'CREDENTIAL_REQUIRED' || status === 'PERMISSION_REQUIRED') return 'degraded'
   return 'offline'
+}
+
+function exactBrainBridgeLaneState(lane: BrainBridgeLaneStatus) {
+  if (lane.state && lane.state !== 'BACKEND_REQUIRED') return lane.state
+  if (lane.blockers?.some((blocker) => /build.?wiki/i.test(blocker))) return 'EVENT_STREAM_REQUIRED'
+  if (lane.blockers?.some((blocker) => /event.?stream|graphify/i.test(blocker))) return 'EVENT_STREAM_REQUIRED'
+  if (lane.credential_state === 'required_by_name_only' || lane.credential_state === 'CREDENTIAL_REQUIRED') return 'CREDENTIAL_REQUIRED'
+  if (lane.credential_state === 'permission_required' || lane.credential_state === 'PERMISSION_REQUIRED') return 'PERMISSION_REQUIRED'
+  if (lane.event_stream_state === 'EVENT_STREAM_REQUIRED') return 'EVENT_STREAM_REQUIRED'
+  if (lane.write_state === 'WRITE_GATED') return 'WRITE_GATED'
+  if (lane.read_state === 'LIVE_READ_ONLY') return 'LIVE_READ_ONLY'
+  if (lane.blockers?.some((blocker) => /backend.?required|backend.?missing/i.test(blocker))) return 'BACKEND_REQUIRED'
+  if (lane.state === 'BACKEND_REQUIRED') return 'BACKEND_REQUIRED'
+  return 'SERVICE_UNREACHABLE'
+}
+
+function BrainBridgeLaneCard({ lane }: { lane: BrainBridgeLaneStatus }) {
+  const state = exactBrainBridgeLaneState(lane)
+  return (
+    <div className={styles.providerCard}>
+      <div className={styles.providerHead}>
+        <div className={styles.providerTitleWrap}>
+          <StatusDot status={brainSyncDotStatus(state)} />
+          <strong className={styles.providerName}>{lane.display_name || lane.id || 'Brain lane'}</strong>
+        </div>
+        <span className={styles.providerState}>{brainSyncStatusLabel(state)}</span>
+      </div>
+      <div className={styles.providerMeta}>
+        <span>read: {lane.read_state || 'unknown'}</span>
+        <span>write: {lane.write_state || 'unknown'}</span>
+        <span>events: {lane.event_stream_state || 'unknown'}</span>
+        <span>credential: {lane.credential_state || 'unknown'}</span>
+      </div>
+      <p className={styles.providerNotes}>
+        Last sync: {lane.last_sync || 'not yet'} · secret values exposed: {lane.no_secrets_exposed === false || lane.no_secret_proof === false ? 'unknown' : 'no'}
+      </p>
+      {lane.exact_action_availability && lane.exact_action_availability.length > 0 && (
+        <p className={styles.providerNotes}>Actions: {lane.exact_action_availability.join(' · ')}</p>
+      )}
+      {lane.blockers && lane.blockers.length > 0 ? (
+        <p className={styles.providerAction}>Blockers: {lane.blockers.join(' · ')}</p>
+      ) : (
+        <p className={styles.providerNotes}>No exact blocker reported for this lane.</p>
+      )}
+    </div>
+  )
 }
 
 function BrainSyncSourceCard({ source }: { source: BrainSyncSourceStatus }) {
@@ -2500,41 +2574,47 @@ function BrainSyncReadOnlyStatusCard({ payload }: { payload: BrainSyncReadOnlyPa
   const summary = payload.summary || {}
   const brainSync = payload.brain_sync || {}
   const warnings = brainSync.missing_connector_warning || []
+  const lanes = Object.values(payload.lanes || {})
+  const exactBlockers = payload.exact_blockers || []
 
   return (
     <>
       <div className={styles.providerCard}>
         <div className={styles.providerHead}>
           <div className={styles.providerTitleWrap}>
-            <StatusDot status={brainSync.available_status === 'available' ? 'active' : 'degraded'} />
-            <strong className={styles.providerName}>Brain Sync Source Status</strong>
+            <StatusDot status={payload.gateway_connected ? 'active' : 'degraded'} />
+            <strong className={styles.providerName}>Brain Bridge Mode Gateway Status</strong>
           </div>
-          <span className={styles.providerState}>READ_ONLY</span>
+          <span className={styles.providerState}>{payload.brain_bridge_mode || 'LIVE_READ_ONLY'}</span>
         </div>
         <div className={styles.providerMeta}>
-          <span>sources: {summary.total ?? sources.length}</span>
-          <span>read-only: {summary.read_only ?? 0}</span>
-          <span>not connected: {summary.not_connected ?? 0}</span>
-          <span>needs setup: {summary.needs_owner_setup ?? 0}</span>
+          <span>Gateway: {payload.gateway_connected ? 'connected' : 'not connected'}</span>
+          <span>Jarvis: {payload.jarvis_connected ? 'connected' : 'not connected'}</span>
+          <span>Ron Weasley: {payload.hermes_connected ? 'connected' : 'not connected'}</span>
+          <span>memory writes: {payload.memory_write_layer || 'approval_gated'}</span>
+          <span>event stream: {payload.event_stream || 'missing'}</span>
         </div>
         <p className={styles.providerNotes}>
-          Agent Zero Brain, MemPalace, Obsidian, Graphify, and planned Brain Sync are shown as read-only visibility. No memory write or protected memory change is enabled here.
+          Brain Bridge Mode is rendered from live route state. Read-only lanes stay readable, write-capable lanes stay approval-gated, and missing event streams are shown as exact blockers instead of stale missing-backend copy.
         </p>
-        <p className={styles.providerNotes}>
-          Planned: {brainSync.planned_status || 'unknown'} · Available: {brainSync.available_status || 'unknown'} · Generated: {payload.generated_at || 'unknown'}
-        </p>
+        <p className={styles.providerNotes}>Generated: {payload.generated_at || 'unknown'} · route: {payload.route || '/api/bridge/brain-sync/gateway-status'}</p>
         <ul className={styles.connectorList}>
           <li><span>Production memory writes<br /><small>Requires separate owner-approved activation.</small></span><strong>{brainSync.production_memory_writes_enabled ? 'enabled' : 'locked'}</strong></li>
           <li><span>Protected memory changes<br /><small>No protected memory mutation from this panel.</small></span><strong>{brainSync.protected_memory_changes_enabled ? 'enabled' : 'locked'}</strong></li>
           <li><span>MemPalace writes<br /><small>MemPalace remains status/read-only.</small></span><strong>{brainSync.mempalace_writes_enabled ? 'enabled' : 'locked'}</strong></li>
         </ul>
-        {warnings.length > 0 ? (
+        {exactBlockers.length > 0 ? (
+          <p className={styles.providerAction}>Exact blockers: {exactBlockers.join(' · ')}</p>
+        ) : warnings.length > 0 ? (
           <p className={styles.providerAction}>Connector warnings: {warnings.join(' · ')}</p>
         ) : (
-          <p className={styles.providerNotes}>No missing connector warnings from the read-only status layer.</p>
+          <p className={styles.providerNotes}>No exact blockers from the Brain Bridge status layer.</p>
         )}
       </div>
-      {sources.map((source) => (
+      {lanes.length > 0 && lanes.map((lane) => (
+        <BrainBridgeLaneCard key={lane.id || lane.display_name || 'brain-lane'} lane={lane} />
+      ))}
+      {lanes.length === 0 && sources.map((source) => (
         <BrainSyncSourceCard key={source.source || source.raw_state || 'brain-source'} source={source} />
       ))}
     </>
@@ -3186,7 +3266,7 @@ function AgentCard({ agent }: { agent: AgentRow }) {
   )
 }
 
-// ── external entity card (Agent Zero, Hermes, Gateway, Bridge) ────
+// ── external entity card (Agent Zero, Ron Weasley, Gateway, Bridge) ────
 function ExternalCard({
   title,
   badge,
@@ -3440,10 +3520,10 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       const called = data?.hermes_called === true ? 'called' : 'not called'
       const blocker = data?.blocker ? ` Blocker: ${String(data.blocker).replace(/[_-]+/g, ' ')}.` : ''
       const reply = typeof data?.response_text === 'string' ? data.response_text : (data?.error || `HTTP ${response.status}`)
-      setTestResult(`Hermes ${called}. ${reply}${blocker}`)
+      setTestResult(`Ron Weasley ${called}. ${reply}${blocker}`)
       setTestState(response.ok && data?.hermes_called === true ? 'ok' : 'error')
     } catch (error) {
-      setTestResult((error as Error).message || 'Hermes test failed')
+      setTestResult((error as Error).message || 'Ron Weasley test failed')
       setTestState('error')
     }
   }
@@ -3452,10 +3532,10 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
     return (
       <div className={styles.externalCard}>
         <div className={styles.externalHead}>
-          <strong className={styles.externalTitle}>Hermes</strong>
+          <strong className={styles.externalTitle}>Ron Weasley</strong>
           <span className={styles.externalBadge}>loading</span>
         </div>
-        <p className={styles.externalDescription}>Loading Hermes lieutenant specialist status…</p>
+        <p className={styles.externalDescription}>Loading Ron Weasley — Nuclear Dispatcher status…</p>
       </div>
     )
   }
@@ -3466,7 +3546,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   const provider = payload.provider_registry || {}
   const safety = payload.safety || {}
   const sandboxHomes = Array.isArray(install.sandbox_homes) ? install.sandbox_homes : []
-  const statusEndpoint = payload.status_endpoint || '/api/bridge/hermes/status'
+  const statusEndpoint = payload.status_endpoint || '/api/bridge/hermes/full-access/status'
   const hermesStatus = getHermesHierarchyStatus({
     installed: install.installed === true,
     reachable: payload.reachable === true || runtime.gateway_pid_running === true,
@@ -3477,24 +3557,24 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
   return (
     <div className={styles.externalCard}>
       <div className={styles.externalHead}>
-        <strong className={styles.externalTitle}>{agent.name || 'Hermes'}</strong>
-        <span className={styles.externalBadge}>Lieutenant {hermesStatus.label}</span>
+        <strong className={styles.externalTitle}>{agent.name || 'Ron Weasley'}</strong>
+        <span className={styles.externalBadge}>Nuclear Dispatcher {hermesStatus.label}</span>
       </div>
       <p className={styles.externalDescription}>
-        Lieutenant / skill and workflow specialist. Hermes can analyze, review, and recommend workflows; production bridge execution is disabled until owner approval and live health proof.
+        Nuclear Dispatcher / optimization and workflow architect. Ron Weasley can analyze, review, recommend, draft, and create internal dispatch plans; Jarvis concurrence is required before production-impacting execution.
       </p>
       <dl className={styles.externalDetails}>
         <div className={styles.externalDetailRow}>
           <dt>Role</dt>
-          <dd>{agent.role || 'lieutenant / skill and workflow specialist'}</dd>
+          <dd>{agent.role || 'nuclear dispatcher / optimization and workflow architect'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Relationship</dt>
-          <dd>Hermes supports Agent Zero</dd>
+          <dd>Ron Weasley has a direct Gateway line under Jarvis authority</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Capabilities</dt>
-          <dd>{HERMES_LIEUTENANT_CAPABILITIES.join(' · ')}</dd>
+          <dd>{HERMES_NUCLEAR_DISPATCHER_CAPABILITIES.join(' · ')}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Allowed behavior</dt>
@@ -3561,7 +3641,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
       )}
       <div className={styles.agentZeroTestBox}>
         <label className={styles.agentZeroTestLabel} htmlFor="hermes-test-message">
-          Open Hermes Test Chat
+          Open Ron Weasley Test Chat
         </label>
         <textarea
           id="hermes-test-message"
@@ -3578,7 +3658,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
             disabled={testState === 'running' || !testMessage.trim()}
             onClick={runHermesReadOnlyTest}
           >
-            {testState === 'running' ? 'Checking...' : 'Ask Hermes read-only'}
+            {testState === 'running' ? 'Checking...' : 'Ask Ron Weasley read-only'}
           </button>
         </div>
         {testResult && (
@@ -3588,7 +3668,7 @@ function HermesSandboxCard({ payload }: { payload: HermesSandboxPayload | null }
         )}
       </div>
       <p className={styles.providerNotes}>{provider.limitation || 'Production bridge disabled until owner approval; no public ports, legacy memory connection, or credentials are changed by this surface.'}</p>
-      <p className={styles.providerAction}>{provider.next_action || 'Keep Hermes lieutenant/read-only until owner approves production bridge wiring.'}</p>
+      <p className={styles.providerAction}>{provider.next_action || 'Keep Ron Weasley planning-only until Jarvis approves production-impacting changes.'}</p>
     </div>
   )
 }
@@ -3606,7 +3686,7 @@ function AgentZeroHermesHandoffCard({
     return (
       <div className={styles.externalCard}>
         <div className={styles.externalHead}>
-          <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+          <strong className={styles.externalTitle}>Agent Zero ↔ Ron Weasley</strong>
           <span className={styles.externalBadge}>loading</span>
         </div>
         <p className={styles.externalDescription}>Loading collaboration handoff protocol…</p>
@@ -3618,10 +3698,10 @@ function AgentZeroHermesHandoffCard({
     return (
       <div className={styles.externalCard}>
         <div className={styles.externalHead}>
-          <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+          <strong className={styles.externalTitle}>Agent Zero ↔ Ron Weasley</strong>
           <span className={styles.externalBadge}>status error</span>
         </div>
-        <p className={styles.externalDescription}>Could not load the Hermes handoff protocol: {error}</p>
+        <p className={styles.externalDescription}>Could not load the Ron Weasley handoff protocol: {error}</p>
       </div>
     )
   }
@@ -3634,11 +3714,11 @@ function AgentZeroHermesHandoffCard({
   return (
     <div className={styles.externalCard}>
       <div className={styles.externalHead}>
-        <strong className={styles.externalTitle}>Agent Zero ↔ Hermes</strong>
+        <strong className={styles.externalTitle}>Agent Zero ↔ Ron Weasley</strong>
         <span className={styles.externalBadge}>handoff protocol</span>
       </div>
       <p className={styles.externalDescription}>
-        Agent Zero can ask Hermes for skill designs, workflow plans, automation plans, integration maps, failure analysis, and report outlines. Hermes returns recommendations only; execution stays disabled.
+        Agent Zero can delegate exact certified adapter scopes to Ron Weasley through a direct Mission Control/Gateway line. Ron Weasley has Jarvis-parity visibility, while Jarvis remains the final signer for execution.
       </p>
       <dl className={styles.externalDetails}>
         <div className={styles.externalDetailRow}>
@@ -3647,7 +3727,7 @@ function AgentZeroHermesHandoffCard({
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Flow</dt>
-          <dd>{protocol.request_flow || 'Agent Zero requests; Hermes returns plan/spec/recommendation.'}</dd>
+          <dd>{protocol.request_flow || 'Agent Zero requests; Ron Weasley returns plan/spec/recommendation.'}</dd>
         </div>
         <div className={styles.externalDetailRow}>
           <dt>Supported</dt>
@@ -3678,8 +3758,8 @@ function AgentZeroHermesHandoffCard({
           <dd>{payload?.execution_enabled ? 'enabled' : 'disabled'} · writes {payload?.writes_enabled ? 'enabled' : 'disabled'}</dd>
         </div>
       </dl>
-      <p className={styles.providerNotes}>{protocol.ui_summary || 'Mission Control shows when Hermes assists a task, and reports may mention Hermes contribution if the handoff route is used.'}</p>
-      <p className={styles.providerAction}>{payload?.next_action || 'Use POST only when Agent Zero needs a Hermes plan or spec.'}</p>
+      <p className={styles.providerNotes}>{protocol.ui_summary || 'Mission Control shows when Ron Weasley assists a task, and reports may mention Ron Weasley contribution if the handoff route is used.'}</p>
+      <p className={styles.providerAction}>{payload?.next_action || 'Use POST only when Agent Zero needs a Ron Weasley plan or spec.'}</p>
     </div>
   )
 }
@@ -4120,7 +4200,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   useEffect(() => {
     let cancelled = false
     setHermesSandboxState('loading')
-    fetch('/api/bridge/hermes/status', { cache: 'no-store', credentials: 'same-origin' })
+    fetch('/api/bridge/hermes/full-access/status', { cache: 'no-store', credentials: 'same-origin' })
       .then(async (r) => {
         const data = await r.json().catch(() => ({}))
         if (!r.ok) {
@@ -4440,7 +4520,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
   useEffect(() => {
     let cancelled = false
     setBrainSyncStatusState('loading')
-    fetch('/api/bridge/brain-sync/status', { cache: 'no-store', credentials: 'same-origin' })
+    fetch('/api/bridge/brain-sync/gateway-status', { cache: 'no-store', credentials: 'same-origin' })
       .then(async (r) => {
         const data = await r.json().catch(() => ({}))
         if (!r.ok) throw new Error(data?.error || `status HTTP ${r.status}`)
@@ -4709,7 +4789,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         <strong>Bridge Mode preflight is mandatory.</strong> Every Gateway Node must pass through Bridge Mode before acting. Bridge Mode selects the correct tools, models, skills, integrations, MCPs, fallback routes, and approval gates for the Gateway Flow. If Bridge Mode says approval, credential, or backend work is required, the node must stop that action instead of guessing or faking success.
       </div>
       <div className={styles.preflightNotice}>
-        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Hermes, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and Build-Wiki / Farmer systems. Tony legacy is retired and hidden from active hierarchy.
+        Gateway topology: {CANONICAL_AGENT_NETWORK_HIERARCHY.owner.name} to Gateway, then Agent Zero / Pi / Ron Weasley, then Paperclip Workforce Control Plane, then OpenClaw+ Runtime / Skills Engine, then mini-agents, specialist agents, skills, tools, reports, approvals, Bridge/MCP, Brain, and Build-Wiki / Farmer systems. Tony legacy is retired and hidden from active hierarchy.
       </div>
 
       <div className={styles.deprecationNotice}>
@@ -4724,7 +4804,7 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
         </div>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{hermes.installed ? '✓' : '—'}</div>
-          <div className={styles.statLabel}>Hermes lieutenant</div>
+          <div className={styles.statLabel}>Ron Weasley — Nuclear Dispatcher</div>
         </div>
         <div className={styles.statBox}>
           <div className={styles.statValue}>{bridge.plansFound}</div>
@@ -5395,10 +5475,10 @@ export function AgentNetworkClient({ hermes, bridge }: Props) {
           {hermesSandboxState === 'error' && (
             <div className={styles.externalCard}>
               <div className={styles.externalHead}>
-                <strong className={styles.externalTitle}>Hermes</strong>
+                <strong className={styles.externalTitle}>Ron Weasley</strong>
                 <span className={styles.externalBadge}>status error</span>
               </div>
-              <p className={styles.externalDescription}>Could not load Hermes lieutenant status: {hermesSandboxError}</p>
+              <p className={styles.externalDescription}>Could not load Ron Weasley — Nuclear Dispatcher status: {hermesSandboxError}</p>
               <dl className={styles.externalDetails}>
                 <div className={styles.externalDetailRow}>
                   <dt>Role</dt>

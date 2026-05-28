@@ -27,6 +27,7 @@ window.AGENTS = (function () {
       bridge: true,
       R: true, W: true, X: false,
       localhost: 'http://100.116.35.95:3100/ECO/dashboard',
+      ui_url: 'http://100.116.35.95:3100/ECO/dashboard',
       iframe_safe: false,              // assumed unsafe until proven; default to "Open in new tab"
       auth: 'Paperclip login + owner company ECO',
       repo: 'github.com/paperclipai/paperclip',
@@ -35,9 +36,9 @@ window.AGENTS = (function () {
       models: ['claude-sonnet-4', 'gpt-5-codex'],
       tools: ['task-bus', 'workforce-ledger', 'budget-meter', 'approvals-bus'],
       blocked_reason: null,
-      gated_reason: 'paperclip_writes_bridge_gated. Owner-accessible company is E copier Solutions (ECO); legacy To Knowledge Gateway (TOK) still needs owner membership repair before routing there.',
+      gated_reason: 'paperclip_writes_bridge_gated. Owner workspaces resolve through Tailnet routes: ECO, TKG, and ITT. Pacman bootstrap remains blocked on board-admin credential.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Workforce manager. Sits before OpenClaw+. ECO company reads are available; real task writes stay Bridge-gated.'
+      summary: 'Workforce manager. Sits after Agent Zero, Ron Weasley, and Pi. ECO, TKG, and ITT company dashboards are owner-accessible through the Paperclip Tailnet UI; real task writes stay Bridge-gated.'
     },
 
     {
@@ -51,6 +52,7 @@ window.AGENTS = (function () {
       bridge: true,
       R: true, W: true, X: true,
       localhost: 'http://100.116.35.95:50080/',
+      ui_url: 'http://100.116.35.95:50080/',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/agent-zero',
@@ -76,6 +78,7 @@ window.AGENTS = (function () {
       bridge: true,
       R: true, W: true, X: false,
       localhost: 'Mission Control proxy: /gateway/agent-hub/ron/webui/app',
+      ui_url: '/gateway/agent-hub/ron/webui/app',
       iframe_safe: true,
       auth: 'mission control session + bridge',
       repo: 'github.com/Sosastrike/To-Knowledge-hermes-agent',

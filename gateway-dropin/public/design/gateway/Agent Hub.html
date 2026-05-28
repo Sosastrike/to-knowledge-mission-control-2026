@@ -15,6 +15,25 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 .gw-crumbs .here { color:var(--t-1); font-weight:500; }
 .gw-crumbs .sep { color:var(--t-5); }
 
+/* Back-to-dashboard button — sits before the breadcrumbs */
+.gw-back {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 12px 7px 9px;
+  border-radius:7px;
+  border:1px solid var(--line-3);
+  background:var(--bg-2);
+  color:var(--t-1);
+  font-size:12px; font-weight:500;
+  text-decoration:none;
+  transition: background .15s, border-color .15s, transform .15s;
+  margin-right:6px;
+}
+.gw-back:hover { background:var(--bg-3); border-color:var(--line-strong); transform:translateX(-1px); text-decoration:none; }
+.gw-back .arrow { width:14px; height:14px; display:grid; place-items:center; color:var(--brand-cyan); }
+.gw-back .arrow svg { width:14px; height:14px; }
+.gw-back .label { color:var(--t-2); }
+.gw-back .label strong { color:var(--t-1); font-weight:600; }
+
 .page-head { padding:22px 24px 18px; border-bottom:1px solid var(--line-2); background:var(--bg-1); display:grid; grid-template-columns:1fr auto; gap:24px; align-items:end; }
 .page-head h1 { margin:0 0 4px; font-size:26px; letter-spacing:-0.01em; display:flex; align-items:center; gap:12px; }
 .page-head h1 .icon { width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, rgba(167,139,250,0.32), rgba(94,234,212,0.30)); border:1px solid rgba(167,139,250,0.55); display:grid; place-items:center; font-family:var(--ff-mono); color:var(--st-purple); font-size:16px; font-weight:700; }
@@ -200,7 +219,12 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 <body>
 
 <div class="gw-crumbs">
-  <a href="index.html">Gateway design</a>
+  <a class="gw-back" href="../../Mission Control.html" title="Back to Mission Control dashboard">
+    <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 L4 8 L10 13"/><path d="M4 8 H14"/></svg></span>
+    <span class="label">Back to <strong>Mission Control</strong></span>
+  </a>
+  <span class="sep">›</span>
+  <a href="index.html">Gateway</a>
   <span class="sep">›</span>
   <a href="Gateway Overview.html">Nucleus</a>
   <span class="sep">›</span>
@@ -212,10 +236,10 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 <header class="page-head">
   <div>
     <h1><span class="icon">A</span>Agent Hub · Control Center</h1>
-    <p class="lede">One place inside Mission Control to see and open every agent's local environment. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: open localhost in-pane when safe, in a new tab when not. Design only — no production calls.</p>
+    <p class="lede">One place inside Mission Control to see and open every agent's authenticated UI route. Native MC view by default. Status, brain, Gateway lane, and gated owner actions for each. Hybrid embed: use Mission Control proxy or Tailnet routes when safe, in a new tab when not. Design only — no production calls.</p>
   </div>
   <div class="head-meta">
-    <span class="pill">5 agents · <strong>1 green · 2 yellow · 2 gray</strong></span>
+    <span class="pill">5 agents · <strong>3 green · 1 yellow · 1 blue</strong></span>
     <span class="pill">Bridge · <strong>not active</strong></span>
   </div>
 </header>
@@ -227,7 +251,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     Overview <span class="role">5 agents</span>
   </button>
   <button class="tab" data-id="paperclip">
-    <span class="dot" style="background:var(--st-yellow)"></span>
+    <span class="dot" style="background:var(--st-green)"></span>
     Paperclip <span class="role">Workforce Control Plane</span>
   </button>
   <button class="tab" data-id="agent-zero">
@@ -235,16 +259,16 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     Agent Zero <span class="role">Commander</span>
   </button>
   <button class="tab" data-id="hermes">
-    <span class="dot" style="background:var(--st-yellow)"></span>
-    Hermes <span class="role">Lieutenant</span>
+    <span class="dot" style="background:var(--st-green)"></span>
+    Ron Weasley <span class="role">Nuclear Dispatcher</span>
   </button>
   <button class="tab" data-id="space-agent">
     <span class="dot" style="background:var(--st-gray)"></span>
     SpaceAgent <span class="role">Browser/Firecrawl/YouTube</span>
   </button>
   <button class="tab" data-id="pi-mono">
-    <span class="dot" style="background:var(--st-gray)"></span>
-    Pi-mono <span class="role">Dispatcher candidate</span>
+    <span class="dot" style="background:var(--st-blue)"></span>
+    PI Dispatcher <span class="role">Route optimizer</span>
   </button>
 </nav>
 
@@ -261,10 +285,11 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
         <div style="display:grid; gap:4px; font-size:11.5px; color:var(--t-2);">
           <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">1</span>Owner</div>
           <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">2</span>Gateway</div>
-          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">3</span>Agent Zero / Pi / Hermes</div>
-          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--st-yellow); width:18px;">4</span><strong style="color:var(--st-purple);">Paperclip</strong></div>
-          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">5</span>OpenClaw+</div>
-          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">6</span>Mini-agents · skills · tools · reports</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">3</span>Agent Zero / Jarvis</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--st-green); width:18px;">4</span><strong style="color:var(--st-purple);">Ron Weasley</strong></div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--st-orange); width:18px;">5</span>Pi</div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--st-yellow); width:18px;">6</span><strong style="color:var(--st-purple);">Paperclip</strong></div>
+          <div style="display:flex; gap:8px;"><span style="font-family:var(--ff-mono); color:var(--t-4); width:18px;">7</span>SpaceAgent / OpenCloud / OpenClaw supporting tools</div>
         </div>
       </div>
     </div>
@@ -329,20 +354,48 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   });
 
   // ---------- helpers ----------
-  function statusPill(s) {
-    const map = { green:'CONNECTED', yellow:'GATED', blue:'READ-ONLY', red:'BLOCKED', gray:'NOT INSTALLED' };
-    return `<span class="ag-status-pill" style="color:var(--st-${s});background:var(--st-${s}-bg);border:1px solid var(--st-${s}-bd);">${map[s]||s.toUpperCase()}</span>`;
+  function statusPill(s, a) {
+    const map = { green:'CONNECTED', yellow:'PARTIAL', blue:'READ-ONLY', red:'BLOCKED', gray:'NOT INSTALLED' };
+    const label = a && a.status_label ? a.status_label : (map[s] || s.toUpperCase());
+    return `<span class="ag-status-pill" style="color:var(--st-${s});background:var(--st-${s}-bg);border:1px solid var(--st-${s}-bd);">${label}</span>`;
+  }
+  function uiHref(a) {
+    const raw = a.ui_url || a.localhost || '';
+    if (/^https?:\/\//.test(raw) || raw.startsWith('/')) return raw;
+    const proxyMatch = raw.match(/Mission Control proxy:\s*(\/\S+)/i);
+    return proxyMatch ? proxyMatch[1] : '';
+  }
+  function targetAttr(href) {
+    return /^https?:\/\//.test(href) ? ' target="_blank" rel="noreferrer"' : '';
   }
   function actionBtns(a, opts={}) {
-    const btns = [
-      { l:'Open localhost', cls: a.iframe_safe ? 'primary' : 'primary' },
+    const href = uiHref(a);
+    const btns = a.id === 'paperclip' ? [
+      { l:'Open UI',     cls: 'primary', href },
+      { l:'Open Config', cls: '' },
+      { l:'Open Tools',  cls: '' },
+      { l:'Health',      cls: '' },
+      { l:'Telegram Agent', cls: '' },
+      { l:'Bridge Session', cls: 'gated' },
+      { l:'Audit',       cls: '' }
+    ] : a.id === 'pi-mono' ? [
+      { l:'Open Config', cls: 'primary' },
+      { l:'Open Recommendations', cls: '' },
+      { l:'Open Tools', cls: '' },
+      { l:'Health', cls: '' },
+      { l:'Bridge Session', cls: 'gated' }
+    ] : [
+      { l:'Open UI', cls: a.iframe_safe ? 'primary' : 'primary', href },
       { l:'Send command',   cls: '' },
       { l:'Pause queue',    cls: '' },
       { l:'Bridge Session', cls: 'gated' },
       { l:'Restart',        cls: 'gated danger' },
       { l:'Audit',          cls: '' }
     ];
-    return btns.map(b => `<button class="ag-btn ${b.cls}">${b.l}</button>`).join('');
+    return btns.map(b => b.href
+      ? `<a class="ag-btn ${b.cls}" href="${b.href}"${targetAttr(b.href)}>${b.l}</a>`
+      : `<button class="ag-btn ${b.cls}">${b.l}</button>`
+    ).join('');
   }
   function laneTable(rows) {
     if (!rows.length) return `<div class="empty-mini">No Gateway requests for this agent yet.</div>`;
@@ -405,10 +458,11 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
       <div class="chain">
         <div class="node"><div class="lbl">1</div><div class="nm">Owner</div><div class="sub">Mission Control</div></div>
         <div class="node you"><div class="lbl">2</div><div class="nm">Gateway</div><div class="sub">center</div></div>
-        <div class="node"><div class="lbl">3</div><div class="nm">Agent Zero / Pi / Hermes</div><div class="sub">command + advise + build</div></div>
-        <div class="node"><div class="lbl">4</div><div class="nm" style="color:var(--st-purple);">Paperclip</div><div class="sub">workforce control</div></div>
-        <div class="node"><div class="lbl">5</div><div class="nm">OpenClaw+</div><div class="sub">runtime / skills</div></div>
-        <div class="node"><div class="lbl">6</div><div class="nm">Mini-agents · skills · tools</div><div class="sub">execution leaves</div></div>
+        <div class="node"><div class="lbl">3</div><div class="nm">Agent Zero / Jarvis</div><div class="sub">commander + owner-control</div></div>
+        <div class="node"><div class="lbl">4</div><div class="nm">Ron Weasley</div><div class="sub">nuclear dispatcher</div></div>
+        <div class="node"><div class="lbl">5</div><div class="nm">Pi</div><div class="sub">route optimizer</div></div>
+        <div class="node"><div class="lbl">6</div><div class="nm" style="color:var(--st-purple);">Paperclip</div><div class="sub">workforce control</div></div>
+        <div class="node"><div class="lbl">7</div><div class="nm">SpaceAgent / OpenCloud / OpenClaw</div><div class="sub">supporting tools</div></div>
       </div>
 
       <div class="sec-head"><h3>Agents · click to drill in</h3><span class="meta">5 cards</span><span class="filler"></span></div>
@@ -421,14 +475,18 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     const ph = A.paperclip;
 
     let embedHtml = '';
+    const href = uiHref(a);
+    const launchHtml = href
+      ? `<a class="ag-btn" href="${href}"${targetAttr(href)}>Open in new tab</a>`
+      : `<button class="ag-btn" disabled title="No owner-accessible UI route configured">Open in new tab</button>`;
     if (a.iframe_safe) {
       embedHtml = `
         <div class="localhost-embed">
           <span class="url">${a.localhost}</span>
-          <div class="desc">Hybrid embed available. Click <strong>Preview UI</strong> to render the agent's localhost UI in this pane, or <strong>Open in new tab</strong> to launch full-screen with native auth.</div>
+          <div class="desc">Hybrid embed available when the route is same-origin. Server-local localhost stays behind Mission Control proxy or Tailnet; use <strong>Open in new tab</strong> for native auth.</div>
           <div style="display:flex; gap:8px;">
             <button class="ag-btn primary">Preview UI</button>
-            <button class="ag-btn">Open in new tab</button>
+            ${launchHtml}
           </div>
         </div>`;
     } else {
@@ -437,7 +495,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
           <span class="url">${a.localhost}</span>
           <div class="desc">Iframe not safe (cross-origin or auth in URL). Use <strong>Open in new tab</strong> — Mission Control will not bypass the agent's own auth.</div>
           <div style="display:flex; gap:8px;">
-            <button class="ag-btn">Open in new tab</button>
+            ${launchHtml}
             <button class="ag-btn">Status only</button>
           </div>
         </div>`;
@@ -460,7 +518,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
       const ba = A.browserAutomation['space-agent'];
       const toolCard = (t) => {
         const dotColor = `var(--st-${t.status})`;
-        const stateMap = { green:'CONNECTED', yellow:'GATED', blue:'READ-ONLY', red:'BLOCKED', gray:'NOT INSTALLED' };
+        const stateMap = { green:'CONNECTED', yellow:'PARTIAL', blue:'READ-ONLY', red:'BLOCKED', gray:'NOT INSTALLED' };
         const stateLabel = stateMap[t.status] || t.status.toUpperCase();
         const playwrightExtras = t.id === 'playwright-mcp' ? `
           <div class="ba-fields">
@@ -527,7 +585,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
           <div class="glyph ag-glyph ${a.id}">${a.name[0]}</div>
           <div class="meta">
             <h2>${a.name}</h2>
-            <div class="role">${a.role} · ${statusPill(a.status)}</div>
+            <div class="role">${a.role} · ${statusPill(a.status, a)}</div>
             <div class="id">${a.localhost} · auth: ${a.auth} · ${a.repo}</div>
           </div>
           <div class="actions">${actionBtns(a)}</div>
@@ -579,7 +637,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
               <div class="ag-name">${a.name}</div>
               <div class="ag-role">${a.role}</div>
             </div>
-            ${statusPill(a.status)}
+            ${statusPill(a.status, a)}
           </div>
           <div class="ag-tag">${a.tagline}</div>
           <div class="ag-stats">

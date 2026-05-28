@@ -102,6 +102,9 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 .localhost-embed .url { font-family:var(--ff-mono); font-size:11.5px; color:var(--brand-cyan); background:var(--bg-4); padding:5px 10px; border-radius:4px; }
 .localhost-embed .desc { font-size:11.5px; color:var(--t-3); max-width:380px; line-height:1.5; }
 .localhost-embed.unsafe .desc { color:var(--st-yellow); }
+.launch-fallback { display:none; margin-top:8px; padding:9px 10px; border:1px solid var(--st-yellow-bd); border-radius:var(--r-2); background:rgba(245,181,10,0.07); color:var(--st-yellow); font-size:11.5px; line-height:1.4; }
+.launch-fallback.show { display:block; }
+.launch-fallback a { color:var(--brand-cyan); font-weight:700; }
 
 /* Auth chips */
 .auth-grid { display:grid; gap:8px; }
@@ -182,24 +185,25 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   <div>
     <h1>Paperclip <span class="ver">persona:paperclip@v0.2 · workforce control plane</span></h1>
     <div class="tag">Sits before OpenClaw+ · organizes the workforce, not the runtime</div>
-    <p class="lede">Paperclip is the workforce manager. It owns co-worker registration, the task queue, daily budgets, heartbeats, approvals, and work products — and hands fully-prepped tasks to OpenClaw+, which runs the actual mini-agent execution. Agent Zero remains commander; Hermes builds skills and workflows; Pi recommends routes. Paperclip does not execute, it organizes.</p>
+    <p class="lede">Paperclip is the workforce manager. It owns co-worker registration, the task queue, daily budgets, heartbeats, approvals, and work products — and hands fully-prepped tasks to OpenClaw+, which runs the actual mini-agent execution. Agent Zero remains commander; Ron Weasley builds skills and workflows; Pi recommends routes. Paperclip does not execute, it organizes.</p>
   </div>
   <div class="right">
-    <button class="btn primary" onclick="window.open('http://100.116.35.95:3100/ECO/dashboard','_blank','noopener,noreferrer')">Open UI</button>
-    <button class="btn" onclick="window.open('/api/bridge/paperclip/status','_blank','noopener,noreferrer')">Open Config</button>
-    <button class="btn" onclick="window.open('/api/bridge/paperclip/agents','_blank','noopener,noreferrer')">Open Tools</button>
-    <button class="btn" onclick="window.open('/api/bridge/paperclip/status','_blank','noopener,noreferrer')">Health</button>
+    <button class="btn primary" onclick="openPaperclipWorkspace(event, 'ECO')">Open UI</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/config'">Open Config</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/tools'">Open Tools</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/status'">Health</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/telegram-agent'">Telegram Agent</button>
     <button class="btn gated" onclick="openBridge()">Bridge Session</button>
-    <button class="btn" onclick="window.open('/api/bridge/paperclip/issues','_blank','noopener,noreferrer')">Audit</button>
-    <button class="btn" onclick="window.open('/api/bridge/paperclip/status','_blank','noopener,noreferrer')">Help</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/audit'">Audit</button>
+    <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/help'">Help</button>
   </div>
 </header>
 
 <div class="strip">
-  <div class="cell"><div class="l">Status</div><div class="v yellow">INSTALLED / PARTIAL</div></div>
+  <div class="cell"><div class="l">Status</div><div class="v green">INSTALLED / READY</div></div>
   <div class="cell"><div class="l">Bridge</div><div class="v yellow">REQUIRED</div></div>
   <div class="cell"><div class="l">R · W · X</div><div class="v">R · W · <span style="color:var(--t-5);">X</span></div></div>
-  <div class="cell"><div class="l">Owner URL</div><div class="v" style="font-size:12px;">100.116.35.95:3100/ECO</div></div>
+  <div class="cell"><div class="l">Owner URLs</div><div class="v" style="font-size:12px;">ECO · TKG · ITT</div></div>
   <div class="cell"><div class="l">Today spend</div><div class="v">$0.00<small>/ $5.00</small></div></div>
   <div class="cell"><div class="l">Heartbeat</div><div class="v yellow">PENDING</div></div>
   <div class="cell"><div class="l">Repo grounding</div><div class="v" style="font-size:12px;color:var(--t-3);">PENDING</div></div>
@@ -215,15 +219,23 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
     <!-- Localhost + auth -->
     <div class="two-col">
       <div class="panel">
-        <header>Owner UI · Tailnet<span class="meta">100.116.35.95:3100/ECO</span></header>
+        <header>Owner UI · Tailnet<span class="meta">100.116.35.95:3100 / ECO · TKG · ITT</span></header>
         <div class="body">
           <div class="localhost-embed unsafe">
-            <span class="url">http://100.116.35.95:3100/ECO/dashboard</span>
-            <div class="desc">Paperclip UI and health are reachable for E copier Solutions (ECO). Legacy To Knowledge Gateway (TOK) remains a separate company-access warning and is not used for owner routing here. Mission Control will not bypass Paperclip's own auth.</div>
+            <span class="url">http://100.116.35.95:3100/ECO/dashboard · /TKG/dashboard · /ITT/dashboard</span>
+            <div class="desc">Paperclip UI and health are reachable through Tailnet. E copier Solutions (ECO), To Knowledge Gateway (TKG), and E Copier ITT (ITT) use the same owner-facing company registry. Mission Control will not bypass Paperclip's own auth.</div>
             <div style="display:flex; gap:8px;">
-              <button class="btn" onclick="window.open('http://100.116.35.95:3100/ECO/dashboard','_blank','noopener,noreferrer')">Open in new tab</button>
+              <button class="btn" onclick="openPaperclipWorkspace(event, 'ECO')">Open ECO</button>
+              <button class="btn" onclick="openPaperclipWorkspace(event, 'TKG')">Open TKG</button>
+              <button class="btn" onclick="openPaperclipWorkspace(event, 'ITT')">Open ITT</button>
               <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/status'">Status only</button>
-              <button class="btn">Recheck health</button>
+              <button class="btn" onclick="window.top.location.href='/gateway/agent-hub/paperclip/status'">Recheck health</button>
+            </div>
+            <div id="paperclip-launch-fallback" class="launch-fallback">
+              Popup blocked. Open the dashboards with these fallbacks:
+              <a href="http://100.116.35.95:3100/ECO/dashboard" target="tkmc_paperclip_eco">ECO</a>,
+              <a href="http://100.116.35.95:3100/TKG/dashboard" target="tkmc_paperclip_tkg">TKG</a>,
+              <a href="http://100.116.35.95:3100/ITT/dashboard" target="tkmc_paperclip_itt">ITT</a>.
             </div>
           </div>
           <div style="font-size:11px;color:var(--t-4);margin-top:10px;line-height:1.5;">
@@ -403,6 +415,30 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
 
 <script src="shared/agent-data.js"></script>
 <script>
+const PAPERCLIP_WORKSPACE_DASHBOARDS = {
+  ECO: 'http://100.116.35.95:3100/ECO/dashboard',
+  TKG: 'http://100.116.35.95:3100/TKG/dashboard',
+  ITT: 'http://100.116.35.95:3100/ITT/dashboard',
+};
+window.openPaperclipWorkspace = function (event, workspace) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const prefix = PAPERCLIP_WORKSPACE_DASHBOARDS[workspace] ? workspace : 'ECO';
+  const opened = window.open(PAPERCLIP_WORKSPACE_DASHBOARDS[prefix], `tkmc_paperclip_${prefix.toLowerCase()}`);
+  if (opened) {
+    try { opened.opener = null; } catch (_err) {}
+    if (opened.focus) opened.focus();
+    return;
+  }
+  const fallback = document.getElementById('paperclip-launch-fallback');
+  if (fallback) fallback.classList.add('show');
+};
+window.openPaperclipEco = function (event) {
+  window.openPaperclipWorkspace(event, 'ECO');
+};
+
 (function () {
   const A = window.AGENTS;
   const P = A.paperclip;
@@ -424,7 +460,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
   const authMap = [
     { k:'chatgpt',   nm:'ChatGPT · Codex',     ico:'C', tone:'#10a37f', d:P.auth.chatgpt },
     { k:'anthropic', nm:'Claude · Anthropic',  ico:'A', tone:'#d97757', d:P.auth.anthropic },
-    { k:'tailnet',   nm:'Tailnet · localhost', ico:'T', tone:'#5eead4', d:P.auth.tailnet  }
+    { k:'tailnet',   nm:'Tailnet · Paperclip host', ico:'T', tone:'#5eead4', d:P.auth.tailnet  }
   ];
   auth.innerHTML = authMap.map(r => `
     <div class="auth-row">
@@ -468,7 +504,7 @@ footer.repo-note code { font-family:var(--ff-mono); font-size:10.5px; color:var(
         <div class="scopes">${a.scopes.map(s=>`<span class="scope">${s}</span>`).join('')}</div>
         <div class="row">
           <button class="btn primary" onclick="openBridge()">Approve · open bridge ${a.ttl_min}m</button>
-          <button class="btn">Deny</button>
+          <button class="btn" onclick="closeBridge()">Deny</button>
         </div>
       </div>
     `).join('');

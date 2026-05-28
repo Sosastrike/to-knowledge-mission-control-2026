@@ -39,6 +39,7 @@ export type AgentHubDirectAgentLinesSummary = {
     command: string
     local_probe_command: string
     live_trace_route: '/api/bridge/agent-routing/trace/live'
+    trace_href: string
     probe_route: '/api/bridge/agent-routing/trace/probe'
     direct_line_active: true
     opencloud_intermediary_allowed: false
@@ -56,6 +57,36 @@ export type AgentHubDirectAgentLinesSummary = {
   opencloud_hidden_intermediary_allowed: false
   opencloud_conversation_owner_allowed: false
   opencloud_allowed_role: 'supporting_tool_only_when_explicitly_invoked'
+  no_secrets_exposed: true
+}
+
+export type AgentHubNuclearGatewayGraphSummary = {
+  route: '/api/gateway/agent-hub/status'
+  graph_id: 'nuclear_gateway_operational_path'
+  central_broker_node: 'nuclear.gateway'
+  architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line'
+  nodes: Array<{
+    id: string
+    label: string
+    role: string
+    direct_line_owner: boolean
+    openclaw_conversation_owner_allowed: false
+    disabled_reason?: string
+  }>
+  edges: Array<{
+    source: string
+    target: string
+    relation: 'enters' | 'brokers' | 'routes_to' | 'reports_to' | 'supports'
+  }>
+  direct_line_trace_buttons: Array<{
+    agent_id: string
+    label: string
+    href: string
+  }>
+  openclaw_disabled_reason: 'Supporting runtime only — not an agent line.'
+  openclaw_hidden_intermediary_allowed: false
+  openclaw_commander_allowed: false
+  credential_broker: 'nuclear.gateway'
   no_secrets_exposed: true
 }
 
@@ -226,6 +257,7 @@ export type AgentHubStatusPayload = {
     direct_agent_lines: 'owner_to_mission_control_to_nuclear_gateway_to_target_agent'
   }
   direct_agent_lines: AgentHubDirectAgentLinesSummary
+  nuclear_gateway_graph: AgentHubNuclearGatewayGraphSummary
   agent_update_control_plane: AgentHubAutoUpdateControlPlane
   gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
   agents: AgentHubAgent[]
@@ -255,6 +287,7 @@ export type AgentHubRegistryPayload = {
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
   direct_agent_lines: AgentHubDirectAgentLinesSummary
+  nuclear_gateway_graph: AgentHubNuclearGatewayGraphSummary
   agent_update_control_plane: AgentHubAutoUpdateControlPlane
   gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
   execution_enabled: false
@@ -598,6 +631,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       direct_agent_lines: 'owner_to_mission_control_to_nuclear_gateway_to_target_agent',
     },
     direct_agent_lines: directAgentLines,
+    nuclear_gateway_graph: buildAgentHubNuclearGatewayGraphSummary(directAgentLines),
     agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
     gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
     agents,
@@ -642,6 +676,7 @@ export function buildAgentHubRegistryPayload(registry: GatewayRegistry): AgentHu
     agents: buildAgentHubAgents(registry),
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
     direct_agent_lines: buildAgentHubDirectAgentLinesSummary(),
+    nuclear_gateway_graph: buildAgentHubNuclearGatewayGraphSummary(),
     agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
     gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
     execution_enabled: false,
@@ -672,6 +707,7 @@ function buildAgentHubDirectAgentLinesSummary(): AgentHubDirectAgentLinesSummary
         command: `ssh tony@100.116.35.95 'bash /home/tony/agent-line-trace.sh --agent ${traceId}'`,
         local_probe_command: `bash /home/tony/agent-line-trace.sh --agent ${traceId} --local-probe`,
         live_trace_route: '/api/bridge/agent-routing/trace/live',
+        trace_href: `/api/bridge/agent-routing/trace/live?agent=${encodeURIComponent(traceId)}`,
         probe_route: '/api/bridge/agent-routing/trace/probe',
         direct_line_active: true,
         opencloud_intermediary_allowed: false,
@@ -690,6 +726,59 @@ function buildAgentHubDirectAgentLinesSummary(): AgentHubDirectAgentLinesSummary
     opencloud_hidden_intermediary_allowed: false,
     opencloud_conversation_owner_allowed: false,
     opencloud_allowed_role: 'supporting_tool_only_when_explicitly_invoked',
+    no_secrets_exposed: true,
+  }
+}
+
+function buildAgentHubNuclearGatewayGraphSummary(
+  directLines: AgentHubDirectAgentLinesSummary = buildAgentHubDirectAgentLinesSummary(),
+): AgentHubNuclearGatewayGraphSummary {
+  return {
+    route: '/api/gateway/agent-hub/status',
+    graph_id: 'nuclear_gateway_operational_path',
+    central_broker_node: 'nuclear.gateway',
+    architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line',
+    nodes: [
+      { id: 'owner', label: 'Owner', role: 'final authority', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
+      { id: 'mission.control', label: 'Mission Control', role: 'owner-control surface and task proof board', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
+      { id: 'nuclear.gateway', label: 'Nuclear Gateway', role: 'central broker for policy, routing, tools, credentials, audit, and rollback', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
+      { id: 'agent.zero', label: 'Agent Zero / Jarvis', role: 'commander and owner-operator direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'ron.weasley', label: 'Ron Weasley', role: 'Nuclear Dispatcher under Jarvis', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'pi', label: 'Pi', role: 'advisory dispatcher and route optimizer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'paperclip', label: 'Paperclip', role: 'company workforce and execution plane', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'spaceagent', label: 'SpaceAgent', role: 'browser and research specialist direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'brain.bridge', label: 'Brain Bridge', role: 'memory and intelligence layer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'tool.registry', label: 'Tool Registry', role: 'certified adapter, MCP, and API tool catalog', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
+      { id: 'credential.broker', label: 'Credential Broker', role: 'name-only credential presence and adapter brokering', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
+      {
+        id: 'openclaw.supporting_runtime',
+        label: 'OpenClaw / OpenCloud',
+        role: 'supporting runtime/tool layer only',
+        direct_line_owner: false,
+        openclaw_conversation_owner_allowed: false,
+        disabled_reason: 'Supporting runtime only — not an agent line.',
+      },
+    ],
+    edges: [
+      { source: 'owner', target: 'mission.control', relation: 'enters' },
+      { source: 'mission.control', target: 'nuclear.gateway', relation: 'brokers' },
+      { source: 'nuclear.gateway', target: 'agent.zero', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'ron.weasley', relation: 'routes_to' },
+      { source: 'ron.weasley', target: 'agent.zero', relation: 'reports_to' },
+      { source: 'nuclear.gateway', target: 'pi', relation: 'routes_to' },
+      { source: 'pi', target: 'agent.zero', relation: 'reports_to' },
+      { source: 'nuclear.gateway', target: 'paperclip', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'spaceagent', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'brain.bridge', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'tool.registry', relation: 'brokers' },
+      { source: 'nuclear.gateway', target: 'credential.broker', relation: 'brokers' },
+      { source: 'openclaw.supporting_runtime', target: 'tool.registry', relation: 'supports' },
+    ],
+    direct_line_trace_buttons: directLines.trace_commands.map((trace) => ({ agent_id: trace.agent_id, label: trace.display_name, href: trace.trace_href })),
+    openclaw_disabled_reason: 'Supporting runtime only — not an agent line.',
+    openclaw_hidden_intermediary_allowed: false,
+    openclaw_commander_allowed: false,
+    credential_broker: 'nuclear.gateway',
     no_secrets_exposed: true,
   }
 }

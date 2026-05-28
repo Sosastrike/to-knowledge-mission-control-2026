@@ -5,6 +5,7 @@ import type {
   AgentHubAgentRoutesPayload,
   AgentHubAutoUpdateControlPlane,
   AgentHubGatewayRouteCdpTruth,
+  AgentHubNuclearGatewayGraphSummary,
   AgentHubRuntimeSystem,
   AgentHubStatusPayload,
 } from '@/lib/gateway-agent-hub'
@@ -55,6 +56,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </section>
 
         <DirectAgentLinesPanel status={status} />
+        <NuclearGatewayGraphPanel graph={status.nuclear_gateway_graph} />
         <AutoUpdateControlPlanePanel controlPlane={status.agent_update_control_plane} />
         <GatewayRouteCdpTruthPanel truth={status.gateway_route_cdp_truth} />
 
@@ -185,8 +187,68 @@ function DirectAgentLinesPanel({ status }: { status: AgentHubStatusPayload }) {
               </div>
               <code className='mt-2 block break-all rounded border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-slate-200'>{trace.command}</code>
               <code className='mt-1 block break-all rounded border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-slate-400'>{trace.local_probe_command}</code>
+              <div className='mt-2 flex flex-wrap gap-2'>
+                <a href={trace.trace_href} className='rounded-md border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-300/15'>Trace live</a>
+                <a href={trace.live_trace_route} className='rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:border-cyan-300/40'>Trace history</a>
+              </div>
             </article>
           ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function NuclearGatewayGraphPanel({ graph }: { graph: AgentHubNuclearGatewayGraphSummary }) {
+  const brokerNodes = graph.nodes.filter((node) => ['mission.control', 'nuclear.gateway', 'tool.registry', 'credential.broker'].includes(node.id))
+  const directLineNodes = graph.nodes.filter((node) => node.direct_line_owner)
+  const supportingNodes = graph.nodes.filter((node) => node.disabled_reason)
+
+  return (
+    <section className='rounded-lg border border-sky-300/20 bg-sky-300/8 p-5' aria-label='Nuclear Gateway graph'>
+      <div className='flex flex-wrap items-end justify-between gap-3'>
+        <div>
+          <p className='text-xs font-semibold uppercase text-sky-200'>Nuclear Gateway Graph</p>
+          <h2 className='mt-1 text-lg font-semibold text-white'>Mission Control routes through Nuclear Gateway, then direct lines</h2>
+          <p className='mt-2 max-w-4xl text-sm leading-6 text-sky-100'>OpenClaw/OpenCloud is displayed only as a supporting runtime/tool layer. It is not a conversation owner, commander, credential broker, or hidden dispatcher.</p>
+        </div>
+        <StatusBadge label='nuclear gateway broker' status='read_only' />
+      </div>
+
+      <div className='mt-4 grid gap-3 md:grid-cols-3'>
+        <Metric label='central broker' value={graph.central_broker_node} />
+        <Metric label='direct-line owners' value={String(directLineNodes.length)} />
+        <Metric label='OpenClaw command role' value={graph.openclaw_commander_allowed ? 'allowed' : 'blocked'} />
+      </div>
+
+      <div className='mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]'>
+        <div className='rounded-lg border border-white/10 bg-black/20 p-3'>
+          <h3 className='text-sm font-semibold text-white'>Broker Nodes</h3>
+          <div className='mt-3 grid gap-2'>
+            {brokerNodes.map((node) => <GraphNodeCard key={node.id} node={node} />)}
+          </div>
+        </div>
+        <div className='rounded-lg border border-white/10 bg-black/20 p-3'>
+          <h3 className='text-sm font-semibold text-white'>Direct Agent Lines</h3>
+          <div className='mt-3 grid gap-2 sm:grid-cols-2'>
+            {directLineNodes.map((node) => <GraphNodeCard key={node.id} node={node} />)}
+          </div>
+        </div>
+      </div>
+
+      <div className='mt-4 grid gap-3 lg:grid-cols-[1fr_1fr]'>
+        <div className='rounded-lg border border-white/10 bg-black/20 p-3'>
+          <h3 className='text-sm font-semibold text-white'>Required Edges</h3>
+          <div className='mt-3 grid gap-2 text-xs text-slate-300'>
+            {graph.edges.map((edge) => <code key={edge.source + edge.relation + edge.target} className='rounded border border-white/10 bg-white/[0.03] px-2 py-1'>{edge.source} - {edge.relation} - {edge.target}</code>)}
+          </div>
+        </div>
+        <div className='rounded-lg border border-white/10 bg-black/20 p-3'>
+          <h3 className='text-sm font-semibold text-white'>Supporting Runtime Only</h3>
+          <div className='mt-3 grid gap-2'>
+            {supportingNodes.map((node) => <GraphNodeCard key={node.id} node={node} />)}
+          </div>
+          <p className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>{graph.openclaw_disabled_reason}</p>
         </div>
       </div>
     </section>
@@ -516,16 +578,18 @@ function HubTab({ href, label, meta, tone }: { href: string; label: string; meta
 function GatewayChainCanvas() {
   const chain = [
     { label: 'Owner', note: 'final authority', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
+    { label: 'Mission Control', note: 'owner-control surface and visible task proof', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
     { label: 'Nuclear Gateway', note: 'policy, routing, registry, audit, credentials', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
     { label: 'Agent Zero / Jarvis', note: 'commander and owner-control layer', tone: 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' },
     { label: 'Ron Weasley', note: 'Nuclear Dispatcher and workflow/skill optimizer', tone: 'border-violet-300/35 bg-violet-300/10 text-violet-100' },
     { label: 'Pi', note: 'dispatcher and route optimizer', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
     { label: 'Paperclip', note: 'workforce control plane', tone: 'border-amber-300/35 bg-amber-300/10 text-amber-100' },
-    { label: 'SpaceAgent / OpenCloud / OpenClaw', note: 'supporting runtimes and tools only', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
+    { label: 'SpaceAgent / Brain Bridge', note: 'research and memory direct lines', tone: 'border-sky-300/35 bg-sky-300/10 text-sky-100' },
+    { label: 'OpenCloud / OpenClaw', note: 'supporting runtime only, not an agent line', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
   ]
 
   return (
-    <div className='mt-4 grid gap-2 lg:grid-cols-7'>
+    <div className='mt-4 grid gap-2 lg:grid-cols-3 xl:grid-cols-9'>
       {chain.map((item, index) => (
         <div key={item.label} className='relative'>
           <div className={'min-h-[104px] rounded-lg border p-3 ' + item.tone}>
@@ -537,6 +601,19 @@ function GatewayChainCanvas() {
         </div>
       ))}
     </div>
+  )
+}
+
+function GraphNodeCard({ node }: { node: AgentHubNuclearGatewayGraphSummary['nodes'][number] }) {
+  return (
+    <article className='rounded-md border border-white/10 bg-white/[0.03] p-3 text-xs text-slate-300'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <strong className='text-slate-100'>{node.label}</strong>
+        {node.direct_line_owner && <span className='rounded-full border border-cyan-300/25 bg-cyan-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-cyan-100'>direct line</span>}
+      </div>
+      <p className='mt-2 leading-5 text-slate-400'>{node.role}</p>
+      {node.disabled_reason && <p className='mt-2 rounded border border-amber-300/20 bg-amber-300/8 px-2 py-1 text-amber-100'>{node.disabled_reason}</p>}
+    </article>
   )
 }
 

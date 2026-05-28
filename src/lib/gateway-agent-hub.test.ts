@@ -51,6 +51,7 @@ describe('Gateway Agent Hub', () => {
       expect.objectContaining({
         agent_id: 'agent-zero-jarvis',
         command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent jarvis'),
+        trace_href: '/api/bridge/agent-routing/trace/live?agent=jarvis',
         opencloud_intermediary_allowed: false,
       }),
       expect.objectContaining({
@@ -68,6 +69,30 @@ describe('Gateway Agent Hub', () => {
       }),
     ]))
     expect(payload.direct_agent_lines.trace_commands.some((trace) => trace.agent_id === 'openclaw' || trace.agent_id === 'opencloud')).toBe(false)
+    expect(payload.nuclear_gateway_graph).toMatchObject({
+      graph_id: 'nuclear_gateway_operational_path',
+      central_broker_node: 'nuclear.gateway',
+      architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line',
+      openclaw_disabled_reason: 'Supporting runtime only — not an agent line.',
+      openclaw_hidden_intermediary_allowed: false,
+      openclaw_commander_allowed: false,
+      credential_broker: 'nuclear.gateway',
+      no_secrets_exposed: true,
+    })
+    expect(payload.nuclear_gateway_graph.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'mission.control', label: 'Mission Control' }),
+      expect.objectContaining({ id: 'nuclear.gateway', label: 'Nuclear Gateway' }),
+      expect.objectContaining({ id: 'ron.weasley', direct_line_owner: true }),
+      expect.objectContaining({ id: 'paperclip', direct_line_owner: true }),
+      expect.objectContaining({ id: 'openclaw.supporting_runtime', direct_line_owner: false, disabled_reason: 'Supporting runtime only — not an agent line.' }),
+    ]))
+    expect(payload.nuclear_gateway_graph.edges).toEqual(expect.arrayContaining([
+      { source: 'owner', target: 'mission.control', relation: 'enters' },
+      { source: 'mission.control', target: 'nuclear.gateway', relation: 'brokers' },
+      { source: 'nuclear.gateway', target: 'agent.zero', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'credential.broker', relation: 'brokers' },
+    ]))
+    expect(payload.nuclear_gateway_graph.direct_line_trace_buttons.some((button) => button.agent_id === 'openclaw')).toBe(false)
     expect(payload.agent_update_control_plane).toMatchObject({
       route: '/api/bridge/agent-updates/status',
       run_route: '/api/bridge/agent-updates/run',

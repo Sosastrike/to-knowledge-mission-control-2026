@@ -26,6 +26,7 @@ describe('Nuclear Gateway cutover certification preflight', () => {
       project_continues: true,
     })
     expect(status.blockers).toEqual(expect.arrayContaining([
+      { id: 'phase_6_task_dispatch_adapter_contract', blocker: 'task_dispatch_execution_waiting_on_live_receive_audit_rollback_proof' },
       { id: 'phase_8_brain_bridge_connection', blocker: 'mission_control_service_reload_required_for_live_phase8_payload' },
       { id: 'phase_9_trace_kit', blocker: 'live_external_agent_receive_probe_still_required' },
       { id: 'phase_10_runtime_cutover', blocker: 'runtime_disable_waiting_on_live_direct_line_proof_dependency_cutover_and_rollback_confirmation' },
@@ -49,6 +50,14 @@ describe('Nuclear Gateway cutover certification preflight', () => {
       allowed_as_tool: true,
       allowed_as_intermediary: false,
       allowed_as_commander: false,
+    })
+    expect(status.task_dispatch_adapter_summary).toMatchObject({
+      adapters_count: 4,
+      execution_enabled: false,
+      writes_enabled: false,
+      openclaw_runtime_invoked: false,
+      openclaw_conversation_owner_allowed: false,
+      openclaw_hidden_intermediary_allowed: false,
     })
   })
 })

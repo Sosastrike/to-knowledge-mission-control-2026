@@ -111,6 +111,10 @@ Added a source-only Nuclear Gateway task dispatch adapter contract:
 
 The GET route reports the source-ready adapters for task dispatch, target-session handoff, Aegis review, and task broadcast. The POST route previews a canonical direct-line envelope and refuses OpenClaw/OpenCloud as a task dispatch conversation owner. Execution, writes, and external writes remain disabled until live receive proof, visible task event proof, audit proof, and rollback/no-state proof exist.
 
+## Phase 10 Cutover Preflight Update - 2026-05-29
+
+The cutover certification now includes `phase_6_task_dispatch_adapter_contract` as a distinct `SOURCE_READY` criterion. This prevents Phase 10 from falsely certifying while task dispatch, target-session handoff, Aegis review, or task broadcast still need live receive/audit/rollback proof. OpenClaw runtime was not stopped, disabled, repaired, invoked, or moved into command authority.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

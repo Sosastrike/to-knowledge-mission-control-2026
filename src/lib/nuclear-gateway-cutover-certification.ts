@@ -1,5 +1,6 @@
 import { buildAgentRoutingLinesStatus } from '@/lib/agent-routing-lines'
 import { buildCredentialBrokerStatus } from '@/lib/credential-broker'
+import { buildNuclearGatewayTaskDispatchAdapterStatus } from '@/lib/nuclear-gateway-task-dispatch-adapter'
 import { buildNuclearGatewayToolMigrationStatus } from '@/lib/nuclear-gateway-tool-migration'
 import { buildOpenCloudAuthorityPolicy, evaluateOpenCloudAuthority } from '@/lib/opencloud-authority-policy'
 
@@ -26,6 +27,7 @@ function passed(item: NuclearGatewayCutoverCriterion) {
 export function buildNuclearGatewayCutoverCertificationStatus() {
   const lines = buildAgentRoutingLinesStatus()
   const credentialBroker = buildCredentialBrokerStatus()
+  const taskDispatchAdapter = buildNuclearGatewayTaskDispatchAdapterStatus()
   const toolMigration = buildNuclearGatewayToolMigrationStatus()
   const authorityPolicy = buildOpenCloudAuthorityPolicy()
   const openclawLine = lines.by_id.openclaw
@@ -91,6 +93,19 @@ export function buildNuclearGatewayCutoverCertificationStatus() {
       status: toolMigration.gateway_tool_broker_of_record && !toolMigration.openclaw_tool_broker_of_record ? 'PASS' : 'BLOCKED',
       blocker: toolMigration.gateway_tool_broker_of_record ? null : 'gateway_tool_broker_not_ready',
       proof: ['/api/bridge/nuclear-gateway/tool-migration'],
+    }),
+    criterion({
+      id: 'phase_6_task_dispatch_adapter_contract',
+      label: 'Task dispatch OpenClaw transport has a Nuclear Gateway direct-line adapter contract',
+      status: taskDispatchAdapter.openclaw_runtime_invoked === false
+        && taskDispatchAdapter.execution_enabled === false
+        && taskDispatchAdapter.writes_enabled === false
+        ? 'SOURCE_READY'
+        : 'BLOCKED',
+      blocker: taskDispatchAdapter.openclaw_runtime_invoked === false
+        ? 'task_dispatch_execution_waiting_on_live_receive_audit_rollback_proof'
+        : 'task_dispatch_adapter_must_not_invoke_openclaw_runtime',
+      proof: ['/api/bridge/nuclear-gateway/task-dispatch-adapter', 'src/lib/nuclear-gateway-task-dispatch-adapter.ts'],
     }),
     criterion({
       id: 'phase_7_agent_hub_graph',
@@ -189,7 +204,15 @@ export function buildNuclearGatewayCutoverCertificationStatus() {
       openclaw_tool_broker_of_record: toolMigration.openclaw_tool_broker_of_record,
       gateway_tool_broker_of_record: toolMigration.gateway_tool_broker_of_record,
     },
-    next_safe_lane: 'Collect live external direct-line receive proof and reload Mission Control for refreshed Phase 8 payload before any runtime cutover.',
+    task_dispatch_adapter_summary: {
+      adapters_count: taskDispatchAdapter.adapters_count,
+      execution_enabled: taskDispatchAdapter.execution_enabled,
+      writes_enabled: taskDispatchAdapter.writes_enabled,
+      openclaw_runtime_invoked: taskDispatchAdapter.openclaw_runtime_invoked,
+      openclaw_conversation_owner_allowed: taskDispatchAdapter.openclaw_conversation_owner_allowed,
+      openclaw_hidden_intermediary_allowed: taskDispatchAdapter.openclaw_hidden_intermediary_allowed,
+    },
+    next_safe_lane: 'Collect live external direct-line receive proof, add task-dispatch live receive/audit/rollback proof, and reload Mission Control for refreshed Phase 8 payload before any runtime cutover.',
     rollback_command: 'cd /home/tony/mission-control && git revert <phase-10-cutover-preflight-commit>',
     credential_values_exposed: false,
     raw_env_values_exposed: false,

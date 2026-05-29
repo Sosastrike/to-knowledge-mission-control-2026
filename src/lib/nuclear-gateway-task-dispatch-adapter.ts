@@ -6,7 +6,11 @@ import {
 } from '@/lib/agent-routing-lines'
 import { createHash } from 'node:crypto'
 import { logAuditEvent } from '@/lib/db'
-import { buildAgentLineTraceLive } from '@/lib/agent-line-trace'
+import {
+  buildAgentLineTraceLive,
+  externalAgentReceiveTraceSources,
+  hasExternalAgentReceiveProof,
+} from '@/lib/agent-line-trace'
 import { isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
 
 export const NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE = 'phase_6_task_dispatch_adapter_contract' as const
@@ -218,20 +222,6 @@ function messageHash(value: unknown) {
   return createHash('sha256').update(String(value || '')).digest('hex').slice(0, 16)
 }
 
-const LOCAL_ONLY_TRACE_SOURCES = new Set([
-  'mission_control_protected_probe_route',
-  'mission_control_trace_route',
-])
-
-function externalTraceSources(sources: unknown) {
-  return Array.isArray(sources)
-    ? sources
-      .map((source) => String(source || '').trim())
-      .filter((source) => source && !LOCAL_ONLY_TRACE_SOURCES.has(source))
-      .slice(0, 8)
-    : []
-}
-
 function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatchPreviewInput) {
   const nonce = String(input.receive_trace_nonce || '').trim()
   if (!nonce) {
@@ -273,15 +263,9 @@ function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatc
     }
   }
 
-  const externalSources = externalTraceSources(record.verification_sources)
-  const externalReceiveVerified = record.local_gateway_probe === false && externalSources.length > 0
-  const valid = record.status === 'PASS'
-    && record.target_agent === targetAgent
-    && record.direct_line_used === true
-    && record.message_received_by_agent === true
-    && record.response_sent === true
-    && record.openclaw_used === false
-    && externalReceiveVerified
+  const externalSources = externalAgentReceiveTraceSources(record.verification_sources)
+  const externalReceiveVerified = hasExternalAgentReceiveProof(record)
+  const valid = record.target_agent === targetAgent && externalReceiveVerified
 
   return {
     status: valid ? 'PASS' as const : 'FAIL' as const,

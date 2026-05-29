@@ -164,6 +164,17 @@ Task dispatch preview proof now rejects local-only trace records. A nonce match 
 
 Local route proof like `mission_control_protected_probe_route` and route replays like `mission_control_trace_route` are not enough for task-dispatch cutover. This keeps the preview/audit/no-state path useful while preventing local smoke checks from being treated as real target-agent receipt. Execution and writes remain disabled.
 
+## Phase 9 Trace Kit External Receive Classification - 2026-05-29
+
+The Direct Agent Line Trace Kit now owns the shared external-receive classification used by task-dispatch cutover gates:
+
+- local-only sources: `mission_control_protected_probe_route`, `mission_control_trace_route`
+- external receive proof sources: journal/container receive signals such as `mission_control_journal_nonce`, `agent_runtime_journal_nonce`, and `agent_zero_docker_nonce`
+- live trace summary includes `external_receive_proof_pass`
+- live trace summary includes `local_only_pass`
+
+This keeps Nuclear Gateway task dispatch, Trace Kit, and future cutover checks aligned on one proof definition. Runtime execution and OpenClaw service state remain unchanged.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

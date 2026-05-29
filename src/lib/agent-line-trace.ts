@@ -64,6 +64,8 @@ export type AgentLineTraceLiveSummary = {
   fail: number
   local_gateway_probe: number
   external_message_probe: number
+  external_receive_proof_pass: number
+  local_only_pass: number
   opencloud_hidden_intermediary_detected: number
   openclaw_hidden_intermediary_detected: number
   hidden_intermediary_detected: number
@@ -96,6 +98,11 @@ export type AgentLineTraceProbeInput = {
 
 const TRACE_RING_LIMIT = 80
 const traceRecords: AgentLineTraceRecord[] = []
+export const LOCAL_ONLY_TRACE_SOURCES = [
+  'mission_control_protected_probe_route',
+  'mission_control_trace_route',
+] as const
+const LOCAL_ONLY_TRACE_SOURCE_SET = new Set<string>(LOCAL_ONLY_TRACE_SOURCES)
 
 const TELEGRAM_BOTS: Record<string, string> = {
   'agent-zero-jarvis': '@Jarvis_88sbot',
@@ -109,6 +116,22 @@ function cleanList(value: unknown) {
   return Array.isArray(value)
     ? value.map((item) => cleanText(item)).filter(Boolean).slice(0, 16)
     : []
+}
+
+export function externalAgentReceiveTraceSources(sources: unknown) {
+  return cleanList(sources)
+    .filter((source) => !LOCAL_ONLY_TRACE_SOURCE_SET.has(source))
+    .slice(0, 8)
+}
+
+export function hasExternalAgentReceiveProof(record: AgentLineTraceRecord) {
+  return record.status === 'PASS'
+    && record.direct_line_used
+    && record.message_received_by_agent
+    && record.response_sent
+    && !record.openclaw_used
+    && !record.local_gateway_probe
+    && externalAgentReceiveTraceSources(record.verification_sources).length > 0
 }
 
 function boolValue(value: unknown, fallback = false) {
@@ -317,6 +340,8 @@ export function buildAgentLineTraceLive(input: { agent?: string | null; nonce?: 
     if (record.status === 'FAIL') acc.fail += 1
     if (record.local_gateway_probe) acc.local_gateway_probe += 1
     if (!record.local_gateway_probe) acc.external_message_probe += 1
+    if (hasExternalAgentReceiveProof(record)) acc.external_receive_proof_pass += 1
+    if (record.status === 'PASS' && !hasExternalAgentReceiveProof(record)) acc.local_only_pass += 1
     if (record.blocker === 'OPENCLOUD_HIDDEN_INTERMEDIARY_DETECTED') {
       acc.opencloud_hidden_intermediary_detected += 1
       acc.openclaw_hidden_intermediary_detected += 1
@@ -338,6 +363,8 @@ export function buildAgentLineTraceLive(input: { agent?: string | null; nonce?: 
     fail: 0,
     local_gateway_probe: 0,
     external_message_probe: 0,
+    external_receive_proof_pass: 0,
+    local_only_pass: 0,
     opencloud_hidden_intermediary_detected: 0,
     openclaw_hidden_intermediary_detected: 0,
     hidden_intermediary_detected: 0,

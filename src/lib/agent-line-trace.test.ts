@@ -5,7 +5,12 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
 
-import { buildAgentLineTraceLive, buildAgentLineTraceRecord } from '@/lib/agent-line-trace'
+import {
+  buildAgentLineTraceLive,
+  buildAgentLineTraceRecord,
+  externalAgentReceiveTraceSources,
+  hasExternalAgentReceiveProof,
+} from '@/lib/agent-line-trace'
 import { listAgentRoutingLines } from '@/lib/agent-routing-lines'
 import { getDatabase } from '@/lib/db'
 import { GET as getTraceLive } from '@/app/api/bridge/agent-routing/trace/live/route'
@@ -166,6 +171,35 @@ describe('Direct Agent Line Trace Kit', () => {
       direct_line_used: true,
       opencloud_used: false,
     })
+  })
+
+  it('classifies external receive proof separately from local-only probe proof', () => {
+    const external = buildAgentLineTraceRecord({
+      target_agent: 'ron-weasley',
+      nonce: 'TRACE-test-external-receive-proof',
+      local_gateway_probe: false,
+      verification_sources: ['mission_control_trace_route', 'mission_control_journal_nonce', 'agent_runtime_journal_nonce'],
+      create_visible_task_on_failure: false,
+    })
+    const localOnly = buildAgentLineTraceRecord({
+      target_agent: 'ron-weasley',
+      nonce: 'TRACE-test-local-only-receive-proof',
+      local_gateway_probe: true,
+      verification_sources: ['mission_control_protected_probe_route', 'mission_control_trace_route'],
+      create_visible_task_on_failure: false,
+    })
+
+    expect(externalAgentReceiveTraceSources(external.verification_sources)).toEqual([
+      'mission_control_journal_nonce',
+      'agent_runtime_journal_nonce',
+    ])
+    expect(hasExternalAgentReceiveProof(external)).toBe(true)
+    expect(externalAgentReceiveTraceSources(localOnly.verification_sources)).toEqual([])
+    expect(hasExternalAgentReceiveProof(localOnly)).toBe(false)
+
+    const live = buildAgentLineTraceLive({ agent: 'ron-weasley' })
+    expect(live.summary.external_receive_proof_pass).toBeGreaterThanOrEqual(1)
+    expect(live.summary.local_only_pass).toBeGreaterThanOrEqual(1)
   })
 
   it('fails when the wrong agent responds', () => {

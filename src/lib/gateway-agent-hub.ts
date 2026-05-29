@@ -96,8 +96,9 @@ export type AgentHubRonProofPanel = {
   full_access_delegation: 'FULL_ACCESS_DELEGATED'
   mission_control_service: 'ACTIVE'
   authenticated_ron_routes: 'RESPONDING'
-  direct_line_chat: 'NOT_INSTALLED'
-  direct_line_chat_blocker: 'ron_direct_line_chat_not_installed_or_not_proven'
+  direct_line_chat: 'INSTALLED'
+  direct_line_chat_blocker: 'none'
+  direct_line_chat_proof: 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS'
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED'
   execution_model: 'JARVIS-GATED EXECUTION'
   opencloud_intermediary: false
@@ -411,7 +412,7 @@ type AgentHubDefinition = {
   extraBlockers: string[]
 }
 
-const RON_DIRECT_LINE_CHAT_BLOCKER = 'ron_direct_line_chat_not_installed_or_not_proven' as const
+const RON_DIRECT_LINE_CHAT_PROOF = 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS' as const
 
 const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
   webui: 'READY',
@@ -419,8 +420,9 @@ const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
   full_access_delegation: 'FULL_ACCESS_DELEGATED',
   mission_control_service: 'ACTIVE',
   authenticated_ron_routes: 'RESPONDING',
-  direct_line_chat: 'NOT_INSTALLED',
-  direct_line_chat_blocker: RON_DIRECT_LINE_CHAT_BLOCKER,
+  direct_line_chat: 'INSTALLED',
+  direct_line_chat_blocker: 'none',
+  direct_line_chat_proof: RON_DIRECT_LINE_CHAT_PROOF,
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED',
   execution_model: 'JARVIS-GATED EXECUTION',
   opencloud_intermediary: false,
@@ -467,7 +469,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: RON_WEASLEY_IDENTITY.canonical_name,
     role: 'Nuclear Dispatcher / Skill + Workflow Architect',
     layer: 'planning_and_skill_design',
-    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Direct-line chat remains NOT_INSTALLED until proven.',
+    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Direct-line chat is INSTALLED with Mission Control proxy session_id repair and Ron WebUI transcript proof.',
     status: 'full_access_delegated',
     liveInterfaceProven: true,
     calledTrueProven: true,
@@ -476,7 +478,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     tailnetUrl: null,
     uiMode: 'local_ui',
     bridgeStatusRoute: '/api/bridge/hermes/webui/status',
-    extraBlockers: [RON_DIRECT_LINE_CHAT_BLOCKER],
+    extraBlockers: ['jarvis_signed_exact_scope_delegation_required_for_protected_execution'],
   },
   {
     id: 'hermes-webui',

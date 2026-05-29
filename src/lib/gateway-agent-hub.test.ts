@@ -170,13 +170,15 @@ describe('Gateway Agent Hub', () => {
         full_access_delegation: 'FULL_ACCESS_DELEGATED',
         mission_control_service: 'ACTIVE',
         authenticated_ron_routes: 'RESPONDING',
-        direct_line_chat: 'NOT_INSTALLED',
+        direct_line_chat: 'INSTALLED',
+        direct_line_chat_blocker: 'none',
+        direct_line_chat_proof: 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS',
         protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED',
         execution_model: 'JARVIS-GATED EXECUTION',
         opencloud_intermediary: false,
       },
     })
-    expect(ron?.blocked_reason).toBe('ron_direct_line_chat_not_installed_or_not_proven')
+    expect(ron?.blocked_reason).toBe('jarvis_signed_exact_scope_delegation_required_for_protected_execution')
     expect(JSON.stringify(ron)).toContain('JARVIS-GATED EXECUTION')
     expect(JSON.stringify(ron)).toContain('JARVIS CONCURRENCE REQUIRED')
     expect(JSON.stringify(ron)).not.toContain('Ron Wegsley')

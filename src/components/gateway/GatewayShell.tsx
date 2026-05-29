@@ -167,7 +167,7 @@ const enabled = (href: string): AgentAccessButton => ({ enabled: true, href, blo
 const disabled = (blocker: string): AgentAccessButton => ({ enabled: false, href: null, blocker })
 const GATEWAY_TOOLS_ROUTE = '/gateway/tools'
 const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
-const HERMES_DIRECT_LINE_CHAT_BLOCKER = 'Ron Weasley direct-line chat not installed'
+const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley direct-line chat installed through Mission Control proxy; protected execution remains Jarvis-gated'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
 const paperclipControlRoute = (mode: string): string => agentControlRoute('paperclip', mode)
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
@@ -211,12 +211,12 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     authRequired: true,
     status: 'FULL_ACCESS_DELEGATED · direct Nuclear Gateway line',
     blocker: 'standalone_hermes_webui_proxy_required_if_8787_unreachable · localhost is server-local; owner browser access must use the Mission Control authenticated proxy. Writes/executions still require Jarvis delegation. OpenClaw and ClaudeClaw are not in the path.',
-    nextFix: 'Use /gateway/agent-hub/ron/webui/app for the actual Ron Weasley WebUI app and /gateway/agent-hub/ron/config for the Mission Control command center. Legacy /gateway/agent-hub/hermes routes remain aliases. Chat remains disabled until a real direct-line Ron Weasley chat adapter is installed.',
+    nextFix: 'Use /gateway/agent-hub/ron/webui/app for the actual Ron Weasley WebUI app and /gateway/agent-hub/ron/config for the Mission Control command center. Legacy /gateway/agent-hub/hermes routes remain aliases. Direct-line chat is available through the Ron WebUI proxy; protected writes and execution still require Jarvis concurrence.',
     buttons: {
       ui: enabled(HERMES_STANDALONE_PROXY_ROUTE),
       config: enabled(HERMES_COMMAND_CENTER_ROUTE),
       brain: enabled(`${HERMES_WEB_INTERFACE_BASE}/brain-map`),
-      chat: disabled(HERMES_DIRECT_LINE_CHAT_BLOCKER),
+      chat: enabled(HERMES_STANDALONE_PROXY_ROUTE),
       tools: enabled(`${HERMES_WEB_INTERFACE_BASE}/tool-map`),
       health: enabled(`${HERMES_WEB_INTERFACE_BASE}/status`),
     },
@@ -510,7 +510,7 @@ export function agentControlLinksFor(slug: string): AgentAccessButtons {
       ui: enabled(HERMES_STANDALONE_PROXY_ROUTE),
       config: enabled(HERMES_COMMAND_CENTER_ROUTE),
       brain: enabled(`${HERMES_WEB_INTERFACE_BASE}/brain-map`),
-      chat: disabled(HERMES_DIRECT_LINE_CHAT_BLOCKER),
+      chat: enabled(HERMES_STANDALONE_PROXY_ROUTE),
       tools: enabled(`${HERMES_WEB_INTERFACE_BASE}/tool-map`),
       health: enabled(`${HERMES_WEB_INTERFACE_BASE}/status`),
     }
@@ -1156,9 +1156,9 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
       <main className="control-page hermes-command-center" data-testid="agent-control-hermes-chat">
         <header className="control-hero">
           <p>Ron Weasley · Direct-Line Chat</p>
-          <h1>Ron Weasley Direct-Line Chat Not Installed</h1>
+          <h1>Ron Weasley Direct-Line Chat Installed</h1>
           <span>
-            This is intentionally blocked until the real direct-line adapter is installed. Required path:
+            Text direct-line proof passed through the Mission Control Ron WebUI proxy. Required path remains:
             Owner → Mission Control → Nuclear Gateway → Ron Weasley, with OpenCloud hidden intermediary false.
           </span>
         </header>
@@ -1170,7 +1170,7 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
         <section className="control-grid">
           <article className="control-card">
             <strong>Status</strong>
-            <span>{HERMES_DIRECT_LINE_CHAT_BLOCKER}</span>
+            <span>{HERMES_DIRECT_LINE_CHAT_PROOF}</span>
           </article>
           <article className="control-card">
             <strong>Direct line requirement</strong>
@@ -1178,7 +1178,7 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
           </article>
           <article className="control-card">
             <strong>Next safe action</strong>
-            <span>Install a real Ron Weasley chat adapter and wire it to trace/audit/task proof before enabling this button.</span>
+            <span>Use the Ron WebUI proxy for direct-line chat. Keep production-impacting writes behind Jarvis concurrence and exact-scope audit.</span>
           </article>
         </section>
       </main>

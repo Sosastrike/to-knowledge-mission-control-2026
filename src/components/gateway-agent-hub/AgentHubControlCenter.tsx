@@ -549,10 +549,15 @@ function RonProofPanel({ agent }: { agent: AgentHubAgent }) {
         <Fact label='Mission Control service' value={proof.mission_control_service} />
         <Fact label='Authenticated Ron routes' value={proof.authenticated_ron_routes} />
         <Fact label='Direct-line chat' value={proof.direct_line_chat} />
+        {'direct_line_chat_proof' in proof && <Fact label='Direct-line proof' value={String(proof.direct_line_chat_proof)} />}
         <Fact label='Protected writes/execution' value={proof.protected_writes_execution} />
         <Fact label='OpenCloud intermediary' value={proof.opencloud_intermediary ? 'TRUE' : 'FALSE'} />
       </dl>
-      <p className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Direct-line chat blocker: {proof.direct_line_chat_blocker}</p>
+      {proof.direct_line_chat_blocker !== 'none' ? (
+        <p className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Direct-line chat blocker: {proof.direct_line_chat_blocker}</p>
+      ) : (
+        <p className='mt-3 rounded-md border border-emerald-300/20 bg-emerald-300/8 p-3 text-xs leading-5 text-emerald-100'>Direct-line chat proof: Mission Control proxy session_id repair and Ron WebUI transcript response verified. Protected execution remains Jarvis-gated.</p>
+      )}
     </section>
   )
 }

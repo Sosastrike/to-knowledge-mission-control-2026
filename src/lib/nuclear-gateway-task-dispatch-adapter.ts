@@ -70,6 +70,21 @@ export type NuclearGatewayTaskDispatchPreview = {
   credential_values_exposed: false
   no_secrets_exposed: true
   required_next_proof: string[]
+  audit_preview?: {
+    action: 'nuclear_gateway.task_dispatch.preview'
+    actor: 'nuclear-gateway'
+    target_type: 'direct_agent_line'
+    target: string
+    payload_values_exposed: false
+    audit_write_required_before_execution: true
+  }
+  rollback_or_no_state_proof?: {
+    proof_type: 'NO_STATE_PREVIEW_ONLY'
+    no_runtime_mutation: true
+    no_external_write: true
+    rollback_required: false
+    rollback_ref: 'no_state_preview_only'
+  }
 }
 
 function adapter(input: Omit<NuclearGatewayTaskDispatchAdapter,
@@ -153,6 +168,27 @@ function normalizeKind(value: unknown): NuclearGatewayTaskDispatchKind | null {
     : null
 }
 
+function auditPreview(target: string) {
+  return {
+    action: 'nuclear_gateway.task_dispatch.preview' as const,
+    actor: 'nuclear-gateway' as const,
+    target_type: 'direct_agent_line' as const,
+    target,
+    payload_values_exposed: false as const,
+    audit_write_required_before_execution: true as const,
+  }
+}
+
+function noStatePreviewProof() {
+  return {
+    proof_type: 'NO_STATE_PREVIEW_ONLY' as const,
+    no_runtime_mutation: true as const,
+    no_external_write: true as const,
+    rollback_required: false as const,
+    rollback_ref: 'no_state_preview_only' as const,
+  }
+}
+
 export function buildNuclearGatewayTaskDispatchAdapterStatus() {
   return {
     ok: true,
@@ -172,11 +208,11 @@ export function buildNuclearGatewayTaskDispatchAdapterStatus() {
     external_writes_enabled: false,
     credential_values_exposed: false,
     no_secrets_exposed: true,
+    rollback_or_no_state_proof: noStatePreviewProof(),
     required_next_proof: [
       'authenticated_direct_line_send_receive_probe',
       'visible_task_event_written',
       'audit_record_written',
-      'rollback_or_no_state_proof_written',
       'mission_control_service_refreshed_after_source_cutover',
     ],
   }
@@ -335,5 +371,7 @@ export function buildNuclearGatewayTaskDispatchPreview(
     credential_values_exposed: false,
     no_secrets_exposed: true,
     required_next_proof: requiredNextProof,
+    audit_preview: auditPreview(line.agent_id),
+    rollback_or_no_state_proof: noStatePreviewProof(),
   }
 }

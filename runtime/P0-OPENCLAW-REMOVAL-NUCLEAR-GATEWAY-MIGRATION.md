@@ -115,6 +115,18 @@ The GET route reports the source-ready adapters for task dispatch, target-sessio
 
 The cutover certification now includes `phase_6_task_dispatch_adapter_contract` as a distinct `SOURCE_READY` criterion. This prevents Phase 10 from falsely certifying while task dispatch, target-session handoff, Aegis review, or task broadcast still need live receive/audit/rollback proof. OpenClaw runtime was not stopped, disabled, repaired, invoked, or moved into command authority.
 
+## Phase 6 No-State Task Dispatch Proof - 2026-05-29
+
+The Nuclear Gateway task dispatch adapter preview now includes explicit no-state rollback proof:
+
+- `audit_preview.action: nuclear_gateway.task_dispatch.preview`
+- `rollback_or_no_state_proof.proof_type: NO_STATE_PREVIEW_ONLY`
+- `no_runtime_mutation: true`
+- `no_external_write: true`
+- `rollback_ref: no_state_preview_only`
+
+This narrows the Phase 10 task-dispatch blocker to live direct-line receive proof plus a real audit write before execution. Runtime dispatch remains blocked; no OpenClaw service, connector, Paperclip data, credential, or public-exposure state was changed.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

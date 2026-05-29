@@ -73,6 +73,20 @@ describe('Nuclear Gateway task dispatch adapter contract', () => {
       openclaw_hidden_intermediary_allowed: false,
       credential_values_exposed: false,
     })
+    expect(preview.audit_preview).toMatchObject({
+      action: 'nuclear_gateway.task_dispatch.preview',
+      actor: 'nuclear-gateway',
+      target_type: 'direct_agent_line',
+      target: 'ron-weasley',
+      payload_values_exposed: false,
+    })
+    expect(preview.rollback_or_no_state_proof).toMatchObject({
+      proof_type: 'NO_STATE_PREVIEW_ONLY',
+      no_runtime_mutation: true,
+      no_external_write: true,
+      rollback_required: false,
+      rollback_ref: 'no_state_preview_only',
+    })
     expect(preview.envelope_preview).toMatchObject({
       source_channel: 'nuclear_gateway_task_dispatch',
       target_agent: 'ron-weasley',

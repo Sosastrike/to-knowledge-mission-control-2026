@@ -64,6 +64,15 @@ describe('Nuclear Gateway task dispatch adapter route', () => {
       writes_enabled: false,
       external_writes_enabled: false,
       credential_values_exposed: false,
+      audit_preview: {
+        action: 'nuclear_gateway.task_dispatch.preview',
+        payload_values_exposed: false,
+      },
+      rollback_or_no_state_proof: {
+        proof_type: 'NO_STATE_PREVIEW_ONLY',
+        no_runtime_mutation: true,
+        rollback_ref: 'no_state_preview_only',
+      },
     })
   })
 

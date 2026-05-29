@@ -103,7 +103,7 @@ export function buildNuclearGatewayCutoverCertificationStatus() {
         ? 'SOURCE_READY'
         : 'BLOCKED',
       blocker: taskDispatchAdapter.openclaw_runtime_invoked === false
-        ? 'task_dispatch_execution_waiting_on_live_receive_audit_rollback_proof'
+        ? 'task_dispatch_execution_waiting_on_live_receive_and_audit_write_proof'
         : 'task_dispatch_adapter_must_not_invoke_openclaw_runtime',
       proof: ['/api/bridge/nuclear-gateway/task-dispatch-adapter', 'src/lib/nuclear-gateway-task-dispatch-adapter.ts'],
     }),
@@ -211,6 +211,7 @@ export function buildNuclearGatewayCutoverCertificationStatus() {
       openclaw_runtime_invoked: taskDispatchAdapter.openclaw_runtime_invoked,
       openclaw_conversation_owner_allowed: taskDispatchAdapter.openclaw_conversation_owner_allowed,
       openclaw_hidden_intermediary_allowed: taskDispatchAdapter.openclaw_hidden_intermediary_allowed,
+      rollback_or_no_state_proof: taskDispatchAdapter.rollback_or_no_state_proof.proof_type,
     },
     next_safe_lane: 'Collect live external direct-line receive proof, add task-dispatch live receive/audit/rollback proof, and reload Mission Control for refreshed Phase 8 payload before any runtime cutover.',
     rollback_command: 'cd /home/tony/mission-control && git revert <phase-10-cutover-preflight-commit>',

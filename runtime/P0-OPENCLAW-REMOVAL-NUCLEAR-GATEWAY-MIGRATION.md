@@ -1,6 +1,6 @@
 # P0 OpenClaw Removal / Nuclear Gateway Migration
 
-Status: Phase 1 inventory started; Phase 2 direct-line enforcement source work started.
+Status: Phase 1 inventory complete; Phase 2 direct-line enforcement and Phase 3 route-trace refusal proof in progress.
 
 Architecture target:
 
@@ -22,10 +22,10 @@ Task title: OpenClaw Removal / Nuclear Gateway Migration
 Required metadata:
 
 - assigned_agent: agent-zero-jarvis
-- current_phase: Phase 1 OpenClaw dependency inventory
-- progress_percent: 15
-- blocker: none for source inventory
-- next_safe_lane: Phase 2 direct-line registry enforcement
+- current_phase: Phase 2 / Phase 3 Nuclear Gateway direct-line enforcement
+- progress_percent: 84
+- blocker: live authenticated external-agent receive proof remains pending before Phase 10 cutover
+- next_safe_lane: continue Direct Agent Line Trace Kit live proof and remove remaining non-canonical owner-facing gateway wording
 - project_continues: true
 - audit_id: audit_openclaw_inventory_phase1
 - rollback_id: no_state_openclaw_inventory_phase1
@@ -61,6 +61,26 @@ Canonical direct-line IDs moved toward:
 - `ron-mini-agent.*` with `hermes-mini-agent.*` legacy aliases
 - `openclaw` as inactive supporting runtime, not a conversation owner
 
+## Phase 2 / Phase 3 Update - 2026-05-29
+
+The Ron/Jarvis legacy direct-line parity surface now reports the direct transport as Nuclear Gateway-owned:
+
+- `transport_mode: nuclear_gateway_direct`
+- `mode: nuclear_gateway_direct_agent_lines`
+- `gateway_node: nuclear-gateway`
+- `route_trace: owner -> mission-control -> nuclear-gateway -> target agent`
+
+Legacy `/api/bridge/hermes/*` route IDs remain intact as Ron Weasley aliases; owner-facing authority remains Jarvis final authority with Ron delegated under Jarvis. OpenClaw/OpenCloud is not in the route trace, not a conversation owner, not an intermediary, and not a commander.
+
+Fresh targeted proof:
+
+- `src/lib/hermes-direct-line-parity.test.ts`
+- `src/lib/agent-routing-lines.test.ts`
+- `src/lib/agent-line-trace.test.ts`
+- `src/lib/nuclear-gateway-cutover-certification.test.ts`
+
+Result: 48 tests passed.
+
 ## Phase 5 Source Changes Started
 
 Credential broker source/routes were added as name-only status surfaces:
@@ -86,10 +106,8 @@ These routes report credential names and boolean presence only. They do not retu
 Before commit:
 
 ```bash
-git restore src/lib/agent-routing-lines.ts src/lib/opencloud-authority-policy.ts src/lib/gateway-agent-hub.ts scripts/agent-line-trace.sh
-rm -f src/lib/credential-broker.ts src/lib/credential-broker.test.ts
-rm -rf src/app/api/bridge/credentials
-rm -f runtime/P0-OPENCLAW-REMOVAL-NUCLEAR-GATEWAY-MIGRATION.md runtime/openclaw-dependency-map.md
+git restore --staged src/lib/hermes-direct-line-parity.ts src/lib/hermes-direct-line-parity.test.ts runtime/P0-OPENCLAW-REMOVAL-NUCLEAR-GATEWAY-MIGRATION.md runtime/openclaw-dependency-map.md
+git restore src/lib/hermes-direct-line-parity.ts src/lib/hermes-direct-line-parity.test.ts runtime/P0-OPENCLAW-REMOVAL-NUCLEAR-GATEWAY-MIGRATION.md runtime/openclaw-dependency-map.md
 ```
 
 After commit:

@@ -15,6 +15,7 @@ Scope: Phase 1 read-only inventory. Secret-bearing files such as `.env*`, cookie
 | Agent routing registry | `src/lib/agent-routing-lines.ts`; `/api/bridge/agent-routing/*` | Early direct-line registry | Stale Mission Control Gateway wording and Hermes canonical ID could obscure Nuclear Gateway path | migrate_to_nuclear_gateway | Nuclear Gateway direct-line registry | Code rollback via `git revert <commit-hash>` | No secret values |
 | Authority policy | `src/lib/opencloud-authority-policy.ts` | OpenCloud/OpenClaw demotion policy | Allowed-role names were too broad and missing credential/default-gateway refusals | migrate_to_nuclear_gateway | OpenClaw supporting-runtime-only policy | Code rollback via `git revert <commit-hash>` | No secret values |
 | Agent line trace kit | `src/lib/agent-line-trace.ts`; `scripts/agent-line-trace.sh` | Direct-line proof tool | Legacy route trace used `mission_control_gateway`; aliases still needed | migrate_to_nuclear_gateway | Direct Agent Line Trace Kit | Code rollback via `git revert <commit-hash>` | No secret values; script does not print auth values |
+| Ron/Jarvis legacy parity surface | `src/lib/hermes-direct-line-parity.ts`; `src/lib/hermes-direct-line-parity.test.ts` | Legacy Ron/Hermes direct-line parity and delegated execution proof | Stale `mission_control_gateway_direct` transport wording could obscure the Nuclear Gateway path | migrate_to_nuclear_gateway | Nuclear Gateway direct-line parity with `/api/bridge/hermes/*` kept as Ron legacy alias | Code rollback via `git revert <commit-hash>` | No secret values |
 | Gateway Agent Hub source | `src/lib/gateway-agent-hub.ts` | Owner-facing status payload | UI can imply Gateway/OpenClaw hierarchy incorrectly if stale wording persists | migrate_to_nuclear_gateway | Nuclear Gateway graph/cards | Code rollback via `git revert <commit-hash>` | No secret values |
 | Credential status surface | `/api/bridge/credentials/*` | New name-only credential broker routes | Must never expose values | migrate_to_nuclear_gateway | Nuclear Gateway Credential Broker | Remove new route files if rollback needed | Names only; values redacted |
 | Gateway graph OpenClaw node | `src/lib/gateway-model.ts` and graph consumers | OpenClaw appears as supporting runtime node | Could be misread as agent/dispatcher if UI is stale | migrate_to_nuclear_gateway | Nuclear Gateway central broker node; OpenClaw supporting runtime node | Code rollback via `git revert <commit-hash>` | No secret values |
@@ -34,32 +35,7 @@ Scope: Phase 1 read-only inventory. Secret-bearing files such as `.env*`, cookie
 
 ## Next Safe Lane
 
-Continue Phase 2 direct-line registry enforcement and Phase 3 message envelope refusal tests before any runtime cutover.
-
-## Phase 6 Tool / MCP Migration Addendum
-
-Generated: 2026-05-28
-
-Phase 6 adds an owner-safe Nuclear Gateway tool migration map at:
-
-- `src/lib/nuclear-gateway-tool-migration.ts`
-- `GET /api/bridge/nuclear-gateway/tool-migration`
-
-The map classifies OpenClaw/OpenCloud tool dependencies without inspecting secret values:
-
-- `READ_ONLY`: session transcript reads, skill inventory, cron inventory, runtime health/version diagnostics.
-- `WRITE_GATED`: session send/control, skill activation, cron run/update/delete.
-- `CREDENTIAL_REQUIRED`: integration credential-name catalog, brokered by Nuclear Gateway by name only.
-- `PERMISSION_REQUIRED`: backup creation or other production-sensitive actions.
-- `UNSAFE_DISABLED`: OpenClaw update/doctor repair surfaces under the owner directive to not repair OpenClaw.
-
-Safety proof:
-
-- OpenClaw is not the tool broker of record.
-- Nuclear Gateway is the tool broker of record.
-- OpenClaw cannot be conversation owner, hidden intermediary, credential broker, default gateway, or commander.
-- All writes/execution remain disabled in this map until exact-scope adapter, Jarvis concurrence, audit, and rollback proof exist.
-- Credential names are listed only when needed; values are not inspected or exposed.
+Continue Phase 2 direct-line registry enforcement, Phase 3 message envelope refusal tests, and live authenticated external-agent receive proof before any runtime cutover.
 
 ## Phase 6 Tool / MCP Migration Addendum
 

@@ -7,6 +7,7 @@ import {
   isAllowedHermesWebUiLoopbackUrl,
   repairHermesWebUiChatStartBody,
 } from './hermes-webui-proxy'
+import { getLatestRonMissionControlProxyProof } from './ron-proxy-proof'
 
 type RonRuntimeProofOptions = {
   webUiUrl?: string
@@ -95,9 +96,13 @@ function missionControlProxyProof(input: { webUiReady: boolean; directLineProven
     { message: 'redacted' },
     '/gateway/agent-hub/ron/webui/session/mission-control-proxy-proof',
   )
+  const authenticatedProof = getLatestRonMissionControlProxyProof()
+  const certified = Boolean(input.webUiReady && input.directLineProven && authenticatedProof?.authenticated_proxy_send_receive_proof)
 
   return {
-    state: input.webUiReady && input.directLineProven
+    state: certified
+      ? 'MISSION_CONTROL_PROXY_CERTIFIED'
+      : input.webUiReady && input.directLineProven
       ? 'LOCAL_PROXY_READINESS_PRESENT_AUTHENTICATED_SEND_RECEIVE_PENDING'
       : 'PENDING_PROOF',
     route: '/gateway/agent-hub/ron/webui/app',
@@ -108,8 +113,12 @@ function missionControlProxyProof(input: { webUiReady: boolean; directLineProven
     session_id_repair: sessionRepair.repaired ? 'READY' : 'BLOCKED',
     session_id_value_exposed: false,
     local_direct_line_proof_present: input.directLineProven,
-    authenticated_proxy_send_receive_proof: false,
-    exact_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
+    authenticated_proxy_send_receive_proof: certified,
+    response_received: certified,
+    proof_nonce_hash: authenticatedProof?.proof_nonce_hash || null,
+    visible_task_id: authenticatedProof?.visible_task_id || null,
+    visible_task_event_written: authenticatedProof?.visible_task_event_written || false,
+    exact_blocker: certified ? null : 'mission_control_authenticated_proxy_send_receive_proof_pending',
   }
 }
 
@@ -139,7 +148,9 @@ export async function buildRonRuntimeProof(options: RonRuntimeProofOptions = {})
     protected_execution: 'JARVIS_CONCURRENCE_REQUIRED',
     overall_state: webUiReady
       ? directLineProven
-        ? 'RUNTIME_RECOVERED_LOCAL_DIRECT_LINE_PROOF_PRESENT'
+        ? proxyProof.authenticated_proxy_send_receive_proof
+          ? 'RUNTIME_RECOVERED_MISSION_CONTROL_PROXY_PROOF_PRESENT'
+          : 'RUNTIME_RECOVERED_LOCAL_DIRECT_LINE_PROOF_PRESENT'
         : 'RUNTIME_HEALTHY_DIRECT_LINE_PROOF_PENDING'
       : 'RUNTIME_HEALTH_BLOCKED',
     opencloud_intermediary: false,
@@ -181,9 +192,13 @@ export async function buildRonRuntimeProof(options: RonRuntimeProofOptions = {})
     },
     mission_control_proxy_certification: {
       state: proxyProof.state,
-      blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
+      blocker: proxyProof.exact_blocker,
       local_direct_line_proof_present: directLineProven,
-      authenticated_proxy_send_receive_proof: false,
+      authenticated_proxy_send_receive_proof: proxyProof.authenticated_proxy_send_receive_proof,
+      response_received: proxyProof.response_received,
+      visible_task_event_written: proxyProof.visible_task_event_written,
+      visible_task_id: proxyProof.visible_task_id,
+      proof_nonce_hash: proxyProof.proof_nonce_hash,
     },
     no_secret_proof: {
       env_values_printed: false,

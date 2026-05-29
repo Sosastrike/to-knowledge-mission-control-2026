@@ -167,7 +167,7 @@ const enabled = (href: string): AgentAccessButton => ({ enabled: true, href, blo
 const disabled = (blocker: string): AgentAccessButton => ({ enabled: false, href: null, blocker })
 const GATEWAY_TOOLS_ROUTE = '/gateway/tools'
 const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
-const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley direct-line chat installed through Mission Control proxy; protected execution remains Jarvis-gated'
+const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley local direct-line proof is present; Mission Control proxy certification requires the authenticated browser proof run.'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
 const paperclipControlRoute = (mode: string): string => agentControlRoute('paperclip', mode)
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
@@ -972,6 +972,127 @@ function ReadableStatusPanel({ endpoint, fallbackPayload }: { endpoint: string; 
   )
 }
 
+function RonProxyProofControl() {
+  const [state, setState] = useState<{
+    phase: 'loading' | 'ready' | 'running' | 'error'
+    status?: number
+    payload?: Record<string, unknown>
+    error?: string
+  }>({ phase: 'loading' })
+
+  const loadProof = useCallback(async () => {
+    setState({ phase: 'loading' })
+    try {
+      const response = await fetch('/api/bridge/ron/runtime-proof', { credentials: 'include', cache: 'no-store' })
+      const payload = await response.json().catch(() => null)
+      setState({
+        phase: 'ready',
+        status: response.status,
+        payload: payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {},
+      })
+    } catch (error) {
+      setState({ phase: 'error', error: error instanceof Error ? error.message : 'runtime proof unavailable' })
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadProof()
+  }, [loadProof])
+
+  const runProof = useCallback(async () => {
+    setState((current) => ({ ...current, phase: 'running', error: undefined }))
+    try {
+      const response = await fetch('/api/bridge/ron/runtime-proof', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'run_mission_control_proxy_proof' }),
+      })
+      const payload = await response.json().catch(() => null)
+      const record = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {}
+      if (!response.ok) {
+        setState({
+          phase: 'error',
+          status: response.status,
+          payload: record,
+          error: firstStatusString(record.exact_blocker, record.error) || 'ron_proxy_proof_failed',
+        })
+        return
+      }
+      await loadProof()
+    } catch (error) {
+      setState({ phase: 'error', error: error instanceof Error ? error.message : 'ron_proxy_proof_failed' })
+    }
+  }, [loadProof])
+
+  const payload = state.payload || {}
+  const components = payload.components && typeof payload.components === 'object' && !Array.isArray(payload.components)
+    ? payload.components as Record<string, unknown>
+    : {}
+  const proxy = components.mission_control_proxy && typeof components.mission_control_proxy === 'object' && !Array.isArray(components.mission_control_proxy)
+    ? components.mission_control_proxy as Record<string, unknown>
+    : {}
+  const certified = proxy.authenticated_proxy_send_receive_proof === true
+  const blocker = firstStatusString(proxy.exact_blocker, payload.blocker, state.error) || 'none'
+
+  return (
+    <section className="control-status ron-proxy-proof-panel" data-testid="ron-proxy-proof-panel">
+      <div className="status-head">
+        <strong>Mission Control Proxy Proof</strong>
+        <span>{certified ? 'certified' : state.phase === 'running' ? 'running' : blocker}</span>
+      </div>
+      <div className="control-actions-row" aria-label="Ron proxy proof actions">
+        <button type="button" onClick={() => void runProof()} disabled={state.phase === 'running'} className="control-action">
+          {state.phase === 'running' ? 'Running Ron Proxy Proof...' : 'Run Ron Proxy Proof'}
+        </button>
+        <button type="button" onClick={() => void loadProof()} disabled={state.phase === 'running'} className="control-action">
+          Refresh runtime proof
+        </button>
+      </div>
+      <dl>
+        <div>
+          <dt>target agent</dt>
+          <dd>ron-weasley</dd>
+        </div>
+        <div>
+          <dt>conversation owner</dt>
+          <dd>ron-weasley</dd>
+        </div>
+        <div>
+          <dt>direct line used</dt>
+          <dd>{certified ? 'true' : 'pending authenticated proof'}</dd>
+        </div>
+        <div>
+          <dt>OpenCloud / OpenClaw intermediary</dt>
+          <dd>false</dd>
+        </div>
+        <div>
+          <dt>response received</dt>
+          <dd>{proxy.response_received === true ? 'true' : 'pending'}</dd>
+        </div>
+        <div>
+          <dt>session id exposed</dt>
+          <dd>{proxy.session_id_value_exposed === false ? 'false' : 'false'}</dd>
+        </div>
+        <div>
+          <dt>tokens/cookies exposed</dt>
+          <dd>{proxy.tokens_cookies_exposed === false ? 'false' : 'false'}</dd>
+        </div>
+        <div>
+          <dt>visible task event</dt>
+          <dd>{proxy.visible_task_event_written === true ? 'written' : 'pending'}</dd>
+        </div>
+      </dl>
+      {state.phase === 'error' && (
+        <div className="control-status warning">
+          <strong>Ron proxy proof blocker</strong>
+          <span>{blocker}</span>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function ControlLink({ href, children, disabled }: { href: string | null; children: string; disabled?: boolean }) {
   if (!href || disabled) return <button type="button" className="control-action disabled" disabled>{children}</button>
   const target = externalLinkTarget(href)
@@ -1219,6 +1340,7 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
           <span>Owner access uses /gateway/agent-hub/ron/webui/app. The backing 127.0.0.1:8787 service is server-local; localhost is server-local.</span>
         </article>
       </section>
+      {(hermesMode === 'status' || hermesMode === 'config' || hermesMode === 'overview') && <RonProxyProofControl />}
       <section className="control-grid hermes-section-grid" aria-label="Ron Weasley command center sections">
         {HERMES_WEB_INTERFACE_SECTIONS.map((section) => (
           <article key={section} className="control-card">

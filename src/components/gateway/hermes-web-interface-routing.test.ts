@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 
 import { AGENT_INTERFACE_LINKS, agentControlLinksFor, controlViewFromPath, gatewayActionForButton } from './GatewayShell'
 import { attachGatewayActionHandler } from './gateway-actions'
@@ -72,6 +73,17 @@ describe('Ron Weasley WebUI Gateway routing', () => {
       enabled: true,
       href: '/gateway/agent-hub/ron/webui/app',
     })
+  })
+
+  it('exposes the authenticated Ron Mission Control proxy proof action in Ron status surfaces', () => {
+    const source = readFileSync('src/components/gateway/GatewayShell.tsx', 'utf8')
+
+    expect(source).toContain('Run Ron Proxy Proof')
+    expect(source).toContain('/api/bridge/ron/runtime-proof')
+    expect(source).toContain('run_mission_control_proxy_proof')
+    expect(source).toContain('session_id_value_exposed')
+    expect(source).toContain('tokens_cookies_exposed')
+    expect(source).toContain('OpenCloud / OpenClaw intermediary')
   })
 
   it('uses owner-openable Tailnet/proxy URLs instead of server-local localhost buttons', () => {

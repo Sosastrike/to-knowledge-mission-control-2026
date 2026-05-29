@@ -550,13 +550,17 @@ function RonProofPanel({ agent }: { agent: AgentHubAgent }) {
         <Fact label='Authenticated Ron routes' value={proof.authenticated_ron_routes} />
         <Fact label='Direct-line chat' value={proof.direct_line_chat} />
         {'direct_line_chat_proof' in proof && <Fact label='Direct-line proof' value={String(proof.direct_line_chat_proof)} />}
+        <Fact label='Mission Control proxy' value={proof.mission_control_proxy} />
         <Fact label='Protected writes/execution' value={proof.protected_writes_execution} />
         <Fact label='OpenCloud intermediary' value={proof.opencloud_intermediary ? 'TRUE' : 'FALSE'} />
       </dl>
       {proof.direct_line_chat_blocker !== 'none' ? (
-        <p className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Direct-line chat blocker: {proof.direct_line_chat_blocker}</p>
+        <div className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>
+          <p>Mission Control proxy blocker: {proof.direct_line_chat_blocker}</p>
+          <a href='/gateway/agent-hub/ron/status' className='mt-2 inline-flex rounded-md border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 font-semibold text-amber-50 hover:bg-amber-300/15'>Run Ron Proxy Proof</a>
+        </div>
       ) : (
-        <p className='mt-3 rounded-md border border-emerald-300/20 bg-emerald-300/8 p-3 text-xs leading-5 text-emerald-100'>Direct-line chat proof: Mission Control proxy session_id repair and Ron WebUI transcript response verified. Protected execution remains Jarvis-gated.</p>
+        <p className='mt-3 rounded-md border border-emerald-300/20 bg-emerald-300/8 p-3 text-xs leading-5 text-emerald-100'>Mission Control proxy proof verified. Protected execution remains Jarvis-gated.</p>
       )}
     </section>
   )

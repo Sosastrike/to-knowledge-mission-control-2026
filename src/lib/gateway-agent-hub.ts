@@ -97,9 +97,11 @@ export type AgentHubRonProofPanel = {
   full_access_delegation: 'FULL_ACCESS_DELEGATED'
   mission_control_service: 'ACTIVE'
   authenticated_ron_routes: 'RESPONDING'
-  direct_line_chat: 'INSTALLED'
-  direct_line_chat_blocker: 'none'
+  direct_line_chat: 'LOCAL_PROOF_PRESENT'
+  direct_line_chat_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending' | 'none'
   direct_line_chat_proof: 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS'
+  mission_control_proxy: 'AUTHENTICATED_SEND_RECEIVE_PENDING'
+  proxy_proof_route: '/api/bridge/ron/runtime-proof'
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED'
   execution_model: 'JARVIS-GATED EXECUTION'
   opencloud_intermediary: false
@@ -422,9 +424,11 @@ const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
   full_access_delegation: 'FULL_ACCESS_DELEGATED',
   mission_control_service: 'ACTIVE',
   authenticated_ron_routes: 'RESPONDING',
-  direct_line_chat: 'INSTALLED',
-  direct_line_chat_blocker: 'none',
+  direct_line_chat: 'LOCAL_PROOF_PRESENT',
+  direct_line_chat_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
   direct_line_chat_proof: RON_DIRECT_LINE_CHAT_PROOF,
+  mission_control_proxy: 'AUTHENTICATED_SEND_RECEIVE_PENDING',
+  proxy_proof_route: '/api/bridge/ron/runtime-proof',
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED',
   execution_model: 'JARVIS-GATED EXECUTION',
   opencloud_intermediary: false,
@@ -471,7 +475,7 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     name: RON_WEASLEY_IDENTITY.canonical_name,
     role: 'Nuclear Dispatcher / Skill + Workflow Architect',
     layer: 'planning_and_skill_design',
-    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Direct-line chat is INSTALLED with Mission Control proxy session_id repair and Ron WebUI transcript proof.',
+    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Local direct-line proof is present; Mission Control proxy send/receive certification is pending the authenticated browser proof run.',
     status: 'full_access_delegated',
     liveInterfaceProven: true,
     calledTrueProven: true,

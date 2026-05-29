@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import {
   buildNuclearGatewayTaskDispatchAdapterStatus,
   buildNuclearGatewayTaskDispatchPreview,
+  writeNuclearGatewayTaskDispatchPreviewAudit,
 } from '@/lib/nuclear-gateway-task-dispatch-adapter'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
@@ -38,5 +39,9 @@ export async function POST(request: NextRequest) {
   }
 
   const result = buildNuclearGatewayTaskDispatchPreview(input)
-  return NextResponse.json(result, { status: statusForPreview(result) })
+  const auditWriteProof = writeNuclearGatewayTaskDispatchPreviewAudit(result, input)
+  return NextResponse.json({
+    ...result,
+    ...(auditWriteProof ? { audit_write_proof: auditWriteProof } : {}),
+  }, { status: statusForPreview(result) })
 }

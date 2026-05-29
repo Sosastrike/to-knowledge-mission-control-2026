@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { getDatabase } from '@/lib/db'
+
 const requireRoleMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
@@ -41,6 +43,7 @@ describe('Nuclear Gateway task dispatch adapter route', () => {
   it('previews a direct-line task dispatch envelope without executing writes', async () => {
     requireRoleMock.mockReturnValue({ user: { role: 'operator' } })
     const route = await import('@/app/api/bridge/nuclear-gateway/task-dispatch-adapter/route')
+    const db = getDatabase()
 
     const response = await route.POST(new NextRequest('http://localhost/api/bridge/nuclear-gateway/task-dispatch-adapter', {
       method: 'POST',
@@ -73,7 +76,38 @@ describe('Nuclear Gateway task dispatch adapter route', () => {
         no_runtime_mutation: true,
         rollback_ref: 'no_state_preview_only',
       },
+      audit_write_proof: {
+        audit_written: true,
+        action: 'nuclear_gateway.task_dispatch.preview',
+        raw_message_body_exposed: false,
+      },
     })
+
+    const audit = db.prepare(`
+      SELECT action, actor, target_type, detail
+      FROM audit_log
+      WHERE action = 'nuclear_gateway.task_dispatch.preview'
+      ORDER BY id DESC
+      LIMIT 1
+    `).get() as { action: string; actor: string; target_type: string; detail: string } | undefined
+    expect(audit).toMatchObject({
+      action: 'nuclear_gateway.task_dispatch.preview',
+      actor: 'nuclear-gateway',
+      target_type: 'direct_agent_line',
+    })
+    const detail = JSON.parse(audit?.detail || '{}')
+    expect(detail).toMatchObject({
+      target_agent: 'ron-weasley',
+      conversation_owner: 'ron-weasley',
+      direct_line_used: true,
+      route_trace: ['owner', 'mission-control', 'nuclear-gateway', 'ron-weasley'],
+      execution_enabled: false,
+      external_writes_enabled: false,
+      raw_message_body_exposed: false,
+      credential_values_exposed: false,
+    })
+    expect(detail.message_hash).toMatch(/^[a-f0-9]{16}$/)
+    expect(JSON.stringify(detail)).not.toContain('Preview dispatch only.')
   })
 
   it('refuses OpenClaw as task dispatch owner', async () => {

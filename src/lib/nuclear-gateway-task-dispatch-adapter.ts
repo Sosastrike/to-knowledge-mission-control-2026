@@ -4,6 +4,8 @@ import {
   routeTraceForLine,
   type AgentMessageEnvelope,
 } from '@/lib/agent-routing-lines'
+import { createHash } from 'node:crypto'
+import { logAuditEvent } from '@/lib/db'
 import { isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
 
 export const NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE = 'phase_6_task_dispatch_adapter_contract' as const
@@ -84,6 +86,12 @@ export type NuclearGatewayTaskDispatchPreview = {
     no_external_write: true
     rollback_required: false
     rollback_ref: 'no_state_preview_only'
+  }
+  audit_write_proof?: {
+    audit_written: true
+    action: 'nuclear_gateway.task_dispatch.preview'
+    raw_message_body_exposed: false
+    credential_values_exposed: false
   }
 }
 
@@ -186,6 +194,50 @@ function noStatePreviewProof() {
     no_external_write: true as const,
     rollback_required: false as const,
     rollback_ref: 'no_state_preview_only' as const,
+  }
+}
+
+function messageHash(value: unknown) {
+  return createHash('sha256').update(String(value || '')).digest('hex').slice(0, 16)
+}
+
+export function writeNuclearGatewayTaskDispatchPreviewAudit(
+  preview: NuclearGatewayTaskDispatchPreview,
+  input: NuclearGatewayTaskDispatchPreviewInput = {},
+) {
+  if (!preview.ok || !preview.audit_preview) return null
+
+  logAuditEvent({
+    action: preview.audit_preview.action,
+    actor: preview.audit_preview.actor,
+    target_type: preview.audit_preview.target_type,
+    detail: {
+      phase: preview.phase,
+      dispatch_kind: preview.dispatch_kind,
+      task_id: preview.task_id,
+      visible_task_id: input.visible_task_id == null ? null : String(input.visible_task_id),
+      target_session_present: Boolean(preview.target_session),
+      target_agent: preview.target_agent,
+      conversation_owner: preview.conversation_owner,
+      direct_line_used: preview.direct_line_used,
+      route_trace: preview.route_trace,
+      message_hash: messageHash(input.message),
+      execution_enabled: preview.execution_enabled,
+      writes_enabled: preview.writes_enabled,
+      external_writes_enabled: preview.external_writes_enabled,
+      openclaw_used: preview.openclaw_used,
+      openclaw_hidden_intermediary_allowed: preview.openclaw_hidden_intermediary_allowed,
+      rollback_or_no_state_proof: preview.rollback_or_no_state_proof,
+      raw_message_body_exposed: false,
+      credential_values_exposed: false,
+    },
+  })
+
+  return {
+    audit_written: true as const,
+    action: 'nuclear_gateway.task_dispatch.preview' as const,
+    raw_message_body_exposed: false as const,
+    credential_values_exposed: false as const,
   }
 }
 

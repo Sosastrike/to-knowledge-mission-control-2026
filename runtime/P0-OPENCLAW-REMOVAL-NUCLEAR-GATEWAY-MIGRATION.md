@@ -127,6 +127,20 @@ The Nuclear Gateway task dispatch adapter preview now includes explicit no-state
 
 This narrows the Phase 10 task-dispatch blocker to live direct-line receive proof plus a real audit write before execution. Runtime dispatch remains blocked; no OpenClaw service, connector, Paperclip data, credential, or public-exposure state was changed.
 
+## Phase 6 Audit Write Proof Installed - 2026-05-29
+
+The authenticated task-dispatch preview route now writes a redacted internal audit entry for successful preview packets:
+
+- `action: nuclear_gateway.task_dispatch.preview`
+- `actor: nuclear-gateway`
+- `target_type: direct_agent_line`
+- raw message body omitted
+- `message_hash` stored instead of message text
+- credential values exposed: false
+- execution/writes/external writes remain false
+
+This is an internal audit-only write. It does not dispatch to any agent, does not call OpenClaw/OpenCloud, does not call connectors, and does not mutate production runtime state. Phase 10 remains blocked until live target-agent receive proof is collected through an authenticated direct-line probe.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

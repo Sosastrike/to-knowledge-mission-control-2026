@@ -1,0 +1,339 @@
+import {
+  buildAgentMessageEnvelope,
+  resolveAgentRoutingLine,
+  routeTraceForLine,
+  type AgentMessageEnvelope,
+} from '@/lib/agent-routing-lines'
+import { isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
+
+export const NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE = 'phase_6_task_dispatch_adapter_contract' as const
+
+export type NuclearGatewayTaskDispatchKind =
+  | 'task_dispatch_new_session'
+  | 'task_dispatch_target_session'
+  | 'aegis_review'
+  | 'task_broadcast'
+
+export type NuclearGatewayTaskDispatchAdapter = {
+  id: NuclearGatewayTaskDispatchKind
+  label: string
+  legacy_dependency: string
+  nuclear_gateway_adapter: string
+  route: string
+  direct_line_required: true
+  message_envelope_required: true
+  visible_task_required: true
+  audit_required: true
+  rollback_required: true
+  bridge_session_required: true
+  jarvis_concurrence_required: true
+  openclaw_allowed_role: 'not_allowed'
+  opencloud_allowed_role: 'not_allowed'
+  openclaw_hidden_intermediary_allowed: false
+  conversation_owner_must_equal_target: true
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  credential_values_exposed: false
+  status: 'SOURCE_READY_EXECUTION_BLOCKED'
+  blocker: string
+}
+
+export type NuclearGatewayTaskDispatchPreviewInput = {
+  dispatch_kind?: NuclearGatewayTaskDispatchKind | string | null
+  task_id?: string | number | null
+  target_agent?: string | null
+  message?: string | null
+  source_channel?: string | null
+  target_session?: string | null
+  visible_task_id?: string | number | null
+}
+
+export type NuclearGatewayTaskDispatchPreview = {
+  ok: boolean
+  route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview'
+  phase: typeof NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE
+  exact_blocker: string | null
+  dispatch_kind: NuclearGatewayTaskDispatchKind | null
+  task_id: string | null
+  target_session: string | null
+  target_agent: string | null
+  conversation_owner: string | null
+  direct_line_used: boolean
+  route_trace: string[]
+  envelope_preview: AgentMessageEnvelope | null
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  openclaw_used: false
+  openclaw_hidden_intermediary_allowed: false
+  credential_values_exposed: false
+  no_secrets_exposed: true
+  required_next_proof: string[]
+}
+
+function adapter(input: Omit<NuclearGatewayTaskDispatchAdapter,
+  | 'direct_line_required'
+  | 'message_envelope_required'
+  | 'visible_task_required'
+  | 'audit_required'
+  | 'rollback_required'
+  | 'bridge_session_required'
+  | 'jarvis_concurrence_required'
+  | 'openclaw_allowed_role'
+  | 'opencloud_allowed_role'
+  | 'openclaw_hidden_intermediary_allowed'
+  | 'conversation_owner_must_equal_target'
+  | 'execution_enabled'
+  | 'writes_enabled'
+  | 'external_writes_enabled'
+  | 'credential_values_exposed'
+  | 'status'
+>): NuclearGatewayTaskDispatchAdapter {
+  return {
+    ...input,
+    direct_line_required: true,
+    message_envelope_required: true,
+    visible_task_required: true,
+    audit_required: true,
+    rollback_required: true,
+    bridge_session_required: true,
+    jarvis_concurrence_required: true,
+    openclaw_allowed_role: 'not_allowed',
+    opencloud_allowed_role: 'not_allowed',
+    openclaw_hidden_intermediary_allowed: false,
+    conversation_owner_must_equal_target: true,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    credential_values_exposed: false,
+    status: 'SOURCE_READY_EXECUTION_BLOCKED',
+  }
+}
+
+export const NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTERS: NuclearGatewayTaskDispatchAdapter[] = [
+  adapter({
+    id: 'task_dispatch_new_session',
+    label: 'Task dispatch to a new direct agent line session',
+    legacy_dependency: 'src/lib/task-dispatch.ts: runOpenClaw gateway call agent --expect-final',
+    nuclear_gateway_adapter: 'direct_agent_line.task_dispatch.new_session',
+    route: '/api/bridge/agent-routing/send',
+    blocker: 'direct_line_task_dispatch_live_receive_proof_required',
+  }),
+  adapter({
+    id: 'task_dispatch_target_session',
+    label: 'Task dispatch to an existing target session',
+    legacy_dependency: 'src/lib/task-dispatch.ts: callOpenClawGateway chat.send when metadata.target_session exists',
+    nuclear_gateway_adapter: 'direct_agent_line.task_dispatch.target_session',
+    route: '/api/bridge/agent-routing/send',
+    blocker: 'target_session_direct_line_handoff_live_proof_required',
+  }),
+  adapter({
+    id: 'aegis_review',
+    label: 'Aegis quality review direct-line adapter',
+    legacy_dependency: 'src/lib/task-dispatch.ts: runOpenClaw gateway call agent for Aegis review',
+    nuclear_gateway_adapter: 'certified_adapter.task_review.aegis',
+    route: '/api/bridge/agent-routing/send',
+    blocker: 'aegis_review_direct_line_adapter_live_proof_required',
+  }),
+  adapter({
+    id: 'task_broadcast',
+    label: 'Task broadcast direct-line fanout adapter',
+    legacy_dependency: 'src/app/api/tasks/[id]/broadcast/route.ts: runOpenClaw sessions_send',
+    nuclear_gateway_adapter: 'certified_adapter.task_broadcast.direct_line',
+    route: '/api/bridge/agent-routing/send',
+    blocker: 'task_broadcast_direct_line_fanout_live_proof_required',
+  }),
+]
+
+function normalizeKind(value: unknown): NuclearGatewayTaskDispatchKind | null {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-\s]+/g, '_')
+  return NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTERS.some((item) => item.id === normalized)
+    ? normalized as NuclearGatewayTaskDispatchKind
+    : null
+}
+
+export function buildNuclearGatewayTaskDispatchAdapterStatus() {
+  return {
+    ok: true,
+    route: 'bridge.nuclear-gateway.task-dispatch-adapter',
+    phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+    status: 'SOURCE_READY_EXECUTION_BLOCKED',
+    architecture: 'owner -> mission-control -> nuclear-gateway -> direct-agent-line -> certified-adapter-or-mcp-api-tool',
+    adapters_count: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTERS.length,
+    adapters: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTERS.map((item) => ({ ...item })),
+    openclaw_runtime_invoked: false,
+    openclaw_conversation_owner_allowed: false,
+    openclaw_hidden_intermediary_allowed: false,
+    openclaw_default_gateway_allowed: false,
+    openclaw_credential_broker_allowed: false,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    credential_values_exposed: false,
+    no_secrets_exposed: true,
+    required_next_proof: [
+      'authenticated_direct_line_send_receive_probe',
+      'visible_task_event_written',
+      'audit_record_written',
+      'rollback_or_no_state_proof_written',
+      'mission_control_service_refreshed_after_source_cutover',
+    ],
+  }
+}
+
+export function buildNuclearGatewayTaskDispatchPreview(
+  input: NuclearGatewayTaskDispatchPreviewInput = {},
+): NuclearGatewayTaskDispatchPreview {
+  const dispatchKind = normalizeKind(input.dispatch_kind || 'task_dispatch_new_session')
+  const targetAgent = String(input.target_agent || '').trim()
+  const taskId = input.task_id == null ? null : String(input.task_id)
+  const targetSession = input.target_session == null ? null : String(input.target_session)
+  const message = String(input.message || '').trim()
+
+  const requiredNextProof = [
+    'live_agent_receive_probe',
+    'audit_record',
+    'rollback_or_no_state_proof',
+  ]
+
+  if (!dispatchKind) {
+    return {
+      ok: false,
+      route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
+      phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+      exact_blocker: 'task_dispatch_kind_not_registered',
+      dispatch_kind: null,
+      task_id: taskId,
+      target_session: targetSession,
+      target_agent: targetAgent || null,
+      conversation_owner: null,
+      direct_line_used: false,
+      route_trace: [],
+      envelope_preview: null,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      openclaw_used: false,
+      openclaw_hidden_intermediary_allowed: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+      required_next_proof: requiredNextProof,
+    }
+  }
+
+  if (!targetAgent || !message) {
+    return {
+      ok: false,
+      route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
+      phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+      exact_blocker: !targetAgent ? 'target_agent_required' : 'message_required',
+      dispatch_kind: dispatchKind,
+      task_id: taskId,
+      target_session: targetSession,
+      target_agent: targetAgent || null,
+      conversation_owner: null,
+      direct_line_used: false,
+      route_trace: [],
+      envelope_preview: null,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      openclaw_used: false,
+      openclaw_hidden_intermediary_allowed: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+      required_next_proof: requiredNextProof,
+    }
+  }
+
+  const line = resolveAgentRoutingLine(targetAgent)
+  if (!line) {
+    return {
+      ok: false,
+      route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
+      phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+      exact_blocker: 'target_agent_direct_line_not_registered',
+      dispatch_kind: dispatchKind,
+      task_id: taskId,
+      target_session: targetSession,
+      target_agent: targetAgent,
+      conversation_owner: null,
+      direct_line_used: false,
+      route_trace: [],
+      envelope_preview: null,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      openclaw_used: false,
+      openclaw_hidden_intermediary_allowed: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+      required_next_proof: requiredNextProof,
+    }
+  }
+
+  if (isOpenCloudIdentity(line.agent_id) || line.direct_line_active === false) {
+    return {
+      ok: false,
+      route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
+      phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+      exact_blocker: 'openclaw_cannot_be_task_dispatch_conversation_owner',
+      dispatch_kind: dispatchKind,
+      task_id: taskId,
+      target_session: targetSession,
+      target_agent: line.agent_id,
+      conversation_owner: line.conversation_owner,
+      direct_line_used: false,
+      route_trace: routeTraceForLine(line),
+      envelope_preview: null,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      openclaw_used: false,
+      openclaw_hidden_intermediary_allowed: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+      required_next_proof: requiredNextProof,
+    }
+  }
+
+  const envelope = buildAgentMessageEnvelope({
+    target_agent: line.agent_id,
+    target_system: dispatchKind,
+    source_channel: input.source_channel || 'nuclear_gateway_task_dispatch',
+    message,
+    normalized_request: message,
+    conversation_id: taskId ? `task-${taskId}` : undefined,
+    intermediaries: [],
+    delegated_to: [],
+    tools_called: [],
+  }, line, {
+    visible_task_id: input.visible_task_id == null ? null : String(input.visible_task_id),
+    audit_id: null,
+    rollback_id: null,
+  })
+
+  return {
+    ok: true,
+    route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
+    phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
+    exact_blocker: 'execution_blocked_until_live_receive_audit_and_rollback_proof',
+    dispatch_kind: dispatchKind,
+    task_id: taskId,
+    target_session: targetSession,
+    target_agent: line.agent_id,
+    conversation_owner: line.conversation_owner,
+    direct_line_used: envelope.direct_line_used,
+    route_trace: envelope.route_trace,
+    envelope_preview: envelope,
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    openclaw_used: false,
+    openclaw_hidden_intermediary_allowed: false,
+    credential_values_exposed: false,
+    no_secrets_exposed: true,
+    required_next_proof: requiredNextProof,
+  }
+}

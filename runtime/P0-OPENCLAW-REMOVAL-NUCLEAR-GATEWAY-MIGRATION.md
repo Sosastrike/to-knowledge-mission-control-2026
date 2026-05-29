@@ -102,6 +102,15 @@ The Nuclear Gateway tool migration map now explicitly tracks Mission Control tas
 
 All four are classified as `WRITE_GATED` with `openclaw_allowed_role: not_allowed`, `writes_enabled: false`, and `execution_enabled: false` in the migration map. This hop does not change runtime dispatch behavior; it makes the remaining dependency owner-visible and blocks fake cutover until direct-line task dispatch, target-session handoff, Aegis review, and broadcast adapters have route-trace/audit/rollback proof.
 
+## Phase 6 Task Dispatch Adapter Contract - 2026-05-29
+
+Added a source-only Nuclear Gateway task dispatch adapter contract:
+
+- `GET /api/bridge/nuclear-gateway/task-dispatch-adapter`
+- `POST /api/bridge/nuclear-gateway/task-dispatch-adapter`
+
+The GET route reports the source-ready adapters for task dispatch, target-session handoff, Aegis review, and task broadcast. The POST route previews a canonical direct-line envelope and refuses OpenClaw/OpenCloud as a task dispatch conversation owner. Execution, writes, and external writes remain disabled until live receive proof, visible task event proof, audit proof, and rollback/no-state proof exist.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

@@ -50,8 +50,27 @@ Unauthenticated route behavior remains correct:
 - `/api/bridge/hermes/webui/status`: `401`
 - `/api/bridge/hermes/status`: `401`
 - `/api/bridge/ron/status`: `401`
+- `/api/bridge/ron/runtime-proof`: `401`
 
 This proves the routes are protected and does not bypass Paperclip, Ron, or Mission Control auth.
+
+## Runtime Proof Route
+
+Added source-backed route:
+
+- `GET /api/bridge/ron/runtime-proof`
+
+The route keeps Mission Control auth required and returns component truth only after authentication:
+
+- `gateway`
+- `webui`
+- `direct_line`
+- `sms`
+- `auth`
+- `jarvis_concurrence`
+- `runtime_tools`
+
+It does not print cookies, tokens, `.env` values, or credential values. It does not execute production actions.
 
 ## Remaining Blocker
 

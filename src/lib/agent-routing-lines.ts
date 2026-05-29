@@ -4,6 +4,7 @@ import { db_helpers, getDatabase, logAuditEvent } from '@/lib/db'
 import { mergeTaskMetadataForAgentWorkTicket } from '@/lib/agent-work-tickets'
 import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
 import { evaluateOpenCloudAuthority, isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
+import { SOFIA_DEPUTY_IDENTITY } from '@/lib/sofia-identity'
 
 export type AgentSystemType =
   | 'commander'
@@ -12,6 +13,7 @@ export type AgentSystemType =
   | 'company_workforce_system'
   | 'specialist_agent_system'
   | 'brain_intelligence_system'
+  | 'deputy_dispatcher'
   | 'browser_control_surface'
   | 'integration_system'
   | 'tool_layer'
@@ -139,6 +141,23 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     direct_line_active: true,
     execution_policy: 'full_visibility_jarvis_delegation_required_for_writes',
     legacy_names: ['Hermes', 'Hermans'],
+  }),
+  line({
+    agent_id: SOFIA_DEPUTY_IDENTITY.agent_id,
+    display_name: SOFIA_DEPUTY_IDENTITY.display_name,
+    system_type: 'deputy_dispatcher',
+    communication_route: '/api/bridge/sofia/*',
+    gateway_route: SOFIA_DEPUTY_IDENTITY.gateway_route,
+    conversation_owner: SOFIA_DEPUTY_IDENTITY.conversation_owner,
+    reports_to: SOFIA_DEPUTY_IDENTITY.reports_to,
+    allowed_tools: ['ron_skill_registry_drafts', 'gateway_improvement_drafts', 'cybersecurity_review_drafts', 'brain_hygiene_drafts', 'visible_task_updates'],
+    direct_line_active: true,
+    execution_policy: 'ron_deputy_internal_planning_ron_and_jarvis_concurrence_for_production',
+    allowed_actions: ['read_status', 'draft_recommendation', 'request_ron_review', 'request_jarvis_concurrence', 'update_visible_task_draft'],
+    write_policy: 'internal_records_only_ron_and_jarvis_concurrence_for_production',
+    allowed_as_tool: false,
+    allowed_as_intermediary: false,
+    allowed_as_commander: false,
   }),
   line({
     agent_id: 'hermes-webui',
@@ -486,6 +505,9 @@ export function resolveAgentRoutingLine(value: unknown): AgentRoutingLine | null
     'ron-weasley-nuclear-dispatcher': 'ron-weasley',
     hermes: 'ron-weasley',
     hermans: 'ron-weasley',
+    sofia: 'sofia',
+    'sofia-deputy': 'sofia',
+    'deputy-nuclear-dispatcher': 'sofia',
     'pi-dispatcher': 'pi',
     'space-agent': 'spaceagent',
     openclaw: 'openclaw',

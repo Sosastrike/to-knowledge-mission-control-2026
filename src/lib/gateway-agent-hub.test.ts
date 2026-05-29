@@ -156,7 +156,7 @@ describe('Gateway Agent Hub', () => {
       bridge_session_required_for_interactive_actions: true,
     })
     expect(JSON.stringify(payload.gateway_route_cdp_truth)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
-    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'hermes-webui', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'sofia', 'hermes-webui', 'spaceagent', 'pi-mono'])
     expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
     const ron = payload.agents.find((agent) => agent.id === 'hermes')
     expect(ron).toMatchObject({
@@ -183,6 +183,13 @@ describe('Gateway Agent Hub', () => {
     expect(JSON.stringify(ron)).toContain('JARVIS CONCURRENCE REQUIRED')
     expect(JSON.stringify(ron)).not.toContain('Ron Wegsley')
     expect(JSON.stringify(ron)).not.toContain('PARTIAL')
+    expect(payload.agents.find((agent) => agent.id === 'sofia')).toMatchObject({
+      name: 'Sofia',
+      role: 'Deputy Nuclear Dispatcher',
+      status: 'configured',
+      called_true_proven: true,
+      routes: { bridge_status: '/api/bridge/sofia/status' },
+    })
     expect(payload.agents.find((agent) => agent.id === 'hermes-webui')).toMatchObject({
       name: 'Ron Weasley WebUI',
       role: 'Ron Weasley Browser Control Surface',

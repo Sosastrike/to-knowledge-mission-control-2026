@@ -10,8 +10,9 @@ import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from '.
 import { AGENT_UPDATE_COMPONENTS } from './agent-update-coordinator'
 import { buildAgentRoutingLinesStatus } from './agent-routing-lines'
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
+import { SOFIA_DEPUTY_IDENTITY } from './sofia-identity'
 
-export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'hermes-webui' | 'spaceagent' | 'pi-mono'
+export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'sofia' | 'hermes-webui' | 'spaceagent' | 'pi-mono'
 
 export type AgentHubAgentState = 'partial_go' | 'full_access_delegated' | 'gated' | 'pending' | 'blocked' | 'read_only' | 'configured'
 
@@ -251,6 +252,7 @@ export type AgentHubStatusPayload = {
     agent_zero: 'partial_go_commander_track'
     hermes: 'full_access_delegated_direct_line'
     pi_mono: 'candidate_pending_until_installed_and_live'
+    sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only'
     spaceagent: 'playwright_mcp_live_local_only_browser_research'
     paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required'
     buildwiki_fork2_smb: 'blocked'
@@ -481,6 +483,23 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     extraBlockers: ['jarvis_signed_exact_scope_delegation_required_for_protected_execution'],
   },
   {
+    id: 'sofia',
+    registryNodeId: 'sofia',
+    name: SOFIA_DEPUTY_IDENTITY.display_name,
+    role: SOFIA_DEPUTY_IDENTITY.role,
+    layer: 'ron_deputy_dispatcher_direct_line',
+    productionTruth: 'Sofia is Ron Weasley’s second-in-command and Deputy Nuclear Dispatcher. Sofia may create internal recommendations, Ron review requests, Gateway improvement drafts, cybersecurity review notes, Brain hygiene drafts, and Jarvis concurrence requests; production execution requires Ron plus Jarvis concurrence.',
+    status: 'configured',
+    liveInterfaceProven: true,
+    calledTrueProven: true,
+    interfaceSummary: 'Mission Control Sofia deputy direct line is source-configured; writes are internal records only and production execution is blocked without Ron plus Jarvis concurrence.',
+    localUiUrl: null,
+    tailnetUrl: null,
+    uiMode: 'mission_control_proxy',
+    bridgeStatusRoute: '/api/bridge/sofia/status',
+    extraBlockers: ['production_execution_requires_ron_plus_jarvis_concurrence'],
+  },
+  {
     id: 'hermes-webui',
     registryNodeId: 'hermes_webui',
     name: 'Ron Weasley WebUI',
@@ -599,6 +618,7 @@ export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null 
   if (normalized === 'agent-zero' || normalized === 'agentzero') return 'agent-zero'
   if (normalized === 'hermes') return 'hermes'
   if (normalized === 'hermes-webui' || normalized === 'hermeswebui') return 'hermes-webui'
+  if (normalized === 'sofia' || normalized === 'sofia-deputy' || normalized === 'deputy-nuclear-dispatcher') return 'sofia'
   if (normalized === 'space-agent' || normalized === 'spaceagent') return 'spaceagent'
   if (normalized === 'pi' || normalized === 'pi-mono' || normalized === 'pimono') return 'pi-mono'
   return null
@@ -626,6 +646,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       agent_zero: 'partial_go_commander_track',
       hermes: 'full_access_delegated_direct_line',
       pi_mono: 'candidate_pending_until_installed_and_live',
+      sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only',
       spaceagent: 'playwright_mcp_live_local_only_browser_research',
       paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required',
       buildwiki_fork2_smb: 'blocked',
@@ -746,6 +767,7 @@ function buildAgentHubNuclearGatewayGraphSummary(
       { id: 'nuclear.gateway', label: 'Nuclear Gateway', role: 'central broker for policy, routing, tools, credentials, audit, and rollback', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
       { id: 'agent.zero', label: 'Agent Zero / Jarvis', role: 'commander and owner-operator direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'ron.weasley', label: 'Ron Weasley', role: 'Nuclear Dispatcher under Jarvis', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'sofia', label: 'Sofia', role: 'Second-in-Command to Ron Weasley', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'pi', label: 'Pi', role: 'advisory dispatcher and route optimizer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'paperclip', label: 'Paperclip', role: 'company workforce and execution plane', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'spaceagent', label: 'SpaceAgent', role: 'browser and research specialist direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
@@ -768,6 +790,8 @@ function buildAgentHubNuclearGatewayGraphSummary(
       { source: 'nuclear.gateway', target: 'ron.weasley', relation: 'routes_to' },
       { source: 'ron.weasley', target: 'agent.zero', relation: 'reports_to' },
       { source: 'nuclear.gateway', target: 'pi', relation: 'routes_to' },
+      { source: 'nuclear.gateway', target: 'sofia', relation: 'routes_to' },
+      { source: 'sofia', target: 'ron.weasley', relation: 'reports_to' },
       { source: 'pi', target: 'agent.zero', relation: 'reports_to' },
       { source: 'nuclear.gateway', target: 'paperclip', relation: 'routes_to' },
       { source: 'nuclear.gateway', target: 'spaceagent', relation: 'routes_to' },

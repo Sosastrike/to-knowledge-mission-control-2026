@@ -2,7 +2,11 @@ import { existsSync } from 'node:fs'
 
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
 import { getHermesWebUiUrl } from './hermes-webui-status'
-import { isAllowedHermesWebUiLoopbackUrl } from './hermes-webui-proxy'
+import {
+  buildHermesWebUiProxyTarget,
+  isAllowedHermesWebUiLoopbackUrl,
+  repairHermesWebUiChatStartBody,
+} from './hermes-webui-proxy'
 
 type RonRuntimeProofOptions = {
   webUiUrl?: string
@@ -64,6 +68,7 @@ function sessionProof(sessions: unknown) {
       state: 'PENDING_PROOF',
       message_count: 0,
       session_proof: null,
+      proof_surface: null,
       exact_blocker: 'ron_direct_line_send_receive_proof_missing',
     }
   }
@@ -72,11 +77,39 @@ function sessionProof(sessions: unknown) {
   return {
     state: 'PROOF_PRESENT',
     message_count: numberValue(proven.message_count),
+    proof_surface: 'ron_webui_loopback_sessions',
     session_proof: {
       masked_session_id: maskSessionId(sessionId),
       title: textValue(proven.title),
     },
     exact_blocker: null,
+  }
+}
+
+function missionControlProxyProof(input: { webUiReady: boolean; directLineProven: boolean }) {
+  const appTarget = buildHermesWebUiProxyTarget(['app'])
+  const healthTarget = buildHermesWebUiProxyTarget(['health'])
+  const sessionRepair = repairHermesWebUiChatStartBody(
+    'POST',
+    '/api/chat/start',
+    { message: 'redacted' },
+    '/gateway/agent-hub/ron/webui/session/mission-control-proxy-proof',
+  )
+
+  return {
+    state: input.webUiReady && input.directLineProven
+      ? 'LOCAL_PROXY_READINESS_PRESENT_AUTHENTICATED_SEND_RECEIVE_PENDING'
+      : 'PENDING_PROOF',
+    route: '/gateway/agent-hub/ron/webui/app',
+    legacy_route: '/gateway/agent-hub/hermes/webui/app',
+    auth_required: true,
+    upstream_loopback_only: appTarget.ok && healthTarget.ok,
+    upstream_health_path: healthTarget.target?.pathname || null,
+    session_id_repair: sessionRepair.repaired ? 'READY' : 'BLOCKED',
+    session_id_value_exposed: false,
+    local_direct_line_proof_present: input.directLineProven,
+    authenticated_proxy_send_receive_proof: false,
+    exact_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
   }
 }
 
@@ -93,6 +126,7 @@ export async function buildRonRuntimeProof(options: RonRuntimeProofOptions = {})
   const smsIsDisabled = smsDisabled(options)
   const webUiReady = safeLoopback && health.ok
   const directLineProven = directLine.state === 'PROOF_PRESENT'
+  const proxyProof = missionControlProxyProof({ webUiReady, directLineProven })
 
   return {
     route: 'bridge.ron.runtime-proof',
@@ -124,6 +158,7 @@ export async function buildRonRuntimeProof(options: RonRuntimeProofOptions = {})
         exact_blocker: safeLoopback ? (webUiReady ? null : 'ron_webui_health_unreachable') : 'ron_webui_url_must_be_loopback',
       },
       direct_line: directLine,
+      mission_control_proxy: proxyProof,
       sms: {
         state: smsIsDisabled ? 'DISABLED_UNCONFIGURED' : 'UNCONFIGURED_NOT_BLOCKING_DIRECT_LINE',
         blocking_startup: false,
@@ -145,8 +180,10 @@ export async function buildRonRuntimeProof(options: RonRuntimeProofOptions = {})
       },
     },
     mission_control_proxy_certification: {
-      state: 'PENDING_AUTHENTICATED_SEND_RECEIVE_PROOF',
+      state: proxyProof.state,
       blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
+      local_direct_line_proof_present: directLineProven,
+      authenticated_proxy_send_receive_proof: false,
     },
     no_secret_proof: {
       env_values_printed: false,

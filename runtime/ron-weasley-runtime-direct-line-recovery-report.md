@@ -72,6 +72,17 @@ The route keeps Mission Control auth required and returns component truth only a
 
 It does not print cookies, tokens, `.env` values, or credential values. It does not execute production actions.
 
+## Mission Control Proxy Proof Narrowed
+
+The runtime proof route now separates local Ron direct-line proof from Mission Control proxy certification:
+
+- `components.direct_line.state`: `PROOF_PRESENT` when the Ron WebUI loopback session history has send/receive evidence.
+- `components.mission_control_proxy.state`: `LOCAL_PROXY_READINESS_PRESENT_AUTHENTICATED_SEND_RECEIVE_PENDING` when the Mission Control proxy target is loopback-only, session-id repair is source-ready, and local direct-line proof exists.
+- `components.mission_control_proxy.session_id_value_exposed`: `false`
+- `components.mission_control_proxy.authenticated_proxy_send_receive_proof`: `false`
+
+This keeps the owner-facing blocker precise: the runtime and local direct line are recovered, but final Mission Control proxy certification still needs an authenticated owner-session send/receive proof. No production execution or external connector path was enabled.
+
 ## Remaining Blocker
 
 `mission_control_authenticated_proxy_send_receive_proof_pending`

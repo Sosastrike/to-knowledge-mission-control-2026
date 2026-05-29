@@ -50,15 +50,30 @@ describe('Ron runtime proof', () => {
       components: {
         gateway: { state: 'ACTIVE', startup_failed: false },
         webui: { state: 'READY', health_reachable: true },
-        direct_line: { state: 'PROOF_PRESENT', message_count: 2 },
+        direct_line: { state: 'PROOF_PRESENT', message_count: 2, proof_surface: 'ron_webui_loopback_sessions' },
+        mission_control_proxy: {
+          state: 'LOCAL_PROXY_READINESS_PRESENT_AUTHENTICATED_SEND_RECEIVE_PENDING',
+          route: '/gateway/agent-hub/ron/webui/app',
+          legacy_route: '/gateway/agent-hub/hermes/webui/app',
+          auth_required: true,
+          upstream_loopback_only: true,
+          upstream_health_path: '/health',
+          session_id_repair: 'READY',
+          session_id_value_exposed: false,
+          local_direct_line_proof_present: true,
+          authenticated_proxy_send_receive_proof: false,
+          exact_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
+        },
         sms: { state: 'DISABLED_UNCONFIGURED', blocking_startup: false, insecure_signature_validation: false },
         auth: { state: 'MISSION_CONTROL_AUTH_REQUIRED' },
         jarvis_concurrence: { state: 'REQUIRED' },
         runtime_tools: { state: 'READ_ONLY_PROOF_ONLY' },
       },
       mission_control_proxy_certification: {
-        state: 'PENDING_AUTHENTICATED_SEND_RECEIVE_PROOF',
+        state: 'LOCAL_PROXY_READINESS_PRESENT_AUTHENTICATED_SEND_RECEIVE_PENDING',
         blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending',
+        local_direct_line_proof_present: true,
+        authenticated_proxy_send_receive_proof: false,
       },
     })
     expect(proof.components.direct_line.session_proof?.masked_session_id).toBe('813c...d9f')

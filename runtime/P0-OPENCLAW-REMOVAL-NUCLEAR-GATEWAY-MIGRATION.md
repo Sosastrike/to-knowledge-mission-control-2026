@@ -141,6 +141,19 @@ The authenticated task-dispatch preview route now writes a redacted internal aud
 
 This is an internal audit-only write. It does not dispatch to any agent, does not call OpenClaw/OpenCloud, does not call connectors, and does not mutate production runtime state. Phase 10 remains blocked until live target-agent receive proof is collected through an authenticated direct-line probe.
 
+## Phase 6 Receive Trace Link - 2026-05-29
+
+Task dispatch previews can now reference Direct Agent Line Trace Kit receive proof by nonce:
+
+- `receive_trace_nonce`
+- `receive_trace_agent`
+- `receive_trace_proof.status`
+- `receive_trace_proof.direct_line_used`
+- `receive_trace_proof.message_received_by_agent`
+- `receive_trace_proof.response_sent`
+
+When a matching live, non-local, PASS trace exists for the target agent, the preview blocker narrows to runtime cutover/Jarvis concurrence. Without that proof, the preview remains blocked at `execution_blocked_until_live_receive_trace_proof`. This prevents preview/audit/no-state proof from being mistaken for actual agent receipt. OpenClaw/OpenCloud remains forbidden as conversation owner and hidden intermediary.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

@@ -6,6 +6,7 @@ import {
 } from '@/lib/agent-routing-lines'
 import { createHash } from 'node:crypto'
 import { logAuditEvent } from '@/lib/db'
+import { buildAgentLineTraceLive } from '@/lib/agent-line-trace'
 import { isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
 
 export const NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE = 'phase_6_task_dispatch_adapter_contract' as const
@@ -49,6 +50,8 @@ export type NuclearGatewayTaskDispatchPreviewInput = {
   source_channel?: string | null
   target_session?: string | null
   visible_task_id?: string | number | null
+  receive_trace_nonce?: string | null
+  receive_trace_agent?: string | null
 }
 
 export type NuclearGatewayTaskDispatchPreview = {
@@ -72,6 +75,18 @@ export type NuclearGatewayTaskDispatchPreview = {
   credential_values_exposed: false
   no_secrets_exposed: true
   required_next_proof: string[]
+  receive_trace_proof?: {
+    status: 'PASS' | 'MISSING' | 'FAIL'
+    nonce: string | null
+    target_agent: string | null
+    direct_line_used: boolean
+    message_received_by_agent: boolean
+    response_sent: boolean
+    openclaw_used: boolean
+    local_gateway_probe: boolean
+    blocker: string | null
+    raw_message_body_exposed: false
+  }
   audit_preview?: {
     action: 'nuclear_gateway.task_dispatch.preview'
     actor: 'nuclear-gateway'
@@ -201,6 +216,65 @@ function messageHash(value: unknown) {
   return createHash('sha256').update(String(value || '')).digest('hex').slice(0, 16)
 }
 
+function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatchPreviewInput) {
+  const nonce = String(input.receive_trace_nonce || '').trim()
+  if (!nonce) {
+    return {
+      status: 'MISSING' as const,
+      nonce: null,
+      target_agent: targetAgent || null,
+      direct_line_used: false,
+      message_received_by_agent: false,
+      response_sent: false,
+      openclaw_used: false,
+      local_gateway_probe: false,
+      blocker: 'receive_trace_nonce_required',
+      raw_message_body_exposed: false as const,
+    }
+  }
+
+  const live = buildAgentLineTraceLive({
+    agent: input.receive_trace_agent || targetAgent,
+    nonce,
+  })
+  const record = live.traces[0]
+  if (!record) {
+    return {
+      status: 'MISSING' as const,
+      nonce,
+      target_agent: targetAgent || null,
+      direct_line_used: false,
+      message_received_by_agent: false,
+      response_sent: false,
+      openclaw_used: false,
+      local_gateway_probe: false,
+      blocker: 'receive_trace_record_not_found',
+      raw_message_body_exposed: false as const,
+    }
+  }
+
+  const valid = record.status === 'PASS'
+    && record.target_agent === targetAgent
+    && record.direct_line_used === true
+    && record.message_received_by_agent === true
+    && record.response_sent === true
+    && record.openclaw_used === false
+    && record.local_gateway_probe === false
+
+  return {
+    status: valid ? 'PASS' as const : 'FAIL' as const,
+    nonce: record.nonce,
+    target_agent: record.target_agent,
+    direct_line_used: record.direct_line_used,
+    message_received_by_agent: record.message_received_by_agent,
+    response_sent: record.response_sent,
+    openclaw_used: record.openclaw_used,
+    local_gateway_probe: record.local_gateway_probe,
+    blocker: valid ? null : record.blocker || 'receive_trace_not_live_external_pass',
+    raw_message_body_exposed: false as const,
+  }
+}
+
 export function writeNuclearGatewayTaskDispatchPreviewAudit(
   preview: NuclearGatewayTaskDispatchPreview,
   input: NuclearGatewayTaskDispatchPreviewInput = {},
@@ -260,6 +334,7 @@ export function buildNuclearGatewayTaskDispatchAdapterStatus() {
     external_writes_enabled: false,
     credential_values_exposed: false,
     no_secrets_exposed: true,
+    receive_trace_required: true,
     rollback_or_no_state_proof: noStatePreviewProof(),
     required_next_proof: [
       'authenticated_direct_line_send_receive_probe',
@@ -401,12 +476,16 @@ export function buildNuclearGatewayTaskDispatchPreview(
     audit_id: null,
     rollback_id: null,
   })
+  const traceProof = receiveTraceProof(line.agent_id, input)
+  const receiveProofPassed = traceProof.status === 'PASS'
 
   return {
     ok: true,
     route: 'bridge.nuclear-gateway.task-dispatch-adapter.preview',
     phase: NUCLEAR_GATEWAY_TASK_DISPATCH_ADAPTER_PHASE,
-    exact_blocker: 'execution_blocked_until_live_receive_audit_and_rollback_proof',
+    exact_blocker: receiveProofPassed
+      ? 'execution_blocked_until_runtime_cutover_and_jarvis_concurrence'
+      : 'execution_blocked_until_live_receive_trace_proof',
     dispatch_kind: dispatchKind,
     task_id: taskId,
     target_session: targetSession,
@@ -423,6 +502,7 @@ export function buildNuclearGatewayTaskDispatchPreview(
     credential_values_exposed: false,
     no_secrets_exposed: true,
     required_next_proof: requiredNextProof,
+    receive_trace_proof: traceProof,
     audit_preview: auditPreview(line.agent_id),
     rollback_or_no_state_proof: noStatePreviewProof(),
   }

@@ -4,6 +4,7 @@ import {
   buildNuclearGatewayTaskDispatchAdapterStatus,
   buildNuclearGatewayTaskDispatchPreview,
 } from '@/lib/nuclear-gateway-task-dispatch-adapter'
+import { buildAgentLineTraceRecord } from '@/lib/agent-line-trace'
 
 describe('Nuclear Gateway task dispatch adapter contract', () => {
   it('publishes source-ready task dispatch adapters without invoking OpenClaw', () => {
@@ -59,7 +60,7 @@ describe('Nuclear Gateway task dispatch adapter contract', () => {
 
     expect(preview).toMatchObject({
       ok: true,
-      exact_blocker: 'execution_blocked_until_live_receive_audit_and_rollback_proof',
+      exact_blocker: 'execution_blocked_until_live_receive_trace_proof',
       dispatch_kind: 'task_dispatch_new_session',
       task_id: '140',
       target_agent: 'ron-weasley',
@@ -96,6 +97,44 @@ describe('Nuclear Gateway task dispatch adapter contract', () => {
       intermediaries: [],
       tools_called: [],
       opencloud_used: false,
+    })
+  })
+
+  it('links live direct-line receive trace proof without enabling execution', () => {
+    const trace = buildAgentLineTraceRecord({
+      target_agent: 'ron-weasley',
+      nonce: 'TRACE-test-task-dispatch-receive-proof',
+      message_received_by_agent: true,
+      response_sent: true,
+      local_gateway_probe: false,
+      create_visible_task_on_failure: false,
+    })
+
+    const preview = buildNuclearGatewayTaskDispatchPreview({
+      dispatch_kind: 'task_dispatch_new_session',
+      target_agent: 'ron-weasley',
+      message: 'Preview dispatch with linked receive proof.',
+      visible_task_id: '140',
+      receive_trace_nonce: trace.nonce,
+    })
+
+    expect(preview).toMatchObject({
+      ok: true,
+      exact_blocker: 'execution_blocked_until_runtime_cutover_and_jarvis_concurrence',
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      receive_trace_proof: {
+        status: 'PASS',
+        nonce: 'TRACE-test-task-dispatch-receive-proof',
+        target_agent: 'ron-weasley',
+        direct_line_used: true,
+        message_received_by_agent: true,
+        response_sent: true,
+        openclaw_used: false,
+        local_gateway_probe: false,
+        raw_message_body_exposed: false,
+      },
     })
   })
 

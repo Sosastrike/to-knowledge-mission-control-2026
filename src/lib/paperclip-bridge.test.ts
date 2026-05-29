@@ -12,6 +12,7 @@ import {
   buildPaperclipTokenGovernorPlan,
   buildPaperclipUiAccessVerificationPlan,
   buildPaperclipWorkspaceMapPlan,
+  buildPaperclipWorkspaceTruthPayload,
   PAPERCLIP_BOARD_APPROVAL_ACTIONS,
   PAPERCLIP_CREDENTIAL_SUBJECTS,
   PAPERCLIP_GATEWAY_PLUGIN_IDS,
@@ -1305,6 +1306,109 @@ describe('Paperclip bridge payloads', () => {
       blocked_reason: null,
     })
     expectOwnerSafe(plan)
+  })
+
+  it('builds read-only Paperclip workspace truth across loopback, tailnet, and HTTPS origins', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) {
+        return jsonResponse([
+          { id: 'company-tkg', name: 'To Knowledge Gateway', issuePrefix: 'TKG', status: 'active' },
+          { id: 'company-eco', name: 'E copier Solutions', issuePrefix: 'ECO', status: 'active' },
+          { id: 'company-itt', name: 'E Copier ITT', issuePrefix: 'ITT', status: 'active' },
+        ])
+      }
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const truth = await buildPaperclipWorkspaceTruthPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      httpsUrl: 'https://paperclip.example.test',
+    })
+
+    expect(truth).toMatchObject({
+      ok: true,
+      mode: 'paperclip_workspace_truth_read_only',
+      route: '/api/bridge/paperclip/workspace-truth',
+      expected_owner_workspaces: ['To Knowledge Gateway', 'E copier Solutions', 'E Copier ITT'],
+      missing_expected_workspaces: [],
+      hard_coded_eco_only: false,
+      selected_default_workspace: 'E copier Solutions',
+      mismatch_detected: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+    })
+    expect(truth.origin_statuses.map((origin) => origin.origin_id)).toEqual(['loopback', 'tailnet', 'https'])
+    expect(truth.live_workspace_names).toEqual(['To Knowledge Gateway', 'E copier Solutions', 'E Copier ITT'])
+    expect(truth.workspace_selector_required).toBe(true)
+    expect(truth.workspace_launches).toEqual([
+      {
+        workspace_name: 'To Knowledge Gateway',
+        issue_prefix: 'TKG',
+        canonical_launch_url: 'http://100.116.35.95:3100/TKG/dashboard',
+        open_enabled: true,
+        disabled_reason: null,
+      },
+      {
+        workspace_name: 'E copier Solutions',
+        issue_prefix: 'ECO',
+        canonical_launch_url: 'http://100.116.35.95:3100/ECO/dashboard',
+        open_enabled: true,
+        disabled_reason: null,
+      },
+      {
+        workspace_name: 'E Copier ITT',
+        issue_prefix: 'ITT',
+        canonical_launch_url: 'http://100.116.35.95:3100/ITT/dashboard',
+        open_enabled: true,
+        disabled_reason: null,
+      },
+    ])
+    expect(truth.mission_control_workspace_map.map((workspace) => workspace.id)).toEqual([...PAPERCLIP_WORKSPACE_IDS])
+    expectOwnerSafe(truth)
+  })
+
+  it('keeps the three-company Paperclip profile visible when the companies API is auth protected but dashboards are reachable', async () => {
+    const fetchImpl = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.endsWith('/api/health')) return jsonResponse({ status: 'ok' })
+      if (url.endsWith('/api/companies')) return jsonResponse({ error: 'forbidden' }, 403)
+      if (url.endsWith('/TKG/dashboard')) return new Response('<html>To Knowledge Gateway</html>', { status: 200 })
+      if (url.endsWith('/ECO/dashboard')) return new Response('<html>E copier Solutions</html>', { status: 200 })
+      if (url.endsWith('/ITT/dashboard')) return new Response('<html>E Copier ITT</html>', { status: 200 })
+      return jsonResponse({ error: 'not found' }, 404)
+    })
+
+    const truth = await buildPaperclipWorkspaceTruthPayload({
+      generatedAt: GENERATED_AT,
+      fetchImpl,
+      httpsUrl: null,
+    })
+
+    expect(truth).toMatchObject({
+      ok: true,
+      hard_coded_eco_only: false,
+      selected_default_workspace: 'E copier Solutions',
+      missing_expected_workspaces: [],
+      mismatch_detected: false,
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      credential_values_exposed: false,
+      no_secrets_exposed: true,
+    })
+    expect(truth.live_workspace_names).toEqual(['To Knowledge Gateway', 'E copier Solutions', 'E Copier ITT'])
+    expect(truth.workspace_launches).toEqual([
+      expect.objectContaining({ workspace_name: 'To Knowledge Gateway', issue_prefix: 'TKG', canonical_launch_url: 'http://100.116.35.95:3100/TKG/dashboard', open_enabled: true }),
+      expect.objectContaining({ workspace_name: 'E copier Solutions', issue_prefix: 'ECO', canonical_launch_url: 'http://100.116.35.95:3100/ECO/dashboard', open_enabled: true }),
+      expect.objectContaining({ workspace_name: 'E Copier ITT', issue_prefix: 'ITT', canonical_launch_url: 'http://100.116.35.95:3100/ITT/dashboard', open_enabled: true }),
+    ])
+    expectOwnerSafe(truth)
   })
 
   it('blocks coding tasks in the wrong workspace or without isolated worktree refs', () => {

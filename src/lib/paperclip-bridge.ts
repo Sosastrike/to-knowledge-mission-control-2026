@@ -1132,6 +1132,53 @@ export type PaperclipWorkspaceMapPlan = {
   raw_paths_exposed: false
 }
 
+type PaperclipWorkspaceOriginId = 'loopback' | 'tailnet' | 'https'
+
+export type PaperclipWorkspaceTruthOrigin = {
+  origin_id: PaperclipWorkspaceOriginId
+  owner_visible_endpoint: string
+  reachable: boolean
+  workspace_count: number
+  workspace_names: string[]
+  blocker: string | null
+}
+
+export type PaperclipWorkspaceLaunch = {
+  workspace_name: string
+  issue_prefix: string | null
+  canonical_launch_url: string | null
+  open_enabled: boolean
+  disabled_reason: string | null
+}
+
+export type PaperclipWorkspaceTruthPayload = {
+  ok: boolean
+  mode: 'paperclip_workspace_truth_read_only'
+  route: '/api/bridge/paperclip/workspace-truth'
+  generated_at: string
+  origin_statuses: PaperclipWorkspaceTruthOrigin[]
+  live_workspace_names: string[]
+  expected_owner_workspaces: string[]
+  missing_expected_workspaces: string[]
+  mission_control_workspace_map: PaperclipWorkspaceDefinition[]
+  workspace_selector_required: boolean
+  mismatch_detected: boolean
+  hard_coded_eco_only: false
+  selected_default_workspace: string | null
+  workspace_launches: PaperclipWorkspaceLaunch[]
+  launch_policy: {
+    open_when_reachable: true
+    disabled_reason_required_when_blocked: true
+    write_actions_require_exact_scope_adapter: true
+  }
+  execution_enabled: false
+  writes_enabled: false
+  external_writes_enabled: false
+  credential_values_exposed: false
+  no_secrets_exposed: true
+  next_action: string
+}
+
 
 
 export const PAPERCLIP_GATEWAY_PLUGIN_IDS = [
@@ -1396,6 +1443,10 @@ export type PaperclipBoardApprovalPlan = {
 
 type FetchJsonResult =
   | { ok: true; status: number; payload: unknown }
+  | { ok: false; status: number; blocker: string }
+
+type FetchReachabilityResult =
+  | { ok: true; status: number }
   | { ok: false; status: number; blocker: string }
 
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>
@@ -2130,7 +2181,7 @@ export async function buildPaperclipHermesProposalPayload(input: {
       handoffAuditEvent('paperclip_issue_or_work_product_storage_blocked_until_session_and_adapter', 'gateway', 'paperclip', 'blocked'),
       handoffAuditEvent('agent_zero_review_required', 'gateway', 'agent_zero', 'recorded'),
     ],
-    response_text: `Sir, Hermes can draft this Paperclip proposal for Agent Zero review, but Paperclip storage is blocked: ${blockedReason.replace(/[_-]+/g, ' ')}. No execution or external write occurred.`,
+    response_text: `Sir, Ron Weasley can draft this Paperclip proposal for Agent Zero review, but Paperclip storage is blocked: ${blockedReason.replace(/[_-]+/g, ' ')}. No execution or external write occurred.`,
     execution_enabled: false,
     writes_enabled: false,
     protected_actions_enabled: false,
@@ -2382,8 +2433,8 @@ const PAPERCLIP_GATEWAY_RECORD_MAPPING_PROFILES: Record<PaperclipGatewayRecordMa
   hermes_skill_proposal_to_issue_work_product: {
     source: "hermes",
     targets: ["paperclip_issue", "paperclip_work_product"],
-    defaultTitle: "Hermes skill proposal tracking record",
-    summary: "Hermes skill proposal to a Paperclip issue and work product",
+    defaultTitle: "Ron Weasley skill proposal tracking record",
+    summary: "Ron Weasley skill proposal to a Paperclip issue and work product",
     event: "hermes_skill_proposal_mapped_to_issue_and_work_product",
   },
   pi_recommendation_to_issue_comment: {
@@ -2524,9 +2575,9 @@ const PAPERCLIP_SANDBOX_HEARTBEAT_ROUTINE_PROFILES: PaperclipSandboxHeartbeatRou
   },
   {
     id: 'daily_hermes_skill_proposal',
-    title: 'Daily Hermes skill proposal routine',
+    title: 'Daily Ron Weasley skill proposal routine',
     owner: 'hermes',
-    purpose: 'Ask Hermes to draft safe skill or workflow proposals for Agent Zero review without activation.',
+    purpose: 'Ask Ron Weasley to draft safe skill or workflow proposals for Agent Zero review without activation.',
   },
   {
     id: 'daily_pi_dispatcher_optimization',
@@ -2867,6 +2918,146 @@ export function buildPaperclipWorkspaceMapPlan(input: PaperclipWorkspaceMapPlanI
   }
 }
 
+export async function buildPaperclipWorkspaceTruthPayload(input: {
+  generatedAt: string
+  fetchImpl?: FetchLike
+  httpsUrl?: string | null
+}): Promise<PaperclipWorkspaceTruthPayload> {
+  const expectedOwnerWorkspaces = ['To Knowledge Gateway', 'E copier Solutions', 'E Copier ITT']
+  const httpsUrl = input.httpsUrl || process.env.PAPERCLIP_HTTPS_URL || process.env.PAPERCLIP_PUBLIC_URL || null
+  const originInputs: Array<{ origin_id: PaperclipWorkspaceOriginId; baseUrl: string | null }> = [
+    { origin_id: 'loopback', baseUrl: DEFAULT_PAPERCLIP_BASE_URL },
+    { origin_id: 'tailnet', baseUrl: 'http://100.116.35.95:3100' },
+    { origin_id: 'https', baseUrl: httpsUrl },
+  ]
+
+  const originStatuses = await Promise.all(originInputs.map(async (origin): Promise<PaperclipWorkspaceTruthOrigin> => {
+    if (!origin.baseUrl) {
+      return {
+        origin_id: origin.origin_id,
+        owner_visible_endpoint: origin.origin_id,
+        reachable: false,
+        workspace_count: 0,
+        workspace_names: [],
+        blocker: 'paperclip_https_origin_not_configured',
+      }
+    }
+
+    const endpoint = resolvePaperclipEndpoint(origin.baseUrl)
+    if (endpoint.blocker) {
+      return {
+        origin_id: origin.origin_id,
+        owner_visible_endpoint: endpoint.ownerVisible,
+        reachable: false,
+        workspace_count: 0,
+        workspace_names: [],
+        blocker: endpoint.blocker,
+      }
+    }
+
+    const companies = await listPaperclipCompanies({
+      generatedAt: input.generatedAt,
+      fetchImpl: input.fetchImpl,
+      baseUrl: endpoint.baseUrl,
+    })
+    const apiWorkspaceNames = companies.ok ? companies.items.map((company) => company.name).filter(Boolean) : []
+    const dashboardWorkspaceNames = companies.ok
+      ? []
+      : await visiblePaperclipWorkspaceNamesFromDashboards({
+        baseUrl: endpoint.baseUrl,
+        fetchImpl: input.fetchImpl,
+        workspaceNames: expectedOwnerWorkspaces,
+      })
+    const workspaceNames = apiWorkspaceNames.length ? apiWorkspaceNames : dashboardWorkspaceNames
+    return {
+      origin_id: origin.origin_id,
+      owner_visible_endpoint: endpoint.ownerVisible,
+      reachable: companies.ok || dashboardWorkspaceNames.length > 0,
+      workspace_count: workspaceNames.length,
+      workspace_names: workspaceNames,
+      blocker: companies.ok
+        ? null
+        : dashboardWorkspaceNames.length > 0
+          ? 'paperclip_companies_api_auth_required_dashboard_probe_used'
+          : companies.blocker,
+    }
+  }))
+
+  const liveWorkspaceNames = dedupeStrings(originStatuses.flatMap((origin) => origin.workspace_names))
+  const missingExpected = expectedOwnerWorkspaces.filter((name) => !liveWorkspaceNames.includes(name))
+  const workspaceMap = buildPaperclipWorkspaceMapPlan({ generatedAt: input.generatedAt })
+  const reachableTailnetOrigin = originStatuses.find((origin) => origin.origin_id === 'tailnet' && origin.reachable)
+  const reachableLoopbackOrigin = originStatuses.find((origin) => origin.origin_id === 'loopback' && origin.reachable)
+  const reachableHttpsOrigin = originStatuses.find((origin) => origin.origin_id === 'https' && origin.reachable)
+  const launchBaseUrl = reachableTailnetOrigin
+    ? 'http://100.116.35.95:3100'
+    : reachableLoopbackOrigin
+      ? DEFAULT_PAPERCLIP_BASE_URL
+      : reachableHttpsOrigin && httpsUrl
+        ? safeUrlOrigin(httpsUrl)
+        : null
+  const mismatchDetected = missingExpected.length > 0 || originStatuses
+    .filter((origin) => origin.reachable)
+    .some((origin) => expectedOwnerWorkspaces.some((workspace) => !origin.workspace_names.includes(workspace)))
+  const workspaceLaunches = expectedOwnerWorkspaces.map((workspaceName): PaperclipWorkspaceLaunch => {
+    const visible = liveWorkspaceNames.includes(workspaceName)
+    const issuePrefix = paperclipWorkspaceIssuePrefix(workspaceName)
+    return {
+      workspace_name: workspaceName,
+      issue_prefix: issuePrefix,
+      canonical_launch_url: visible && issuePrefix && launchBaseUrl ? `${launchBaseUrl}/${issuePrefix}/dashboard` : null,
+      open_enabled: Boolean(visible && issuePrefix && launchBaseUrl),
+      disabled_reason: visible && issuePrefix && launchBaseUrl ? null : 'workspace_not_visible_from_workspace_truth',
+    }
+  })
+
+  return {
+    ok: originStatuses.some((origin) => origin.reachable),
+    mode: 'paperclip_workspace_truth_read_only',
+    route: '/api/bridge/paperclip/workspace-truth',
+    generated_at: input.generatedAt,
+    origin_statuses: originStatuses,
+    live_workspace_names: liveWorkspaceNames,
+    expected_owner_workspaces: expectedOwnerWorkspaces,
+    missing_expected_workspaces: missingExpected,
+    mission_control_workspace_map: workspaceMap.workspaces,
+    workspace_selector_required: liveWorkspaceNames.length > 1 || missingExpected.length > 0,
+    mismatch_detected: mismatchDetected,
+    hard_coded_eco_only: false,
+    selected_default_workspace: liveWorkspaceNames.find((name) => name === 'E copier Solutions') || liveWorkspaceNames[0] || null,
+    workspace_launches: workspaceLaunches,
+    launch_policy: {
+      open_when_reachable: true,
+      disabled_reason_required_when_blocked: true,
+      write_actions_require_exact_scope_adapter: true,
+    },
+    execution_enabled: false,
+    writes_enabled: false,
+    external_writes_enabled: false,
+    credential_values_exposed: false,
+    no_secrets_exposed: true,
+    next_action: missingExpected.length
+      ? 'Use this workspace truth payload to wire the AgentHub selector and show disabled reasons for origins/workspaces that are not visible.'
+      : 'Wire AgentHub Paperclip launch buttons to the live workspace selector; keep writes exact-scope adapter gated.',
+  }
+}
+
+function paperclipWorkspaceIssuePrefix(workspaceName: string): string | null {
+  const normalized = workspaceName.trim().toLowerCase()
+  if (normalized === 'to knowledge gateway') return 'TKG'
+  if (normalized === 'e copier solutions') return 'ECO'
+  if (normalized === 'e copier itt') return 'ITT'
+  return null
+}
+
+function safeUrlOrigin(value: string): string | null {
+  try {
+    return new URL(value).origin
+  } catch {
+    return null
+  }
+}
+
 
 
 const PAPERCLIP_GATEWAY_PLUGIN_SPECS: Record<PaperclipGatewayPluginId, PaperclipGatewayPluginSpec> = {
@@ -2914,7 +3105,7 @@ const PAPERCLIP_GATEWAY_PLUGIN_SPECS: Record<PaperclipGatewayPluginId, Paperclip
   },
   hermes_adapter: {
     id: 'hermes_adapter',
-    name: 'Hermes Adapter Plugin',
+    name: 'Ron Weasley Adapter Plugin',
     kind: 'agent_adapter',
     target_node: 'hermes',
     supervisor: 'agent_zero',
@@ -3325,6 +3516,47 @@ async function fetchPaperclipJson(path: string, input: { baseUrl: string; fetchI
   } finally {
     clearTimeout(timeout)
   }
+}
+
+async function fetchPaperclipReachable(path: string, input: { baseUrl: string; fetchImpl?: FetchLike }): Promise<FetchReachabilityResult> {
+  const fetchImpl = input.fetchImpl || globalThis.fetch
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), PAPERCLIP_TIMEOUT_MS)
+  try {
+    const response = await fetchImpl(`${input.baseUrl}${path}`, {
+      method: 'GET',
+      headers: { Accept: 'text/html,application/xhtml+xml,*/*' },
+      signal: controller.signal,
+    })
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, status: response.status, blocker: 'paperclip_dashboard_auth_required_or_not_configured' }
+    }
+    if (!response.ok) {
+      return { ok: false, status: response.status, blocker: `paperclip_dashboard_http_${response.status}` }
+    }
+    return { ok: true, status: response.status }
+  } catch {
+    return { ok: false, status: 503, blocker: 'paperclip_dashboard_not_reachable' }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function visiblePaperclipWorkspaceNamesFromDashboards(input: {
+  baseUrl: string
+  fetchImpl?: FetchLike
+  workspaceNames: string[]
+}): Promise<string[]> {
+  const probes = await Promise.all(input.workspaceNames.map(async (workspaceName) => {
+    const issuePrefix = paperclipWorkspaceIssuePrefix(workspaceName)
+    if (!issuePrefix) return null
+    const result = await fetchPaperclipReachable(`/${issuePrefix}/dashboard`, {
+      baseUrl: input.baseUrl,
+      fetchImpl: input.fetchImpl,
+    })
+    return result.ok ? workspaceName : null
+  }))
+  return probes.filter((workspaceName): workspaceName is string => Boolean(workspaceName))
 }
 
 function basePayload(generatedAt: string, endpoint: string, uiLink: string | null): PaperclipSafeStatusPayload {
@@ -4270,10 +4502,10 @@ function normalizePaperclipProposalKind(value: unknown): PaperclipHermesProposal
 }
 
 function paperclipProposalDefaultTitle(kind: PaperclipHermesProposalKind): string {
-  if (kind === 'mini_agent_spec') return 'Hermes mini-agent proposal for Agent Zero review'
-  if (kind === 'paperclip_routine') return 'Hermes Paperclip routine draft for Agent Zero review'
-  if (kind === 'skill_proposal_document') return 'Hermes skill proposal document for Paperclip tracking'
-  return 'Hermes workflow task template for Paperclip tracking'
+  if (kind === 'mini_agent_spec') return 'Ron Weasley mini-agent proposal for Agent Zero review'
+  if (kind === 'paperclip_routine') return 'Ron Weasley Paperclip routine draft for Agent Zero review'
+  if (kind === 'skill_proposal_document') return 'Ron Weasley skill proposal document for Paperclip tracking'
+  return 'Ron Weasley workflow task template for Paperclip tracking'
 }
 
 function buildPaperclipProposalId(generatedAt: string) {

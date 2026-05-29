@@ -154,6 +154,16 @@ Task dispatch previews can now reference Direct Agent Line Trace Kit receive pro
 
 When a matching live, non-local, PASS trace exists for the target agent, the preview blocker narrows to runtime cutover/Jarvis concurrence. Without that proof, the preview remains blocked at `execution_blocked_until_live_receive_trace_proof`. This prevents preview/audit/no-state proof from being mistaken for actual agent receipt. OpenClaw/OpenCloud remains forbidden as conversation owner and hidden intermediary.
 
+## Phase 6 External Receive Source Hardening - 2026-05-29
+
+Task dispatch preview proof now rejects local-only trace records. A nonce match must include a non-local Direct Agent Line Trace Kit PASS record plus at least one external receive source such as:
+
+- `mission_control_journal_nonce`
+- `agent_runtime_journal_nonce`
+- `agent_zero_docker_nonce`
+
+Local route proof like `mission_control_protected_probe_route` and route replays like `mission_control_trace_route` are not enough for task-dispatch cutover. This keeps the preview/audit/no-state path useful while preventing local smoke checks from being treated as real target-agent receipt. Execution and writes remain disabled.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

@@ -255,6 +255,10 @@ FOUND_RECEIVE=0
 FOUND_RESPONSE=0
 FOUND_OPENCLOUD=0
 FOUND_TRANSCRIPT=0
+FOUND_ROUTE_TRACE=0
+FOUND_MISSION_CONTROL_JOURNAL=0
+FOUND_AGENT_RUNTIME_JOURNAL=0
+FOUND_AGENT_ZERO_DOCKER=0
 ROUTE_STATUS=""
 ROUTE_BLOCKER=""
 ROUTE_VISIBLE_TASK_ID=""
@@ -276,6 +280,7 @@ while [[ "$(date +%s)" -lt "$END" ]]; do
     if grep -F "$NONCE" "/tmp/agent-line-trace-live-${NONCE}.json" >/dev/null 2>&1; then
       FOUND_RECEIVE=1
       FOUND_RESPONSE=1
+      FOUND_ROUTE_TRACE=1
       ROUTE_STATUS="$(python3 - "/tmp/agent-line-trace-live-${NONCE}.json" <<'PY' 2>/dev/null || true
 import json, sys
 data=json.load(open(sys.argv[1]))
@@ -296,9 +301,11 @@ PY
   if command -v journalctl >/dev/null 2>&1; then
     if bounded_cmd journalctl -u mission-control.service --since "@$START" --no-pager 2>/dev/null | grep -F "$NONCE" >/dev/null 2>&1; then
       FOUND_RECEIVE=1
+      FOUND_MISSION_CONTROL_JOURNAL=1
     fi
     if bounded_cmd journalctl --user -u claudeclaw.service --since "@$START" --no-pager 2>/dev/null | grep -F "$NONCE" >/dev/null 2>&1; then
       FOUND_RESPONSE=1
+      FOUND_AGENT_RUNTIME_JOURNAL=1
     fi
     if bounded_cmd journalctl --user --since "@$START" --no-pager 2>/dev/null | grep -iE 'opencloud|openclaw' | grep -F "$NONCE" >/dev/null 2>&1; then
       FOUND_OPENCLOUD=1
@@ -311,6 +318,7 @@ PY
   if command -v docker >/dev/null 2>&1 && bounded_cmd docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'agent-zero'; then
     if bounded_cmd docker logs agent-zero --since "${START}" 2>/dev/null | grep -F "$NONCE" >/dev/null 2>&1; then
       FOUND_RECEIVE=1
+      FOUND_AGENT_ZERO_DOCKER=1
     fi
   fi
 
@@ -350,6 +358,17 @@ import json
 target = "$TARGET"
 received = bool($FOUND_RECEIVE)
 intermediaries = ["opencloud"] if bool($FOUND_OPENCLOUD) else []
+verification_sources = []
+if bool($LOCAL_PROBE):
+    verification_sources.append("mission_control_protected_probe_route")
+if bool($FOUND_ROUTE_TRACE):
+    verification_sources.append("mission_control_trace_route")
+if bool($FOUND_MISSION_CONTROL_JOURNAL):
+    verification_sources.append("mission_control_journal_nonce")
+if bool($FOUND_AGENT_RUNTIME_JOURNAL):
+    verification_sources.append("agent_runtime_journal_nonce")
+if bool($FOUND_AGENT_ZERO_DOCKER):
+    verification_sources.append("agent_zero_docker_nonce")
 print(json.dumps({
     "nonce": "$NONCE",
     "target_agent": target,
@@ -359,7 +378,7 @@ print(json.dumps({
     "source_surface": "$SOURCE_SURFACE",
     "mode": "$MODE",
     "local_gateway_probe": bool($LOCAL_PROBE),
-    "verification_sources": ["mission_control_protected_probe_route"] if bool($LOCAL_PROBE) else [],
+    "verification_sources": verification_sources,
     "intermediaries": intermediaries,
     "message_received_by_agent": received,
     "voice_transcribed": bool($FOUND_TRANSCRIPT) if bool($VOICE) else True,
@@ -436,6 +455,17 @@ def normalize_route_trace(trace):
     return normalized
 mission_control_route_trace = normalize_route_trace(mission_control_route_trace)
 local_signal_route_trace = ["owner", "mission-control", "nuclear-gateway"] + (["$TARGET"] if bool($FOUND_RECEIVE) else [])
+verification_sources = []
+if bool($LOCAL_PROBE):
+    verification_sources.append("mission_control_protected_probe_route")
+if bool($FOUND_ROUTE_TRACE):
+    verification_sources.append("mission_control_trace_route")
+if bool($FOUND_MISSION_CONTROL_JOURNAL):
+    verification_sources.append("mission_control_journal_nonce")
+if bool($FOUND_AGENT_RUNTIME_JOURNAL):
+    verification_sources.append("agent_runtime_journal_nonce")
+if bool($FOUND_AGENT_ZERO_DOCKER):
+    verification_sources.append("agent_zero_docker_nonce")
 report = {
   "trace_id": "$NONCE",
   "nonce": "$NONCE",
@@ -455,7 +485,7 @@ report = {
   "response_signal": bool($FOUND_RESPONSE),
   "voice_trace": bool($VOICE),
   "local_gateway_probe": bool($LOCAL_PROBE),
-  "verification_sources": ["mission_control_protected_probe_route"] if bool($LOCAL_PROBE) else [],
+  "verification_sources": verification_sources,
   "voice_transcribed_signal": bool($FOUND_TRANSCRIPT),
   "opencloud_signal": bool($FOUND_OPENCLOUD),
   "opencloud_intermediary": bool($FOUND_OPENCLOUD),

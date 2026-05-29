@@ -107,6 +107,7 @@ describe('Nuclear Gateway task dispatch adapter contract', () => {
       message_received_by_agent: true,
       response_sent: true,
       local_gateway_probe: false,
+      verification_sources: ['mission_control_journal_nonce', 'agent_runtime_journal_nonce'],
       create_visible_task_on_failure: false,
     })
 
@@ -133,7 +134,45 @@ describe('Nuclear Gateway task dispatch adapter contract', () => {
         response_sent: true,
         openclaw_used: false,
         local_gateway_probe: false,
+        external_receive_verified: true,
+        verification_sources: ['mission_control_journal_nonce', 'agent_runtime_journal_nonce'],
         raw_message_body_exposed: false,
+      },
+    })
+  })
+
+  it('does not accept local-only trace proof for task dispatch cutover', () => {
+    const trace = buildAgentLineTraceRecord({
+      target_agent: 'ron-weasley',
+      nonce: 'TRACE-test-task-dispatch-local-only-proof',
+      message_received_by_agent: true,
+      response_sent: true,
+      local_gateway_probe: true,
+      verification_sources: ['mission_control_protected_probe_route'],
+      create_visible_task_on_failure: false,
+    })
+
+    const preview = buildNuclearGatewayTaskDispatchPreview({
+      dispatch_kind: 'task_dispatch_new_session',
+      target_agent: 'ron-weasley',
+      message: 'Preview dispatch with local-only trace.',
+      visible_task_id: '140',
+      receive_trace_nonce: trace.nonce,
+    })
+
+    expect(preview).toMatchObject({
+      ok: true,
+      exact_blocker: 'execution_blocked_until_live_receive_trace_proof',
+      execution_enabled: false,
+      writes_enabled: false,
+      external_writes_enabled: false,
+      receive_trace_proof: {
+        status: 'FAIL',
+        nonce: 'TRACE-test-task-dispatch-local-only-proof',
+        local_gateway_probe: true,
+        external_receive_verified: false,
+        verification_sources: [],
+        blocker: 'receive_trace_external_verification_source_required',
       },
     })
   })

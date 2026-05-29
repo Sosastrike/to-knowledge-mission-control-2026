@@ -84,6 +84,8 @@ export type NuclearGatewayTaskDispatchPreview = {
     response_sent: boolean
     openclaw_used: boolean
     local_gateway_probe: boolean
+    external_receive_verified: boolean
+    verification_sources: string[]
     blocker: string | null
     raw_message_body_exposed: false
   }
@@ -216,6 +218,20 @@ function messageHash(value: unknown) {
   return createHash('sha256').update(String(value || '')).digest('hex').slice(0, 16)
 }
 
+const LOCAL_ONLY_TRACE_SOURCES = new Set([
+  'mission_control_protected_probe_route',
+  'mission_control_trace_route',
+])
+
+function externalTraceSources(sources: unknown) {
+  return Array.isArray(sources)
+    ? sources
+      .map((source) => String(source || '').trim())
+      .filter((source) => source && !LOCAL_ONLY_TRACE_SOURCES.has(source))
+      .slice(0, 8)
+    : []
+}
+
 function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatchPreviewInput) {
   const nonce = String(input.receive_trace_nonce || '').trim()
   if (!nonce) {
@@ -228,6 +244,8 @@ function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatc
       response_sent: false,
       openclaw_used: false,
       local_gateway_probe: false,
+      external_receive_verified: false,
+      verification_sources: [],
       blocker: 'receive_trace_nonce_required',
       raw_message_body_exposed: false as const,
     }
@@ -248,18 +266,22 @@ function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatc
       response_sent: false,
       openclaw_used: false,
       local_gateway_probe: false,
+      external_receive_verified: false,
+      verification_sources: [],
       blocker: 'receive_trace_record_not_found',
       raw_message_body_exposed: false as const,
     }
   }
 
+  const externalSources = externalTraceSources(record.verification_sources)
+  const externalReceiveVerified = record.local_gateway_probe === false && externalSources.length > 0
   const valid = record.status === 'PASS'
     && record.target_agent === targetAgent
     && record.direct_line_used === true
     && record.message_received_by_agent === true
     && record.response_sent === true
     && record.openclaw_used === false
-    && record.local_gateway_probe === false
+    && externalReceiveVerified
 
   return {
     status: valid ? 'PASS' as const : 'FAIL' as const,
@@ -270,7 +292,9 @@ function receiveTraceProof(targetAgent: string, input: NuclearGatewayTaskDispatc
     response_sent: record.response_sent,
     openclaw_used: record.openclaw_used,
     local_gateway_probe: record.local_gateway_probe,
-    blocker: valid ? null : record.blocker || 'receive_trace_not_live_external_pass',
+    external_receive_verified: externalReceiveVerified,
+    verification_sources: externalSources,
+    blocker: valid ? null : record.blocker || (externalReceiveVerified ? 'receive_trace_not_live_external_pass' : 'receive_trace_external_verification_source_required'),
     raw_message_body_exposed: false as const,
   }
 }

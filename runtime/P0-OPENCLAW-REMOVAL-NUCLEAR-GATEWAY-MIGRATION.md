@@ -91,6 +91,17 @@ Credential broker source/routes were added as name-only status surfaces:
 
 These routes report credential names and boolean presence only. They do not return values.
 
+## Phase 6 Dispatch Transport Addendum - 2026-05-29
+
+The Nuclear Gateway tool migration map now explicitly tracks Mission Control task dispatch surfaces that still depend on OpenClaw/OpenCloud-compatible transport:
+
+- `openclaw.task_dispatch.new_session`
+- `openclaw.task_dispatch.target_session`
+- `openclaw.task_review.aegis`
+- `openclaw.task_broadcast`
+
+All four are classified as `WRITE_GATED` with `openclaw_allowed_role: not_allowed`, `writes_enabled: false`, and `execution_enabled: false` in the migration map. This hop does not change runtime dispatch behavior; it makes the remaining dependency owner-visible and blocks fake cutover until direct-line task dispatch, target-session handoff, Aegis review, and broadcast adapters have route-trace/audit/rollback proof.
+
 ## Current Safety Proof
 
 - Secrets exposed: false

@@ -20,7 +20,7 @@ describe('Nuclear Gateway tool migration map', () => {
       no_secrets_exposed: true,
       external_writes_enabled: false,
     })
-    expect(status.entries_count).toBeGreaterThanOrEqual(9)
+    expect(status.entries_count).toBeGreaterThanOrEqual(13)
     expect(status.classification_counts.READ_ONLY).toBeGreaterThan(0)
     expect(status.classification_counts.WRITE_GATED).toBeGreaterThan(0)
     expect(status.classification_counts.CREDENTIAL_REQUIRED).toBeGreaterThan(0)
@@ -56,6 +56,32 @@ describe('Nuclear Gateway tool migration map', () => {
       openclaw_allowed_role: 'not_allowed',
       writes_enabled: false,
       execution_enabled: false,
+    })
+    expect(byId['openclaw.task_dispatch.new_session']).toMatchObject({
+      classification: 'WRITE_GATED',
+      gateway_registry_target: 'direct_agent_line.task_dispatch.new_session',
+      openclaw_allowed_role: 'not_allowed',
+      blocker: 'direct_line_task_dispatch_adapter_required',
+      writes_enabled: false,
+      execution_enabled: false,
+    })
+    expect(byId['openclaw.task_dispatch.target_session']).toMatchObject({
+      classification: 'WRITE_GATED',
+      gateway_registry_target: 'direct_agent_line.task_dispatch.target_session',
+      openclaw_allowed_role: 'not_allowed',
+      blocker: 'target_session_direct_line_handoff_required',
+    })
+    expect(byId['openclaw.task_review.aegis']).toMatchObject({
+      classification: 'WRITE_GATED',
+      gateway_registry_target: 'certified_adapter.task_review.aegis',
+      openclaw_allowed_role: 'not_allowed',
+      blocker: 'quality_review_direct_line_adapter_required',
+    })
+    expect(byId['openclaw.task_broadcast']).toMatchObject({
+      classification: 'WRITE_GATED',
+      gateway_registry_target: 'certified_adapter.task_broadcast.direct_line',
+      openclaw_allowed_role: 'not_allowed',
+      blocker: 'task_broadcast_direct_line_adapter_required',
     })
   })
 })

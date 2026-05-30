@@ -7,12 +7,15 @@ type GatewayActionContext = {
 type GatewayFrameAction =
   | { kind: 'navigate'; href: string; title: string; detail: string }
   | { kind: 'frame'; href: string; title: string; detail: string }
-  | { kind: 'openExternal'; href: string; title: string; detail: string }
+  | { kind: 'openExternal'; href: string; title: string; detail: string; targetName?: string }
   | { kind: 'status'; endpoint: string; title: string; detail: string }
   | { kind: 'gated'; title: string; detail: string; href?: string }
   | { kind: 'copy'; title: string; detail: string; value: string }
 
 const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+export const PAPERCLIP_ECO_DASHBOARD = 'http://100.116.35.95:3100/ECO/dashboard'
+export const PAPERCLIP_ECO_WINDOW_NAME = 'tkmc_paperclip_eco'
+export const PAPERCLIP_WORKSPACE_SELECTOR_ROUTE = '/gateway/agent-hub/paperclip/ui'
 
 function normalized(value: string | undefined): string {
   return (value || '').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -30,6 +33,24 @@ function hasAny(text: string, ...needles: string[]): boolean {
   return needles.some((needle) => text.includes(needle))
 }
 
+function isRonWeasleySurface(text: string): boolean {
+  return hasAny(text, 'hermes', 'ron weasley', ' ron ', 'weasley', 'nuclear dispatcher')
+}
+
+function firstNeedleIndex(text: string, needles: string[]): number {
+  return needles
+    .map((needle) => text.indexOf(needle))
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b)[0] ?? -1
+}
+
+function paperclipSurfaceTakesPriority(text: string): boolean {
+  const paperclipIndex = firstNeedleIndex(text, ['paperclip', 'workforce control plane'])
+  if (paperclipIndex < 0) return false
+  const ronIndex = firstNeedleIndex(text, ['hermes', 'ron weasley', ' ron ', 'weasley', 'nuclear dispatcher'])
+  return ronIndex < 0 || paperclipIndex < ronIndex
+}
+
 function connectorEndpoint(text: string): string | null {
   if (text.includes('agentmail')) return '/api/bridge/agentmail-readiness'
   if (text.includes('sendgrid')) return '/api/bridge/agentmail-readiness'
@@ -43,18 +64,42 @@ function connectorEndpoint(text: string): string | null {
   return null
 }
 
-function ownerUiLink(text: string): string | null {
-  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'http://100.116.35.95:3100/ECO/dashboard'
-  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return 'http://100.116.35.95:50080/'
-  if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return 'http://127.0.0.1:18789/'
+function ownerUiTarget(text: string): { href: string; targetName?: string } | null {
+  if (hasAny(text, 'paperclip', 'workforce control plane')) {
+    return { href: shellHref(PAPERCLIP_WORKSPACE_SELECTOR_ROUTE) }
+  }
+  if (isRonWeasleySurface(text)) return { href: shellHref('/gateway/agent-hub/ron/webui/app') }
+  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: 'http://100.116.35.95:50080/' }
+  if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return { href: 'http://127.0.0.1:18789/' }
   return null
+}
+
+function actionForOwnerUiTarget(
+  target: { href: string; targetName?: string },
+  detail: string,
+): GatewayFrameAction {
+  const missionControlRoute = target.href.startsWith('/')
+  if (missionControlRoute) {
+    return {
+      kind: 'navigate',
+      href: target.href,
+      title: 'Opening owner UI',
+      detail,
+    }
+  }
+  return {
+    kind: 'openExternal',
+    ...target,
+    title: 'Opening owner UI',
+    detail,
+  }
 }
 
 function agentControlSlug(text: string): string | null {
   if (hasAny(text, 'paperclip', 'workforce control plane')) return 'paperclip'
   if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return 'agent-zero'
-  if (hasAny(text, 'hermes')) return 'hermes'
-  if (hasAny(text, 'pi-mono', 'pi ', 'dispatcher candidate', 'route optimizer')) return 'pi'
+  if (isRonWeasleySurface(text)) return 'hermes'
+  if (hasAny(text, 'pi-mono', 'pi ', 'pi full access', 'full access gateway agent')) return 'pi'
   if (hasAny(text, 'spaceagent', 'space agent', 'playwright', 'browser research')) return 'spaceagent'
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'openclaw')) return 'openclaw'
   return null
@@ -62,11 +107,18 @@ function agentControlSlug(text: string): string | null {
 
 function agentControlHref(
   text: string,
-  mode: 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help',
+  mode: 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help' | 'brain-map' | 'tool-map' | 'skill-registry' | 'mini-agent-registry' | 'pipelines' | 'tasks' | 'logs' | 'dispatch-plan' | 'jarvis-concurrence',
 ): string | null {
   const slug = agentControlSlug(text)
   if (!slug) return null
-  if (mode === 'tools') return slug === 'paperclip' ? shellHref('/gateway/agent-hub/paperclip/tools') : null
+  if (mode === 'tools') {
+    if (slug === 'paperclip') return shellHref('/gateway/agent-hub/paperclip/tools')
+    if (slug === 'hermes') return shellHref('/gateway/agent-hub/ron/tool-map')
+    return null
+  }
+  if (slug === 'hermes' && ['brain-map', 'tool-map', 'skill-registry', 'mini-agent-registry', 'pipelines', 'tasks', 'logs', 'dispatch-plan', 'jarvis-concurrence', 'status'].includes(mode)) {
+    return shellHref(`/gateway/agent-hub/ron/${mode}`)
+  }
   if (['companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(mode)) {
     return slug === 'paperclip' ? shellHref(`/gateway/agent-hub/paperclip/${mode}`) : null
   }
@@ -109,6 +161,46 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
       title: 'Protected action gated',
       detail: 'This action is wired, but execution is blocked until Bridge approval, audit persistence, and rollback proof are live.',
       href: shellHref('/gateway/bridge-session'),
+    }
+  }
+
+  if (isRonWeasleySurface(text) && !paperclipSurfaceTakesPriority(text)) {
+    const hermesRoutes: Record<string, string> = {
+      'open ui': '/gateway/agent-hub/ron/webui/app',
+      'open ron weasley webui': '/gateway/agent-hub/ron/webui/app',
+      'open hermes webui': '/gateway/agent-hub/ron/webui/app',
+      'open standalone webui': '/gateway/agent-hub/ron/webui/app',
+      'standalone webui': '/gateway/agent-hub/ron/webui/app',
+      'webui': '/gateway/agent-hub/ron/webui/app',
+      'open command center': '/gateway/agent-hub/ron/config',
+      'command center': '/gateway/agent-hub/ron/config',
+      'status': '/gateway/agent-hub/ron/status',
+      'health': '/gateway/agent-hub/ron/status',
+      'brain map': '/gateway/agent-hub/ron/brain-map',
+      'tool map': '/gateway/agent-hub/ron/tool-map',
+      'skill registry': '/gateway/agent-hub/ron/skill-registry',
+      'mini-agent registry': '/gateway/agent-hub/ron/mini-agent-registry',
+      'dispatch plan': '/gateway/agent-hub/ron/dispatch-plan',
+      'request jarvis concurrence': '/gateway/agent-hub/ron/jarvis-concurrence',
+      'view pipeline': '/gateway/agent-hub/ron/pipelines',
+      'pipeline': '/gateway/agent-hub/ron/pipelines',
+      'view audit': '/gateway/agent-hub/ron/logs',
+      'audit': '/gateway/agent-hub/ron/logs',
+      'logs': '/gateway/agent-hub/ron/logs',
+      'routes': '/gateway/agent-hub/ron/routes',
+    }
+    const href = hermesRoutes[label]
+    if (href) {
+      return {
+        kind: 'navigate',
+        href: shellHref(href),
+        title: label.includes('webui') || label === 'open ui'
+          ? 'Opening Ron Weasley WebUI'
+          : 'Opening Ron Weasley command center',
+        detail: label.includes('webui') || label === 'open ui'
+          ? 'Opening the actual Ron Weasley WebUI app through the Mission Control authenticated proxy. OpenCloud is not an intermediary.'
+          : 'Opening the Mission Control Ron Weasley command center. OpenCloud is not an intermediary.',
+      }
     }
   }
 
@@ -155,7 +247,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         kind: 'navigate',
         href,
         title: 'Opening Paperclip companies',
-        detail: 'Opening the read-only ECO company inventory. TOK remains a separate legacy blocker.',
+        detail: 'Opening the read-only Paperclip company inventory. Workspace launches are handled by the workspace selector.',
       }
     }
   }
@@ -167,7 +259,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         kind: 'navigate',
         href,
         title: 'Opening Paperclip agents',
-        detail: 'Opening the read-only Paperclip workforce roster for ECO.',
+        detail: 'Opening the read-only Paperclip workforce roster for the visible workspace scope.',
       }
     }
   }
@@ -212,6 +304,16 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
+  if (label === 'open recommendations' || label === 'recommendations') {
+    const href = agentControlHref(text, 'recommend')
+    if (href) return {
+      kind: 'navigate',
+      href,
+      title: 'Opening Pi recommendations',
+      detail: 'Opening the full-access Pi Gateway recommendation panel. Production-impacting execution remains Jarvis-gated.',
+    }
+  }
+
   if (label === 'view audit' || label === 'audit' || label.includes('audit')) {
     const href = agentControlHref(text, 'audit')
     if (href) {
@@ -242,6 +344,15 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
+  if (label === 'telegram agent' || label === 'create telegram agent' || label.includes('telegram agent')) {
+    return {
+      kind: 'navigate',
+      href: shellHref('/gateway/agent-hub/paperclip/telegram-agent'),
+      title: 'Opening Telegram Agent option',
+      detail: 'This is a read-only planning surface. Connecting a Telegram-capable Paperclip agent remains Bridge-gated and does not execute here.',
+    }
+  }
+
   if (label.includes('bridge') || label.includes('approve') || label.includes('open bridge')) {
     return {
       kind: 'navigate',
@@ -252,19 +363,21 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label === 'open ui') {
-    const href = ownerUiLink(text)
-    if (href) {
-      return {
-        kind: 'openExternal',
-        href,
-        title: 'Opening owner UI',
-        detail: 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
-      }
+    const target = ownerUiTarget(text)
+    if (target) {
+      return actionForOwnerUiTarget(
+        target,
+        target.href.includes('/gateway/agent-hub/paperclip')
+          ? 'Opening the Paperclip workspace selector through Mission Control. Use Open UI on the selected visible workspace; no Paperclip writes are executed.'
+          : target.href.includes('/gateway/agent-hub/ron')
+            ? 'Opening Ron Weasley through the Mission Control authenticated proxy. Server-local localhost URLs are not exposed to the owner browser.'
+            : 'Opening the real owner-accessible interface. Bridge Session is not required for safe navigation.',
+      )
     }
     return {
       kind: 'status',
-      endpoint: hasAny(text, 'hermes') ? '/api/hermes/status'
-        : hasAny(text, 'pi') ? '/api/bridge/dispatcher/status'
+      endpoint: isRonWeasleySurface(text) ? '/api/bridge/hermes/full-access/status'
+        : hasAny(text, 'pi') ? '/api/bridge/pi/status'
           : hasAny(text, 'spaceagent', 'space agent', 'playwright') ? '/api/bridge/space-agent/status'
             : '/api/agent-local-interfaces',
       title: 'Owner UI unavailable',
@@ -283,12 +396,12 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         detail: 'Checking the real readiness endpoint before opening this connector.',
       }
     }
-    if (hasAny(text, 'hermes')) {
+    if (isRonWeasleySurface(text)) {
       return {
-        kind: 'frame',
-        href: designHref('Hermes Lieutenant.html'),
-        title: 'Opening Hermes',
-        detail: 'Loading the Hermes lieutenant surface in the Gateway pane.',
+        kind: 'navigate',
+        href: shellHref('/gateway/agent-hub/ron/webui/app'),
+        title: 'Opening Ron Weasley WebUI',
+        detail: 'Opening the actual Ron Weasley WebUI app through the Mission Control authenticated proxy.',
       }
     }
     if (hasAny(text, 'build-wiki', 'farmer', 'opencloud', 'n8n')) {
@@ -347,14 +460,16 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label.includes('open localhost') || label.includes('open in new tab') || label.includes('preview ui')) {
-    const href = ownerUiLink(text)
-    if (href) {
-      return {
-        kind: 'openExternal',
-        href,
-        title: 'Opening owner UI',
-        detail: 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
-      }
+    const target = ownerUiTarget(text)
+    if (target) {
+      return actionForOwnerUiTarget(
+        target,
+        target.href.includes('/gateway/agent-hub/paperclip')
+          ? 'Opening the Paperclip workspace selector through Mission Control. Use Open UI on the selected visible workspace; no Paperclip writes are executed.'
+          : target.href.includes('/gateway/agent-hub/ron')
+            ? 'Opening Ron Weasley through the Mission Control authenticated proxy. Server-local localhost URLs are not exposed to the owner browser.'
+            : 'Opening the real owner-accessible interface. Bridge Session is not required for safe navigation.',
+      )
     }
     if (hasAny(text, 'agent zero')) {
       return {
@@ -364,12 +479,12 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         detail: 'Checking Agent Zero readiness instead of opening an unproven localhost blindly.',
       }
     }
-    if (hasAny(text, 'hermes')) {
+    if (isRonWeasleySurface(text)) {
       return {
         kind: 'status',
-        endpoint: '/api/hermes/status',
-        title: 'Hermes local status',
-        detail: 'Checking Hermes runtime reachability before opening the localhost surface.',
+        endpoint: '/api/bridge/hermes/full-access/status',
+        title: 'Ron Weasley command-center status',
+        detail: 'Checking the Mission Control Ron Weasley direct Gateway line and Jarvis-delegated parity state.',
       }
     }
     if (hasAny(text, 'paperclip')) {
@@ -414,7 +529,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
-  if (label.includes('recheck handshake')) {
+  if (label.includes('recheck handshake') || label.includes('recheck health')) {
     return {
       kind: 'status',
       endpoint: hasAny(text, 'paperclip') ? '/api/bridge/paperclip/status' : '/api/bridge/runtime-services',
@@ -533,7 +648,14 @@ function actionHeaders(): HeadersInit {
   return key ? { 'x-api-key': key } : {}
 }
 
-function showGatewayNotice(doc: Document, title: string, detail: string, tone: 'info' | 'ok' | 'warn' | 'error' = 'info') {
+function showGatewayNotice(
+  doc: Document,
+  title: string,
+  detail: string,
+  tone: 'info' | 'ok' | 'warn' | 'error' = 'info',
+  fallbackHref?: string,
+  fallbackTarget?: string,
+) {
   let style = doc.getElementById('cc-gateway-action-style')
   if (!style) {
     style = doc.createElement('style')
@@ -560,6 +682,19 @@ function showGatewayNotice(doc: Document, title: string, detail: string, tone: '
   titleNode.textContent = title
   const detailNode = doc.createElement('span')
   detailNode.textContent = detail
+  if (fallbackHref) {
+    const link = doc.createElement('a')
+    link.href = fallbackHref
+    link.target = fallbackTarget || '_blank'
+    link.rel = fallbackTarget ? '' : 'noreferrer'
+    link.textContent = 'Open fallback link'
+    link.style.display = 'inline-flex'
+    link.style.marginTop = '8px'
+    link.style.color = '#7dd3fc'
+    link.style.fontWeight = '700'
+    toast.replaceChildren(titleNode, detailNode, link)
+    return
+  }
   toast.replaceChildren(titleNode, detailNode)
 }
 
@@ -589,8 +724,26 @@ async function executeGatewayAction(action: GatewayFrameAction, iframe: HTMLIFra
 
   if (action.kind === 'openExternal') {
     showGatewayNotice(doc, action.title, action.detail, 'ok')
-    const opened = window.open(action.href, '_blank', 'noopener,noreferrer')
-    if (!opened) window.location.href = action.href
+    const opened = action.targetName
+      ? window.open(action.href, action.targetName)
+      : window.open(action.href, '_blank', 'noopener,noreferrer')
+    if (opened) {
+      try {
+        opened.opener = null
+      } catch (_err) {
+        /* cross-origin window proxy can reject opener mutation; launcher still uses a named tab */
+      }
+      opened.focus?.()
+      return
+    }
+    showGatewayNotice(
+      doc,
+      'Popup blocked',
+      'The browser blocked the launch. Use the fallback link; Mission Control stays open.',
+      'warn',
+      action.href,
+      action.targetName,
+    )
     return
   }
 
@@ -629,23 +782,23 @@ export function attachGatewayActionHandler(iframe: HTMLIFrameElement): void {
     const root = doc.documentElement as HTMLElement
     if (root.dataset.ccGatewayActionsWired === '1') return
     root.dataset.ccGatewayActionsWired = '1'
-    doc.querySelectorAll('button').forEach((button) => {
-      const wiredButton = button as HTMLButtonElement
-      if (wiredButton.matches('.tab')) return
-      if (wiredButton.dataset.ccGatewayActionButtonWired === '1') return
-      wiredButton.dataset.ccGatewayActionButtonWired = '1'
-      wiredButton.addEventListener(
-        'click',
-        (event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          event.stopImmediatePropagation()
-          const action = gatewayActionForButton(buttonContext(doc, wiredButton))
-          void executeGatewayAction(action, iframe, doc)
-        },
-        true,
-      )
-    })
+    doc.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target as (Element & { closest?: (selectors: string) => Element | null }) | null
+        if (!target || typeof target.closest !== 'function') return
+        const button = target.closest('button') as HTMLButtonElement | null
+        if (!button || !doc.contains(button)) return
+        if (button.matches('.tab')) return
+
+        event.preventDefault()
+        event.stopPropagation()
+        event.stopImmediatePropagation()
+        const action = gatewayActionForButton(buttonContext(doc, button))
+        void executeGatewayAction(action, iframe, doc)
+      },
+      true,
+    )
   } catch (_err) {
     /* cross-origin - ignore, matching the shell back-button handler */
   }

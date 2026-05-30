@@ -137,12 +137,12 @@ function capabilityMatrix(): GatewayStatusPayload {
 
 function piVisibilityContract() {
   return [
-    { id: 'provider_registry', label: 'Provider registry', endpoint: '/api/bridge/providers', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'names_only_no_secret_values', health: 'read_only' },
-    { id: 'capability_matrix', label: 'Capability matrix', endpoint: '/api/bridge/capability-matrix', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'not_required_for_read_only_inventory', health: 'read_only' },
-    { id: 'mcp_health', label: 'MCP health', endpoint: '/api/bridge/mcp-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access', health: 'read_only_or_degraded' },
-    { id: 'agent_roster', label: 'Agent roster', endpoint: '/api/agents', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_roster', health: 'read_only' },
-    { id: 'bridge_readiness', label: 'Bridge readiness', endpoint: '/api/bridge/approval-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'owner_approval_required_for_mutations', health: 'read_only' },
-    { id: 'skills_tools_inventory', label: 'Skills/tools inventory', endpoint: '/api/skills', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'install_mutation_owner_gated', health: 'read_only' },
+    { id: 'provider_registry', label: 'Provider registry', endpoint: '/api/bridge/providers', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_names_only_no_secret_values', health: 'full_access' },
+    { id: 'capability_matrix', label: 'Capability matrix', endpoint: '/api/bridge/capability-matrix', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'not_required_for_read_only_inventory', health: 'full_access' },
+    { id: 'mcp_health', label: 'MCP health', endpoint: '/api/bridge/mcp-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access', health: 'full_access_or_degraded' },
+    { id: 'agent_roster', label: 'Agent roster', endpoint: '/api/agents', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_roster', health: 'full_access' },
+    { id: 'bridge_readiness', label: 'Bridge readiness', endpoint: '/api/bridge/approval-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'owner_approval_required_for_mutations', health: 'full_access' },
+    { id: 'skills_tools_inventory', label: 'Skills/tools inventory', endpoint: '/api/skills', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'install_mutation_owner_gated', health: 'full_access' },
   ]
 }
 
@@ -151,7 +151,7 @@ function piDispatcherStatus(): GatewayStatusPayload {
   return {
     ok: true,
     route: 'bridge.pi.status',
-    state: 'READ_ONLY',
+    state: 'READY',
     blocker_class: 'NONE',
     agent_id: 'pi',
     label: 'Pi',
@@ -161,6 +161,7 @@ function piDispatcherStatus(): GatewayStatusPayload {
     runtime_blocker: 'production_execution_requires_jarvis_concurrence',
     exact_blocker: 'production_execution_requires_jarvis_concurrence',
     visibility_contract: visibility,
+    pi_visibility_contract: visibility,
     inventory_summary: {
       visible_to_gateway: visibility.filter((item) => item.visible_to_gateway).length,
       visible_to_PI: visibility.filter((item) => item.visible_to_PI).length,
@@ -169,7 +170,7 @@ function piDispatcherStatus(): GatewayStatusPayload {
       bridge_required: visibility.filter((item) => item.bridge_required).length,
       adapter_present: visibility.filter((item) => item.adapter_present).length,
     },
-    pi_advisory_contract: {
+    pi_full_access_contract: {
       no_write_route_selection: false,
       execution_enabled: true,
       writes_enabled: true,

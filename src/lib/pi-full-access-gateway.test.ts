@@ -9,6 +9,8 @@ import { buildAgentHubStatusPayload } from './gateway-agent-hub';
 import { buildPiDispatcherStatus } from './bridge-dispatcher-registry';
 import { buildPiDispatcherStatusPayload } from './gateway-pi-dispatcher';
 import { createGatewayRegistryFromAgentNetwork } from './gateway-model';
+import { gatewayActionForButton } from '../components/gateway/gateway-actions';
+import { statusForGatewayApiPath } from '../components/gateway/gateway-status-contracts';
 
 const registry = createGatewayRegistryFromAgentNetwork({
   generatedAt: '2026-05-29T20:40:00.000Z',
@@ -165,5 +167,59 @@ describe('Pi full-access Gateway pipeline identity', () => {
     expect(dispatcherStatusRoute).toContain('pi_gateway_agent_status');
     expect(dispatcherStatusRoute).not.toContain('pi_advisory_contract');
     expect(dispatcherStatusRoute).not.toContain('pi_dispatcher_status');
+  });
+
+  it('keeps Pi owner actions and Gateway status contracts off legacy dispatcher surfaces', () => {
+    const recommendationAction = gatewayActionForButton({
+      label: 'Open Recommendations',
+      pageTitle: 'Agent Hub',
+      nearbyText: 'Pi Full Access Gateway Agent',
+    });
+    expect(recommendationAction).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/pi/recommend',
+      title: 'Opening Pi recommendations',
+    });
+    expect(recommendationAction.detail).toContain('full-access Pi Gateway recommendation panel');
+    expect(recommendationAction.detail).not.toMatch(/read-only|dispatcher/i);
+
+    const unavailableUiAction = gatewayActionForButton({
+      label: 'Open UI',
+      pageTitle: 'Gateway',
+      nearbyText: 'Pi Full Access Gateway Agent',
+    });
+    expect(unavailableUiAction).toMatchObject({
+      kind: 'status',
+      endpoint: '/api/bridge/pi/status',
+    });
+
+    const status = statusForGatewayApiPath(['bridge', 'pi', 'status']);
+    expect(status).toMatchObject({
+      route: 'bridge.pi.status',
+      role: 'Full Access Gateway Agent',
+      status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
+      pi_full_access_contract: expect.objectContaining({
+        execution_enabled: true,
+        writes_enabled: true,
+        protected_execution_enabled: true,
+      }),
+    });
+    expect(status.pi_visibility_contract).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'provider_registry',
+          visible_to_agent_runtime: true,
+          execution_allowed: true,
+          health: 'full_access',
+        }),
+        expect.objectContaining({
+          id: 'skills_tools_inventory',
+          visible_to_agent_runtime: true,
+          execution_allowed: true,
+          health: 'full_access',
+        }),
+      ]),
+    );
+    expect(JSON.stringify(status)).not.toContain('pi_advisory_contract');
   });
 });

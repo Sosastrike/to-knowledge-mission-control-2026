@@ -10,6 +10,7 @@ import { normalizeTaskCreateStatus } from '@/lib/task-status';
 import { pushTaskToGitHub, syncTaskOutbound } from '@/lib/github-sync-engine';
 import { pushTaskToGnap } from '@/lib/gnap-sync';
 import { config } from '@/lib/config';
+import { parseTaskMetadata, parseTaskTags } from '@/lib/task-row-json';
 
 function formatTicketRef(prefix?: string | null, num?: number | null): string | undefined {
   if (!prefix || typeof num !== 'number' || !Number.isFinite(num) || num <= 0) return undefined
@@ -19,8 +20,8 @@ function formatTicketRef(prefix?: string | null, num?: number | null): string | 
 function mapTaskRow(task: any): Task & { tags: string[]; metadata: Record<string, unknown> } {
   return {
     ...task,
-    tags: task.tags ? JSON.parse(task.tags) : [],
-    metadata: task.metadata ? JSON.parse(task.metadata) : {},
+    tags: parseTaskTags(task.tags),
+    metadata: parseTaskMetadata(task.metadata),
     ticket_ref: formatTicketRef(task.project_prefix, task.project_ticket_no),
   }
 }

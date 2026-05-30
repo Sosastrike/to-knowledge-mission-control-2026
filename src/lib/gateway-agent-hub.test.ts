@@ -345,6 +345,7 @@ describe('Gateway Agent Hub', () => {
   it('does not render stale Bridge-not-active copy on the live Agent Hub control center', () => {
     const source = readFileSync(new URL('../components/gateway-agent-hub/AgentHubControlCenter.tsx', import.meta.url), 'utf8')
 
+    expect(source).toContain('/api/bridge/mission-control/stale-bundle-health')
     expect(source).toContain('Direct lines active')
     expect(source).toContain('Universal Direct Lines')
     expect(source).toContain('Every agent gets its own highway')

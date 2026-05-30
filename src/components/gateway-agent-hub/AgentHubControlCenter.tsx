@@ -86,6 +86,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
               <OwnerAction label='Gateway route smoke' state='live' route='/api/gateway/status' />
               <OwnerAction label='Agent Hub status' state='live' route='/api/gateway/agent-hub/status' />
               <OwnerAction label='Run Mission Control UI smoke' state='live' route='/api/bridge/playwright-mcp/smoke' method='POST' />
+              <OwnerAction label='Stale Next bundle check' state='live' route='/api/bridge/mission-control/stale-bundle-health' />
               <OwnerAction label='Start browser session' state='gated' blocker='bridge_session_required_for_browser_session_route' />
               <OwnerAction label='Delivery upload/send' state='gated' blocker='bridge_session_required_for_delivery_action' />
               <OwnerAction label='Fork 2 / SMB' state='blocked' blocker='smb_fork2_blocked' />

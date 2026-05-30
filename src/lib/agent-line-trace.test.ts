@@ -20,6 +20,7 @@ describe('Direct Agent Line Trace Kit', () => {
   it.each([
     ['agent-zero-jarvis'],
     ['ron-weasley'],
+    ['sofia'],
     ['pi'],
     ['paperclip'],
     ['spaceagent'],
@@ -386,7 +387,9 @@ describe('Direct Agent Line Trace Kit', () => {
 
     expect(script).toContain('post_final_trace_result')
     expect(script).toContain('agent-line-trace.sh --agent ron')
+    expect(script).toContain('agent-line-trace.sh --agent sofia')
     expect(script).toContain('ron|ron-weasley|hermes')
+    expect(script).toContain('sofia|sofia-deputy|deputy-nuclear-dispatcher')
     expect(script).toContain('hermes-webui)')
     expect(script).toContain('CONVERSATION_OWNER="ron-weasley"')
     expect(script).toContain('DISPLAY_AGENT="Ron Weasley"')

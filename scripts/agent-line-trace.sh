@@ -7,6 +7,7 @@ Usage:
   agent-line-trace.sh --agent jarvis
   agent-line-trace.sh --agent ron
   agent-line-trace.sh --agent hermes  # legacy alias
+  agent-line-trace.sh --agent sofia
   agent-line-trace.sh --agent pi
   agent-line-trace.sh --agent paperclip
   agent-line-trace.sh --agent spaceagent
@@ -99,6 +100,10 @@ case "$AGENT" in
   hermes-webui)
     TARGET="ron-weasley"
     SOURCE_SURFACE="hermes-webui"
+    EXPECTED_BOT=""
+    ;;
+  sofia|sofia-deputy|deputy-nuclear-dispatcher)
+    TARGET="sofia"
     EXPECTED_BOT=""
     ;;
   pi|paperclip|spaceagent|brain-sync|brain-bridge|brain|brain-bridge-mode)

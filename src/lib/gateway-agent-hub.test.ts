@@ -226,6 +226,7 @@ describe('Gateway Agent Hub', () => {
       expect.objectContaining({ route: '/api/bridge/spaceagent/certification-proof', surface: 'space_agent', state: 'READY' }),
       expect.objectContaining({ route: '/api/bridge/spaceagent/quality-scorecard', surface: 'space_agent', state: 'READY' }),
       expect.objectContaining({ route: '/api/bridge/spaceagent/live-proof-readiness', surface: 'space_agent', state: 'READY' }),
+      expect.objectContaining({ route: '/api/bridge/spaceagent/final-certification', surface: 'space_agent', state: 'READY' }),
     ]))
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       name: 'Pi',
@@ -383,8 +384,10 @@ describe('Gateway Agent Hub', () => {
     expect(source).toContain('/api/bridge/spaceagent/certification-proof')
     expect(source).toContain('/api/bridge/spaceagent/quality-scorecard')
     expect(source).toContain('/api/bridge/spaceagent/live-proof-readiness')
+    expect(source).toContain('/api/bridge/spaceagent/final-certification')
     expect(source).toContain('Quality Scorecard')
     expect(source).toContain('Live Proof Readiness')
+    expect(source).toContain('Final Certification')
     expect(source).toContain('internal pipeline templates')
     expect(source).toContain('Brain source labels')
     expect(source).toContain('Gateway-brokered tool map')

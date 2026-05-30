@@ -532,6 +532,7 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
             <a href='/api/bridge/spaceagent/certification-proof' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Certification</a>
             <a href='/api/bridge/spaceagent/quality-scorecard' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Quality Scorecard</a>
             <a href='/api/bridge/spaceagent/live-proof-readiness' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Live Proof Readiness</a>
+            <a href='/api/bridge/spaceagent/final-certification' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Final Certification</a>
             <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title='SpaceAgent report drafts use the authenticated POST route /api/bridge/spaceagent/report-draft and write internal records only.'>Draft Report</span>
             <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title='SpaceAgent concurrence requests use the authenticated POST route /api/bridge/spaceagent/jarvis-concurrence-request and do not execute production actions.'>Request Jarvis Concurrence</span>
           </>
@@ -540,7 +541,7 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
       </div>
       {agent.id === 'spaceagent' && (
         <div className='mt-4 rounded-lg border border-sky-300/20 bg-sky-300/8 p-3 text-xs leading-5 text-sky-100'>
-          SpaceAgent is a first-class direct-line agent. Playwright MCP, Firecrawl, YouTube, and Brain Bridge are SpaceAgent tools/layers, not SpaceAgent identity; read-only evidence packets, Brain source labels, Gateway-brokered tool map, certification source proof, quality scorecard, and live proof readiness, and internal pipeline templates are available, while click/type/form/authenticated actions require Bridge Session scope.
+          SpaceAgent is a first-class direct-line agent. Playwright MCP, Firecrawl, YouTube, and Brain Bridge are SpaceAgent tools/layers, not SpaceAgent identity; read-only evidence packets, Brain source labels, Gateway-brokered tool map, certification source proof, quality scorecard, live proof readiness, and final certification gate, and internal pipeline templates are available, while click/type/form/authenticated actions require Bridge Session scope.
         </div>
       )}
       {agent.blocked_reason && <p className='mt-4 rounded-lg border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Blocker: {agent.blocked_reason}</p>}

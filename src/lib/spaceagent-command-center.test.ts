@@ -22,6 +22,7 @@ import {
   buildSpaceAgentBrainStatus,
   buildSpaceAgentCapabilityMap,
   buildSpaceAgentCertificationProof,
+  buildSpaceAgentFinalCertification,
   buildSpaceAgentLiveProofReadiness,
   buildSpaceAgentPipelineStatus,
   buildSpaceAgentQualityScorecard,
@@ -192,6 +193,19 @@ describe('SpaceAgent first-class Mission Control agent', () => {
       execution_enabled: false,
       external_execution_enabled: false,
     })
+
+    expect(buildSpaceAgentFinalCertification()).toMatchObject({
+      route: 'bridge.spaceagent.final-certification',
+      status: 'SPACEAGENT_FINAL_CERTIFICATION_SOURCE_READY_LIVE_PROOF_PENDING',
+      final_status: 'PENDING_AUTHENTICATED_LIVE_PROOF',
+      target_final_status_when_live_proof_passes: 'SPACEAGENT_GATEWAY_PIPELINE_READY',
+      may_mark_ready_now: false,
+      source_evidence: { direct_line_registry: 'SOURCE_VERIFIED', live_proof_readiness_route: 'bridge.spaceagent.live-proof-readiness' },
+      proof: { source_certification_ready: true, live_certification_ready: false, no_opencloud_intermediary: true, credential_values_exposed: false },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
+    expect(buildSpaceAgentFinalCertification().acceptance_criteria.map((item) => item.id)).toEqual(expect.arrayContaining(['direct_line_trace', 'authenticated_browser_gateway_load', 'no_secret_proof']))
 
     expect(buildSpaceAgentBrainStatus()).toMatchObject({
       route: 'bridge.spaceagent.brain-status',

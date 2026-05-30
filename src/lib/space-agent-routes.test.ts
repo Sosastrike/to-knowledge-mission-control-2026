@@ -4,6 +4,7 @@ import { createGatewayRegistryFromAgentNetwork } from './gateway-model'
 import { clearSpaceAgentJobStoreForTests } from './space-agent-api'
 
 const requireRoleMock = vi.hoisted(() => vi.fn())
+const requireRoleOrAgentScopeMock = vi.hoisted(() => vi.fn())
 const loadGatewayRegistryMock = vi.hoisted(() => vi.fn())
 const getPlaywrightMcpStatusMock = vi.hoisted(() => vi.fn())
 const createPlaywrightBrowserEvidencePacketMock = vi.hoisted(() => vi.fn())
@@ -11,6 +12,7 @@ const runPlaywrightMcpMissionControlSmokeMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/auth', () => ({
   requireRole: requireRoleMock,
+  requireRoleOrAgentScope: requireRoleOrAgentScopeMock,
 }))
 
 vi.mock('@/lib/gateway-registry-api', async () => {
@@ -48,6 +50,7 @@ function expectOwnerSafe(payload: unknown) {
 describe('Space Agent Gateway and Bridge routes', () => {
   beforeEach(() => {
     requireRoleMock.mockReset()
+    requireRoleOrAgentScopeMock.mockReset()
     loadGatewayRegistryMock.mockReset()
     getPlaywrightMcpStatusMock.mockReset()
     createPlaywrightBrowserEvidencePacketMock.mockReset()
@@ -127,6 +130,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
 
   it('rejects unauthenticated Space Agent routes before loading Gateway state', async () => {
     requireRoleMock.mockReturnValue({ error: 'Authentication required', status: 401 })
+    requireRoleOrAgentScopeMock.mockReturnValue({ error: 'Authentication required', status: 401 })
     const nodeAlias = await import('@/app/api/gateway/nodes/space-agent/route')
     const status = await import('@/app/api/bridge/space-agent/status/route')
     const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
@@ -216,6 +220,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
 
   it('returns canonical SpaceAgent status, readiness, authority, and internal record routes when authenticated', async () => {
     requireRoleMock.mockReturnValue({ user: { role: 'operator' } })
+    requireRoleOrAgentScopeMock.mockReturnValue({ user: { role: 'operator' } })
     const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
     const canonicalReadiness = await import('@/app/api/bridge/spaceagent/readiness/route')
     const canonicalCapabilityMap = await import('@/app/api/bridge/spaceagent/capability-map/route')
@@ -327,6 +332,9 @@ describe('Space Agent Gateway and Bridge routes', () => {
     expect(payloads[12]).toMatchObject({ route: 'bridge.spaceagent.task_plan', record: { kind: 'spaceagent_task_plan' } })
     expect(payloads[13]).toMatchObject({ route: 'bridge.spaceagent.report_draft', record: { kind: 'spaceagent_report_draft' } })
     expect(payloads[14]).toMatchObject({ route: 'bridge.spaceagent.jarvis_concurrence_request', record: { kind: 'spaceagent_jarvis_concurrence_request' } })
+    expect(requireRoleOrAgentScopeMock).toHaveBeenCalledWith(expect.any(NextRequest), 'viewer', expect.arrayContaining(['spaceagent.read', 'spaceagent.gateway_read']))
+    expect(requireRoleOrAgentScopeMock).toHaveBeenCalledWith(expect.any(NextRequest), 'operator', expect.arrayContaining(['spaceagent.recommend', 'spaceagent.draft', 'spaceagent.task_plan', 'spaceagent.report_draft']))
+    expect(requireRoleOrAgentScopeMock).toHaveBeenCalledWith(expect.any(NextRequest), 'operator', ['spaceagent.jarvis_concurrence_request'])
     for (const payload of payloads) expectOwnerSafe(payload)
   })
 

@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { requireRole } from '@/lib/auth'
+import { requireRoleOrAgentScope } from '@/lib/auth'
+
+export const SPACEAGENT_READ_SCOPES = [
+  'spaceagent.read',
+  'spaceagent.gateway_read',
+  'spaceagent.brain_read',
+  'spaceagent.tool_read',
+]
+
+export const SPACEAGENT_DRAFT_SCOPES = [
+  'spaceagent.recommend',
+  'spaceagent.draft',
+  'spaceagent.task_plan',
+  'spaceagent.report_draft',
+]
+
+export const SPACEAGENT_CONCURRENCE_SCOPES = [
+  'spaceagent.jarvis_concurrence_request',
+]
 
 type Builder = () => Record<string, unknown>
 type Writer = (input: Record<string, unknown>) => {
@@ -10,11 +28,13 @@ type Writer = (input: Record<string, unknown>) => {
 }
 
 export function spaceAgentRead(request: NextRequest, builder: Builder) {
-  const auth = requireRole(request, 'viewer')
+  const auth = requireRoleOrAgentScope(request, 'viewer', SPACEAGENT_READ_SCOPES)
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   return NextResponse.json({
     ok: true,
+    token_source: auth.user.agent_scopes?.length ? 'agent_scoped_token' : 'human_session_or_global_admin',
+    master_api_key_used: auth.user.username === 'api',
     ...builder(),
   }, {
     headers: { 'Cache-Control': 'no-store' },
@@ -28,8 +48,12 @@ function statusForSpaceAgentWrite(result: ReturnType<Writer>) {
   return 423
 }
 
-export async function spaceAgentWrite(request: NextRequest, writer: Writer) {
-  const auth = requireRole(request, 'operator')
+export async function spaceAgentWrite(request: NextRequest, writer: Writer, concurrence = false) {
+  const auth = requireRoleOrAgentScope(
+    request,
+    'operator',
+    concurrence ? SPACEAGENT_CONCURRENCE_SCOPES : SPACEAGENT_DRAFT_SCOPES,
+  )
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const parsed = await request.json().catch(() => ({}))
@@ -38,7 +62,11 @@ export async function spaceAgentWrite(request: NextRequest, writer: Writer) {
     : {}
   const result = writer(input)
 
-  return NextResponse.json(result, {
+  return NextResponse.json({
+    token_source: auth.user.agent_scopes?.length ? 'agent_scoped_token' : 'human_session_or_global_admin',
+    master_api_key_used: auth.user.username === 'api',
+    ...result,
+  }, {
     status: statusForSpaceAgentWrite(result),
     headers: { 'Cache-Control': 'no-store' },
   })

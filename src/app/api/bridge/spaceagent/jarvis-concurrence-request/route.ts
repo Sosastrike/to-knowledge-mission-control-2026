@@ -16,5 +16,5 @@ export async function POST(request: NextRequest) {
     rollback_path: input.rollback_path ? String(input.rollback_path) : undefined,
     audit_path: input.audit_path ? String(input.audit_path) : undefined,
     visible_task_id: input.visible_task_id ? String(input.visible_task_id) : undefined,
-  }))
+  }), true)
 }

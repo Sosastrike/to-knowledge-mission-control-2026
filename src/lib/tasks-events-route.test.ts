@@ -117,7 +117,7 @@ describe('/api/tasks/[id]/events', () => {
       },
       secrets_exposed: false,
     })
-    expect(requireRoleOrAgentScopeMock).toHaveBeenCalledWith(expect.any(NextRequest), 'operator', ['ron.task_event_write', 'sofia.task_event_write'])
+    expect(requireRoleOrAgentScopeMock).toHaveBeenCalledWith(expect.any(NextRequest), 'operator', ['ron.task_event_write', 'sofia.task_event_write', 'spaceagent.task_event_write'])
     expect(runMock).toHaveBeenCalled()
 
     const secretResponse = await POST(new NextRequest('http://localhost/api/tasks/7/events', {

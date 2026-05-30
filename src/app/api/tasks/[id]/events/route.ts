@@ -135,7 +135,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireRoleOrAgentScope(request, 'operator', ['ron.task_event_write', 'sofia.task_event_write'])
+  const auth = requireRoleOrAgentScope(request, 'operator', ['ron.task_event_write', 'sofia.task_event_write', 'spaceagent.task_event_write'])
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const rateCheck = mutationLimiter(request)

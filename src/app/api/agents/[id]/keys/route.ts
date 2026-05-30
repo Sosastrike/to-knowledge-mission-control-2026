@@ -13,6 +13,20 @@ const ALLOWED_SCOPES = new Set([
   'agent:attribution',
   'agent:heartbeat',
   'agent:messages',
+  'ron.read',
+  'ron.recommend',
+  'ron.draft',
+  'ron.task_event_write',
+  'ron.jarvis_concurrence_request',
+  'ron.skill_draft_write',
+  'ron.gateway_read',
+  'ron.brain_read',
+  'ron.cybersecurity_audit_read',
+  'spaceagent.read',
+  'spaceagent.gateway_read',
+  'spaceagent.task_event_write',
+  'spaceagent.report_draft',
+  'spaceagent.jarvis_concurrence_request',
 ])
 
 interface AgentRow {

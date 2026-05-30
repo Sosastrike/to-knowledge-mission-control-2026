@@ -91,6 +91,13 @@ describe('Pi full-access Gateway pipeline identity', () => {
     expect(routeStatus.execution_enabled).toBe(true);
     expect(routeStatus.writes_enabled).toBe(true);
     expect(routeStatus.credential_values_exposed).toBe(false);
+    expect(routeStatus.pi_full_access_contract).toMatchObject({
+      role: 'Full Access Gateway Agent',
+      execution_enabled: true,
+      writes_enabled: true,
+      protected_execution_enabled: true,
+    });
+    expect(JSON.stringify(routeStatus)).not.toContain('pi_advisory_contract');
   });
 
   it('shows Pi as a first-class full-access agent in Agent Hub', () => {
@@ -134,5 +141,29 @@ describe('Pi full-access Gateway pipeline identity', () => {
       expect(source).toContain('Full Access Gateway Agent');
       expect(source).toContain('FULL ACCESS / DIRECT GATEWAY PIPELINE');
     }
+  });
+
+  it('keeps Pi API routes named as full-access Gateway surfaces, not dispatcher/advisory surfaces', () => {
+    const root = join(__dirname, '..', '..');
+    const capabilityMatrix = readFileSync(join(root, 'src/app/api/bridge/capability-matrix/route.ts'), 'utf8');
+    const piRecommendRoute = readFileSync(join(root, 'src/app/api/bridge/pi/recommend/route.ts'), 'utf8');
+    const dispatcherStatusRoute = readFileSync(join(root, 'src/app/api/bridge/dispatcher/status/route.ts'), 'utf8');
+
+    expect(capabilityMatrix).toContain("label: 'Pi'");
+    expect(capabilityMatrix).toContain("role: 'full_access_gateway_agent'");
+    expect(capabilityMatrix).toContain('pi_gateway_agent');
+    expect(capabilityMatrix).not.toContain("label: 'PI Dispatcher'");
+    expect(capabilityMatrix).not.toContain('pi_advisory_contract');
+
+    expect(piRecommendRoute).toContain("mode: 'pi_full_access_gateway_recommendation_route'");
+    expect(piRecommendRoute).toContain('full_access_to_tools');
+    expect(piRecommendRoute).toContain('pipeline_request_enabled');
+    expect(piRecommendRoute).not.toContain('read_only_dispatcher_recommendation');
+
+    expect(dispatcherStatusRoute).toContain("pi_role: 'Full Access Gateway Agent'");
+    expect(dispatcherStatusRoute).toContain('pi_full_access_contract');
+    expect(dispatcherStatusRoute).toContain('pi_gateway_agent_status');
+    expect(dispatcherStatusRoute).not.toContain('pi_advisory_contract');
+    expect(dispatcherStatusRoute).not.toContain('pi_dispatcher_status');
   });
 });

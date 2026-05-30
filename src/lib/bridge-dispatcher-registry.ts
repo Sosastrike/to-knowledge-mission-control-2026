@@ -184,12 +184,12 @@ export function buildPiDispatcherStatus() {
     mode: 'pi_full_access_gateway_status',
     agent_id: 'pi',
     label: 'Pi',
-    status: PI_ADVISORY_CONTRACT.status,
-    role: PI_ADVISORY_CONTRACT.role,
+    status: PI_FULL_ACCESS_CONTRACT.status,
+    role: PI_FULL_ACCESS_CONTRACT.role,
     runtime_status: 'direct_gateway_pipeline_registered',
-    runtime_blocker: PI_ADVISORY_CONTRACT.exact_blocker,
-    exact_blocker: PI_ADVISORY_CONTRACT.exact_blocker,
-    pi_advisory_contract: PI_ADVISORY_CONTRACT,
+    runtime_blocker: PI_FULL_ACCESS_CONTRACT.exact_blocker,
+    exact_blocker: PI_FULL_ACCESS_CONTRACT.exact_blocker,
+    pi_full_access_contract: PI_FULL_ACCESS_CONTRACT,
     visibility_contract: PI_VISIBILITY_CONTRACT,
     inventory_summary: {
       visible_to_gateway: PI_VISIBILITY_CONTRACT.filter((item) => item.visible_to_gateway).length,
@@ -222,8 +222,8 @@ export function buildPiDispatcherStatus() {
     fake_success_allowed: false,
     go_claim_allowed: true,
     no_go_claim: false,
-    next_action: PI_ADVISORY_CONTRACT.next_action,
-    rollback_command: PI_ADVISORY_CONTRACT.rollback_command,
+    next_action: PI_FULL_ACCESS_CONTRACT.next_action,
+    rollback_command: PI_FULL_ACCESS_CONTRACT.rollback_command,
   }
 }
 

@@ -8,6 +8,11 @@ import {
   routePath,
 } from '@/lib/designer-module-api'
 import { getZapierToolBridge } from '@/lib/zapier-tool-bridge'
+import { buildZapierApprovedActionLibrary } from '@/lib/zapier-approved-action-library'
+import {
+  buildZapierConnectionDetails,
+  zapierCredentialPresenceFromEnv,
+} from '@/lib/zapier-connection-details'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,22 +46,37 @@ function readAuditEvents(kind?: string | null) {
   }
 }
 
-function statusPayload() {
+async function statusPayload() {
   const conn = readZapierState()
   const oauth = !!conn?.connected || hasEnv('ZAPIER_ACCESS_TOKEN') || hasEnv('ZAPIER_API_KEY')
   const mcpConfigured = hasEnv('ZAPIER_MCP_URL') || hasEnv('ZAPIER_MCP_SERVER')
+  const blockedWrites24h = readAuditEvents('blocked').length
+  const allowedReads24h = readAuditEvents('allowed').length
+  const bridge = await getZapierToolBridge()
+  const approvedActionLibrary = buildZapierApprovedActionLibrary()
+  const connectionDetails = buildZapierConnectionDetails({
+    bridge,
+    approvedActionLibrary,
+    credentialPresence: zapierCredentialPresenceFromEnv(),
+    auditCounts: {
+      blocked_writes_24h: blockedWrites24h,
+      allowed_reads_24h: allowedReads24h,
+    },
+  })
   return {
     ok: true,
-    status: oauth || mcpConfigured ? 'connected' : 'not_configured',
+    status: connectionDetails.status,
     oauth,
-    mcp: conn?.health || (mcpConfigured ? 'configured' : 'not_configured'),
-    tools_count: conn?.tool_count || 0,
+    mcp: bridge.mcp_reachable ? 'connected' : conn?.health || (mcpConfigured ? 'configured' : 'not_configured'),
+    tools_count: bridge.tools_total || conn?.tool_count || 0,
     writes_unlocked: false,
     unlock_expires_at: null,
-    blocked_writes_24h: readAuditEvents('blocked').length,
-    allowed_reads_24h: readAuditEvents('allowed').length,
-    credential_names: ['ZAPIER_ACCESS_TOKEN', 'ZAPIER_API_KEY', 'ZAPIER_MCP_URL'],
-    next_action: 'Wire Zapier MCP client and owner approval persistence before write actions.',
+    blocked_writes_24h: blockedWrites24h,
+    allowed_reads_24h: allowedReads24h,
+    credential_names: connectionDetails.credential_names_checked,
+    credential_present_by_name_only: connectionDetails.credential_present_by_name_only,
+    connection_details: connectionDetails,
+    next_action: connectionDetails.next_action,
   }
 }
 
@@ -65,7 +85,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
   if (auth) return auth
 
   const path = routePath((await params).path)
-  if (!path || path === 'status') return NextResponse.json(statusPayload())
+  if (!path || path === 'status') return NextResponse.json(await statusPayload())
   if (path === 'audit') {
     const kind = new URL(request.url).searchParams.get('kind')
     return NextResponse.json({
@@ -80,6 +100,7 @@ export async function GET(request: NextRequest, { params }: { params: CatchAllPa
     const result = await getZapierToolBridge(query)
     return NextResponse.json({
       ...result,
+      backend_required: false,
       endpoint: '/api/zapier/tools',
       canonical_endpoint: '/api/bridge/zapier/tools',
       route_state: 'legacy_read_only_compatibility',

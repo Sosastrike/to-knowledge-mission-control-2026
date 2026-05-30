@@ -7,9 +7,11 @@ import {
   getGatewayNodeDetail,
 } from './gateway-registry-api'
 import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from './gateway-model'
+import type { MissionControlRuntimeHealth } from './mission-control-runtime-health'
 import { AGENT_UPDATE_COMPONENTS } from './agent-update-coordinator'
 import { buildAgentRoutingLinesStatus } from './agent-routing-lines'
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
+import { buildMissionControlRuntimeHealth } from './mission-control-runtime-health'
 import { getLatestRonMissionControlProxyProof } from './ron-proxy-proof'
 import { SOFIA_DEPUTY_IDENTITY } from './sofia-identity'
 
@@ -270,6 +272,7 @@ export type AgentHubStatusPayload = {
   nuclear_gateway_graph: AgentHubNuclearGatewayGraphSummary
   agent_update_control_plane: AgentHubAutoUpdateControlPlane
   gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
+  mission_control_runtime_health: MissionControlRuntimeHealth
   agents: AgentHubAgent[]
   space_agent_browser_automation?: SpaceAgentBrowserAutomationPayload
   supporting_runtime_systems: AgentHubRuntimeSystem[]
@@ -300,6 +303,7 @@ export type AgentHubRegistryPayload = {
   nuclear_gateway_graph: AgentHubNuclearGatewayGraphSummary
   agent_update_control_plane: AgentHubAutoUpdateControlPlane
   gateway_route_cdp_truth: AgentHubGatewayRouteCdpTruth
+  mission_control_runtime_health: MissionControlRuntimeHealth
   execution_enabled: false
   writes_enabled: false
   external_writes_enabled: false
@@ -695,6 +699,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     nuclear_gateway_graph: buildAgentHubNuclearGatewayGraphSummary(directAgentLines),
     agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
     gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
+    mission_control_runtime_health: buildMissionControlRuntimeHealth(),
     agents,
     supporting_runtime_systems: buildSupportingRuntimeSystems(registry),
     buildwiki_run_now: {
@@ -740,6 +745,7 @@ export function buildAgentHubRegistryPayload(registry: GatewayRegistry): AgentHu
     nuclear_gateway_graph: buildAgentHubNuclearGatewayGraphSummary(),
     agent_update_control_plane: buildAgentHubAutoUpdateControlPlane(),
     gateway_route_cdp_truth: buildAgentHubGatewayRouteCdpTruth(registry.generated_at),
+    mission_control_runtime_health: buildMissionControlRuntimeHealth(),
     execution_enabled: false,
     writes_enabled: false,
     external_writes_enabled: false,

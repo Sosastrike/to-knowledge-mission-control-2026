@@ -55,6 +55,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
           <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi is a Full Access Gateway Agent with direct brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
         </section>
 
+        <MissionControlRuntimeHealthPanel status={status} />
         <DirectAgentLinesPanel status={status} />
         <NuclearGatewayGraphPanel graph={status.nuclear_gateway_graph} />
         <AutoUpdateControlPlanePanel controlPlane={status.agent_update_control_plane} />
@@ -143,6 +144,41 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </section>
       </div>
     </main>
+  )
+}
+
+function MissionControlRuntimeHealthPanel({ status }: { status: AgentHubStatusPayload }) {
+  const health = status.mission_control_runtime_health
+  const stale = health.stale_next_bundle_detected
+
+  return (
+    <section className={(stale ? 'border-amber-300/30 bg-amber-300/8' : 'border-emerald-300/25 bg-emerald-300/8') + ' rounded-lg border p-4 text-sm leading-6'} aria-label='Mission Control runtime health'>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div>
+          <h2 className='text-base font-semibold text-white'>Mission Control Runtime Health</h2>
+          <p className={stale ? 'mt-1 text-amber-100' : 'mt-1 text-emerald-100'}>
+            {stale
+              ? 'Fresh source is built, but the live Next process is still serving a stale deleted standalone bundle until the service is restarted.'
+              : 'Mission Control is serving from a current runtime bundle.'}
+          </p>
+        </div>
+        <span className={(stale ? 'border-amber-300/25 bg-amber-300/10 text-amber-100' : 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100') + ' rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase'}>
+          {health.status}
+        </span>
+      </div>
+      <dl className='mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2 lg:grid-cols-4'>
+        <Fact label='Owner action required' value={health.owner_action_required ? 'yes' : 'no'} />
+        <Fact label='Exact blocker' value={health.exact_blocker || 'none'} />
+        <Fact label='Restart attempted' value={health.service_restart_attempted ? 'yes' : 'no'} />
+        <Fact label='Path values' value={health.cwd_summary.path_values_redacted ? 'redacted' : 'not redacted'} />
+      </dl>
+      {stale && (
+        <div className='mt-3 rounded-md border border-amber-300/20 bg-black/20 p-3 text-xs leading-5 text-amber-100'>
+          <p>Required deploy step: <code className='rounded bg-black/30 px-1 py-0.5'>sudo systemctl restart mission-control.service</code></p>
+          <p className='mt-1 text-amber-50/80'>No restart is attempted from this panel. Ron proxy proof, SpaceAgent final trace, and OpenCloud cutover remain gated until the live bundle is current.</p>
+        </div>
+      )}
+    </section>
   )
 }
 

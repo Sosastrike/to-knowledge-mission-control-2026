@@ -28,6 +28,16 @@ describe('Gateway Agent Hub', () => {
       secrets_exposed: false,
       raw_paths_exposed: false,
     })
+    expect(payload.mission_control_runtime_health).toMatchObject({
+      service_restart_attempted: false,
+      public_exposure_changed: false,
+      secrets_exposed: false,
+      raw_env_values_exposed: false,
+      cwd_summary: {
+        path_values_redacted: true,
+      },
+    })
+    expect(JSON.stringify(payload.mission_control_runtime_health)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]|mc_session|\.env/)
     expect(payload.direct_agent_lines).toMatchObject({
       route: '/api/bridge/agent-routing/lines',
       live_trace_route: '/api/bridge/agent-routing/trace/live',
@@ -355,6 +365,9 @@ describe('Gateway Agent Hub', () => {
     const source = readFileSync(new URL('../components/gateway-agent-hub/AgentHubControlCenter.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('/api/bridge/mission-control/stale-bundle-health')
+    expect(source).toContain('Mission Control Runtime Health')
+    expect(source).toContain('stale deleted standalone bundle')
+    expect(source).toContain('No restart is attempted from this panel')
     expect(source).toContain('Direct lines active')
     expect(source).toContain('Universal Direct Lines')
     expect(source).toContain('Every agent gets its own highway')

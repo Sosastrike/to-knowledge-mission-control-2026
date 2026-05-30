@@ -52,7 +52,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </nav>
 
         <section className='rounded-lg border border-emerald-300/25 bg-emerald-300/8 p-4 text-sm leading-6 text-emerald-100'>
-          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, and SpaceAgent / OpenCloud / OpenClaw stay supporting tools with no conversation ownership.
+          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
         </section>
 
         <DirectAgentLinesPanel status={status} />
@@ -520,11 +520,20 @@ function AgentCard({ agent }: { agent: AgentHubAgent }) {
         {tailnetUiHref && <a href={tailnetUiHref} target='_blank' rel='noreferrer' className='rounded-md border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/15'>Open Tailnet UI</a>}
         <a href={agent.interface.mission_control_surface} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-cyan-200 hover:border-cyan-300/40'>Open surface</a>
         <a href={agent.routes.detail} className='rounded-md border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300/40'>API detail</a>
+        {agent.id === 'spaceagent' && (
+          <>
+            <a href='/api/bridge/agent-routing/trace/live?agent=spaceagent' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Trace Direct Line</a>
+            <a href='/api/bridge/spaceagent/capability-map' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Capability Map</a>
+            <a href='/api/bridge/spaceagent/readiness' className='rounded-md border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-300/15'>Readiness</a>
+            <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title='SpaceAgent report drafts use the authenticated POST route /api/bridge/spaceagent/report-draft and write internal records only.'>Draft Report</span>
+            <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title='SpaceAgent concurrence requests use the authenticated POST route /api/bridge/spaceagent/jarvis-concurrence-request and do not execute production actions.'>Request Jarvis Concurrence</span>
+          </>
+        )}
         <span className='cursor-not-allowed rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-500' title={protectedActionTitle}>{protectedActionLabel}</span>
       </div>
       {agent.id === 'spaceagent' && (
         <div className='mt-4 rounded-lg border border-sky-300/20 bg-sky-300/8 p-3 text-xs leading-5 text-sky-100'>
-          Playwright MCP: local-only browser automation is connected through SpaceAgent. Read-only evidence packets are available; click/type/form/authenticated actions require Bridge Session scope.
+          SpaceAgent is a first-class direct-line agent. Playwright MCP, Firecrawl, and YouTube are SpaceAgent tools, not SpaceAgent identity; read-only evidence packets are available, and click/type/form/authenticated actions require Bridge Session scope.
         </div>
       )}
       {agent.blocked_reason && <p className='mt-4 rounded-lg border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>Blocker: {agent.blocked_reason}</p>}

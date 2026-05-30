@@ -255,7 +255,7 @@ export type AgentHubStatusPayload = {
     hermes: 'full_access_delegated_direct_line'
     pi_mono: 'candidate_pending_until_installed_and_live'
     sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only'
-    spaceagent: 'playwright_mcp_live_local_only_browser_research'
+    spaceagent: 'first_class_direct_line_gateway_pipeline_agent'
     paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required'
     buildwiki_fork2_smb: 'blocked'
     buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only'
@@ -524,18 +524,18 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
     id: 'spaceagent',
     registryNodeId: 'space_agent',
     name: 'SpaceAgent',
-    role: 'Browser / Firecrawl / YouTube Research Specialist',
-    layer: 'web_research_specialist',
-    productionTruth: 'SpaceAgent has its own Gateway direct line for local-only browser research. Interactive/authenticated actions remain Bridge Session gated.',
-    status: 'read_only',
+    role: 'Independent Specialized Agent',
+    layer: 'first_class_gateway_pipeline_agent',
+    productionTruth: 'SpaceAgent is an independent specialized Mission Control agent under Agent Zero / Jarvis authority. Playwright MCP, Firecrawl, and YouTube are tools under SpaceAgent, not SpaceAgent identity. Production-impacting actions require Jarvis concurrence.',
+    status: 'configured',
     liveInterfaceProven: true,
-    calledTrueProven: false,
-    interfaceSummary: 'Gateway research node visible; Playwright MCP is connected at localhost only and returns read-only Browser Evidence Packets',
+    calledTrueProven: true,
+    interfaceSummary: 'Canonical SpaceAgent direct line is source-configured through Nuclear Gateway; legacy /space-agent routes remain aliases while canonical /spaceagent routes carry first-class status, readiness, authority, capability, report, and concurrence surfaces.',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
-    bridgeStatusRoute: '/api/bridge/space-agent/status',
-    extraBlockers: ['firecrawl_credential_required', 'interactive_browser_actions_require_bridge_session'],
+    bridgeStatusRoute: '/api/bridge/spaceagent/status',
+    extraBlockers: ['production_execution_requires_jarvis_concurrence', 'firecrawl_credential_required', 'interactive_browser_actions_require_bridge_session'],
   },
   {
     id: 'pi-mono',
@@ -584,6 +584,13 @@ const GATEWAY_ROUTE_MAP: AgentHubGatewayRouteCdpTruth['routes'] = [
   { route: '/api/gateway/agent-hub/agents/[id]/health', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/gateway/agent-hub/agents/[id]/routes', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/gateway/agent-hub/agents/[id]/audit', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/status', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/readiness', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/capability-map', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/authority', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/recommendation', methods: ['POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/report-draft', methods: ['POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/jarvis-concurrence-request', methods: ['POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
   { route: '/api/gateway/space-agent/browser/status', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/gateway/space-agent/browser/jobs', methods: ['GET', 'POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },
   { route: '/api/gateway/space-agent/playwright-mcp/evidence', methods: ['GET'], surface: 'playwright_mcp', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
@@ -651,7 +658,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
       hermes: 'full_access_delegated_direct_line',
       pi_mono: 'candidate_pending_until_installed_and_live',
       sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only',
-      spaceagent: 'playwright_mcp_live_local_only_browser_research',
+      spaceagent: 'first_class_direct_line_gateway_pipeline_agent',
       paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required',
       buildwiki_fork2_smb: 'blocked',
       buildwiki_run_now_scope: 'opencloud-docs-farmer.service_only',
@@ -774,7 +781,7 @@ function buildAgentHubNuclearGatewayGraphSummary(
       { id: 'sofia', label: 'Sofia', role: 'Second-in-Command to Ron Weasley', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'pi', label: 'Pi', role: 'advisory dispatcher and route optimizer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'paperclip', label: 'Paperclip', role: 'company workforce and execution plane', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
-      { id: 'spaceagent', label: 'SpaceAgent', role: 'browser and research specialist direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'spaceagent', label: 'SpaceAgent', role: 'independent specialized agent under Jarvis authority', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'brain.bridge', label: 'Brain Bridge', role: 'memory and intelligence layer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'tool.registry', label: 'Tool Registry', role: 'certified adapter, MCP, and API tool catalog', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
       { id: 'credential.broker', label: 'Credential Broker', role: 'name-only credential presence and adapter brokering', direct_line_owner: false, openclaw_conversation_owner_allowed: false },
@@ -799,6 +806,7 @@ function buildAgentHubNuclearGatewayGraphSummary(
       { source: 'pi', target: 'agent.zero', relation: 'reports_to' },
       { source: 'nuclear.gateway', target: 'paperclip', relation: 'routes_to' },
       { source: 'nuclear.gateway', target: 'spaceagent', relation: 'routes_to' },
+      { source: 'spaceagent', target: 'agent.zero', relation: 'reports_to' },
       { source: 'nuclear.gateway', target: 'brain.bridge', relation: 'routes_to' },
       { source: 'nuclear.gateway', target: 'tool.registry', relation: 'brokers' },
       { source: 'nuclear.gateway', target: 'credential.broker', relation: 'brokers' },

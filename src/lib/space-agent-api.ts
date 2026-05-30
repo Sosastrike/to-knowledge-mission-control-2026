@@ -7,11 +7,20 @@ import {
   type SpaceAgentResponsibleAgent,
 } from './space-agent-research'
 import type { PlaywrightMcpStatus } from './playwright-mcp'
+import { SPACEAGENT_IDENTITY } from './spaceagent-identity'
 
 export type SpaceAgentStatusPayload = {
   ok: true
   mode: 'space_agent_status_read_only'
   generated_at: string
+  agent_id: 'spaceagent'
+  display_name: 'SpaceAgent'
+  reports_to: 'agent-zero-jarvis'
+  conversation_owner: 'spaceagent'
+  direct_line_active: true
+  opencloud_intermediary_allowed: false
+  jarvis_final_authority: true
+  execution_policy: 'certified_exact_scope_or_read_only'
   node: GatewayNodeDetailPayload['node'] | null
   capabilities: GatewayNodeDetailPayload['capabilities']
   health: 'read_only' | 'blocked' | 'degraded'
@@ -42,6 +51,10 @@ export type SpaceAgentStatusPayload = {
   handoff_target: string
   blockers: string[]
   status_endpoint: '/api/bridge/space-agent/status'
+  canonical_status_endpoint: '/api/bridge/spaceagent/status'
+  canonical_readiness_endpoint: '/api/bridge/spaceagent/readiness'
+  canonical_capability_map_endpoint: '/api/bridge/spaceagent/capability-map'
+  canonical_authority_endpoint: '/api/bridge/spaceagent/authority'
   test_chat_endpoint: '/api/bridge/space-agent/test-chat'
   research_endpoint: '/api/gateway/space-agent/research'
   execution_enabled: false
@@ -161,6 +174,14 @@ export function buildSpaceAgentStatusPayload(registry: GatewayRegistry, generate
     ok: true,
     mode: 'space_agent_status_read_only',
     generated_at: generatedAt,
+    agent_id: SPACEAGENT_IDENTITY.agent_id,
+    display_name: SPACEAGENT_IDENTITY.display_name,
+    reports_to: SPACEAGENT_IDENTITY.reports_to,
+    conversation_owner: SPACEAGENT_IDENTITY.conversation_owner,
+    direct_line_active: SPACEAGENT_IDENTITY.direct_line_active,
+    opencloud_intermediary_allowed: SPACEAGENT_IDENTITY.opencloud_intermediary_allowed,
+    jarvis_final_authority: SPACEAGENT_IDENTITY.jarvis_final_authority,
+    execution_policy: SPACEAGENT_IDENTITY.execution_policy,
     node,
     capabilities: detail?.capabilities || [],
     health: firecrawlBlockedReason ? 'blocked' : node?.status === 'degraded' ? 'degraded' : 'read_only',
@@ -190,6 +211,10 @@ export function buildSpaceAgentStatusPayload(registry: GatewayRegistry, generate
     handoff_target: stringDetail(details.handoff_target, 'agent_zero_by_default'),
     blockers: Array.from(new Set(blockers)),
     status_endpoint: '/api/bridge/space-agent/status',
+    canonical_status_endpoint: '/api/bridge/spaceagent/status',
+    canonical_readiness_endpoint: '/api/bridge/spaceagent/readiness',
+    canonical_capability_map_endpoint: '/api/bridge/spaceagent/capability-map',
+    canonical_authority_endpoint: '/api/bridge/spaceagent/authority',
     test_chat_endpoint: '/api/bridge/space-agent/test-chat',
     research_endpoint: '/api/gateway/space-agent/research',
     execution_enabled: false,

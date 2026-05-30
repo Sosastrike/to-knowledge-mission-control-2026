@@ -129,6 +129,14 @@ describe('Space Agent Gateway and Bridge routes', () => {
     requireRoleMock.mockReturnValue({ error: 'Authentication required', status: 401 })
     const nodeAlias = await import('@/app/api/gateway/nodes/space-agent/route')
     const status = await import('@/app/api/bridge/space-agent/status/route')
+    const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
+    const canonicalReadiness = await import('@/app/api/bridge/spaceagent/readiness/route')
+    const canonicalCapabilityMap = await import('@/app/api/bridge/spaceagent/capability-map/route')
+    const canonicalAuthority = await import('@/app/api/bridge/spaceagent/authority/route')
+    const canonicalRecommendation = await import('@/app/api/bridge/spaceagent/recommendation/route')
+    const canonicalTaskPlan = await import('@/app/api/bridge/spaceagent/task-plan/route')
+    const canonicalReportDraft = await import('@/app/api/bridge/spaceagent/report-draft/route')
+    const canonicalConcurrence = await import('@/app/api/bridge/spaceagent/jarvis-concurrence-request/route')
     const testChat = await import('@/app/api/bridge/space-agent/test-chat/route')
     const research = await import('@/app/api/gateway/space-agent/research/route')
     const job = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
@@ -142,6 +150,26 @@ describe('Space Agent Gateway and Bridge routes', () => {
     const responses = await Promise.all([
       nodeAlias.GET(request('http://localhost/api/gateway/nodes/space-agent')),
       status.GET(request('http://localhost/api/bridge/space-agent/status')),
+      canonicalStatus.GET(request('http://localhost/api/bridge/spaceagent/status')),
+      canonicalReadiness.GET(request('http://localhost/api/bridge/spaceagent/readiness')),
+      canonicalCapabilityMap.GET(request('http://localhost/api/bridge/spaceagent/capability-map')),
+      canonicalAuthority.GET(request('http://localhost/api/bridge/spaceagent/authority')),
+      canonicalRecommendation.POST(request('http://localhost/api/bridge/spaceagent/recommendation', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'unauth', recommendation: 'blocked' }),
+      })),
+      canonicalTaskPlan.POST(request('http://localhost/api/bridge/spaceagent/task-plan', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'unauth', objective: 'blocked' }),
+      })),
+      canonicalReportDraft.POST(request('http://localhost/api/bridge/spaceagent/report-draft', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'unauth', summary: 'blocked' }),
+      })),
+      canonicalConcurrence.POST(request('http://localhost/api/bridge/spaceagent/jarvis-concurrence-request', {
+        method: 'POST',
+        body: JSON.stringify({ request_id: 'unauth', reason: 'blocked' }),
+      })),
       testChat.POST(request('http://localhost/api/bridge/space-agent/test-chat', {
         method: 'POST',
         body: JSON.stringify({ message: 'Can you see Gateway?' }),
@@ -170,6 +198,53 @@ describe('Space Agent Gateway and Bridge routes', () => {
       expect(await response.json()).toMatchObject({ error: 'Authentication required' })
     }
     expect(loadGatewayRegistryMock).not.toHaveBeenCalled()
+  })
+
+  it('returns canonical SpaceAgent status, readiness, authority, and internal record routes when authenticated', async () => {
+    requireRoleMock.mockReturnValue({ user: { role: 'operator' } })
+    const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
+    const canonicalReadiness = await import('@/app/api/bridge/spaceagent/readiness/route')
+    const canonicalCapabilityMap = await import('@/app/api/bridge/spaceagent/capability-map/route')
+    const canonicalAuthority = await import('@/app/api/bridge/spaceagent/authority/route')
+    const canonicalRecommendation = await import('@/app/api/bridge/spaceagent/recommendation/route')
+    const canonicalTaskPlan = await import('@/app/api/bridge/spaceagent/task-plan/route')
+    const canonicalReportDraft = await import('@/app/api/bridge/spaceagent/report-draft/route')
+    const canonicalConcurrence = await import('@/app/api/bridge/spaceagent/jarvis-concurrence-request/route')
+
+    const responses = await Promise.all([
+      canonicalStatus.GET(request('http://localhost/api/bridge/spaceagent/status')),
+      canonicalReadiness.GET(request('http://localhost/api/bridge/spaceagent/readiness')),
+      canonicalCapabilityMap.GET(request('http://localhost/api/bridge/spaceagent/capability-map')),
+      canonicalAuthority.GET(request('http://localhost/api/bridge/spaceagent/authority')),
+      canonicalRecommendation.POST(request('http://localhost/api/bridge/spaceagent/recommendation', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'SpaceAgent recommendation', recommendation: 'Draft only.' }),
+      })),
+      canonicalTaskPlan.POST(request('http://localhost/api/bridge/spaceagent/task-plan', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'SpaceAgent task plan', objective: 'Read status.' }),
+      })),
+      canonicalReportDraft.POST(request('http://localhost/api/bridge/spaceagent/report-draft', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'SpaceAgent report', summary: 'Internal report draft.' }),
+      })),
+      canonicalConcurrence.POST(request('http://localhost/api/bridge/spaceagent/jarvis-concurrence-request', {
+        method: 'POST',
+        body: JSON.stringify({ request_id: 'spaceagent-test', action_type: 'gateway_tool_execution', reason: 'Production action requires Jarvis.' }),
+      })),
+    ])
+    const payloads = await Promise.all(responses.map((response) => response.json()))
+
+    for (const response of responses) expect(response.status).toBe(200)
+    expect(payloads[0]).toMatchObject({ route: 'bridge.spaceagent.status', agent_id: 'spaceagent', conversation_owner: 'spaceagent', opencloud_intermediary_allowed: false })
+    expect(payloads[1]).toMatchObject({ route: 'bridge.spaceagent.readiness', final_certification_status: 'NOT_CERTIFIED' })
+    expect(payloads[2]).toMatchObject({ route: 'bridge.spaceagent.capability-map', writes_enabled: false })
+    expect(payloads[3]).toMatchObject({ route: 'bridge.spaceagent.authority', may_execute_production_changes: false, jarvis_concurrence_required_for_production: true })
+    expect(payloads[4]).toMatchObject({ route: 'bridge.spaceagent.recommendation', mode: 'spaceagent_internal_record_written', record: { kind: 'spaceagent_recommendation' } })
+    expect(payloads[5]).toMatchObject({ route: 'bridge.spaceagent.task_plan', record: { kind: 'spaceagent_task_plan' } })
+    expect(payloads[6]).toMatchObject({ route: 'bridge.spaceagent.report_draft', record: { kind: 'spaceagent_report_draft' } })
+    expect(payloads[7]).toMatchObject({ route: 'bridge.spaceagent.jarvis_concurrence_request', record: { kind: 'spaceagent_jarvis_concurrence_request' } })
+    for (const payload of payloads) expectOwnerSafe(payload)
   })
 
   it('returns Playwright MCP status and read-only browser evidence packets through protected Gateway routes', async () => {

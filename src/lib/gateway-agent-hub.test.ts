@@ -213,7 +213,12 @@ describe('Gateway Agent Hub', () => {
         tailnet_ui_proven: true,
       },
     })
-    expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({ role: 'Browser / Firecrawl / YouTube Research Specialist', status: 'read_only' })
+    expect(payload.agents.find((agent) => agent.id === 'spaceagent')).toMatchObject({
+      role: 'Independent Specialized Agent',
+      status: 'configured',
+      called_true_proven: true,
+      routes: { bridge_status: '/api/bridge/spaceagent/status' },
+    })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       role: 'Dispatcher / Route Optimizer Candidate',
       status: 'pending',
@@ -356,7 +361,8 @@ describe('Gateway Agent Hub', () => {
     expect(source).toContain('Agent Zero / Jarvis')
     expect(source).toContain('Ron Weasley')
     expect(source).toContain('Pi')
-    expect(source).toContain('SpaceAgent / OpenCloud / OpenClaw')
+    expect(source).toContain('SpaceAgent is an independent specialized direct-line agent under Jarvis authority')
+    expect(source).toContain('OpenCloud / OpenClaw stay supporting runtime tools')
     expect(source).toContain('Nuclear Gateway')
     expect(source).not.toContain('Bridge not active')
     expect(source).not.toContain('OpenCloud intermediary true')

@@ -219,6 +219,9 @@ describe('Gateway Agent Hub', () => {
       called_true_proven: true,
       routes: { bridge_status: '/api/bridge/spaceagent/status' },
     })
+    expect(payload.gateway_route_cdp_truth.routes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ route: '/api/bridge/spaceagent/pipeline-status', surface: 'space_agent', state: 'READY' }),
+    ]))
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
       name: 'Pi',
       role: 'Full Access Gateway Agent',
@@ -369,6 +372,8 @@ describe('Gateway Agent Hub', () => {
     expect(source).toContain('Ron Weasley')
     expect(source).toContain('Pi')
     expect(source).toContain('SpaceAgent is an independent specialized direct-line agent under Jarvis authority')
+    expect(source).toContain('/api/bridge/spaceagent/pipeline-status')
+    expect(source).toContain('internal pipeline templates')
     expect(source).toContain('OpenCloud / OpenClaw stay supporting runtime tools')
     expect(source).toContain('Nuclear Gateway')
     expect(source).not.toContain('Bridge not active')

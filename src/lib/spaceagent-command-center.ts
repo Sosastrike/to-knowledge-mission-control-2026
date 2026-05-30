@@ -55,6 +55,56 @@ type SpaceAgentWriteResult =
     }
   | SpaceAgentBlockedResult
 
+export const SPACEAGENT_PIPELINE_NAME = 'SpaceAgent Gateway Integration Pipeline'
+
+export const SPACEAGENT_PIPELINE_TEMPLATES = [
+  {
+    id: 'spaceagent_readiness_probe',
+    label: 'SpaceAgent readiness probe',
+    route: '/api/bridge/spaceagent/readiness',
+    state: 'READ_ONLY_READY',
+    external_execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: false,
+  },
+  {
+    id: 'spaceagent_recommendation_draft',
+    label: 'SpaceAgent recommendation draft',
+    route: '/api/bridge/spaceagent/recommendation',
+    state: 'WRITE_GATED',
+    external_execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+  },
+  {
+    id: 'spaceagent_report_draft',
+    label: 'SpaceAgent report draft',
+    route: '/api/bridge/spaceagent/report-draft',
+    state: 'WRITE_GATED',
+    external_execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+  },
+  {
+    id: 'owner_visible_task_update',
+    label: 'Owner-visible task update',
+    route: '/api/tasks/:id/events',
+    state: 'WRITE_GATED',
+    external_execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+  },
+  {
+    id: 'jarvis_concurrence_gate',
+    label: 'Jarvis concurrence gate',
+    route: '/api/bridge/spaceagent/jarvis-concurrence-request',
+    state: 'WRITE_GATED',
+    external_execution_enabled: false,
+    writes_enabled: false,
+    bridge_session_required: true,
+  },
+] as const
+
 export type SpaceAgentBlockedResult = {
   ok: false
   route: 'bridge.spaceagent.execute'
@@ -207,14 +257,48 @@ export function buildSpaceAgentCapabilityMap() {
       memory_write_execution: 'WRITE_GATED',
       memory_write_request_only: true,
     },
-    pipeline_templates: [
-      'spaceagent_readiness_probe',
-      'spaceagent_recommendation_draft',
-      'spaceagent_report_draft',
-      'jarvis_concurrence_gate',
-      'owner_visible_task_update',
-    ],
+    pipeline_templates: SPACEAGENT_PIPELINE_TEMPLATES,
+    pipeline_status_route: '/api/bridge/spaceagent/pipeline-status',
     writes_enabled: false,
+  }
+}
+
+export function buildSpaceAgentPipelineStatus() {
+  return {
+    ...commonInvariants(),
+    route: 'bridge.spaceagent.pipeline-status',
+    status: 'SPACEAGENT_PIPELINE_REGISTERED_INTERNAL_ONLY',
+    pipeline: {
+      id: 'spaceagent_gateway_integration_pipeline',
+      name: SPACEAGENT_PIPELINE_NAME,
+      agent_id: SPACEAGENT_IDENTITY.agent_id,
+      direct_gateway_connection: true,
+      gateway_route: SPACEAGENT_IDENTITY.gateway_route,
+      conversation_owner: SPACEAGENT_IDENTITY.conversation_owner,
+      reports_to: SPACEAGENT_IDENTITY.reports_to,
+      final_authority: SPACEAGENT_IDENTITY.final_authority,
+      opencloud_intermediary_allowed: false,
+      no_external_execution_without_exact_scope: true,
+    },
+    templates: SPACEAGENT_PIPELINE_TEMPLATES,
+    workflow_templates: SPACEAGENT_PIPELINE_TEMPLATES.map((template, index) => ({
+      template_id: index + 1,
+      ...template,
+      no_state_proof: true,
+      audit_required: template.bridge_session_required,
+    })),
+    proof: {
+      pipeline_visible: true,
+      no_external_execution: true,
+      no_opencloud_intermediary: true,
+      credential_values_exposed: false,
+      rollback_id: 'no_state_spaceagent_pipeline_status',
+      rollback_command: 'Remove /api/bridge/spaceagent/pipeline-status and SpaceAgent pipeline metadata; no production state changed.',
+    },
+    writes_enabled: false,
+    execution_enabled: false,
+    external_execution_enabled: false,
+    credential_values_exposed: false,
   }
 }
 

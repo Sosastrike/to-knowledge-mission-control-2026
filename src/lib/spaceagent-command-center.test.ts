@@ -20,6 +20,7 @@ import { buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
 import {
   buildSpaceAgentAuthority,
   buildSpaceAgentCapabilityMap,
+  buildSpaceAgentPipelineStatus,
   buildSpaceAgentReadiness,
   buildSpaceAgentStatus,
   createSpaceAgentJarvisConcurrenceRequest,
@@ -90,13 +91,39 @@ describe('SpaceAgent first-class Mission Control agent', () => {
       may_use_opencloud_as_intermediary: false,
       jarvis_concurrence_required_for_production: true,
     })
-    expect(buildSpaceAgentCapabilityMap().tools.map((tool) => tool.classification)).toEqual(expect.arrayContaining([
+    const capabilityMap = buildSpaceAgentCapabilityMap()
+    expect(capabilityMap.tools.map((tool) => tool.classification)).toEqual(expect.arrayContaining([
       'READ_ONLY',
       'WRITE_GATED',
       'CREDENTIAL_REQUIRED',
       'PERMISSION_REQUIRED',
       'UNSAFE_DISABLED',
     ]))
+    expect(capabilityMap.pipeline_templates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'spaceagent_readiness_probe', route: '/api/bridge/spaceagent/readiness' }),
+      expect.objectContaining({ id: 'spaceagent_report_draft', route: '/api/bridge/spaceagent/report-draft' }),
+      expect.objectContaining({ id: 'jarvis_concurrence_gate', route: '/api/bridge/spaceagent/jarvis-concurrence-request' }),
+    ]))
+    expect(capabilityMap.pipeline_status_route).toBe('/api/bridge/spaceagent/pipeline-status')
+
+    expect(buildSpaceAgentPipelineStatus()).toMatchObject({
+      route: 'bridge.spaceagent.pipeline-status',
+      status: 'SPACEAGENT_PIPELINE_REGISTERED_INTERNAL_ONLY',
+      pipeline: {
+        id: 'spaceagent_gateway_integration_pipeline',
+        name: 'SpaceAgent Gateway Integration Pipeline',
+        direct_gateway_connection: true,
+        opencloud_intermediary_allowed: false,
+      },
+      proof: {
+        pipeline_visible: true,
+        no_external_execution: true,
+        no_opencloud_intermediary: true,
+        credential_values_exposed: false,
+      },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
 
     expect(createSpaceAgentRecommendation({
       title: 'SpaceAgent source review',

@@ -606,6 +606,7 @@ const GATEWAY_ROUTE_MAP: AgentHubGatewayRouteCdpTruth['routes'] = [
   { route: '/api/gateway/agent-hub/agents/[id]/audit', methods: ['GET'], surface: 'agent_hub', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/bridge/spaceagent/status', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/bridge/spaceagent/readiness', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
+  { route: '/api/bridge/spaceagent/pipeline-status', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/bridge/spaceagent/capability-map', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/bridge/spaceagent/authority', methods: ['GET'], surface: 'space_agent', state: 'READY', bridge_session_required: false, writes_enabled: false, public_exposure: false },
   { route: '/api/bridge/spaceagent/recommendation', methods: ['POST'], surface: 'space_agent', state: 'READY', bridge_session_required: true, writes_enabled: false, public_exposure: false },

@@ -132,6 +132,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
     const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
     const canonicalReadiness = await import('@/app/api/bridge/spaceagent/readiness/route')
     const canonicalCapabilityMap = await import('@/app/api/bridge/spaceagent/capability-map/route')
+    const canonicalPipelineStatus = await import('@/app/api/bridge/spaceagent/pipeline-status/route')
     const canonicalAuthority = await import('@/app/api/bridge/spaceagent/authority/route')
     const canonicalRecommendation = await import('@/app/api/bridge/spaceagent/recommendation/route')
     const canonicalTaskPlan = await import('@/app/api/bridge/spaceagent/task-plan/route')
@@ -153,6 +154,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
       canonicalStatus.GET(request('http://localhost/api/bridge/spaceagent/status')),
       canonicalReadiness.GET(request('http://localhost/api/bridge/spaceagent/readiness')),
       canonicalCapabilityMap.GET(request('http://localhost/api/bridge/spaceagent/capability-map')),
+      canonicalPipelineStatus.GET(request('http://localhost/api/bridge/spaceagent/pipeline-status')),
       canonicalAuthority.GET(request('http://localhost/api/bridge/spaceagent/authority')),
       canonicalRecommendation.POST(request('http://localhost/api/bridge/spaceagent/recommendation', {
         method: 'POST',
@@ -205,6 +207,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
     const canonicalStatus = await import('@/app/api/bridge/spaceagent/status/route')
     const canonicalReadiness = await import('@/app/api/bridge/spaceagent/readiness/route')
     const canonicalCapabilityMap = await import('@/app/api/bridge/spaceagent/capability-map/route')
+    const canonicalPipelineStatus = await import('@/app/api/bridge/spaceagent/pipeline-status/route')
     const canonicalAuthority = await import('@/app/api/bridge/spaceagent/authority/route')
     const canonicalRecommendation = await import('@/app/api/bridge/spaceagent/recommendation/route')
     const canonicalTaskPlan = await import('@/app/api/bridge/spaceagent/task-plan/route')
@@ -215,6 +218,7 @@ describe('Space Agent Gateway and Bridge routes', () => {
       canonicalStatus.GET(request('http://localhost/api/bridge/spaceagent/status')),
       canonicalReadiness.GET(request('http://localhost/api/bridge/spaceagent/readiness')),
       canonicalCapabilityMap.GET(request('http://localhost/api/bridge/spaceagent/capability-map')),
+      canonicalPipelineStatus.GET(request('http://localhost/api/bridge/spaceagent/pipeline-status')),
       canonicalAuthority.GET(request('http://localhost/api/bridge/spaceagent/authority')),
       canonicalRecommendation.POST(request('http://localhost/api/bridge/spaceagent/recommendation', {
         method: 'POST',
@@ -238,12 +242,18 @@ describe('Space Agent Gateway and Bridge routes', () => {
     for (const response of responses) expect(response.status).toBe(200)
     expect(payloads[0]).toMatchObject({ route: 'bridge.spaceagent.status', agent_id: 'spaceagent', conversation_owner: 'spaceagent', opencloud_intermediary_allowed: false })
     expect(payloads[1]).toMatchObject({ route: 'bridge.spaceagent.readiness', final_certification_status: 'NOT_CERTIFIED' })
-    expect(payloads[2]).toMatchObject({ route: 'bridge.spaceagent.capability-map', writes_enabled: false })
-    expect(payloads[3]).toMatchObject({ route: 'bridge.spaceagent.authority', may_execute_production_changes: false, jarvis_concurrence_required_for_production: true })
-    expect(payloads[4]).toMatchObject({ route: 'bridge.spaceagent.recommendation', mode: 'spaceagent_internal_record_written', record: { kind: 'spaceagent_recommendation' } })
-    expect(payloads[5]).toMatchObject({ route: 'bridge.spaceagent.task_plan', record: { kind: 'spaceagent_task_plan' } })
-    expect(payloads[6]).toMatchObject({ route: 'bridge.spaceagent.report_draft', record: { kind: 'spaceagent_report_draft' } })
-    expect(payloads[7]).toMatchObject({ route: 'bridge.spaceagent.jarvis_concurrence_request', record: { kind: 'spaceagent_jarvis_concurrence_request' } })
+    expect(payloads[2]).toMatchObject({ route: 'bridge.spaceagent.capability-map', writes_enabled: false, pipeline_status_route: '/api/bridge/spaceagent/pipeline-status' })
+    expect(payloads[3]).toMatchObject({
+      route: 'bridge.spaceagent.pipeline-status',
+      status: 'SPACEAGENT_PIPELINE_REGISTERED_INTERNAL_ONLY',
+      pipeline: { name: 'SpaceAgent Gateway Integration Pipeline', direct_gateway_connection: true },
+      proof: { no_external_execution: true, no_opencloud_intermediary: true },
+    })
+    expect(payloads[4]).toMatchObject({ route: 'bridge.spaceagent.authority', may_execute_production_changes: false, jarvis_concurrence_required_for_production: true })
+    expect(payloads[5]).toMatchObject({ route: 'bridge.spaceagent.recommendation', mode: 'spaceagent_internal_record_written', record: { kind: 'spaceagent_recommendation' } })
+    expect(payloads[6]).toMatchObject({ route: 'bridge.spaceagent.task_plan', record: { kind: 'spaceagent_task_plan' } })
+    expect(payloads[7]).toMatchObject({ route: 'bridge.spaceagent.report_draft', record: { kind: 'spaceagent_report_draft' } })
+    expect(payloads[8]).toMatchObject({ route: 'bridge.spaceagent.jarvis_concurrence_request', record: { kind: 'spaceagent_jarvis_concurrence_request' } })
     for (const payload of payloads) expectOwnerSafe(payload)
   })
 

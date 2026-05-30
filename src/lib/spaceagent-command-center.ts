@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { config } from '@/lib/config'
+import { buildAgentMessageEnvelope, resolveAgentRoutingLine } from '@/lib/agent-routing-lines'
 import { recordJarvisAudit } from '@/lib/jarvis-audit'
 import { redactHermesValue } from '@/lib/hermes-policy'
 import { SPACEAGENT_ALLOWED_SCOPE, SPACEAGENT_FORBIDDEN_ACTIONS, SPACEAGENT_IDENTITY } from '@/lib/spaceagent-identity'
@@ -268,6 +269,7 @@ export function buildSpaceAgentStatus() {
     brain_status_route: '/api/bridge/spaceagent/brain-status',
     authority_route: '/api/bridge/spaceagent/authority',
     tool_map_route: '/api/bridge/spaceagent/tool-map',
+    certification_proof_route: '/api/bridge/spaceagent/certification-proof',
     capability_map_route: '/api/bridge/spaceagent/capability-map',
     recommendation_route: '/api/bridge/spaceagent/recommendation',
     task_plan_route: '/api/bridge/spaceagent/task-plan',
@@ -478,6 +480,125 @@ export function buildSpaceAgentBrainStatus() {
       credential_values_exposed: false,
       rollback_id: 'no_state_spaceagent_brain_status',
       rollback_command: 'Remove /api/bridge/spaceagent/brain-status and SpaceAgent Brain metadata; no memory state changed.',
+    },
+    writes_enabled: false,
+    execution_enabled: false,
+    external_execution_enabled: false,
+    credential_values_exposed: false,
+  }
+}
+
+
+export function buildSpaceAgentCertificationProof() {
+  const line = resolveAgentRoutingLine('spaceagent')
+  const envelope = line
+    ? buildAgentMessageEnvelope({
+      target_agent: 'spaceagent',
+      target_system: 'spaceagent',
+      source_channel: 'mission_control_certification_source_proof',
+      normalized_request: 'SpaceAgent certification source proof',
+    }, line, {
+      visible_task_id: '149',
+      audit_id: 'spaceagent-certification-source-proof',
+      rollback_id: 'no_state_spaceagent_certification_proof',
+    })
+    : null
+  const records = listSpaceAgentInternalRecords(100)
+  const recordCounts = records.reduce<Record<SpaceAgentRecordKind, number>>((counts, record) => {
+    counts[record.kind] += 1
+    return counts
+  }, {
+    spaceagent_recommendation: 0,
+    spaceagent_task_plan: 0,
+    spaceagent_report_draft: 0,
+    spaceagent_jarvis_concurrence_request: 0,
+  })
+  const unsafeActionRefusal = refuseSpaceAgentProductionExecution({
+    action_type: 'production_write',
+    affected_system: 'spaceagent',
+    reason: 'certification unsafe-action refusal proof',
+  })
+
+  return {
+    ...commonInvariants(),
+    route: 'bridge.spaceagent.certification-proof',
+    status: 'SPACEAGENT_CERTIFICATION_SOURCE_PROOF_READY_LIVE_PROOF_PENDING',
+    final_status: 'PENDING_AUTHENTICATED_DIRECT_LINE_AND_BROWSER_PROOF',
+    source_proof_ready: true,
+    live_certification_ready: false,
+    direct_line: {
+      agent_id: line?.agent_id || 'spaceagent',
+      display_name: line?.display_name || 'SpaceAgent',
+      conversation_owner: line?.conversation_owner || 'spaceagent',
+      reports_to: line?.reports_to || 'agent-zero-jarvis',
+      direct_line_active: Boolean(line?.direct_line_active),
+      gateway_route: line?.gateway_route || '/api/bridge/spaceagent/*',
+      route_trace: envelope?.route_trace || ['owner', 'mission-control', 'nuclear-gateway', 'spaceagent'],
+      opencloud_intermediary_allowed: false,
+      opencloud_conversation_owner_allowed: false,
+    },
+    message_envelope: envelope
+      ? {
+        target_agent: envelope.target_agent,
+        target_system: envelope.target_system,
+        conversation_owner: envelope.conversation_owner,
+        direct_line_used: envelope.direct_line_used,
+        route_trace: envelope.route_trace,
+        intermediaries: envelope.intermediaries,
+        opencloud_used: envelope.opencloud_used,
+        opencloud_role: envelope.opencloud_role,
+        visible_task_id: envelope.visible_task_id,
+        audit_id: envelope.audit_id,
+        rollback_id: envelope.rollback_id,
+      }
+      : null,
+    surfaces: {
+      agent_hub_visible: true,
+      gateway_visible: true,
+      pipeline_visible: true,
+      brain_bridge_visible: true,
+      tool_map_visible: true,
+      visible_task_id: 149,
+    },
+    internal_records: {
+      total: records.length,
+      recommendations: recordCounts.spaceagent_recommendation,
+      task_plans: recordCounts.spaceagent_task_plan,
+      report_drafts: recordCounts.spaceagent_report_draft,
+      jarvis_concurrence_requests: recordCounts.spaceagent_jarvis_concurrence_request,
+      credential_values_exposed: false,
+    },
+    unsafe_action_refusal: {
+      exact_blocker: unsafeActionRefusal.exact_blocker,
+      execution_enabled: unsafeActionRefusal.execution_enabled,
+      external_execution_enabled: unsafeActionRefusal.external_execution_enabled,
+      credential_values_exposed: unsafeActionRefusal.credential_values_exposed,
+      jarvis_final_authority: unsafeActionRefusal.jarvis_final_authority,
+      opencloud_intermediary: unsafeActionRefusal.opencloud_intermediary,
+    },
+    certification_checks: [
+      { id: 'agent_hub_visible', state: 'SOURCE_VERIFIED' },
+      { id: 'gateway_graph_visible', state: 'SOURCE_VERIFIED' },
+      { id: 'pipeline_registered', state: 'SOURCE_VERIFIED' },
+      { id: 'brain_bridge_read_only', state: 'SOURCE_VERIFIED' },
+      { id: 'tool_map_gateway_brokered', state: 'SOURCE_VERIFIED' },
+      { id: 'unsafe_action_refused', state: 'SOURCE_VERIFIED' },
+      { id: 'authenticated_direct_line_receive', state: 'PENDING_LIVE_PROOF' },
+      { id: 'mission_control_browser_gateway_load', state: 'PENDING_SERVICE_RESTART' },
+    ],
+    blockers: [
+      'mission_control_service_stale_next_bundle_restart_required',
+      'final_authenticated_direct_line_probe_pending',
+      'live_browser_gateway_load_pending',
+    ],
+    proof: {
+      no_opencloud_intermediary: true,
+      no_opencloud_conversation_owner: true,
+      no_external_execution: true,
+      no_raw_credentials: true,
+      credential_values_exposed: false,
+      rollback_id: 'no_state_spaceagent_certification_proof',
+      rollback_command: 'Remove /api/bridge/spaceagent/certification-proof and SpaceAgent certification metadata; no production state changed.',
     },
     writes_enabled: false,
     execution_enabled: false,

@@ -21,6 +21,7 @@ import {
   buildSpaceAgentAuthority,
   buildSpaceAgentBrainStatus,
   buildSpaceAgentCapabilityMap,
+  buildSpaceAgentCertificationProof,
   buildSpaceAgentPipelineStatus,
   buildSpaceAgentReadiness,
   buildSpaceAgentStatus,
@@ -141,6 +142,19 @@ describe('SpaceAgent first-class Mission Control agent', () => {
         no_opencloud_intermediary: true,
         credential_values_exposed: false,
       },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
+
+    expect(buildSpaceAgentCertificationProof()).toMatchObject({
+      route: 'bridge.spaceagent.certification-proof',
+      status: 'SPACEAGENT_CERTIFICATION_SOURCE_PROOF_READY_LIVE_PROOF_PENDING',
+      final_status: 'PENDING_AUTHENTICATED_DIRECT_LINE_AND_BROWSER_PROOF',
+      direct_line: { conversation_owner: 'spaceagent', direct_line_active: true, opencloud_intermediary_allowed: false },
+      message_envelope: { target_agent: 'spaceagent', conversation_owner: 'spaceagent', direct_line_used: true, route_trace: ['owner', 'mission-control', 'nuclear-gateway', 'spaceagent'], opencloud_used: false },
+      surfaces: { agent_hub_visible: true, gateway_visible: true, pipeline_visible: true, brain_bridge_visible: true, tool_map_visible: true },
+      unsafe_action_refusal: { exact_blocker: 'spaceagent_requires_jarvis_concurrence', execution_enabled: false, credential_values_exposed: false },
+      proof: { no_opencloud_intermediary: true, no_external_execution: true, credential_values_exposed: false },
       execution_enabled: false,
       external_execution_enabled: false,
     })

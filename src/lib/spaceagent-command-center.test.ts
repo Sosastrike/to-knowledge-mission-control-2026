@@ -19,6 +19,7 @@ import { createGatewayRegistryFromAgentNetwork } from '@/lib/gateway-model'
 import { buildAgentHubStatusPayload } from '@/lib/gateway-agent-hub'
 import {
   buildSpaceAgentAuthority,
+  buildSpaceAgentBrainStatus,
   buildSpaceAgentCapabilityMap,
   buildSpaceAgentPipelineStatus,
   buildSpaceAgentReadiness,
@@ -105,6 +106,7 @@ describe('SpaceAgent first-class Mission Control agent', () => {
       expect.objectContaining({ id: 'jarvis_concurrence_gate', route: '/api/bridge/spaceagent/jarvis-concurrence-request' }),
     ]))
     expect(capabilityMap.pipeline_status_route).toBe('/api/bridge/spaceagent/pipeline-status')
+    expect(capabilityMap.brain_access.brain_status_route).toBe('/api/bridge/spaceagent/brain-status')
 
     expect(buildSpaceAgentPipelineStatus()).toMatchObject({
       route: 'bridge.spaceagent.pipeline-status',
@@ -121,6 +123,28 @@ describe('SpaceAgent first-class Mission Control agent', () => {
         no_opencloud_intermediary: true,
         credential_values_exposed: false,
       },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
+
+    expect(buildSpaceAgentBrainStatus()).toMatchObject({
+      route: 'bridge.spaceagent.brain-status',
+      status: 'SPACEAGENT_BRAIN_BRIDGE_CONNECTED_READ_ONLY',
+      brain_bridge: {
+        gateway_connected: true,
+        opencloud_intermediary_allowed: false,
+        read_only_canonical_truth: true,
+        live_routes_outrank_stale_memory: true,
+      },
+      memory_policy: {
+        can_read_canonical_truth: true,
+        can_recommend_corrections: true,
+        can_request_memory_write: true,
+        can_execute_memory_write: false,
+        broad_memory_deletion_allowed: false,
+        raw_secret_memory_writes_allowed: false,
+      },
+      proof: { no_opencloud_intermediary: true, credential_values_exposed: false },
       execution_enabled: false,
       external_execution_enabled: false,
     })

@@ -105,6 +105,25 @@ export const SPACEAGENT_PIPELINE_TEMPLATES = [
   },
 ] as const
 
+export const SPACEAGENT_BRAIN_SOURCE_LABELS = [
+  'mission_control_live',
+  'gateway_tool_state',
+  'paperclip_state',
+  'ron_dispatch_advice',
+  'spaceagent_report',
+] as const
+
+export const SPACEAGENT_BRAIN_LANES = [
+  { id: 'brain_bridge_gateway', route: '/api/bridge/brain-sync/gateway-status', state: 'READY', writes_enabled: false },
+  { id: 'brain_bridge_events', route: '/api/bridge/brain-sync/events', state: 'LIVE_READ_ONLY', writes_enabled: false },
+  { id: 'obsidian', route: '/api/bridge/brain-sync/obsidian/status', state: 'LIVE_READ_ONLY', writes_enabled: false },
+  { id: 'mempalace', route: '/api/bridge/brain-sync/mempalace/status', state: 'LIVE_READ_ONLY', writes_enabled: false },
+  { id: 'graphify', route: '/api/bridge/brain-sync/graphify/status', state: 'LIVE_READ_ONLY', writes_enabled: false },
+  { id: 'build_wiki', route: '/api/bridge/brain-sync/build-wiki/status', state: 'EVENT_STREAM_REQUIRED', writes_enabled: false },
+  { id: 'memory_approvals', route: '/api/bridge/brain-sync/memory-approvals/status', state: 'WRITE_GATED', writes_enabled: false },
+  { id: 'memory_write_request', route: '/api/bridge/brain-sync/memory/write-request', state: 'WRITE_GATED', writes_enabled: false },
+] as const
+
 export type SpaceAgentBlockedResult = {
   ok: false
   route: 'bridge.spaceagent.execute'
@@ -175,6 +194,7 @@ export function buildSpaceAgentStatus() {
     direct_line_route: SPACEAGENT_IDENTITY.direct_line_route,
     legacy_direct_line_route: SPACEAGENT_IDENTITY.legacy_gateway_route,
     readiness_route: '/api/bridge/spaceagent/readiness',
+    brain_status_route: '/api/bridge/spaceagent/brain-status',
     authority_route: '/api/bridge/spaceagent/authority',
     capability_map_route: '/api/bridge/spaceagent/capability-map',
     recommendation_route: '/api/bridge/spaceagent/recommendation',
@@ -198,6 +218,7 @@ export function buildSpaceAgentReadiness() {
     direct_line_trace_required: true,
     agent_hub_proof_required: true,
     gateway_graph_proof_required: true,
+    brain_bridge_proof_required: true,
     pipeline_proof_required: true,
     authenticated_owner_session_proof_required: true,
     writes_enabled: false,
@@ -205,6 +226,7 @@ export function buildSpaceAgentReadiness() {
       'final_authenticated_direct_line_probe_pending',
       'pipeline_run_proof_pending',
       'jarvis_concurrence_required_for_production',
+      'memory_write_execution_requires_approval_gate',
     ],
     next_safe_lane: 'run direct-line trace and internal report/concurrence proof without external execution',
   }
@@ -223,6 +245,8 @@ export function buildSpaceAgentAuthority() {
     may_create_report_drafts: true,
     may_create_jarvis_concurrence_requests: true,
     may_update_visible_task_events: true,
+    may_recommend_memory_corrections: true,
+    may_request_memory_write_approval: true,
     may_execute_external_writes: false,
     may_execute_production_changes: false,
     may_receive_raw_credentials: false,
@@ -253,10 +277,15 @@ export function buildSpaceAgentCapabilityMap() {
     ],
     brain_access: {
       read_status: 'READ_ONLY_READY',
+      brain_status_route: '/api/bridge/spaceagent/brain-status',
       canonical_truth_read: 'READ_ONLY_READY',
       memory_write_execution: 'WRITE_GATED',
       memory_write_request_only: true,
+      source_labels: SPACEAGENT_BRAIN_SOURCE_LABELS,
+      live_routes_outrank_stale_memory: true,
+      stale_memory_detection: 'mark_historical_before_removal',
     },
+    brain_lanes: SPACEAGENT_BRAIN_LANES,
     pipeline_templates: SPACEAGENT_PIPELINE_TEMPLATES,
     pipeline_status_route: '/api/bridge/spaceagent/pipeline-status',
     writes_enabled: false,
@@ -294,6 +323,50 @@ export function buildSpaceAgentPipelineStatus() {
       credential_values_exposed: false,
       rollback_id: 'no_state_spaceagent_pipeline_status',
       rollback_command: 'Remove /api/bridge/spaceagent/pipeline-status and SpaceAgent pipeline metadata; no production state changed.',
+    },
+    writes_enabled: false,
+    execution_enabled: false,
+    external_execution_enabled: false,
+    credential_values_exposed: false,
+  }
+}
+
+export function buildSpaceAgentBrainStatus() {
+  return {
+    ...commonInvariants(),
+    route: 'bridge.spaceagent.brain-status',
+    status: 'SPACEAGENT_BRAIN_BRIDGE_CONNECTED_READ_ONLY',
+    brain_bridge: {
+      gateway_connected: true,
+      gateway_route: '/api/bridge/brain-sync/gateway-status',
+      opencloud_intermediary_allowed: false,
+      read_only_canonical_truth: true,
+      source_labels: SPACEAGENT_BRAIN_SOURCE_LABELS,
+      live_routes_outrank_stale_memory: true,
+    },
+    lanes: SPACEAGENT_BRAIN_LANES,
+    memory_policy: {
+      can_read_canonical_truth: true,
+      can_recommend_corrections: true,
+      can_request_memory_write: true,
+      can_execute_memory_write: false,
+      memory_write_execution_route: '/api/bridge/brain-sync/memory/write-execute',
+      memory_write_request_route: '/api/bridge/brain-sync/memory/write-request',
+      approval_route: '/api/bridge/brain-sync/memory-approvals/status',
+      stale_memory_rule: 'live_routes_outrank_stale_memory',
+      historical_mark_before_removal: true,
+      broad_memory_deletion_allowed: false,
+      raw_secret_memory_writes_allowed: false,
+    },
+    proof: {
+      brain_bridge_visible: true,
+      gateway_connected: true,
+      opencloud_used: false,
+      opencloud_intermediary: false,
+      no_opencloud_intermediary: true,
+      credential_values_exposed: false,
+      rollback_id: 'no_state_spaceagent_brain_status',
+      rollback_command: 'Remove /api/bridge/spaceagent/brain-status and SpaceAgent Brain metadata; no memory state changed.',
     },
     writes_enabled: false,
     execution_enabled: false,

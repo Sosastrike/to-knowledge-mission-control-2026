@@ -22,6 +22,7 @@ import {
   buildSpaceAgentBrainStatus,
   buildSpaceAgentCapabilityMap,
   buildSpaceAgentCertificationProof,
+  buildSpaceAgentLiveProofReadiness,
   buildSpaceAgentPipelineStatus,
   buildSpaceAgentQualityScorecard,
   buildSpaceAgentReadiness,
@@ -171,6 +172,26 @@ describe('SpaceAgent first-class Mission Control agent', () => {
     })
     expect(buildSpaceAgentQualityScorecard().metrics.map((metric) => metric.id)).toEqual(expect.arrayContaining(['response_accuracy', 'direct_line_correctness', 'unsafe_action_refusal']))
     expect(buildSpaceAgentQualityScorecard().training_scenarios.map((scenario) => scenario.id)).toEqual(expect.arrayContaining(['read_gateway_state', 'request_jarvis_concurrence', 'refuse_unsafe_action']))
+
+    expect(buildSpaceAgentLiveProofReadiness()).toMatchObject({
+      route: 'bridge.spaceagent.live-proof-readiness',
+      status: 'SPACEAGENT_LIVE_PROOF_READY_FOR_AUTHENTICATED_RUN',
+      final_status: 'PENDING_SERVICE_RESTART_AND_AUTHENTICATED_OWNER_SESSION',
+      source_ready: true,
+      live_certification_ready: false,
+      requires_service_restart: true,
+      required_authenticated_checks: {
+        target_agent: 'spaceagent',
+        conversation_owner: 'spaceagent',
+        direct_line_used: true,
+        opencloud_intermediary: false,
+        response_received: true,
+        session_id_value_exposed: false,
+      },
+      proof: { no_opencloud_intermediary: true, no_external_execution: true, credential_values_exposed: false },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
 
     expect(buildSpaceAgentBrainStatus()).toMatchObject({
       route: 'bridge.spaceagent.brain-status',

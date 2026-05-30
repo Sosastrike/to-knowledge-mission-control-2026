@@ -24,6 +24,7 @@ import {
   buildSpaceAgentPipelineStatus,
   buildSpaceAgentReadiness,
   buildSpaceAgentStatus,
+  buildSpaceAgentToolMap,
   createSpaceAgentJarvisConcurrenceRequest,
   createSpaceAgentRecommendation,
   createSpaceAgentReportDraft,
@@ -106,7 +107,24 @@ describe('SpaceAgent first-class Mission Control agent', () => {
       expect.objectContaining({ id: 'jarvis_concurrence_gate', route: '/api/bridge/spaceagent/jarvis-concurrence-request' }),
     ]))
     expect(capabilityMap.pipeline_status_route).toBe('/api/bridge/spaceagent/pipeline-status')
+    expect(capabilityMap.tool_map_route).toBe('/api/bridge/spaceagent/tool-map')
     expect(capabilityMap.brain_access.brain_status_route).toBe('/api/bridge/spaceagent/brain-status')
+
+    expect(buildSpaceAgentToolMap()).toMatchObject({
+      route: 'bridge.spaceagent.tool-map',
+      status: 'SPACEAGENT_TOOL_MAP_GATEWAY_BROKERED',
+      classifications: {
+        READ_ONLY: expect.any(Number),
+        WRITE_GATED: expect.any(Number),
+        CREDENTIAL_REQUIRED: expect.any(Number),
+        PERMISSION_REQUIRED: expect.any(Number),
+        UNSAFE_DISABLED: expect.any(Number),
+      },
+      credential_policy: { values_exposed: false, brokered_credentials_by_name_only: true },
+      proof: { gateway_brokered: true, no_opencloud_intermediary: true, credential_values_exposed: false },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
 
     expect(buildSpaceAgentPipelineStatus()).toMatchObject({
       route: 'bridge.spaceagent.pipeline-status',

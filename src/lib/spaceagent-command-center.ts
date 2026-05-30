@@ -124,6 +124,77 @@ export const SPACEAGENT_BRAIN_LANES = [
   { id: 'memory_write_request', route: '/api/bridge/brain-sync/memory/write-request', state: 'WRITE_GATED', writes_enabled: false },
 ] as const
 
+export const SPACEAGENT_TOOL_MAP = [
+  {
+    id: 'gateway.status.read',
+    label: 'Gateway Status Read',
+    route: '/api/gateway/status',
+    classification: 'READ_ONLY' as SpaceAgentToolClassification,
+    state: 'READ_ONLY_READY',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'brain.status.read',
+    label: 'Brain Status Read',
+    route: '/api/bridge/spaceagent/brain-status',
+    classification: 'READ_ONLY' as SpaceAgentToolClassification,
+    state: 'READ_ONLY_READY',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'paperclip.workspace.read',
+    label: 'Paperclip Workspace Read',
+    route: '/api/bridge/paperclip/workspace-truth',
+    classification: 'READ_ONLY' as SpaceAgentToolClassification,
+    state: 'READ_ONLY_READY',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'task.list.read',
+    label: 'Mission Control Task Read',
+    route: '/api/tasks',
+    classification: 'READ_ONLY' as SpaceAgentToolClassification,
+    state: 'READ_ONLY_READY',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'task.event.write',
+    label: 'Visible Task Event Draft',
+    route: '/api/tasks/:id/events',
+    classification: 'WRITE_GATED' as SpaceAgentToolClassification,
+    state: 'WRITE_GATED',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'report.draft',
+    label: 'Report Draft',
+    route: '/api/bridge/spaceagent/report-draft',
+    classification: 'WRITE_GATED' as SpaceAgentToolClassification,
+    state: 'WRITE_GATED',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  {
+    id: 'jarvis.concurrence.request',
+    label: 'Jarvis Concurrence Request',
+    route: '/api/bridge/spaceagent/jarvis-concurrence-request',
+    classification: 'WRITE_GATED' as SpaceAgentToolClassification,
+    state: 'WRITE_GATED',
+    execution_enabled: false,
+    credential_brokered: false,
+  },
+  { id: 'public_webpage_read', label: 'Public Webpage Read', route: '/api/firecrawl/reader', classification: 'READ_ONLY' as SpaceAgentToolClassification, state: 'READ_ONLY_READY', execution_enabled: false, credential_brokered: true },
+  { id: 'youtube_transcript', label: 'YouTube Transcript', route: '/api/youtube/transcript', classification: 'PERMISSION_REQUIRED' as SpaceAgentToolClassification, state: 'PERMISSION_REQUIRED', execution_enabled: false, credential_brokered: false },
+  { id: 'firecrawl.read', label: 'Firecrawl Read', route: '/api/firecrawl/reader', classification: 'CREDENTIAL_REQUIRED' as SpaceAgentToolClassification, state: 'CREDENTIAL_REQUIRED', execution_enabled: false, credential_brokered: true },
+  { id: 'playwright_mcp_local_only', label: 'Playwright MCP Local Evidence', route: '/api/bridge/playwright-mcp/status', classification: 'PERMISSION_REQUIRED' as SpaceAgentToolClassification, state: 'BRIDGE_SESSION_REQUIRED', execution_enabled: false, credential_brokered: false },
+  { id: 'broad_connector_execution', label: 'Broad Connector Execution', route: null, classification: 'UNSAFE_DISABLED' as SpaceAgentToolClassification, state: 'UNSAFE_DISABLED', execution_enabled: false, credential_brokered: false },
+] as const
+
 export type SpaceAgentBlockedResult = {
   ok: false
   route: 'bridge.spaceagent.execute'
@@ -196,6 +267,7 @@ export function buildSpaceAgentStatus() {
     readiness_route: '/api/bridge/spaceagent/readiness',
     brain_status_route: '/api/bridge/spaceagent/brain-status',
     authority_route: '/api/bridge/spaceagent/authority',
+    tool_map_route: '/api/bridge/spaceagent/tool-map',
     capability_map_route: '/api/bridge/spaceagent/capability-map',
     recommendation_route: '/api/bridge/spaceagent/recommendation',
     task_plan_route: '/api/bridge/spaceagent/task-plan',
@@ -262,19 +334,7 @@ export function buildSpaceAgentCapabilityMap() {
     ...commonInvariants(),
     route: 'bridge.spaceagent.capability-map',
     status: 'SPACEAGENT_CAPABILITY_MAP_READY',
-    tools: [
-      { id: 'gateway.status.read', label: 'Gateway Status Read', classification: 'READ_ONLY' as SpaceAgentToolClassification, state: 'READ_ONLY_READY', execution_enabled: false },
-      { id: 'brain.status.read', label: 'Brain Status Read', classification: 'READ_ONLY' as SpaceAgentToolClassification, state: 'READ_ONLY_READY', execution_enabled: false },
-      { id: 'task.list.read', label: 'Mission Control Task Read', classification: 'READ_ONLY' as SpaceAgentToolClassification, state: 'READ_ONLY_READY', execution_enabled: false },
-      { id: 'task.event.write', label: 'Visible Task Event Draft', classification: 'WRITE_GATED' as SpaceAgentToolClassification, state: 'WRITE_GATED', execution_enabled: false },
-      { id: 'report.draft', label: 'Report Draft', classification: 'WRITE_GATED' as SpaceAgentToolClassification, state: 'WRITE_GATED', execution_enabled: false },
-      { id: 'jarvis.concurrence.request', label: 'Jarvis Concurrence Request', classification: 'WRITE_GATED' as SpaceAgentToolClassification, state: 'WRITE_GATED', execution_enabled: false },
-      { id: 'public_webpage_read', label: 'Public Webpage Read', classification: 'READ_ONLY' as SpaceAgentToolClassification, state: 'READ_ONLY_READY', execution_enabled: false },
-      { id: 'youtube_transcript', label: 'YouTube Transcript', classification: 'PERMISSION_REQUIRED' as SpaceAgentToolClassification, state: 'PERMISSION_REQUIRED', execution_enabled: false },
-      { id: 'firecrawl.read', label: 'Firecrawl Read', classification: 'CREDENTIAL_REQUIRED' as SpaceAgentToolClassification, state: 'CREDENTIAL_REQUIRED', execution_enabled: false },
-      { id: 'playwright_mcp_local_only', label: 'Playwright MCP Local Evidence', classification: 'PERMISSION_REQUIRED' as SpaceAgentToolClassification, state: 'BRIDGE_SESSION_REQUIRED', execution_enabled: false },
-      { id: 'broad_connector_execution', label: 'Broad Connector Execution', classification: 'UNSAFE_DISABLED' as SpaceAgentToolClassification, state: 'UNSAFE_DISABLED', execution_enabled: false },
-    ],
+    tools: SPACEAGENT_TOOL_MAP,
     brain_access: {
       read_status: 'READ_ONLY_READY',
       brain_status_route: '/api/bridge/spaceagent/brain-status',
@@ -288,7 +348,58 @@ export function buildSpaceAgentCapabilityMap() {
     brain_lanes: SPACEAGENT_BRAIN_LANES,
     pipeline_templates: SPACEAGENT_PIPELINE_TEMPLATES,
     pipeline_status_route: '/api/bridge/spaceagent/pipeline-status',
+    tool_map_route: '/api/bridge/spaceagent/tool-map',
     writes_enabled: false,
+  }
+}
+
+
+export function buildSpaceAgentToolMap() {
+  const classifications = SPACEAGENT_TOOL_MAP.reduce<Record<SpaceAgentToolClassification, number>>((counts, tool) => {
+    counts[tool.classification] += 1
+    return counts
+  }, {
+    READ_ONLY: 0,
+    WRITE_GATED: 0,
+    CREDENTIAL_REQUIRED: 0,
+    PERMISSION_REQUIRED: 0,
+    UNSAFE_DISABLED: 0,
+  })
+
+  return {
+    ...commonInvariants(),
+    route: 'bridge.spaceagent.tool-map',
+    status: 'SPACEAGENT_TOOL_MAP_GATEWAY_BROKERED',
+    tool_count: SPACEAGENT_TOOL_MAP.length,
+    classifications,
+    tools: SPACEAGENT_TOOL_MAP,
+    mcp_visibility: {
+      registry_route: '/api/mcp',
+      playwright_mcp_status_route: '/api/bridge/playwright-mcp/status',
+      execution_policy: 'read_only_or_bridge_session_exact_scope',
+    },
+    provider_model_visibility: {
+      route: '/api/bridge/providers',
+      state: 'READ_ONLY_READY',
+      raw_provider_keys_exposed: false,
+    },
+    credential_policy: {
+      broker_route: '/api/bridge/credentials/status',
+      values_exposed: false,
+      brokered_credentials_by_name_only: true,
+      agents_receive_raw_credentials: false,
+    },
+    proof: {
+      gateway_brokered: true,
+      no_opencloud_intermediary: true,
+      no_external_execution: true,
+      credential_values_exposed: false,
+      rollback_id: 'no_state_spaceagent_tool_map',
+      rollback_command: 'Remove /api/bridge/spaceagent/tool-map and SpaceAgent tool-map metadata; no external tool state changed.',
+    },
+    writes_enabled: false,
+    execution_enabled: false,
+    external_execution_enabled: false,
   }
 }
 

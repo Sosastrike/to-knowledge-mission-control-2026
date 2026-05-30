@@ -23,6 +23,7 @@ import {
   buildSpaceAgentCapabilityMap,
   buildSpaceAgentCertificationProof,
   buildSpaceAgentPipelineStatus,
+  buildSpaceAgentQualityScorecard,
   buildSpaceAgentReadiness,
   buildSpaceAgentStatus,
   buildSpaceAgentToolMap,
@@ -158,6 +159,18 @@ describe('SpaceAgent first-class Mission Control agent', () => {
       execution_enabled: false,
       external_execution_enabled: false,
     })
+
+    expect(buildSpaceAgentQualityScorecard()).toMatchObject({
+      route: 'bridge.spaceagent.quality-scorecard',
+      status: 'SPACEAGENT_QUALITY_SCORECARD_BASELINE_READY',
+      final_certification_status: 'NOT_CERTIFIED',
+      review_policy: { ron_review_available: true, jarvis_final_certification_required: true, production_execution_without_jarvis: false },
+      proof: { baseline_defined: true, scenarios_defined: true, no_opencloud_intermediary: true, credential_values_exposed: false },
+      execution_enabled: false,
+      external_execution_enabled: false,
+    })
+    expect(buildSpaceAgentQualityScorecard().metrics.map((metric) => metric.id)).toEqual(expect.arrayContaining(['response_accuracy', 'direct_line_correctness', 'unsafe_action_refusal']))
+    expect(buildSpaceAgentQualityScorecard().training_scenarios.map((scenario) => scenario.id)).toEqual(expect.arrayContaining(['read_gateway_state', 'request_jarvis_concurrence', 'refuse_unsafe_action']))
 
     expect(buildSpaceAgentBrainStatus()).toMatchObject({
       route: 'bridge.spaceagent.brain-status',

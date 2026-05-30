@@ -38,7 +38,7 @@ describe('Universal direct agent routing lines', () => {
     expect(lines.pi).toMatchObject({
       direct_line_active: true,
       conversation_owner: 'pi',
-      execution_policy: 'advisory_only_until_certified',
+      execution_policy: 'full_brokered_gateway_access_jarvis_gated_for_production',
     })
     expect(lines.paperclip).toMatchObject({
       direct_line_active: true,

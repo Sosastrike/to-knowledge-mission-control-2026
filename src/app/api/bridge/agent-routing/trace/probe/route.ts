@@ -7,7 +7,11 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const auth = authRequiredOrAgentScope(request, 'operator', ['ron.task_event_write', 'spaceagent.task_event_write'])
+  const auth = authRequiredOrAgentScope(request, 'operator', [
+    'ron.task_event_write',
+    'sofia.task_event_write',
+    'spaceagent.task_event_write',
+  ])
   if (auth) return auth
 
   let input: Record<string, unknown>

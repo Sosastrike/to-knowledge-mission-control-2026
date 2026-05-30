@@ -671,4 +671,67 @@ describe('Direct Agent Line Trace Kit', () => {
       `).run(now, now, keyHash)
     }
   })
+
+  it('allows Sofia scoped token to use trace routes without the global API key', async () => {
+    const db = getDatabase()
+    const now = Math.floor(Date.now() / 1000)
+    const rawKey = `mca_test_sofia_trace_${now}`
+    const keyHash = createHash('sha256').update(rawKey).digest('hex')
+    db.prepare(`
+      INSERT OR IGNORE INTO agents (name, role, session_key, status, created_at, updated_at, workspace_id)
+      VALUES ('sofia', 'Deputy Nuclear Dispatcher', 'sofia-test-session', 'idle', ?, ?, 1)
+    `).run(now, now)
+    const agent = db.prepare(`SELECT id FROM agents WHERE name = 'sofia' AND workspace_id = 1`).get() as { id: number }
+
+    try {
+      db.prepare(`
+        INSERT OR IGNORE INTO agent_api_keys (
+          agent_id, workspace_id, name, key_hash, key_prefix, scopes, created_by, created_at, updated_at
+        ) VALUES (?, 1, 'sofia-trace-test', ?, ?, ?, 'test', ?, ?)
+      `).run(
+        agent.id,
+        keyHash,
+        rawKey.slice(0, 12),
+        JSON.stringify(['sofia.read', 'sofia.gateway_read', 'sofia.task_event_write']),
+        now,
+        now,
+      )
+
+      const headers = {
+        'x-api-key': rawKey,
+        'x-agent-name': 'sofia',
+        'content-type': 'application/json',
+      }
+
+      const probe = await postTraceProbe(new NextRequest('http://localhost/api/bridge/agent-routing/trace/probe', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          target_agent: 'sofia',
+          nonce: 'TRACE-test-sofia-scoped-token',
+          create_visible_task_on_failure: false,
+        }),
+      }))
+      const live = await getTraceLive(new NextRequest('http://localhost/api/bridge/agent-routing/trace/live?agent=sofia&nonce=TRACE-test-sofia-scoped-token', {
+        headers,
+      }))
+
+      expect(probe.status).toBe(200)
+      expect(live.status).toBe(200)
+      const payload = await live.json()
+      expect(payload).toMatchObject({
+        credential_values_exposed: false,
+        raw_message_body_exposed: false,
+        summary: {
+          latest_status: 'PASS',
+        },
+      })
+    } finally {
+      db.prepare(`
+        UPDATE agent_api_keys
+        SET revoked_at = COALESCE(revoked_at, ?), updated_at = ?
+        WHERE key_hash = ? AND name = 'sofia-trace-test'
+      `).run(now, now, keyHash)
+    }
+  })
 })

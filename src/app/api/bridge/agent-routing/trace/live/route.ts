@@ -7,7 +7,14 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  const auth = authRequiredOrAgentScope(request, 'viewer', ['ron.read', 'ron.gateway_read', 'spaceagent.read', 'spaceagent.gateway_read'])
+  const auth = authRequiredOrAgentScope(request, 'viewer', [
+    'ron.read',
+    'ron.gateway_read',
+    'sofia.read',
+    'sofia.gateway_read',
+    'spaceagent.read',
+    'spaceagent.gateway_read',
+  ])
   if (auth) return auth
 
   const url = new URL(request.url)

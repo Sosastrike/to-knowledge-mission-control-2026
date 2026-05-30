@@ -143,4 +143,51 @@ describe('Ron Mission Control proxy proof', () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it('accepts the Agent Hub form POST without exposing browser session values', async () => {
+    authMock.mockReturnValue({ user: { role: 'operator', username: 'owner', workspace_id: 1 } })
+    const route = await import('@/app/api/bridge/ron/runtime-proof/route')
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {}
+      if (url.endsWith('/gateway/agent-hub/ron/webui/api/session/new')) {
+        return new Response(JSON.stringify({ session_id: 'form_session_123456' }), { status: 200 })
+      }
+      if (url.endsWith('/gateway/agent-hub/ron/webui/api/chat/start')) {
+        expect(body.session_id).toBe('form_session_123456')
+        return new Response(JSON.stringify({ ok: true, stream_id: 'stream_form' }), { status: 200 })
+      }
+      if (url.includes('/gateway/agent-hub/ron/webui/api/session?')) {
+        return new Response(JSON.stringify({
+          session: { session_id: 'form_session_123456', message_count: 2 },
+          messages: [{ role: 'assistant', content: 'RON_PROXY_PROOF form ack' }],
+        }), { status: 200 })
+      }
+      return new Response('{}', { status: 404 })
+    }))
+
+    try {
+      const response = await route.POST(new NextRequest('http://localhost/api/bridge/ron/runtime-proof', {
+        method: 'POST',
+        headers: { cookie: 'mc_session=form-owner', 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'run_mission_control_proxy_proof', persist: 'false' }),
+      }))
+      const payload = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(payload).toMatchObject({
+        ok: true,
+        target_agent: 'ron-weasley',
+        conversation_owner: 'ron-weasley',
+        authenticated_proxy_send_receive_proof: true,
+        session_id_value_exposed: false,
+        tokens_cookies_exposed: false,
+      })
+      expect(JSON.stringify(payload)).not.toContain('form_session_123456')
+      expect(JSON.stringify(payload)).not.toContain('form-owner')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

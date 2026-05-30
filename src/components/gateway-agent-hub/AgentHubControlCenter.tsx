@@ -566,10 +566,17 @@ function RonProofPanel({ agent }: { agent: AgentHubAgent }) {
       {proof.direct_line_chat_blocker !== 'none' ? (
         <div className='mt-3 rounded-md border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-100'>
           <p>Mission Control proxy blocker: {proof.direct_line_chat_blocker}</p>
-          <a href='/gateway/agent-hub/ron/status' className='mt-2 inline-flex rounded-md border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 font-semibold text-amber-50 hover:bg-amber-300/15'>Run Ron Proxy Proof</a>
+          <p className='mt-1 text-amber-50/80'>Uses the current authenticated Mission Control session to send a safe nonce through the Ron WebUI proxy. Session ids, cookies, tokens, and credentials are not displayed.</p>
+          <form method='post' action={proof.proxy_proof_route} className='mt-2'>
+            <input type='hidden' name='action' value='run_mission_control_proxy_proof' />
+            <button type='submit' className='inline-flex rounded-md border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 font-semibold text-amber-50 hover:bg-amber-300/15'>Run Ron Proxy Proof</button>
+          </form>
         </div>
       ) : (
-        <p className='mt-3 rounded-md border border-emerald-300/20 bg-emerald-300/8 p-3 text-xs leading-5 text-emerald-100'>Mission Control proxy proof verified. Protected execution remains Jarvis-gated.</p>
+        <div data-certified-state='MISSION_CONTROL_PROXY_CERTIFIED' className='mt-3 rounded-md border border-emerald-300/20 bg-emerald-300/8 p-3 text-xs leading-5 text-emerald-100'>
+          <p>Mission Control proxy proof verified. Protected execution remains Jarvis-gated.</p>
+          {proof.visible_task_id && <p className='mt-1'>Visible task proof: #{proof.visible_task_id}</p>}
+        </div>
       )}
     </section>
   )

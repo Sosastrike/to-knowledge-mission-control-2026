@@ -10,6 +10,7 @@ import type { GatewayEdge, GatewayFlow, GatewayRegistry, GatewayStatus } from '.
 import { AGENT_UPDATE_COMPONENTS } from './agent-update-coordinator'
 import { buildAgentRoutingLinesStatus } from './agent-routing-lines'
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
+import { getLatestRonMissionControlProxyProof } from './ron-proxy-proof'
 import { SOFIA_DEPUTY_IDENTITY } from './sofia-identity'
 
 export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'sofia' | 'hermes-webui' | 'spaceagent' | 'pi-mono'
@@ -100,11 +101,15 @@ export type AgentHubRonProofPanel = {
   direct_line_chat: 'LOCAL_PROOF_PRESENT'
   direct_line_chat_blocker: 'mission_control_authenticated_proxy_send_receive_proof_pending' | 'none'
   direct_line_chat_proof: 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS'
-  mission_control_proxy: 'AUTHENTICATED_SEND_RECEIVE_PENDING'
+  mission_control_proxy: 'AUTHENTICATED_SEND_RECEIVE_PENDING' | 'MISSION_CONTROL_PROXY_CERTIFIED'
   proxy_proof_route: '/api/bridge/ron/runtime-proof'
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED'
   execution_model: 'JARVIS-GATED EXECUTION'
   opencloud_intermediary: false
+  response_received?: true
+  visible_task_event_written?: boolean
+  visible_task_id?: number | null
+  proof_nonce_hash?: string | null
 }
 
 export type AgentHubAutoUpdateControlPlane = {
@@ -418,7 +423,7 @@ type AgentHubDefinition = {
 
 const RON_DIRECT_LINE_CHAT_PROOF = 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS' as const
 
-const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
+const RON_WEASLEY_PENDING_PROOF_PANEL: AgentHubRonProofPanel = {
   webui: 'READY',
   webui_alias: 'READY',
   full_access_delegation: 'FULL_ACCESS_DELEGATED',
@@ -432,6 +437,21 @@ const RON_WEASLEY_PROOF_PANEL: AgentHubRonProofPanel = {
   protected_writes_execution: 'JARVIS CONCURRENCE REQUIRED',
   execution_model: 'JARVIS-GATED EXECUTION',
   opencloud_intermediary: false,
+}
+
+function buildRonWeasleyProofPanel(): AgentHubRonProofPanel {
+  const authenticatedProof = getLatestRonMissionControlProxyProof()
+  if (!authenticatedProof?.authenticated_proxy_send_receive_proof) return RON_WEASLEY_PENDING_PROOF_PANEL
+
+  return {
+    ...RON_WEASLEY_PENDING_PROOF_PANEL,
+    direct_line_chat_blocker: 'none',
+    mission_control_proxy: 'MISSION_CONTROL_PROXY_CERTIFIED',
+    response_received: true,
+    visible_task_event_written: authenticatedProof.visible_task_event_written,
+    visible_task_id: authenticatedProof.visible_task_id,
+    proof_nonce_hash: authenticatedProof.proof_nonce_hash,
+  }
 }
 
 const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
@@ -1124,7 +1144,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
 	        no_secrets: true,
 	        no_fake_done: true,
 	      },
-	      ...(definition.id === 'hermes' ? { proof_panel: RON_WEASLEY_PROOF_PANEL } : {}),
+	      ...(definition.id === 'hermes' ? { proof_panel: buildRonWeasleyProofPanel() } : {}),
 	    }
 	  })
 	}

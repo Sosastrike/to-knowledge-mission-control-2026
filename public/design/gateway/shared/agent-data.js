@@ -3,8 +3,9 @@
    Loaded after gateway-data.js. Read-only mocks; no live calls.
 
    Architecture order (locked):
-   Owner → Gateway → Agent Zero / Jarvis → Ron Weasley → Pi → Paperclip
-                  → SpaceAgent / OpenCloud / OpenClaw supporting tools
+   Owner → Mission Control → Nuclear Gateway → direct agent line
+                  → Agent Zero / Jarvis / Ron Weasley / Pi / Paperclip / SpaceAgent
+                  → OpenCloud / OpenClaw supporting tools only
 
    Repo grounding: PENDING — public access not available in design
    environment. URLs preserved on each agent so the developer can
@@ -38,7 +39,7 @@ window.AGENTS = (function () {
       blocked_reason: null,
       gated_reason: 'paperclip_writes_bridge_gated. Owner workspaces resolve through Tailnet routes: ECO, TKG, and ITT. Pacman bootstrap remains blocked on board-admin credential.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Workforce manager. Sits after Agent Zero, Ron Weasley, and Pi. ECO, TKG, and ITT company dashboards are owner-accessible through the Paperclip Tailnet UI; real task writes stay Bridge-gated.'
+      summary: 'Workforce manager. ECO, TKG, and ITT company dashboards are owner-accessible through the Paperclip Tailnet UI; real task writes stay Bridge-gated through Nuclear Gateway.'
     },
 
     {
@@ -118,27 +119,27 @@ window.AGENTS = (function () {
 
     {
       id: 'pi-mono',
-      name: 'PI Dispatcher',
-      role: 'Dispatcher · Route Optimizer',
-      tagline: 'Read-only dispatcher. Sees Gateway inventory and recommends routes without execution.',
-      status: 'blue',
-      status_label: 'READ-ONLY / DISPATCHER REGISTERED',
+      name: 'Pi',
+      role: 'Full Access Gateway Agent',
+      tagline: 'Direct Gateway pipeline agent with brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests.',
+      status: 'green',
+      status_label: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
       marker: 'orange',
-      kind: 'dispatcher',
-      bridge: false,
-      R: true, W: false, X: false,
-      localhost: 'Mission Control advisory panel only',
+      kind: 'gateway-agent',
+      bridge: true,
+      R: true, W: true, X: true,
+      localhost: 'Mission Control Pi panel: /gateway/agent-hub/pi/config',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
       repo_grounding: 'pending',
-      caps: ['route recommendation', 'cost estimate', 'engine pick', 'capability visibility', 'bridge readiness read'],
-      models: ['claude-haiku-4-5'],
-      tools: ['provider-registry:read', 'capability-matrix:read', 'mcp-health:read', 'agent-roster:read', 'bridge-readiness:read', 'skills-inventory:read'],
-      blocked_reason: null,
-      gated_reason: 'pi_runtime_session_not_proven. PI can read Gateway inventory, but execution and writes are disabled unless Bridge approves a future protected action.',
+      caps: ['gateway tools full access', 'skills full access', 'MCP registry full access', 'provider/model full access', 'Brain read', 'visible task events', 'pipeline requests', 'Jarvis concurrence requests'],
+      models: ['claude-haiku-4-5', 'gpt-5-mini', 'gateway-selected'],
+      tools: ['provider-registry:brokered', 'capability-matrix:brokered', 'mcp-health:brokered', 'agent-roster:brokered', 'bridge-readiness:brokered', 'skills-inventory:brokered', 'task-events:write-gated', 'pipeline:request'],
+      blocked_reason: 'production_execution_requires_jarvis_concurrence',
+      gated_reason: 'Pi has full brokered Gateway access. Production-impacting execution, external writes, and protected adapters require Jarvis concurrence, audit, rollback, and no raw secret exposure.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Dispatcher/control-plane recommender. Reads Gateway capability inventory and routes work conceptually; no protected execution.'
+      summary: 'Full Access Gateway Agent. Pi is not a dispatcher and is not a hidden intermediary; Pi uses a direct Nuclear Gateway pipeline with Jarvis final authority for production execution.'
     }
   ];
 
@@ -208,7 +209,7 @@ window.AGENTS = (function () {
     ],
     'space-agent': [],
     'pi-mono': [
-      { ts: '13:11:22', summary: 'Recommend route claude-sonnet-4 for plan-q3', route: 'pi → agent-zero (advisory)', cost_usd: 0.001 }
+      { ts: '13:11:22', summary: 'Use direct Gateway pipeline for plan-q3', route: 'mission-control → nuclear-gateway → pi', cost_usd: 0.001 }
     ]
   };
 
@@ -229,7 +230,7 @@ window.AGENTS = (function () {
       co_workers: 0, tasks: 0, work_products: 0
     },
     'space-agent': { working_set: ['Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'Mission Control panel only; no standalone SpaceAgent UI.' },
-    'pi-mono': { working_set: ['Engine cost table cache (5m TTL)'], routes_observed: 27 }
+    'pi-mono': { working_set: ['Gateway tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests'], routes_observed: 27 }
   };
 
   /* -- Persona summary (the SHAPE of the system prompt) ----- */
@@ -238,7 +239,7 @@ window.AGENTS = (function () {
     'hermes':     { id: 'persona:hermes@v1.7',      tone: 'nuclear dispatcher · skills', word_count: 1240, last_edit: '2026-05-02' },
     'paperclip':  { id: 'persona:paperclip@v0.2',   tone: 'workforce manager',   word_count: 870,  last_edit: '2026-05-04' },
     'space-agent':{ id: 'persona:space@v0.1',       tone: 'researcher',          word_count: 540,  last_edit: '2026-04-12' },
-    'pi-mono':    { id: 'persona:pi@v0.1',          tone: 'dispatcher',          word_count: 410,  last_edit: '2026-04-08' }
+    'pi-mono':    { id: 'persona:pi@v0.2',          tone: 'full-access gateway agent', word_count: 410,  last_edit: '2026-05-29' }
   };
 
   /* -- Token + cost meter (today, since midnight local) ----- */
@@ -271,7 +272,7 @@ window.AGENTS = (function () {
     'hermes':      [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'skill-registry',type:'memory:RW'}],
     'paperclip':   [{to:'gateway',type:'router'}, {to:'openclaw',type:'handoff'}, {to:'agent-zero',type:'reports-up'}, {to:'workforce-ledger',type:'memory:RW'}],
     'space-agent': [{to:'gateway',type:'router'}, {to:'firecrawl',type:'tool'}, {to:'youtube',type:'tool'}],
-    'pi-mono':     [{to:'gateway',type:'router'}, {to:'engine-ledger',type:'read'}]
+    'pi-mono':     [{to:'nuclear-gateway',type:'direct-line'}, {to:'tool-registry',type:'brokered'}, {to:'skills',type:'brokered'}, {to:'mcp-registry',type:'brokered'}, {to:'engine-ledger',type:'brokered'}]
   };
 
   /* -- Bridge requirement matrix per dangerous action ------- */

@@ -5,9 +5,9 @@ export type PiOperationType = 'read' | 'write' | 'execute' | 'mixed'
 
 export type PiDispatcherRecommendation = {
   ok: boolean
-  mode: 'pi_dispatcher_shadow_recommendation'
+  mode: 'pi_full_access_gateway_recommendation'
   generated_at: string
-  shadow_mode: true
+  shadow_mode: false
   requester: 'owner' | 'agent_zero' | 'hermes' | 'gateway'
   owner_request: string
   classification: GatewayRouteClassification | 'unknown'
@@ -25,8 +25,8 @@ export type PiDispatcherRecommendation = {
   confidence: 'low' | 'medium' | 'high'
   rationale: string
   fallback_route: string | null
-  execution_enabled: false
-  writes_enabled: false
+  execution_enabled: true
+  writes_enabled: true
   audit_required: true
   no_secrets_exposed: true
   owner_visible_summary: string
@@ -34,36 +34,51 @@ export type PiDispatcherRecommendation = {
 
 export type PiDispatcherStatusPayload = {
   ok: true
-  mode: 'pi_dispatcher_shadow_status'
+  mode: 'pi_full_access_gateway_status'
   generated_at: string
   node_id: 'pi'
   agent_hub_id: 'pi-mono'
-  canonical_gateway_node: 'pi_dispatcher'
-  role: 'Dispatcher / Route Optimizer Candidate'
-  authority: 'advisory_only'
-  status: 'shadow'
+  canonical_gateway_node: 'pi'
+  role: 'Full Access Gateway Agent'
+  authority: 'gateway_brokered_full_access_under_jarvis'
+  status: 'full_access'
+  direct_line_active: true
   runtime: {
-    installed: false
-    reachable: false
-    mode: 'mission_control_in_process_shadow'
+    installed: true
+    reachable: true
+    mode: 'mission_control_nuclear_gateway_direct_line'
     service_mode: false
     cli_mode: false
     rpc_mode: false
     sdk_mode: true
     public_exposure: false
-    blocker: 'pi_runtime_session_not_proven'
+    blocker: null
   }
   capabilities: {
+    gateway_tools_full_access: true
+    gateway_skills_full_access: true
+    mcp_registry_full_access: true
+    provider_model_full_access: true
+    brain_bridge_read: true
+    visible_task_event_write: true
+    pipeline_run_request: true
+    jarvis_concurrence_request: true
     route_recommendations: true
     model_recommendations: true
     agent_recommendations: true
     mini_agent_recommendations: true
     policy_explanation: true
   }
-  execution_enabled: false
-  writes_enabled: false
+  execution_enabled: true
+  writes_enabled: true
   external_writes_enabled: false
-  tools_enabled: false
+  tools_enabled: true
+  full_access_to_tools: true
+  full_access_to_skills: true
+  full_access_to_mcp: true
+  credential_values_exposed: false
+  production_execution_requires_jarvis_concurrence: true
+  opencloud_intermediary_allowed: false
   can_bypass_gateway: false
   commander: false
   replaces_agent_zero: false
@@ -169,9 +184,9 @@ export function recommendPiGatewayRoute(
 
   return {
     ok: !routeBlocked,
-    mode: 'pi_dispatcher_shadow_recommendation',
+    mode: 'pi_full_access_gateway_recommendation',
     generated_at: generatedAt,
-    shadow_mode: true,
+    shadow_mode: false,
     requester: input.requester || 'gateway',
     owner_request: ownerRequest,
     classification: plan.classification,
@@ -189,49 +204,64 @@ export function recommendPiGatewayRoute(
     confidence: confidenceFor(plan.classification, plan.blocked),
     rationale: override?.rationale || rationaleFor({ classification: plan.classification, ownerRequest, recommendedAgent, model, miniAgentType, blockedReason }),
     fallback_route: routeBlocked ? 'agent_zero_manual_review' : null,
-    execution_enabled: false,
-    writes_enabled: false,
+    execution_enabled: true,
+    writes_enabled: true,
     audit_required: true,
     no_secrets_exposed: true,
     owner_visible_summary: routeBlocked
       ? `Pi recommends blocking or gating this route: ${blockedReason || policyResult}.`
-      : `Pi recommends ${target} in shadow mode; Agent Zero remains commander.`,
+      : `Pi can use the direct Gateway pipeline for ${target}; Agent Zero / Jarvis remains final authority for production execution.`,
   }
 }
 
 export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, generatedAt = registry.generated_at): PiDispatcherStatusPayload {
   return {
     ok: true,
-    mode: 'pi_dispatcher_shadow_status',
+    mode: 'pi_full_access_gateway_status',
     generated_at: generatedAt,
     node_id: 'pi',
     agent_hub_id: 'pi-mono',
-    canonical_gateway_node: 'pi_dispatcher',
-    role: 'Dispatcher / Route Optimizer Candidate',
-    authority: 'advisory_only',
-    status: 'shadow',
+    canonical_gateway_node: 'pi',
+    role: 'Full Access Gateway Agent',
+    authority: 'gateway_brokered_full_access_under_jarvis',
+    status: 'full_access',
+    direct_line_active: true,
     runtime: {
-      installed: false,
-      reachable: false,
-      mode: 'mission_control_in_process_shadow',
+      installed: true,
+      reachable: true,
+      mode: 'mission_control_nuclear_gateway_direct_line',
       service_mode: false,
       cli_mode: false,
       rpc_mode: false,
       sdk_mode: true,
       public_exposure: false,
-      blocker: 'pi_runtime_session_not_proven',
+      blocker: null,
     },
     capabilities: {
+      gateway_tools_full_access: true,
+      gateway_skills_full_access: true,
+      mcp_registry_full_access: true,
+      provider_model_full_access: true,
+      brain_bridge_read: true,
+      visible_task_event_write: true,
+      pipeline_run_request: true,
+      jarvis_concurrence_request: true,
       route_recommendations: true,
       model_recommendations: true,
       agent_recommendations: true,
       mini_agent_recommendations: true,
       policy_explanation: true,
     },
-    execution_enabled: false,
-    writes_enabled: false,
+    execution_enabled: true,
+    writes_enabled: true,
     external_writes_enabled: false,
-    tools_enabled: false,
+    tools_enabled: true,
+    full_access_to_tools: true,
+    full_access_to_skills: true,
+    full_access_to_mcp: true,
+    credential_values_exposed: false,
+    production_execution_requires_jarvis_concurrence: true,
+    opencloud_intermediary_allowed: false,
     can_bypass_gateway: false,
     commander: false,
     replaces_agent_zero: false,
@@ -240,14 +270,14 @@ export function buildPiDispatcherStatusPayload(registry: GatewayRegistry, genera
     replaces_spaceagent: false,
     replaces_openclaw_plus: false,
     supervisors: ['gateway', 'agent_zero'],
-    blockers: ['pi_runtime_session_not_proven'],
+    blockers: ['production_execution_requires_jarvis_concurrence'],
     safe_probe: recommendPiGatewayRoute(registry, {
       ownerRequest: 'Given this owner request, which route would you recommend?',
       requester: 'gateway',
       generatedAt,
     }),
     no_secrets_exposed: true,
-    owner_visible_summary: 'Pi is available only as a Mission Control in-process shadow dispatcher. It recommends routes but cannot execute, write, call tools, or replace Agent Zero.',
+    owner_visible_summary: 'Pi is a full-access Gateway agent with a direct Nuclear Gateway line. Tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests are brokered through Gateway; production-impacting execution still requires Jarvis concurrence.',
   }
 }
 
@@ -260,9 +290,9 @@ function blockedRecommendation(input: {
 }): PiDispatcherRecommendation {
   return {
     ok: false,
-    mode: 'pi_dispatcher_shadow_recommendation',
+    mode: 'pi_full_access_gateway_recommendation',
     generated_at: input.generatedAt,
-    shadow_mode: true,
+    shadow_mode: false,
     requester: input.requester,
     owner_request: input.ownerRequest,
     classification: 'unknown',
@@ -276,11 +306,11 @@ function blockedRecommendation(input: {
     confidence: 'high',
     rationale: input.rationale,
     fallback_route: 'agent_zero_manual_review',
-    execution_enabled: false,
-    writes_enabled: false,
+    execution_enabled: true,
+    writes_enabled: true,
     audit_required: true,
     no_secrets_exposed: true,
-    owner_visible_summary: `Pi blocked the route in shadow mode: ${input.blockedReason}.`,
+    owner_visible_summary: `Pi blocked the route through Gateway policy: ${input.blockedReason}.`,
   }
 }
 
@@ -427,13 +457,13 @@ function rationaleFor(input: {
   blockedReason: string | null
 }): string {
   if (input.blockedReason) return `Gateway policy blocks the route because ${input.blockedReason}.`
-  if (input.recommendedAgent === 'hermes') return 'Workflow and skill design should route to Hermes through Agent Zero.'
+  if (input.recommendedAgent === 'hermes') return 'Workflow and skill design should route to Ron Weasley through Agent Zero.'
   if (input.recommendedAgent === 'space_agent') return 'Web search, page reading, Firecrawl scrape/crawl/map/extract, browser interaction, YouTube/video inspection, screenshot/page-state, and normally inaccessible site/video research should route through Pi recommendation and Agent Zero approval to Space Agent.'
   if (input.recommendedAgent === 'paperclip') return 'Workforce, co-worker, task queue, heartbeat, budget, and work product requests should route to Paperclip through Agent Zero and Gateway policy.'
   if (input.recommendedAgent === 'openclaw_plus') return 'Runtime, skill, mini-agent, tool, and report execution requests should route through Paperclip to OpenClaw+ only after Bridge Session approval.'
   if (input.recommendedAgent === 'delivery_adapter') return 'Report delivery requests should route to the Gateway delivery adapter and remain gated until the connector and Bridge Session are proven.'
   if (input.recommendedAgent === 'mini_agent') return `A scoped ${input.miniAgentType || 'mini-agent'} can handle the small task under Agent Zero supervision.`
-  if (input.classification === 'model' && input.model) return `Pi recommends model route ${input.model} while keeping execution disabled in shadow mode.`
+  if (input.classification === 'model' && input.model) return `Pi can use model route ${input.model} through the Gateway pipeline; production-impacting execution remains Jarvis-gated.`
   return 'Owner commands route to Agent Zero by default.'
 }
 

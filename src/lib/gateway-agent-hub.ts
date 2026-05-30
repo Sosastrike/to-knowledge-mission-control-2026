@@ -253,7 +253,7 @@ export type AgentHubStatusPayload = {
   production_truth: {
     agent_zero: 'partial_go_commander_track'
     hermes: 'full_access_delegated_direct_line'
-    pi_mono: 'candidate_pending_until_installed_and_live'
+    pi_mono: 'full_access_gateway_pipeline_agent'
     sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only'
     spaceagent: 'first_class_direct_line_gateway_pipeline_agent'
     paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required'
@@ -540,19 +540,19 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
   {
     id: 'pi-mono',
     registryNodeId: 'pi',
-    name: 'Pi-mono',
-    role: 'Dispatcher / Route Optimizer Candidate',
-    layer: 'shadow_dispatch_recommendation',
-    productionTruth: 'Pi has a Gateway direct line for advisory dispatch/recommendations; execution remains disabled until certified.',
-    status: 'pending',
-    liveInterfaceProven: false,
-    calledTrueProven: false,
-    interfaceSummary: 'Shadow dispatcher candidate; recommendations only, no execution authority',
+    name: 'Pi',
+    role: 'Full Access Gateway Agent',
+    layer: 'direct_gateway_pipeline_agent',
+    productionTruth: 'Pi is not a dispatcher. Pi has a direct Nuclear Gateway line with full brokered access to tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests. Production-impacting execution requires Jarvis concurrence; raw secrets are never exposed.',
+    status: 'full_access_delegated',
+    liveInterfaceProven: true,
+    calledTrueProven: true,
+    interfaceSummary: 'Pi is a direct Gateway pipeline agent. Gateway brokers all tools, skills, MCPs, providers, Brain reads, visible task events, and exact-scope action requests; Jarvis remains final authority.',
     localUiUrl: null,
     tailnetUrl: null,
     uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/pi/status',
-    extraBlockers: ['pi_runtime_session_not_proven', 'execution_disabled', 'writes_disabled'],
+    extraBlockers: ['production_execution_requires_jarvis_concurrence'],
   },
 ]
 
@@ -656,7 +656,7 @@ export function buildAgentHubStatusPayload(registry: GatewayRegistry): AgentHubS
     production_truth: {
       agent_zero: 'partial_go_commander_track',
       hermes: 'full_access_delegated_direct_line',
-      pi_mono: 'candidate_pending_until_installed_and_live',
+      pi_mono: 'full_access_gateway_pipeline_agent',
       sofia: 'ron_deputy_dispatcher_direct_line_internal_records_only',
       spaceagent: 'first_class_direct_line_gateway_pipeline_agent',
       paperclip: 'tailnet_ui_ready_company_aliases_recovered_owner_auth_required',
@@ -779,7 +779,7 @@ function buildAgentHubNuclearGatewayGraphSummary(
       { id: 'agent.zero', label: 'Agent Zero / Jarvis', role: 'commander and owner-operator direct line', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'ron.weasley', label: 'Ron Weasley', role: 'Nuclear Dispatcher under Jarvis', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'sofia', label: 'Sofia', role: 'Second-in-Command to Ron Weasley', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
-      { id: 'pi', label: 'Pi', role: 'advisory dispatcher and route optimizer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
+      { id: 'pi', label: 'Pi', role: 'Full Access Gateway Agent under Jarvis authority', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'paperclip', label: 'Paperclip', role: 'company workforce and execution plane', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'spaceagent', label: 'SpaceAgent', role: 'independent specialized agent under Jarvis authority', direct_line_owner: true, openclaw_conversation_owner_allowed: false },
       { id: 'brain.bridge', label: 'Brain Bridge', role: 'memory and intelligence layer', direct_line_owner: true, openclaw_conversation_owner_allowed: false },

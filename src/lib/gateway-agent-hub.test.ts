@@ -114,7 +114,7 @@ describe('Gateway Agent Hub', () => {
       'Mission Control',
       'Agent Zero / Jarvis',
       'SpaceAgent',
-      'Pi Dispatcher',
+      'Pi',
       'Paperclip',
       'OpenClaw / OpenCloud Supporting Runtime Only',
     ]))
@@ -220,13 +220,15 @@ describe('Gateway Agent Hub', () => {
       routes: { bridge_status: '/api/bridge/spaceagent/status' },
     })
     expect(payload.agents.find((agent) => agent.id === 'pi-mono')).toMatchObject({
-      role: 'Dispatcher / Route Optimizer Candidate',
-      status: 'pending',
+      name: 'Pi',
+      role: 'Full Access Gateway Agent',
+      status: 'full_access_delegated',
+      called_true_proven: true,
       routes: {
         bridge_status: '/api/bridge/pi/status',
       },
     })
-    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBe('pi_runtime_session_not_proven')
+    expect(payload.agents.find((agent) => agent.id === 'pi-mono')?.blocked_reason).toBe('production_execution_requires_jarvis_concurrence')
     expect(payload.design_handoff.expected_files_present).toBe(true)
     expect(payload.design_handoff.production_uses_mock_data).toBe(false)
     for (const agent of payload.agents) {
@@ -272,7 +274,7 @@ describe('Gateway Agent Hub', () => {
     expect(normalizeAgentHubAgentId('pi')).toBe('pi-mono')
     expect(normalizeAgentHubAgentId('space_agent')).toBe('spaceagent')
     expect(normalizeAgentHubAgentId('hermes_webui')).toBe('hermes-webui')
-    expect(health).toMatchObject({ agent_id: 'pi-mono', execution_enabled: false, writes_enabled: false })
+    expect(health).toMatchObject({ agent_id: 'pi-mono', status: 'full_access_delegated', execution_enabled: false, writes_enabled: false })
     expect(routes?.registered_flows.length).toBeGreaterThan(0)
     expect(routes?.trace_direct_line).toMatchObject({
       label: 'Trace Direct Line',
@@ -379,7 +381,8 @@ describe('Gateway Agent Hub', () => {
     expect(ronBlock).toContain('protected writes require Jarvis concurrence')
     expect(ronBlock).not.toContain('Ron Wegsley')
     expect(ronBlock).not.toContain("status: 'yellow'")
-    expect(source).toContain('Agent Zero / Jarvis → Ron Weasley → Pi → Paperclip')
+    expect(source).toContain('Owner → Mission Control → Nuclear Gateway → direct agent line')
+    expect(source).toContain('Full Access Gateway Agent')
     expect(source).toContain("label: 'Open UI'")
   })
 

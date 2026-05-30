@@ -137,7 +137,7 @@ export const AGENT_UPDATE_COMPONENTS: AgentUpdateComponent[] = [
   },
   {
     id: 'pi',
-    label: 'Pi Dispatcher',
+    label: 'Pi',
     agent_id: 'pi',
     surface: 'agent-runtime',
     status_url: 'http://127.0.0.1:3337/api/bridge/pi/status',
@@ -145,7 +145,7 @@ export const AGENT_UPDATE_COMPONENTS: AgentUpdateComponent[] = [
     auto_apply_supported: false,
     requires_owner_restart: false,
     requires_sudo_or_polkit: false,
-    rollback: 'Pi is a Mission Control dispatcher registration; no standalone updater is registered.',
+    rollback: 'Pi is a Mission Control full-access Gateway pipeline registration; no standalone updater is registered.',
     safe_policy: 'check_only_no_standalone_updater',
   },
   {

@@ -173,7 +173,7 @@ const paperclipControlRoute = (mode: string): string => agentControlRoute('paper
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
 const AGENT_AUTO_UPDATE_RUN_ROUTE = '/api/bridge/agent-updates/run'
 const AUTO_UPDATE_SAFE_TARGETS = ['Ron Weasley WebUI', 'Ron Weasley Agent'] as const
-const AUTO_UPDATE_VISIBLE_TASK_TARGETS = ['Mission Control', 'Agent Zero / Jarvis', 'SpaceAgent', 'Pi Dispatcher', 'Paperclip', 'OpenClaw / OpenCloud Supporting Runtime Only'] as const
+const AUTO_UPDATE_VISIBLE_TASK_TARGETS = ['Mission Control', 'Agent Zero / Jarvis', 'SpaceAgent', 'Pi', 'Paperclip', 'OpenClaw / OpenCloud Supporting Runtime Only'] as const
 const GATEWAY_ROUTE_TRUTH_STATUS_ROUTE = '/api/gateway/agent-hub/status'
 const GATEWAY_ROUTE_TRUTH_ROUTES = ['/api/gateway/status', '/api/gateway/registry', '/api/gateway/flows', '/api/bridge/playwright-mcp/status'] as const
 const GATEWAY_ROUTE_TRUTH_LEGACY_FIXES = ['/tools -> /gateway/tools', '/routes -> /api/gateway/flows', '/health -> /api/gateway/status'] as const
@@ -222,19 +222,19 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
-    name: 'PI Dispatcher',
-    service: 'Mission Control dispatcher contract',
-    localBind: 'none',
-    port: 'none',
+    name: 'Pi',
+    service: 'Mission Control full-access Gateway pipeline',
+    localBind: 'Mission Control authenticated Gateway',
+    port: 'Gateway-brokered',
     localUrl: null,
     tailnetUrl: null,
     proxyRoute: '/api/bridge/pi/status',
     authRequired: true,
-    status: 'READ_ONLY / DISPATCHER REGISTERED - EXECUTION DISABLED',
-    blocker: 'pi_runtime_session_not_proven · PI can read Gateway capability inventory but has no standalone runtime/UI and cannot execute writes.',
-    nextFix: 'Use PI as a read-only dispatcher/control-plane recommender. Protected routing and execution require Bridge Session and owner approval.',
+    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
+    blocker: 'production_execution_requires_jarvis_concurrence · Pi has brokered Gateway access but production-impacting execution stays Jarvis-gated. No raw secrets, cookies, .env values, or auth files are exposed.',
+    nextFix: 'Use Pi as a full-access Gateway agent. Tools, skills, MCPs, providers, Brain reads, visible task events, exact-scope adapter requests, and pipeline requests route directly through Nuclear Gateway.',
     buttons: {
-      ui: disabled('No standalone Pi UI/service has been found.'),
+      ui: enabled(agentControlRoute('pi', 'config')),
       config: enabled(agentControlRoute('pi', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: enabled(agentControlRoute('pi', 'recommend')),
@@ -615,7 +615,7 @@ function AgentInterfaceInventory({
               <LinkButton button={agent.buttons.ui}>Open UI</LinkButton>
               <LinkButton button={agent.buttons.config}>Open Config</LinkButton>
               <LinkButton button={agent.buttons.brain}>Open Brain</LinkButton>
-              <LinkButton button={agent.buttons.chat}>{agent.name === 'PI Dispatcher' ? 'Open Recommend' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
+              <LinkButton button={agent.buttons.chat}>{agent.name === 'Pi' ? 'Open Pi' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
               <LinkButton button={agent.buttons.tools}>Open Tools</LinkButton>
               <LinkButton button={agent.buttons.health}>Health</LinkButton>
             </div>
@@ -724,13 +724,13 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
   },
   pi: {
     slug: 'pi',
-    name: 'PI Dispatcher',
-    role: 'Gateway dispatcher / route optimizer',
-    status: 'READ_ONLY / DISPATCHER REGISTERED - EXECUTION DISABLED',
+    name: 'Pi',
+    role: 'Full Access Gateway Agent',
+    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
     endpoint: '/api/bridge/pi/status',
-    uiHref: null,
-    blocker: 'pi_runtime_session_not_proven',
-    nextAction: 'PI can inspect Gateway provider/capability/MCP/agent/Bridge/skills inventory and recommend lanes. It cannot execute writes or protected actions without Bridge Session and owner approval.',
+    uiHref: agentControlRoute('pi', 'config'),
+    blocker: 'production_execution_requires_jarvis_concurrence',
+    nextAction: 'Pi has direct brokered Gateway access to tools, skills, MCPs, providers, Brain reads, visible task events, exact-scope adapter requests, and pipeline requests. Production-impacting execution remains Jarvis-gated.',
     modes: ['config', 'recommend', 'tools'],
   },
   spaceagent: {
@@ -1396,7 +1396,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
     overview: 'Mission Control command center for the selected agent.',
     config: 'Inspect runtime, owner access, blockers, and next safe configuration actions.',
     chat: 'Safe chat/test surface. If a real chat route is not proven, this page only shows status and the exact blocker.',
-    recommend: 'Advisory recommendations only. Execution and writes remain disabled.',
+    recommend: 'Full Access Gateway Agent recommendation surface. Gateway brokers tools, skills, MCPs, providers, visible task events, exact-scope adapter requests, and pipeline requests while production execution remains Jarvis-gated.',
     research: 'Research control surface for browser evidence packets, Firecrawl readiness, and YouTube transcript state.',
     ui: 'Paperclip workspace selector for the three-company owner profile. Open a visible company through its Tailnet dashboard link; writes remain Bridge-gated.',
     tools: 'Readable tool inventory. Real task creation remains Bridge-gated; this page does not perform writes.',
@@ -1514,15 +1514,15 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid pi-only">
           <article className="control-card">
             <strong>Gateway visibility</strong>
-            <span>PI can read provider registry, capability matrix, MCP health, agent roster, Bridge readiness, and skills/tools inventory through Mission Control routes.</span>
+            <span>Pi has full brokered Gateway visibility across provider registry, capability matrix, MCP health, agent roster, Bridge readiness, skills, tools, Brain reads, visible tasks, and pipeline requests.</span>
           </article>
           <article className="control-card">
-            <strong>Runtime execution</strong>
-            <span>visible_to_agent_runtime is false until a PI runtime/session is proven. PI cannot execute writes, run tools, or dispatch protected work.</span>
+            <strong>Direct Gateway pipeline</strong>
+            <span>Pi is not a dispatcher. The direct line is owner to Mission Control to Nuclear Gateway to Pi, with tools and skills brokered by Gateway.</span>
           </article>
           <article className="control-card">
             <strong>Bridge policy</strong>
-            <span>Any write/run/mutate recommendation stays Bridge-gated with exact scope, owner approval, audit trail, and rollback.</span>
+            <span>Writes, adapter execution, and production-impacting actions require exact scope, Jarvis concurrence, audit trail, rollback, and no raw secret exposure.</span>
           </article>
         </section>
       )}
@@ -1530,9 +1530,9 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid pi-only">
           {[
             ['Web research', 'Recommend SpaceAgent, Firecrawl, or Playwright based on current blockers.'],
-            ['Workflow design', 'Recommend Ron Weasley for skill/workflow planning through the Nuclear Dispatcher command center.'],
+            ['Workflow design', 'Use the Gateway pipeline to work with Ron Weasley for skill/workflow planning through the Nuclear Dispatcher command center.'],
             ['Workforce task', 'Recommend Paperclip for workspace-scoped workforce organization; writes stay gated.'],
-            ['Runtime action', 'Recommend OpenClaw/OpenCloud only as an explicit supporting runtime/tool after Bridge approval and runtime proof.'],
+            ['Runtime action', 'Use OpenClaw/OpenCloud only as an explicit supporting runtime/tool after Bridge approval and runtime proof.'],
             ['Provider/model choice', 'Read provider registry and token governor state without seeing secrets.'],
             ['Brain visibility', 'Read Brain readiness status; memory writes remain Bridge-gated.'],
           ].map(([title, copy]) => (

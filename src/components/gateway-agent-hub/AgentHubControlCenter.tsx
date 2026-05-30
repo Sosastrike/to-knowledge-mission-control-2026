@@ -52,7 +52,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </nav>
 
         <section className='rounded-lg border border-emerald-300/25 bg-emerald-300/8 p-4 text-sm leading-6 text-emerald-100'>
-          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi optimizes dispatch routes, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
+          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi is a Full Access Gateway Agent with direct brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
         </section>
 
         <DirectAgentLinesPanel status={status} />
@@ -65,7 +65,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
             <div className='flex flex-wrap items-end justify-between gap-3'>
               <div>
                 <h2 className='text-lg font-semibold text-white'>Operating Chain</h2>
-                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Mission Control, then Nuclear Gateway, then the selected direct agent line. Ron dispatches under Jarvis, Sofia supports Ron as deputy for internal plans and reviews, Pi advises routes, and Paperclip executes scoped workforce work; OpenCloud and OpenClaw are supporting tools only.</p>
+                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Mission Control, then Nuclear Gateway, then the selected direct agent line. Ron dispatches under Jarvis, Sofia supports Ron as deputy for internal plans and reviews, Pi uses a full-access direct Gateway pipeline, and Paperclip executes scoped workforce work; OpenCloud and OpenClaw are supporting tools only.</p>
               </div>
               <StatusBadge label='policy enforced' status='read_only' />
             </div>
@@ -135,7 +135,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
             <dl className='mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2'>
               <Fact label='fake done' value='blocked' />
               <Fact label='external writes' value='Bridge Session required' />
-              <Fact label='Pi execution' value='disabled' />
+              <Fact label='Pi execution' value='FULL ACCESS / DIRECT GATEWAY PIPELINE' />
               <Fact label='Tony authority' value='retired/archive only' />
             </dl>
           </article>
@@ -415,7 +415,7 @@ export function AgentHubPaperclipPage({
           <h2 className='text-lg font-semibold text-white'>Workforce Chain</h2>
           <p className='mt-3 text-sm leading-6 text-slate-300'>Paperclip has its own direct Nuclear Gateway line as the company/workforce system. It organizes co-worker agents, mini-agent requests, task queues, budgets, heartbeats, approvals, work products, task status, supervision, and assignment history; OpenClaw/OpenCloud can be invoked only as an explicit supporting runtime/tool.</p>
           <div className='mt-4 grid gap-3 md:grid-cols-2'>
-            <Fact label='Gateway route' value='Owner / Jarvis / Ron Weasley / Pi -> Nuclear Gateway -> Paperclip' />
+            <Fact label='Gateway route' value='Owner / Jarvis / Ron Weasley / Pi -> Nuclear Gateway -> target direct line' />
             <Fact label='OpenCloud intermediary' value='false' />
             <Fact label='execution enabled' value={agent.execution_enabled ? 'yes' : 'no'} />
             <Fact label='public exposure' value={agent.interface.public_exposure ? 'yes' : 'no'} />
@@ -600,7 +600,7 @@ function GatewayChainCanvas() {
     { label: 'Nuclear Gateway', note: 'policy, routing, registry, audit, credentials', tone: 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' },
     { label: 'Agent Zero / Jarvis', note: 'commander and owner-control layer', tone: 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' },
     { label: 'Ron Weasley', note: 'Nuclear Dispatcher and workflow/skill optimizer', tone: 'border-violet-300/35 bg-violet-300/10 text-violet-100' },
-    { label: 'Pi', note: 'dispatcher and route optimizer', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
+    { label: 'Pi', note: 'Full Access Gateway Agent', tone: 'border-orange-300/35 bg-orange-300/10 text-orange-100' },
     { label: 'Paperclip', note: 'workforce control plane', tone: 'border-amber-300/35 bg-amber-300/10 text-amber-100' },
     { label: 'SpaceAgent / Brain Bridge', note: 'research and memory direct lines', tone: 'border-sky-300/35 bg-sky-300/10 text-sky-100' },
     { label: 'OpenCloud / OpenClaw', note: 'supporting runtime only, not an agent line', tone: 'border-slate-400/25 bg-slate-400/10 text-slate-200' },
@@ -683,7 +683,7 @@ function PolicyPanel() {
         <PolicyLine label='Read actions' value='allowed through authenticated routes' />
         <PolicyLine label='Writes' value='Bridge Session required' />
         <PolicyLine label='Execution' value='Agent Zero authority plus Nuclear Gateway policy' />
-        <PolicyLine label='Pi' value='advisory only, no writes, no execution' />
+        <PolicyLine label='Pi' value='Full Access Gateway Agent; tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests are brokered by Gateway. Production execution remains Jarvis-gated.' />
         <PolicyLine label='Ron Weasley' value='direct Nuclear Gateway line; executes only Jarvis-signed exact scopes' />
         <PolicyLine label='Tony' value='retired/archive only' />
       </div>

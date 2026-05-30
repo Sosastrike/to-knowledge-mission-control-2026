@@ -10,6 +10,7 @@ export type AgentSystemType =
   | 'commander'
   | 'nuclear_dispatcher'
   | 'advisory_dispatcher'
+  | 'gateway_full_access_agent'
   | 'company_workforce_system'
   | 'specialist_agent_system'
   | 'brain_intelligence_system'
@@ -49,6 +50,7 @@ export type AgentRoutingLine = {
   allowed_as_tool?: boolean
   allowed_as_intermediary?: boolean
   allowed_as_commander?: boolean
+  opencloud_intermediary_allowed?: false
   blocker?: string | null
   legacy_names?: string[]
 }
@@ -158,6 +160,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     allowed_as_tool: false,
     allowed_as_intermediary: false,
     allowed_as_commander: false,
+    opencloud_intermediary_allowed: false,
   }),
   line({
     agent_id: 'hermes-webui',
@@ -174,15 +177,39 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
   }),
   line({
     agent_id: 'pi',
-    display_name: 'Pi Advisory Dispatcher',
-    system_type: 'advisory_dispatcher',
+    display_name: 'Pi',
+    system_type: 'gateway_full_access_agent',
     communication_route: '/api/bridge/pi/*',
     gateway_route: '/api/bridge/pi/*',
     conversation_owner: 'pi',
     reports_to: 'agent-zero-jarvis',
-    allowed_tools: ['read_only_recommendations', 'gateway_status'],
+    allowed_tools: [
+      'gateway.tools.full_access',
+      'gateway.skills.full_access',
+      'mcp.registry.full_access',
+      'provider.model.full_access',
+      'brain.bridge.read',
+      'task.event.write',
+      'certified_exact_scope_adapters',
+      'pipeline.run.request',
+      'jarvis.concurrence.request',
+    ],
     direct_line_active: true,
-    execution_policy: 'advisory_only_until_certified',
+    execution_policy: 'full_brokered_gateway_access_jarvis_gated_for_production',
+    allowed_actions: [
+      'read_gateway_state',
+      'read_tools_skills_mcp_and_providers',
+      'create_internal_recommendation',
+      'write_visible_task_event',
+      'request_exact_scope_adapter',
+      'request_pipeline_run',
+      'request_jarvis_concurrence',
+    ],
+    write_policy: 'gateway_brokered_exact_scope_jarvis_concurrence_for_production',
+    allowed_as_tool: false,
+    allowed_as_intermediary: false,
+    allowed_as_commander: false,
+    opencloud_intermediary_allowed: false,
   }),
   line({
     agent_id: 'paperclip',

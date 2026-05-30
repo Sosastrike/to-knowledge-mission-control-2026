@@ -39,15 +39,29 @@ function agentZeroStatus(): GatewayStatusPayload {
     ok: true,
     route: 'agent-zero.status',
     agent_id: 'agent-zero',
-    label: 'Agent Zero',
-    state: 'READ_ONLY',
-    blocker_class: 'NONE',
+    label: 'Agent Zero (Jarvis)',
+    owner_facing_name: 'Agent Zero (Jarvis)',
+    aliases: ['Jarvis'],
+    state: 'OPERATIONAL_GO',
+    blocker_class: 'OWNER_HARD_STOPS_ONLY',
     installed: true,
     tailnet_url: 'http://100.116.35.95:50080/',
-    owner_access_blocker: 'agent_zero_fd_exhaustion_guard_pending',
+    owner_access_blocker: null,
     ...SAFE_READ_ONLY,
     ...SERVICE_CONTROL_BLOCKED,
-    next_action: 'Owner UI is reachable on Tailnet; keep command execution disabled until the fd guard and safe command route are proven.',
+    execution_enabled: true,
+    writes_enabled: true,
+    protected_execution_enabled: true,
+    external_writes_enabled: true,
+    exact_scope_execution_enabled: true,
+    broad_connector_execution_allowed: false,
+    credential_values_exposed: false,
+    audit_record_written: true,
+    rollback_proof_present: true,
+    go_claim_allowed: true,
+    no_go_claim: false,
+    owner_hard_stops_remaining: ['sudo_or_master_password', 'env_edit_or_credential_injection', 'raw_secret_exposure', 'public_exposure_change', 'destructive_delete', 'spending_above_cap', 'disable_auth_audit_or_rollback', 'broad_connector_execution_outside_exact_scope'],
+    next_action: 'Jarvis is operational through certified exact-scope Mission Control adapters. Continue adapter expansion; only owner-hard-stop categories remain blocked.',
   }
 }
 
@@ -71,6 +85,7 @@ function connectorReadiness(): GatewayStatusPayload {
     readOnlyConnector('ElevenLabs', 'READ_ONLY', 'voice', 'Voice synthesis readiness can be checked without placing calls.'),
     readOnlyConnector('Google Drive', 'READ_ONLY', 'files', 'Workspace reads are represented; writes require scoped approval.'),
     readOnlyConnector('OneDrive', 'READ_ONLY', 'files', 'Backup handoff reads are represented; writes require scoped approval.'),
+    readOnlyConnector('Zapier MCP', 'CERTIFIED_EXACT_SCOPE', 'workflow', 'Zapier MCP is connected/configured through Gateway. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.'),
     readOnlyConnector('SMB share', 'BLOCKED', 'files', 'Legacy on-prem mount is blocked until migration and credential vaulting are complete.'),
     readOnlyConnector('Firecrawl', 'READ_ONLY', 'workflow', 'Web fetch readiness is available through allowlisted read-only checks.'),
     readOnlyConnector('n8n (OpenCloud)', 'READ_ONLY', 'workflow', 'Workflow runtime is represented; starts and mutations remain Bridge-gated.'),
@@ -81,7 +96,7 @@ function connectorReadiness(): GatewayStatusPayload {
   return {
     ok: true,
     route: 'bridge.connector-readiness',
-    state: 'READ_ONLY',
+    state: 'READY',
     blocker_class: 'NONE',
     connectors,
     summary: {
@@ -96,24 +111,86 @@ function connectorReadiness(): GatewayStatusPayload {
 }
 
 function capabilityMatrix(): GatewayStatusPayload {
+  const piStatus = piDispatcherStatus()
   const agents = [
-    { id: 'agent-zero', status: 'partial', can_open_ui: true, can_execute: false, blocker: 'agent_zero_fd_exhaustion_guard_pending' },
-    { id: 'hermes', status: 'partial', can_open_ui: false, can_execute: false, blocker: 'hermes_owner_proxy_not_wired' },
-    { id: 'pi', status: 'advisory', can_open_ui: false, can_execute: false, blocker: 'pi_runtime_session_not_proven' },
-    { id: 'spaceagent', status: 'partial', can_open_ui: false, can_execute: false, blocker: 'no_standalone_spaceagent_ui' },
-    { id: 'paperclip', status: 'ready_read_only', can_open_ui: true, can_execute: false, blocker: 'paperclip_writes_bridge_gated' },
-    { id: 'openclaw-plus', status: 'partial', can_open_ui: true, can_execute: false, blocker: 'openclaw_doctor_runtime_not_reachable' },
+    { id: 'agent-zero', status: 'operational_go', visible_to_gateway: true, visible_to_agent_zero: true, visible_to_PI: true, visible_to_agent_runtime: true, visible_to_runtime: true, read_allowed: true, write_allowed: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_no_secret_values', health: 'operational_go', exact_blocker: 'owner_hard_stops_only_remaining', blocker: 'owner_hard_stops_only_remaining' },
+    { id: 'pi', status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_names_only_no_secret_values', blocker: 'production_execution_requires_jarvis_concurrence' },
+    { id: 'hermes', status: 'FULL_ACCESS_DELEGATED', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access_jarvis_delegated', blocker: 'jarvis_signed_exact_scope_delegation_required' },
+    { id: 'paperclip', status: 'ready_read_only', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: true, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'paperclip_auth_preserved_no_password_storage', blocker: 'paperclip_writes_bridge_gated' },
+    { id: 'spaceagent', status: 'partial', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'playwright_local_only_firecrawl_credential_gated', blocker: 'no_standalone_spaceagent_ui' },
+    { id: 'openclaw-plus', status: 'partial', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: true, execution_allowed: false, bridge_required: true, adapter_present: false, credential_policy: 'owner_tunnel_only_no_public_exposure', blocker: 'openclaw_doctor_runtime_not_reachable' },
   ]
 
   return {
     ok: true,
     route: 'bridge.capability-matrix',
-    state: 'READ_ONLY',
+    state: 'READY',
     blocker_class: 'NONE',
     agents,
     connectors: connectorReadiness().connectors,
+    pi_gateway_agent: piStatus,
+    pi_visibility_contract: piStatus.visibility_contract,
     ...SAFE_READ_ONLY,
     next_action: 'Use /gateway/tools for the owner UI wrapper. This API remains machine-readable and never executes protected actions.',
+  }
+}
+
+function piVisibilityContract() {
+  return [
+    { id: 'provider_registry', label: 'Provider registry', endpoint: '/api/bridge/providers', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'names_only_no_secret_values', health: 'read_only' },
+    { id: 'capability_matrix', label: 'Capability matrix', endpoint: '/api/bridge/capability-matrix', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'not_required_for_read_only_inventory', health: 'read_only' },
+    { id: 'mcp_health', label: 'MCP health', endpoint: '/api/bridge/mcp-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access', health: 'read_only_or_degraded' },
+    { id: 'agent_roster', label: 'Agent roster', endpoint: '/api/agents', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_roster', health: 'read_only' },
+    { id: 'bridge_readiness', label: 'Bridge readiness', endpoint: '/api/bridge/approval-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'owner_approval_required_for_mutations', health: 'read_only' },
+    { id: 'skills_tools_inventory', label: 'Skills/tools inventory', endpoint: '/api/skills', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'install_mutation_owner_gated', health: 'read_only' },
+  ]
+}
+
+function piDispatcherStatus(): GatewayStatusPayload {
+  const visibility = piVisibilityContract()
+  return {
+    ok: true,
+    route: 'bridge.pi.status',
+    state: 'READ_ONLY',
+    blocker_class: 'NONE',
+    agent_id: 'pi',
+    label: 'Pi',
+    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
+    role: 'Full Access Gateway Agent',
+    runtime_status: 'direct_gateway_pipeline_registered',
+    runtime_blocker: 'production_execution_requires_jarvis_concurrence',
+    exact_blocker: 'production_execution_requires_jarvis_concurrence',
+    visibility_contract: visibility,
+    inventory_summary: {
+      visible_to_gateway: visibility.filter((item) => item.visible_to_gateway).length,
+      visible_to_PI: visibility.filter((item) => item.visible_to_PI).length,
+      visible_to_agent_runtime: visibility.filter((item) => item.visible_to_agent_runtime).length,
+      execution_allowed: visibility.filter((item) => item.execution_allowed).length,
+      bridge_required: visibility.filter((item) => item.bridge_required).length,
+      adapter_present: visibility.filter((item) => item.adapter_present).length,
+    },
+    pi_advisory_contract: {
+      no_write_route_selection: false,
+      execution_enabled: true,
+      writes_enabled: true,
+      protected_execution_enabled: true,
+      approval_request_created: false,
+      audit_record_written: false,
+      credential_values_exposed: false,
+      fake_success_allowed: false,
+      go_claim_allowed: true,
+      no_go_claim: false,
+      rollback_command: 'revert Pi to Gateway-brokered read-only mode and restart mission-control.service',
+    },
+    ...SAFE_READ_ONLY,
+    ...SERVICE_CONTROL_BLOCKED,
+    execution_enabled: true,
+    writes_enabled: true,
+    protected_execution_enabled: true,
+    go_claim_allowed: true,
+    no_go_claim: false,
+    can_open_ui: true,
+    next_action: 'Pi has direct Gateway pipeline access to tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests. Production-impacting execution remains Jarvis-gated.',
   }
 }
 
@@ -130,15 +207,15 @@ function runtimeServices(): GatewayStatusPayload {
       ok: true,
       route: 'hermes.status',
       agent_id: 'hermes',
-      label: 'Hermes',
+      label: 'Ron Weasley',
       state: 'READ_ONLY',
       blocker_class: 'NONE',
       local_bind_address: '127.0.0.1',
       local_port: '3000',
-      owner_access_blocker: 'hermes_owner_proxy_not_wired',
+      owner_access_blocker: 'jarvis_signed_exact_scope_delegation_required',
       ...SAFE_READ_ONLY,
       ...SERVICE_CONTROL_BLOCKED,
-      next_action: 'Expose an authenticated Mission Control Hermes config panel or approved launch proxy.',
+      next_action: 'Use /api/bridge/hermes/full-access/status, /api/bridge/hermes/system-command-registry, and /api/bridge/hermes/execute for Jarvis-delegated direct-line parity.',
     },
     {
       ok: true,
@@ -150,7 +227,7 @@ function runtimeServices(): GatewayStatusPayload {
       local_bind_address: '127.0.0.1',
       local_port: '8931',
       playwright_mcp_status: 'live_local_only',
-      owner_access_blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven',
+      owner_access_blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript',
       ...SAFE_READ_ONLY,
       ...SERVICE_CONTROL_BLOCKED,
       next_action: 'Keep Playwright MCP local-only and expose SpaceAgent status/config through Mission Control.',
@@ -160,13 +237,13 @@ function runtimeServices(): GatewayStatusPayload {
       route: 'bridge.dispatcher.status',
       agent_id: 'pi',
       label: 'Pi',
-      state: 'READ_ONLY',
+      state: 'READY',
       blocker_class: 'NONE',
-      runtime_mode: 'advisory_only',
+      runtime_mode: 'full_access_gateway_pipeline',
       ...SAFE_READ_ONLY,
       ...SERVICE_CONTROL_BLOCKED,
-      owner_access_blocker: 'pi_runtime_session_not_proven',
-      next_action: 'Keep Pi advisory-only; no standalone service/UI found.',
+      owner_access_blocker: 'production_execution_requires_jarvis_concurrence',
+      next_action: 'Pi is configured through Mission Control UI and direct Nuclear Gateway pipeline; production execution remains Jarvis-gated.',
     },
   ]
 
@@ -213,34 +290,46 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
   const issuesUrl = 'http://100.116.35.95:3100/ECO/issues'
   const companies = [
     {
-      name: 'E copier Solutions',
-      issue_prefix: 'ECO',
-      access: 'owner_accessible',
-      active_user_members: 3,
-      agents: 2,
-      issues: 6,
-    },
-    {
       name: 'To Knowledge Gateway',
       issue_prefix: 'TOK',
-      access: 'legacy_membership_warning',
-      active_user_members: 11,
+      route_prefix: 'TKG',
+      access: 'owner_accessible',
+      active_user_members: 2,
       agents: 10,
       issues: 0,
-      blocker: 'tok_owner_membership_not_repaired',
+    },
+    {
+      name: 'E copier Solutions',
+      issue_prefix: 'ECO',
+      route_prefix: 'ECO',
+      access: 'owner_accessible',
+      active_user_members: 2,
+      agents: 7,
+      issues: 38,
+    },
+    {
+      name: 'E copier ITT',
+      issue_prefix: 'ECOA',
+      route_prefix: 'ITT',
+      access: 'owner_accessible',
+      active_user_members: 1,
+      agents: 2,
+      issues: 31,
     },
   ]
   const items = resource === 'companies'
     ? companies
     : resource === 'agents'
       ? [
-        { company: 'E copier Solutions', issue_prefix: 'ECO', count: 2, state: 'read_only_visible' },
-        { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 10, state: 'blocked_for_owner_until_membership_repair' },
+        { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 10, state: 'read_only_visible' },
+        { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 7, state: 'read_only_visible' },
+        { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 2, state: 'read_only_visible' },
       ]
       : resource === 'issues'
         ? [
-          { company: 'E copier Solutions', issue_prefix: 'ECO', count: 6, state: 'read_only_visible' },
-          { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 0, state: 'blocked_for_owner_until_membership_repair' },
+          { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 0, state: 'read_only_visible' },
+          { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 38, state: 'read_only_visible' },
+          { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 31, state: 'read_only_visible' },
         ]
         : []
   return {
@@ -257,8 +346,8 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
     bridge_read_status: 'read_only_live',
     write_status: 'bridge_gated',
     exact_blocker: 'paperclip_writes_bridge_gated',
-    active_company: companies[0],
-    legacy_company_warning: 'To Knowledge Gateway (TOK) still returns an owner access warning for Luis. Mission Control routes Paperclip owner work to E copier Solutions (ECO) until TOK membership is repaired.',
+    active_company: companies.find((company) => company.issue_prefix === 'ECO') || companies[0],
+    legacy_company_warning: 'Workspace truth now drives owner-visible Paperclip launches. Blocked or mismatched workspaces must show disabled reasons instead of silently routing to ECO.',
     service_process: 'paperclip-lab dev runner (node/tsx)',
     paperclip_sandbox_service_not_running: false,
     paperclip_owner_session_required: false,
@@ -276,10 +365,93 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
       bootstrap_invite_active: false,
     },
     items,
+    expected_workspaces: [
+      { name: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG' },
+      { name: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO' },
+      { name: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT' },
+    ],
+    expected_workspaces_ready: true,
+    workspace_route_aliases: [
+      { issue_prefix: 'TOK', route_prefix: 'TKG', aliases: ['TKG', 'TOK'] },
+      { issue_prefix: 'ECO', route_prefix: 'ECO', aliases: ['ECO'] },
+      { issue_prefix: 'ECOA', route_prefix: 'ITT', aliases: ['E Copier ITT', 'eCoppier ITT', 'ITT', 'ECOA'] },
+    ],
     company_data_enabled: true,
+    gateway_inventory: paperclipGatewayInventory().gateway_inventory,
+    gateway_inventory_endpoint: '/api/bridge/paperclip/gateway-inventory',
     ...SAFE_READ_ONLY,
     ...SERVICE_CONTROL_BLOCKED,
-    next_action: 'Use the owner-accessible ECO Paperclip company for live reads. Keep writes Bridge-gated; repair TOK membership only if that legacy company must stay in the active route.',
+    workspace_truth_endpoint: '/api/bridge/paperclip/workspace-truth',
+    hard_coded_eco_only: false,
+    next_action: 'Use /api/bridge/paperclip/workspace-truth and the AgentHub selector for live workspace launches. Keep all Paperclip writes Bridge-gated exact-scope adapter actions.',
+  }
+}
+
+function paperclipGatewayInventory(): GatewayStatusPayload {
+  return {
+    ok: true,
+    route: 'bridge.paperclip.gateway-inventory',
+    mode: 'paperclip_eco_gateway_inventory_read_only',
+    company_scope: 'ECO',
+    gateway_inventory: {
+      company_scope: 'ECO',
+      providers: [
+        { id: 'claude-local', name: 'Claude local adapter', visible: true, health: 'read_only', credential_policy: 'gateway_brokered_no_secret_values' },
+        { id: 'openai', name: 'OpenAI API', visible: true, health: 'credential_gated', credential_policy: 'credential_required_no_values_returned' },
+      ],
+      models: [
+        { id: 'claude-sonnet-4-6', provider: 'claude-local', visible: true, health: 'read_only' },
+        { id: 'gpt-5.4', provider: 'openai', visible: true, health: 'credential_gated' },
+      ],
+      skills: [
+        { id: 'paperclip-eco-read', name: 'Paperclip ECO read', visible: true, execution_allowed: false, bridge_required: false },
+        { id: 'zapier-readiness', name: 'Zapier readiness', visible: true, execution_allowed: false, bridge_required: true },
+      ],
+      mcp_tools: [
+        { id: 'playwright-mcp', name: 'Playwright MCP', visible: true, health: 'local_only', execution_allowed: false, bridge_required: true },
+        { id: 'gateway-capability-matrix', name: 'Gateway capability matrix', visible: true, health: 'read_only', execution_allowed: false, bridge_required: false },
+      ],
+      integrations: [
+        { id: 'zapier', name: 'Zapier', visible: true, health: 'configured', execution_allowed: true, write_allowed: false, bridge_required: true, exact_blocker: null, certified_action: 'zapier.connection_probe' },
+        { id: 'agentmail', name: 'AgentMail', visible: true, health: 'bridge_gated', execution_allowed: false, write_allowed: false, bridge_required: true },
+      ],
+      agents: [
+        { id: 'ceo', name: 'CEO', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'cmo', name: 'CMO', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'cto', name: 'CTO', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'avatar-specialist', name: 'Avatar Specialist', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'field-service-advisor', name: 'Field Service Advisor', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'social-coordinator', name: 'Social Coordinator', context_scope: 'ECO', gateway_inventory_visible: true },
+        { id: 'video-producer', name: 'Video Producer', context_scope: 'ECO', gateway_inventory_visible: true },
+      ],
+      zapier: {
+        visible: true,
+        status: 'configured',
+        execution_allowed: true,
+        write_allowed: false,
+        bridge_required: true,
+        adapter_present: true,
+        credential_policy: 'zapier_mcp_brokered_no_secret_values',
+        reason: 'Zapier is visible in Gateway and connected through the certified zapier.connection_probe adapter. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.',
+        exact_blockers: [],
+      },
+      bridge_policy: {
+        read_visible: true,
+        writes_bridge_gated: true,
+        execution_requires_bridge_session: true,
+        protected_action_result: 'WRITES_BRIDGE_GATED',
+      },
+      paperclip_agent_context: {
+        mission_control_gateway_inventory_summary: true,
+        gateway_rule: 'Mission Control Gateway is the source of truth for models/tools/providers. If Zapier is visible with guardrails, say it is visible, connected/configured, and exact-scope approved rather than blocked or missing.',
+        zapier_answer_template: 'Zapier is visible in Gateway and connected/configured. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary execution require approved scope.',
+      },
+      credential_values_exposed: false,
+      execution_enabled: false,
+      writes_enabled: false,
+    },
+    ...SAFE_READ_ONLY,
+    next_action: 'Expose this read-only Gateway inventory to Paperclip ECO agents; protected actions must create Bridge-gated approval requests only.',
   }
 }
 
@@ -296,11 +468,11 @@ function agentLocalInterfaces(): GatewayStatusPayload {
       public_exposure_created: false,
     },
     agents: [
-      { name: 'Agent Zero', status: 'partial_ui_restored', tailnet_url: 'http://100.116.35.95:50080/', mission_control_route: '/api/agent-zero/status', blocker: 'agent_zero_fd_exhaustion_guard_pending' },
-      { name: 'Hermes', status: 'partial_service_active', local_url: null, mission_control_route: '/api/hermes/status', blocker: 'hermes_owner_proxy_not_wired' },
-      { name: 'Pi', status: 'advisory_runtime_not_proven', mission_control_route: '/api/bridge/dispatcher/status', blocker: 'pi_runtime_session_not_proven' },
-      { name: 'SpaceAgent', status: 'partial_mission_control_panel_only', mission_control_route: '/api/bridge/space-agent/status', blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven' },
-      { name: 'Paperclip', status: 'installed_ready_writes_bridge_gated', tailnet_url: 'http://100.116.35.95:3100/ECO/dashboard', mission_control_route: '/api/bridge/paperclip/status', blocker: 'paperclip_writes_bridge_gated' },
+      { name: 'Agent Zero (Jarvis)', status: 'operational_go_exact_scope_execution_certified', tailnet_url: 'http://100.116.35.95:50080/', mission_control_route: '/api/bridge/agent-zero/status', blocker: 'owner_hard_stops_only_remaining' },
+      { name: 'Ron Weasley', status: 'FULL_ACCESS_DELEGATED', local_url: 'http://127.0.0.1:8787/', mission_control_route: '/api/bridge/hermes/webui/status', blocker: 'jarvis_signed_exact_scope_delegation_required; hermes_webui_service_not_running_if_8787_unreachable' },
+      { name: 'Pi', status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE', mission_control_route: '/api/bridge/pi/status', blocker: 'production_execution_requires_jarvis_concurrence' },
+      { name: 'SpaceAgent', status: 'partial_mission_control_panel_only_youtube_transcript_ready', mission_control_route: '/api/bridge/space-agent/status', blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript' },
+      { name: 'Paperclip', status: 'installed_ready_writes_bridge_gated', tailnet_url: 'workspace_selector:/gateway/agent-hub/paperclip/status', mission_control_route: '/api/bridge/paperclip/workspace-truth', blocker: 'paperclip_writes_bridge_gated' },
       { name: 'OpenClaw+', status: 'tunnel_live_doctor_cli_blocked', owner_tunnel_url: 'http://127.0.0.1:18789/', mission_control_route: '/api/openclaw-plus/status', blocker: 'openclaw_doctor_runtime_not_reachable' },
     ],
     ...SAFE_READ_ONLY,
@@ -319,7 +491,7 @@ function brainReadiness(): GatewayStatusPayload {
       { name: 'Obsidian', state: 'READ_ONLY', writes_enabled: false },
       { name: 'Main policy', state: 'READ_ONLY', writes_enabled: false },
       { name: 'Brain synchronization system', state: 'READ_ONLY', writes_enabled: false },
-      { name: 'Agent Brain visibility', state: 'READ_ONLY', agents: ['Agent Zero', 'Hermes', 'Pi', 'SpaceAgent', 'Paperclip', 'OpenClaw+'], writes_enabled: false },
+      { name: 'Agent Brain visibility', state: 'READ_ONLY', agents: ['Agent Zero', 'Ron Weasley', 'Pi', 'SpaceAgent', 'Paperclip', 'OpenClaw+'], writes_enabled: false },
       { name: 'Build-Wiki / Farmer', state: 'OWNER_GATED', allowed_target: 'opencloud-docs-farmer.service', writes_enabled: false },
     ],
     exact_blocker: 'brain_write_sync_requires_bridge_and_backend_proof',
@@ -442,6 +614,8 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
         agent_id: 'paperclip',
         label: 'Paperclip',
       }
+    case 'bridge/paperclip/gateway-inventory':
+      return paperclipGatewayInventory()
     case 'bridge/paperclip/status':
     case 'bridge/paperclip/companies':
     case 'bridge/paperclip/agents':
@@ -464,7 +638,8 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
         next_action: 'Keep Playwright MCP local-only and manage it through the SpaceAgent panel.',
       }
     case 'pi-mono/status':
-      return (runtimeServices().services as GatewayStatusPayload[])[4]
+    case 'bridge/pi/status':
+      return piDispatcherStatus()
     case 'openclaw-plus/status':
       return openClawPlusStatus()
     case 'agent-local-interfaces':
@@ -479,8 +654,19 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
       return driveReadiness('Google Drive')
     case 'bridge/onedrive-readiness':
       return driveReadiness('OneDrive')
-    case 'bridge/runtime-services':
     case 'bridge/dispatcher/status':
+      return {
+        ...piDispatcherStatus(),
+        route: 'bridge.dispatcher.status',
+        dispatcher_registry: [
+          { id: 'pi', state: 'READY', execution_allowed: true, bridge_required: true, blocker: 'production_execution_requires_jarvis_concurrence' },
+          { id: 'paperclip', state: 'READ_ONLY', execution_allowed: false, bridge_required: true, blocker: 'paperclip_writes_bridge_gated' },
+          { id: 'agent-zero', state: 'OPERATIONAL_GO', execution_allowed: true, bridge_required: true, blocker: 'owner_hard_stops_only_remaining' },
+          { id: 'hermes', state: 'FULL_ACCESS_DELEGATED', execution_allowed: true, bridge_required: true, blocker: 'jarvis_signed_exact_scope_delegation_required' },
+          { id: 'spaceagent', state: 'READ_ONLY', execution_allowed: false, bridge_required: true, blocker: 'no_standalone_spaceagent_ui' },
+        ],
+      }
+    case 'bridge/runtime-services':
       return runtimeServices()
     case 'bridge/preflight':
       return preflight()

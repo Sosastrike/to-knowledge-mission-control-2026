@@ -8,6 +8,8 @@ import {
   buildAgentMailStatus,
   buildAgentMailConnectStatus,
   buildAgentMailInboxSyncPreview,
+  approveAgentMailBridgeSession,
+  approveAgentMailSendRequest,
   buildAgentMailSendAccessStatus,
   createAgentMailBridgeSessionRequest,
   createAgentMailSendPreview,
@@ -369,4 +371,57 @@ it('reports per-agent send access blockers without enabling send execution', () 
       dispatch_enabled: false,
     })
   })
+
+  it('activates an owner-approved AgentMail Bridge Session without enabling unrestricted dispatch', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    const request = createAgentMailBridgeSessionRequest(db, { requester: 'owner' })
+
+    const approved = approveAgentMailBridgeSession(db, { actor: 'owner' })
+    const status = buildAgentMailSendAccessStatus(db, { AGENTMAIL_CREDENTIAL_REF: 'configured' })
+
+    expect(request.state).toBe('pending_owner_approval')
+    expect(approved).toMatchObject({
+      ok: true,
+      state: 'active',
+      execution_enabled: false,
+      dispatch_enabled: false,
+      bridge_session_active: true,
+      credential_values_exposed: false,
+    })
+    expect(status.global.bridge_session_state).toBe('active')
+    expect(status.global.send_default).toBe('approval_required')
+  })
+
+  it('requires message approval, scoped credentials, and a real send adapter before dispatch', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    createAgentMailBridgeSessionRequest(db, { requester: 'owner' })
+    approveAgentMailBridgeSession(db, { actor: 'owner' })
+
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'pi@agentmail.to',
+      to: ['owner@example.com'],
+      subject: 'AgentMail safe send test',
+      text: 'This should stay blocked until a real scoped AgentMail send adapter is present.',
+    })
+    const requested = createAgentMailSendRequest(db, (preview as any).send_request.id)
+    const approved = approveAgentMailSendRequest(db, (requested as any).send_request.id, { actor: 'owner' })
+    const dispatch = dispatchAgentMailSendRequest(db, (approved as any).send_request.id)
+
+    expect(approved).toMatchObject({
+      ok: true,
+      approval_state: 'approved',
+      dispatch_enabled: false,
+    })
+    expect(dispatch).toMatchObject({
+      ok: false,
+      dispatch_enabled: false,
+      exact_blocker: 'agentmail_inbox_credential_required',
+      credential_values_exposed: false,
+    })
+  })
+
 })

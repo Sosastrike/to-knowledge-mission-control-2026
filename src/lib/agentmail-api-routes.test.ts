@@ -45,12 +45,21 @@ describe('AgentMail local control API routes', () => {
     const page = readFileSync(path.join(process.cwd(), 'src/app/agentmail/page.tsx'), 'utf8')
     const gateway = readFileSync(path.join(process.cwd(), 'src/components/gateway/GatewayShell.tsx'), 'utf8')
     const localControl = readFileSync(path.join(process.cwd(), 'src/lib/agentmail-local-control.ts'), 'utf8')
+    const actions = readFileSync(path.join(process.cwd(), 'src/app/agentmail/AgentMailConnectActions.tsx'), 'utf8')
 
     for (const label of ['Connect AgentMail', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Bridge Queue', 'Approvals', 'Audit']) {
       expect(page).toContain(label)
     }
     expect(page).toContain('AGENTMAIL_CONSOLE_URL')
-    expect(page).toContain('AGENTMAIL_MCP_URL')
+    expect(page).toContain('Back to Gateway')
+    expect(page).toContain('Back to Mission Control')
+    expect(page).not.toContain('action="/api/agentmail/connect/test"')
+    expect(page).not.toContain('action="/api/agentmail/connect/provision-preview"')
+    expect(actions).toContain("'/api/agentmail/connect/test'")
+    expect(actions).toContain("'/api/agentmail/connect/provision-preview'")
+    expect(actions).toContain('fetch(path')
+    expect(actions).toContain('setState')
+    expect(actions).not.toContain('href={AGENTMAIL_MCP_URL}')
     expect(localControl).toContain('https://app.agentmail.to')
     expect(localControl).toContain('https://mcp.agentmail.to/mcp')
     expect(page).not.toContain('localhost as the primary')

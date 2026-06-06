@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
-import { AGENTMAIL_CONSOLE_URL, AGENTMAIL_MCP_URL, buildAgentMailPayload } from '@/lib/agentmail-local-control'
+import { AgentMailConnectActions } from './AgentMailConnectActions'
+import { AGENTMAIL_CONSOLE_URL, buildAgentMailPayload } from '@/lib/agentmail-local-control'
 
 export const metadata: Metadata = {
   title: 'AgentMail Local Control · Mission Control',
@@ -41,8 +42,12 @@ export default function AgentMailLocalControlPage() {
         .am-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
         .am-button { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border-radius: 7px; border: 1px solid #344056; color: #d7e1f3; text-decoration: none; background: #151d2c; font-size: 13px; }
         .am-button-primary { border-color: #22b5a6; color: #08111b; background: #57e1d4; font-weight: 700; }
-        .am-form { display: inline-flex; margin: 0; }
-        .am-form button { min-height: 36px; padding: 0 12px; border-radius: 7px; border: 1px solid #344056; color: #d7e1f3; background: #151d2c; font-size: 13px; cursor: pointer; }
+        button.am-button { cursor: pointer; }
+        .am-action-result { display: grid; gap: 5px; margin-top: 12px; padding: 12px; border-radius: 8px; border: 1px solid #283449; background: #0d1422; color: #aeb8cc; }
+        .am-action-result strong { color: #edf4ff; }
+        .am-action-running { border-color: #3378bf; }
+        .am-action-done { border-color: #20a66b; }
+        .am-action-error { border-color: #c6425a; }
         .am-row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #1e2637; padding-top: 10px; color: #d6deef; }
         .am-row:first-child { border-top: 0; padding-top: 0; }
         .am-muted { color: #8995aa; }
@@ -64,7 +69,11 @@ export default function AgentMailLocalControlPage() {
             Bridge queue, approvals, and audit. Outbound email remains disabled until owner approval and Bridge policy are proven.
           </p>
         </div>
-        <Pill tone={stateTone}>{status.state}</Pill>
+        <div className="am-actions">
+          <ActionLink href="/gateway">Back to Gateway</ActionLink>
+          <ActionLink href="/tkmc">Back to Mission Control</ActionLink>
+          <Pill tone={stateTone}>{status.state}</Pill>
+        </div>
       </section>
 
       <section className="am-grid">
@@ -79,16 +88,11 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>Bridge session status</span><Pill tone="yellow">{connect.bridge_session_status}</Pill></div>
             <div className="am-row"><span>Send state</span><Pill tone="yellow">{connect.send_state}</Pill></div>
           </div>
-          <div className="am-actions">
-            <ActionLink primary href={AGENTMAIL_CONSOLE_URL}>Connect AgentMail</ActionLink>
-            <ActionLink href={AGENTMAIL_CONSOLE_URL}>Open AgentMail Console</ActionLink>
-            <ActionLink href={AGENTMAIL_MCP_URL}>AgentMail MCP/OAuth status</ActionLink>
-            <form className="am-form" action="/api/agentmail/connect/test" method="post"><button type="submit">Test connection</button></form>
-            <form className="am-form" action="/api/agentmail/connect/provision-preview" method="post"><button type="submit">Sync inbox registry</button></form>
-          </div>
+          <AgentMailConnectActions consoleUrl={AGENTMAIL_CONSOLE_URL} />
           <p className="am-muted">
             Waiting for owner Google/SSO sign-in through AgentMail when credentials are missing. Mission Control never collects Google credentials,
             browser cookies, OAuth tokens, or raw AgentMail API keys in this view.
+            AgentMail MCP uses the hosted endpoint in supported MCP clients; this page does not open the raw MCP server URL as a browser page.
           </p>
         </div>
 

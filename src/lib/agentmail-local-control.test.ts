@@ -143,7 +143,7 @@ describe('AgentMail local control bootstrap', () => {
     const db = new Database(':memory:')
     ensureAgentMailSchema(db)
 
-    const status = buildAgentMailConnectStatus(db, {})
+    const status = buildAgentMailConnectStatus(db, {}, { agentmail_mcp_config_detected: false })
 
     expect(status).toMatchObject({
       ok: true,
@@ -167,6 +167,28 @@ describe('AgentMail local control bootstrap', () => {
     ])
     expect(JSON.stringify(status)).not.toContain('localhost')
     expect(JSON.stringify(status)).not.toContain('127.0.0.1')
+  })
+
+  it('reports local MCP config as not visible to the Mission Control runtime without faking connection', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const status = buildAgentMailConnectStatus(db, {}, { agentmail_mcp_config_detected: true })
+
+    expect(status).toMatchObject({
+      status: 'api_key_required',
+      current_blocker: 'agentmail_mcp_oauth_not_visible_to_mission_control_runtime',
+      mcp_oauth_status: {
+        state: 'mcp_config_detected_runtime_unusable',
+        cli_status: 'configured_for_local_cli_not_service_runtime',
+      },
+      api_key_fallback: {
+        state: 'api_key_required',
+      },
+      send_state: 'approval_required',
+      send_enabled: false,
+      credential_values_exposed: false,
+    })
   })
 
   it('masks AgentMail API-key fallback and keeps send Bridge/approval gated', () => {
@@ -196,7 +218,7 @@ describe('AgentMail local control bootstrap', () => {
     const db = new Database(':memory:')
     ensureAgentMailSchema(db)
 
-    const preview = buildAgentMailInboxSyncPreview(db)
+    const preview = buildAgentMailInboxSyncPreview(db, {}, { agentmail_mcp_config_detected: false })
 
     expect(preview).toMatchObject({
       ok: true,

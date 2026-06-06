@@ -133,6 +133,23 @@ function maskAgentMailKey(value: string) {
   return `am_****${suffix}`
 }
 
+function detectAgentMailMcpConfig() {
+  const candidates = [
+    process.env.CLAUDE_CONFIG_PATH,
+    process.env.HOME ? path.join(process.env.HOME, '.claude.json') : null,
+    '/home/tony/.claude.json',
+  ].filter(Boolean) as string[]
+
+  for (const file of candidates) {
+    try {
+      if (fs.readFileSync(file, 'utf8').includes(AGENTMAIL_MCP_URL)) return true
+    } catch {
+      // Missing or unreadable local CLI config is not a Mission Control runtime error.
+    }
+  }
+  return false
+}
+
 function tableExists(db: Database.Database, name: string) {
   return Boolean(db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`).get(name))
 }
@@ -426,13 +443,18 @@ export function buildAgentMailStatus(db: Database.Database = getDatabase(), env:
   }
 }
 
-export function buildAgentMailConnectStatus(db: Database.Database = getDatabase(), env: Record<string, string | undefined> = process.env) {
+export function buildAgentMailConnectStatus(
+  db: Database.Database = getDatabase(),
+  env: Record<string, string | undefined> = process.env,
+  runtimeMetadata: { agentmail_mcp_config_detected?: boolean } = {},
+) {
   ensureAgentMailSchema(db)
   const monitorStatus = buildAgentMailStatus(db, env)
   const apiKey = env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || ''
   const credentialRef = env.AGENTMAIL_CREDENTIAL_REF
   const hasApiCredential = Boolean(apiKey || credentialRef)
   const hasWsUrl = Boolean(env.AGENTMAIL_WS_URL)
+  const hasLocalMcpConfig = runtimeMetadata.agentmail_mcp_config_detected ?? detectAgentMailMcpConfig()
   const assignedInboxCount = (db.prepare(`SELECT COUNT(*) AS count FROM agentmail_inboxes WHERE inbox_address IS NOT NULL`).get() as { count: number }).count
   const lastAudit = db.prepare(`SELECT action, result, detail, created_at FROM agentmail_audit ORDER BY created_at DESC LIMIT 1`).get() as Record<string, unknown> | undefined
 
@@ -442,6 +464,8 @@ export function buildAgentMailConnectStatus(db: Database.Database = getDatabase(
       : 'sync_ready'
     : hasApiCredential
       ? 'connected'
+      : hasLocalMcpConfig
+        ? 'api_key_required'
       : 'owner_sso_required'
 
   return {
@@ -449,7 +473,9 @@ export function buildAgentMailConnectStatus(db: Database.Database = getDatabase(
     source: 'agentmail_connect_status',
     generated_at: nowIso(),
     status,
-    current_blocker: status === 'owner_sso_required'
+    current_blocker: status === 'api_key_required'
+      ? 'agentmail_mcp_oauth_not_visible_to_mission_control_runtime'
+      : status === 'owner_sso_required'
       ? 'agentmail_owner_sso_or_api_key_required'
       : status === 'connected'
         ? 'agentmail_ws_url_or_inbox_sync_required'
@@ -462,17 +488,27 @@ export function buildAgentMailConnectStatus(db: Database.Database = getDatabase(
     hosted_console_url: AGENTMAIL_CONSOLE_URL,
     mcp_oauth_url: AGENTMAIL_MCP_URL,
     hosted_console: {
-      state: status === 'owner_sso_required' ? 'owner_sso_required' : 'connected_or_api_key_configured',
+      state: status === 'owner_sso_required'
+        ? 'owner_sso_required'
+        : status === 'api_key_required'
+          ? 'owner_sso_completed_runtime_credential_required'
+          : 'connected_or_api_key_configured',
       url: AGENTMAIL_CONSOLE_URL,
       message: status === 'owner_sso_required'
         ? 'Waiting for owner Google/SSO sign-in through AgentMail.'
+        : status === 'api_key_required'
+          ? 'Hosted MCP config was detected for a local CLI, but mission-control.service still needs approved runtime access.'
         : 'AgentMail credential metadata detected; sync inbox registry before enabling monitor.',
     },
-    google_sso_status: status === 'owner_sso_required' ? 'owner_sso_required' : 'connected_or_api_key_fallback',
+    google_sso_status: status === 'owner_sso_required'
+      ? 'owner_sso_required'
+      : status === 'api_key_required'
+        ? 'owner_sso_completed_unverified_by_service'
+        : 'connected_or_api_key_fallback',
     mcp_oauth_status: {
-      state: 'oauth_pending',
+      state: hasLocalMcpConfig ? 'mcp_config_detected_runtime_unusable' : 'oauth_pending',
       url: AGENTMAIL_MCP_URL,
-      cli_status: 'not_verified_by_server',
+      cli_status: hasLocalMcpConfig ? 'configured_for_local_cli_not_service_runtime' : 'not_verified_by_server',
     },
     api_key_fallback: {
       state: hasApiCredential ? 'detected' : 'api_key_required',
@@ -498,10 +534,14 @@ export function buildAgentMailConnectStatus(db: Database.Database = getDatabase(
   }
 }
 
-export function buildAgentMailInboxSyncPreview(db: Database.Database = getDatabase(), env: Record<string, string | undefined> = process.env) {
+export function buildAgentMailInboxSyncPreview(
+  db: Database.Database = getDatabase(),
+  env: Record<string, string | undefined> = process.env,
+  runtimeMetadata: { agentmail_mcp_config_detected?: boolean } = {},
+) {
   ensureAgentMailSchema(db)
   const inboxes = listAgentMailInboxes(db)
-  const status = buildAgentMailConnectStatus(db, env)
+  const status = buildAgentMailConnectStatus(db, env, runtimeMetadata)
   const knownAgents = inboxes.map((inbox) => ({
     agent_id: inbox.agent_id,
     display_name: inbox.display_name,

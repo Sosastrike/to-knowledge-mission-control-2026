@@ -421,9 +421,9 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     authRequired: true,
     status: 'blocked',
     blocker: 'AGENTMAIL_API_KEY and allowed-recipient policy are missing; sends remain Bridge-gated and disabled.',
-    nextFix: 'Add AgentMail credential and recipient allow-list through approved path; keep sends Bridge-gated.',
+    nextFix: 'Open AgentMail Local Control to monitor listener health, inboxes, queues, approvals, and audit. Sends stay Bridge-gated.',
     buttons: {
-      ui: disabled('No AgentMail owner web UI is configured.'),
+      ui: enabled('/agentmail'),
       config: enabled(GATEWAY_TOOLS_ROUTE),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: disabled('AgentMail send/reply is disabled until credentials and Bridge approval proof exist.'),

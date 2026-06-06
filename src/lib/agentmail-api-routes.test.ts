@@ -1,0 +1,60 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const routeSpecs = [
+  ['status', '@/app/api/agentmail/status/route'],
+  ['inboxes', '@/app/api/agentmail/inboxes/route'],
+  ['events', '@/app/api/agentmail/events/route'],
+  ['bridge-queue', '@/app/api/agentmail/bridge-queue/route'],
+  ['approvals', '@/app/api/agentmail/approvals/route'],
+  ['audit', '@/app/api/agentmail/audit/route'],
+  ['connect/status', '@/app/api/agentmail/connect/status/route'],
+] as const
+
+const postRouteSpecs = [
+  ['connect/sync', '@/app/api/agentmail/connect/sync/route'],
+  ['connect/test', '@/app/api/agentmail/connect/test/route'],
+  ['connect/provision-preview', '@/app/api/agentmail/connect/provision-preview/route'],
+] as const
+
+describe('AgentMail local control API routes', () => {
+  it.each(routeSpecs)('%s returns 401 without Mission Control auth', async (name, modulePath) => {
+    const mod = await import(modulePath)
+    const response = await mod.GET(new Request(`http://localhost/api/agentmail/${name}`) as any)
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: expect.any(String),
+    })
+  })
+
+  it.each(postRouteSpecs)('%s POST returns 401 without Mission Control auth', async (name, modulePath) => {
+    const mod = await import(modulePath)
+    const response = await mod.POST(new Request(`http://localhost/api/agentmail/${name}`, { method: 'POST' }) as any)
+
+    expect(response.status).toBe(401)
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: expect.any(String),
+    })
+  })
+
+  it('renders required Local Control panels and Gateway links to it', () => {
+    const page = readFileSync(path.join(process.cwd(), 'src/app/agentmail/page.tsx'), 'utf8')
+    const gateway = readFileSync(path.join(process.cwd(), 'src/components/gateway/GatewayShell.tsx'), 'utf8')
+    const localControl = readFileSync(path.join(process.cwd(), 'src/lib/agentmail-local-control.ts'), 'utf8')
+
+    for (const label of ['Connect AgentMail', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Bridge Queue', 'Approvals', 'Audit']) {
+      expect(page).toContain(label)
+    }
+    expect(page).toContain('AGENTMAIL_CONSOLE_URL')
+    expect(page).toContain('AGENTMAIL_MCP_URL')
+    expect(localControl).toContain('https://app.agentmail.to')
+    expect(localControl).toContain('https://mcp.agentmail.to/mcp')
+    expect(page).not.toContain('localhost as the primary')
+    expect(page).toContain('Outbound email remains disabled')
+    expect(gateway).toContain("ui: enabled('/agentmail')")
+  })
+})

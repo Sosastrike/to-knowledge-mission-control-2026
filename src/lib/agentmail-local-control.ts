@@ -4,6 +4,14 @@ import crypto from 'node:crypto'
 import type Database from 'better-sqlite3'
 
 import { createApprovalRequest } from '@/lib/approval-requests'
+import {
+  AGENTMAIL_PERMISSION_KEYS,
+  loadAgentMailCredentialSecret,
+  resolveAgentMailScopedCredential,
+  upsertAgentMailScopedCredentialMetadata,
+  type AgentMailPermission,
+} from '@/lib/agentmail-credential-resolver'
+import { sendAgentMailMessage, type AgentMailAdapterSendResult } from '@/lib/agentmail-send-adapter'
 
 import { config, ensureDirExists } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
@@ -676,19 +684,9 @@ export type AgentMailGatewayPolicy = 'monitor_only' | 'draft_only' | 'approval_r
 export type AgentMailCredentialStatus = 'missing' | 'detected' | 'scoped' | 'invalid' | 'expired'
 export type AgentMailInboxStatus = 'missing' | 'provisioned' | 'synced'
 
-const AGENTMAIL_SEND_PERMISSIONS = [
-  'inbox_read',
-  'thread_read',
-  'message_read',
-  'message_send',
-  'message_update',
-  'draft_read',
-  'draft_create',
-  'draft_update',
-  'draft_send',
-] as const
+const AGENTMAIL_SEND_PERMISSIONS = AGENTMAIL_PERMISSION_KEYS
 
-type AgentMailSendPermission = typeof AGENTMAIL_SEND_PERMISSIONS[number]
+type AgentMailSendPermission = AgentMailPermission
 
 type AgentMailSendInput = {
   agent_id?: unknown
@@ -794,28 +792,25 @@ function sendPolicyForInbox(inbox: AgentMailInboxRecord): AgentMailGatewayPolicy
   return inbox.autonomy_level === 'L1_draft_only' ? 'draft_only' : 'monitor_only'
 }
 
-function credentialStatusForInbox(inbox: AgentMailInboxRecord, env: Record<string, string | undefined>): AgentMailCredentialStatus {
-  if (!env.AGENTMAIL_CREDENTIAL_REF && !env.AGENTMAIL_API_KEY && !env.AGENTMAIL_TOKEN) return 'missing'
-  if (!inbox.inbox_address) return 'detected'
-  return 'scoped'
-}
-
 function inboxStatus(inbox: AgentMailInboxRecord): AgentMailInboxStatus {
   if (!inbox.inbox_address) return 'missing'
   return inbox.provision_state === 'assigned' ? 'synced' : 'provisioned'
 }
 
-function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, string | undefined>, bridgeState: AgentMailBridgeSessionState) {
+function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, string | undefined>, bridgeState: AgentMailBridgeSessionState, db: Database.Database = getDatabase()) {
   const policy = sendPolicyForInbox(inbox)
-  const credential = credentialStatusForInbox(inbox, env)
   const inbox_state = inboxStatus(inbox)
   const sendCapablePolicy = policy === 'approval_required' || policy === 'allowlisted_auto_send'
-  const credentialReady = credential === 'scoped'
-  const permissions = permissionMap(credentialReady, sendCapablePolicy)
+  const credentialResolution = inbox.inbox_address
+    ? resolveAgentMailScopedCredential({ db, agentId: inbox.agent_id, inboxId: inbox.inbox_address, requiredPermissions: sendCapablePolicy ? ['message_send'] : [], env })
+    : null
+  const credential = credentialResolution?.credential_status || 'missing'
+  const permissions = credentialResolution?.permissions || permissionMap(false, sendCapablePolicy)
   const blockers: string[] = []
 
   if (inbox_state === 'missing') blockers.push('agentmail_inbox_assignment_missing')
   if (credential === 'missing' || credential === 'detected') blockers.push('agentmail_inbox_credential_required')
+  for (const blocker of credentialResolution?.blockers || []) blockers.push(blocker)
   if (!permissions.message_send && sendCapablePolicy) blockers.push('message_send_permission_missing')
   if (policy === 'monitor_only') blockers.push('gateway_policy_monitor_only')
   if (policy === 'draft_only') blockers.push('gateway_policy_draft_only')
@@ -826,6 +821,14 @@ function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, str
     inbox_id: inbox.inbox_address,
     inbox_status: inbox_state,
     credential_status: credential,
+    scoped_credential: credentialResolution ? {
+      credential_ref: credentialResolution.credentialRef,
+      key_available: credentialResolution.keyAvailable,
+      key_masked: credentialResolution.keyMasked,
+      scope: credentialResolution.scope,
+      blockers: credentialResolution.blockers,
+      credential_values_exposed: false,
+    } : null,
     permission_status: permissions,
     bridge_allowed: bridgeState === 'active',
     gateway_policy: policy,
@@ -850,7 +853,7 @@ export function buildAgentMailSendAccessStatus(
       role: inbox.role,
       autonomy_level: inbox.autonomy_level,
       send_policy: inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero' ? 'owner_approval_required' : 'no_external_send_by_default',
-      ...sendAccessForInbox(inbox, env, bridgeState),
+      ...sendAccessForInbox(inbox, env, bridgeState, db),
     }
     return acc
   }, {} as Record<string, Record<string, unknown>>)
@@ -872,12 +875,93 @@ export function buildAgentMailSendAccessStatus(
       execution_enabled: false,
       send_enabled: false,
       approval_channel: 'canonical_owner_channel',
+      real_send_adapter: {
+        state: 'configured',
+        endpoint: 'https://api.agentmail.to/v0/inboxes/:inbox_id/messages/send',
+        test_status: 'not_run',
+        credential_values_exposed: false,
+      },
     },
     agents,
     permission_keys: AGENTMAIL_SEND_PERMISSIONS,
     exact_blockers: Array.from(new Set(Object.values(agents).flatMap((agent) => agent.blockers as string[]))),
     ...SAFE_FLAGS,
   }
+}
+
+
+export function buildAgentMailCredentialProvisionPreview(db: Database.Database = getDatabase(), env: Record<string, string | undefined> = process.env) {
+  ensureAgentMailSchema(db)
+  const sendAccess = buildAgentMailSendAccessStatus(db, env)
+  const inboxes = listAgentMailInboxes(db)
+  const targets = inboxes.map((inbox) => {
+    const agent = sendAccess.agents[inbox.agent_id] as any
+    const sendCapable = inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero'
+    return {
+      agent_id: inbox.agent_id,
+      display_name: inbox.display_name,
+      role: inbox.role,
+      inbox_id: inbox.inbox_address,
+      inbox_required: sendCapable,
+      scoped_credential_required: sendCapable,
+      existing_credential_ref: agent?.scoped_credential?.credential_ref || null,
+      credential_status: agent?.credential_status || 'missing',
+      permissions_detected: agent?.permission_status || permissionMap(false, sendCapable),
+      permissions_missing: AGENTMAIL_SEND_PERMISSIONS.filter((permission) => sendCapable && !agent?.permission_status?.[permission]),
+      safe_next_action: sendCapable
+        ? agent?.credential_status === 'scoped'
+          ? 'run_credential_readiness_test'
+          : 'create_owner_approved_scoped_inbox_key_in_existing_runtime_secret_storage'
+        : 'no_send_identity_monitor_only',
+      send_policy: sendCapable ? 'owner_approval_required' : 'no_external_send_by_default',
+    }
+  })
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_previewed', 'ok', 'preview_only_no_key_creation')
+  return {
+    ok: true,
+    source: 'agentmail_scoped_credential_provision_preview',
+    generated_at: nowIso(),
+    provision_automatically: false,
+    secret_store: 'existing_mission_control_runtime_secret_storage_required',
+    exact_blocker: 'agentmail_runtime_secret_store_required',
+    targets,
+    ...SAFE_FLAGS,
+  }
+}
+
+export function createAgentMailCredentialProvisionRequest(db: Database.Database = getDatabase(), requester = 'owner') {
+  ensureAgentMailSchema(db)
+  const { request: approval, created } = createApprovalRequest({
+    connector: 'agentmail',
+    action: 'agentmail_scoped_credential_provision_request',
+    target: 'agentmail_scoped_credentials',
+    target_key: 'agentmail:scoped-credentials',
+    requester: sanitizeText(requester, 'owner', 120),
+    risk_level: 'medium',
+    protected_category: 'credential_write',
+    reason: 'Owner approval is required before scoped AgentMail inbox send credentials can be created and stored.',
+    approval_scope: {
+      credential_scope: 'inbox',
+      no_org_wide_default: true,
+      send_policy: 'owner_approval_required',
+      credential_values_exposed: false,
+    },
+    idempotency_key: 'agentmail:scoped-credentials:request',
+  })
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_requested', 'blocked', `approval_id=${approval.id};runtime_secret_store_required`)
+  return { ok: true, source: 'agentmail_scoped_credential_provision_request', approval_id: approval.id, approval_state: approval.approval_state, approval_request_created: created, exact_blocker: 'canonical_owner_approval_required', ...SAFE_FLAGS }
+}
+
+export function approveAgentMailCredentialProvision(db: Database.Database = getDatabase(), actor = 'owner') {
+  ensureAgentMailSchema(db)
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_approved', 'ok', `actor=${sanitizeText(actor, 'owner', 120)}`)
+  return { ok: true, source: 'agentmail_scoped_credential_provision_approve', approval_state: 'approved', exact_blocker: 'agentmail_runtime_secret_store_required', apply_enabled: false, ...SAFE_FLAGS }
+}
+
+export function applyAgentMailCredentialProvision(db: Database.Database = getDatabase()) {
+  ensureAgentMailSchema(db)
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_missing', 'blocked', 'agentmail_runtime_secret_store_required')
+  return { ok: false, source: 'agentmail_scoped_credential_provision_apply', exact_blocker: 'agentmail_runtime_secret_store_required', created: false, ...SAFE_FLAGS }
 }
 
 export function createAgentMailBridgeSessionRequest(
@@ -1133,14 +1217,26 @@ export function approveAgentMailSendRequest(
   }
 }
 
-export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase(), sendRequestId: string, env: Record<string, string | undefined> = process.env) {
+type AgentMailDispatchAdapter = { sendAgentMailMessage: (input: any) => Promise<AgentMailAdapterSendResult> }
+
+type AgentMailDispatchOptions = { env?: Record<string, string | undefined>; adapter?: AgentMailDispatchAdapter }
+
+function normalizeDispatchOptions(input: Record<string, string | undefined> | AgentMailDispatchOptions = process.env): AgentMailDispatchOptions {
+  if ('adapter' in input || 'env' in input) return input as AgentMailDispatchOptions
+  return { env: input as Record<string, string | undefined> }
+}
+
+export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase(), sendRequestId: string, optionsInput: Record<string, string | undefined> | AgentMailDispatchOptions = process.env): any {
+  const options = normalizeDispatchOptions(optionsInput)
+  const env = options.env || process.env
   ensureAgentMailSchema(db)
   const row = getSendRequest(db, sendRequestId)
   if (!row) return { ok: false, source: 'agentmail_send_dispatch', exact_blocker: 'send_request_not_found', dispatch_enabled: false, ...SAFE_FLAGS }
   const bridgeRow = latestAgentMailBridgeSession(db)
   const bridgeState = normalizeBridgeState(bridgeRow)
   const inbox = findInboxForAgent(db, row.agent_id)
-  const access = inbox ? sendAccessForInbox(inbox, env, bridgeState) : null
+  const access = inbox ? sendAccessForInbox(inbox, env, bridgeState, db) : null
+  const credentialResolution = inbox?.inbox_address ? resolveAgentMailScopedCredential({ db, env, agentId: row.agent_id, inboxId: inbox.inbox_address, requiredPermissions: ['message_send'] }) : null
   const recipientCount = parseJsonArray(row.to_json).length + parseJsonArray(row.cc_json).length + parseJsonArray(row.bcc_json).length
   let exactBlocker: string | null = null
 
@@ -1148,21 +1244,74 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
   else if (row.state !== 'owner_approved') exactBlocker = 'owner_approval_required'
   else if (!inbox || !inbox.inbox_address) exactBlocker = 'agentmail_inbox_assignment_missing'
   else if (inbox.inbox_address.toLowerCase() !== row.inbox_id.toLowerCase()) exactBlocker = 'wrong_agent_inbox'
-  else if (!access || access.credential_status !== 'scoped') exactBlocker = 'agentmail_inbox_credential_required'
+  else if (!access || access.credential_status !== 'scoped') exactBlocker = credentialResolution?.blockers.includes('scoped_credential_missing') ? 'scoped_credential_missing' : 'agentmail_inbox_credential_required'
+  else if (credentialResolution?.blockers.includes('scoped_credential_wrong_inbox')) exactBlocker = 'scoped_credential_wrong_inbox'
+  else if (credentialResolution?.blockers.includes('agentmail_runtime_secret_store_required')) exactBlocker = 'agentmail_runtime_secret_store_required'
   else if (!access.permission_status.message_send) exactBlocker = 'message_send_permission_missing'
-  else if (recipientCount > (bridgeRow?.max_recipients_per_send || 10)) exactBlocker = 'recipient_count_exceeds_limit'
-  else exactBlocker = 'agentmail_send_adapter_not_configured'
+  else if (recipientCount > (bridgeRow?.max_recipients_per_send || 10)) exactBlocker = 'recipient_limit_exceeded'
 
-  db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(exactBlocker, bridgeRow?.id || null, row.id)
-  recordAgentMailAudit(db, 'agentmail_send_dispatch_blocked', 'blocked', exactBlocker, row.id)
-  return {
-    ok: false,
-    source: 'agentmail_send_dispatch',
-    send_request: sendRequestFromRow(getSendRequest(db, row.id)!),
-    dispatch_enabled: false,
-    execution_enabled: false,
-    exact_blocker: exactBlocker,
-    bridge_session_state: bridgeState,
-    ...SAFE_FLAGS,
+  if (exactBlocker) {
+    db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(exactBlocker, bridgeRow?.id || null, row.id)
+    recordAgentMailAudit(db, 'agentmail_send_dispatch_blocked', 'blocked', exactBlocker, row.id)
+    return {
+      ok: false,
+      source: 'agentmail_send_dispatch',
+      send_request: sendRequestFromRow(getSendRequest(db, row.id)!),
+      dispatch_enabled: false,
+      execution_enabled: false,
+      exact_blocker: exactBlocker,
+      bridge_session_state: bridgeState,
+      ...SAFE_FLAGS,
+    }
   }
+
+  const secret = credentialResolution ? loadAgentMailCredentialSecret(credentialResolution, env) : null
+  if (!secret || !credentialResolution?.credentialRef) {
+    exactBlocker = 'agentmail_runtime_secret_store_required'
+    db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(exactBlocker, bridgeRow?.id || null, row.id)
+    recordAgentMailAudit(db, 'agentmail_send_dispatch_blocked', 'blocked', exactBlocker, row.id)
+    return { ok: false, source: 'agentmail_send_dispatch', send_request: sendRequestFromRow(getSendRequest(db, row.id)!), dispatch_enabled: false, execution_enabled: false, exact_blocker: exactBlocker, bridge_session_state: bridgeState, ...SAFE_FLAGS }
+  }
+
+  const adapter = options.adapter || { sendAgentMailMessage }
+  recordAgentMailAudit(db, 'agentmail_real_send_attempted', 'ok', `agent=${row.agent_id};inbox=${row.inbox_id}`, row.id)
+  return adapter.sendAgentMailMessage({
+    agentId: row.agent_id,
+    inboxId: row.inbox_id,
+    credentialRef: credentialResolution.credentialRef,
+    apiKey: secret,
+    to: parseJsonArray(row.to_json),
+    cc: parseJsonArray(row.cc_json),
+    bcc: parseJsonArray(row.bcc_json),
+    subject: row.subject,
+    text: row.text_body,
+    html: row.html_body,
+    labels: parseJsonArray(row.labels_json),
+    approvalId: row.approval_request_id,
+    bridgeSessionId: bridgeRow?.id || null,
+    gatewayDecisionId: `agentmail:${row.id}`,
+  }).then((result) => {
+    if (!result.ok) {
+      db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(result.exact_blocker, bridgeRow?.id || null, row.id)
+      recordAgentMailAudit(db, 'agentmail_real_send_failed', 'error', result.exact_blocker, row.id)
+      return { ok: false, source: 'agentmail_send_dispatch', send_request: sendRequestFromRow(getSendRequest(db, row.id)!), dispatch_enabled: false, execution_enabled: false, exact_blocker: result.exact_blocker, bridge_session_state: bridgeState, ...SAFE_FLAGS }
+    }
+    db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatched', exact_blocker = NULL, bridge_session_id = ?, message_id = ?, thread_id = COALESCE(?, thread_id), updated_at = unixepoch() WHERE id = ?`).run(bridgeRow?.id || null, result.message_id, result.thread_id, row.id)
+    if (bridgeRow) db.prepare(`UPDATE agentmail_bridge_sessions SET sends_dispatched = sends_dispatched + 1, updated_at = unixepoch() WHERE id = ?`).run(bridgeRow.id)
+    recordAgentMailAudit(db, 'agentmail_real_send_dispatched', 'ok', `message_id=${result.message_id};thread_id=${result.thread_id || 'none'}`, row.id)
+    return {
+      ok: true,
+      source: 'agentmail_send_dispatch',
+      send_request: sendRequestFromRow(getSendRequest(db, row.id)!),
+      message_id: result.message_id,
+      thread_id: result.thread_id,
+      bridge_session_id: bridgeRow?.id || null,
+      dispatch_enabled: false,
+      execution_enabled: false,
+      auto_send_enabled: false,
+      ...SAFE_FLAGS,
+    }
+  })
 }
+
+export { upsertAgentMailScopedCredentialMetadata }

@@ -141,12 +141,13 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>Expires at</span><span className="am-muted">{sendAccess.global.expires_at || 'not active'}</span></div>
             <div className="am-row"><span>Sends remaining</span><span>{sendAccess.global.sends_remaining_per_agent}</span></div>
             <div className="am-row"><span>Default send policy</span><Pill tone="yellow">{sendAccess.global.send_default}</Pill></div>
+            <div className="am-row"><span>Real Send Adapter</span><Pill tone="blue">{sendAccess.global.real_send_adapter?.state || 'missing'}</Pill></div>
           </div>
           <div className="am-actions">
             <button className="am-button" type="button" disabled>Request Bridge Session</button>
             <button className="am-button" type="button" disabled>Revoke Bridge Session</button>
           </div>
-          <p className="am-muted">Bridge Session required to dispatch approved mail. Message approval remains separate and canonical-owner-channel gated.</p>
+          <p className="am-muted">If Bridge Session is active but sending is still blocked, the next exact blocker is usually scoped AgentMail inbox credential required, message_send permission missing, owner approval required, or Gateway policy blocked.</p>
         </div>
 
         <div className="am-panel am-full">
@@ -154,7 +155,7 @@ export default function AgentMailLocalControlPage() {
           <div className="am-list">
             {Object.values(sendAccess.agents).map((agent: any) => (
               <div className="am-row" key={agent.agent_id}>
-                <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'}</span></span>
+                <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'} · Scoped Credential: {agent.scoped_credential?.key_masked || agent.credential_status}</span></span>
                 <span>
                   <Pill tone={agent.send_ready ? 'green' : 'yellow'}>{agent.send_ready ? 'send-ready' : (agent.blockers[0] || 'blocked')}</Pill>{' '}
                   <Pill tone={agent.credential_status === 'scoped' ? 'green' : 'red'}>{agent.credential_status}</Pill>

@@ -15,6 +15,7 @@ import {
   createAgentMailSendPreview,
   createAgentMailSendRequest,
   dispatchAgentMailSendRequest,
+  upsertAgentMailScopedCredentialMetadata,
   ensureAgentMailSchema,
   ingestAgentMailEvent,
   listAgentMailInboxes,
@@ -419,7 +420,114 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(dispatch).toMatchObject({
       ok: false,
       dispatch_enabled: false,
-      exact_blocker: 'agentmail_inbox_credential_required',
+      exact_blocker: 'scoped_credential_missing',
+      credential_values_exposed: false,
+    })
+  })
+
+
+  it('dispatches through the real AgentMail adapter only after every gate passes', async () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'pi',
+      inboxId: 'pi@agentmail.to',
+      credentialRef: 'AGENTMAIL_PI_KEY',
+      maskedPreview: 'am_****7890',
+      permissions: {
+        inbox_read: true,
+        thread_read: true,
+        message_read: true,
+        message_send: true,
+        message_update: true,
+        draft_read: true,
+        draft_create: true,
+        draft_update: true,
+        draft_send: true,
+      },
+    })
+    createAgentMailBridgeSessionRequest(db, { requester: 'owner' })
+    const bridge = approveAgentMailBridgeSession(db, { actor: 'owner' })
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'pi@agentmail.to',
+      to: ['owner@example.com'],
+      subject: 'AgentMail adapter test',
+      text: 'This uses a mocked adapter and must store message IDs only after all gates pass.',
+    })
+    const requested = createAgentMailSendRequest(db, (preview as any).send_request.id)
+    const approved = approveAgentMailSendRequest(db, (requested as any).send_request.id, { actor: 'owner' })
+    const calls: any[] = []
+    const dispatch = await dispatchAgentMailSendRequest(db, (approved as any).send_request.id, {
+      env: { AGENTMAIL_PI_KEY: 'agentmail-test-secret-value-1234567890' },
+      adapter: {
+        sendAgentMailMessage: async (input: any) => {
+          calls.push(input)
+          return { ok: true, message_id: 'msg_live_1', thread_id: 'thread_live_1', provider_status: 'sent', credential_values_exposed: false, tokens_exposed: false, env_values_exposed: false }
+        },
+      },
+    })
+
+    expect(dispatch).toMatchObject({
+      ok: true,
+      dispatch_enabled: false,
+      message_id: 'msg_live_1',
+      thread_id: 'thread_live_1',
+      bridge_session_id: (bridge as any).bridge_session_id,
+      credential_values_exposed: false,
+    })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toMatchObject({
+      agentId: 'pi',
+      inboxId: 'pi@agentmail.to',
+      credentialRef: 'AGENTMAIL_PI_KEY',
+      approvalId: (approved as any).send_request.approval_request_id,
+      bridgeSessionId: (bridge as any).bridge_session_id,
+    })
+    expect(JSON.stringify(dispatch)).not.toContain('agentmail-test-secret-value')
+    expect(db.prepare('SELECT message_id, thread_id, state FROM agentmail_send_requests WHERE id = ?').get((approved as any).send_request.id)).toMatchObject({
+      message_id: 'msg_live_1',
+      thread_id: 'thread_live_1',
+      state: 'dispatched',
+    })
+  })
+
+  it('does not call the AgentMail adapter when the scoped runtime secret is unavailable', async () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'pi',
+      inboxId: 'pi@agentmail.to',
+      credentialRef: 'AGENTMAIL_PI_KEY',
+      maskedPreview: 'am_****7890',
+      permissions: { message_send: true, inbox_read: true, thread_read: true, message_read: true, message_update: true },
+    })
+    createAgentMailBridgeSessionRequest(db, { requester: 'owner' })
+    approveAgentMailBridgeSession(db, { actor: 'owner' })
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'pi@agentmail.to',
+      to: ['owner@example.com'],
+      subject: 'Blocked missing runtime secret',
+      text: 'No adapter call should happen.',
+    })
+    const requested = createAgentMailSendRequest(db, (preview as any).send_request.id)
+    const approved = approveAgentMailSendRequest(db, (requested as any).send_request.id, { actor: 'owner' })
+    let called = false
+    const dispatch = await dispatchAgentMailSendRequest(db, (approved as any).send_request.id, {
+      env: {},
+      adapter: {
+        sendAgentMailMessage: async () => { called = true; return { ok: true, message_id: 'bad', thread_id: 'bad', provider_status: 'sent', credential_values_exposed: false, tokens_exposed: false, env_values_exposed: false } },
+      },
+    })
+
+    expect(called).toBe(false)
+    expect(dispatch).toMatchObject({
+      ok: false,
+      exact_blocker: 'agentmail_runtime_secret_store_required',
+      dispatch_enabled: false,
       credential_values_exposed: false,
     })
   })

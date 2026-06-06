@@ -10,12 +10,21 @@ const routeSpecs = [
   ['approvals', '@/app/api/agentmail/approvals/route'],
   ['audit', '@/app/api/agentmail/audit/route'],
   ['connect/status', '@/app/api/agentmail/connect/status/route'],
+  ['send-access/status', '@/app/api/agentmail/send-access/status/route'],
+  ['bridge-session/status', '@/app/api/agentmail/bridge-session/status/route'],
 ] as const
 
 const postRouteSpecs = [
   ['connect/sync', '@/app/api/agentmail/connect/sync/route'],
   ['connect/test', '@/app/api/agentmail/connect/test/route'],
   ['connect/provision-preview', '@/app/api/agentmail/connect/provision-preview/route'],
+  ['bridge-session/request', '@/app/api/agentmail/bridge-session/request/route'],
+  ['bridge-session/approve', '@/app/api/agentmail/bridge-session/approve/route'],
+  ['bridge-session/revoke', '@/app/api/agentmail/bridge-session/revoke/route'],
+  ['send/preview', '@/app/api/agentmail/send/preview/route'],
+  ['send/request', '@/app/api/agentmail/send/request/route'],
+  ['send/approve', '@/app/api/agentmail/send/approve/route'],
+  ['send/dispatch', '@/app/api/agentmail/send/dispatch/route'],
 ] as const
 
 describe('AgentMail local control API routes', () => {
@@ -47,7 +56,7 @@ describe('AgentMail local control API routes', () => {
     const localControl = readFileSync(path.join(process.cwd(), 'src/lib/agentmail-local-control.ts'), 'utf8')
     const actions = readFileSync(path.join(process.cwd(), 'src/app/agentmail/AgentMailConnectActions.tsx'), 'utf8')
 
-    for (const label of ['Connect AgentMail', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Bridge Queue', 'Approvals', 'Audit']) {
+    for (const label of ['Connect AgentMail', 'Send Access', 'Bridge Session', 'Agent Send Readiness', 'Permission Matrix', 'Safe Send Test', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Bridge Queue', 'Approvals', 'Audit']) {
       expect(page).toContain(label)
     }
     expect(page).toContain('AGENTMAIL_CONSOLE_URL')

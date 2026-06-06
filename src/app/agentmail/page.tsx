@@ -23,6 +23,7 @@ export default function AgentMailLocalControlPage() {
   const status = payload.status
   const connect = payload.connect
   const preview = payload.sync_preview
+  const sendAccess = payload.send_access
   const stateTone = status.state === 'running' ? 'green' : status.state === 'degraded' ? 'yellow' : 'red'
 
   return (
@@ -121,10 +122,68 @@ export default function AgentMailLocalControlPage() {
     │   ├── Subscribed Inboxes
     │   └── Last Event
     ├── Inbox Registry
+    ├── Send Access
+    │   ├── Bridge Session
+    │   ├── Agent Send Readiness
+    │   ├── Permission Matrix
+    │   └── Safe Send Test
     ├── Gateway Route Preview
     ├── Bridge Queue
     ├── Approvals
     └── Audit`}</div>
+        </div>
+
+
+        <div className="am-panel am-full">
+          <h2>Send Access</h2>
+          <div className="am-list">
+            <div className="am-row"><span>Bridge Session</span><Pill tone={sendAccess.global.bridge_session_state === 'active' ? 'green' : 'yellow'}>{sendAccess.global.bridge_session_state}</Pill></div>
+            <div className="am-row"><span>Expires at</span><span className="am-muted">{sendAccess.global.expires_at || 'not active'}</span></div>
+            <div className="am-row"><span>Sends remaining</span><span>{sendAccess.global.sends_remaining_per_agent}</span></div>
+            <div className="am-row"><span>Default send policy</span><Pill tone="yellow">{sendAccess.global.send_default}</Pill></div>
+          </div>
+          <div className="am-actions">
+            <button className="am-button" type="button" disabled>Request Bridge Session</button>
+            <button className="am-button" type="button" disabled>Revoke Bridge Session</button>
+          </div>
+          <p className="am-muted">Bridge Session required to dispatch approved mail. Message approval remains separate and canonical-owner-channel gated.</p>
+        </div>
+
+        <div className="am-panel am-full">
+          <h2>Agent Send Readiness</h2>
+          <div className="am-list">
+            {Object.values(sendAccess.agents).map((agent: any) => (
+              <div className="am-row" key={agent.agent_id}>
+                <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'}</span></span>
+                <span>
+                  <Pill tone={agent.send_ready ? 'green' : 'yellow'}>{agent.send_ready ? 'send-ready' : (agent.blockers[0] || 'blocked')}</Pill>{' '}
+                  <Pill tone={agent.credential_status === 'scoped' ? 'green' : 'red'}>{agent.credential_status}</Pill>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="am-panel am-full">
+          <h2>Permission Matrix</h2>
+          <div className="am-list">
+            {Object.values(sendAccess.agents).map((agent: any) => (
+              <div className="am-row" key={`${agent.agent_id}-permissions`}>
+                <span>{agent.display_name}</span>
+                <span>{sendAccess.permission_keys.map((key: string) => <Pill key={key} tone={agent.permission_status[key] ? 'green' : 'gray'}>{key}</Pill>)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="am-panel am-full">
+          <h2>Safe Send Test</h2>
+          <div className="am-list">
+            <div className="am-row"><span>Stage A</span><Pill tone="blue">verify readiness without sending</Pill></div>
+            <div className="am-row"><span>Stage B</span><Pill tone="yellow">create draft/preview only</Pill></div>
+            <div className="am-row"><span>Stage C</span><Pill tone="yellow">request canonical owner approval</Pill></div>
+            <div className="am-row"><span>Stage D</span><Pill tone="red">dispatch blocked until approval and active Bridge Session</Pill></div>
+          </div>
         </div>
 
         <div className="am-panel am-full">

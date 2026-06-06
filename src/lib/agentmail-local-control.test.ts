@@ -8,6 +8,11 @@ import {
   buildAgentMailStatus,
   buildAgentMailConnectStatus,
   buildAgentMailInboxSyncPreview,
+  buildAgentMailSendAccessStatus,
+  createAgentMailBridgeSessionRequest,
+  createAgentMailSendPreview,
+  createAgentMailSendRequest,
+  dispatchAgentMailSendRequest,
   ensureAgentMailSchema,
   ingestAgentMailEvent,
   listAgentMailInboxes,
@@ -257,5 +262,111 @@ describe('AgentMail local control bootstrap', () => {
     })
     expect(String(audit.audit[0].detail)).toContain('[redacted]')
     expect(JSON.stringify(audit)).not.toContain('agentmail-test-secret-value')
+  })
+
+it('reports per-agent send access blockers without enabling send execution', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const status = buildAgentMailSendAccessStatus(db, {})
+
+    expect(status.global).toMatchObject({
+      bridge_session_state: 'inactive',
+      send_default: 'approval_required',
+      execution_enabled: false,
+    })
+    expect(status.agents.pi).toMatchObject({
+      inbox_status: 'missing',
+      credential_status: 'missing',
+      gateway_policy: 'approval_required',
+      send_ready: false,
+      bridge_allowed: false,
+    })
+    expect(status.agents.pi.blockers).toEqual(expect.arrayContaining([
+      'agentmail_inbox_assignment_missing',
+      'agentmail_inbox_credential_required',
+      'message_send_permission_missing',
+      'bridge_session_inactive',
+      'owner_approval_required',
+    ]))
+    expect(status.agents.gateway).toMatchObject({
+      gateway_policy: 'monitor_only',
+      send_ready: false,
+    })
+    expect(status.agents.gateway.blockers).toContain('gateway_policy_monitor_only')
+    expect(JSON.stringify(status)).not.toContain('agentmail-test-secret-value')
+  })
+
+  it('keeps AgentMail Bridge Session requests owner-gated and audited', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const request = createAgentMailBridgeSessionRequest(db, { requester: 'owner' })
+    const status = buildAgentMailSendAccessStatus(db, { AGENTMAIL_CREDENTIAL_REF: 'configured' })
+
+    expect(request).toMatchObject({
+      ok: true,
+      state: 'pending_owner_approval',
+      execution_enabled: false,
+      bridge_session_required: true,
+      approval_request_created: expect.any(Boolean),
+      credential_values_exposed: false,
+    })
+    expect(status.global.bridge_session_state).toBe('pending_owner_approval')
+    expect(status.global.execution_enabled).toBe(false)
+  })
+
+  it('blocks dispatch without canonical message approval and active Bridge Session', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'pi@agentmail.to',
+      to: ['owner@example.com'],
+      subject: 'AgentMail send test',
+      text: 'This must not send without approval and Bridge Session.',
+    })
+    const request = createAgentMailSendRequest(db, (preview as any).send_request.id)
+    const dispatch = dispatchAgentMailSendRequest(db, (request as any).send_request.id)
+
+    expect(preview).toMatchObject({
+      ok: true,
+      dispatch_enabled: false,
+      exact_blocker: 'owner_approval_required',
+    })
+    expect(request).toMatchObject({
+      ok: true,
+      approval_required: true,
+      dispatch_enabled: false,
+    })
+    expect(dispatch).toMatchObject({
+      ok: false,
+      dispatch_enabled: false,
+      exact_blocker: 'bridge_session_inactive',
+      credential_values_exposed: false,
+    })
+  })
+
+  it('blocks a send request when an agent tries to use another agent inbox', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'agent_zero'").run('agent-zero@agentmail.to')
+
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'agent-zero@agentmail.to',
+      to: ['owner@example.com'],
+      subject: 'Wrong inbox',
+      text: 'Blocked.',
+    })
+
+    expect(preview).toMatchObject({
+      ok: false,
+      exact_blocker: 'wrong_agent_inbox',
+      dispatch_enabled: false,
+    })
   })
 })

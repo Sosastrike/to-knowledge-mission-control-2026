@@ -11,6 +11,7 @@ import {
   approveAgentMailBridgeSession,
   approveAgentMailSendRequest,
   buildAgentMailSendAccessStatus,
+  buildAgentMailSetupStatus,
   createAgentMailBridgeSessionRequest,
   createAgentMailSendPreview,
   createAgentMailSendRequest,
@@ -170,7 +171,7 @@ describe('AgentMail local control bootstrap', () => {
       'connected',
       'sync_ready',
       'inbox_sync_complete',
-      'bridge_session_required',
+      'action_bridge_session_required',
       'monitor_ready',
     ])
     expect(JSON.stringify(status)).not.toContain('localhost')
@@ -214,7 +215,7 @@ describe('AgentMail local control bootstrap', () => {
         state: 'detected',
         masked_preview: 'am_****7890',
       },
-      bridge_session_status: 'bridge_session_required',
+      bridge_session_status: 'action_bridge_session_required',
       send_state: 'approval_required',
       execution_enabled: false,
       send_enabled: false,
@@ -289,7 +290,7 @@ it('reports per-agent send access blockers without enabling send execution', () 
       'agentmail_inbox_assignment_missing',
       'agentmail_inbox_credential_required',
       'message_send_permission_missing',
-      'bridge_session_inactive',
+      'action_bridge_session_inactive',
       'owner_approval_required',
     ]))
     expect(status.agents.gateway).toMatchObject({
@@ -347,7 +348,7 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(dispatch).toMatchObject({
       ok: false,
       dispatch_enabled: false,
-      exact_blocker: 'bridge_session_inactive',
+      exact_blocker: 'action_bridge_session_inactive',
       credential_values_exposed: false,
     })
   })
@@ -530,6 +531,95 @@ it('reports per-agent send access blockers without enabling send execution', () 
       dispatch_enabled: false,
       credential_values_exposed: false,
     })
+  })
+
+
+  it('selects the exact AgentMail primary blocker by priority instead of collapsing to Bridge Session', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const setup = buildAgentMailSetupStatus(db, {})
+    const sendAccess = buildAgentMailSendAccessStatus(db, {})
+
+    expect(setup).toMatchObject({
+      agentmail_ready: false,
+      send_ready: false,
+      primary_blocker: 'agentmail_owner_sso_or_api_key_required',
+      next_action: 'connect_agentmail',
+      inboxes: {
+        total: 6,
+        provisioned: 0,
+        missing_addresses: 6,
+      },
+      credentials: {
+        scoped_credentials_present: 0,
+        required: 2,
+      },
+      checklist: {
+        owner_connection: 'missing',
+        inboxes_provisioned: 'no',
+        inbox_addresses: 'missing',
+        scoped_credentials: 'missing',
+        action_bridge_session: 'inactive',
+      },
+    })
+    expect(setup.blockers).toEqual(expect.arrayContaining([
+      'agentmail_owner_sso_or_api_key_required',
+      'agentmail_inbox_not_provisioned',
+      'agentmail_inbox_address_missing',
+      'agentmail_inbox_credential_required',
+      'message_send_permission_missing',
+      'action_bridge_session_inactive',
+      'owner_approval_required',
+    ]))
+    expect(setup.primary_blocker).not.toBe('action_bridge_session_inactive')
+    expect(setup.primary_blocker).not.toBe('bridge_session_required')
+    expect(sendAccess.primary_blocker).toBe('agentmail_owner_sso_or_api_key_required')
+    expect(sendAccess.exact_blockers[0]).toBe('agentmail_owner_sso_or_api_key_required')
+    expect(JSON.stringify(setup)).not.toContain('agentmail-test-secret-value')
+  })
+
+  it('prioritizes provisioning and credential blockers before Action Bridge Session once owner connection is present', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const setup = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+
+    expect(setup.primary_blocker).toBe('agentmail_inbox_assignment_missing')
+    expect(setup.blockers).toEqual(expect.arrayContaining([
+      'agentmail_inbox_not_provisioned',
+      'agentmail_inbox_address_missing',
+      'agentmail_inbox_credential_required',
+      'action_bridge_session_inactive',
+    ]))
+    expect(setup.next_action).toBe('sync_or_provision_inbox_registry')
+    expect(JSON.stringify(setup)).not.toContain('agentmail-test-secret-value')
+  })
+
+  it('maps provisioned inboxes with missing scoped credentials before owner approval and Action Bridge blockers', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'agent_zero'").run('agent-zero@agentmail.to')
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = agent_id || '@agentmail.to', provision_state = 'assigned' WHERE inbox_address IS NULL").run()
+
+    const setup = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+
+    expect(setup.primary_blocker).toBe('agentmail_inbox_credential_required')
+    expect(setup.blockers).toEqual(expect.arrayContaining([
+      'agentmail_inbox_credential_required',
+      'message_send_permission_missing',
+      'owner_approval_required',
+      'action_bridge_session_inactive',
+    ]))
+    expect(setup.next_action).toBe('provision_scoped_inbox_credentials')
+    expect(setup.send_ready).toBe(false)
   })
 
 })

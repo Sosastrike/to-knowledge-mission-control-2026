@@ -24,6 +24,7 @@ export default function AgentMailLocalControlPage() {
   const connect = payload.connect
   const preview = payload.sync_preview
   const sendAccess = payload.send_access
+  const setupStatus = payload.setup_status || sendAccess.setup_status
   const stateTone = status.state === 'running' ? 'green' : status.state === 'degraded' ? 'yellow' : 'red'
 
   return (
@@ -73,7 +74,7 @@ export default function AgentMailLocalControlPage() {
         <div className="am-actions">
           <ActionLink href="/gateway">Back to Gateway</ActionLink>
           <ActionLink href="/tkmc">Back to Mission Control</ActionLink>
-          <Pill tone={stateTone}>{status.state}</Pill>
+          <Pill tone={setupStatus?.primary_blocker === 'ready' ? 'green' : 'yellow'}>{setupStatus?.primary_blocker || status.state}</Pill>
         </div>
       </section>
 
@@ -95,6 +96,29 @@ export default function AgentMailLocalControlPage() {
             browser cookies, OAuth tokens, or raw AgentMail API keys in this view.
             AgentMail MCP uses the hosted endpoint in supported MCP clients; this page does not open the raw MCP server URL as a browser page.
           </p>
+        </div>
+
+
+        <div className="am-panel am-full">
+          <h2>AgentMail Setup</h2>
+          <div className="am-list">
+            <div className="am-row"><span>Primary blocker</span><Pill tone={setupStatus?.primary_blocker === 'ready' ? 'green' : 'yellow'}>{setupStatus?.primary_blocker || 'unknown'}</Pill></div>
+            <div className="am-row"><span>Next action</span><span>{setupStatus?.next_action || 'connect_agentmail'}</span></div>
+            <div className="am-row"><span>Owner connection</span><Pill tone={setupStatus?.checklist?.owner_connection === 'connected' ? 'green' : 'red'}>{setupStatus?.checklist?.owner_connection || 'missing'}</Pill></div>
+            <div className="am-row"><span>Runtime visibility</span><Pill tone={setupStatus?.checklist?.runtime_visibility === 'visible' ? 'green' : 'red'}>{setupStatus?.checklist?.runtime_visibility || 'missing'}</Pill></div>
+            <div className="am-row"><span>Organization selected</span><Pill tone={setupStatus?.checklist?.organization_selected === 'selected' ? 'green' : 'yellow'}>{setupStatus?.checklist?.organization_selected || 'missing'}</Pill></div>
+            <div className="am-row"><span>Inbox registry</span><Pill tone={setupStatus?.checklist?.inbox_registry === 'synced' ? 'green' : 'yellow'}>{setupStatus?.checklist?.inbox_registry || 'preview'}</Pill></div>
+            <div className="am-row"><span>Inboxes provisioned</span><Pill tone={setupStatus?.checklist?.inboxes_provisioned === 'yes' ? 'green' : 'red'}>{setupStatus?.checklist?.inboxes_provisioned || 'no'}</Pill></div>
+            <div className="am-row"><span>Inbox addresses</span><Pill tone={setupStatus?.checklist?.inbox_addresses === 'assigned' ? 'green' : 'red'}>{setupStatus?.checklist?.inbox_addresses || 'missing'}</Pill></div>
+            <div className="am-row"><span>Scoped credentials</span><Pill tone={setupStatus?.checklist?.scoped_credentials === 'stored' ? 'green' : 'red'}>{setupStatus?.checklist?.scoped_credentials || 'missing'}</Pill></div>
+            <div className="am-row"><span>Permissions</span><Pill tone={setupStatus?.checklist?.permissions === 'verified' ? 'green' : 'red'}>{setupStatus?.checklist?.permissions || 'missing'}</Pill></div>
+            <div className="am-row"><span>Send adapter</span><Pill tone="blue">{setupStatus?.checklist?.send_adapter || 'configured'}</Pill></div>
+            <div className="am-row"><span>Owner approval flow</span><Pill tone={setupStatus?.checklist?.owner_approval_flow === 'ready' ? 'green' : 'yellow'}>{setupStatus?.checklist?.owner_approval_flow || 'missing'}</Pill></div>
+            <div className="am-row"><span>Action Bridge Session</span><Pill tone={setupStatus?.checklist?.action_bridge_session === 'active' ? 'green' : 'yellow'}>{setupStatus?.checklist?.action_bridge_session || 'inactive'}</Pill></div>
+            <div className="am-row"><span>Gateway policy</span><Pill tone={setupStatus?.checklist?.gateway_policy === 'ready' ? 'green' : 'yellow'}>{setupStatus?.checklist?.gateway_policy || 'blocked'}</Pill></div>
+            <div className="am-row"><span>Audit</span><Pill tone={setupStatus?.checklist?.audit === 'ready' ? 'green' : 'red'}>{setupStatus?.checklist?.audit || 'missing'}</Pill></div>
+            <div className="am-row"><span>All blockers</span><span>{(setupStatus?.blockers || []).join(' · ')}</span></div>
+          </div>
         </div>
 
         <div className="am-panel am-side">
@@ -147,7 +171,7 @@ export default function AgentMailLocalControlPage() {
             <button className="am-button" type="button" disabled>Request Bridge Session</button>
             <button className="am-button" type="button" disabled>Revoke Bridge Session</button>
           </div>
-          <p className="am-muted">If Bridge Session is active but sending is still blocked, the next exact blocker is usually scoped AgentMail inbox credential required, message_send permission missing, owner approval required, or Gateway policy blocked.</p>
+          <p className="am-muted">If the Action Bridge Session is active but sending is still blocked, the next exact blocker is usually scoped AgentMail inbox credential required, message_send permission missing, owner approval required, or Gateway policy blocked.</p>
         </div>
 
         <div className="am-panel am-full">

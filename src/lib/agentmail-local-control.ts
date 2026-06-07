@@ -528,7 +528,7 @@ export function buildAgentMailConnectStatus(
         : status === 'sync_ready'
           ? 'agentmail_inbox_sync_preview_required'
           : status === 'inbox_sync_complete'
-            ? 'agentmail_bridge_session_required'
+            ? 'action_bridge_session_inactive'
             : null,
     primary_cta: 'Connect AgentMail',
     hosted_console_url: AGENTMAIL_CONSOLE_URL,
@@ -563,7 +563,7 @@ export function buildAgentMailConnectStatus(
     },
     last_sync_attempt: lastAudit || null,
     sync_ready: status === 'sync_ready' || status === 'inbox_sync_complete' || status === 'monitor_ready',
-    bridge_session_status: 'bridge_session_required',
+    bridge_session_status: 'action_bridge_session_required',
     local_monitor: monitorStatus.local_monitor,
     send_state: 'approval_required',
     execution_enabled: false,
@@ -573,7 +573,7 @@ export function buildAgentMailConnectStatus(
       'connected',
       'sync_ready',
       'inbox_sync_complete',
-      'bridge_session_required',
+      'action_bridge_session_required',
       'monitor_ready',
     ],
     ...SAFE_FLAGS,
@@ -670,6 +670,7 @@ export function buildAgentMailPayload(kind: 'inboxes' | 'events' | 'bridge_queue
     connect: buildAgentMailConnectStatus(db),
     sync_preview: buildAgentMailInboxSyncPreview(db),
     send_access: buildAgentMailSendAccessStatus(db),
+    setup_status: buildAgentMailSetupStatus(db),
     inboxes: listAgentMailInboxes(db),
     events: queryRows(db, `SELECT event_id, event_type, agent_id, sender_preview, subject, received_at, policy_state FROM agentmail_events ORDER BY created_at DESC LIMIT 12`),
     bridge_queue: queryRows(db, `SELECT id, event_id, task_candidate_state, policy_state, owner_approval_required FROM agentmail_bridge_queue ORDER BY created_at DESC LIMIT 12`),
@@ -683,6 +684,61 @@ export type AgentMailBridgeSessionState = 'inactive' | 'pending_owner_approval' 
 export type AgentMailGatewayPolicy = 'monitor_only' | 'draft_only' | 'approval_required' | 'allowlisted_auto_send'
 export type AgentMailCredentialStatus = 'missing' | 'detected' | 'scoped' | 'invalid' | 'expired'
 export type AgentMailInboxStatus = 'missing' | 'provisioned' | 'synced'
+
+export const AGENTMAIL_BLOCKER_PRIORITY = [
+  'agentmail_owner_sso_or_api_key_required',
+  'agentmail_connection_not_visible_to_runtime',
+  'agentmail_inbox_assignment_missing',
+  'agentmail_inbox_not_provisioned',
+  'agentmail_inbox_address_missing',
+  'agentmail_inbox_credential_required',
+  'agentmail_runtime_secret_store_required',
+  'scoped_credential_invalid',
+  'scoped_credential_wrong_inbox',
+  'message_send_permission_missing',
+  'draft_send_permission_missing',
+  'owner_approval_required',
+  'action_bridge_session_inactive',
+  'gateway_blocked',
+  'audit_context_missing',
+  'ready',
+] as const
+
+type AgentMailSetupBlocker = typeof AGENTMAIL_BLOCKER_PRIORITY[number]
+
+type AgentMailSetupChecklist = {
+  owner_connection: 'missing' | 'connected'
+  runtime_visibility: 'missing' | 'visible'
+  organization_selected: 'missing' | 'selected'
+  inbox_registry: 'preview' | 'synced'
+  inboxes_provisioned: 'no' | 'partial' | 'yes'
+  inbox_addresses: 'missing' | 'assigned'
+  scoped_credentials: 'missing' | 'stored'
+  permissions: 'missing' | 'verified'
+  send_adapter: 'configured' | 'failed'
+  owner_approval_flow: 'ready' | 'missing'
+  action_bridge_session: 'inactive' | 'active'
+  gateway_policy: 'ready' | 'blocked'
+  audit: 'ready' | 'missing'
+}
+
+type AgentMailSetupEvaluation = {
+  agentmail_ready: boolean
+  send_ready: boolean
+  primary_blocker: AgentMailSetupBlocker
+  blockers: AgentMailSetupBlocker[]
+  next_action: string
+  inboxes: {
+    total: number
+    provisioned: number
+    missing_addresses: number
+  }
+  credentials: {
+    scoped_credentials_present: number
+    required: number
+  }
+  checklist: AgentMailSetupChecklist
+}
 
 const AGENTMAIL_SEND_PERMISSIONS = AGENTMAIL_PERMISSION_KEYS
 
@@ -736,6 +792,173 @@ type AgentMailBridgeSessionRow = {
   sends_dispatched: number
   created_at: number
   updated_at: number
+}
+
+function uniqueBlockers(blockers: string[]): AgentMailSetupBlocker[] {
+  const found = new Set<string>(blockers)
+  return AGENTMAIL_BLOCKER_PRIORITY.filter((blocker): blocker is AgentMailSetupBlocker => found.has(blocker))
+}
+
+function primaryAgentMailBlocker(blockers: AgentMailSetupBlocker[]): AgentMailSetupBlocker {
+  for (const blocker of AGENTMAIL_BLOCKER_PRIORITY) {
+    if (blockers.includes(blocker)) return blocker
+  }
+  return 'ready'
+}
+
+function agentMailNextAction(primaryBlocker: AgentMailSetupBlocker): string {
+  if (primaryBlocker === 'agentmail_owner_sso_or_api_key_required') return 'connect_agentmail'
+  if (primaryBlocker === 'agentmail_connection_not_visible_to_runtime') return 'connect_agentmail_runtime_access'
+  if (primaryBlocker === 'agentmail_inbox_assignment_missing' || primaryBlocker === 'agentmail_inbox_not_provisioned' || primaryBlocker === 'agentmail_inbox_address_missing') return 'sync_or_provision_inbox_registry'
+  if (primaryBlocker === 'agentmail_inbox_credential_required' || primaryBlocker === 'scoped_credential_invalid' || primaryBlocker === 'scoped_credential_wrong_inbox') return 'provision_scoped_inbox_credentials'
+  if (primaryBlocker === 'agentmail_runtime_secret_store_required') return 'configure_approved_runtime_secret_storage'
+  if (primaryBlocker === 'message_send_permission_missing' || primaryBlocker === 'draft_send_permission_missing') return 'verify_agentmail_scoped_permissions'
+  if (primaryBlocker === 'owner_approval_required') return 'request_owner_message_approval'
+  if (primaryBlocker === 'action_bridge_session_inactive') return 'request_agentmail_action_bridge_session'
+  if (primaryBlocker === 'gateway_blocked') return 'resolve_gateway_policy_blocker'
+  if (primaryBlocker === 'audit_context_missing') return 'restore_agentmail_audit_context'
+  return 'approval_gated_send_ready'
+}
+
+function setupChecklist(input: {
+  connectStatus: AgentMailConnectStatus
+  hasRuntimeConnection: boolean
+  organizationSelected: boolean
+  totalInboxes: number
+  provisionedInboxes: number
+  missingAddresses: number
+  scopedCredentialsPresent: number
+  requiredScopedCredentials: number
+  permissionsVerified: boolean
+  bridgeState: AgentMailBridgeSessionState
+  gatewayReady: boolean
+  auditReady: boolean
+}): AgentMailSetupChecklist {
+  return {
+    owner_connection: input.connectStatus === 'owner_sso_required' || input.connectStatus === 'api_key_required' ? 'missing' : 'connected',
+    runtime_visibility: input.hasRuntimeConnection ? 'visible' : 'missing',
+    organization_selected: input.organizationSelected ? 'selected' : 'missing',
+    inbox_registry: input.provisionedInboxes > 0 && input.missingAddresses === 0 ? 'synced' : 'preview',
+    inboxes_provisioned: input.provisionedInboxes === 0 ? 'no' : input.provisionedInboxes === input.totalInboxes ? 'yes' : 'partial',
+    inbox_addresses: input.missingAddresses === 0 ? 'assigned' : 'missing',
+    scoped_credentials: input.scopedCredentialsPresent >= input.requiredScopedCredentials && input.requiredScopedCredentials > 0 ? 'stored' : 'missing',
+    permissions: input.permissionsVerified ? 'verified' : 'missing',
+    send_adapter: 'configured',
+    owner_approval_flow: 'ready',
+    action_bridge_session: input.bridgeState === 'active' ? 'active' : 'inactive',
+    gateway_policy: input.gatewayReady ? 'ready' : 'blocked',
+    audit: input.auditReady ? 'ready' : 'missing',
+  }
+}
+
+function evaluateAgentMailSetup(input: {
+  connect: ReturnType<typeof buildAgentMailConnectStatus>
+  inboxes: AgentMailInboxRecord[]
+  agents: Record<string, Record<string, unknown>>
+  bridgeState: AgentMailBridgeSessionState
+  auditReady: boolean
+}): AgentMailSetupEvaluation {
+  const sendCapable = input.inboxes.filter((inbox) => inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero')
+  const totalInboxes = input.inboxes.length
+  const provisionedInboxes = input.inboxes.filter((inbox) => inbox.provision_state === 'assigned' || Boolean(inbox.inbox_address)).length
+  const missingAddresses = input.inboxes.filter((inbox) => !inbox.inbox_address).length
+  const requiredScopedCredentials = sendCapable.length
+  const scopedCredentialsPresent = sendCapable.filter((inbox) => {
+    const agent = input.agents[inbox.agent_id] || {}
+    return agent.credential_status === 'scoped'
+  }).length
+  const permissionsVerified = sendCapable.length > 0 && sendCapable.every((inbox) => {
+    const agent = input.agents[inbox.agent_id] || {}
+    const permissions = agent.permission_status as Record<string, boolean> | undefined
+    return Boolean(permissions?.message_send)
+  })
+  const connected = input.connect.status !== 'owner_sso_required' && input.connect.status !== 'api_key_required'
+  const runtimeVisible = connected && input.connect.status !== 'connected'
+  const organizationSelected = input.connect.status === 'sync_ready' || input.connect.status === 'inbox_sync_complete' || input.connect.status === 'monitor_ready'
+  const gatewayReady = !Object.values(input.agents).some((agent) => (agent.blockers as string[] | undefined)?.includes('gateway_policy_monitor_only') && (agent.agent_id === 'pi' || agent.agent_id === 'agent_zero'))
+  const rawBlockers: string[] = []
+
+  if (!connected) rawBlockers.push('agentmail_owner_sso_or_api_key_required')
+  if (connected && !runtimeVisible) rawBlockers.push('agentmail_connection_not_visible_to_runtime')
+  if (input.inboxes.some((inbox) => !inbox.inbox_address)) rawBlockers.push('agentmail_inbox_assignment_missing', 'agentmail_inbox_address_missing')
+  if (input.inboxes.some((inbox) => inbox.provision_state !== 'assigned')) rawBlockers.push('agentmail_inbox_not_provisioned')
+  if (scopedCredentialsPresent < requiredScopedCredentials) rawBlockers.push('agentmail_inbox_credential_required')
+  for (const agent of Object.values(input.agents)) {
+    const blockers = agent.blockers as string[] | undefined
+    if (!blockers) continue
+    if (blockers.includes('agentmail_runtime_secret_store_required')) rawBlockers.push('agentmail_runtime_secret_store_required')
+    if (blockers.includes('scoped_credential_invalid')) rawBlockers.push('scoped_credential_invalid')
+    if (blockers.includes('scoped_credential_wrong_inbox')) rawBlockers.push('scoped_credential_wrong_inbox')
+    if (blockers.includes('message_send_permission_missing')) rawBlockers.push('message_send_permission_missing')
+    if (blockers.includes('draft_send_permission_missing')) rawBlockers.push('draft_send_permission_missing')
+    if (blockers.includes('owner_approval_required')) rawBlockers.push('owner_approval_required')
+    if (blockers.includes('gateway_blocked')) rawBlockers.push('gateway_blocked')
+  }
+  if (input.bridgeState !== 'active') rawBlockers.push('action_bridge_session_inactive')
+  if (!gatewayReady) rawBlockers.push('gateway_blocked')
+  if (!input.auditReady) rawBlockers.push('audit_context_missing')
+
+  const blockers = uniqueBlockers(rawBlockers)
+  const primary = primaryAgentMailBlocker(blockers)
+  const sendReady = primary === 'ready'
+  const checklist = setupChecklist({
+    connectStatus: input.connect.status,
+    hasRuntimeConnection: runtimeVisible,
+    organizationSelected,
+    totalInboxes,
+    provisionedInboxes,
+    missingAddresses,
+    scopedCredentialsPresent,
+    requiredScopedCredentials,
+    permissionsVerified,
+    bridgeState: input.bridgeState,
+    gatewayReady,
+    auditReady: input.auditReady,
+  })
+
+  return {
+    agentmail_ready: connected && organizationSelected && missingAddresses === 0,
+    send_ready: sendReady,
+    primary_blocker: primary,
+    blockers: blockers.length ? blockers : ['ready'],
+    next_action: agentMailNextAction(primary),
+    inboxes: {
+      total: totalInboxes,
+      provisioned: provisionedInboxes,
+      missing_addresses: missingAddresses,
+    },
+    credentials: {
+      scoped_credentials_present: scopedCredentialsPresent,
+      required: requiredScopedCredentials,
+    },
+    checklist,
+  }
+}
+
+export function buildAgentMailSetupStatus(
+  db: Database.Database = getDatabase(),
+  env: Record<string, string | undefined> = process.env,
+): AgentMailSetupEvaluation & typeof SAFE_FLAGS {
+  ensureAgentMailSchema(db)
+  const connect = buildAgentMailConnectStatus(db, env)
+  const bridgeState = normalizeBridgeState(latestAgentMailBridgeSession(db))
+  const inboxes = listAgentMailInboxes(db)
+  const agents = inboxes.reduce((acc, inbox) => {
+    acc[inbox.agent_id] = {
+      agent_id: inbox.agent_id,
+      ...sendAccessForInbox(inbox, env, bridgeState, db),
+    }
+    return acc
+  }, {} as Record<string, Record<string, unknown>>)
+  const auditReady = true
+  const setup = evaluateAgentMailSetup({ connect, inboxes, agents, bridgeState, auditReady })
+  recordAgentMailAudit(db, 'agentmail_status_blockers_evaluated', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.blockers.join(','))
+  recordAgentMailAudit(db, 'agentmail_primary_blocker_selected', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.primary_blocker)
+  recordAgentMailAudit(db, 'agentmail_next_action_selected', 'ok', setup.next_action)
+  if (setup.blockers.includes('agentmail_inbox_not_provisioned')) recordAgentMailAudit(db, 'agentmail_inbox_provisioning_required', 'blocked', 'preview_or_owner_approved_provisioning_required')
+  if (setup.blockers.includes('agentmail_inbox_credential_required')) recordAgentMailAudit(db, 'agentmail_scoped_credentials_required', 'blocked', 'owner_approved_scoped_inbox_credentials_required')
+  if (setup.blockers.includes('action_bridge_session_inactive')) recordAgentMailAudit(db, 'agentmail_action_bridge_session_required', 'blocked', 'agentmail_action_bridge_session_required_after_setup')
+  return { ...setup, ...SAFE_FLAGS }
 }
 
 function parseJsonArray(value: string | null): string[] {
@@ -808,13 +1031,13 @@ function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, str
   const permissions = credentialResolution?.permissions || permissionMap(false, sendCapablePolicy)
   const blockers: string[] = []
 
-  if (inbox_state === 'missing') blockers.push('agentmail_inbox_assignment_missing')
+  if (inbox_state === 'missing') blockers.push('agentmail_inbox_assignment_missing', 'agentmail_inbox_not_provisioned', 'agentmail_inbox_address_missing')
   if (credential === 'missing' || credential === 'detected') blockers.push('agentmail_inbox_credential_required')
   for (const blocker of credentialResolution?.blockers || []) blockers.push(blocker)
   if (!permissions.message_send && sendCapablePolicy) blockers.push('message_send_permission_missing')
   if (policy === 'monitor_only') blockers.push('gateway_policy_monitor_only')
   if (policy === 'draft_only') blockers.push('gateway_policy_draft_only')
-  if (bridgeState !== 'active') blockers.push(bridgeState === 'inactive' ? 'bridge_session_inactive' : `bridge_session_${bridgeState}`)
+  if (bridgeState !== 'active') blockers.push(bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `action_bridge_session_${bridgeState}`)
   if (policy === 'approval_required') blockers.push('owner_approval_required')
 
   return {
@@ -858,6 +1081,14 @@ export function buildAgentMailSendAccessStatus(
     return acc
   }, {} as Record<string, Record<string, unknown>>)
 
+  const setupStatus = evaluateAgentMailSetup({
+    connect,
+    inboxes,
+    agents,
+    bridgeState,
+    auditReady: true,
+  })
+
   return {
     ok: true,
     source: 'agentmail_send_access',
@@ -883,8 +1114,17 @@ export function buildAgentMailSendAccessStatus(
       },
     },
     agents,
+    setup_status: setupStatus,
+    primary_blocker: setupStatus.primary_blocker,
+    blockers: setupStatus.blockers,
+    next_action: setupStatus.next_action,
+    agentmail_ready: setupStatus.agentmail_ready,
+    send_ready: setupStatus.send_ready,
+    inbox_summary: setupStatus.inboxes,
+    credential_summary: setupStatus.credentials,
+    setup_checklist: setupStatus.checklist,
     permission_keys: AGENTMAIL_SEND_PERMISSIONS,
-    exact_blockers: Array.from(new Set(Object.values(agents).flatMap((agent) => agent.blockers as string[]))),
+    exact_blockers: setupStatus.blockers,
     ...SAFE_FLAGS,
   }
 }
@@ -1240,7 +1480,7 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
   const recipientCount = parseJsonArray(row.to_json).length + parseJsonArray(row.cc_json).length + parseJsonArray(row.bcc_json).length
   let exactBlocker: string | null = null
 
-  if (bridgeState !== 'active') exactBlocker = bridgeState === 'inactive' ? 'bridge_session_inactive' : `bridge_session_${bridgeState}`
+  if (bridgeState !== 'active') exactBlocker = bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `bridge_session_${bridgeState}`
   else if (row.state !== 'owner_approved') exactBlocker = 'owner_approval_required'
   else if (!inbox || !inbox.inbox_address) exactBlocker = 'agentmail_inbox_assignment_missing'
   else if (inbox.inbox_address.toLowerCase() !== row.inbox_id.toLowerCase()) exactBlocker = 'wrong_agent_inbox'

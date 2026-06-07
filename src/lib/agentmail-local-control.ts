@@ -548,7 +548,7 @@ export function buildAgentMailConnectStatus(
       : status === 'sync_ready'
           ? 'agentmail_inbox_sync_preview_required'
           : status === 'inbox_sync_complete'
-            ? 'action_bridge_session_inactive'
+            ? (detectAgentMailInboxLimitExceeded(db) ? 'agentmail_inbox_limit_exceeded' : 'action_bridge_session_inactive')
             : null,
     primary_cta: 'Connect AgentMail',
     hosted_console_url: AGENTMAIL_CONSOLE_URL,
@@ -792,6 +792,7 @@ export type AgentMailInboxStatus = 'missing' | 'provisioned' | 'synced'
 export const AGENTMAIL_BLOCKER_PRIORITY = [
   'agentmail_owner_sso_or_api_key_required',
   'agentmail_connection_not_visible_to_runtime',
+  'agentmail_inbox_limit_exceeded',
   'agentmail_inbox_assignment_missing',
   'agentmail_inbox_not_provisioned',
   'agentmail_inbox_address_missing',
@@ -913,6 +914,7 @@ function primaryAgentMailBlocker(blockers: AgentMailSetupBlocker[]): AgentMailSe
 function agentMailNextAction(primaryBlocker: AgentMailSetupBlocker): string {
   if (primaryBlocker === 'agentmail_owner_sso_or_api_key_required') return 'connect_agentmail'
   if (primaryBlocker === 'agentmail_connection_not_visible_to_runtime') return 'connect_agentmail_runtime_access'
+  if (primaryBlocker === 'agentmail_inbox_limit_exceeded') return 'resolve_agentmail_inbox_capacity'
   if (primaryBlocker === 'agentmail_inbox_assignment_missing' || primaryBlocker === 'agentmail_inbox_not_provisioned' || primaryBlocker === 'agentmail_inbox_address_missing') return 'sync_or_provision_inbox_registry'
   if (primaryBlocker === 'agentmail_inbox_credential_required' || primaryBlocker === 'scoped_credential_invalid' || primaryBlocker === 'scoped_credential_wrong_inbox') return 'provision_scoped_inbox_credentials'
   if (primaryBlocker === 'agentmail_runtime_secret_store_required') return 'configure_approved_runtime_secret_storage'
@@ -961,6 +963,7 @@ function evaluateAgentMailSetup(input: {
   agents: Record<string, Record<string, unknown>>
   bridgeState: AgentMailBridgeSessionState
   auditReady: boolean
+  inboxLimitExceeded?: boolean
 }): AgentMailSetupEvaluation {
   const sendCapable = input.inboxes.filter((inbox) => inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero')
   const totalInboxes = input.inboxes.length
@@ -984,6 +987,7 @@ function evaluateAgentMailSetup(input: {
 
   if (!connected) rawBlockers.push(input.connect.runtime_credential_blocker === 'agentmail_runtime_secret_store_required' ? 'agentmail_runtime_secret_store_required' : 'agentmail_owner_sso_or_api_key_required')
   if (connected && !runtimeVisible) rawBlockers.push('agentmail_connection_not_visible_to_runtime')
+  if (input.inboxLimitExceeded && missingAddresses > 0) rawBlockers.push('agentmail_inbox_limit_exceeded')
   if (input.inboxes.some((inbox) => !inbox.inbox_address)) rawBlockers.push('agentmail_inbox_assignment_missing', 'agentmail_inbox_address_missing')
   if (input.inboxes.some((inbox) => inbox.provision_state !== 'assigned')) rawBlockers.push('agentmail_inbox_not_provisioned')
   if (scopedCredentialsPresent < requiredScopedCredentials) rawBlockers.push('agentmail_inbox_credential_required')
@@ -1055,14 +1059,47 @@ export function buildAgentMailSetupStatus(
     return acc
   }, {} as Record<string, Record<string, unknown>>)
   const auditReady = true
-  const setup = evaluateAgentMailSetup({ connect, inboxes, agents, bridgeState, auditReady })
+  const inboxLimitExceeded = detectAgentMailInboxLimitExceeded(db)
+  const setup = evaluateAgentMailSetup({ connect, inboxes, agents, bridgeState, auditReady, inboxLimitExceeded })
   recordAgentMailAudit(db, 'agentmail_status_blockers_evaluated', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.blockers.join(','))
   recordAgentMailAudit(db, 'agentmail_primary_blocker_selected', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.primary_blocker)
   recordAgentMailAudit(db, 'agentmail_next_action_selected', 'ok', setup.next_action)
+  if (setup.blockers.includes('agentmail_inbox_limit_exceeded')) {
+    recordAgentMailAudit(db, 'agentmail_inbox_limit_exceeded', 'blocked', 'agentmail_provider_inbox_capacity_limit_blocks_required_agent_inboxes')
+    recordAgentMailAudit(db, 'agentmail_capacity_resolution_required', 'blocked', 'increase_capacity_or_owner_approve_reuse_mapping')
+  }
   if (setup.blockers.includes('agentmail_inbox_not_provisioned')) recordAgentMailAudit(db, 'agentmail_inbox_provisioning_required', 'blocked', 'preview_or_owner_approved_provisioning_required')
   if (setup.blockers.includes('agentmail_inbox_credential_required')) recordAgentMailAudit(db, 'agentmail_scoped_credentials_required', 'blocked', 'owner_approved_scoped_inbox_credentials_required')
   if (setup.blockers.includes('action_bridge_session_inactive')) recordAgentMailAudit(db, 'agentmail_action_bridge_session_required', 'blocked', 'agentmail_action_bridge_session_required_after_setup')
   return { ...setup, ...SAFE_FLAGS }
+}
+
+
+export function detectAgentMailInboxLimitExceeded(db: Database.Database = getDatabase()): boolean {
+  ensureAgentMailSchema(db)
+  const missingAddresses = (db.prepare(`SELECT COUNT(*) AS count FROM agentmail_inboxes WHERE inbox_address IS NULL OR inbox_address = ''`).get() as { count: number }).count
+  if (missingAddresses < 1) return false
+  const row = db.prepare(`
+    SELECT detail FROM agentmail_audit
+    WHERE action IN ('agentmail_inbox_provisioning_failed', 'agentmail_inbox_limit_exceeded')
+      AND detail LIKE '%agentmail_inbox_limit_exceeded%'
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `).get() as { detail?: string } | undefined
+  return Boolean(row?.detail)
+}
+
+export function latestAgentMailLiveInboxCount(db: Database.Database = getDatabase()): number | null {
+  ensureAgentMailSchema(db)
+  const row = db.prepare(`
+    SELECT detail FROM agentmail_audit
+    WHERE action = 'agentmail_live_inbox_preview_completed'
+      AND detail LIKE 'live_inboxes=%'
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `).get() as { detail?: string } | undefined
+  const match = String(row?.detail || '').match(/live_inboxes=(\d+)/)
+  return match ? Number(match[1]) : null
 }
 
 function parseJsonArray(value: string | null): string[] {

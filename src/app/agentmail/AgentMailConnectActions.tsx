@@ -98,6 +98,7 @@ export function AgentMailConnectActions({ consoleUrl }: { consoleUrl: string }) 
         <button className="am-button" type="button" onClick={() => runAction('Request inbox provisioning approval', '/api/agentmail/connect/provision-request')}>Request inbox provisioning approval</button>
         <button className="am-button" type="button" onClick={() => runAction('Approve inbox provisioning', '/api/agentmail/connect/provision-approve')}>Approve inbox provisioning</button>
         <button className="am-button" type="button" onClick={() => runAction('Apply inbox provisioning', '/api/agentmail/connect/provision-apply')}>Apply inbox provisioning</button>
+        <button className="am-button" type="button" onClick={() => runAction('Request capacity resolution decision', '/api/agentmail/connect/capacity-resolution')}>Request capacity resolution decision</button>
         <button className="am-button" type="button" onClick={() => runAction('Request Bridge Session', '/api/agentmail/bridge-session/request')}>Request Bridge Session</button>
         <button className="am-button" type="button" onClick={() => runAction('Revoke Bridge Session', '/api/agentmail/bridge-session/revoke')}>Revoke Bridge Session</button>
       </div>

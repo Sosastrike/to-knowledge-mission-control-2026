@@ -76,6 +76,7 @@ describe('AgentMail local control API routes', () => {
     expect(actions).toContain("'/api/agentmail/connect/provision-request'")
     expect(actions).toContain("'/api/agentmail/connect/provision-approve'")
     expect(actions).toContain("'/api/agentmail/connect/provision-apply'")
+    expect(actions).toContain("'/api/agentmail/connect/capacity-resolution'")
     expect(actions).toContain('fetch(path')
     expect(actions).toContain('setState')
     expect(actions).not.toContain('href={AGENTMAIL_MCP_URL}')

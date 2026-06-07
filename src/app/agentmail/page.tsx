@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { AgentMailConnectActions } from './AgentMailConnectActions'
+import { buildAgentMailCapacityStatus } from '@/lib/agentmail-capacity-status'
 import { AGENTMAIL_CONSOLE_URL, buildAgentMailPayload } from '@/lib/agentmail-local-control'
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function AgentMailLocalControlPage() {
   const preview = payload.sync_preview
   const sendAccess = payload.send_access
   const setupStatus = payload.setup_status || sendAccess.setup_status
+  const capacity = buildAgentMailCapacityStatus() as any
   const stateTone = status.state === 'running' ? 'green' : status.state === 'degraded' ? 'yellow' : 'red'
 
   return (
@@ -159,6 +161,25 @@ export default function AgentMailLocalControlPage() {
     └── Audit`}</div>
         </div>
 
+
+        <div className="am-panel am-full">
+          <h2>AgentMail Capacity</h2>
+          <div className="am-list">
+            <div className="am-row"><span>Current blocker</span><Pill tone={capacity.current_primary_blocker === 'agentmail_inbox_limit_exceeded' ? 'red' : 'yellow'}>{capacity.user_facing_blocker}</Pill></div>
+            <div className="am-row"><span>Live inboxes</span><span>{capacity.live_inboxes}</span></div>
+            <div className="am-row"><span>Required target inboxes</span><span>{capacity.required_target_inboxes}</span></div>
+            <div className="am-row"><span>Provisioned/synced</span><span>{capacity.provisioned_synced}</span></div>
+            <div className="am-row"><span>Blocked by provider limit</span><Pill tone={capacity.blocked_by_provider_limit > 0 ? 'red' : 'green'}>{capacity.blocked_by_provider_limit}</Pill></div>
+            <div className="am-row"><span>Existing live inboxes</span><span>{capacity.existing_live_inboxes.length ? capacity.existing_live_inboxes.join(' · ') : 'none synced in registry yet'}</span></div>
+            <div className="am-row"><span>Missing required inboxes</span><span>{capacity.missing_required_inboxes.map((row: any) => row.email).join(' · ') || 'none'}</span></div>
+          </div>
+          <h2 style={{ marginTop: 18 }}>Resolution options</h2>
+          <div className="am-list">
+            <div className="am-row"><span>Option A</span><span>Increase AgentMail inbox limit / upgrade plan / request capacity, then rerun provisioning.</span></div>
+            <div className="am-row"><span>Option B</span><span>Reuse existing live inboxes only with explicit owner-approved mapping.</span></div>
+            <div className="am-row"><span>Option C</span><span>Delete unrelated inboxes from AgentMail console, then rerun provisioning. Mission Control will not delete them automatically.</span></div>
+          </div>
+        </div>
 
         <div className="am-panel am-full">
           <h2>Send Access</h2>

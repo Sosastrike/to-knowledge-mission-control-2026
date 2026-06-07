@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 
 import { buildAgentMailConnectStatus, recordAgentMailAudit } from '@/lib/agentmail-local-control'
+import { testAgentMailBootstrapConnection } from '@/lib/agentmail-credential-resolver'
 import { getDatabase } from '@/lib/db'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
@@ -12,27 +13,32 @@ export async function POST(request: NextRequest) {
   if (auth) return auth
 
   const db = getDatabase()
+  const probe = await testAgentMailBootstrapConnection({ db })
   const status = buildAgentMailConnectStatus(db)
-  const connected = status.status !== 'owner_sso_required' && status.status !== 'api_key_required'
+  const connected = probe.ok
   recordAgentMailAudit(
     db,
     connected ? 'agentmail_connection_test_passed' : 'agentmail_connection_test_failed',
     connected ? 'ok' : 'blocked',
-    connected ? 'credential metadata detected; sends remain approval required' : 'owner_sso_required_or_api_key_required',
+    connected ? `safe_inbox_probe_ok;inbox_count=${probe.inbox_count};sends_remain_approval_required` : (probe.exact_blocker || 'agentmail_connection_test_blocked'),
   )
   recordAgentMailAudit(
     db,
     connected ? 'agentmail_connection_visible_to_runtime' : 'agentmail_connection_not_visible_to_runtime',
     connected ? 'ok' : 'blocked',
-    connected ? 'mission_control_service_runtime_can_see_agentmail_connection' : 'mission_control_service_runtime_cannot_see_agentmail_connection',
+    connected ? 'mission_control_service_runtime_can_probe_agentmail_with_bootstrap_credential' : (probe.exact_blocker || 'mission_control_service_runtime_cannot_probe_agentmail'),
   )
-  if (status.status === 'sync_ready' || status.status === 'inbox_sync_complete' || status.status === 'monitor_ready') {
-    recordAgentMailAudit(db, 'agentmail_organization_selected', 'ok', 'organization_selection_or_api_fallback_detected_no_send_enabled')
+  if (connected) {
+    recordAgentMailAudit(db, 'agentmail_organization_selected', 'ok', 'bootstrap_connection_probe_visible_no_send_enabled')
   }
 
   return readOnly({
     ...status,
     connection_test: connected ? 'passed' : 'blocked',
-    exact_blocker: connected ? null : status.status === 'api_key_required' ? 'agentmail_connection_not_visible_to_runtime' : 'agentmail_owner_sso_or_api_key_required',
+    exact_blocker: connected ? null : probe.exact_blocker || 'agentmail_connection_not_visible_to_runtime',
+    connection_probe: {
+      ...probe,
+      secret_material_returned: false,
+    },
   })
 }

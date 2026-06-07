@@ -26,6 +26,7 @@
     "providers:xai:grok:diagnose": "node scripts/providers-xai-grok-diagnose.mjs",
     "agentmail:connect": "bash scripts/agentmail/connect-agentmail.sh",
     "agentmail:local-monitor": "node scripts/agentmail-local-monitor.mjs",
+    "agentmail:store-bootstrap-key": "node scripts/agentmail/store-bootstrap-key.mjs",
     "gateway:trace-provider": "node scripts/gateway-trace-provider.mjs",
     "typecheck": "pnpm run verify:node && tsc --noEmit",
     "test": "pnpm run verify:node && vitest run",

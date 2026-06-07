@@ -89,6 +89,38 @@ export type AgentMailBootstrapCredentialResolution = {
   raw_secret_values_exposed: false
 }
 
+export type AgentMailBootstrapConnectionTest = {
+  ok: boolean
+  probe_status: 'ok' | 'credential_required' | 'http_error' | 'unreachable'
+  http_status: number | null
+  exact_blocker: string | null
+  inbox_count: number
+  endpoint_used: string
+  auth_header_present: boolean
+  provider_error_summary?: {
+    status: number | null
+    message: string | null
+    credential_values_exposed: false
+    tokens_exposed: false
+    env_values_exposed: false
+    raw_secret_values_exposed: false
+  }
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
+type LoadedAgentMailBootstrapCredential =
+  | { ok: true; value: string; ref: string; keyMasked: string | null; source: 'provider_vault' | 'raw_env' }
+  | {
+      ok: false
+      ref: string | null
+      keyMasked: string | null
+      source: 'provider_vault' | 'raw_env' | 'none'
+      exact_blocker: 'agentmail_api_key_missing' | 'agentmail_api_key_ref_unresolved' | 'agentmail_runtime_secret_store_required'
+    }
+
 function latestAgentMailBootstrapSecret(db: Database.Database, ref: string): AgentMailBootstrapSecretRow | undefined {
   ensureProviderVaultSchema(db)
   return db.prepare(`
@@ -131,6 +163,134 @@ export function resolveAgentMailBootstrapCredential(input: {
 
   if (rawEnvKey) return { ref: 'AGENTMAIL_API_KEY', keyAvailable: true, keyMasked: maskAgentMailKey(rawEnvKey), source: 'raw_env', exact_blocker: null, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
   return { ref: null, keyAvailable: false, keyMasked: null, source: 'none', exact_blocker: 'agentmail_api_key_missing', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+}
+
+function loadAgentMailBootstrapCredentialValue(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+} = {}): LoadedAgentMailBootstrapCredential {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const ref = normalizeRef(env.AGENTMAIL_API_KEY_REF || env.AGENTMAIL_CREDENTIAL_REF || '')
+  const rawEnvKey = String(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || '').trim()
+
+  if (ref) {
+    const loadedKey = loadSecretMasterKey(env)
+    if (!loadedKey.ok) {
+      return { ok: false, ref, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_runtime_secret_store_required' }
+    }
+    const row = latestAgentMailBootstrapSecret(db, ref)
+    if (!row) {
+      return { ok: false, ref, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_api_key_ref_unresolved' }
+    }
+    try {
+      const value = decryptProviderSecret(row, loadedKey.key).trim()
+      if (!value) return { ok: false, ref, keyMasked: row.masked_preview || null, source: 'provider_vault', exact_blocker: 'agentmail_api_key_ref_unresolved' }
+      return { ok: true, value, ref, keyMasked: row.masked_preview || maskSecret(value), source: 'provider_vault' }
+    } catch {
+      return { ok: false, ref, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_api_key_ref_unresolved' }
+    }
+  }
+
+  if (rawEnvKey) return { ok: true, value: rawEnvKey, ref: 'AGENTMAIL_API_KEY', keyMasked: maskAgentMailKey(rawEnvKey), source: 'raw_env' }
+  return { ok: false, ref: null, keyMasked: null, source: 'none', exact_blocker: 'agentmail_api_key_missing' }
+}
+
+function agentMailProbeBlocker(status: number | null) {
+  if (status === 401 || status === 403) return 'agentmail_auth_failed'
+  if (status === 404) return 'agentmail_api_endpoint_not_found'
+  if (status === 429) return 'agentmail_rate_limited'
+  if (status === null) return 'agentmail_network_or_timeout'
+  return `agentmail_probe_http_${status}`
+}
+
+function sanitizedProviderError(status: number | null, message: unknown) {
+  const text = String(message || '')
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/\b(?:am_|sk-|gsk_|xai-|nva-)[A-Za-z0-9._-]{8,}\b/gi, '[redacted]')
+    .slice(0, 240) || null
+  return {
+    status,
+    message: text,
+    ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+  }
+}
+
+function countInboxes(payload: unknown) {
+  if (Array.isArray(payload)) return payload.length
+  if (payload && typeof payload === 'object') {
+    const record = payload as Record<string, unknown>
+    for (const key of ['data', 'inboxes', 'items', 'results']) {
+      if (Array.isArray(record[key])) return record[key].length
+    }
+  }
+  return 0
+}
+
+export async function testAgentMailBootstrapConnection(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  baseUrl?: string
+} = {}): Promise<AgentMailBootstrapConnectionTest> {
+  const env = input.env || process.env
+  const loaded = loadAgentMailBootstrapCredentialValue(input)
+  const baseUrl = String(input.baseUrl || env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
+  const endpoint = new URL('/v0/inboxes', baseUrl).toString()
+  const fetcher = input.fetchImpl || fetch
+
+  if (!loaded.ok) {
+    return {
+      ok: false,
+      probe_status: 'credential_required',
+      http_status: null,
+      exact_blocker: loaded.exact_blocker,
+      inbox_count: 0,
+      endpoint_used: endpoint,
+      auth_header_present: false,
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4500)
+  try {
+    const response = await fetcher(endpoint, {
+      method: 'GET',
+      headers: { Accept: 'application/json', Authorization: `Bearer ${loaded.value}` },
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      return {
+        ok: false,
+        probe_status: 'http_error',
+        http_status: response.status,
+        exact_blocker: agentMailProbeBlocker(response.status),
+        inbox_count: 0,
+        endpoint_used: endpoint,
+        auth_header_present: true,
+        provider_error_summary: sanitizedProviderError(response.status, (payload as Record<string, unknown>)?.message || (payload as Record<string, unknown>)?.error),
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+    return { ok: true, probe_status: 'ok', http_status: response.status, exact_blocker: null, inbox_count: countInboxes(payload), endpoint_used: endpoint, auth_header_present: true, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+  } catch {
+    return {
+      ok: false,
+      probe_status: 'unreachable',
+      http_status: null,
+      exact_blocker: 'agentmail_network_or_timeout',
+      inbox_count: 0,
+      endpoint_used: endpoint,
+      auth_header_present: true,
+      provider_error_summary: sanitizedProviderError(null, 'network_or_timeout'),
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 function emptyPermissions(): Record<AgentMailPermission, boolean> {

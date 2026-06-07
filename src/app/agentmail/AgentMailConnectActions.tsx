@@ -25,9 +25,16 @@ function summarizePayload(payload: Record<string, unknown>) {
   const preview = payload.preview && typeof payload.preview === 'object' ? payload.preview as Record<string, unknown> : payload
   const missing = Array.isArray(preview.missing_inboxes) ? preview.missing_inboxes.length : null
   const proposed = Array.isArray(preview.proposed_inbox_assignments) ? preview.proposed_inbox_assignments.length : null
+  const liveAgentMail = preview.live_agentmail && typeof preview.live_agentmail === 'object'
+    ? preview.live_agentmail as Record<string, unknown>
+    : payload.live_agentmail && typeof payload.live_agentmail === 'object'
+      ? payload.live_agentmail as Record<string, unknown>
+      : null
+  const liveInboxes = typeof liveAgentMail?.inbox_count === 'number' ? liveAgentMail.inbox_count : null
   return [
     status ? `status=${status}` : null,
     blocker ? `blocker=${blocker}` : null,
+    liveInboxes !== null ? `live_inboxes=${liveInboxes}` : null,
     missing !== null ? `missing_inboxes=${missing}` : null,
     proposed !== null ? `proposed_assignments=${proposed}` : null,
   ].filter(Boolean).join(' · ') || 'No status summary returned.'

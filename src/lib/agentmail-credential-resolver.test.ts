@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { describe, expect, it } from 'vitest'
 
 import {
+  listAgentMailBootstrapInboxes,
   resolveAgentMailBootstrapCredential,
   testAgentMailBootstrapConnection,
 } from '@/lib/agentmail-credential-resolver'
@@ -81,4 +82,53 @@ describe('AgentMail bootstrap credential resolver', () => {
     })
     expect(JSON.stringify(result)).not.toContain('agentmail-test-secret-value')
   })
+
+  it('lists sanitized live AgentMail inboxes from the bootstrap credential', async () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 8)
+    const fakeSecret = 'agentmail-test-secret-value-1234567890'
+    seedAgentMailSecret(db, masterKey, fakeSecret)
+
+    const result = await listAgentMailBootstrapInboxes({
+      db,
+      env: {
+        AGENTMAIL_API_KEY_REF: 'AGENTMAIL_API_KEY',
+        MISSION_CONTROL_SECRETS_MASTER_KEY: masterKey.toString('base64'),
+      },
+      fetchImpl: async () => new Response(JSON.stringify({
+        count: 2,
+        inboxes: [
+          {
+            organization_id: 'org_live_1',
+            pod_id: 'pod_1',
+            inbox_id: 'itt@agentmail.to',
+            email: 'itt@agentmail.to',
+            display_name: 'ITT_AGENT',
+            updated_at: '2026-06-07T01:00:00.000Z',
+            created_at: '2026-06-07T00:00:00.000Z',
+          },
+          {
+            organization_id: 'org_live_1',
+            pod_id: 'pod_1',
+            inbox_id: 'tony-88@agentmail.to',
+            email: 'tony-88@agentmail.to',
+            display_name: 'Chief-Tony88',
+          },
+        ],
+      }), { status: 200 }),
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      http_status: 200,
+      exact_blocker: null,
+      inbox_count: 2,
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+    })
+    expect(result.inboxes[0]).toMatchObject({ inbox_id: 'itt@agentmail.to', email_preview: 'i***@agentmail.to', display_name: 'ITT_AGENT' })
+    expect(JSON.stringify(result)).not.toContain(fakeSecret)
+  })
+
 })

@@ -89,6 +89,48 @@ export type AgentMailBootstrapCredentialResolution = {
   raw_secret_values_exposed: false
 }
 
+
+export type AgentMailLiveInbox = {
+  inbox_id: string
+  email: string | null
+  email_preview: string | null
+  display_name: string | null
+  organization_id: string | null
+  pod_id: string | null
+  updated_at: string | null
+  created_at: string | null
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
+export type AgentMailBootstrapInboxList = {
+  ok: boolean
+  source: 'agentmail_live_inbox_list'
+  probe_status: 'ok' | 'credential_required' | 'http_error' | 'unreachable'
+  http_status: number | null
+  exact_blocker: string | null
+  inbox_count: number
+  endpoint_used: string
+  auth_header_present: boolean
+  key_source: 'provider_vault' | 'raw_env' | 'none'
+  key_masked: string | null
+  inboxes: AgentMailLiveInbox[]
+  provider_error_summary?: {
+    status: number | null
+    message: string | null
+    credential_values_exposed: false
+    tokens_exposed: false
+    env_values_exposed: false
+    raw_secret_values_exposed: false
+  }
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
 export type AgentMailBootstrapConnectionTest = {
   ok: boolean
   probe_status: 'ok' | 'credential_required' | 'http_error' | 'unreachable'
@@ -216,15 +258,145 @@ function sanitizedProviderError(status: number | null, message: unknown) {
   }
 }
 
-function countInboxes(payload: unknown) {
-  if (Array.isArray(payload)) return payload.length
+function agentMailInboxArray(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload
   if (payload && typeof payload === 'object') {
     const record = payload as Record<string, unknown>
     for (const key of ['data', 'inboxes', 'items', 'results']) {
-      if (Array.isArray(record[key])) return record[key].length
+      if (Array.isArray(record[key])) return record[key] as unknown[]
     }
   }
-  return 0
+  return []
+}
+
+function countInboxes(payload: unknown) {
+  return agentMailInboxArray(payload).length
+}
+
+function sanitizeAgentMailField(value: unknown, max = 160) {
+  return String(value || '')
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/\b(?:am_|sk-|gsk_|xai-|nva-)[A-Za-z0-9._-]{8,}\b/gi, '[redacted]')
+    .trim()
+    .slice(0, max)
+}
+
+function previewAgentMailEmail(value: string | null) {
+  const clean = String(value || '').trim().toLowerCase()
+  const at = clean.indexOf('@')
+  if (!clean || at <= 0) return null
+  return `${clean[0]}***@${clean.slice(at + 1)}`
+}
+
+function normalizeAgentMailLiveInbox(raw: unknown): AgentMailLiveInbox {
+  const record = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
+  const rawEmail = sanitizeAgentMailField(record.email || record.address || record.inbox || record.inbox_id, 220)
+  const email = rawEmail.includes('@') ? rawEmail.toLowerCase() : null
+  const inboxId = sanitizeAgentMailField(record.inbox_id || record.id || record.name || email || 'unknown_inbox', 220)
+  return {
+    inbox_id: inboxId || 'unknown_inbox',
+    email,
+    email_preview: previewAgentMailEmail(email),
+    display_name: sanitizeAgentMailField(record.display_name || record.name, 120) || null,
+    organization_id: sanitizeAgentMailField(record.organization_id || record.org_id, 120) || null,
+    pod_id: sanitizeAgentMailField(record.pod_id, 120) || null,
+    updated_at: sanitizeAgentMailField(record.updated_at, 80) || null,
+    created_at: sanitizeAgentMailField(record.created_at, 80) || null,
+    ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+  }
+}
+
+
+export async function listAgentMailBootstrapInboxes(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  baseUrl?: string
+} = {}): Promise<AgentMailBootstrapInboxList> {
+  const env = input.env || process.env
+  const loaded = loadAgentMailBootstrapCredentialValue(input)
+  const baseUrl = String(input.baseUrl || env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
+  const endpoint = new URL('/v0/inboxes', baseUrl).toString()
+  const fetcher = input.fetchImpl || fetch
+
+  if (!loaded.ok) {
+    return {
+      ok: false,
+      source: 'agentmail_live_inbox_list',
+      probe_status: 'credential_required',
+      http_status: null,
+      exact_blocker: loaded.exact_blocker,
+      inbox_count: 0,
+      endpoint_used: endpoint,
+      auth_header_present: false,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inboxes: [],
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4500)
+  try {
+    const response = await fetcher(endpoint, {
+      method: 'GET',
+      headers: { Accept: 'application/json', Authorization: `Bearer ${loaded.value}` },
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      return {
+        ok: false,
+        source: 'agentmail_live_inbox_list',
+        probe_status: 'http_error',
+        http_status: response.status,
+        exact_blocker: agentMailProbeBlocker(response.status),
+        inbox_count: 0,
+        endpoint_used: endpoint,
+        auth_header_present: true,
+        key_source: loaded.source,
+        key_masked: loaded.keyMasked,
+        inboxes: [],
+        provider_error_summary: sanitizedProviderError(response.status, (payload as Record<string, unknown>)?.message || (payload as Record<string, unknown>)?.error),
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+    const inboxes = agentMailInboxArray(payload).map(normalizeAgentMailLiveInbox)
+    return {
+      ok: true,
+      source: 'agentmail_live_inbox_list',
+      probe_status: 'ok',
+      http_status: response.status,
+      exact_blocker: null,
+      inbox_count: inboxes.length,
+      endpoint_used: endpoint,
+      auth_header_present: true,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inboxes,
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } catch {
+    return {
+      ok: false,
+      source: 'agentmail_live_inbox_list',
+      probe_status: 'unreachable',
+      http_status: null,
+      exact_blocker: 'agentmail_network_or_timeout',
+      inbox_count: 0,
+      endpoint_used: endpoint,
+      auth_header_present: true,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inboxes: [],
+      provider_error_summary: sanitizedProviderError(null, 'network_or_timeout'),
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 export async function testAgentMailBootstrapConnection(input: {

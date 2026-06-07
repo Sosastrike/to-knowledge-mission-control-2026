@@ -81,4 +81,15 @@ describe('AgentMail local control API routes', () => {
     expect(page).toContain('Outbound email remains disabled')
     expect(gateway).toContain("ui: enabled('/agentmail')")
   })
+
+  it('hydrates sync preview actions from live AgentMail inbox listing when runtime credentials exist', () => {
+    const syncRoute = readFileSync(path.join(process.cwd(), 'src/app/api/agentmail/connect/sync/route.ts'), 'utf8')
+    const previewRoute = readFileSync(path.join(process.cwd(), 'src/app/api/agentmail/connect/provision-preview/route.ts'), 'utf8')
+    const actions = readFileSync(path.join(process.cwd(), 'src/app/agentmail/AgentMailConnectActions.tsx'), 'utf8')
+
+    expect(syncRoute).toContain('listAgentMailBootstrapInboxes')
+    expect(previewRoute).toContain('listAgentMailBootstrapInboxes')
+    expect(actions).toContain('live_inboxes=')
+  })
+
 })

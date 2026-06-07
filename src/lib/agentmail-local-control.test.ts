@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3'
 import { describe, expect, it } from 'vitest'
+import { encryptProviderSecret, ensureProviderVaultSchema } from '@/lib/provider-vault'
 
 import {
   AGENTMAIL_CONSOLE_URL,
@@ -222,6 +223,48 @@ describe('AgentMail local control bootstrap', () => {
       send_enabled: false,
     })
     expect(JSON.stringify(status)).not.toContain('agentmail-test-secret-value')
+  })
+
+
+  it('resolves AgentMail bootstrap API key references from encrypted runtime storage without exposing raw secrets', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    ensureProviderVaultSchema(db)
+    db.prepare(`
+      INSERT INTO provider_configs (provider_id, display_name, provider_type, base_url, validation_path, enabled, custom)
+      VALUES ('agentmail', 'AgentMail', 'hosted', 'https://api.agentmail.to', '/v0/inboxes', 1, 1)
+    `).run()
+    const masterKey = Buffer.alloc(32, 4)
+    const encrypted = encryptProviderSecret('agentmail-test-secret-value-1234567890', masterKey, 'test-key-v1')
+    db.prepare(`
+      INSERT INTO provider_secrets (
+        provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm, key_version, masked_preview, fingerprint_hash, created_by
+      ) VALUES ('agentmail', 'AGENTMAIL_API_KEY', ?, ?, ?, ?, ?, 'am_****7890', 'unit-test-fingerprint', 'unit-test')
+    `).run(encrypted.ciphertext, encrypted.iv, encrypted.auth_tag, encrypted.algorithm, encrypted.key_version)
+
+    const status = buildAgentMailConnectStatus(db, {
+      AGENTMAIL_API_KEY_REF: 'AGENTMAIL_API_KEY',
+      MISSION_CONTROL_SECRETS_MASTER_KEY: masterKey.toString('base64'),
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+
+    expect(status.status).toBe('sync_ready')
+    expect((status as any).runtime_credentials.agentmail_api_key_ref).toBe('resolved')
+    expect((status as any).api_key_fallback).toMatchObject({ state: 'detected', source: 'provider_vault', ref_status: 'resolved' })
+    expect((status as any).secret_safety).toMatchObject({ raw_secret_exposed: false, client_exposed: false })
+    expect(JSON.stringify(status)).not.toContain('agentmail-test-secret-value')
+  })
+
+  it('reports unresolved AgentMail bootstrap references without faking runtime visibility', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const status = buildAgentMailConnectStatus(db, { AGENTMAIL_API_KEY_REF: 'AGENTMAIL_API_KEY' })
+
+    expect(status.status).toBe('api_key_required')
+    expect((status as any).runtime_credentials.agentmail_api_key_ref).toBe('unresolved')
+    expect((status as any).runtime_credential_blocker).toBe('agentmail_runtime_secret_store_required')
+    expect(status.current_blocker).toBe('agentmail_runtime_secret_store_required')
   })
 
   it('builds inbox sync preview without provisioning or enabling sends', () => {

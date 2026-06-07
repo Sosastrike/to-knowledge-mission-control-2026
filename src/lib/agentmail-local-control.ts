@@ -7,6 +7,7 @@ import { createApprovalRequest } from '@/lib/approval-requests'
 import {
   AGENTMAIL_PERMISSION_KEYS,
   loadAgentMailCredentialSecret,
+  resolveAgentMailBootstrapCredential,
   resolveAgentMailScopedCredential,
   upsertAgentMailScopedCredentialMetadata,
   type AgentMailPermission,
@@ -455,11 +456,13 @@ export function buildAgentMailStatus(db: Database.Database = getDatabase(), env:
   const monitor = readMonitorStatusFile()
   const updatedAt = typeof monitor?.updated_at === 'string' ? monitor.updated_at : null
   const ageMs = updatedAt ? Date.now() - Date.parse(updatedAt) : Number.POSITIVE_INFINITY
-  const hasCredential = Boolean(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || env.AGENTMAIL_CREDENTIAL_REF)
+  const bootstrap = resolveAgentMailBootstrapCredential({ db, env })
+  const hasCredential = Boolean(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || env.AGENTMAIL_CREDENTIAL_REF || env.AGENTMAIL_API_KEY_REF)
+  const hasRuntimeCredential = hasCredential || bootstrap.keyAvailable
   const hasWsUrl = Boolean(env.AGENTMAIL_WS_URL)
   const state: AgentMailMonitorState = monitor?.state === 'running' && ageMs < 90_000
     ? 'running'
-    : hasCredential || hasWsUrl
+    : hasRuntimeCredential || hasWsUrl
       ? 'degraded'
       : 'stopped'
   const inboxCount = (db.prepare(`SELECT COUNT(*) AS count FROM agentmail_inboxes`).get() as { count: number }).count
@@ -478,7 +481,25 @@ export function buildAgentMailStatus(db: Database.Database = getDatabase(), env:
       subscribed_inboxes: Number(monitor?.subscribed_inboxes || 0),
       subscribed_event_types: ALLOWED_EVENTS,
       last_event_at: typeof monitor?.last_event_at === 'string' ? monitor.last_event_at : null,
-      exact_blocker: state === 'running' ? null : hasCredential ? 'agentmail_websocket_listener_not_running' : 'agentmail_credential_required',
+      exact_blocker: state === 'running' ? null : hasRuntimeCredential ? 'agentmail_websocket_listener_not_running' : 'agentmail_credential_required',
+    },
+    runtime_credentials: {
+      agentmail_api_key: env.AGENTMAIL_API_KEY ? 'detected' : 'missing',
+      agentmail_api_key_ref: env.AGENTMAIL_API_KEY_REF
+        ? (bootstrap.keyAvailable ? 'resolved' : bootstrap.exact_blocker === 'agentmail_runtime_secret_store_required' ? 'unresolved' : 'detected')
+        : 'missing',
+      agentmail_credential_ref: env.AGENTMAIL_CREDENTIAL_REF
+        ? (bootstrap.keyAvailable ? 'resolved' : bootstrap.exact_blocker === 'agentmail_runtime_secret_store_required' ? 'unresolved' : 'detected')
+        : 'missing',
+      agentmail_org_id: env.AGENTMAIL_ORGANIZATION_ID || env.AGENTMAIL_ORG_ID ? 'detected' : 'missing',
+      agentmail_ws_url: env.AGENTMAIL_WS_URL ? 'detected' : 'missing',
+      credential_source: bootstrap.source,
+      masked_preview: bootstrap.keyMasked,
+      exact_blocker: bootstrap.exact_blocker,
+    },
+    secret_safety: {
+      raw_secret_exposed: false,
+      client_exposed: false,
     },
     inbox_count: inboxCount,
     event_count: eventCount,
@@ -496,9 +517,8 @@ export function buildAgentMailConnectStatus(
 ) {
   ensureAgentMailSchema(db)
   const monitorStatus = buildAgentMailStatus(db, env)
-  const apiKey = env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || ''
-  const credentialRef = env.AGENTMAIL_CREDENTIAL_REF
-  const hasApiCredential = Boolean(apiKey || credentialRef)
+  const bootstrap = resolveAgentMailBootstrapCredential({ db, env })
+  const hasApiCredential = bootstrap.keyAvailable
   const hasWsUrl = Boolean(env.AGENTMAIL_WS_URL)
   const hasLocalMcpConfig = runtimeMetadata.agentmail_mcp_config_detected ?? detectAgentMailMcpConfig()
   const assignedInboxCount = (db.prepare(`SELECT COUNT(*) AS count FROM agentmail_inboxes WHERE inbox_address IS NOT NULL`).get() as { count: number }).count
@@ -519,8 +539,13 @@ export function buildAgentMailConnectStatus(
     source: 'agentmail_connect_status',
     generated_at: nowIso(),
     status,
+    runtime_credentials: monitorStatus.runtime_credentials,
+    secret_safety: monitorStatus.secret_safety,
+    runtime_credential_blocker: bootstrap.exact_blocker,
     current_blocker: status === 'api_key_required'
-      ? 'agentmail_mcp_oauth_not_visible_to_mission_control_runtime'
+      ? (bootstrap.exact_blocker && bootstrap.exact_blocker !== 'agentmail_api_key_missing'
+        ? bootstrap.exact_blocker
+        : 'agentmail_mcp_oauth_not_visible_to_mission_control_runtime')
       : status === 'owner_sso_required'
       ? 'agentmail_owner_sso_or_api_key_required'
       : status === 'connected'
@@ -558,8 +583,9 @@ export function buildAgentMailConnectStatus(
     },
     api_key_fallback: {
       state: hasApiCredential ? 'detected' : 'api_key_required',
-      masked_preview: apiKey ? maskAgentMailKey(apiKey) : credentialRef ? 'configured_by_reference' : null,
-      source: apiKey ? 'runtime_environment' : credentialRef ? 'credential_reference' : null,
+      masked_preview: bootstrap.keyMasked,
+      source: bootstrap.source === 'none' ? null : bootstrap.source,
+      ref_status: bootstrap.ref ? (bootstrap.keyAvailable ? 'resolved' : bootstrap.exact_blocker) : 'missing',
     },
     last_sync_attempt: lastAudit || null,
     sync_ready: status === 'sync_ready' || status === 'inbox_sync_complete' || status === 'monitor_ready',
@@ -961,7 +987,7 @@ function evaluateAgentMailSetup(input: {
   const gatewayReady = !Object.values(input.agents).some((agent) => (agent.blockers as string[] | undefined)?.includes('gateway_policy_monitor_only') && (agent.agent_id === 'pi' || agent.agent_id === 'agent_zero'))
   const rawBlockers: string[] = []
 
-  if (!connected) rawBlockers.push('agentmail_owner_sso_or_api_key_required')
+  if (!connected) rawBlockers.push(input.connect.runtime_credential_blocker === 'agentmail_runtime_secret_store_required' ? 'agentmail_runtime_secret_store_required' : 'agentmail_owner_sso_or_api_key_required')
   if (connected && !runtimeVisible) rawBlockers.push('agentmail_connection_not_visible_to_runtime')
   if (input.inboxes.some((inbox) => !inbox.inbox_address)) rawBlockers.push('agentmail_inbox_assignment_missing', 'agentmail_inbox_address_missing')
   if (input.inboxes.some((inbox) => inbox.provision_state !== 'assigned')) rawBlockers.push('agentmail_inbox_not_provisioned')

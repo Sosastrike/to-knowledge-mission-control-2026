@@ -92,8 +92,10 @@ export default function AgentMailLocalControlPage() {
           </div>
           <AgentMailConnectActions consoleUrl={AGENTMAIL_CONSOLE_URL} />
           <p className="am-muted">
-            Waiting for owner Google/SSO sign-in through AgentMail when credentials are missing. Mission Control never collects Google credentials,
-            browser cookies, OAuth tokens, or raw AgentMail API keys in this view.
+            Browser login succeeds only for the hosted AgentMail site. Mission Control still needs a server-side AgentMail credential reference
+            that mission-control.service can read, such as an approved runtime secret store entry or service-level secret injection using AGENTMAIL_API_KEY_REF.
+            Do not paste credentials into the browser unless a server-side secure secret intake flow is explicitly approved.
+            Mission Control never collects Google credentials, browser cookies, OAuth tokens, or raw AgentMail API keys in this view.
             AgentMail MCP uses the hosted endpoint in supported MCP clients; this page does not open the raw MCP server URL as a browser page.
           </p>
         </div>

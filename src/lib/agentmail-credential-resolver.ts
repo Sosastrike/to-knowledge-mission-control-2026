@@ -1,6 +1,13 @@
 import type Database from 'better-sqlite3'
 
 import { getDatabase } from '@/lib/db'
+import {
+  decryptProviderSecret,
+  ensureProviderVaultSchema,
+  loadSecretMasterKey,
+  maskSecret,
+  type EncryptedProviderSecret,
+} from '@/lib/provider-vault'
 
 export const AGENTMAIL_CREDENTIAL_SAFE_FLAGS = {
   credential_values_exposed: false,
@@ -60,6 +67,70 @@ function maskAgentMailKey(value: string) {
   const clean = String(value || '').trim()
   if (!clean) return null
   return `am_****${clean.slice(-4)}`
+}
+
+
+type AgentMailBootstrapSecretRow = EncryptedProviderSecret & {
+  id: number
+  provider_id: string
+  env_var_name: string
+  masked_preview: string
+}
+
+export type AgentMailBootstrapCredentialResolution = {
+  ref: string | null
+  keyAvailable: boolean
+  keyMasked: string | null
+  source: 'provider_vault' | 'raw_env' | 'none'
+  exact_blocker: null | 'agentmail_api_key_missing' | 'agentmail_api_key_ref_unresolved' | 'agentmail_runtime_secret_store_required'
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
+function latestAgentMailBootstrapSecret(db: Database.Database, ref: string): AgentMailBootstrapSecretRow | undefined {
+  ensureProviderVaultSchema(db)
+  return db.prepare(`
+    SELECT id, provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm, key_version, masked_preview
+    FROM provider_secrets
+    WHERE provider_id = 'agentmail'
+      AND active = 1
+      AND deleted_at IS NULL
+      AND (? = '' OR env_var_name = ?)
+    ORDER BY id DESC
+    LIMIT 1
+  `).get(ref, ref) as AgentMailBootstrapSecretRow | undefined
+}
+
+export function resolveAgentMailBootstrapCredential(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+} = {}): AgentMailBootstrapCredentialResolution {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const ref = normalizeRef(env.AGENTMAIL_API_KEY_REF || env.AGENTMAIL_CREDENTIAL_REF || '')
+  const rawEnvKey = String(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || '').trim()
+
+  if (ref) {
+    const loadedKey = loadSecretMasterKey(env)
+    if (!loadedKey.ok) {
+      return { ref, keyAvailable: false, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_runtime_secret_store_required', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+    }
+    const row = latestAgentMailBootstrapSecret(db, ref)
+    if (!row) {
+      return { ref, keyAvailable: false, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_api_key_ref_unresolved', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+    }
+    try {
+      const value = decryptProviderSecret(row, loadedKey.key)
+      return { ref, keyAvailable: Boolean(value.trim()), keyMasked: row.masked_preview || maskSecret(value), source: 'provider_vault', exact_blocker: value.trim() ? null : 'agentmail_api_key_ref_unresolved', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+    } catch {
+      return { ref, keyAvailable: false, keyMasked: null, source: 'provider_vault', exact_blocker: 'agentmail_api_key_ref_unresolved', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+    }
+  }
+
+  if (rawEnvKey) return { ref: 'AGENTMAIL_API_KEY', keyAvailable: true, keyMasked: maskAgentMailKey(rawEnvKey), source: 'raw_env', exact_blocker: null, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+  return { ref: null, keyAvailable: false, keyMasked: null, source: 'none', exact_blocker: 'agentmail_api_key_missing', ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
 }
 
 function emptyPermissions(): Record<AgentMailPermission, boolean> {

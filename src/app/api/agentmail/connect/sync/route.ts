@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const ready = status.status === 'sync_ready' || status.status === 'inbox_sync_complete' || status.status === 'monitor_ready'
   recordAgentMailAudit(
     db,
-    ready ? 'agentmail_inbox_sync_completed' : 'agentmail_bridge_session_required',
+    ready ? 'agentmail_inbox_sync_completed' : 'agentmail_connection_not_visible_to_runtime',
     ready ? 'ok' : 'blocked',
     ready ? 'sync_state_refreshed_no_send_enabled' : 'connect_agentmail_before_sync',
   )
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     status: ready ? 'inbox_sync_complete' : status.status,
     sync_ready: ready,
     inbox_sync_complete: ready,
-    exact_blocker: ready ? 'agentmail_bridge_session_required' : 'agentmail_owner_sso_or_api_key_required',
+    exact_blocker: ready ? 'agentmail_inbox_credential_required' : 'agentmail_owner_sso_or_api_key_required',
     send_enabled: false,
     execution_enabled: false,
     preview,

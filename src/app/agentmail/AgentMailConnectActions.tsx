@@ -82,6 +82,7 @@ export function AgentMailConnectActions({ consoleUrl }: { consoleUrl: string }) 
         <a className="am-button" href={consoleUrl} target="_blank" rel="noreferrer">Open AgentMail Console</a>
         <button className="am-button" type="button" onClick={() => runAction('Test connection', '/api/agentmail/connect/test')}>Test connection</button>
         <button className="am-button" type="button" onClick={() => runAction('Sync inbox registry', '/api/agentmail/connect/provision-preview')}>Sync inbox registry</button>
+        <button className="am-button" type="button" onClick={() => runAction('Request inbox provisioning approval', '/api/agentmail/connect/provision-request')}>Request inbox provisioning approval</button>
         <button className="am-button" type="button" onClick={() => runAction('Request Bridge Session', '/api/agentmail/bridge-session/request')}>Request Bridge Session</button>
         <button className="am-button" type="button" onClick={() => runAction('Revoke Bridge Session', '/api/agentmail/bridge-session/revoke')}>Revoke Bridge Session</button>
       </div>

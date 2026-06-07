@@ -588,6 +588,9 @@ export function buildAgentMailInboxSyncPreview(
   ensureAgentMailSchema(db)
   const inboxes = listAgentMailInboxes(db)
   const status = buildAgentMailConnectStatus(db, env, runtimeMetadata)
+  const setupStatus = buildAgentMailSetupStatus(db, env)
+  const connectionVisibleToRuntime = status.status !== 'owner_sso_required' && status.status !== 'api_key_required'
+  const organizationSelected = status.status === 'sync_ready' || status.status === 'inbox_sync_complete' || status.status === 'monitor_ready'
   const knownAgents = inboxes.map((inbox) => ({
     agent_id: inbox.agent_id,
     display_name: inbox.display_name,
@@ -609,25 +612,66 @@ export function buildAgentMailInboxSyncPreview(
     bridge_route: `agentmail:${inbox.agent_id}:pending_gateway_review`,
     provision_state: inbox.inbox_address ? 'preserve_existing' : 'preview_only_not_provisioned',
   }))
+  const requiredPermissions = proposedAssignments.map((assignment) => {
+    const sendCapable = assignment.agent_id === 'pi' || assignment.agent_id === 'agent_zero'
+    return {
+      agent_id: assignment.agent_id,
+      credential_scope: sendCapable ? 'inbox' : 'monitor_or_control_plane',
+      required_permissions: sendCapable
+        ? ['inbox_read', 'thread_read', 'message_read', 'message_send', 'message_update', 'draft_read', 'draft_create', 'draft_update', 'draft_send']
+        : ['inbox_read', 'thread_read', 'message_read'],
+      send_policy: sendCapable ? 'owner_approval_required' : 'no_external_send_by_default',
+      scoped_credential_required: sendCapable,
+    }
+  })
   return {
     ok: true,
     source: 'agentmail_inbox_sync_preview',
     generated_at: nowIso(),
-    organization_connected: status.status !== 'owner_sso_required',
+    connection_state: status.status,
+    connection_visible_to_runtime: connectionVisibleToRuntime,
+    organization_connected: connectionVisibleToRuntime,
+    organization_selected: organizationSelected,
+    organization: {
+      state: organizationSelected ? 'selected' : connectionVisibleToRuntime ? 'connection_visible_selection_required' : 'not_visible_to_runtime',
+      id: null,
+      name: null,
+      credential_values_exposed: false,
+    },
     available_inboxes: inboxes.filter((inbox) => inbox.inbox_address).map((inbox) => ({
       agent_id: inbox.agent_id,
       display_name: inbox.display_name,
       inbox_address: inbox.inbox_address,
       provision_state: inbox.provision_state,
     })),
+    existing_agentmail_inboxes: inboxes.filter((inbox) => inbox.inbox_address).map((inbox) => ({
+      agent_id: inbox.agent_id,
+      inbox_address: inbox.inbox_address,
+      provision_state: inbox.provision_state,
+    })),
     known_agents: knownAgents,
     missing_inboxes: knownAgents.filter((agent) => !agent.current_inbox),
+    missing_inbox_addresses: knownAgents.filter((agent) => !agent.current_inbox).map((agent) => ({
+      agent_id: agent.agent_id,
+      display_name: agent.display_name,
+      role: agent.role,
+      proposed_inbox: `${agent.agent_id.replace(/_/g, '-')}@agentmail.to`,
+    })),
     proposed_inbox_assignments: proposedAssignments,
+    provisioning_plan: proposedAssignments.map((assignment) => ({
+      agent_id: assignment.agent_id,
+      proposed_inbox: assignment.proposed_inbox,
+      proposed_client_id: assignment.proposed_client_id,
+      mutation: 'requires_owner_approval',
+      provision_automatically: false,
+    })),
     proposed_scoped_credentials: proposedAssignments.map((assignment) => ({
       agent_id: assignment.agent_id,
       credential_scope: 'inbox_scoped',
       credential_values_exposed: false,
     })),
+    required_scoped_credentials: requiredPermissions.filter((row) => row.scoped_credential_required),
+    required_permissions: requiredPermissions,
     bridge_routing_preview: proposedAssignments.map((assignment) => ({
       source: 'agentmail',
       agent_id: assignment.agent_id,
@@ -636,9 +680,48 @@ export function buildAgentMailInboxSyncPreview(
       outbound_send_state: 'approval_required',
     })),
     provision_automatically: false,
+    mutation_enabled: false,
     send_enabled: false,
     execution_enabled: false,
+    exact_blocker: setupStatus.primary_blocker,
+    setup_status: setupStatus,
     bridge_session_required: true,
+    ...SAFE_FLAGS,
+  }
+}
+
+export function createAgentMailInboxProvisioningRequest(db: Database.Database = getDatabase(), requester = 'owner') {
+  ensureAgentMailSchema(db)
+  const preview = buildAgentMailInboxSyncPreview(db)
+  const { request: approval, created } = createApprovalRequest({
+    connector: 'agentmail',
+    action: 'agentmail_inbox_provisioning',
+    target: 'agentmail_inboxes',
+    target_key: 'agentmail:inboxes:provision',
+    requester: sanitizeText(requester, 'owner', 120),
+    risk_level: 'medium',
+    protected_category: 'connector_write',
+    reason: 'Owner approval is required before AgentMail inboxes can be provisioned or assigned.',
+    approval_scope: {
+      provision_automatically: false,
+      proposed_inboxes: preview.proposed_inbox_assignments.map((row: any) => ({ agent_id: row.agent_id, proposed_inbox: row.proposed_inbox })),
+      scoped_credentials_created: false,
+      send_enabled: false,
+      credential_values_exposed: false,
+    },
+    idempotency_key: 'agentmail:inboxes:provision',
+  })
+  recordAgentMailAudit(db, 'agentmail_inbox_provisioning_requested', 'blocked', `approval_id=${approval.id};preview_only_no_provisioning_no_send`)
+  return {
+    ok: true,
+    source: 'agentmail_inbox_provisioning_request',
+    approval_id: approval.id,
+    approval_state: approval.approval_state,
+    approval_request_created: created,
+    exact_blocker: 'canonical_owner_approval_required',
+    provision_enabled: false,
+    send_enabled: false,
+    preview,
     ...SAFE_FLAGS,
   }
 }

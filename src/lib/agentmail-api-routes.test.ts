@@ -18,6 +18,7 @@ const postRouteSpecs = [
   ['connect/sync', '@/app/api/agentmail/connect/sync/route'],
   ['connect/test', '@/app/api/agentmail/connect/test/route'],
   ['connect/provision-preview', '@/app/api/agentmail/connect/provision-preview/route'],
+  ['connect/provision-request', '@/app/api/agentmail/connect/provision-request/route'],
   ['bridge-session/request', '@/app/api/agentmail/bridge-session/request/route'],
   ['bridge-session/approve', '@/app/api/agentmail/bridge-session/approve/route'],
   ['bridge-session/revoke', '@/app/api/agentmail/bridge-session/revoke/route'],
@@ -70,6 +71,7 @@ describe('AgentMail local control API routes', () => {
     expect(page).not.toContain('action="/api/agentmail/connect/provision-preview"')
     expect(actions).toContain("'/api/agentmail/connect/test'")
     expect(actions).toContain("'/api/agentmail/connect/provision-preview'")
+    expect(actions).toContain("'/api/agentmail/connect/provision-request'")
     expect(actions).toContain('fetch(path')
     expect(actions).toContain('setState')
     expect(actions).not.toContain('href={AGENTMAIL_MCP_URL}')

@@ -13,6 +13,7 @@ import {
   buildAgentMailSendAccessStatus,
   buildAgentMailSetupStatus,
   createAgentMailBridgeSessionRequest,
+  createAgentMailInboxProvisioningRequest,
   createAgentMailSendPreview,
   createAgentMailSendRequest,
   dispatchAgentMailSendRequest,
@@ -233,8 +234,12 @@ describe('AgentMail local control bootstrap', () => {
       ok: true,
       source: 'agentmail_inbox_sync_preview',
       organization_connected: false,
+      connection_visible_to_runtime: false,
+      organization_selected: false,
       provision_automatically: false,
+      mutation_enabled: false,
       send_enabled: false,
+      exact_blocker: 'agentmail_owner_sso_or_api_key_required',
       bridge_routing_preview: expect.any(Array),
       credential_values_exposed: false,
     })
@@ -246,11 +251,47 @@ describe('AgentMail local control bootstrap', () => {
       'agentmail_monitor',
       'agentmail_audit',
     ]))
+    expect(preview.missing_inbox_addresses).toHaveLength(6)
+    expect(preview.provisioning_plan).toHaveLength(6)
+    expect(preview.required_scoped_credentials.map((row: any) => row.agent_id)).toEqual(['pi', 'agent_zero'])
+    expect(preview.required_permissions.find((row: any) => row.agent_id === 'pi')).toMatchObject({
+      credential_scope: 'inbox',
+      send_policy: 'owner_approval_required',
+      scoped_credential_required: true,
+      required_permissions: expect.arrayContaining(['message_send', 'draft_send']),
+    })
+    expect(preview.required_permissions.find((row: any) => row.agent_id === 'gateway')).toMatchObject({
+      credential_scope: 'monitor_or_control_plane',
+      send_policy: 'no_external_send_by_default',
+      scoped_credential_required: false,
+    })
     expect(preview.proposed_inbox_assignments.find((row: any) => row.agent_id === 'gateway')).toMatchObject({
       role: 'policy_router',
       autonomy_level: 'L0_monitor_only',
       owner_approval_required: true,
     })
+  })
+
+  it('creates only an owner approval request for AgentMail inbox provisioning', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const result = createAgentMailInboxProvisioningRequest(db, 'owner')
+
+    expect(result).toMatchObject({
+      ok: true,
+      source: 'agentmail_inbox_provisioning_request',
+      approval_state: expect.any(String),
+      exact_blocker: 'canonical_owner_approval_required',
+      provision_enabled: false,
+      send_enabled: false,
+      credential_values_exposed: false,
+    })
+    expect(result.preview.provision_automatically).toBe(false)
+    expect(result.preview.mutation_enabled).toBe(false)
+    expect(result.preview.send_enabled).toBe(false)
+    expect(listAgentMailInboxes(db).every((inbox) => inbox.provision_state === 'not_provisioned')).toBe(true)
+    expect(JSON.stringify(result)).not.toContain('agentmail-test-secret-value')
   })
 
   it('writes sanitized AgentMail connect audit records', () => {

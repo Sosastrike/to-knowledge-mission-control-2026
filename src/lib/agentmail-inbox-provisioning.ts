@@ -54,6 +54,11 @@ type ProvisioningInput = {
   requester?: string
 }
 
+type SelectedMappingInput = ProvisioningInput & {
+  selectedMapping?: Record<string, string>
+  ownerApproved?: boolean
+}
+
 function nowIso() {
   return new Date().toISOString()
 }
@@ -106,6 +111,13 @@ function matchesTarget(inbox: AgentMailLiveInbox, target: AgentMailProvisioningT
 
 function findTargetMatch(inboxes: AgentMailLiveInbox[], target: AgentMailProvisioningTarget) {
   return inboxes.find((inbox) => matchesTarget(inbox, target)) || null
+}
+
+function findSelectedLiveInbox(inboxes: AgentMailLiveInbox[], selected: string) {
+  const normalized = String(selected || '').trim().toLowerCase()
+  if (!normalized) return null
+  return inboxes.find((inbox) => String(inbox.email || '').toLowerCase() === normalized
+    || String(inbox.inbox_id || '').toLowerCase() === normalized) || null
 }
 
 function ensureProvisioningColumns(db: Database.Database) {
@@ -410,6 +422,137 @@ export async function applyAgentMailInboxProvisioning(input: ProvisioningInput =
     current_primary_blocker: setup.primary_blocker,
     full_blocker_list: setup.blockers,
     exact_blocker: ok ? setup.primary_blocker : 'agentmail_inbox_provisioning_failed',
+    scoped_credentials_created: false,
+    email_sent: false,
+    send_enabled: false,
+    execution_enabled: false,
+    setup_status: setup,
+    ...SAFE_FLAGS,
+  }
+}
+
+export async function applyAgentMailSelectedInboxMapping(input: SelectedMappingInput = {}) {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const selectedMapping = input.selectedMapping || {}
+  ensureProvisioningColumns(db)
+
+  if (!input.ownerApproved) {
+    recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_started', 'blocked', 'owner_approval_required')
+    return {
+      ok: false,
+      source: 'agentmail_owner_selected_inbox_mapping_apply',
+      exact_blocker: 'owner_selected_inbox_mapping_approval_required',
+      registry_rows_updated: 0,
+      scoped_credentials_created: false,
+      email_sent: false,
+      send_enabled: false,
+      execution_enabled: false,
+      ...SAFE_FLAGS,
+    }
+  }
+
+  const live = await listAgentMailBootstrapInboxes({ db, env, fetchImpl: input.fetchImpl })
+  const liveInboxes = live.ok ? live.inboxes : []
+  if (!live.ok) {
+    const blocker = live.exact_blocker || 'agentmail_live_inbox_preview_failed'
+    recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_started', 'blocked', blocker)
+    return {
+      ok: false,
+      source: 'agentmail_owner_selected_inbox_mapping_apply',
+      exact_blocker: blocker,
+      registry_rows_updated: 0,
+      scoped_credentials_created: false,
+      email_sent: false,
+      send_enabled: false,
+      execution_enabled: false,
+      ...SAFE_FLAGS,
+    }
+  }
+
+  const targetsByAgent = new Map(AGENTMAIL_INBOX_PROVISIONING_TARGETS.map((target) => [target.agent_id, target]))
+  const usedSelections = new Set<string>()
+  const selectedRows: Array<{ target: AgentMailProvisioningTarget; inbox: AgentMailLiveInbox }> = []
+  const blocked: Array<Record<string, unknown>> = []
+
+  for (const [agentId, selected] of Object.entries(selectedMapping)) {
+    const target = targetsByAgent.get(agentId)
+    if (!target) {
+      blocked.push({ agent_id: agentId, exact_blocker: 'unknown_agentmail_agent_id' })
+      continue
+    }
+    const inbox = findSelectedLiveInbox(liveInboxes, selected)
+    if (!inbox) {
+      blocked.push({ agent_id: agentId, selected_inbox: safeText(selected, 'unknown'), exact_blocker: 'selected_live_inbox_not_found' })
+      continue
+    }
+    const normalizedSelection = String(inbox.email || inbox.inbox_id || selected).toLowerCase()
+    if (usedSelections.has(normalizedSelection)) {
+      blocked.push({ agent_id: agentId, selected_inbox: normalizedSelection, exact_blocker: 'selected_live_inbox_already_assigned' })
+      continue
+    }
+    usedSelections.add(normalizedSelection)
+    selectedRows.push({ target, inbox })
+  }
+
+  const requiredAgents = new Set(AGENTMAIL_INBOX_PROVISIONING_TARGETS.map((target) => target.agent_id))
+  for (const agentId of requiredAgents) {
+    if (!Object.prototype.hasOwnProperty.call(selectedMapping, agentId)) {
+      blocked.push({ agent_id: agentId, exact_blocker: 'selected_live_inbox_mapping_missing' })
+    }
+  }
+
+  if (blocked.length > 0) {
+    recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_started', 'blocked', `blocked=${blocked.length};no_registry_mutation_no_send`)
+    return {
+      ok: false,
+      source: 'agentmail_owner_selected_inbox_mapping_apply',
+      exact_blocker: 'owner_selected_inbox_mapping_invalid',
+      blocked,
+      registry_rows_updated: 0,
+      scoped_credentials_created: false,
+      email_sent: false,
+      send_enabled: false,
+      execution_enabled: false,
+      ...SAFE_FLAGS,
+    }
+  }
+
+  recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_started', 'ok', `selected=${selectedRows.length};no_scoped_credentials_no_send`)
+  const synced: Array<Record<string, unknown>> = []
+  for (const { target, inbox } of selectedRows) {
+    updateRegistryRow(db, target, inbox)
+    synced.push({
+      agent_id: target.agent_id,
+      display_name: target.display_name,
+      inbox_address: String(inbox.email || target.email).toLowerCase(),
+      inbox_id: inbox.inbox_id,
+      action: 'owner_selected_live_inbox_reused',
+    })
+    recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_applied', 'ok', `agent=${target.agent_id};email=${String(inbox.email || target.email).toLowerCase()}`)
+    recordAgentMailAudit(db, 'agentmail_inbox_registry_synced', 'ok', `agent=${target.agent_id};owner_selected_reuse`)
+  }
+
+  const setup = buildAgentMailSetupStatus(db, env)
+  recordAgentMailAudit(db, 'agentmail_owner_selected_inbox_mapping_completed', 'ok', `synced=${synced.length};next=${setup.primary_blocker};no_scoped_credentials_no_send`)
+
+  return {
+    ok: true,
+    source: 'agentmail_owner_selected_inbox_mapping_apply',
+    generated_at: nowIso(),
+    live_inbox_count: live.inbox_count,
+    registry_rows_updated: synced.length,
+    synced,
+    final_inboxes: listAgentMailInboxes(db).map((row) => ({
+      agent_id: row.agent_id,
+      display_name: row.display_name,
+      inbox_address: row.inbox_address,
+      provision_state: row.provision_state,
+      autonomy_level: row.autonomy_level,
+    })),
+    current_primary_blocker: setup.primary_blocker,
+    full_blocker_list: setup.blockers,
+    exact_blocker: setup.primary_blocker,
     scoped_credentials_created: false,
     email_sent: false,
     send_enabled: false,

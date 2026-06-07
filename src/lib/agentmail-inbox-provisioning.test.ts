@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   applyAgentMailInboxProvisioning,
+  applyAgentMailSelectedInboxMapping,
   approveAgentMailInboxProvisioning,
   buildAgentMailInboxProvisioningPreview,
   createAgentMailInboxProvisioningApproval,
@@ -84,6 +85,27 @@ function provisioningFetcher(rawSecret: string, calls: Array<{ method: string; u
     }
 
     throw new Error(`unexpected AgentMail test call ${method} ${endpoint}`)
+  }
+}
+
+function selectedMappingFetcher(rawSecret: string, calls: Array<{ method: string; url: string; body?: unknown }> = []) {
+  const inboxes = [
+    { inbox_id: 'pi-88@agentmail.to', email: 'pi-88@agentmail.to', display_name: 'Pi 88', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+    { inbox_id: 'jarvis88@agentmail.to', email: 'jarvis88@agentmail.to', display_name: 'Jarvis 88', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+    { inbox_id: 'gateway@agentmail.to', email: 'gateway@agentmail.to', display_name: 'Gateway', client_id: 'mission-gateway-inbox-v1', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+    { inbox_id: 'bridge-unit@agentmail.to', email: 'bridge-unit@agentmail.to', display_name: 'Bridge Unit', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+    { inbox_id: 'tony-88@agentmail.to', email: 'tony-88@agentmail.to', display_name: 'Chief Tony', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+    { inbox_id: 'audit-88@agentmail.to', email: 'audit-88@agentmail.to', display_name: 'Audit 88', pod_id: 'pod_live_1', organization_id: 'org_live_1' },
+  ]
+  return async (url: string | URL | Request, init?: RequestInit) => {
+    const endpoint = String(url)
+    const method = String(init?.method || 'GET').toUpperCase()
+    calls.push({ method, url: endpoint, body: init?.body ? JSON.parse(String(init.body)) : undefined })
+    expect(String((init?.headers as Record<string, string>)?.Authorization || '')).toBe(`Bearer ${rawSecret}`)
+    if (method === 'GET' && endpoint.endsWith('/v0/inboxes')) {
+      return new Response(JSON.stringify({ inboxes }), { status: 200 })
+    }
+    throw new Error(`unexpected AgentMail selected mapping call ${method} ${endpoint}`)
   }
 }
 
@@ -187,6 +209,110 @@ describe('AgentMail inbox provisioning', () => {
       'agentmail-monitor@agentmail.to',
       'agentmail-audit@agentmail.to',
     ])
+    expect(JSON.stringify(result)).not.toContain(rawSecret)
+  })
+
+  it('applies owner-selected live inbox mapping without creating inboxes, credentials, or sends', async () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 15)
+    const rawSecret = 'agentmail-test-secret-value-1234567890'
+    seedAgentMailSecret(db, masterKey, rawSecret)
+    ensureAgentMailSchema(db)
+    const calls: Array<{ method: string; url: string; body?: unknown }> = []
+
+    const result = await applyAgentMailSelectedInboxMapping({
+      db,
+      env: testEnv(masterKey),
+      fetchImpl: selectedMappingFetcher(rawSecret, calls),
+      ownerApproved: true,
+      selectedMapping: {
+        pi: 'pi-88@agentmail.to',
+        agent_zero: 'jarvis88@agentmail.to',
+        gateway: 'gateway@agentmail.to',
+        bridge_unit: 'bridge-unit@agentmail.to',
+        agentmail_monitor: 'tony-88@agentmail.to',
+        agentmail_audit: 'audit-88@agentmail.to',
+      },
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.registry_rows_updated).toBe(6)
+    expect(calls.map((call) => call.method)).toEqual(['GET'])
+    expect(calls.some((call) => call.method === 'POST')).toBe(false)
+    expect(result.scoped_credentials_created).toBe(false)
+    expect(result.email_sent).toBe(false)
+    expect((result as any).current_primary_blocker).toBe('agentmail_inbox_credential_required')
+    expect(listAgentMailInboxes(db).map((row) => [row.agent_id, row.inbox_address])).toEqual([
+      ['pi', 'pi-88@agentmail.to'],
+      ['agent_zero', 'jarvis88@agentmail.to'],
+      ['gateway', 'gateway@agentmail.to'],
+      ['bridge_unit', 'bridge-unit@agentmail.to'],
+      ['agentmail_monitor', 'tony-88@agentmail.to'],
+      ['agentmail_audit', 'audit-88@agentmail.to'],
+    ])
+    expect(JSON.stringify(result)).not.toContain(rawSecret)
+    expect(JSON.stringify(result)).not.toContain('Authorization')
+  })
+
+  it('blocks selected inbox mapping when a selected live inbox is missing', async () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 16)
+    const rawSecret = 'agentmail-test-secret-value-1234567890'
+    seedAgentMailSecret(db, masterKey, rawSecret)
+    ensureAgentMailSchema(db)
+
+    const result = await applyAgentMailSelectedInboxMapping({
+      db,
+      env: testEnv(masterKey),
+      fetchImpl: selectedMappingFetcher(rawSecret),
+      ownerApproved: true,
+      selectedMapping: {
+        pi: 'missing@agentmail.to',
+        agent_zero: 'jarvis88@agentmail.to',
+        gateway: 'gateway@agentmail.to',
+        bridge_unit: 'bridge-unit@agentmail.to',
+        agentmail_monitor: 'tony-88@agentmail.to',
+        agentmail_audit: 'audit-88@agentmail.to',
+      },
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.exact_blocker).toBe('owner_selected_inbox_mapping_invalid')
+    expect((result as any).blocked).toEqual(expect.arrayContaining([
+      expect.objectContaining({ agent_id: 'pi', exact_blocker: 'selected_live_inbox_not_found' }),
+    ]))
+    expect(listAgentMailInboxes(db).every((inbox) => !inbox.inbox_address)).toBe(true)
+    expect(JSON.stringify(result)).not.toContain(rawSecret)
+  })
+
+  it('blocks selected inbox mapping when two agents share the same inbox', async () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 17)
+    const rawSecret = 'agentmail-test-secret-value-1234567890'
+    seedAgentMailSecret(db, masterKey, rawSecret)
+    ensureAgentMailSchema(db)
+
+    const result = await applyAgentMailSelectedInboxMapping({
+      db,
+      env: testEnv(masterKey),
+      fetchImpl: selectedMappingFetcher(rawSecret),
+      ownerApproved: true,
+      selectedMapping: {
+        pi: 'pi-88@agentmail.to',
+        agent_zero: 'pi-88@agentmail.to',
+        gateway: 'gateway@agentmail.to',
+        bridge_unit: 'bridge-unit@agentmail.to',
+        agentmail_monitor: 'tony-88@agentmail.to',
+        agentmail_audit: 'audit-88@agentmail.to',
+      },
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.exact_blocker).toBe('owner_selected_inbox_mapping_invalid')
+    expect((result as any).blocked).toEqual(expect.arrayContaining([
+      expect.objectContaining({ agent_id: 'agent_zero', exact_blocker: 'selected_live_inbox_already_assigned' }),
+    ]))
+    expect(listAgentMailInboxes(db).every((inbox) => !inbox.inbox_address)).toBe(true)
     expect(JSON.stringify(result)).not.toContain(rawSecret)
   })
 })

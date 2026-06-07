@@ -19,6 +19,8 @@ const postRouteSpecs = [
   ['connect/test', '@/app/api/agentmail/connect/test/route'],
   ['connect/provision-preview', '@/app/api/agentmail/connect/provision-preview/route'],
   ['connect/provision-request', '@/app/api/agentmail/connect/provision-request/route'],
+  ['connect/provision-approve', '@/app/api/agentmail/connect/provision-approve/route'],
+  ['connect/provision-apply', '@/app/api/agentmail/connect/provision-apply/route'],
   ['bridge-session/request', '@/app/api/agentmail/bridge-session/request/route'],
   ['bridge-session/approve', '@/app/api/agentmail/bridge-session/approve/route'],
   ['bridge-session/revoke', '@/app/api/agentmail/bridge-session/revoke/route'],
@@ -72,6 +74,8 @@ describe('AgentMail local control API routes', () => {
     expect(actions).toContain("'/api/agentmail/connect/test'")
     expect(actions).toContain("'/api/agentmail/connect/provision-preview'")
     expect(actions).toContain("'/api/agentmail/connect/provision-request'")
+    expect(actions).toContain("'/api/agentmail/connect/provision-approve'")
+    expect(actions).toContain("'/api/agentmail/connect/provision-apply'")
     expect(actions).toContain('fetch(path')
     expect(actions).toContain('setState')
     expect(actions).not.toContain('href={AGENTMAIL_MCP_URL}')
@@ -88,7 +92,7 @@ describe('AgentMail local control API routes', () => {
     const actions = readFileSync(path.join(process.cwd(), 'src/app/agentmail/AgentMailConnectActions.tsx'), 'utf8')
 
     expect(syncRoute).toContain('listAgentMailBootstrapInboxes')
-    expect(previewRoute).toContain('listAgentMailBootstrapInboxes')
+    expect(previewRoute).toContain('buildAgentMailInboxProvisioningPreview')
     expect(actions).toContain('live_inboxes=')
   })
 

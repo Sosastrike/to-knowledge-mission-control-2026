@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 
-import { createAgentMailInboxProvisioningApproval } from '@/lib/agentmail-inbox-provisioning'
+import { approveAgentMailInboxProvisioning } from '@/lib/agentmail-inbox-provisioning'
 import { getDatabase } from '@/lib/db'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
@@ -11,6 +11,6 @@ export async function POST(request: NextRequest) {
   const auth = authRequired(request, 'operator')
   if (auth) return auth
 
-  const result = await createAgentMailInboxProvisioningApproval({ db: getDatabase() })
+  const result = approveAgentMailInboxProvisioning({ db: getDatabase(), actor: 'owner' })
   return readOnly(result)
 }

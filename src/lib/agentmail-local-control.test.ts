@@ -663,6 +663,20 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(JSON.stringify(setup)).not.toContain('agentmail-test-secret-value')
   })
 
+  it('treats a resolved bootstrap credential as runtime-visible for inbox sync even before the WebSocket monitor runs', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+
+    const setup = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+    })
+
+    expect(setup.primary_blocker).toBe('agentmail_inbox_assignment_missing')
+    expect(setup.blockers).not.toContain('agentmail_connection_not_visible_to_runtime')
+    expect(setup.next_action).toBe('sync_or_provision_inbox_registry')
+    expect(JSON.stringify(setup)).not.toContain('agentmail-test-secret-value')
+  })
+
   it('prioritizes provisioning and credential blockers before Action Bridge Session once owner connection is present', () => {
     const db = new Database(':memory:')
     ensureAgentMailSchema(db)

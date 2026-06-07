@@ -25,18 +25,24 @@ function summarizePayload(payload: Record<string, unknown>) {
   const preview = payload.preview && typeof payload.preview === 'object' ? payload.preview as Record<string, unknown> : payload
   const missing = Array.isArray(preview.missing_inboxes) ? preview.missing_inboxes.length : null
   const proposed = Array.isArray(preview.proposed_inbox_assignments) ? preview.proposed_inbox_assignments.length : null
+  const created = Array.isArray(payload.inboxes_created) ? payload.inboxes_created.length : null
+  const reused = Array.isArray(payload.inboxes_reused) ? payload.inboxes_reused.length : null
+  const rows = typeof payload.registry_rows_updated === 'number' ? payload.registry_rows_updated : null
   const liveAgentMail = preview.live_agentmail && typeof preview.live_agentmail === 'object'
     ? preview.live_agentmail as Record<string, unknown>
     : payload.live_agentmail && typeof payload.live_agentmail === 'object'
       ? payload.live_agentmail as Record<string, unknown>
       : null
-  const liveInboxes = typeof liveAgentMail?.inbox_count === 'number' ? liveAgentMail.inbox_count : null
+  const liveInboxes = typeof liveAgentMail?.inbox_count === 'number' ? liveAgentMail.inbox_count : typeof payload.live_inbox_count_before === 'number' ? payload.live_inbox_count_before : null
   return [
     status ? `status=${status}` : null,
     blocker ? `blocker=${blocker}` : null,
     liveInboxes !== null ? `live_inboxes=${liveInboxes}` : null,
     missing !== null ? `missing_inboxes=${missing}` : null,
     proposed !== null ? `proposed_assignments=${proposed}` : null,
+    created !== null ? `created=${created}` : null,
+    reused !== null ? `reused=${reused}` : null,
+    rows !== null ? `registry_rows=${rows}` : null,
   ].filter(Boolean).join(' · ') || 'No status summary returned.'
 }
 
@@ -90,6 +96,8 @@ export function AgentMailConnectActions({ consoleUrl }: { consoleUrl: string }) 
         <button className="am-button" type="button" onClick={() => runAction('Test connection', '/api/agentmail/connect/test')}>Test connection</button>
         <button className="am-button" type="button" onClick={() => runAction('Sync inbox registry', '/api/agentmail/connect/provision-preview')}>Sync inbox registry</button>
         <button className="am-button" type="button" onClick={() => runAction('Request inbox provisioning approval', '/api/agentmail/connect/provision-request')}>Request inbox provisioning approval</button>
+        <button className="am-button" type="button" onClick={() => runAction('Approve inbox provisioning', '/api/agentmail/connect/provision-approve')}>Approve inbox provisioning</button>
+        <button className="am-button" type="button" onClick={() => runAction('Apply inbox provisioning', '/api/agentmail/connect/provision-apply')}>Apply inbox provisioning</button>
         <button className="am-button" type="button" onClick={() => runAction('Request Bridge Session', '/api/agentmail/bridge-session/request')}>Request Bridge Session</button>
         <button className="am-button" type="button" onClick={() => runAction('Revoke Bridge Session', '/api/agentmail/bridge-session/revoke')}>Revoke Bridge Session</button>
       </div>

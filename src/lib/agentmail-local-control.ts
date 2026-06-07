@@ -519,19 +519,16 @@ export function buildAgentMailConnectStatus(
   const monitorStatus = buildAgentMailStatus(db, env)
   const bootstrap = resolveAgentMailBootstrapCredential({ db, env })
   const hasApiCredential = bootstrap.keyAvailable
-  const hasWsUrl = Boolean(env.AGENTMAIL_WS_URL)
   const hasLocalMcpConfig = runtimeMetadata.agentmail_mcp_config_detected ?? detectAgentMailMcpConfig()
   const assignedInboxCount = (db.prepare(`SELECT COUNT(*) AS count FROM agentmail_inboxes WHERE inbox_address IS NOT NULL`).get() as { count: number }).count
   const lastAudit = db.prepare(`SELECT action, result, detail, created_at FROM agentmail_audit ORDER BY created_at DESC LIMIT 1`).get() as Record<string, unknown> | undefined
 
-  const status: AgentMailConnectStatus = hasApiCredential && hasWsUrl
+  const status: AgentMailConnectStatus = hasApiCredential
     ? assignedInboxCount > 0
       ? monitorStatus.state === 'running' ? 'monitor_ready' : 'inbox_sync_complete'
       : 'sync_ready'
-    : hasApiCredential
-      ? 'connected'
-      : hasLocalMcpConfig
-        ? 'api_key_required'
+    : hasLocalMcpConfig
+      ? 'api_key_required'
       : 'owner_sso_required'
 
   return {
@@ -548,9 +545,7 @@ export function buildAgentMailConnectStatus(
         : 'agentmail_mcp_oauth_not_visible_to_mission_control_runtime')
       : status === 'owner_sso_required'
       ? 'agentmail_owner_sso_or_api_key_required'
-      : status === 'connected'
-        ? 'agentmail_ws_url_or_inbox_sync_required'
-        : status === 'sync_ready'
+      : status === 'sync_ready'
           ? 'agentmail_inbox_sync_preview_required'
           : status === 'inbox_sync_complete'
             ? 'action_bridge_session_inactive'
@@ -982,7 +977,7 @@ function evaluateAgentMailSetup(input: {
     return Boolean(permissions?.message_send)
   })
   const connected = input.connect.status !== 'owner_sso_required' && input.connect.status !== 'api_key_required'
-  const runtimeVisible = connected && input.connect.status !== 'connected'
+  const runtimeVisible = connected
   const organizationSelected = input.connect.status === 'sync_ready' || input.connect.status === 'inbox_sync_complete' || input.connect.status === 'monitor_ready'
   const gatewayReady = !Object.values(input.agents).some((agent) => (agent.blockers as string[] | undefined)?.includes('gateway_policy_monitor_only') && (agent.agent_id === 'pi' || agent.agent_id === 'agent_zero'))
   const rawBlockers: string[] = []

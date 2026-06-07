@@ -97,8 +97,35 @@ export type AgentMailLiveInbox = {
   display_name: string | null
   organization_id: string | null
   pod_id: string | null
+  client_id: string | null
+  metadata: Record<string, string | number | boolean | null> | null
   updated_at: string | null
   created_at: string | null
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
+export type AgentMailBootstrapInboxCreateResult = {
+  ok: boolean
+  source: 'agentmail_live_inbox_create'
+  probe_status: 'ok' | 'credential_required' | 'http_error' | 'unreachable'
+  http_status: number | null
+  exact_blocker: string | null
+  endpoint_used: string
+  auth_header_present: boolean
+  key_source: 'provider_vault' | 'raw_env' | 'none'
+  key_masked: string | null
+  inbox: AgentMailLiveInbox | null
+  provider_error_summary?: {
+    status: number | null
+    message: string | null
+    credential_values_exposed: false
+    tokens_exposed: false
+    env_values_exposed: false
+    raw_secret_values_exposed: false
+  }
   credential_values_exposed: false
   tokens_exposed: false
   env_values_exposed: false
@@ -281,6 +308,20 @@ function sanitizeAgentMailField(value: unknown, max = 160) {
     .slice(0, max)
 }
 
+function sanitizeAgentMailMetadata(value: unknown): Record<string, string | number | boolean | null> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const output: Record<string, string | number | boolean | null> = {}
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    const safeKey = sanitizeAgentMailField(key, 80).replace(/[^a-zA-Z0-9_.:-]/g, '_')
+    if (!safeKey) continue
+    if (typeof raw === 'string') output[safeKey] = sanitizeAgentMailField(raw, 180)
+    else if (typeof raw === 'number' && Number.isFinite(raw)) output[safeKey] = raw
+    else if (typeof raw === 'boolean') output[safeKey] = raw
+    else if (raw === null) output[safeKey] = null
+  }
+  return Object.keys(output).length ? output : null
+}
+
 function previewAgentMailEmail(value: string | null) {
   const clean = String(value || '').trim().toLowerCase()
   const at = clean.indexOf('@')
@@ -300,6 +341,8 @@ function normalizeAgentMailLiveInbox(raw: unknown): AgentMailLiveInbox {
     display_name: sanitizeAgentMailField(record.display_name || record.name, 120) || null,
     organization_id: sanitizeAgentMailField(record.organization_id || record.org_id, 120) || null,
     pod_id: sanitizeAgentMailField(record.pod_id, 120) || null,
+    client_id: sanitizeAgentMailField(record.client_id, 160) || null,
+    metadata: sanitizeAgentMailMetadata(record.metadata),
     updated_at: sanitizeAgentMailField(record.updated_at, 80) || null,
     created_at: sanitizeAgentMailField(record.created_at, 80) || null,
     ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
@@ -398,6 +441,119 @@ export async function listAgentMailBootstrapInboxes(input: {
     clearTimeout(timeout)
   }
 }
+
+export async function createAgentMailBootstrapInbox(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  baseUrl?: string
+  username: string
+  domain?: string
+  displayName: string
+  clientId: string
+  metadata?: Record<string, string | number | boolean | null>
+}): Promise<AgentMailBootstrapInboxCreateResult> {
+  const env = input.env || process.env
+  const loaded = loadAgentMailBootstrapCredentialValue(input)
+  const baseUrl = String(input.baseUrl || env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
+  const endpoint = new URL('/v0/inboxes', baseUrl).toString()
+  const fetcher = input.fetchImpl || fetch
+
+  if (!loaded.ok) {
+    return {
+      ok: false,
+      source: 'agentmail_live_inbox_create',
+      probe_status: 'credential_required',
+      http_status: null,
+      exact_blocker: loaded.exact_blocker,
+      endpoint_used: endpoint,
+      auth_header_present: false,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inbox: null,
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  }
+
+  const body = {
+    username: sanitizeAgentMailField(input.username, 80).toLowerCase(),
+    domain: sanitizeAgentMailField(input.domain || 'agentmail.to', 120).toLowerCase(),
+    display_name: sanitizeAgentMailField(input.displayName, 120),
+    client_id: sanitizeAgentMailField(input.clientId, 160),
+    metadata: sanitizeAgentMailMetadata(input.metadata) || undefined,
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4500)
+  try {
+    const response = await fetcher(endpoint, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${loaded.value}` },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      const rawMessage = (payload as Record<string, unknown>)?.message || (payload as Record<string, unknown>)?.error
+      const exactBlocker = response.status === 401
+        ? 'agentmail_auth_failed'
+        : response.status === 403 && /inbox limit/i.test(String(rawMessage || ''))
+          ? 'agentmail_inbox_limit_exceeded'
+          : response.status === 403
+            ? 'agentmail_inbox_create_http_403'
+            : `agentmail_inbox_create_http_${response.status}`
+      return {
+        ok: false,
+        source: 'agentmail_live_inbox_create',
+        probe_status: 'http_error',
+        http_status: response.status,
+        exact_blocker: exactBlocker,
+        endpoint_used: endpoint,
+        auth_header_present: true,
+        key_source: loaded.source,
+        key_masked: loaded.keyMasked,
+        inbox: null,
+        provider_error_summary: sanitizedProviderError(response.status, rawMessage),
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+    const record = payload && typeof payload === 'object' && !Array.isArray(payload) && (payload as Record<string, unknown>).data
+      ? (payload as Record<string, unknown>).data
+      : payload
+    return {
+      ok: true,
+      source: 'agentmail_live_inbox_create',
+      probe_status: 'ok',
+      http_status: response.status,
+      exact_blocker: null,
+      endpoint_used: endpoint,
+      auth_header_present: true,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inbox: normalizeAgentMailLiveInbox(record),
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } catch {
+    return {
+      ok: false,
+      source: 'agentmail_live_inbox_create',
+      probe_status: 'unreachable',
+      http_status: null,
+      exact_blocker: 'agentmail_network_or_timeout',
+      endpoint_used: endpoint,
+      auth_header_present: true,
+      key_source: loaded.source,
+      key_masked: loaded.keyMasked,
+      inbox: null,
+      provider_error_summary: sanitizedProviderError(null, 'network_or_timeout'),
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 
 export async function testAgentMailBootstrapConnection(input: {
   db?: Database.Database

@@ -162,13 +162,45 @@
 /* ---- Edges layer (SVG) ---- */
 .edges {
   position: absolute; inset: 0;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 1;
 }
 .edges path {
   fill: none;
   stroke: rgba(255,255,255,0.10);
   stroke-width: 1.2;
+  pointer-events: stroke;
+  cursor: help;
+}
+.edges path.edge-green {
+  stroke: var(--st-green) !important;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 4;
+  animation: dash-flow 1.4s linear infinite;
+  opacity: 0.86;
+}
+.edges path.edge-cyan {
+  stroke: var(--brand-cyan) !important;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.82;
+}
+.edges path.edge-yellow {
+  stroke: var(--st-yellow) !important;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+  opacity: 0.86;
+}
+.edges path.edge-gray {
+  stroke: rgba(255,255,255,0.16) !important;
+  stroke-width: 1.2;
+  stroke-dasharray: 3 6;
+  opacity: 0.62;
+}
+.edges path.edge-red {
+  stroke: var(--st-red) !important;
+  stroke-width: 1.5;
+  opacity: 0.68;
 }
 .edges path.active {
   stroke: var(--brand-cyan);
@@ -186,10 +218,44 @@
   stroke: var(--st-red);
   opacity: 0.6;
 }
+.edges path:hover,
+.edges path:focus {
+  stroke-width: 2.2;
+  opacity: 1;
+  outline: none;
+}
 @keyframes dash-flow { to { stroke-dashoffset: -16; } }
 
 /* Particle traffic dots */
 .edges circle.particle { fill: var(--brand-cyan); }
+
+.edge-tooltip {
+  position: fixed;
+  z-index: 75;
+  min-width: 260px;
+  max-width: 360px;
+  pointer-events: none;
+  display: none;
+  background: rgba(13,18,26,0.96);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  box-shadow: var(--shadow-3);
+  padding: 10px 12px;
+  color: var(--t-2);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.edge-tooltip.show { display: block; }
+.edge-tooltip .edge-title {
+  color: var(--t-1);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.edge-tooltip code {
+  font-family: var(--ff-mono);
+  color: var(--brand-cyan);
+  font-size: 10px;
+}
 
 /* Tweaks panel */
 .tweaks {
@@ -712,6 +778,46 @@
 
 .actions-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.edge-legend {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  width: 270px;
+  z-index: 55;
+  background: rgba(13,18,26,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-2);
+}
+.edge-legend h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-3);
+  font-weight: 600;
+}
+.edge-legend .legend-row {
+  display: grid;
+  grid-template-columns: 14px 72px 1fr;
+  gap: 7px;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 10.5px;
+  color: var(--t-3);
+}
+.edge-legend .legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.edge-legend .legend-label {
+  color: var(--t-2);
+  font-weight: 600;
+}
+
 /* Bridge Session modal */
 .modal-mask {
   position: fixed; inset: 0;
@@ -841,8 +947,15 @@
       <h4>Mini-agents <span class="roll" id="mini-roll">8 workers · 2.7k / 50k tokens used</span></h4>
       <div class="mini-grid" id="mini-grid"></div>
     </aside>
+
+    <aside class="edge-legend" aria-label="Gateway edge legend">
+      <h4>Gateway edge legend</h4>
+      <div id="edge-legend-list"></div>
+    </aside>
   </div>
 </div>
+
+<div class="edge-tooltip" id="edge-tooltip"></div>
 
 <!-- Tweaks panel: Kong / Balanced / n8n / Nucleus + edge density -->
 <div class="tweaks">
@@ -940,6 +1053,147 @@
 
   // ---- Inspector ----
   const inspector = document.getElementById('inspector');
+  const edgeTooltip = document.getElementById('edge-tooltip');
+  let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+    })[ch]);
+  }
+
+  function edgeColorVar(color) {
+    return ({
+      green: 'var(--st-green)',
+      cyan: 'var(--brand-cyan)',
+      yellow: 'var(--st-yellow)',
+      gray: 'var(--st-gray)',
+      red: 'var(--st-red)',
+    })[color] || 'var(--st-gray)';
+  }
+
+  function edgeFallbackReadiness(edge) {
+    if (G.getEdgeReadiness) return G.getEdgeReadiness(edge);
+    const fromN = G.get(edge.from);
+    const toN = G.get(edge.to);
+    return {
+      edge_id: `${edge.from}->${edge.to}:${edge.relation}`,
+      source: fromN?.name || edge.from,
+      target: toN?.name || edge.to,
+      domain: 'connector',
+      status: 'standby',
+      color: 'gray',
+      primary_reason: 'registered_edge_no_runtime_heartbeat',
+      blockers: [],
+      last_heartbeat_at: null,
+      last_success_at: null,
+      last_event_at: null,
+      next_action: 'verify_edge_runtime_heartbeat_if_live_control_is_required',
+    };
+  }
+
+  function edgeReadinessFor(edge) {
+    const fallback = edgeFallbackReadiness(edge);
+    const runtimeMatch = runtimeEdgeReadiness.find(item => item.edge_id === fallback.edge_id);
+    return runtimeMatch ? Object.assign({}, fallback, runtimeMatch) : fallback;
+  }
+
+  function moveEdgeTooltip(e) {
+    if (!edgeTooltip) return;
+    const pad = 14;
+    const rawX = typeof e.clientX === 'number' ? e.clientX : window.innerWidth / 2;
+    const rawY = typeof e.clientY === 'number' ? e.clientY : 120;
+    const x = Math.min(rawX + pad, window.innerWidth - edgeTooltip.offsetWidth - pad);
+    const y = Math.min(rawY + pad, window.innerHeight - edgeTooltip.offsetHeight - pad);
+    edgeTooltip.style.left = `${Math.max(pad, x)}px`;
+    edgeTooltip.style.top = `${Math.max(64, y)}px`;
+  }
+
+  function showEdgeTooltip(readiness, e) {
+    if (!edgeTooltip || !readiness) return;
+    edgeTooltip.innerHTML = `
+      <div class="edge-title">${esc(readiness.source)} → ${esc(readiness.target)}</div>
+      <div>status: <code>${esc(readiness.status)}</code> · color: <code>${esc(readiness.color)}</code></div>
+      <div>reason: <code>${esc(readiness.primary_reason)}</code></div>
+      <div>next: ${esc(readiness.next_action || 'none')}</div>
+    `;
+    edgeTooltip.classList.add('show');
+    moveEdgeTooltip(e);
+  }
+
+  function hideEdgeTooltip() {
+    if (edgeTooltip) edgeTooltip.classList.remove('show');
+  }
+
+  function renderEdgeLegend() {
+    const target = document.getElementById('edge-legend-list');
+    if (!target) return;
+    const legend = Array.isArray(G.EDGE_LEGEND) ? G.EDGE_LEGEND : [];
+    target.innerHTML = legend.map(item => `
+      <div class="legend-row" title="${esc(item.meaning)}">
+        <span class="legend-dot" style="background:${edgeColorVar(item.color)}"></span>
+        <span class="legend-label">${esc(item.color)}</span>
+        <span>${esc(item.label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function openEdgeInspector(readiness) {
+    if (!readiness) return;
+    document.getElementById('ins-dot').style.background = edgeColorVar(readiness.color);
+    document.getElementById('ins-name').textContent = `${readiness.source} → ${readiness.target}`;
+    const pills = document.getElementById('ins-pills');
+    const colorPill = readiness.color === 'cyan' ? 'blue' : readiness.color;
+    pills.innerHTML = `
+      <span class="pill ${colorPill}">${esc(readiness.status)}</span>
+      <span class="pill blue">${esc(readiness.domain)}</span>
+      <span class="pill gray">${esc(readiness.color)} edge</span>
+    `;
+    const body = document.getElementById('ins-body');
+    const blockers = Array.isArray(readiness.blockers) && readiness.blockers.length
+      ? readiness.blockers.map(b => `<div style="font-family:var(--ff-mono);font-size:11px;">${esc(b)}</div>`).join('')
+      : '<span style="color:var(--t-4);">none</span>';
+    const standbyNote = readiness.color === 'gray' || readiness.status === 'standby'
+      ? '<p style="margin:10px 0 0;color:var(--t-3);font-size:12px;">Node registered, edge standby.</p>'
+      : '';
+    body.innerHTML = `
+      <div class="ins-section">
+        <h4>Edge readiness</h4>
+        <dl class="kv">
+          <dt>Current color</dt><dd>${esc(readiness.color)}</dd>
+          <dt>Status</dt><dd>${esc(readiness.status)}</dd>
+          <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.primary_reason)}</dd>
+          <dt>Blockers</dt><dd>${blockers}</dd>
+          <dt>Last heartbeat</dt><dd>${esc(readiness.last_heartbeat_at || 'none')}</dd>
+          <dt>Last success</dt><dd>${esc(readiness.last_success_at || 'none')}</dd>
+          <dt>Last event</dt><dd>${esc(readiness.last_event_at || 'none')}</dd>
+          <dt>Next action</dt><dd>${esc(readiness.next_action || 'none')}</dd>
+        </dl>
+        ${standbyNote}
+      </div>
+      <div class="ins-section">
+        <h4>Why a green card can have a gray line</h4>
+        <p style="color:var(--t-3);font-size:12px;line-height:1.55;margin:0;">Cards show registered node readiness. Edges require separate runtime proof such as a heartbeat, a recent signed event, or a successful edge-specific check.</p>
+      </div>
+    `;
+    inspector.classList.add('open');
+  }
+
+  function fetchEdgeReadiness() {
+    try {
+      fetch('/api/gateway/graph/edge-readiness', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.edges)) return;
+          runtimeEdgeReadiness = payload.edges;
+          if (Array.isArray(payload.legend)) G.EDGE_LEGEND = payload.legend;
+          renderEdgeLegend();
+          drawEdges();
+        })
+        .catch(() => { /* static fallback stays active */ });
+    } catch (err) { /* static fallback stays active */ }
+  }
+
   function openInspector(id) {
     let n = G.get(id);
     if (!n && id === 'gateway.core') n = G.get('gateway.core');
@@ -1008,6 +1262,7 @@
   document.getElementById('gateway-core').onclick = () => {
     openInspector('gateway.core');
   };
+  renderEdgeLegend();
 
   // ---- Edges drawing ----
   const svg = document.getElementById('edges-svg');
@@ -1037,15 +1292,30 @@
       const cp = Math.abs(dx) * 0.45;
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M ${a.x} ${a.y} C ${a.x + cp} ${a.y}, ${b.x - cp} ${b.y}, ${b.x} ${b.y}`);
-      let cls = 'edge';
-      if (toN && (toN.status === 'red' || fromN?.status === 'red')) cls += ' blocked';
-      else if (toN && (toN.status === 'yellow' || fromN?.status === 'yellow')) cls += ' gated';
-      else if (edge.relation === 'commands' || edge.relation === 'delegates_to' || edge.relation === 'routes_through') cls += ' active';
-      path.setAttribute('class', cls);
+      const readiness = edgeReadinessFor(edge);
+      path.setAttribute('class', `edge edge-${readiness.color}`);
+      path.setAttribute('tabindex', '0');
+      path.setAttribute('role', 'button');
+      path.setAttribute('aria-label', `${readiness.source} to ${readiness.target}: ${readiness.status}, ${readiness.primary_reason}`);
+      path.dataset.edgeId = readiness.edge_id;
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${readiness.source} → ${readiness.target}\nstatus: ${readiness.status}\nreason: ${readiness.primary_reason}\nnext: ${readiness.next_action}`;
+      path.appendChild(title);
+      path.addEventListener('mouseenter', evt => showEdgeTooltip(readiness, evt));
+      path.addEventListener('mousemove', moveEdgeTooltip);
+      path.addEventListener('mouseleave', hideEdgeTooltip);
+      path.addEventListener('focus', evt => showEdgeTooltip(readiness, evt));
+      path.addEventListener('blur', hideEdgeTooltip);
+      path.addEventListener('click', evt => {
+        evt.stopPropagation();
+        hideEdgeTooltip();
+        openEdgeInspector(readiness);
+      });
       svg.appendChild(path);
     });
   }
   drawEdges();
+  fetchEdgeReadiness();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle
   setTimeout(drawEdges, 250);

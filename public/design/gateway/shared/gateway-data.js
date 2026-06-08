@@ -158,6 +158,35 @@ window.GATEWAY = (function () {
     { from: 'agent.zero',   to: 'model.miniagents',   relation: 'delegates_to' },
   ];
 
+  // ---------- Edge readiness diagnostics ----------
+  // Edge status is intentionally separate from node/card status:
+  // a node can be green while its connecting line is gray because no live
+  // heartbeat or recent event has proven that specific runtime bridge.
+  const EDGE_LEGEND = [
+    { color: 'green', label: 'live', meaning: 'Live runtime connection with a recent heartbeat or successful check and no blocker.' },
+    { color: 'cyan', label: 'read-only active', meaning: 'Safe observation path is working; write or execution dispatch is not enabled.' },
+    { color: 'yellow', label: 'approval or degraded', meaning: 'Partially configured, approval-gated, degraded, or waiting on policy.' },
+    { color: 'gray', label: 'standby', meaning: 'Registered, but no live runtime heartbeat or recent event is present.' },
+    { color: 'red', label: 'blocked', meaning: 'Failed, blocked by auth/policy, or unsafe to execute.' },
+  ];
+
+  const EDGE_READINESS = [
+    { edge_id: 'browser.html_surface_to_gateway', source: 'HTML', target: 'Gateway', domain: 'browser', status: 'read_only', color: 'cyan', primary_reason: 'html_surface_registered_no_runtime_bridge', blockers: [], last_heartbeat_at: null, last_success_at: 'static surface loaded', last_event_at: null, next_action: 'configure_browser_runtime_bridge_if_active_control_is_required' },
+    { edge_id: 'browser.firefox_to_gateway', source: 'Firefox', target: 'Gateway', domain: 'browser', status: 'standby', color: 'gray', primary_reason: 'firefox_runtime_not_connected', blockers: ['browser_session_not_connected'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'start_or_verify_browser_runtime_bridge' },
+    { edge_id: 'reports.gateway_to_reports', from: 'agent.zero', to: 'int.reports', relation: 'writes_to', source: 'Gateway', target: 'Reports', domain: 'reports', status: 'read_only', color: 'cyan', primary_reason: 'report_preview_ready_delivery_not_enabled', blockers: [], last_heartbeat_at: null, last_success_at: 'preview route ready', last_event_at: null, next_action: 'request_owner_approval_for_report_delivery_if_needed' },
+    { edge_id: 'webhooks.inbound_to_gateway', from: 'input.webhook', to: 'gateway.core', relation: 'notifies', source: 'Webhooks', target: 'Gateway', domain: 'webhooks', status: 'standby', color: 'gray', primary_reason: 'webhook_receiver_ready_no_recent_events', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'send_signed_test_event_or_verify_webhook_heartbeat' },
+    { edge_id: 'events.event_bus_to_gateway', from: 'input.event', to: 'gateway.core', relation: 'notifies', source: 'Events', target: 'Gateway', domain: 'events', status: 'standby', color: 'gray', primary_reason: 'event_bus_ready_no_recent_events', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'verify_event_stream_heartbeat' },
+    { edge_id: 'agentmail.gateway_to_agentmail', from: 'agent.zero', to: 'int.agentmail', relation: 'writes_to', source: 'Gateway', target: 'AgentMail', domain: 'connector', status: 'ready', color: 'green', primary_reason: 'agentmail_approval_gated_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest audit', next_action: 'create_owner_approved_send_request_when_needed' },
+    { edge_id: 'connector.zapier_to_gateway', source: 'Zapier', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'zapier_write_execution_requires_owner_approval', blockers: ['zapier_writes_disabled_without_owner_approval'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_exact_zapier_action_scope' },
+    { edge_id: 'connector.google_drive_to_gateway', source: 'Google Drive', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'google_drive_upload_requires_owner_approval', blockers: ['drive_writes_approval_gated'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_upload_or_write_scope' },
+    { edge_id: 'connector.onedrive_to_gateway', source: 'OneDrive', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'onedrive_upload_requires_owner_approval', blockers: ['onedrive_writes_approval_gated'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_upload_or_write_scope' },
+    { edge_id: 'connector.external_apis_to_gateway', source: 'External APIs', target: 'Gateway', domain: 'connector', status: 'standby', color: 'gray', primary_reason: 'external_api_registry_ready_no_live_heartbeat', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'verify_specific_external_api_runtime_heartbeat_before_execution' },
+    { edge_id: 'connector.mcp_servers_to_gateway', source: 'MCP Servers', target: 'Gateway', domain: 'connector', status: 'read_only', color: 'cyan', primary_reason: 'mcp_discovery_ready_execution_gated', blockers: [], last_heartbeat_at: null, last_success_at: 'discovery ready', last_event_at: null, next_action: 'request_owner_approval_before_broad_mcp_execution' },
+    { edge_id: 'connector.tools_registry_to_gateway', source: 'Tools Registry', target: 'Gateway', domain: 'connector', status: 'read_only', color: 'cyan', primary_reason: 'tools_registry_readiness_active_writes_gated', blockers: [], last_heartbeat_at: null, last_success_at: 'readiness ready', last_event_at: null, next_action: 'keep_tool_execution_behind_gateway_policy_and_owner_approval' },
+    { edge_id: 'connector.firecrawl_to_gateway', source: 'Firecrawl', target: 'Gateway', domain: 'connector', status: 'read_only', color: 'cyan', primary_reason: 'firecrawl_readiness_available_no_write_execution', blockers: [], last_heartbeat_at: null, last_success_at: 'readiness ready', last_event_at: null, next_action: 'run_crawl_only_after_exact_owner_approved_scope' },
+    { edge_id: 'connector.heygen_to_gateway', source: 'HeyGen', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'heygen_generation_requires_owner_approval', blockers: ['heygen_writes_disabled_without_owner_approval'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_exact_heygen_generation_scope' },
+  ];
+
   // ---------- Bridge Sessions ----------
   const BRIDGE_SESSIONS = [
     {
@@ -226,6 +255,24 @@ window.GATEWAY = (function () {
       green: 'var(--st-green)', yellow: 'var(--st-yellow)', blue: 'var(--st-blue)',
       red: 'var(--st-red)', gray: 'var(--st-gray)', purple: 'var(--st-purple)', orange: 'var(--st-orange)',
     })[status] || 'var(--st-gray)';
+  }
+  function getEdgeReadiness(edge) {
+    if (!edge) return null;
+    const direct = EDGE_READINESS.find(r => r.from === edge.from && r.to === edge.to && (!r.relation || r.relation === edge.relation));
+    if (direct) return direct;
+    const fromN = get(edge.from);
+    const toN = get(edge.to);
+    const edgeId = `${edge.from}->${edge.to}:${edge.relation}`;
+    if (fromN && toN && (fromN.status === 'red' || toN.status === 'red')) {
+      return { edge_id: edgeId, source: fromN.name, target: toN.name, domain: 'connector', status: 'blocked', color: 'red', primary_reason: 'node_blocked_edge_inherits_blocker', blockers: [fromN.blocked_reason || toN.blocked_reason || 'node_blocked'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'resolve_blocked_node_before_edge_can_activate' };
+    }
+    if (fromN && toN && (fromN.status === 'yellow' || toN.status === 'yellow')) {
+      return { edge_id: edgeId, source: fromN.name, target: toN.name, domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'node_policy_gated_edge_inherits_approval_state', blockers: [fromN.blocked_reason || toN.blocked_reason || 'approval_required'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'complete_owner_approval_or_policy_gate' };
+    }
+    if (edge.relation === 'commands' || edge.relation === 'delegates_to' || edge.relation === 'routes_through') {
+      return { edge_id: edgeId, source: fromN?.name || edge.from, target: toN?.name || edge.to, domain: 'connector', status: 'active', color: 'green', primary_reason: 'live_route_relation_active', blockers: [], last_heartbeat_at: 'live', last_success_at: fromN?.lastSuccess || toN?.lastSuccess || null, last_event_at: null, next_action: 'none' };
+    }
+    return { edge_id: edgeId, source: fromN?.name || edge.from, target: toN?.name || edge.to, domain: 'connector', status: 'standby', color: 'gray', primary_reason: 'registered_edge_no_runtime_heartbeat', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'verify_edge_runtime_heartbeat_if_live_control_is_required' };
   }
 
   // ---------- Engines (live token / $ budgets) ----------
@@ -311,9 +358,9 @@ window.GATEWAY = (function () {
   };
 
   return {
-    STATUS, LANES, NODES, OPENCLOUD_CHILDREN, EDGES, BRIDGE_SESSIONS, AUDIT, POLICIES, HEALTH,
+    STATUS, LANES, NODES, OPENCLOUD_CHILDREN, EDGES, EDGE_READINESS, EDGE_LEGEND, BRIDGE_SESSIONS, AUDIT, POLICIES, HEALTH,
     ENGINES, MINI_AGENTS, REQUEST_STREAM, DISPATCHER, TOKEN_LEDGER,
-    get, byLane, statusOf, statusColor,
+    get, byLane, statusOf, statusColor, getEdgeReadiness,
   };
 })();
 

@@ -1,8 +1,10 @@
+import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
 
 import { getDatabase } from '@/lib/db'
 import {
   decryptProviderSecret,
+  encryptProviderSecret,
   ensureProviderVaultSchema,
   loadSecretMasterKey,
   maskSecret,
@@ -76,6 +78,8 @@ type AgentMailBootstrapSecretRow = EncryptedProviderSecret & {
   env_var_name: string
   masked_preview: string
 }
+
+type AgentMailScopedSecretRow = AgentMailBootstrapSecretRow
 
 export type AgentMailBootstrapCredentialResolution = {
   ref: string | null
@@ -180,6 +184,36 @@ export type AgentMailBootstrapConnectionTest = {
   raw_secret_values_exposed: false
 }
 
+export type AgentMailScopedCredentialCreateResult = {
+  ok: boolean
+  source: 'agentmail_scoped_credential_create_store'
+  agent_id: string
+  inbox_id: string
+  credential_ref: string
+  key_masked: string | null
+  api_key_id: string | null
+  scope: 'inbox'
+  permissions: Record<AgentMailPermission, boolean>
+  create_http_status: number | null
+  read_probe_status: 'ok' | 'skipped' | 'http_error' | 'unreachable'
+  read_http_status: number | null
+  exact_blocker: string | null
+  auth_header_present: boolean
+  bootstrap_key_source: 'provider_vault' | 'raw_env' | 'none'
+  provider_error_summary?: {
+    status: number | null
+    message: string | null
+    credential_values_exposed: false
+    tokens_exposed: false
+    env_values_exposed: false
+    raw_secret_values_exposed: false
+  }
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
 type LoadedAgentMailBootstrapCredential =
   | { ok: true; value: string; ref: string; keyMasked: string | null; source: 'provider_vault' | 'raw_env' }
   | {
@@ -204,13 +238,106 @@ function latestAgentMailBootstrapSecret(db: Database.Database, ref: string): Age
   `).get(ref, ref) as AgentMailBootstrapSecretRow | undefined
 }
 
+function resolveAgentMailBootstrapRef(db: Database.Database, env: Record<string, string | undefined>) {
+  const explicit = normalizeRef(env.AGENTMAIL_API_KEY_REF || env.AGENTMAIL_CREDENTIAL_REF || '')
+  if (explicit) return explicit
+  const loadedKey = loadSecretMasterKey(env)
+  if (!loadedKey.ok) return ''
+  const defaultRow = latestAgentMailBootstrapSecret(db, 'AGENTMAIL_API_KEY')
+  return defaultRow ? 'AGENTMAIL_API_KEY' : ''
+}
+
+function ensureAgentMailProviderConfig(db: Database.Database) {
+  ensureProviderVaultSchema(db)
+  db.prepare(`
+    INSERT INTO provider_configs (provider_id, display_name, provider_type, base_url, validation_path, enabled, custom)
+    VALUES ('agentmail', 'AgentMail', 'hosted', 'https://api.agentmail.to', '/v0/inboxes', 1, 1)
+    ON CONFLICT(provider_id) DO UPDATE SET
+      display_name = excluded.display_name,
+      provider_type = excluded.provider_type,
+      base_url = excluded.base_url,
+      validation_path = excluded.validation_path,
+      enabled = excluded.enabled,
+      updated_at = unixepoch()
+  `).run()
+}
+
+function latestAgentMailScopedSecret(db: Database.Database, ref: string): AgentMailScopedSecretRow | undefined {
+  ensureAgentMailProviderConfig(db)
+  return db.prepare(`
+    SELECT id, provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm, key_version, masked_preview
+    FROM provider_secrets
+    WHERE provider_id = 'agentmail'
+      AND env_var_name = ?
+      AND active = 1
+      AND deleted_at IS NULL
+    ORDER BY id DESC
+    LIMIT 1
+  `).get(ref) as AgentMailScopedSecretRow | undefined
+}
+
+export function storeAgentMailScopedCredentialSecret(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  credentialRef: string
+  rawSecret: string
+  actor?: string
+}) {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const credentialRef = normalizeRef(input.credentialRef)
+  const rawSecret = String(input.rawSecret || '').trim()
+  if (!credentialRef || !rawSecret) {
+    return { ok: false, exact_blocker: 'agentmail_scoped_credential_secret_required', credential_ref: credentialRef || null, key_masked: null, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+  }
+  const loadedKey = loadSecretMasterKey(env)
+  if (!loadedKey.ok) {
+    return { ok: false, exact_blocker: 'agentmail_runtime_secret_store_required', credential_ref: credentialRef, key_masked: null, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+  }
+  ensureAgentMailProviderConfig(db)
+  const encrypted = encryptProviderSecret(rawSecret, loadedKey.key, loadedKey.key_version)
+  const masked = maskAgentMailKey(rawSecret)
+  const fingerprint = createHash('sha256').update(rawSecret).digest('hex')
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE provider_secrets
+      SET active = 0, rotated_at = unixepoch()
+      WHERE provider_id = 'agentmail'
+        AND env_var_name = ?
+        AND active = 1
+        AND deleted_at IS NULL
+    `).run(credentialRef)
+    db.prepare(`
+      INSERT INTO provider_secrets (
+        provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm,
+        key_version, masked_preview, fingerprint_hash, created_by
+      ) VALUES ('agentmail', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      credentialRef,
+      encrypted.ciphertext,
+      encrypted.iv,
+      encrypted.auth_tag,
+      encrypted.algorithm,
+      encrypted.key_version,
+      masked || 'am_****',
+      fingerprint,
+      input.actor || 'mission-control',
+    )
+    db.prepare(`
+      INSERT INTO provider_secret_audit (provider_id, action, actor, result, detail)
+      VALUES ('agentmail', 'scoped_secret_store', ?, 'ok', ?)
+    `).run(input.actor || 'mission-control', `ref=${credentialRef}`)
+  })()
+  return { ok: true, exact_blocker: null, credential_ref: credentialRef, key_masked: masked, ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS }
+}
+
 export function resolveAgentMailBootstrapCredential(input: {
   db?: Database.Database
   env?: Record<string, string | undefined>
 } = {}): AgentMailBootstrapCredentialResolution {
   const db = input.db || getDatabase()
   const env = input.env || process.env
-  const ref = normalizeRef(env.AGENTMAIL_API_KEY_REF || env.AGENTMAIL_CREDENTIAL_REF || '')
+  const ref = resolveAgentMailBootstrapRef(db, env)
   const rawEnvKey = String(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || '').trim()
 
   if (ref) {
@@ -240,7 +367,7 @@ function loadAgentMailBootstrapCredentialValue(input: {
 } = {}): LoadedAgentMailBootstrapCredential {
   const db = input.db || getDatabase()
   const env = input.env || process.env
-  const ref = normalizeRef(env.AGENTMAIL_API_KEY_REF || env.AGENTMAIL_CREDENTIAL_REF || '')
+  const ref = resolveAgentMailBootstrapRef(db, env)
   const rawEnvKey = String(env.AGENTMAIL_API_KEY || env.AGENTMAIL_TOKEN || '').trim()
 
   if (ref) {
@@ -644,6 +771,238 @@ function parsePermissions(value: string | null) {
   }
 }
 
+function unwrapAgentMailRecord(payload: unknown): Record<string, unknown> {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {}
+  const record = payload as Record<string, unknown>
+  if (record.data && typeof record.data === 'object' && !Array.isArray(record.data)) return record.data as Record<string, unknown>
+  return record
+}
+
+export async function createAndStoreAgentMailScopedCredential(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  baseUrl?: string
+  agentId: string
+  inboxId: string
+  credentialRef: string
+  name: string
+  permissions: AgentMailPermissionMap
+  actor?: string
+}): Promise<AgentMailScopedCredentialCreateResult> {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const fetcher = input.fetchImpl || fetch
+  const agentId = sanitizeAgentMailField(input.agentId, 120)
+  const inboxId = sanitizeAgentMailField(input.inboxId, 220).toLowerCase()
+  const credentialRef = normalizeRef(input.credentialRef)
+  const permissions = normalizePermissions(input.permissions)
+  const baseUrl = String(input.baseUrl || env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
+  const endpoint = new URL(`/v0/inboxes/${encodeURIComponent(inboxId)}/api-keys`, baseUrl).toString()
+  const bootstrap = loadAgentMailBootstrapCredentialValue({ db, env })
+
+  if (!agentId || !inboxId || !credentialRef) {
+    return {
+      ok: false,
+      source: 'agentmail_scoped_credential_create_store',
+      agent_id: agentId,
+      inbox_id: inboxId,
+      credential_ref: credentialRef,
+      key_masked: null,
+      api_key_id: null,
+      scope: 'inbox',
+      permissions,
+      create_http_status: null,
+      read_probe_status: 'skipped',
+      read_http_status: null,
+      exact_blocker: 'agentmail_scoped_credential_metadata_required',
+      auth_header_present: false,
+      bootstrap_key_source: 'none',
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  }
+
+  if (!bootstrap.ok) {
+    return {
+      ok: false,
+      source: 'agentmail_scoped_credential_create_store',
+      agent_id: agentId,
+      inbox_id: inboxId,
+      credential_ref: credentialRef,
+      key_masked: null,
+      api_key_id: null,
+      scope: 'inbox',
+      permissions,
+      create_http_status: null,
+      read_probe_status: 'skipped',
+      read_http_status: null,
+      exact_blocker: bootstrap.exact_blocker,
+      auth_header_present: false,
+      bootstrap_key_source: bootstrap.source,
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 4500)
+  try {
+    const response = await fetcher(endpoint, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${bootstrap.value}`,
+      },
+      body: JSON.stringify({
+        name: sanitizeAgentMailField(input.name || credentialRef, 120),
+        permissions,
+      }),
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      const rawMessage = (payload as Record<string, unknown>)?.message || (payload as Record<string, unknown>)?.error
+      return {
+        ok: false,
+        source: 'agentmail_scoped_credential_create_store',
+        agent_id: agentId,
+        inbox_id: inboxId,
+        credential_ref: credentialRef,
+        key_masked: null,
+        api_key_id: null,
+        scope: 'inbox',
+        permissions,
+        create_http_status: response.status,
+        read_probe_status: 'skipped',
+        read_http_status: null,
+        exact_blocker: response.status === 401 || response.status === 403
+          ? 'agentmail_scoped_credential_create_forbidden'
+          : `agentmail_scoped_credential_create_http_${response.status}`,
+        auth_header_present: true,
+        bootstrap_key_source: bootstrap.source,
+        provider_error_summary: sanitizedProviderError(response.status, rawMessage),
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+
+    const record = unwrapAgentMailRecord(payload)
+    const rawSecret = String(record.api_key || record.key || record.token || '').trim()
+    const apiKeyId = sanitizeAgentMailField(record.api_key_id || record.id, 160) || null
+    if (!rawSecret) {
+      return {
+        ok: false,
+        source: 'agentmail_scoped_credential_create_store',
+        agent_id: agentId,
+        inbox_id: inboxId,
+        credential_ref: credentialRef,
+        key_masked: null,
+        api_key_id: apiKeyId,
+        scope: 'inbox',
+        permissions,
+        create_http_status: response.status,
+        read_probe_status: 'skipped',
+        read_http_status: null,
+        exact_blocker: 'agentmail_scoped_credential_secret_missing_from_response',
+        auth_header_present: true,
+        bootstrap_key_source: bootstrap.source,
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+
+    const stored = storeAgentMailScopedCredentialSecret({
+      db,
+      env,
+      credentialRef,
+      rawSecret,
+      actor: input.actor || 'mission-control',
+    })
+    if (!stored.ok) {
+      return {
+        ok: false,
+        source: 'agentmail_scoped_credential_create_store',
+        agent_id: agentId,
+        inbox_id: inboxId,
+        credential_ref: credentialRef,
+        key_masked: null,
+        api_key_id: apiKeyId,
+        scope: 'inbox',
+        permissions,
+        create_http_status: response.status,
+        read_probe_status: 'skipped',
+        read_http_status: null,
+        exact_blocker: stored.exact_blocker,
+        auth_header_present: true,
+        bootstrap_key_source: bootstrap.source,
+        ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+      }
+    }
+
+    let readProbeStatus: AgentMailScopedCredentialCreateResult['read_probe_status'] = 'skipped'
+    let readHttpStatus: number | null = null
+    let readBlocker: string | null = null
+    try {
+      const readEndpoint = new URL(`/v0/inboxes/${encodeURIComponent(inboxId)}`, baseUrl).toString()
+      const readResponse = await fetcher(readEndpoint, {
+        method: 'GET',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${rawSecret}` },
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+      readHttpStatus = readResponse.status
+      if (readResponse.ok) readProbeStatus = 'ok'
+      else {
+        readProbeStatus = 'http_error'
+        readBlocker = `agentmail_scoped_credential_read_probe_http_${readResponse.status}`
+      }
+    } catch {
+      readProbeStatus = 'unreachable'
+      readBlocker = 'agentmail_network_or_timeout'
+    }
+
+    return {
+      ok: readProbeStatus === 'ok',
+      source: 'agentmail_scoped_credential_create_store',
+      agent_id: agentId,
+      inbox_id: inboxId,
+      credential_ref: credentialRef,
+      key_masked: stored.key_masked,
+      api_key_id: apiKeyId,
+      scope: 'inbox',
+      permissions,
+      create_http_status: response.status,
+      read_probe_status: readProbeStatus,
+      read_http_status: readHttpStatus,
+      exact_blocker: readBlocker,
+      auth_header_present: true,
+      bootstrap_key_source: bootstrap.source,
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } catch {
+    return {
+      ok: false,
+      source: 'agentmail_scoped_credential_create_store',
+      agent_id: agentId,
+      inbox_id: inboxId,
+      credential_ref: credentialRef,
+      key_masked: null,
+      api_key_id: null,
+      scope: 'inbox',
+      permissions,
+      create_http_status: null,
+      read_probe_status: 'unreachable',
+      read_http_status: null,
+      exact_blocker: 'agentmail_network_or_timeout',
+      auth_header_present: true,
+      bootstrap_key_source: bootstrap.source,
+      provider_error_summary: sanitizedProviderError(null, 'network_or_timeout'),
+      ...AGENTMAIL_CREDENTIAL_SAFE_FLAGS,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export function ensureAgentMailCredentialSchema(db: Database.Database = getDatabase()) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS agentmail_scoped_credentials (
@@ -749,12 +1108,26 @@ export function resolveAgentMailScopedCredential(input: {
     if (!permissions[permission]) blockers.push(`${permission}_permission_missing`)
   }
   const ref = normalizeRef(row.credential_ref)
-  const keyValue = String(env[ref] || '').trim()
-  if (!keyValue) blockers.push('agentmail_runtime_secret_store_required')
+  let keyValue = String(env[ref] || '').trim()
+  let keyMasked = row.masked_preview || maskAgentMailKey(keyValue)
+  if (!keyValue) {
+    const loadedKey = loadSecretMasterKey(env)
+    const secretRow = latestAgentMailScopedSecret(db, ref)
+    if (loadedKey.ok && secretRow) {
+      try {
+        keyValue = decryptProviderSecret(secretRow, loadedKey.key).trim()
+        keyMasked = secretRow.masked_preview || maskAgentMailKey(keyValue)
+      } catch {
+        blockers.push('agentmail_runtime_secret_store_required')
+      }
+    } else {
+      blockers.push('agentmail_runtime_secret_store_required')
+    }
+  }
   return {
     credentialRef: ref,
     keyAvailable: Boolean(keyValue),
-    keyMasked: row.masked_preview || maskAgentMailKey(keyValue),
+    keyMasked,
     scope: 'inbox',
     inboxId: row.inbox_id,
     permissions,
@@ -764,8 +1137,22 @@ export function resolveAgentMailScopedCredential(input: {
   }
 }
 
-export function loadAgentMailCredentialSecret(resolution: AgentMailScopedCredentialResolution, env: Record<string, string | undefined> = process.env): string | null {
+export function loadAgentMailCredentialSecret(
+  resolution: AgentMailScopedCredentialResolution,
+  env: Record<string, string | undefined> = process.env,
+  db: Database.Database = getDatabase(),
+): string | null {
   const ref = resolution.credentialRef ? normalizeRef(resolution.credentialRef) : ''
   if (!ref) return null
-  return String(env[ref] || '').trim() || null
+  const rawEnv = String(env[ref] || '').trim()
+  if (rawEnv) return rawEnv
+  const loadedKey = loadSecretMasterKey(env)
+  if (!loadedKey.ok) return null
+  const secretRow = latestAgentMailScopedSecret(db, ref)
+  if (!secretRow) return null
+  try {
+    return decryptProviderSecret(secretRow, loadedKey.key).trim() || null
+  } catch {
+    return null
+  }
 }

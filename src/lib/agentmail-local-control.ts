@@ -3,19 +3,22 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import type Database from 'better-sqlite3'
 
-import { createApprovalRequest } from '@/lib/approval-requests'
+import { createApprovalRequest, getApprovalRequest, listApprovalRequests, resolveApprovalRequest } from '@/lib/approval-requests'
 import {
   AGENTMAIL_PERMISSION_KEYS,
+  createAndStoreAgentMailScopedCredential,
   loadAgentMailCredentialSecret,
   resolveAgentMailBootstrapCredential,
   resolveAgentMailScopedCredential,
   upsertAgentMailScopedCredentialMetadata,
   type AgentMailPermission,
+  type AgentMailPermissionMap,
 } from '@/lib/agentmail-credential-resolver'
 import { sendAgentMailMessage, type AgentMailAdapterSendResult } from '@/lib/agentmail-send-adapter'
 
 import { config, ensureDirExists } from '@/lib/config'
 import { getDatabase } from '@/lib/db'
+import { loadSecretMasterKey } from '@/lib/provider-vault'
 
 export type AgentMailAutonomyLevel = 'L0_monitor_only' | 'L1_draft_only' | 'L2_approval_gated_send'
 export type AgentMailMonitorState = 'running' | 'degraded' | 'stopped'
@@ -1150,6 +1153,53 @@ function permissionMap(enabled: boolean, sendCapable: boolean) {
   }, {} as Record<AgentMailSendPermission, boolean>)
 }
 
+function agentMailCredentialRef(agentId: string) {
+  const refs: Record<string, string> = {
+    pi: 'AGENTMAIL_INBOX_KEY_PI',
+    agent_zero: 'AGENTMAIL_INBOX_KEY_AGENT_ZERO',
+    gateway: 'AGENTMAIL_INBOX_KEY_GATEWAY',
+    bridge_unit: 'AGENTMAIL_INBOX_KEY_BRIDGE_UNIT',
+    agentmail_monitor: 'AGENTMAIL_INBOX_KEY_MONITOR',
+    agentmail_audit: 'AGENTMAIL_INBOX_KEY_AUDIT_ARCHIVE',
+  }
+  return refs[agentId] || `AGENTMAIL_INBOX_KEY_${agentId.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`
+}
+
+function agentMailSendCapable(agentId: string) {
+  return agentId === 'pi' || agentId === 'agent_zero'
+}
+
+function agentMailCredentialSendPolicy(agentId: string) {
+  if (agentId === 'pi' || agentId === 'agent_zero') return 'approval_gated_send'
+  if (agentId === 'gateway') return 'no_normal_external_send'
+  if (agentId === 'bridge_unit') return 'dispatch_control_plane_only'
+  return 'no_send'
+}
+
+function proposedAgentMailCredentialPermissions(agentId: string): Record<AgentMailSendPermission, boolean> {
+  const permissions = permissionMap(false, false)
+  for (const key of ['inbox_read', 'thread_read', 'message_read'] as AgentMailSendPermission[]) permissions[key] = true
+  if (agentId === 'pi' || agentId === 'agent_zero') {
+    for (const key of AGENTMAIL_SEND_PERMISSIONS) permissions[key] = true
+  } else if (agentId === 'gateway' || agentId === 'bridge_unit') {
+    permissions.message_update = true
+  }
+  return permissions
+}
+
+function approvedAgentMailScopedCredentialRequest(approvalId?: string | null) {
+  if (approvalId) {
+    const approval = getApprovalRequest(approvalId)
+    return approval?.connector === 'agentmail' && approval.approval_state === 'approved'
+      && (approval.action === 'agentmail_scoped_credentials_provisioning' || approval.action === 'agentmail_scoped_credential_provision_request')
+      ? approval
+      : null
+  }
+  return listApprovalRequests().find((request) => request.connector === 'agentmail'
+    && request.approval_state === 'approved'
+    && (request.action === 'agentmail_scoped_credentials_provisioning' || request.action === 'agentmail_scoped_credential_provision_request')) || null
+}
+
 function sendPolicyForInbox(inbox: AgentMailInboxRecord): AgentMailGatewayPolicy {
   if (inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero') return 'approval_required'
   if (inbox.agent_id === 'bridge_unit') return 'monitor_only'
@@ -1275,36 +1325,51 @@ export function buildAgentMailCredentialProvisionPreview(db: Database.Database =
   ensureAgentMailSchema(db)
   const sendAccess = buildAgentMailSendAccessStatus(db, env)
   const inboxes = listAgentMailInboxes(db)
+  const providerVaultAvailable = loadSecretMasterKey(env).ok
   const targets = inboxes.map((inbox) => {
     const agent = sendAccess.agents[inbox.agent_id] as any
-    const sendCapable = inbox.agent_id === 'pi' || inbox.agent_id === 'agent_zero'
+    const sendCapable = agentMailSendCapable(inbox.agent_id)
+    const credentialRef = agentMailCredentialRef(inbox.agent_id)
+    const proposedPermissions = proposedAgentMailCredentialPermissions(inbox.agent_id)
     return {
       agent_id: inbox.agent_id,
       display_name: inbox.display_name,
       role: inbox.role,
       inbox_id: inbox.inbox_address,
-      inbox_required: sendCapable,
-      scoped_credential_required: sendCapable,
+      inbox_required: true,
+      credential_ref: credentialRef,
+      credential_scope: 'inbox',
+      scoped_credential_required: true,
       existing_credential_ref: agent?.scoped_credential?.credential_ref || null,
       credential_status: agent?.credential_status || 'missing',
+      existing_key_masked: agent?.scoped_credential?.key_masked || null,
+      provider_vault_storage_available: providerVaultAvailable,
+      send_capable: sendCapable,
       permissions_detected: agent?.permission_status || permissionMap(false, sendCapable),
-      permissions_missing: AGENTMAIL_SEND_PERMISSIONS.filter((permission) => sendCapable && !agent?.permission_status?.[permission]),
-      safe_next_action: sendCapable
-        ? agent?.credential_status === 'scoped'
-          ? 'run_credential_readiness_test'
-          : 'create_owner_approved_scoped_inbox_key_in_existing_runtime_secret_storage'
-        : 'no_send_identity_monitor_only',
-      send_policy: sendCapable ? 'owner_approval_required' : 'no_external_send_by_default',
+      proposed_permissions: proposedPermissions,
+      permissions_missing: AGENTMAIL_SEND_PERMISSIONS.filter((permission) => Boolean(proposedPermissions[permission]) && !agent?.permission_status?.[permission]),
+      safe_next_action: agent?.credential_status === 'scoped'
+        ? 'run_credential_readiness_test'
+        : providerVaultAvailable
+          ? 'request_owner_approval_for_scoped_inbox_key_creation'
+          : 'configure_approved_runtime_secret_storage',
+      send_policy: agentMailCredentialSendPolicy(inbox.agent_id),
     }
   })
-  recordAgentMailAudit(db, 'agentmail_scoped_credential_previewed', 'ok', 'preview_only_no_key_creation')
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_preview_started', 'ok', 'preview_only_no_key_creation')
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_preview_completed', 'ok', `targets=${targets.length};provider_vault_available=${providerVaultAvailable}`)
   return {
     ok: true,
     source: 'agentmail_scoped_credential_provision_preview',
     generated_at: nowIso(),
     provision_automatically: false,
-    secret_store: 'existing_mission_control_runtime_secret_storage_required',
-    exact_blocker: 'agentmail_runtime_secret_store_required',
+    provider_vault_available: providerVaultAvailable,
+    secret_store: 'existing_mission_control_provider_vault',
+    exact_blocker: providerVaultAvailable ? 'agentmail_scoped_credential_provisioning_approval_required' : 'agentmail_runtime_secret_store_required',
+    credential_refs_to_create: targets.filter((target) => target.credential_status !== 'scoped').map((target) => target.credential_ref),
+    email_sent: false,
+    send_enabled: false,
+    scoped_credentials_created: false,
     targets,
     ...SAFE_FLAGS,
   }
@@ -1312,9 +1377,10 @@ export function buildAgentMailCredentialProvisionPreview(db: Database.Database =
 
 export function createAgentMailCredentialProvisionRequest(db: Database.Database = getDatabase(), requester = 'owner') {
   ensureAgentMailSchema(db)
+  const preview = buildAgentMailCredentialProvisionPreview(db)
   const { request: approval, created } = createApprovalRequest({
     connector: 'agentmail',
-    action: 'agentmail_scoped_credential_provision_request',
+    action: 'agentmail_scoped_credentials_provisioning',
     target: 'agentmail_scoped_credentials',
     target_key: 'agentmail:scoped-credentials',
     requester: sanitizeText(requester, 'owner', 120),
@@ -1324,25 +1390,168 @@ export function createAgentMailCredentialProvisionRequest(db: Database.Database 
     approval_scope: {
       credential_scope: 'inbox',
       no_org_wide_default: true,
-      send_policy: 'owner_approval_required',
+      credential_refs: preview.credential_refs_to_create,
+      send_capable_roles: ['pi', 'agent_zero'],
+      no_send_roles: ['agentmail_monitor', 'agentmail_audit'],
+      control_plane_roles: ['gateway', 'bridge_unit'],
+      send_policy: 'approval_gated_send_for_pi_and_agent_zero_only',
+      email_sent: false,
       credential_values_exposed: false,
     },
-    idempotency_key: 'agentmail:scoped-credentials:request',
+    idempotency_key: 'agentmail:scoped-credentials:provisioning:v1',
   })
-  recordAgentMailAudit(db, 'agentmail_scoped_credential_requested', 'blocked', `approval_id=${approval.id};runtime_secret_store_required`)
-  return { ok: true, source: 'agentmail_scoped_credential_provision_request', approval_id: approval.id, approval_state: approval.approval_state, approval_request_created: created, exact_blocker: 'canonical_owner_approval_required', ...SAFE_FLAGS }
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_provisioning_requested', 'blocked', `approval_id=${approval.id};preview_targets=${preview.targets.length}`)
+  return { ok: true, source: 'agentmail_scoped_credential_provision_request', approval_id: approval.id, approval_state: approval.approval_state, approval_request_created: created, preview, exact_blocker: 'canonical_owner_approval_required', email_sent: false, send_enabled: false, ...SAFE_FLAGS }
 }
 
-export function approveAgentMailCredentialProvision(db: Database.Database = getDatabase(), actor = 'owner') {
+export function approveAgentMailCredentialProvision(
+  db: Database.Database = getDatabase(),
+  input: string | { approvalId?: string | null; actor?: string } = 'owner',
+) {
   ensureAgentMailSchema(db)
-  recordAgentMailAudit(db, 'agentmail_scoped_credential_approved', 'ok', `actor=${sanitizeText(actor, 'owner', 120)}`)
-  return { ok: true, source: 'agentmail_scoped_credential_provision_approve', approval_state: 'approved', exact_blocker: 'agentmail_runtime_secret_store_required', apply_enabled: false, ...SAFE_FLAGS }
+  const actor = typeof input === 'string' ? input : input.actor || 'owner'
+  const approvalId = typeof input === 'string' ? null : input.approvalId || null
+  const pending = approvalId
+    ? getApprovalRequest(approvalId)
+    : listApprovalRequests().find((request) => request.connector === 'agentmail'
+      && request.approval_state === 'pending'
+      && (request.action === 'agentmail_scoped_credentials_provisioning' || request.action === 'agentmail_scoped_credential_provision_request'))
+  if (!pending) {
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_provisioning_approved', 'blocked', 'canonical_owner_approval_request_missing')
+    return { ok: false, source: 'agentmail_scoped_credential_provision_approve', approval_state: 'missing', exact_blocker: 'canonical_owner_approval_required', apply_enabled: false, email_sent: false, send_enabled: false, ...SAFE_FLAGS }
+  }
+  const approved = pending.approval_state === 'approved'
+    ? pending
+    : resolveApprovalRequest(pending.id, 'approved', sanitizeText(actor, 'owner', 120), 'Owner approved scoped AgentMail inbox credential provisioning only.')
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_provisioning_approved', 'ok', `approval_id=${pending.id};actor=${sanitizeText(actor, 'owner', 120)}`)
+  return { ok: Boolean(approved), source: 'agentmail_scoped_credential_provision_approve', approval_id: pending.id, approval_state: approved?.approval_state || 'missing', exact_blocker: approved ? null : 'canonical_owner_approval_required', apply_enabled: Boolean(approved), email_sent: false, send_enabled: false, ...SAFE_FLAGS }
 }
 
-export function applyAgentMailCredentialProvision(db: Database.Database = getDatabase()) {
+type AgentMailCredentialProvisionApplyInput = {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  approvalId?: string | null
+  actor?: string
+}
+
+function normalizeCredentialProvisionApplyInput(input?: Database.Database | AgentMailCredentialProvisionApplyInput): Required<Pick<AgentMailCredentialProvisionApplyInput, 'db' | 'env'>> & Omit<AgentMailCredentialProvisionApplyInput, 'db' | 'env'> {
+  if (input && typeof (input as Database.Database).prepare === 'function') {
+    return { db: input as Database.Database, env: process.env, actor: 'mission-control' }
+  }
+  const value = (input || {}) as AgentMailCredentialProvisionApplyInput
+  return { db: value.db || getDatabase(), env: value.env || process.env, fetchImpl: value.fetchImpl, approvalId: value.approvalId || null, actor: value.actor || 'mission-control' }
+}
+
+export async function applyAgentMailCredentialProvision(input?: Database.Database | AgentMailCredentialProvisionApplyInput) {
+  const normalized = normalizeCredentialProvisionApplyInput(input)
+  const db = normalized.db
+  const env = normalized.env
   ensureAgentMailSchema(db)
-  recordAgentMailAudit(db, 'agentmail_scoped_credential_missing', 'blocked', 'agentmail_runtime_secret_store_required')
-  return { ok: false, source: 'agentmail_scoped_credential_provision_apply', exact_blocker: 'agentmail_runtime_secret_store_required', created: false, ...SAFE_FLAGS }
+  const approval = approvedAgentMailScopedCredentialRequest(normalized.approvalId)
+  if (!approval) {
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_provisioning_failed', 'blocked', 'canonical_owner_approval_required')
+    return { ok: false, source: 'agentmail_scoped_credential_provision_apply', exact_blocker: 'canonical_owner_approval_required', credentials_created: 0, credentials_stored: 0, scoped_credentials_created: false, email_sent: false, send_enabled: false, ...SAFE_FLAGS }
+  }
+  const preview = buildAgentMailCredentialProvisionPreview(db, env)
+  if (!preview.provider_vault_available) {
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_failed', 'blocked', 'agentmail_runtime_secret_store_required')
+    return { ok: false, source: 'agentmail_scoped_credential_provision_apply', approval_id: approval.id, exact_blocker: 'agentmail_runtime_secret_store_required', credentials_created: 0, credentials_stored: 0, scoped_credentials_created: false, email_sent: false, send_enabled: false, ...SAFE_FLAGS }
+  }
+
+  const results: Array<Record<string, unknown>> = []
+  let created = 0
+  let stored = 0
+  let failed = 0
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_create_started', 'ok', `approval_id=${approval.id};targets=${preview.targets.length}`)
+  for (const target of preview.targets) {
+    if (!target.inbox_id) {
+      failed += 1
+      recordAgentMailAudit(db, 'agentmail_scoped_credential_missing', 'blocked', `agent=${target.agent_id};inbox_missing`)
+      results.push({ agent_id: target.agent_id, ok: false, exact_blocker: 'agentmail_inbox_assignment_missing', credential_ref: target.credential_ref, ...SAFE_FLAGS })
+      continue
+    }
+    if (target.credential_status === 'scoped') {
+      stored += 1
+      results.push({ agent_id: target.agent_id, ok: true, reused: true, credential_ref: target.credential_ref, key_masked: target.existing_key_masked, permissions: target.permissions_detected, ...SAFE_FLAGS })
+      continue
+    }
+
+    const create = await createAndStoreAgentMailScopedCredential({
+      db,
+      env,
+      fetchImpl: normalized.fetchImpl,
+      agentId: target.agent_id,
+      inboxId: target.inbox_id,
+      credentialRef: target.credential_ref,
+      name: `Mission Control ${target.display_name} scoped inbox key`,
+      permissions: target.proposed_permissions as AgentMailPermissionMap,
+      actor: normalized.actor || 'mission-control',
+    })
+    if (!create.ok) {
+      failed += 1
+      recordAgentMailAudit(db, 'agentmail_scoped_credential_failed', 'blocked', `agent=${target.agent_id};blocker=${create.exact_blocker}`)
+      results.push(create)
+      continue
+    }
+
+    created += 1
+    stored += 1
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: target.agent_id,
+      inboxId: target.inbox_id,
+      credentialRef: target.credential_ref,
+      maskedPreview: create.key_masked,
+      permissions: target.proposed_permissions as AgentMailPermissionMap,
+      status: 'scoped',
+      exactBlocker: null,
+    })
+    const resolution = resolveAgentMailScopedCredential({
+      db,
+      env,
+      agentId: target.agent_id,
+      inboxId: target.inbox_id,
+      requiredPermissions: agentMailSendCapable(target.agent_id) ? ['message_send'] : ['inbox_read'],
+    })
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_created', 'ok', `agent=${target.agent_id};ref=${target.credential_ref}`)
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_stored', 'ok', `agent=${target.agent_id};ref=${target.credential_ref}`)
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_resolved', resolution.keyAvailable ? 'ok' : 'blocked', `agent=${target.agent_id};ref=${target.credential_ref}`)
+    recordAgentMailAudit(db, 'agentmail_scoped_credential_permission_verified', resolution.blockers.length ? 'blocked' : 'ok', `agent=${target.agent_id};missing=${resolution.blockers.join('|') || 'none'}`)
+    results.push({
+      ...create,
+      resolved: resolution.keyAvailable,
+      blockers: resolution.blockers,
+    })
+  }
+
+  const sendAccess = buildAgentMailSendAccessStatus(db, env)
+  const ok = failed === 0
+  recordAgentMailAudit(db, 'agentmail_scoped_credential_provisioning_completed', ok ? 'ok' : 'blocked', `created=${created};stored=${stored};failed=${failed}`)
+  return {
+    ok,
+    source: 'agentmail_scoped_credential_provision_apply',
+    generated_at: nowIso(),
+    approval_id: approval.id,
+    credentials_created: created,
+    credentials_stored: stored,
+    credentials_failed: failed,
+    credential_refs_used: preview.targets.map((target) => target.credential_ref),
+    masked_key_confirmations: results.map((result) => ({
+      agent_id: result.agent_id,
+      credential_ref: result.credential_ref,
+      key_masked: result.key_masked || null,
+      ok: Boolean(result.ok),
+    })),
+    per_agent_results: results,
+    current_primary_blocker: sendAccess.primary_blocker,
+    full_blocker_list: sendAccess.blockers,
+    scoped_credentials_created: created > 0 || stored === preview.targets.length,
+    email_sent: false,
+    send_enabled: false,
+    execution_enabled: false,
+    exact_blocker: ok ? null : (results.find((result) => result.exact_blocker)?.exact_blocker as string | null) || 'agentmail_scoped_credential_failed',
+    ...SAFE_FLAGS,
+  }
 }
 
 export function createAgentMailBridgeSessionRequest(
@@ -1646,7 +1855,7 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
     }
   }
 
-  const secret = credentialResolution ? loadAgentMailCredentialSecret(credentialResolution, env) : null
+  const secret = credentialResolution ? loadAgentMailCredentialSecret(credentialResolution, env, db) : null
   if (!secret || !credentialResolution?.credentialRef) {
     exactBlocker = 'agentmail_runtime_secret_store_required'
     db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(exactBlocker, bridgeRow?.id || null, row.id)

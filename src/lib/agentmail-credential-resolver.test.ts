@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   listAgentMailBootstrapInboxes,
+  resolveAgentMailScopedCredential,
   resolveAgentMailBootstrapCredential,
   testAgentMailBootstrapConnection,
+  upsertAgentMailScopedCredentialMetadata,
 } from '@/lib/agentmail-credential-resolver'
 import { encryptProviderSecret, ensureProviderVaultSchema } from '@/lib/provider-vault'
 
@@ -129,6 +131,54 @@ describe('AgentMail bootstrap credential resolver', () => {
     })
     expect(result.inboxes[0]).toMatchObject({ inbox_id: 'itt@agentmail.to', email_preview: 'i***@agentmail.to', display_name: 'ITT_AGENT' })
     expect(JSON.stringify(result)).not.toContain(fakeSecret)
+  })
+
+  it('resolves scoped inbox credentials from encrypted Provider Vault storage without env injection', () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 9)
+    const rawScopedSecret = 'agentmail-scoped-secret-for-pi-1234567890'
+    ensureProviderVaultSchema(db)
+    db.prepare(`
+      INSERT INTO provider_configs (provider_id, display_name, provider_type, base_url, validation_path, enabled, custom)
+      VALUES ('agentmail', 'AgentMail', 'hosted', 'https://api.agentmail.to', '/v0/inboxes', 1, 1)
+    `).run()
+    const encrypted = encryptProviderSecret(rawScopedSecret, masterKey, 'test-key-v1')
+    db.prepare(`
+      INSERT INTO provider_secrets (
+        provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm, key_version, masked_preview, fingerprint_hash, created_by
+      ) VALUES ('agentmail', 'AGENTMAIL_INBOX_KEY_PI', ?, ?, ?, ?, ?, 'am_****7890', 'unit-test-scoped-fingerprint', 'unit-test')
+    `).run(encrypted.ciphertext, encrypted.iv, encrypted.auth_tag, encrypted.algorithm, encrypted.key_version)
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'pi',
+      inboxId: 'pi-88@agentmail.to',
+      credentialRef: 'AGENTMAIL_INBOX_KEY_PI',
+      maskedPreview: 'am_****7890',
+      permissions: { inbox_read: true, thread_read: true, message_read: true, message_send: true },
+    })
+
+    const result = resolveAgentMailScopedCredential({
+      db,
+      env: { MISSION_CONTROL_SECRETS_MASTER_KEY: masterKey.toString('base64') },
+      agentId: 'pi',
+      inboxId: 'pi-88@agentmail.to',
+      requiredPermissions: ['message_send'],
+    })
+
+    expect(result).toMatchObject({
+      credentialRef: 'AGENTMAIL_INBOX_KEY_PI',
+      keyAvailable: true,
+      keyMasked: 'am_****7890',
+      scope: 'inbox',
+      inboxId: 'pi-88@agentmail.to',
+      credential_status: 'scoped',
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+      raw_secret_values_exposed: false,
+    })
+    expect(result.blockers).toEqual([])
+    expect(result.permissions.message_send).toBe(true)
+    expect(JSON.stringify(result)).not.toContain(rawScopedSecret)
   })
 
 })

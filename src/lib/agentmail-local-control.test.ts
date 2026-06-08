@@ -9,15 +9,19 @@ import {
   buildAgentMailStatus,
   buildAgentMailConnectStatus,
   buildAgentMailInboxSyncPreview,
+  buildAgentMailCredentialProvisionPreview,
   approveAgentMailBridgeSession,
+  approveAgentMailCredentialProvision,
   approveAgentMailSendRequest,
   buildAgentMailSendAccessStatus,
   buildAgentMailSetupStatus,
   createAgentMailBridgeSessionRequest,
+  createAgentMailCredentialProvisionRequest,
   createAgentMailInboxProvisioningRequest,
   createAgentMailSendPreview,
   createAgentMailSendRequest,
   dispatchAgentMailSendRequest,
+  applyAgentMailCredentialProvision,
   upsertAgentMailScopedCredentialMetadata,
   ensureAgentMailSchema,
   ingestAgentMailEvent,
@@ -26,6 +30,35 @@ import {
   recordAgentMailAudit,
   validateInboxRegistry,
 } from '@/lib/agentmail-local-control'
+
+function assignCanonicalAgentMailInboxes(db: Database.Database) {
+  const rows = [
+    ['pi', 'pi-88@agentmail.to'],
+    ['agent_zero', 'jarvis88@agentmail.to'],
+    ['gateway', 'gateway@agentmail.to'],
+    ['bridge_unit', 'bridge-unit@agentmail.to'],
+    ['agentmail_monitor', 'tony-88@agentmail.to'],
+    ['agentmail_audit', 'audit-88@agentmail.to'],
+  ]
+  for (const [agentId, inbox] of rows) {
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = ?").run(inbox, agentId)
+  }
+}
+
+function seedAgentMailBootstrapSecret(db: Database.Database, masterKey: Buffer, rawSecret: string) {
+  ensureProviderVaultSchema(db)
+  db.prepare(`
+    INSERT INTO provider_configs (provider_id, display_name, provider_type, base_url, validation_path, enabled, custom)
+    VALUES ('agentmail', 'AgentMail', 'hosted', 'https://api.agentmail.to', '/v0/inboxes', 1, 1)
+    ON CONFLICT(provider_id) DO UPDATE SET display_name = excluded.display_name
+  `).run()
+  const encrypted = encryptProviderSecret(rawSecret, masterKey, 'test-key-v1')
+  db.prepare(`
+    INSERT INTO provider_secrets (
+      provider_id, env_var_name, ciphertext, iv, auth_tag, algorithm, key_version, masked_preview, fingerprint_hash, created_by
+    ) VALUES ('agentmail', 'AGENTMAIL_API_KEY', ?, ?, ?, ?, ?, 'am_****7890', 'unit-test-bootstrap-fingerprint', 'unit-test')
+  `).run(encrypted.ciphertext, encrypted.iv, encrypted.auth_tag, encrypted.algorithm, encrypted.key_version)
+}
 
 describe('AgentMail local control bootstrap', () => {
   it('seeds monitor-first inbox registry without shared autonomous inboxes', () => {
@@ -718,6 +751,144 @@ it('reports per-agent send access blockers without enabling send execution', () 
     ]))
     expect(setup.next_action).toBe('provision_scoped_inbox_credentials')
     expect(setup.send_ready).toBe(false)
+  })
+
+  it('previews scoped AgentMail credentials for every assigned inbox with role-specific permissions and no send', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    assignCanonicalAgentMailInboxes(db)
+
+    const preview = buildAgentMailCredentialProvisionPreview(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+    })
+
+    expect(preview).toMatchObject({
+      ok: true,
+      source: 'agentmail_scoped_credential_provision_preview',
+      provision_automatically: false,
+      provider_vault_available: expect.any(Boolean),
+      email_sent: false,
+      send_enabled: false,
+      credential_values_exposed: false,
+    })
+    expect(preview.targets).toHaveLength(6)
+    expect(preview.targets.find((row: any) => row.agent_id === 'pi')).toMatchObject({
+      inbox_id: 'pi-88@agentmail.to',
+      credential_ref: 'AGENTMAIL_INBOX_KEY_PI',
+      credential_scope: 'inbox',
+      send_capable: true,
+      send_policy: 'approval_gated_send',
+      proposed_permissions: expect.objectContaining({
+        inbox_read: true,
+        thread_read: true,
+        message_read: true,
+        message_send: true,
+        message_update: true,
+        draft_read: true,
+        draft_create: true,
+        draft_update: true,
+        draft_send: true,
+      }),
+    })
+    expect(preview.targets.find((row: any) => row.agent_id === 'gateway')).toMatchObject({
+      inbox_id: 'gateway@agentmail.to',
+      credential_ref: 'AGENTMAIL_INBOX_KEY_GATEWAY',
+      send_capable: false,
+      send_policy: 'no_normal_external_send',
+      proposed_permissions: expect.objectContaining({
+        inbox_read: true,
+        thread_read: true,
+        message_read: true,
+        message_update: true,
+        message_send: false,
+        draft_send: false,
+      }),
+    })
+    expect(preview.targets.find((row: any) => row.agent_id === 'agentmail_audit')).toMatchObject({
+      credential_ref: 'AGENTMAIL_INBOX_KEY_AUDIT_ARCHIVE',
+      send_policy: 'no_send',
+      proposed_permissions: expect.objectContaining({
+        inbox_read: true,
+        thread_read: true,
+        message_read: true,
+        message_send: false,
+        message_update: false,
+      }),
+    })
+    expect(JSON.stringify(preview)).not.toContain('agentmail-test-secret-value')
+  })
+
+  it('creates and stores scoped AgentMail inbox credentials only after owner approval without sending email', async () => {
+    const db = new Database(':memory:')
+    const masterKey = Buffer.alloc(32, 18)
+    const bootstrapSecret = 'agentmail-bootstrap-secret-value-1234567890'
+    ensureAgentMailSchema(db)
+    assignCanonicalAgentMailInboxes(db)
+    seedAgentMailBootstrapSecret(db, masterKey, bootstrapSecret)
+    const requested = createAgentMailCredentialProvisionRequest(db, 'owner')
+    const approved = approveAgentMailCredentialProvision(db, { approvalId: requested.approval_id, actor: 'owner' } as any)
+    expect(approved).toMatchObject({ ok: true, approval_state: 'approved' })
+    const calls: Array<{ method: string; url: string; body?: any; auth: string }> = []
+
+    const result = await applyAgentMailCredentialProvision({
+      db,
+      env: {
+        AGENTMAIL_API_KEY_REF: 'AGENTMAIL_API_KEY',
+        MISSION_CONTROL_SECRETS_MASTER_KEY: masterKey.toString('base64'),
+      },
+      fetchImpl: async (url: any, init: any) => {
+        const method = String(init?.method || 'GET').toUpperCase()
+        const body = init?.body ? JSON.parse(String(init.body)) : undefined
+        const auth = String((init?.headers as Record<string, string>)?.Authorization || '')
+        calls.push({ method, url: String(url), body, auth })
+        if (method === 'POST' && String(url).includes('/api-keys')) {
+          const inboxId = decodeURIComponent(String(url).split('/v0/inboxes/')[1].split('/api-keys')[0])
+          return new Response(JSON.stringify({
+            api_key_id: `key_${inboxId.replace(/[^a-z0-9]/gi, '_')}`,
+            api_key: `agentmail-scoped-key-${inboxId}-1234567890`,
+            prefix: 'am_test',
+            name: body?.name,
+            pod_id: 'pod_live_1',
+            inbox_id: inboxId,
+            permissions: body?.permissions,
+          }), { status: 200 })
+        }
+        if (method === 'GET' && String(url).includes('/v0/inboxes/')) {
+          const inboxId = decodeURIComponent(String(url).split('/v0/inboxes/')[1])
+          return new Response(JSON.stringify({ inbox_id: inboxId, email: inboxId, display_name: inboxId }), { status: 200 })
+        }
+        throw new Error(`unexpected AgentMail credential test call ${method} ${url}`)
+      },
+    } as any)
+
+    expect(result).toMatchObject({
+      ok: true,
+      source: 'agentmail_scoped_credential_provision_apply',
+      credentials_created: 6,
+      credentials_stored: 6,
+      current_primary_blocker: 'owner_approval_required',
+      scoped_credentials_created: true,
+      email_sent: false,
+      send_enabled: false,
+      credential_values_exposed: false,
+    })
+    expect(calls.filter((call) => call.method === 'POST')).toHaveLength(6)
+    expect(calls.some((call) => call.url.includes('/messages') || call.url.includes('/send'))).toBe(false)
+    expect(calls.every((call) => call.auth === `Bearer ${bootstrapSecret}` || call.auth.startsWith('Bearer agentmail-scoped-key-'))).toBe(true)
+    expect(calls.find((call) => call.url.includes('pi-88%40agentmail.to'))?.body.permissions.message_send).toBe(true)
+    expect(calls.find((call) => call.url.includes('gateway%40agentmail.to'))?.body.permissions.message_send).toBe(false)
+    expect(calls.find((call) => call.url.includes('audit-88%40agentmail.to'))?.body.permissions.message_update).toBe(false)
+    const sendAccess = buildAgentMailSendAccessStatus(db, {
+      MISSION_CONTROL_SECRETS_MASTER_KEY: masterKey.toString('base64'),
+      AGENTMAIL_API_KEY_REF: 'AGENTMAIL_API_KEY',
+    })
+    expect((sendAccess.agents.pi as any).credential_status).toBe('scoped')
+    expect((sendAccess.agents.pi as any).permission_status.message_send).toBe(true)
+    expect((sendAccess.agents.gateway as any).permission_status.message_send).toBe(false)
+    expect((sendAccess.agents.agentmail_audit as any).permission_status.message_send).toBe(false)
+    expect(sendAccess.primary_blocker).toBe('owner_approval_required')
+    expect(JSON.stringify(result)).not.toContain(bootstrapSecret)
+    expect(JSON.stringify(result)).not.toContain('agentmail-scoped-key-')
   })
 
 })

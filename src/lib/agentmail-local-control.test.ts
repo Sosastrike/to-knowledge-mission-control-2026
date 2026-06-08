@@ -693,6 +693,11 @@ it('reports per-agent send access blockers without enabling send execution', () 
       thread_id: 'thread_live_1',
       state: 'dispatched',
     })
+    expect(buildAgentMailSendAccessStatus(db, { AGENTMAIL_PI_KEY: 'agentmail-test-secret-value-1234567890' }).per_send_status).toMatchObject({
+      state: 'no_pending_send_request',
+      send_request_id: null,
+      exact_blocker: null,
+    })
   })
 
   it('blocks dispatch when the always-on AgentMail runtime is emergency-stopped', async () => {
@@ -1030,7 +1035,13 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect((sendAccess.agents.pi as any).credential_status).toBe('scoped')
     expect((sendAccess.agents.pi as any).permission_status.message_send).toBe(true)
     expect((sendAccess.agents.pi as any).approval_gated_send_capable).toBe(true)
+    expect((sendAccess.agents.pi as any).agentmail_provider_send_allowlist).toMatchObject({
+      status: 'unknown',
+      required_next_action: 'verify_recipient_in_agentmail_provider_send_allowlist_before_dispatch',
+      credential_values_exposed: false,
+    })
     expect((sendAccess.agents.gateway as any).permission_status.message_send).toBe(false)
+    expect((sendAccess.agents.gateway as any).agentmail_provider_send_allowlist.status).toBe('not_required')
     expect((sendAccess.agents.agentmail_audit as any).permission_status.message_send).toBe(false)
     expect(sendAccess.primary_blocker).toBe('ready')
     expect(sendAccess.setup_state).toBe('approval_gated_send_ready')
@@ -1038,6 +1049,28 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(sendAccess.exact_blockers).toEqual([])
     expect(JSON.stringify(result)).not.toContain(bootstrapSecret)
     expect(JSON.stringify(result)).not.toContain('agentmail-scoped-key-')
+  })
+
+  it('reports provider-side send allowlist evidence from sanitized audit records', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    assignCanonicalAgentMailInboxes(db)
+    db.prepare(`
+      INSERT INTO agentmail_audit (id, event_id, action, result, detail, created_at)
+      VALUES ('ama_allowlist_pi', 'evt_allowlist_pi', 'agentmail_send_allowlist_entry_verified', 'ok', 'inbox=pi-88@agentmail.to;entry=tony-88@agentmail.to;created=true', unixepoch())
+    `).run()
+
+    const sendAccess = buildAgentMailSendAccessStatus(db, {})
+    expect((sendAccess.agents.pi as any).agentmail_provider_send_allowlist).toMatchObject({
+      status: 'configured',
+      last_verified_recipient: 'tony-88@agentmail.to',
+      credential_values_exposed: false,
+      tokens_exposed: false,
+    })
+    expect((sendAccess.agents.agent_zero as any).agentmail_provider_send_allowlist).toMatchObject({
+      status: 'unknown',
+      required_next_action: 'verify_recipient_in_agentmail_provider_send_allowlist_before_dispatch',
+    })
   })
 
 })

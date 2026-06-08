@@ -999,6 +999,7 @@ function latestAgentMailSendRequest(db: Database.Database): AgentMailSendRequest
   ensureAgentMailSchema(db)
   const row = db.prepare(`
     SELECT * FROM agentmail_send_requests
+    WHERE state IN ('preview_created', 'approval_requested', 'owner_approved')
     ORDER BY created_at DESC, updated_at DESC
     LIMIT 1
   `).get() as AgentMailSendRequestRow | undefined
@@ -1013,14 +1014,10 @@ function runtimeBlocker(status: AgentMailDispatchRuntimeStatusValue) {
 function evaluateAgentMailPerSendStatus(db: Database.Database, dispatchRuntimeStatus: AgentMailDispatchRuntimeStatusValue): AgentMailSetupEvaluation['per_send_status'] {
   const row = latestAgentMailSendRequest(db)
   if (!row) return { state: 'no_pending_send_request', send_request_id: null, exact_blocker: null }
-  if (row.state === 'dispatched') return { state: 'send_dispatched', send_request_id: row.id, exact_blocker: null }
   if (row.state === 'owner_approved') {
     const blocker = runtimeBlocker(dispatchRuntimeStatus)
     if (!blocker) return { state: 'approved_send_dispatch_ready', send_request_id: row.id, exact_blocker: null }
     return { state: 'send_blocked', send_request_id: row.id, exact_blocker: blocker }
-  }
-  if (row.state === 'dispatch_blocked') {
-    return { state: 'send_blocked', send_request_id: row.id, exact_blocker: row.exact_blocker || 'gateway_blocked' }
   }
   return { state: 'owner_approval_required', send_request_id: row.id, exact_blocker: 'owner_approval_required' }
 }
@@ -1386,6 +1383,67 @@ function inboxStatus(inbox: AgentMailInboxRecord): AgentMailInboxStatus {
   return inbox.provision_state === 'assigned' ? 'synced' : 'provisioned'
 }
 
+function agentMailProviderSendAllowlistStatus(db: Database.Database, inbox: AgentMailInboxRecord, policy: AgentMailGatewayPolicy) {
+  if (policy !== 'approval_required' && policy !== 'allowlisted_auto_send') {
+    return {
+      status: 'not_required',
+      source: 'role_policy',
+      last_verified_recipient: null,
+      last_provider_rejection: null,
+      required_next_action: null,
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+      raw_secret_values_exposed: false,
+    }
+  }
+
+  const address = String(inbox.inbox_address || '').trim()
+  const verified = address
+    ? db.prepare(`
+      SELECT detail FROM agentmail_audit
+      WHERE action = 'agentmail_send_allowlist_entry_verified'
+        AND detail LIKE ?
+      ORDER BY created_at DESC, id DESC
+      LIMIT 1
+    `).get(`%inbox=${address}%`) as { detail?: string } | undefined
+    : null
+  const latestRejection = db.prepare(`
+    SELECT detail FROM agentmail_audit
+    WHERE action = 'agentmail_real_send_failed'
+      AND detail IN ('agentmail_send_allowlist_required', 'agentmail_message_rejected')
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `).get() as { detail?: string } | undefined
+
+  if (verified?.detail) {
+    const recipient = String(verified.detail.match(/entry=([^;]+)/)?.[1] || '').trim() || null
+    return {
+      status: 'configured',
+      source: 'provider_audit',
+      last_verified_recipient: recipient,
+      last_provider_rejection: null,
+      required_next_action: null,
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+      raw_secret_values_exposed: false,
+    }
+  }
+
+  return {
+    status: latestRejection?.detail === 'agentmail_send_allowlist_required' ? 'blocked' : 'unknown',
+    source: 'provider_audit',
+    last_verified_recipient: null,
+    last_provider_rejection: latestRejection?.detail || null,
+    required_next_action: 'verify_recipient_in_agentmail_provider_send_allowlist_before_dispatch',
+    credential_values_exposed: false,
+    tokens_exposed: false,
+    env_values_exposed: false,
+    raw_secret_values_exposed: false,
+  }
+}
+
 function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, string | undefined>, dispatchRuntime: ReturnType<typeof buildAgentMailDispatchRuntimeStatus>, db: Database.Database = getDatabase()) {
   const policy = sendPolicyForInbox(inbox)
   const inbox_state = inboxStatus(inbox)
@@ -1425,6 +1483,7 @@ function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, str
     bridge_allowed: dispatchRuntime.status === 'active',
     dispatch_runtime_allowed: dispatchRuntime.status === 'active',
     gateway_policy: policy,
+    agentmail_provider_send_allowlist: agentMailProviderSendAllowlistStatus(db, inbox, policy),
     send_ready: blockers.length === 0,
     approval_gated_send_capable: sendCapablePolicy && blockers.length === 0,
     dispatch_blockers: perSendDispatchBlockers,

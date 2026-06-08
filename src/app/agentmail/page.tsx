@@ -205,7 +205,7 @@ export default function AgentMailLocalControlPage() {
           <div className="am-list">
             {Object.values(sendAccess.agents).map((agent: any) => (
               <div className="am-row" key={agent.agent_id}>
-                <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'} · Scoped Credential: {agent.scoped_credential?.key_masked || agent.credential_status}</span></span>
+                <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'} · Scoped Credential: {agent.scoped_credential?.key_masked || agent.credential_status} · Provider allowlist: {agent.agentmail_provider_send_allowlist?.status || 'unknown'}</span></span>
                 <span>
                   <Pill tone={agent.approval_gated_send_capable ? 'green' : 'yellow'}>{agent.approval_gated_send_capable ? 'approval-gated ready' : (agent.blockers[0] || 'blocked')}</Pill>{' '}
                   <Pill tone={agent.credential_status === 'scoped' ? 'green' : 'red'}>{agent.credential_status}</Pill>

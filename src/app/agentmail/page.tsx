@@ -72,7 +72,7 @@ export default function AgentMailLocalControlPage() {
           <h1 className="am-title">AgentMail Local Control</h1>
           <p className="am-subtitle">
             Monitor-first AgentMail control plane for local listener health, inbox registry, Gateway routing preview,
-            Bridge queue, approvals, and audit. Outbound email remains disabled until owner approval and Bridge policy are proven.
+            Bridge queue, approvals, and audit. Outbound email remains approval-gated under Gateway policy and server-side dispatch runtime controls.
           </p>
         </div>
         <div className="am-actions">
@@ -91,7 +91,7 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>MCP OAuth Status</span><span>{connect.mcp_oauth_status.state}</span></div>
             <div className="am-row"><span>API Key Fallback</span><span>{connect.api_key_fallback.state}{connect.api_key_fallback.masked_preview ? ` · ${connect.api_key_fallback.masked_preview}` : ''}</span></div>
             <div className="am-row"><span>Last Sync</span><span className="am-muted">{connect.last_sync_attempt?.action || 'none'}</span></div>
-            <div className="am-row"><span>Bridge session status</span><Pill tone="yellow">{connect.bridge_session_status}</Pill></div>
+            <div className="am-row"><span>Dispatch runtime</span><Pill tone={connect.dispatch_runtime_status?.status === 'active' ? 'green' : 'yellow'}>{connect.dispatch_runtime_status?.status || 'unknown'}</Pill></div>
             <div className="am-row"><span>Send state</span><Pill tone="yellow">{connect.send_state}</Pill></div>
           </div>
           <AgentMailConnectActions consoleUrl={AGENTMAIL_CONSOLE_URL} />
@@ -121,7 +121,8 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>Permissions</span><Pill tone={setupStatus?.checklist?.permissions === 'verified' ? 'green' : 'red'}>{setupStatus?.checklist?.permissions || 'missing'}</Pill></div>
             <div className="am-row"><span>Send adapter</span><Pill tone="blue">{setupStatus?.checklist?.send_adapter || 'configured'}</Pill></div>
             <div className="am-row"><span>Owner approval flow</span><Pill tone={setupStatus?.checklist?.owner_approval_flow === 'ready' ? 'green' : 'yellow'}>{setupStatus?.checklist?.owner_approval_flow || 'missing'}</Pill></div>
-            <div className="am-row"><span>Action Bridge Session</span><Pill tone={setupStatus?.checklist?.action_bridge_session === 'active' ? 'green' : 'yellow'}>{setupStatus?.checklist?.action_bridge_session || 'inactive'}</Pill></div>
+            <div className="am-row"><span>Dispatch runtime</span><Pill tone={setupStatus?.checklist?.dispatch_runtime === 'active' ? 'green' : setupStatus?.checklist?.dispatch_runtime === 'paused' ? 'yellow' : 'red'}>{setupStatus?.checklist?.dispatch_runtime || 'unknown'}</Pill></div>
+            <div className="am-row"><span>Legacy Action Bridge Session</span><Pill tone={setupStatus?.checklist?.action_bridge_session === 'active' ? 'blue' : 'gray'}>{setupStatus?.checklist?.action_bridge_session || 'inactive'}</Pill></div>
             <div className="am-row"><span>Gateway policy</span><Pill tone={setupStatus?.checklist?.gateway_policy === 'ready' ? 'green' : 'yellow'}>{setupStatus?.checklist?.gateway_policy || 'blocked'}</Pill></div>
             <div className="am-row"><span>Audit</span><Pill tone={setupStatus?.checklist?.audit === 'ready' ? 'green' : 'red'}>{setupStatus?.checklist?.audit || 'missing'}</Pill></div>
             <div className="am-row"><span>Setup blockers</span><span>{(setupStatus?.exact_blockers || []).length ? setupStatus.exact_blockers.join(' · ') : 'none'}</span></div>
@@ -154,7 +155,7 @@ export default function AgentMailLocalControlPage() {
     │   └── Last Event
     ├── Inbox Registry
     ├── Send Access
-    │   ├── Bridge Session
+    │   ├── Dispatch Runtime
     │   ├── Agent Send Readiness
     │   ├── Permission Matrix
     │   └── Safe Send Test
@@ -189,17 +190,14 @@ export default function AgentMailLocalControlPage() {
           <div className="am-list">
             <div className="am-row"><span>Infrastructure status</span><Pill tone={sendAccess.setup_state === 'approval_gated_send_ready' ? 'green' : 'yellow'}>{sendAccess.setup_state || setupState}</Pill></div>
             <div className="am-row"><span>Per-send status</span><Pill tone={sendAccess.per_send_status?.state === 'no_pending_send_request' ? 'blue' : sendAccess.per_send_status?.state === 'approved_send_dispatch_ready' ? 'green' : 'yellow'}>{sendAccess.per_send_status?.state || 'no_pending_send_request'}</Pill></div>
-            <div className="am-row"><span>Bridge Session</span><Pill tone={sendAccess.global.bridge_session_state === 'active' ? 'green' : 'yellow'}>{sendAccess.global.bridge_session_state}</Pill></div>
-            <div className="am-row"><span>Expires at</span><span className="am-muted">{sendAccess.global.expires_at || 'not active'}</span></div>
-            <div className="am-row"><span>Sends remaining</span><span>{sendAccess.global.sends_remaining_per_agent}</span></div>
+            <div className="am-row"><span>Dispatch Runtime</span><Pill tone={sendAccess.global.agentmail_dispatch_runtime?.status === 'active' ? 'green' : 'yellow'}>{sendAccess.global.agentmail_dispatch_runtime?.status || 'unknown'}</Pill></div>
+            <div className="am-row"><span>Runtime mode</span><span>{sendAccess.global.agentmail_dispatch_runtime?.mode || 'always_on'}</span></div>
+            <div className="am-row"><span>Sends remaining</span><span>{sendAccess.global.agentmail_dispatch_runtime?.sends_remaining_per_hour ?? 0}</span></div>
+            <div className="am-row"><span>Emergency stop</span><Pill tone={sendAccess.global.agentmail_dispatch_runtime?.emergency_stop ? 'red' : 'green'}>{sendAccess.global.agentmail_dispatch_runtime?.emergency_stop ? 'enabled' : 'off'}</Pill></div>
             <div className="am-row"><span>Default send policy</span><Pill tone="yellow">{sendAccess.global.send_default}</Pill></div>
             <div className="am-row"><span>Real Send Adapter</span><Pill tone="blue">{sendAccess.global.real_send_adapter?.state || 'missing'}</Pill></div>
           </div>
-          <div className="am-actions">
-            <button className="am-button" type="button" disabled>Request Bridge Session</button>
-            <button className="am-button" type="button" disabled>Revoke Bridge Session</button>
-          </div>
-          <p className="am-muted">With no pending send request, AgentMail can be setup-ready while dispatch remains idle. Owner approval and an active Action Bridge Session are evaluated per message.</p>
+          <p className="am-muted">With no pending send request, AgentMail can be setup-ready while dispatch remains idle. Owner approval, scoped credentials, Gateway policy, and audit are evaluated per message.</p>
         </div>
 
         <div className="am-panel am-full">
@@ -235,7 +233,7 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>Stage A</span><Pill tone="blue">verify readiness without sending</Pill></div>
             <div className="am-row"><span>Stage B</span><Pill tone="yellow">create draft/preview only</Pill></div>
             <div className="am-row"><span>Stage C</span><Pill tone="yellow">request canonical owner approval</Pill></div>
-            <div className="am-row"><span>Stage D</span><Pill tone="red">dispatch blocked until approval and active Bridge Session</Pill></div>
+            <div className="am-row"><span>Stage D</span><Pill tone="yellow">dispatch only after approval and active dispatch runtime</Pill></div>
           </div>
         </div>
 

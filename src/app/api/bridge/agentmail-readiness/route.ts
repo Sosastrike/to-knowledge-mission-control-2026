@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   const sendAccess = buildAgentMailSendAccessStatus()
   const setupReady = sendAccess.setup_state === 'approval_gated_send_ready'
   const perSendState = sendAccess.per_send_status?.state || 'no_pending_send_request'
+  const dispatchRuntime = sendAccess.global.agentmail_dispatch_runtime
   const readinessBlockerClass = capacity.current_primary_blocker === 'agentmail_inbox_limit_exceeded'
     ? 'CAPACITY_GATED'
     : setupReady
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
     },
     bridge_send_request: {
       state: perSendState === 'no_pending_send_request' ? 'IDLE_NO_PENDING_SEND_REQUEST' : perSendState === 'approved_send_dispatch_ready' ? 'APPROVED_DISPATCH_READY' : 'OWNER_GATED',
-      policy: 'Bridge-gated only',
+      policy: 'always-on dispatch runtime with approval-gated sends',
       approval_required: true,
       audit_required: true,
       execution_enabled: false,
@@ -88,8 +89,9 @@ export async function GET(request: NextRequest) {
       fake_success_allowed: false,
       reason: perSendState === 'no_pending_send_request'
         ? 'AgentMail setup is ready for approval-gated sends, and no message is currently waiting for dispatch.'
-        : 'AgentMail send requests remain locked until message approval, Action Bridge approval lifecycle, audit, and rollback are ready.',
+        : 'AgentMail send requests remain locked until message approval, active dispatch runtime, Gateway policy, audit, and rollback are ready.',
     },
+    agentmail_dispatch_runtime: dispatchRuntime,
     safe_send_proof: {
       state: 'OWNER_GATED',
       attempted: false,
@@ -109,17 +111,17 @@ export async function GET(request: NextRequest) {
     failure_states: [
       { state: 'CAPACITY_GATED', owner_message: 'AgentMail inbox limit exceeded. Increase capacity or approve explicit reuse mapping before send gates matter.' },
       { state: 'CREDENTIAL_GATED', owner_message: 'AgentMail credential or allowed recipient list is missing.' },
-      { state: 'OWNER_GATED', owner_message: 'AgentMail send is waiting on Bridge approval, audit, and rollback proof.' },
+      { state: 'OWNER_GATED', owner_message: 'AgentMail send is waiting on owner message approval, active dispatch runtime, audit, and rollback proof.' },
       { state: 'BLOCKED', owner_message: 'AgentMail connector route or safe send runner is not wired in this slice.' },
     ],
     audit_state: 'OWNER_GATED',
     rollback_state: 'OWNER_GATED',
-    rollback_command: 'revoke AgentMail Bridge approval and disable AgentMail send runner',
+    rollback_command: 'enable AgentMail dispatch runtime emergency stop and disable the AgentMail send runner',
     promotion_requirements: [
       'AgentMail credential configured through approved secret path',
       'readiness route shows LIVE',
       'recipient allow-list verified',
-      'Bridge-gated send request exists',
+      'approval-gated send request exists',
       'safe AgentMail send proof passes',
       'failure states are owner-readable',
       'audit trail exists',
@@ -133,7 +135,7 @@ export async function GET(request: NextRequest) {
     next_action: setupReady
       ? (perSendState === 'no_pending_send_request' ? 'Create a send preview/request when the owner wants to dispatch a specific AgentMail message.' : sendAccess.next_action)
       : capacity.current_primary_blocker === 'agentmail_inbox_limit_exceeded'
-      ? 'Resolve AgentMail inbox capacity before requesting Action Bridge Session for sends.'
-      : 'Keep AgentMail sends locked until credential, allow-list, Bridge approval, audit, rollback, and safe send proof are complete.',
+      ? 'Resolve AgentMail inbox capacity before creating approval-gated AgentMail send requests.'
+      : 'Keep AgentMail sends locked until credential, allow-list, owner approval, dispatch runtime, audit, rollback, and safe send proof are complete.',
   })
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONSOLE_URL="${AGENTMAIL_CONSOLE_URL:-https://app.agentmail.to}"
+CONSOLE_URL="${AGENTMAIL_CONSOLE_URL:-https://console.agentmail.to}"
 MCP_URL="${AGENTMAIL_MCP_URL:-https://mcp.agentmail.to/mcp}"
 
 say() {

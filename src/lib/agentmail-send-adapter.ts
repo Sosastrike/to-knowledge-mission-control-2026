@@ -19,14 +19,16 @@ export type AgentMailAdapterSendInput = {
 
 export type AgentMailAdapterSendResult =
   | { ok: true; message_id: string; thread_id: string | null; provider_status: string; credential_values_exposed: false; tokens_exposed: false; env_values_exposed: false }
-  | { ok: false; exact_blocker: string; provider_status: string; http_status: number | null; credential_values_exposed: false; tokens_exposed: false; env_values_exposed: false }
+  | { ok: false; exact_blocker: string; provider_status: string; http_status: number | null; provider_error_summary?: { status: number | null; message: string | null; credential_values_exposed: false; tokens_exposed: false; env_values_exposed: false }; credential_values_exposed: false; tokens_exposed: false; env_values_exposed: false }
 
 const SAFE = { credential_values_exposed: false as const, tokens_exposed: false as const, env_values_exposed: false as const }
 
 export function normalizeAgentMailSendError(error: { status?: number | null; code?: string | null; message?: string | null }) {
   const status = Number(error.status || 0)
+  const message = String(error.message || error.code || '').toLowerCase()
   if (status === 401) return 'scoped_credential_invalid'
-  if (status === 403) return 'message_send_permission_missing'
+  if (status === 403 && (message.includes('allow list') || message.includes('blocked'))) return 'agentmail_send_allowlist_required'
+  if (status === 403) return 'agentmail_message_rejected'
   if (status === 404) return 'agentmail_inbox_or_message_not_found'
   if (status === 429) return 'agentmail_rate_limited'
   if (status >= 500) return 'agentmail_service_unreachable'
@@ -51,27 +53,33 @@ function threadIdFromPayload(payload: Record<string, any>) {
   return value ? String(value) : null
 }
 
+function sanitizedProviderError(status: number | null, payload: Record<string, any>) {
+  const raw = payload.message || payload.error || payload.code || null
+  return {
+    status,
+    message: raw ? String(raw).slice(0, 240) : null,
+    ...SAFE,
+  }
+}
+
+function compactMessagePayload(input: AgentMailAdapterSendInput) {
+  const body: Record<string, unknown> = {
+    to: input.to,
+    subject: input.subject,
+    text: input.text,
+    labels: input.labels || [],
+  }
+  if (input.cc?.length) body.cc = input.cc
+  if (input.bcc?.length) body.bcc = input.bcc
+  if (input.html) body.html = input.html
+  return body
+}
+
 export async function sendAgentMailMessage(input: AgentMailAdapterSendInput): Promise<AgentMailAdapterSendResult> {
   const fetcher = input.fetchImpl || fetch
   const baseUrl = String(input.baseUrl || process.env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
   const url = `${baseUrl}/v0/inboxes/${encodeURIComponent(input.inboxId)}/messages/send`
-  const body = {
-    to: input.to,
-    cc: input.cc || [],
-    bcc: input.bcc || [],
-    subject: input.subject,
-    text: input.text,
-    html: input.html || undefined,
-    labels: input.labels || [],
-    metadata: {
-      source: 'mission-control',
-      agent_id: input.agentId,
-      approval_id: input.approvalId || null,
-      bridge_session_id: input.bridgeSessionId || null,
-      gateway_decision_id: input.gatewayDecisionId || null,
-      credential_values_exposed: false,
-    },
-  }
+  const body = compactMessagePayload(input)
   const response = await fetcher(url, {
     method: 'POST',
     headers: {
@@ -88,6 +96,7 @@ export async function sendAgentMailMessage(input: AgentMailAdapterSendInput): Pr
       exact_blocker: normalizeAgentMailSendError({ status: response.status, code: payload.code, message: payload.message }),
       provider_status: 'http_error',
       http_status: response.status,
+      provider_error_summary: sanitizedProviderError(response.status, payload),
       ...SAFE,
     }
   }
@@ -111,7 +120,7 @@ export async function replyAgentMailMessage(input: AgentMailAdapterSendInput & {
   })
   const payload = await safeJson(response)
   if (!response.ok) {
-    return { ok: false, exact_blocker: normalizeAgentMailSendError({ status: response.status, code: payload.code, message: payload.message }), provider_status: 'http_error', http_status: response.status, ...SAFE }
+    return { ok: false, exact_blocker: normalizeAgentMailSendError({ status: response.status, code: payload.code, message: payload.message }), provider_status: 'http_error', http_status: response.status, provider_error_summary: sanitizedProviderError(response.status, payload), ...SAFE }
   }
   return { ok: true, message_id: messageIdFromPayload(payload) || input.messageId, thread_id: threadIdFromPayload(payload) || input.threadId, provider_status: 'sent', ...SAFE }
 }

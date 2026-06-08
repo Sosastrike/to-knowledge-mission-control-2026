@@ -252,10 +252,10 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     proxyRoute: '/api/bridge/spaceagent/status',
     authRequired: true,
     status: 'configured · first-class direct-line agent · Jarvis final authority',
-    blocker: 'production_execution_requires_jarvis_concurrence · firecrawl_credential_required · interactive_browser_actions_require_bridge_session · Playwright MCP is local-only on server 127.0.0.1:8931.',
-    nextFix: 'Manage SpaceAgent through the canonical /api/bridge/spaceagent/* routes. Playwright MCP, Firecrawl, and YouTube are tools under SpaceAgent, not identity routes; production-impacting actions require Jarvis concurrence.',
+    blocker: 'production_execution_requires_jarvis_concurrence · firecrawl_credential_required · interactive_browser_actions_require_bridge_session · Playwright MCP is local-only on server 127.0.0.1:8931. Firecrawl and YouTube remain Gateway-gated tools.',
+    nextFix: 'Manage SpaceAgent through the canonical /api/bridge/spaceagent/* routes. Playwright MCP, Firecrawl, and YouTube remain Gateway-gated tools under SpaceAgent, not identity routes; production-impacting actions require Jarvis concurrence.',
     buttons: {
-      ui: disabled('No standalone SpaceAgent UI exists.'),
+      ui: enabled(agentControlRoute('spaceagent', 'config')),
       config: enabled(agentControlRoute('spaceagent', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: enabled(agentControlRoute('spaceagent', 'research')),
@@ -411,6 +411,27 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
+    name: 'Gbrain',
+    service: 'Brain Sync Mission Control surface',
+    localBind: 'Mission Control authenticated UI',
+    port: 'Gateway-brokered',
+    localUrl: null,
+    tailnetUrl: null,
+    proxyRoute: '/api/bridge/gbrain/runtime-proof',
+    authRequired: true,
+    status: 'READABLE / BROWSER-PROOF REQUIRED',
+    blocker: 'gbrain_sync_pipeline_not_certified · Run Gbrain Browser Proof · session_id_value_exposed:false · tokens_cookies_exposed:false · raw tools JSON exposed:false',
+    nextFix: 'Open Brain Sync through Mission Control and run /api/bridge/gbrain/browser-proof, /api/bridge/gbrain/runtime-proof, /api/bridge/gbrain/search, and /api/bridge/gbrain/tool-map. Gbrain Tool Map stays inventory_only_no_tool_invocation with tools inventoried until the sync pipeline is certified.',
+    buttons: {
+      ui: enabled('/designer-mission-control/Mission%20Control.html?page=gbrain-sync'),
+      config: enabled(agentControlRoute('gbrain', 'config')),
+      brain: enabled(GATEWAY_BRAIN_ROUTE),
+      chat: disabled('Gbrain is a Brain Sync/readiness surface, not a chat surface.'),
+      tools: enabled('/api/bridge/gbrain/tool-map'),
+      health: enabled('/api/bridge/gbrain/runtime-proof'),
+    },
+  },
+  {
     name: 'AgentMail',
     service: 'AgentMail delivery connector',
     localBind: 'none',
@@ -419,14 +440,14 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     tailnetUrl: null,
     proxyRoute: '/api/bridge/agentmail-readiness',
     authRequired: true,
-    status: 'blocked',
-    blocker: 'agentmail_inbox_limit_exceeded · AgentMail inbox limit exceeded. 5 inboxes could not be provisioned: Pi, Agent Zero, Bridge Unit, Mission Control Monitor, Audit Archive.',
-    nextFix: 'Increase AgentMail inbox capacity or explicitly approve a safe reuse mapping in AgentMail Local Control. Do not treat Bridge Session as the primary blocker until inboxes and scoped credentials are ready.',
+    status: 'ready · approval-gated sending',
+    blocker: 'AgentMail ready · approval-gated sending. Setup is complete; per-send dispatch still requires owner approval, Gateway policy, scoped inbox credential, audit, and provider allowlist clearance.',
+    nextFix: 'Use AgentMail Local Control to create a send preview and approval request. Auto-send and bulk-send remain disabled.',
     buttons: {
       ui: enabled('/agentmail'),
       config: enabled(GATEWAY_TOOLS_ROUTE),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
-      chat: disabled('AgentMail send/reply is disabled. Current primary blocker: agentmail_inbox_limit_exceeded. Bridge Session is a later send gate after inboxes, scoped credentials, permissions, and approval are ready.'),
+      chat: disabled('AgentMail sends are server-side and approval-gated. Open AgentMail Local Control to preview, approve, and audit a specific send request.'),
       tools: enabled(GATEWAY_TOOLS_ROUTE),
       health: enabled(GATEWAY_TOOLS_ROUTE),
     },
@@ -679,7 +700,7 @@ function GatewayRouteCdpTruthPanel() {
   )
 }
 
-type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'paperclip' | 'openclaw'
+type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'gbrain' | 'paperclip' | 'openclaw'
 type BaseAgentPanelMode = 'config' | 'chat' | 'recommend' | 'research' | 'ui' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help' | 'telegram-agent'
 type AgentPanelMode = BaseAgentPanelMode | HermesWebInterfaceMode
 type GatewayControlView =
@@ -743,6 +764,17 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     blocker: 'production_execution_requires_jarvis_concurrence · firecrawl_credential_required · interactive_browser_actions_require_bridge_session',
     nextAction: 'Use canonical /api/bridge/spaceagent/* for status, readiness, capability, authority, report drafts, and Jarvis concurrence requests. Tools stay brokered through Gateway and exact-scope adapters.',
     modes: ['config', 'research'],
+  },
+  gbrain: {
+    slug: 'gbrain',
+    name: 'Gbrain',
+    role: 'Brain Sync and tool-map visibility',
+    status: 'READABLE / BROWSER-PROOF REQUIRED',
+    endpoint: '/api/bridge/gbrain/runtime-proof',
+    uiHref: '/designer-mission-control/Mission%20Control.html?page=gbrain-sync',
+    blocker: 'gbrain_sync_pipeline_not_certified',
+    nextAction: 'Run Gbrain Browser Proof through /api/bridge/gbrain/browser-proof. Runtime proof uses /api/bridge/gbrain/runtime-proof; search uses /api/bridge/gbrain/search; Gbrain Tool Map uses /api/bridge/gbrain/tool-map. Tool map result is inventory_only_no_tool_invocation, tools inventoried, session_id_value_exposed:false, tokens_cookies_exposed:false, raw tools JSON exposed:false.',
+    modes: ['config', 'tools', 'status'],
   },
   paperclip: {
     slug: 'paperclip',
@@ -818,7 +850,7 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   const control = q?.get('control')
   if (control === 'tools') return { kind: 'tools' }
   if (control === 'brain') return { kind: 'brain' }
-  const controlMatch = control?.match(new RegExp(`^(agent-zero|hermes|pi|spaceagent|paperclip|openclaw)-${CONTROL_MODE_MATCH}$`))
+  const controlMatch = control?.match(new RegExp(`^(agent-zero|hermes|pi|spaceagent|gbrain|paperclip|openclaw)-${CONTROL_MODE_MATCH}$`))
   if (controlMatch) {
     return { kind: 'agent', slug: controlMatch[1] as AgentSlug, mode: controlMatch[2] as AgentPanelMode }
   }

@@ -60,7 +60,8 @@ describe('AgentMail scoped credential resolver and send adapter', () => {
 
   it('normalizes AgentMail adapter errors into Mission Control blockers', () => {
     expect(normalizeAgentMailSendError({ status: 401 })).toBe('scoped_credential_invalid')
-    expect(normalizeAgentMailSendError({ status: 403 })).toBe('message_send_permission_missing')
+    expect(normalizeAgentMailSendError({ status: 403 })).toBe('agentmail_message_rejected')
+    expect(normalizeAgentMailSendError({ status: 403, message: 'Message rejected: Recipient(s) blocked: tony-88@agentmail.to (not in allow list)' })).toBe('agentmail_send_allowlist_required')
     expect(normalizeAgentMailSendError({ status: 404 })).toBe('agentmail_inbox_or_message_not_found')
   })
 
@@ -90,7 +91,44 @@ describe('AgentMail scoped credential resolver and send adapter', () => {
     expect(result).toMatchObject({ ok: true, message_id: 'msg_1', thread_id: 'thread_1' })
     expect(calls[0].url).toBe('https://api.agentmail.to/v0/inboxes/pi%40agentmail.to/messages/send')
     expect(calls[0].init.method).toBe('POST')
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({
+      to: ['owner@example.com'],
+      subject: 'Adapter test',
+      text: 'hello',
+      html: '<p>hello</p>',
+      labels: ['agentmail-send-test'],
+    })
     expect(JSON.stringify(result)).not.toContain('agentmail-test-secret-value')
     expect(JSON.stringify(calls[0].init.body)).not.toContain('agentmail-test-secret-value')
+    expect(JSON.stringify(calls[0].init.body)).not.toContain('approval_1')
+    expect(JSON.stringify(calls[0].init.body)).not.toContain('gateway_1')
+  })
+
+  it('returns sanitized provider rejection details without exposing the API key', async () => {
+    const result = await sendAgentMailMessage({
+      agentId: 'pi',
+      inboxId: 'pi@agentmail.to',
+      credentialRef: 'AGENTMAIL_PI_KEY',
+      apiKey: 'agentmail-test-secret-value-1234567890',
+      to: ['owner@example.com'],
+      subject: 'Adapter rejection test',
+      text: 'hello',
+      fetchImpl: async () => new Response(JSON.stringify({
+        message: 'Message rejected: Recipient(s) blocked: owner@example.com (not in allow list)',
+      }), { status: 403, headers: { 'content-type': 'application/json' } }),
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      exact_blocker: 'agentmail_send_allowlist_required',
+      provider_status: 'http_error',
+      http_status: 403,
+      provider_error_summary: {
+        status: 403,
+        credential_values_exposed: false,
+      },
+      credential_values_exposed: false,
+    })
+    expect(JSON.stringify(result)).not.toContain('agentmail-test-secret-value')
   })
 })

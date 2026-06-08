@@ -6,6 +6,7 @@ import {
   AGENTMAIL_CONSOLE_URL,
   AGENTMAIL_MCP_URL,
   buildAgentMailPayload,
+  buildAgentMailReceivePathStatus,
   buildAgentMailStatus,
   buildAgentMailConnectStatus,
   buildAgentMailInboxSyncPreview,
@@ -31,6 +32,7 @@ import {
   normalizeAgentMailEvent,
   recordAgentMailAudit,
   validateInboxRegistry,
+  verifyAgentMailReceivePath,
 } from '@/lib/agentmail-local-control'
 
 function assignCanonicalAgentMailInboxes(db: Database.Database) {
@@ -1070,6 +1072,163 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect((sendAccess.agents.agent_zero as any).agentmail_provider_send_allowlist).toMatchObject({
       status: 'unknown',
       required_next_action: 'verify_recipient_in_agentmail_provider_send_allowlist_before_dispatch',
+    })
+  })
+
+  it('verifies recipient visibility without assuming sender thread IDs match recipient thread IDs', async () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    assignCanonicalAgentMailInboxes(db)
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'pi',
+      inboxId: 'pi-88@agentmail.to',
+      credentialRef: 'AGENTMAIL_INBOX_KEY_PI',
+      maskedPreview: 'am_****send',
+      permissions: { inbox_read: true, thread_read: true, message_read: true, message_send: true, message_update: true },
+    })
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'agentmail_monitor',
+      inboxId: 'tony-88@agentmail.to',
+      credentialRef: 'AGENTMAIL_INBOX_KEY_MONITOR',
+      maskedPreview: 'am_****read',
+      permissions: { inbox_read: true, thread_read: true, message_read: true },
+    })
+    db.prepare(`
+      INSERT INTO agentmail_send_requests (
+        id, agent_id, inbox_id, to_json, cc_json, bcc_json, subject, text_body,
+        html_body, thread_id, reply_to_message_id, labels_json, state, gateway_policy,
+        exact_blocker, approval_request_id, bridge_session_id, message_id, created_at, updated_at
+      ) VALUES (
+        'amsr_receive_1', 'pi', 'pi-88@agentmail.to', '["tony-88@agentmail.to"]', '[]', '[]',
+        'Mission Control AgentMail approval-gated send test', 'body omitted from status', null,
+        'sender-thread-1', null, '[]', 'dispatched', 'approval_required', null,
+        'approval_1', null, '<known-message@email.example>', 1780934855, 1780934855
+      )
+    `).run()
+
+    const calls: Array<{ method: string; url: string }> = []
+    const result = await verifyAgentMailReceivePath({
+      db,
+      env: {
+        AGENTMAIL_INBOX_KEY_PI: 'agentmail-test-sender-key-1234567890',
+        AGENTMAIL_INBOX_KEY_MONITOR: 'agentmail-test-monitor-key-1234567890',
+      },
+      fetchImpl: async (url: any, init: any) => {
+        calls.push({ method: String(init?.method || 'GET'), url: String(url) })
+        expect(String(init?.method || 'GET')).toBe('GET')
+        expect(String(url)).not.toContain('/messages/send')
+        if (String(url).includes('pi-88%40agentmail.to/threads/sender-thread-1')) {
+          return new Response(JSON.stringify({ id: 'sender-thread-1', messages: [{ message_id: '<known-message@email.example>', thread_id: 'sender-thread-1' }] }), { status: 200 })
+        }
+        if (String(url).includes('tony-88%40agentmail.to/threads/sender-thread-1')) {
+          return new Response(JSON.stringify({ message: 'not found' }), { status: 404 })
+        }
+        if (String(url).includes('tony-88%40agentmail.to/messages/%3Cknown-message%40email.example%3E')) {
+          return new Response(JSON.stringify({ message: 'not found' }), { status: 404 })
+        }
+        if (String(url).endsWith('/v0/inboxes/tony-88%40agentmail.to/messages')) {
+          return new Response(JSON.stringify({ data: [{
+            id: 'recipient-visible-message-1',
+            thread_id: 'recipient-thread-9',
+            subject: 'Mission Control AgentMail approval-gated send test',
+            from: 'pi-88@agentmail.to',
+            to: ['tony-88@agentmail.to'],
+            received_at: '2026-06-08T20:07:35.000Z',
+          }] }), { status: 200 })
+        }
+        if (String(url).endsWith('/v0/inboxes/tony-88%40agentmail.to/threads')) {
+          return new Response(JSON.stringify({ data: [] }), { status: 200 })
+        }
+        return new Response(JSON.stringify({ data: [] }), { status: 200 })
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      exact_blocker: null,
+      email_sent: false,
+      recipient_visible_message_id: 'recipient-visible-message-1',
+      recipient_visible_thread_id: 'recipient-thread-9',
+      credential_values_exposed: false,
+    })
+    expect(calls.some((call) => call.method !== 'GET')).toBe(false)
+    expect(calls.some((call) => call.url.includes('/messages/send'))).toBe(false)
+    const receivePath = buildAgentMailReceivePathStatus(db)
+    expect(receivePath).toMatchObject({
+      sender_sent_message_visible: true,
+      recipient_read_credential_ok: true,
+      sender_thread_id_recipient_visible: false,
+      recipient_message_by_subject: 'found',
+      recipient_visible_message_id: 'recipient-visible-message-1',
+      recipient_visible_thread_id: 'recipient-thread-9',
+      final_blocker: null,
+      credential_values_exposed: false,
+    })
+    expect(receivePath.lookup_methods_attempted).toEqual(expect.arrayContaining(['recipient_thread_id', 'message_id', 'subject']))
+    expect(JSON.stringify(result)).not.toContain('agentmail-test-sender-key')
+    expect(JSON.stringify(result)).not.toContain('agentmail-test-monitor-key')
+  })
+
+  it('reports received message not visible after all read-only fallbacks miss', async () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    assignCanonicalAgentMailInboxes(db)
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'pi',
+      inboxId: 'pi-88@agentmail.to',
+      credentialRef: 'AGENTMAIL_INBOX_KEY_PI',
+      maskedPreview: 'am_****send',
+      permissions: { inbox_read: true, thread_read: true, message_read: true, message_send: true, message_update: true },
+    })
+    upsertAgentMailScopedCredentialMetadata(db, {
+      agentId: 'agentmail_monitor',
+      inboxId: 'tony-88@agentmail.to',
+      credentialRef: 'AGENTMAIL_INBOX_KEY_MONITOR',
+      maskedPreview: 'am_****read',
+      permissions: { inbox_read: true, thread_read: true, message_read: true },
+    })
+    db.prepare(`
+      INSERT INTO agentmail_send_requests (
+        id, agent_id, inbox_id, to_json, cc_json, bcc_json, subject, text_body,
+        html_body, thread_id, reply_to_message_id, labels_json, state, gateway_policy,
+        exact_blocker, approval_request_id, bridge_session_id, message_id, created_at, updated_at
+      ) VALUES (
+        'amsr_receive_missing', 'pi', 'pi-88@agentmail.to', '["tony-88@agentmail.to"]', '[]', '[]',
+        'Mission Control AgentMail approval-gated send test', 'body omitted from status', null,
+        'sender-thread-missing', null, '[]', 'dispatched', 'approval_required', null,
+        'approval_1', null, '<missing-message@email.example>', 1780934855, 1780934855
+      )
+    `).run()
+
+    const result = await verifyAgentMailReceivePath({
+      db,
+      env: {
+        AGENTMAIL_INBOX_KEY_PI: 'agentmail-test-sender-key-1234567890',
+        AGENTMAIL_INBOX_KEY_MONITOR: 'agentmail-test-monitor-key-1234567890',
+      },
+      fetchImpl: async (url: any, init: any) => {
+        expect(String(init?.method || 'GET')).toBe('GET')
+        expect(String(url)).not.toContain('/messages/send')
+        if (String(url).includes('pi-88%40agentmail.to')) {
+          return new Response(JSON.stringify({ data: [{ message_id: '<missing-message@email.example>', thread_id: 'sender-thread-missing' }] }), { status: 200 })
+        }
+        return new Response(JSON.stringify({ data: [] }), { status: String(url).includes('/threads/sender-thread-missing') ? 404 : 200 })
+      },
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      exact_blocker: 'agentmail_received_message_not_visible',
+      email_sent: false,
+      credential_values_exposed: false,
+    })
+    expect(buildAgentMailReceivePathStatus(db)).toMatchObject({
+      sender_sent_message_visible: true,
+      recipient_read_credential_ok: true,
+      sender_thread_id_recipient_visible: false,
+      recipient_visible_message_id: null,
+      recipient_visible_thread_id: null,
+      final_blocker: 'agentmail_received_message_not_visible',
     })
   })
 

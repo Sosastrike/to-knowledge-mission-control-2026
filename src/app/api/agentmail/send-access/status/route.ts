@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 
-import { buildAgentMailSendAccessStatus } from '@/lib/agentmail-local-control'
+import { buildAgentMailReceivePathStatus, buildAgentMailSendAccessStatus } from '@/lib/agentmail-local-control'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
 export const runtime = 'nodejs'
@@ -10,5 +10,8 @@ export async function GET(request: NextRequest) {
   const auth = authRequired(request, 'viewer')
   if (auth) return auth
 
-  return readOnly(buildAgentMailSendAccessStatus())
+  return readOnly({
+    ...buildAgentMailSendAccessStatus(),
+    agentmail_receive_path: buildAgentMailReceivePathStatus(),
+  })
 }

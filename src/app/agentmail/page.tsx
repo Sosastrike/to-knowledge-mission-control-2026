@@ -25,6 +25,7 @@ export default function AgentMailLocalControlPage() {
   const connect = payload.connect
   const preview = payload.sync_preview
   const sendAccess = payload.send_access
+  const receivePath = payload.agentmail_receive_path
   const setupStatus = payload.setup_status || sendAccess.setup_status
   const setupState = setupStatus?.setup_state || (setupStatus?.primary_blocker === 'ready' ? 'approval_gated_send_ready' : setupStatus?.primary_blocker)
   const setupReady = setupState === 'approval_gated_send_ready'
@@ -266,6 +267,16 @@ export default function AgentMailLocalControlPage() {
 
         <div className="am-panel am-wide">
           <h2>Event Console</h2>
+          <div className="am-list" style={{ marginBottom: 14 }}>
+            <div className="am-row"><span>Last approved send</span><span>{receivePath?.last_approved_send?.subject || 'none'}<span className="am-muted"> · {receivePath?.last_approved_send?.sender_inbox || 'sender unknown'} → {receivePath?.last_approved_send?.recipient_inbox || 'recipient unknown'}</span></span></div>
+            <div className="am-row"><span>Send path</span><Pill tone={receivePath?.sender_sent_message_visible ? 'green' : 'yellow'}>{receivePath?.sender_sent_message_visible ? 'verified' : 'verifying'}</Pill></div>
+            <div className="am-row"><span>Receive path</span><Pill tone={!receivePath?.final_blocker && receivePath?.recipient_visible_message_id ? 'green' : receivePath?.final_blocker ? 'red' : 'yellow'}>{!receivePath?.final_blocker && receivePath?.recipient_visible_message_id ? 'verified' : receivePath?.final_blocker || 'verifying'}</Pill></div>
+            <div className="am-row"><span>Recipient credential</span><Pill tone={receivePath?.recipient_read_credential_ok ? 'green' : 'yellow'}>{receivePath?.recipient_read_credential_ok ? 'read verified' : 'verifying'}</Pill></div>
+            <div className="am-row"><span>Sender thread visible to recipient</span><Pill tone={receivePath?.sender_thread_id_recipient_visible === true ? 'green' : receivePath?.sender_thread_id_recipient_visible === false ? 'yellow' : 'gray'}>{String(receivePath?.sender_thread_id_recipient_visible || 'not_applicable')}</Pill></div>
+            <div className="am-row"><span>Lookup methods attempted</span><span>{receivePath?.lookup_methods_attempted?.join(' · ') || 'none yet'}</span></div>
+            <div className="am-row"><span>Recipient-visible message</span><span>{receivePath?.recipient_visible_message_id || 'not found'}<span className="am-muted"> · thread {receivePath?.recipient_visible_thread_id || 'not found'}</span></span></div>
+            <div className="am-row"><span>Provider allowlist</span><span>Pi: {receivePath?.provider_allowlist?.pi?.status || 'unknown'} · Agent Zero: {receivePath?.provider_allowlist?.agent_zero?.status || 'unknown'}</span></div>
+          </div>
           {payload.events.length ? <div className="am-list">{payload.events.map((event: any) => (
             <div className="am-row" key={event.event_id}>
               <span>{event.subject}<span className="am-muted"> · {event.sender_preview}</span></span>

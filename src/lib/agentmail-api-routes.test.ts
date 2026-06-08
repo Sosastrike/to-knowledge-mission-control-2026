@@ -63,7 +63,7 @@ describe('AgentMail local control API routes', () => {
     const localControl = readFileSync(path.join(process.cwd(), 'src/lib/agentmail-local-control.ts'), 'utf8')
     const actions = readFileSync(path.join(process.cwd(), 'src/app/agentmail/AgentMailConnectActions.tsx'), 'utf8')
 
-    for (const label of ['Connect AgentMail', 'Send Access', 'Bridge Session', 'Agent Send Readiness', 'Permission Matrix', 'Safe Send Test', 'Scoped Credential', 'Real Send Adapter', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Bridge Queue', 'Approvals', 'Audit']) {
+    for (const label of ['Connect AgentMail', 'Send Access', 'Bridge Session', 'Agent Send Readiness', 'Permission Matrix', 'Safe Send Test', 'Scoped Credential', 'Real Send Adapter', 'Hosted Console', 'Google/SSO Status', 'MCP OAuth Status', 'API Key Fallback', 'Last Sync', 'Local Status', 'Inbox Registry', 'Event Console', 'Last approved send', 'Sender thread visible to recipient', 'Recipient-visible message', 'Provider allowlist', 'Bridge Queue', 'Approvals', 'Audit']) {
       expect(page).toContain(label)
     }
     expect(page).toContain('AGENTMAIL_CONSOLE_URL')

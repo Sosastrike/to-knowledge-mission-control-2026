@@ -85,7 +85,7 @@ const SAFE_FLAGS = {
   tokens_exposed: false,
   env_values_exposed: false,
   raw_secret_values_exposed: false,
-}
+} as const
 
 export const AGENTMAIL_CONSOLE_URL = 'https://console.agentmail.to'
 export const AGENTMAIL_MCP_URL = 'https://mcp.agentmail.to/mcp'
@@ -809,6 +809,7 @@ export function buildAgentMailPayload(kind: 'inboxes' | 'events' | 'bridge_queue
     connect: buildAgentMailConnectStatus(db),
     sync_preview: buildAgentMailInboxSyncPreview(db),
     send_access: buildAgentMailSendAccessStatus(db),
+    agentmail_receive_path: buildAgentMailReceivePathStatus(db),
     setup_status: buildAgentMailSetupStatus(db),
     inboxes: listAgentMailInboxes(db),
     events: queryRows(db, `SELECT event_id, event_type, agent_id, sender_preview, subject, received_at, policy_state FROM agentmail_events ORDER BY created_at DESC LIMIT 12`),
@@ -933,6 +934,47 @@ type AgentMailSendRequestRow = {
   updated_at: number
 }
 
+type AgentMailReceivePathLookupState = 'found' | 'not_found'
+
+type AgentMailVisibleMessage = {
+  message_id: string | null
+  thread_id: string | null
+  subject: string | null
+  sender: string | null
+  recipient: string | null
+}
+
+type AgentMailReceivePathStatus = {
+  sender_sent_message_visible: boolean
+  recipient_read_credential_ok: boolean
+  sender_thread_id_recipient_visible: boolean | 'not_applicable'
+  recipient_message_by_message_id: AgentMailReceivePathLookupState
+  recipient_message_by_subject: AgentMailReceivePathLookupState
+  recipient_message_by_participants: AgentMailReceivePathLookupState
+  recipient_visible_message_id: string | null
+  recipient_visible_thread_id: string | null
+  lookup_methods_attempted: string[]
+  final_blocker: null | 'agentmail_thread_lookup_failed' | 'agentmail_received_message_not_visible' | 'agentmail_inbox_read_permission_missing' | 'agentmail_provider_delay'
+  last_approved_send: {
+    send_request_id: string | null
+    agent_id: string | null
+    sender_inbox: string | null
+    recipient_inbox: string | null
+    subject: string | null
+    message_id: string | null
+    sender_thread_id: string | null
+    updated_at: number | null
+  }
+  provider_allowlist: {
+    pi: ReturnType<typeof agentMailProviderSendAllowlistStatus> | null
+    agent_zero: ReturnType<typeof agentMailProviderSendAllowlistStatus> | null
+  }
+  credential_values_exposed: false
+  tokens_exposed: false
+  env_values_exposed: false
+  raw_secret_values_exposed: false
+}
+
 type AgentMailBridgeSessionRow = {
   id: string
   state: string
@@ -1004,6 +1046,45 @@ function latestAgentMailSendRequest(db: Database.Database): AgentMailSendRequest
     LIMIT 1
   `).get() as AgentMailSendRequestRow | undefined
   return row || null
+}
+
+function latestDispatchedAgentMailSendRequest(db: Database.Database): AgentMailSendRequestRow | null {
+  ensureAgentMailSchema(db)
+  const row = db.prepare(`
+    SELECT * FROM agentmail_send_requests
+    WHERE state = 'dispatched'
+    ORDER BY updated_at DESC, created_at DESC
+    LIMIT 1
+  `).get() as AgentMailSendRequestRow | undefined
+  return row || null
+}
+
+function latestAgentMailAuditAction(db: Database.Database, action: string) {
+  ensureAgentMailSchema(db)
+  return db.prepare(`
+    SELECT action, result, detail, created_at
+    FROM agentmail_audit
+    WHERE action = ?
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `).get(action) as { action: string; result: string; detail: string | null; created_at: number } | undefined
+}
+
+function latestAgentMailAuditMatching(db: Database.Database, actions: string[]) {
+  ensureAgentMailSchema(db)
+  const placeholders = actions.map(() => '?').join(',')
+  return db.prepare(`
+    SELECT action, result, detail, created_at
+    FROM agentmail_audit
+    WHERE action IN (${placeholders})
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `).get(...actions) as { action: string; result: string; detail: string | null; created_at: number } | undefined
+}
+
+function auditDetailValue(detail: string | null | undefined, key: string) {
+  const match = String(detail || '').match(new RegExp(`${key}=([^;]+)`))
+  return match ? sanitizeText(match[1], '', 180) || null : null
 }
 
 function runtimeBlocker(status: AgentMailDispatchRuntimeStatusValue) {
@@ -1217,6 +1298,123 @@ function parseJsonArray(value: string | null): string[] {
   } catch {
     return []
   }
+}
+
+function normalizeAgentMailProviderId(value: unknown) {
+  return String(value || '')
+    .trim()
+    .replace(/^<|>$/g, '')
+    .toLowerCase()
+}
+
+function agentMailPayloadItems(payload: unknown): Record<string, unknown>[] {
+  if (Array.isArray(payload)) {
+    return payload.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item))
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return []
+  const record = payload as Record<string, unknown>
+  for (const key of ['data', 'messages', 'threads', 'items', 'results']) {
+    if (Array.isArray(record[key])) return agentMailPayloadItems(record[key])
+  }
+  return [record]
+}
+
+function agentMailNestedMessage(record: Record<string, unknown>): Record<string, unknown> {
+  return record.message && typeof record.message === 'object' && !Array.isArray(record.message)
+    ? record.message as Record<string, unknown>
+    : {}
+}
+
+function agentMailMessageId(record: Record<string, unknown>): string | null {
+  const nested = agentMailNestedMessage(record)
+  const value = record.message_id || record.id || nested.message_id || nested.id || null
+  return value ? sanitizeText(value, '', 220) || null : null
+}
+
+function agentMailThreadId(record: Record<string, unknown>): string | null {
+  const nested = agentMailNestedMessage(record)
+  const nestedThread = record.thread && typeof record.thread === 'object' && !Array.isArray(record.thread) ? record.thread as Record<string, unknown> : {}
+  const value = record.thread_id || nested.thread_id || nestedThread.thread_id || nestedThread.id || record.thread || null
+  return typeof value === 'string' || typeof value === 'number' ? sanitizeText(value, '', 220) || null : null
+}
+
+function agentMailMessageSubject(record: Record<string, unknown>): string | null {
+  const nested = agentMailNestedMessage(record)
+  const value = record.subject || nested.subject || null
+  return value ? sanitizeText(value, '', 220) || null : null
+}
+
+function agentMailSender(record: Record<string, unknown>): string | null {
+  const nested = agentMailNestedMessage(record)
+  const value = record.sender || record.from || record.from_email || nested.sender || nested.from || null
+  return value ? sanitizeText(typeof value === 'string' ? value : JSON.stringify(value), '', 220) || null : null
+}
+
+function agentMailRecipient(record: Record<string, unknown>): string | null {
+  const nested = agentMailNestedMessage(record)
+  const value = record.recipient || record.to || record.recipients || nested.recipient || nested.to || nested.recipients || null
+  return value ? sanitizeText(typeof value === 'string' ? value : JSON.stringify(value), '', 260) || null : null
+}
+
+function agentMailTimestampMs(record: Record<string, unknown>): number | null {
+  const nested = agentMailNestedMessage(record)
+  const value = record.received_at || record.created_at || record.sent_at || record.updated_at || nested.received_at || nested.created_at || nested.sent_at || null
+  if (!value) return null
+  if (typeof value === 'number') return value > 10_000_000_000 ? value : value * 1000
+  const parsed = Date.parse(String(value))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function visibleMessageFromRecord(record: Record<string, unknown>): AgentMailVisibleMessage {
+  return {
+    message_id: agentMailMessageId(record),
+    thread_id: agentMailThreadId(record),
+    subject: agentMailMessageSubject(record),
+    sender: agentMailSender(record),
+    recipient: agentMailRecipient(record),
+  }
+}
+
+function findMessageByMessageId(items: Record<string, unknown>[], messageId: string | null) {
+  const target = normalizeAgentMailProviderId(messageId)
+  if (!target) return null
+  return items.find((item) => normalizeAgentMailProviderId(agentMailMessageId(item)) === target) || null
+}
+
+function findMessageBySubject(items: Record<string, unknown>[], subject: string | null) {
+  const target = String(subject || '').trim().toLowerCase()
+  if (!target) return null
+  return items.find((item) => String(agentMailMessageSubject(item) || '').trim().toLowerCase() === target) || null
+}
+
+function findMessageByParticipants(items: Record<string, unknown>[], sender: string | null, recipient: string | null) {
+  const cleanSender = String(sender || '').trim().toLowerCase()
+  const cleanRecipient = String(recipient || '').trim().toLowerCase()
+  if (!cleanSender && !cleanRecipient) return null
+  return items.find((item) => {
+    const serialized = JSON.stringify(item).toLowerCase()
+    return (!cleanSender || serialized.includes(cleanSender)) && (!cleanRecipient || serialized.includes(cleanRecipient))
+  }) || null
+}
+
+function findMessageByTimestampWindow(items: Record<string, unknown>[], dispatchedAt: number | null) {
+  if (!dispatchedAt) return null
+  const targetMs = dispatchedAt * 1000
+  const windowMs = 12 * 60 * 60 * 1000
+  return items.find((item) => {
+    const itemMs = agentMailTimestampMs(item)
+    return itemMs !== null && Math.abs(itemMs - targetMs) <= windowMs
+  }) || null
+}
+
+async function agentMailReadJson(fetcher: typeof fetch, url: string, apiKey: string) {
+  const response = await fetcher(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json', Authorization: `Bearer ${apiKey}` },
+    cache: 'no-store',
+  })
+  const payload = await response.json().catch(() => ({}))
+  return { status: response.status, ok: response.ok, payload }
 }
 
 function stringArray(value: unknown, maxItems = 10) {
@@ -1441,6 +1639,257 @@ function agentMailProviderSendAllowlistStatus(db: Database.Database, inbox: Agen
     tokens_exposed: false,
     env_values_exposed: false,
     raw_secret_values_exposed: false,
+  }
+}
+
+function sendCapableAllowlistByAgent(db: Database.Database) {
+  const inboxes = listAgentMailInboxes(db)
+  const byId = Object.fromEntries(inboxes.map((inbox) => [inbox.agent_id, inbox]))
+  return {
+    pi: byId.pi ? agentMailProviderSendAllowlistStatus(db, byId.pi, 'approval_required') : null,
+    agent_zero: byId.agent_zero ? agentMailProviderSendAllowlistStatus(db, byId.agent_zero, 'approval_required') : null,
+  }
+}
+
+function latestAgentMailReceiveFound(db: Database.Database) {
+  const found = latestAgentMailAuditAction(db, 'agentmail_recipient_message_found')
+  if (!found?.detail || found.result !== 'ok') return null
+  return {
+    message_id: auditDetailValue(found.detail, 'message_id'),
+    thread_id: auditDetailValue(found.detail, 'thread_id'),
+    method: auditDetailValue(found.detail, 'method'),
+    created_at: found.created_at,
+  }
+}
+
+function agentMailReceiveAttemptStatus(db: Database.Database, action: string): AgentMailReceivePathLookupState {
+  const found = latestAgentMailAuditAction(db, action)
+  return found?.result === 'ok' ? 'found' : 'not_found'
+}
+
+export function buildAgentMailReceivePathStatus(db: Database.Database = getDatabase()): AgentMailReceivePathStatus {
+  ensureAgentMailSchema(db)
+  const lastSend = latestDispatchedAgentMailSendRequest(db)
+  const recipients = parseJsonArray(lastSend?.to_json || null)
+  const found = latestAgentMailReceiveFound(db)
+  const latestFinal = latestAgentMailAuditMatching(db, ['agentmail_receive_verification_passed', 'agentmail_receive_verification_failed'])
+  const oldVisibility = latestAgentMailAuditAction(db, 'agentmail_receive_visibility_checked')
+  const threadFailed = latestAgentMailAuditAction(db, 'agentmail_recipient_thread_lookup_failed')
+  const senderVisible = latestAgentMailAuditAction(db, 'agentmail_sender_sent_message_visible')
+  const recipientCredential = latestAgentMailAuditAction(db, 'agentmail_recipient_read_credential_verified')
+  const finalBlocker = latestFinal?.action === 'agentmail_receive_verification_passed'
+    ? null
+    : auditDetailValue(latestFinal?.detail || null, 'blocker') as AgentMailReceivePathStatus['final_blocker']
+      || (oldVisibility?.result === 'blocked' && String(oldVisibility.detail || '').includes('thread_lookup_failed') ? 'agentmail_thread_lookup_failed' : null)
+
+  return {
+    sender_sent_message_visible: senderVisible?.result === 'ok',
+    recipient_read_credential_ok: recipientCredential?.result === 'ok',
+    sender_thread_id_recipient_visible: found?.method === 'recipient_thread_id'
+      ? true
+      : threadFailed
+        ? false
+        : 'not_applicable',
+    recipient_message_by_message_id: agentMailReceiveAttemptStatus(db, 'agentmail_recipient_message_lookup_by_message_id'),
+    recipient_message_by_subject: agentMailReceiveAttemptStatus(db, 'agentmail_recipient_message_lookup_by_subject'),
+    recipient_message_by_participants: agentMailReceiveAttemptStatus(db, 'agentmail_recipient_message_lookup_by_participants'),
+    recipient_visible_message_id: found?.message_id || null,
+    recipient_visible_thread_id: found?.thread_id || null,
+    lookup_methods_attempted: [
+      threadFailed ? 'recipient_thread_id' : null,
+      latestAgentMailAuditAction(db, 'agentmail_recipient_message_lookup_by_message_id') ? 'message_id' : null,
+      latestAgentMailAuditAction(db, 'agentmail_recipient_message_lookup_by_subject') ? 'subject' : null,
+      latestAgentMailAuditAction(db, 'agentmail_recipient_message_lookup_by_participants') ? 'participants' : null,
+      latestAgentMailAuditAction(db, 'agentmail_recipient_message_lookup_by_timestamp') ? 'timestamp_window' : null,
+      latestAgentMailAuditAction(db, 'agentmail_recipient_thread_lookup_by_participants') ? 'thread_search' : null,
+    ].filter((item): item is string => Boolean(item)),
+    final_blocker: finalBlocker,
+    last_approved_send: {
+      send_request_id: lastSend?.id || null,
+      agent_id: lastSend?.agent_id || null,
+      sender_inbox: lastSend?.inbox_id || null,
+      recipient_inbox: recipients[0] || null,
+      subject: lastSend?.subject || null,
+      message_id: lastSend?.message_id || null,
+      sender_thread_id: lastSend?.thread_id || null,
+      updated_at: lastSend?.updated_at || null,
+    },
+    provider_allowlist: sendCapableAllowlistByAgent(db),
+    ...SAFE_FLAGS,
+  }
+}
+
+export async function verifyAgentMailReceivePath(input: {
+  db?: Database.Database
+  env?: Record<string, string | undefined>
+  fetchImpl?: typeof fetch
+  baseUrl?: string
+  sendRequestId?: string | null
+} = {}) {
+  const db = input.db || getDatabase()
+  const env = input.env || process.env
+  const fetcher = input.fetchImpl || fetch
+  const baseUrl = String(input.baseUrl || env.AGENTMAIL_API_BASE_URL || 'https://api.agentmail.to').replace(/\/+$/, '')
+  ensureAgentMailSchema(db)
+
+  const send = input.sendRequestId
+    ? db.prepare(`SELECT * FROM agentmail_send_requests WHERE id = ? AND state = 'dispatched' LIMIT 1`).get(input.sendRequestId) as AgentMailSendRequestRow | undefined
+    : latestDispatchedAgentMailSendRequest(db)
+  if (!send) {
+    recordAgentMailAudit(db, 'agentmail_receive_verification_failed', 'blocked', 'blocker=agentmail_received_message_not_visible;reason=no_dispatched_send')
+    return { ok: false, source: 'agentmail_receive_path_verification', exact_blocker: 'agentmail_received_message_not_visible', email_sent: false, ...SAFE_FLAGS }
+  }
+
+  const recipients = parseJsonArray(send.to_json)
+  const recipientInbox = recipients[0] || null
+  const senderInbox = send.inbox_id
+  const inboxes = listAgentMailInboxes(db)
+  const recipientAgent = inboxes.find((inbox) => inbox.inbox_address?.toLowerCase() === String(recipientInbox || '').toLowerCase()) || null
+  const senderAgent = inboxes.find((inbox) => inbox.inbox_address?.toLowerCase() === senderInbox.toLowerCase()) || null
+
+  recordAgentMailAudit(db, 'agentmail_receive_verification_started', 'ok', `send_request=${send.id};recipient_count=${recipients.length}`)
+
+  const senderResolution = senderAgent
+    ? resolveAgentMailScopedCredential({ db, env, agentId: senderAgent.agent_id, inboxId: senderInbox, requiredPermissions: ['message_read', 'thread_read'] })
+    : null
+  const senderKey = senderResolution ? loadAgentMailCredentialSecret(senderResolution, env, db) : null
+  let senderVisible = false
+  if (senderKey) {
+    const senderThreadUrl = `${baseUrl}/v0/inboxes/${encodeURIComponent(senderInbox)}/threads/${encodeURIComponent(send.thread_id || '')}`
+    const senderThread = send.thread_id ? await agentMailReadJson(fetcher, senderThreadUrl, senderKey) : { ok: false, status: 0, payload: {} }
+    const senderThreadItems = agentMailPayloadItems(senderThread.payload)
+    senderVisible = senderThread.ok && (senderThreadItems.length > 0 || normalizeAgentMailProviderId((senderThread.payload as any)?.thread_id || (senderThread.payload as any)?.id) === normalizeAgentMailProviderId(send.thread_id))
+    if (!senderVisible) {
+      const senderMessages = await agentMailReadJson(fetcher, `${baseUrl}/v0/inboxes/${encodeURIComponent(senderInbox)}/messages`, senderKey)
+      senderVisible = senderMessages.ok && Boolean(findMessageByMessageId(agentMailPayloadItems(senderMessages.payload), send.message_id))
+    }
+  }
+  recordAgentMailAudit(db, 'agentmail_sender_sent_message_visible', senderVisible ? 'ok' : 'blocked', `send_request=${send.id}`)
+
+  if (!recipientAgent || !recipientInbox) {
+    recordAgentMailAudit(db, 'agentmail_receive_verification_failed', 'blocked', 'blocker=agentmail_inbox_read_permission_missing;reason=recipient_registry_missing')
+    return { ok: false, source: 'agentmail_receive_path_verification', exact_blocker: 'agentmail_inbox_read_permission_missing', email_sent: false, receive_path: buildAgentMailReceivePathStatus(db), ...SAFE_FLAGS }
+  }
+
+  const recipientResolution = resolveAgentMailScopedCredential({ db, env, agentId: recipientAgent.agent_id, inboxId: recipientInbox, requiredPermissions: ['message_read', 'thread_read'] })
+  const recipientKey = loadAgentMailCredentialSecret(recipientResolution, env, db)
+  const recipientCredentialOk = Boolean(recipientKey && recipientResolution.permissions.message_read && recipientResolution.permissions.thread_read)
+  recordAgentMailAudit(db, 'agentmail_recipient_read_credential_verified', recipientCredentialOk ? 'ok' : 'blocked', `agent=${recipientAgent.agent_id};inbox=${recipientInbox}`)
+  if (!recipientKey || !recipientCredentialOk) {
+    recordAgentMailAudit(db, 'agentmail_receive_verification_failed', 'blocked', 'blocker=agentmail_inbox_read_permission_missing')
+    return { ok: false, source: 'agentmail_receive_path_verification', exact_blocker: 'agentmail_inbox_read_permission_missing', email_sent: false, receive_path: buildAgentMailReceivePathStatus(db), ...SAFE_FLAGS }
+  }
+
+  let found: AgentMailVisibleMessage | null = null
+  let foundMethod: string | null = null
+
+  if (send.thread_id) {
+    const thread = await agentMailReadJson(fetcher, `${baseUrl}/v0/inboxes/${encodeURIComponent(recipientInbox)}/threads/${encodeURIComponent(send.thread_id)}`, recipientKey)
+    const threadItems = agentMailPayloadItems(thread.payload)
+    const threadVisible = thread.ok && (threadItems.length > 0 || normalizeAgentMailProviderId((thread.payload as any)?.thread_id || (thread.payload as any)?.id) === normalizeAgentMailProviderId(send.thread_id))
+    if (threadVisible) {
+      found = visibleMessageFromRecord(threadItems[0] || thread.payload as Record<string, unknown>)
+      found.thread_id ||= send.thread_id
+      foundMethod = 'recipient_thread_id'
+    } else {
+      recordAgentMailAudit(db, 'agentmail_recipient_thread_lookup_failed', 'blocked', `status=${thread.status}`)
+    }
+  }
+
+  const directMessage = !found && send.message_id
+    ? await agentMailReadJson(fetcher, `${baseUrl}/v0/inboxes/${encodeURIComponent(recipientInbox)}/messages/${encodeURIComponent(send.message_id)}`, recipientKey)
+    : null
+  if (!found && directMessage?.ok) {
+    const directItems = agentMailPayloadItems(directMessage.payload)
+    const directRecord = directItems[0] || directMessage.payload as Record<string, unknown>
+    if (normalizeAgentMailProviderId(agentMailMessageId(directRecord)) === normalizeAgentMailProviderId(send.message_id)) {
+      found = visibleMessageFromRecord(directRecord)
+      foundMethod = 'message_id'
+    }
+  }
+
+  const messages = !found
+    ? await agentMailReadJson(fetcher, `${baseUrl}/v0/inboxes/${encodeURIComponent(recipientInbox)}/messages`, recipientKey)
+    : null
+  const messageItems = messages?.ok ? agentMailPayloadItems(messages.payload) : []
+
+  if (!found) {
+    const byMessageId = findMessageByMessageId(messageItems, send.message_id)
+    recordAgentMailAudit(db, 'agentmail_recipient_message_lookup_by_message_id', byMessageId ? 'ok' : 'blocked', `status=${directMessage?.status || messages?.status || 'not_run'}`)
+    if (byMessageId) {
+      found = visibleMessageFromRecord(byMessageId)
+      foundMethod = 'message_id'
+    }
+  } else {
+    recordAgentMailAudit(db, 'agentmail_recipient_message_lookup_by_message_id', 'ok', 'found_before_list_lookup')
+  }
+
+  if (!found) {
+    const bySubject = findMessageBySubject(messageItems, send.subject)
+    recordAgentMailAudit(db, 'agentmail_recipient_message_lookup_by_subject', bySubject ? 'ok' : 'blocked', `subject_hash=${sha(send.subject).slice(0, 12)}`)
+    if (bySubject) {
+      found = visibleMessageFromRecord(bySubject)
+      foundMethod = 'subject'
+    }
+  }
+
+  if (!found) {
+    const byParticipants = findMessageByParticipants(messageItems, senderInbox, recipientInbox)
+    recordAgentMailAudit(db, 'agentmail_recipient_message_lookup_by_participants', byParticipants ? 'ok' : 'blocked', `sender=${senderInbox};recipient=${recipientInbox}`)
+    if (byParticipants) {
+      found = visibleMessageFromRecord(byParticipants)
+      foundMethod = 'participants'
+    }
+  }
+
+  if (!found) {
+    const byTimestamp = findMessageByTimestampWindow(messageItems, send.updated_at)
+    recordAgentMailAudit(db, 'agentmail_recipient_message_lookup_by_timestamp', byTimestamp ? 'ok' : 'blocked', `dispatch_updated_at=${send.updated_at}`)
+    if (byTimestamp) {
+      found = visibleMessageFromRecord(byTimestamp)
+      foundMethod = 'timestamp_window'
+    }
+  }
+
+  if (!found) {
+    const threads = await agentMailReadJson(fetcher, `${baseUrl}/v0/inboxes/${encodeURIComponent(recipientInbox)}/threads`, recipientKey)
+    const threadItems = threads.ok ? agentMailPayloadItems(threads.payload) : []
+    const byThread = findMessageBySubject(threadItems, send.subject) || findMessageByParticipants(threadItems, senderInbox, recipientInbox)
+    recordAgentMailAudit(db, 'agentmail_recipient_thread_lookup_by_participants', byThread ? 'ok' : 'blocked', `status=${threads.status}`)
+    if (byThread) {
+      found = visibleMessageFromRecord(byThread)
+      foundMethod = 'thread_search'
+    }
+  }
+
+  recordAgentMailAudit(db, 'agentmail_provider_allowlist_status_recorded', 'ok', `pi=${sendCapableAllowlistByAgent(db).pi?.status || 'unknown'};agent_zero=${sendCapableAllowlistByAgent(db).agent_zero?.status || 'unknown'}`)
+
+  if (found) {
+    recordAgentMailAudit(db, 'agentmail_recipient_message_found', 'ok', `method=${foundMethod};message_id=${found.message_id || 'unknown'};thread_id=${found.thread_id || 'unknown'}`)
+    recordAgentMailAudit(db, 'agentmail_receive_verification_passed', 'ok', `method=${foundMethod}`)
+    recordAgentMailAudit(db, 'agentmail_event_console_updated', 'ok', 'receive_path=verified')
+    return {
+      ok: true,
+      source: 'agentmail_receive_path_verification',
+      exact_blocker: null,
+      email_sent: false,
+      recipient_visible_message_id: found.message_id,
+      recipient_visible_thread_id: found.thread_id,
+      receive_path: buildAgentMailReceivePathStatus(db),
+      ...SAFE_FLAGS,
+    }
+  }
+
+  const finalBlocker = senderVisible && recipientCredentialOk ? 'agentmail_received_message_not_visible' : 'agentmail_provider_delay'
+  recordAgentMailAudit(db, 'agentmail_receive_verification_failed', 'blocked', `blocker=${finalBlocker}`)
+  recordAgentMailAudit(db, 'agentmail_event_console_updated', 'blocked', `receive_path=${finalBlocker}`)
+  return {
+    ok: false,
+    source: 'agentmail_receive_path_verification',
+    exact_blocker: finalBlocker,
+    email_sent: false,
+    receive_path: buildAgentMailReceivePathStatus(db),
+    ...SAFE_FLAGS,
   }
 }
 

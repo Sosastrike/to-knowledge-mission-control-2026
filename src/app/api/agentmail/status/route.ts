@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 
-import { buildAgentMailDispatchRuntimeStatus, buildAgentMailSetupStatus, buildAgentMailStatus } from '@/lib/agentmail-local-control'
+import { buildAgentMailDispatchRuntimeStatus, buildAgentMailReceivePathStatus, buildAgentMailSetupStatus, buildAgentMailStatus } from '@/lib/agentmail-local-control'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
 export const runtime = 'nodejs'
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   return readOnly({
     ...buildAgentMailStatus(),
     setup_status: setupStatus,
+    agentmail_receive_path: buildAgentMailReceivePathStatus(),
     setup_state: setupStatus.setup_state,
     per_send_status: setupStatus.per_send_status,
     agentmail_dispatch_runtime: buildAgentMailDispatchRuntimeStatus(),

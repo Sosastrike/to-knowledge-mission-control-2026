@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { buildAgentMailCapacityStatus } from '@/lib/agentmail-capacity-status'
-import { buildAgentMailSendAccessStatus } from '@/lib/agentmail-local-control'
+import { buildAgentMailReceivePathStatus, buildAgentMailSendAccessStatus } from '@/lib/agentmail-local-control'
 import { authRequired, readOnly } from '@/lib/mission-control-contracts'
 
 export const runtime = 'nodejs'
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
 
   const capacity = buildAgentMailCapacityStatus()
   const sendAccess = buildAgentMailSendAccessStatus()
+  const receivePath = buildAgentMailReceivePathStatus()
   const setupReady = sendAccess.setup_state === 'approval_gated_send_ready'
   const perSendState = sendAccess.per_send_status?.state || 'no_pending_send_request'
   const dispatchRuntime = sendAccess.global.agentmail_dispatch_runtime
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
         : 'AgentMail send requests remain locked until message approval, active dispatch runtime, Gateway policy, audit, and rollback are ready.',
     },
     agentmail_dispatch_runtime: dispatchRuntime,
+    agentmail_receive_path: receivePath,
     safe_send_proof: {
       state: 'OWNER_GATED',
       attempted: false,

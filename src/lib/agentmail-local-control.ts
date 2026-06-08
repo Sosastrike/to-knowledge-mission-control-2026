@@ -833,8 +833,15 @@ type AgentMailSetupChecklist = {
 type AgentMailSetupEvaluation = {
   agentmail_ready: boolean
   send_ready: boolean
+  setup_state: AgentMailSetupBlocker | 'approval_gated_send_ready'
   primary_blocker: AgentMailSetupBlocker
   blockers: AgentMailSetupBlocker[]
+  exact_blockers: AgentMailSetupBlocker[]
+  per_send_status: {
+    state: 'no_pending_send_request' | 'owner_approval_required' | 'action_bridge_session_inactive' | 'approved_send_dispatch_ready' | 'send_dispatched' | 'send_blocked'
+    send_request_id: string | null
+    exact_blocker: string | null
+  }
   next_action: string
   inboxes: {
     total: number
@@ -929,6 +936,30 @@ function agentMailNextAction(primaryBlocker: AgentMailSetupBlocker): string {
   return 'approval_gated_send_ready'
 }
 
+function latestAgentMailSendRequest(db: Database.Database): AgentMailSendRequestRow | null {
+  ensureAgentMailSchema(db)
+  const row = db.prepare(`
+    SELECT * FROM agentmail_send_requests
+    ORDER BY created_at DESC, updated_at DESC
+    LIMIT 1
+  `).get() as AgentMailSendRequestRow | undefined
+  return row || null
+}
+
+function evaluateAgentMailPerSendStatus(db: Database.Database, bridgeState: AgentMailBridgeSessionState): AgentMailSetupEvaluation['per_send_status'] {
+  const row = latestAgentMailSendRequest(db)
+  if (!row) return { state: 'no_pending_send_request', send_request_id: null, exact_blocker: null }
+  if (row.state === 'dispatched') return { state: 'send_dispatched', send_request_id: row.id, exact_blocker: null }
+  if (row.state === 'owner_approved') {
+    if (bridgeState === 'active') return { state: 'approved_send_dispatch_ready', send_request_id: row.id, exact_blocker: null }
+    return { state: 'action_bridge_session_inactive', send_request_id: row.id, exact_blocker: 'action_bridge_session_inactive' }
+  }
+  if (row.state === 'dispatch_blocked') {
+    return { state: 'send_blocked', send_request_id: row.id, exact_blocker: row.exact_blocker || 'gateway_blocked' }
+  }
+  return { state: 'owner_approval_required', send_request_id: row.id, exact_blocker: 'owner_approval_required' }
+}
+
 function setupChecklist(input: {
   connectStatus: AgentMailConnectStatus
   hasRuntimeConnection: boolean
@@ -961,6 +992,7 @@ function setupChecklist(input: {
 }
 
 function evaluateAgentMailSetup(input: {
+  db: Database.Database
   connect: ReturnType<typeof buildAgentMailConnectStatus>
   inboxes: AgentMailInboxRecord[]
   agents: Record<string, Record<string, unknown>>
@@ -986,6 +1018,7 @@ function evaluateAgentMailSetup(input: {
   const runtimeVisible = connected
   const organizationSelected = input.connect.status === 'sync_ready' || input.connect.status === 'inbox_sync_complete' || input.connect.status === 'monitor_ready'
   const gatewayReady = !Object.values(input.agents).some((agent) => (agent.blockers as string[] | undefined)?.includes('gateway_policy_monitor_only') && (agent.agent_id === 'pi' || agent.agent_id === 'agent_zero'))
+  const perSendStatus = evaluateAgentMailPerSendStatus(input.db, input.bridgeState)
   const rawBlockers: string[] = []
 
   if (!connected) rawBlockers.push(input.connect.runtime_credential_blocker === 'agentmail_runtime_secret_store_required' ? 'agentmail_runtime_secret_store_required' : 'agentmail_owner_sso_or_api_key_required')
@@ -1002,16 +1035,16 @@ function evaluateAgentMailSetup(input: {
     if (blockers.includes('scoped_credential_wrong_inbox')) rawBlockers.push('scoped_credential_wrong_inbox')
     if (blockers.includes('message_send_permission_missing')) rawBlockers.push('message_send_permission_missing')
     if (blockers.includes('draft_send_permission_missing')) rawBlockers.push('draft_send_permission_missing')
-    if (blockers.includes('owner_approval_required')) rawBlockers.push('owner_approval_required')
     if (blockers.includes('gateway_blocked')) rawBlockers.push('gateway_blocked')
   }
-  if (input.bridgeState !== 'active') rawBlockers.push('action_bridge_session_inactive')
   if (!gatewayReady) rawBlockers.push('gateway_blocked')
   if (!input.auditReady) rawBlockers.push('audit_context_missing')
 
   const blockers = uniqueBlockers(rawBlockers)
   const primary = primaryAgentMailBlocker(blockers)
-  const sendReady = primary === 'ready'
+  const infrastructureReady = primary === 'ready'
+  const setupState = infrastructureReady ? 'approval_gated_send_ready' : primary
+  const sendReady = perSendStatus.state === 'approved_send_dispatch_ready'
   const checklist = setupChecklist({
     connectStatus: input.connect.status,
     hasRuntimeConnection: runtimeVisible,
@@ -1030,8 +1063,11 @@ function evaluateAgentMailSetup(input: {
   return {
     agentmail_ready: connected && organizationSelected && missingAddresses === 0,
     send_ready: sendReady,
+    setup_state: setupState,
     primary_blocker: primary,
     blockers: blockers.length ? blockers : ['ready'],
+    exact_blockers: blockers.filter((blocker) => blocker !== 'ready'),
+    per_send_status: perSendStatus,
     next_action: agentMailNextAction(primary),
     inboxes: {
       total: totalInboxes,
@@ -1063,8 +1099,10 @@ export function buildAgentMailSetupStatus(
   }, {} as Record<string, Record<string, unknown>>)
   const auditReady = true
   const inboxLimitExceeded = detectAgentMailInboxLimitExceeded(db)
-  const setup = evaluateAgentMailSetup({ connect, inboxes, agents, bridgeState, auditReady, inboxLimitExceeded })
-  recordAgentMailAudit(db, 'agentmail_status_blockers_evaluated', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.blockers.join(','))
+  const setup = evaluateAgentMailSetup({ db, connect, inboxes, agents, bridgeState, auditReady, inboxLimitExceeded })
+  recordAgentMailAudit(db, 'agentmail_readiness_evaluated', setup.setup_state === 'approval_gated_send_ready' ? 'ok' : 'blocked', setup.setup_state)
+  if (setup.setup_state === 'approval_gated_send_ready') recordAgentMailAudit(db, 'agentmail_setup_ready', 'ok', setup.per_send_status.state)
+  recordAgentMailAudit(db, 'agentmail_status_blockers_evaluated', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.exact_blockers.join(',') || setup.setup_state)
   recordAgentMailAudit(db, 'agentmail_primary_blocker_selected', setup.primary_blocker === 'ready' ? 'ok' : 'blocked', setup.primary_blocker)
   recordAgentMailAudit(db, 'agentmail_next_action_selected', 'ok', setup.next_action)
   if (setup.blockers.includes('agentmail_inbox_limit_exceeded')) {
@@ -1228,8 +1266,10 @@ function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, str
   if (!permissions.message_send && sendCapablePolicy) blockers.push('message_send_permission_missing')
   if (policy === 'monitor_only') blockers.push('gateway_policy_monitor_only')
   if (policy === 'draft_only') blockers.push('gateway_policy_draft_only')
-  if (bridgeState !== 'active') blockers.push(bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `action_bridge_session_${bridgeState}`)
-  if (policy === 'approval_required') blockers.push('owner_approval_required')
+  const perSendDispatchBlockers = [
+    policy === 'approval_required' ? 'owner_approval_required' : null,
+    bridgeState !== 'active' ? (bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `action_bridge_session_${bridgeState}`) : null,
+  ].filter((blocker): blocker is string => Boolean(blocker))
 
   return {
     inbox_id: inbox.inbox_address,
@@ -1247,6 +1287,8 @@ function sendAccessForInbox(inbox: AgentMailInboxRecord, env: Record<string, str
     bridge_allowed: bridgeState === 'active',
     gateway_policy: policy,
     send_ready: blockers.length === 0,
+    approval_gated_send_capable: sendCapablePolicy && blockers.length === 0,
+    dispatch_blockers: perSendDispatchBlockers,
     blockers,
   }
 }
@@ -1273,6 +1315,7 @@ export function buildAgentMailSendAccessStatus(
   }, {} as Record<string, Record<string, unknown>>)
 
   const setupStatus = evaluateAgentMailSetup({
+    db,
     connect,
     inboxes,
     agents,
@@ -1308,6 +1351,8 @@ export function buildAgentMailSendAccessStatus(
     setup_status: setupStatus,
     primary_blocker: setupStatus.primary_blocker,
     blockers: setupStatus.blockers,
+    setup_state: setupStatus.setup_state,
+    per_send_status: setupStatus.per_send_status,
     next_action: setupStatus.next_action,
     agentmail_ready: setupStatus.agentmail_ready,
     send_ready: setupStatus.send_ready,
@@ -1315,7 +1360,7 @@ export function buildAgentMailSendAccessStatus(
     credential_summary: setupStatus.credentials,
     setup_checklist: setupStatus.checklist,
     permission_keys: AGENTMAIL_SEND_PERMISSIONS,
-    exact_blockers: setupStatus.blockers,
+    exact_blockers: setupStatus.exact_blockers,
     ...SAFE_FLAGS,
   }
 }
@@ -1556,11 +1601,17 @@ export async function applyAgentMailCredentialProvision(input?: Database.Databas
 
 export function createAgentMailBridgeSessionRequest(
   db: Database.Database = getDatabase(),
-  input: { requester?: string; ttl_minutes?: number } = {},
+  input: { requester?: string; ttl_minutes?: number; max_sends_per_session_per_agent?: number; max_recipients_per_send?: number } = {},
 ) {
   ensureAgentMailSchema(db)
   const requester = sanitizeText(input.requester || 'owner', 'owner', 120)
   const ttlMinutes = Number.isFinite(input.ttl_minutes) && Number(input.ttl_minutes) > 0 ? Math.min(Number(input.ttl_minutes), 240) : 60
+  const maxSends = Number.isFinite(input.max_sends_per_session_per_agent) && Number(input.max_sends_per_session_per_agent) > 0
+    ? Math.min(Number(input.max_sends_per_session_per_agent), 10)
+    : 10
+  const maxRecipients = Number.isFinite(input.max_recipients_per_send) && Number(input.max_recipients_per_send) > 0
+    ? Math.min(Number(input.max_recipients_per_send), 10)
+    : 10
   const expiresAt = new Date(Date.now() + ttlMinutes * 60_000).toISOString()
   const { request: approval, created } = createApprovalRequest({
     connector: 'agentmail',
@@ -1573,8 +1624,8 @@ export function createAgentMailBridgeSessionRequest(
     reason: 'Owner approval is required before Mission Control can dispatch approved AgentMail send requests through Bridge Unit.',
     approval_scope: {
       session_duration_minutes: ttlMinutes,
-      max_sends_per_session_per_agent: 10,
-      max_recipients_per_send: 10,
+      max_sends_per_session_per_agent: maxSends,
+      max_recipients_per_send: maxRecipients,
       attachments_policy: 'blocked_until_scanning_exists',
       external_domain_policy: 'owner_approval_required',
       credential_values_exposed: false,
@@ -1584,10 +1635,11 @@ export function createAgentMailBridgeSessionRequest(
   const id = `ambs_${sha(`${approval.id}:${expiresAt}`).slice(0, 18)}`
   db.prepare(`
     INSERT INTO agentmail_bridge_sessions (id, state, approval_request_id, requester, expires_at, max_sends_per_session_per_agent, max_recipients_per_send)
-    VALUES (?, 'pending_owner_approval', ?, ?, ?, 10, 10)
+    VALUES (?, 'pending_owner_approval', ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO NOTHING
-  `).run(id, approval.id, requester, expiresAt)
+  `).run(id, approval.id, requester, expiresAt, maxSends, maxRecipients)
   recordAgentMailAudit(db, 'agentmail_bridge_session_requested', 'blocked', `approval_id=${approval.id};canonical_owner_channel_required`)
+  recordAgentMailAudit(db, 'agentmail_action_bridge_session_requested', 'blocked', `approval_id=${approval.id};max_sends=${maxSends};max_recipients=${maxRecipients}`)
   return {
     ok: true,
     source: 'agentmail_bridge_session_request',
@@ -1641,6 +1693,8 @@ export function approveAgentMailBridgeSession(
   db.prepare(`UPDATE agentmail_bridge_sessions SET state = 'active', expires_at = ?, updated_at = unixepoch() WHERE id = ?`).run(expiresAt, row.id)
   recordAgentMailAudit(db, 'agentmail_bridge_session_approved', 'ok', `actor=${sanitizeText(input.actor || 'owner', 'owner', 120)}`)
   recordAgentMailAudit(db, 'agentmail_bridge_session_active', 'ok', `expires_at=${expiresAt}`)
+  recordAgentMailAudit(db, 'agentmail_action_bridge_session_approved', 'ok', `actor=${sanitizeText(input.actor || 'owner', 'owner', 120)}`)
+  recordAgentMailAudit(db, 'agentmail_action_bridge_session_active', 'ok', `expires_at=${expiresAt}`)
   return {
     ok: true,
     source: 'agentmail_bridge_session_approve',
@@ -1730,6 +1784,7 @@ export function createAgentMailSendPreview(db: Database.Database = getDatabase()
     exactBlocker,
   )
   recordAgentMailAudit(db, 'agentmail_send_preview_created', ok ? 'ok' : 'blocked', exactBlocker || 'preview_created')
+  recordAgentMailAudit(db, 'agentmail_gateway_policy_evaluated', ok ? 'ok' : 'blocked', ok ? 'approval_gated_send' : exactBlocker || 'gateway_blocked')
   const row = getSendRequest(db, id)!
   return {
     ok,
@@ -1769,6 +1824,7 @@ export function createAgentMailSendRequest(db: Database.Database = getDatabase()
   db.prepare(`UPDATE agentmail_send_requests SET state = 'approval_requested', approval_request_id = ?, exact_blocker = 'owner_approval_required', updated_at = unixepoch() WHERE id = ?`).run(approval.id, row.id)
   db.prepare(`INSERT INTO agentmail_approvals (id, event_id, action_type, state, exact_blocker) VALUES (?, ?, 'outbound_send', 'pending', 'owner_approval_required') ON CONFLICT(id) DO NOTHING`).run(`ama_${row.id}`, row.id)
   recordAgentMailAudit(db, 'agentmail_send_request_created', 'blocked', `approval_id=${approval.id};canonical_owner_channel_required`)
+  recordAgentMailAudit(db, 'agentmail_send_approval_required', 'blocked', `approval_id=${approval.id};send_request_id=${row.id}`)
   const updated = getSendRequest(db, row.id)!
   return {
     ok: true,
@@ -1792,8 +1848,8 @@ export function approveAgentMailSendRequest(
   ensureAgentMailSchema(db)
   const row = getSendRequest(db, sendRequestId)
   if (!row) return { ok: false, source: 'agentmail_send_approve', exact_blocker: 'send_request_not_found', dispatch_enabled: false, ...SAFE_FLAGS }
-  db.prepare(`UPDATE agentmail_send_requests SET state = 'owner_approved', exact_blocker = 'bridge_session_required', updated_at = unixepoch() WHERE id = ?`).run(row.id)
-  db.prepare(`UPDATE agentmail_approvals SET state = 'approved', exact_blocker = 'bridge_session_required' WHERE id = ?`).run(`ama_${row.id}`)
+  db.prepare(`UPDATE agentmail_send_requests SET state = 'owner_approved', exact_blocker = 'action_bridge_session_inactive', updated_at = unixepoch() WHERE id = ?`).run(row.id)
+  db.prepare(`UPDATE agentmail_approvals SET state = 'approved', exact_blocker = 'action_bridge_session_inactive' WHERE id = ?`).run(`ama_${row.id}`)
   recordAgentMailAudit(db, 'agentmail_send_approved', 'ok', `actor=${sanitizeText(input.actor || 'owner', 'owner', 120)}`, row.id)
   const updated = getSendRequest(db, row.id)!
   return {
@@ -1802,7 +1858,7 @@ export function approveAgentMailSendRequest(
     send_request: sendRequestFromRow(updated),
     approval_state: 'approved',
     dispatch_enabled: false,
-    exact_blocker: 'bridge_session_required',
+    exact_blocker: 'action_bridge_session_inactive',
     ...SAFE_FLAGS,
   }
 }
@@ -1830,8 +1886,8 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
   const recipientCount = parseJsonArray(row.to_json).length + parseJsonArray(row.cc_json).length + parseJsonArray(row.bcc_json).length
   let exactBlocker: string | null = null
 
-  if (bridgeState !== 'active') exactBlocker = bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `bridge_session_${bridgeState}`
-  else if (row.state !== 'owner_approved') exactBlocker = 'owner_approval_required'
+  if (row.state !== 'owner_approved') exactBlocker = 'owner_approval_required'
+  else if (bridgeState !== 'active') exactBlocker = bridgeState === 'inactive' ? 'action_bridge_session_inactive' : `bridge_session_${bridgeState}`
   else if (!inbox || !inbox.inbox_address) exactBlocker = 'agentmail_inbox_assignment_missing'
   else if (inbox.inbox_address.toLowerCase() !== row.inbox_id.toLowerCase()) exactBlocker = 'wrong_agent_inbox'
   else if (!access || access.credential_status !== 'scoped') exactBlocker = credentialResolution?.blockers.includes('scoped_credential_missing') ? 'scoped_credential_missing' : 'agentmail_inbox_credential_required'
@@ -1839,6 +1895,7 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
   else if (credentialResolution?.blockers.includes('agentmail_runtime_secret_store_required')) exactBlocker = 'agentmail_runtime_secret_store_required'
   else if (!access.permission_status.message_send) exactBlocker = 'message_send_permission_missing'
   else if (recipientCount > (bridgeRow?.max_recipients_per_send || 10)) exactBlocker = 'recipient_limit_exceeded'
+  else if (bridgeRow && bridgeRow.sends_dispatched >= bridgeRow.max_sends_per_session_per_agent) exactBlocker = 'send_limit_exceeded'
 
   if (exactBlocker) {
     db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatch_blocked', exact_blocker = ?, bridge_session_id = ?, updated_at = unixepoch() WHERE id = ?`).run(exactBlocker, bridgeRow?.id || null, row.id)
@@ -1889,6 +1946,7 @@ export function dispatchAgentMailSendRequest(db: Database.Database = getDatabase
     db.prepare(`UPDATE agentmail_send_requests SET state = 'dispatched', exact_blocker = NULL, bridge_session_id = ?, message_id = ?, thread_id = COALESCE(?, thread_id), updated_at = unixepoch() WHERE id = ?`).run(bridgeRow?.id || null, result.message_id, result.thread_id, row.id)
     if (bridgeRow) db.prepare(`UPDATE agentmail_bridge_sessions SET sends_dispatched = sends_dispatched + 1, updated_at = unixepoch() WHERE id = ?`).run(bridgeRow.id)
     recordAgentMailAudit(db, 'agentmail_real_send_dispatched', 'ok', `message_id=${result.message_id};thread_id=${result.thread_id || 'none'}`, row.id)
+    recordAgentMailAudit(db, 'agentmail_send_test_completed', 'ok', `message_id=${result.message_id};thread_id=${result.thread_id || 'none'}`, row.id)
     return {
       ok: true,
       source: 'agentmail_send_dispatch',

@@ -407,6 +407,8 @@ it('reports per-agent send access blockers without enabling send execution', () 
       'agentmail_inbox_assignment_missing',
       'agentmail_inbox_credential_required',
       'message_send_permission_missing',
+    ]))
+    expect(status.agents.pi.dispatch_blockers).toEqual(expect.arrayContaining([
       'action_bridge_session_inactive',
       'owner_approval_required',
     ]))
@@ -465,7 +467,7 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(dispatch).toMatchObject({
       ok: false,
       dispatch_enabled: false,
-      exact_blocker: 'action_bridge_session_inactive',
+      exact_blocker: 'owner_approval_required',
       credential_values_exposed: false,
     })
   })
@@ -534,12 +536,88 @@ it('reports per-agent send access blockers without enabling send execution', () 
       ok: true,
       approval_state: 'approved',
       dispatch_enabled: false,
+      exact_blocker: 'action_bridge_session_inactive',
     })
     expect(dispatch).toMatchObject({
       ok: false,
       dispatch_enabled: false,
       exact_blocker: 'scoped_credential_missing',
       credential_values_exposed: false,
+    })
+  })
+
+  it('separates global setup readiness from per-send approval and Action Bridge states', () => {
+    const db = new Database(':memory:')
+    ensureAgentMailSchema(db)
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'pi'").run('pi@agentmail.to')
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = ?, provision_state = 'assigned' WHERE agent_id = 'agent_zero'").run('agent-zero@agentmail.to')
+    db.prepare("UPDATE agentmail_inboxes SET inbox_address = agent_id || '@agentmail.to', provision_state = 'assigned' WHERE inbox_address IS NULL").run()
+    for (const agentId of ['pi', 'agent_zero']) {
+      upsertAgentMailScopedCredentialMetadata(db, {
+        agentId,
+        inboxId: agentId === 'pi' ? 'pi@agentmail.to' : 'agent-zero@agentmail.to',
+        credentialRef: agentId === 'pi' ? 'AGENTMAIL_PI_KEY' : 'AGENTMAIL_AGENT_ZERO_KEY',
+        maskedPreview: 'am_****7890',
+        permissions: {
+          inbox_read: true,
+          thread_read: true,
+          message_read: true,
+          message_send: true,
+          message_update: true,
+          draft_read: true,
+          draft_create: true,
+          draft_update: true,
+          draft_send: true,
+        },
+      })
+    }
+
+    const ready = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_PI_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_AGENT_ZERO_KEY: 'agentmail-test-secret-value-abcdef',
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+    expect(ready).toMatchObject({
+      setup_state: 'approval_gated_send_ready',
+      primary_blocker: 'ready',
+      exact_blockers: [],
+      per_send_status: { state: 'no_pending_send_request' },
+    })
+
+    const preview = createAgentMailSendPreview(db, {
+      agent_id: 'pi',
+      inbox_id: 'pi@agentmail.to',
+      to: ['tony-88@agentmail.to'],
+      subject: 'Mission Control AgentMail approval-gated send test',
+      text: 'Controlled test preview only.',
+    })
+    const requested = createAgentMailSendRequest(db, (preview as any).send_request.id)
+    const needsApproval = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_PI_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_AGENT_ZERO_KEY: 'agentmail-test-secret-value-abcdef',
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+    expect(needsApproval.setup_state).toBe('approval_gated_send_ready')
+    expect(needsApproval.per_send_status).toMatchObject({
+      state: 'owner_approval_required',
+      send_request_id: (requested as any).send_request.id,
+      exact_blocker: 'owner_approval_required',
+    })
+
+    approveAgentMailSendRequest(db, (requested as any).send_request.id, { actor: 'owner' })
+    const needsBridge = buildAgentMailSetupStatus(db, {
+      AGENTMAIL_API_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_PI_KEY: 'agentmail-test-secret-value-1234567890',
+      AGENTMAIL_AGENT_ZERO_KEY: 'agentmail-test-secret-value-abcdef',
+      AGENTMAIL_WS_URL: 'wss://api.agentmail.to/ws',
+    })
+    expect(needsBridge.setup_state).toBe('approval_gated_send_ready')
+    expect(needsBridge.per_send_status).toMatchObject({
+      state: 'action_bridge_session_inactive',
+      send_request_id: (requested as any).send_request.id,
+      exact_blocker: 'action_bridge_session_inactive',
     })
   })
 
@@ -662,6 +740,12 @@ it('reports per-agent send access blockers without enabling send execution', () 
       agentmail_ready: false,
       send_ready: false,
       primary_blocker: 'agentmail_owner_sso_or_api_key_required',
+      setup_state: 'agentmail_owner_sso_or_api_key_required',
+      per_send_status: {
+        state: 'no_pending_send_request',
+        send_request_id: null,
+        exact_blocker: null,
+      },
       next_action: 'connect_agentmail',
       inboxes: {
         total: 6,
@@ -686,8 +770,6 @@ it('reports per-agent send access blockers without enabling send execution', () 
       'agentmail_inbox_address_missing',
       'agentmail_inbox_credential_required',
       'message_send_permission_missing',
-      'action_bridge_session_inactive',
-      'owner_approval_required',
     ]))
     expect(setup.primary_blocker).not.toBe('action_bridge_session_inactive')
     expect(setup.primary_blocker).not.toBe('bridge_session_required')
@@ -724,7 +806,6 @@ it('reports per-agent send access blockers without enabling send execution', () 
       'agentmail_inbox_not_provisioned',
       'agentmail_inbox_address_missing',
       'agentmail_inbox_credential_required',
-      'action_bridge_session_inactive',
     ]))
     expect(setup.next_action).toBe('sync_or_provision_inbox_registry')
     expect(JSON.stringify(setup)).not.toContain('agentmail-test-secret-value')
@@ -746,11 +827,10 @@ it('reports per-agent send access blockers without enabling send execution', () 
     expect(setup.blockers).toEqual(expect.arrayContaining([
       'agentmail_inbox_credential_required',
       'message_send_permission_missing',
-      'owner_approval_required',
-      'action_bridge_session_inactive',
     ]))
     expect(setup.next_action).toBe('provision_scoped_inbox_credentials')
     expect(setup.send_ready).toBe(false)
+    expect(setup.per_send_status.state).toBe('no_pending_send_request')
   })
 
   it('previews scoped AgentMail credentials for every assigned inbox with role-specific permissions and no send', () => {
@@ -866,7 +946,7 @@ it('reports per-agent send access blockers without enabling send execution', () 
       source: 'agentmail_scoped_credential_provision_apply',
       credentials_created: 6,
       credentials_stored: 6,
-      current_primary_blocker: 'owner_approval_required',
+      current_primary_blocker: 'ready',
       scoped_credentials_created: true,
       email_sent: false,
       send_enabled: false,
@@ -884,9 +964,13 @@ it('reports per-agent send access blockers without enabling send execution', () 
     })
     expect((sendAccess.agents.pi as any).credential_status).toBe('scoped')
     expect((sendAccess.agents.pi as any).permission_status.message_send).toBe(true)
+    expect((sendAccess.agents.pi as any).approval_gated_send_capable).toBe(true)
     expect((sendAccess.agents.gateway as any).permission_status.message_send).toBe(false)
     expect((sendAccess.agents.agentmail_audit as any).permission_status.message_send).toBe(false)
-    expect(sendAccess.primary_blocker).toBe('owner_approval_required')
+    expect(sendAccess.primary_blocker).toBe('ready')
+    expect(sendAccess.setup_state).toBe('approval_gated_send_ready')
+    expect(sendAccess.per_send_status.state).toBe('no_pending_send_request')
+    expect(sendAccess.exact_blockers).toEqual([])
     expect(JSON.stringify(result)).not.toContain(bootstrapSecret)
     expect(JSON.stringify(result)).not.toContain('agentmail-scoped-key-')
   })

@@ -26,6 +26,8 @@ export default function AgentMailLocalControlPage() {
   const preview = payload.sync_preview
   const sendAccess = payload.send_access
   const setupStatus = payload.setup_status || sendAccess.setup_status
+  const setupState = setupStatus?.setup_state || (setupStatus?.primary_blocker === 'ready' ? 'approval_gated_send_ready' : setupStatus?.primary_blocker)
+  const setupReady = setupState === 'approval_gated_send_ready'
   const capacity = buildAgentMailCapacityStatus() as any
   const stateTone = status.state === 'running' ? 'green' : status.state === 'degraded' ? 'yellow' : 'red'
 
@@ -76,7 +78,7 @@ export default function AgentMailLocalControlPage() {
         <div className="am-actions">
           <ActionLink href="/gateway">Back to Gateway</ActionLink>
           <ActionLink href="/tkmc">Back to Mission Control</ActionLink>
-          <Pill tone={setupStatus?.primary_blocker === 'ready' ? 'green' : 'yellow'}>{setupStatus?.primary_blocker || status.state}</Pill>
+          <Pill tone={setupReady ? 'green' : 'yellow'}>{setupState || status.state}</Pill>
         </div>
       </section>
 
@@ -106,7 +108,8 @@ export default function AgentMailLocalControlPage() {
         <div className="am-panel am-full">
           <h2>AgentMail Setup</h2>
           <div className="am-list">
-            <div className="am-row"><span>Primary blocker</span><Pill tone={setupStatus?.primary_blocker === 'ready' ? 'green' : 'yellow'}>{setupStatus?.primary_blocker || 'unknown'}</Pill></div>
+            <div className="am-row"><span>Setup status</span><Pill tone={setupReady ? 'green' : 'yellow'}>{setupState || 'unknown'}</Pill></div>
+            <div className="am-row"><span>Per-send status</span><Pill tone={setupStatus?.per_send_status?.state === 'no_pending_send_request' ? 'blue' : setupStatus?.per_send_status?.state === 'approved_send_dispatch_ready' ? 'green' : 'yellow'}>{setupStatus?.per_send_status?.state || 'no_pending_send_request'}</Pill></div>
             <div className="am-row"><span>Next action</span><span>{setupStatus?.next_action || 'connect_agentmail'}</span></div>
             <div className="am-row"><span>Owner connection</span><Pill tone={setupStatus?.checklist?.owner_connection === 'connected' ? 'green' : 'red'}>{setupStatus?.checklist?.owner_connection || 'missing'}</Pill></div>
             <div className="am-row"><span>Runtime visibility</span><Pill tone={setupStatus?.checklist?.runtime_visibility === 'visible' ? 'green' : 'red'}>{setupStatus?.checklist?.runtime_visibility || 'missing'}</Pill></div>
@@ -121,7 +124,7 @@ export default function AgentMailLocalControlPage() {
             <div className="am-row"><span>Action Bridge Session</span><Pill tone={setupStatus?.checklist?.action_bridge_session === 'active' ? 'green' : 'yellow'}>{setupStatus?.checklist?.action_bridge_session || 'inactive'}</Pill></div>
             <div className="am-row"><span>Gateway policy</span><Pill tone={setupStatus?.checklist?.gateway_policy === 'ready' ? 'green' : 'yellow'}>{setupStatus?.checklist?.gateway_policy || 'blocked'}</Pill></div>
             <div className="am-row"><span>Audit</span><Pill tone={setupStatus?.checklist?.audit === 'ready' ? 'green' : 'red'}>{setupStatus?.checklist?.audit || 'missing'}</Pill></div>
-            <div className="am-row"><span>All blockers</span><span>{(setupStatus?.blockers || []).join(' · ')}</span></div>
+            <div className="am-row"><span>Setup blockers</span><span>{(setupStatus?.exact_blockers || []).length ? setupStatus.exact_blockers.join(' · ') : 'none'}</span></div>
           </div>
         </div>
 
@@ -184,6 +187,8 @@ export default function AgentMailLocalControlPage() {
         <div className="am-panel am-full">
           <h2>Send Access</h2>
           <div className="am-list">
+            <div className="am-row"><span>Infrastructure status</span><Pill tone={sendAccess.setup_state === 'approval_gated_send_ready' ? 'green' : 'yellow'}>{sendAccess.setup_state || setupState}</Pill></div>
+            <div className="am-row"><span>Per-send status</span><Pill tone={sendAccess.per_send_status?.state === 'no_pending_send_request' ? 'blue' : sendAccess.per_send_status?.state === 'approved_send_dispatch_ready' ? 'green' : 'yellow'}>{sendAccess.per_send_status?.state || 'no_pending_send_request'}</Pill></div>
             <div className="am-row"><span>Bridge Session</span><Pill tone={sendAccess.global.bridge_session_state === 'active' ? 'green' : 'yellow'}>{sendAccess.global.bridge_session_state}</Pill></div>
             <div className="am-row"><span>Expires at</span><span className="am-muted">{sendAccess.global.expires_at || 'not active'}</span></div>
             <div className="am-row"><span>Sends remaining</span><span>{sendAccess.global.sends_remaining_per_agent}</span></div>
@@ -194,7 +199,7 @@ export default function AgentMailLocalControlPage() {
             <button className="am-button" type="button" disabled>Request Bridge Session</button>
             <button className="am-button" type="button" disabled>Revoke Bridge Session</button>
           </div>
-          <p className="am-muted">If the Action Bridge Session is active but sending is still blocked, the next exact blocker is usually scoped AgentMail inbox credential required, message_send permission missing, owner approval required, or Gateway policy blocked.</p>
+          <p className="am-muted">With no pending send request, AgentMail can be setup-ready while dispatch remains idle. Owner approval and an active Action Bridge Session are evaluated per message.</p>
         </div>
 
         <div className="am-panel am-full">
@@ -204,7 +209,7 @@ export default function AgentMailLocalControlPage() {
               <div className="am-row" key={agent.agent_id}>
                 <span>{agent.display_name}<span className="am-muted"> · {agent.gateway_policy} · {agent.inbox_id || 'inbox missing'} · Scoped Credential: {agent.scoped_credential?.key_masked || agent.credential_status}</span></span>
                 <span>
-                  <Pill tone={agent.send_ready ? 'green' : 'yellow'}>{agent.send_ready ? 'send-ready' : (agent.blockers[0] || 'blocked')}</Pill>{' '}
+                  <Pill tone={agent.approval_gated_send_capable ? 'green' : 'yellow'}>{agent.approval_gated_send_capable ? 'approval-gated ready' : (agent.blockers[0] || 'blocked')}</Pill>{' '}
                   <Pill tone={agent.credential_status === 'scoped' ? 'green' : 'red'}>{agent.credential_status}</Pill>
                 </span>
               </div>

@@ -1514,10 +1514,12 @@
   let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
   let canonicalTopology = null;
   let graphSyncStatus = null;
+  let graphTrafficSnapshot = null;
   let graphReadinessFetched = false;
   let nodeReadinessFetched = false;
   let topologyFetched = false;
   let syncStatusFetched = false;
+  let trafficFetched = false;
   let approvalCenterFetched = false;
   let approvalCenterItems = [];
   let approvalCenterProposals = Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : [];
@@ -1670,8 +1672,39 @@
     })[status] || 'gray';
   }
 
+  function trafficForEdge(edgeId) {
+    return graphTrafficSnapshot?.edges?.find(item => item.edge_id === edgeId) || null;
+  }
+
+  function trafficStateForStatus(status) {
+    return ({
+      active: 'live_recent',
+      ready_no_recent_traffic: 'ready_no_recent_traffic',
+      stale: 'telemetry_stale',
+      unavailable: 'traffic_data_unavailable',
+    })[status] || 'traffic_data_unavailable';
+  }
+
+  function trafficLabel(status) {
+    return ({
+      active: 'Active traffic',
+      ready_no_recent_traffic: 'Ready · no recent traffic',
+      stale: 'Telemetry stale',
+      unavailable: 'Traffic data unavailable',
+    })[status] || 'Traffic data unavailable';
+  }
+
   function edgeLabelFromTopology(edge) {
     if (!edge) return null;
+    const trafficEdge = trafficForEdge(edge.edge_id);
+    const trafficCounters = trafficEdge
+      ? {
+          events_last_60s: trafficEdge.events_last_60s || 0,
+          requests_last_60s: trafficEdge.requests_last_60s || 0,
+          bytes_in_last_60s: trafficEdge.bytes_in_last_60s || 0,
+          bytes_out_last_60s: trafficEdge.bytes_out_last_60s || 0,
+        }
+      : (edge.traffic || { events_last_60s: 0, requests_last_60s: 0, bytes_in_last_60s: 0, bytes_out_last_60s: 0 });
     return {
       edge_id: edge.edge_id,
       source: edge.source_label || edge.source_node_id || 'Gateway Dispatcher',
@@ -1683,14 +1716,18 @@
       blockers: Array.isArray(edge.blockers) ? edge.blockers : [],
       last_heartbeat_at: edge.last_heartbeat_at || null,
       last_success_at: edge.last_success_at || null,
-      last_event_at: edge.last_event_at || null,
+      last_event_at: trafficEdge?.last_event_at || edge.last_event_at || null,
+      last_request_at: trafficEdge?.last_request_at || null,
       next_action: edge.next_action || 'inspect_topology_data_sync',
       source_node_id: edge.source_node_id,
       target_node_id: edge.target_node_id,
       relationship: edge.relationship || 'structural',
       route_group: edge.route_group,
-      traffic_state: edge.traffic_state || 'traffic_data_unavailable',
-      traffic: edge.traffic || { events_last_60s: 0, requests_last_60s: 0, bytes_in_last_60s: 0, bytes_out_last_60s: 0 },
+      traffic_state: trafficEdge ? trafficStateForStatus(trafficEdge.traffic_status) : (edge.traffic_state || 'traffic_data_unavailable'),
+      traffic_status: trafficEdge?.traffic_status || 'unavailable',
+      traffic_label: trafficLabel(trafficEdge?.traffic_status || 'unavailable'),
+      telemetry_source: trafficEdge?.telemetry_source || null,
+      traffic: trafficCounters,
       critical: edge.status === 'blocked',
     };
   }
@@ -1790,7 +1827,7 @@
     edgeTooltip.innerHTML = `
       <div class="edge-title">${esc(readiness.source)} → ${esc(readiness.target)}</div>
       <div>status: <code>${esc(readiness.status)}</code> · color: <code>${esc(readiness.color)}</code></div>
-      <div>relationship: <code>${esc(readiness.relationship || 'readiness')}</code> · traffic: <code>${esc(readiness.traffic_state || 'traffic_data_unavailable')}</code></div>
+      <div>relationship: <code>${esc(readiness.relationship || 'readiness')}</code> · traffic: <code>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</code></div>
       <div>reason: <code>${esc(readiness.primary_reason)}</code></div>
       <div>next: ${esc(readiness.next_action || 'none')}</div>
     `;
@@ -1944,7 +1981,13 @@
       ['stale edges', (sync.stale_edges || []).join(', ') || 'none'],
       ['status mismatches', (sync.status_mismatches || []).join(', ') || 'none'],
       ['traffic mismatches', (sync.traffic_mismatches || []).join(', ') || 'none'],
-      ['traffic source', canonicalTopology?.traffic_data_source || 'traffic_data_unavailable'],
+      ['traffic source', graphTrafficSnapshot?.traffic_source || canonicalTopology?.traffic_data_source || 'traffic_data_unavailable'],
+      ['telemetry snapshot id', graphTrafficSnapshot?.telemetry_snapshot_id || 'none'],
+      ['active traffic edges', String(graphTrafficSnapshot?.summary?.active_traffic_edges || 0)],
+      ['ready/no-recent traffic edges', String(graphTrafficSnapshot?.summary?.ready_no_recent_traffic_edges || 0)],
+      ['stale telemetry edges', String(graphTrafficSnapshot?.summary?.stale_telemetry_edges || 0)],
+      ['unavailable telemetry edges', String(graphTrafficSnapshot?.summary?.unavailable_telemetry_edges || 0)],
+      ['last telemetry fetch', graphTrafficSnapshot?.generated_at || 'none'],
       ['last live fetch', sync.last_live_fetch_at || canonicalTopology?.generated_at || 'none'],
       ['last static fallback', sync.last_static_fallback_at || 'none'],
       ['primary blocker', sync.primary_blocker || (topologyFetched ? 'none' : 'topology_data_unavailable')],
@@ -1982,7 +2025,8 @@
           <dt>Visual edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'none')}</dd>
           <dt>Data edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'edge_mapping_missing')}</dd>
           <dt>Relationship</dt><dd>${esc(readiness.relationship || 'readiness')}</dd>
-          <dt>traffic status</dt><dd>${esc(readiness.traffic_state || 'traffic_data_unavailable')}</dd>
+          <dt>traffic status</dt><dd>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</dd>
+          <dt>Telemetry source</dt><dd>${esc(readiness.telemetry_source || 'none')}</dd>
           <dt>Traffic counters</dt><dd>${esc(`${readiness.traffic?.events_last_60s || 0} events · ${readiness.traffic?.requests_last_60s || 0} requests`)}</dd>
           <dt>Source node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_node_id || 'not reported')}</dd>
           <dt>Target node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.target_node_id || 'not reported')}</dd>
@@ -2223,6 +2267,58 @@
         });
     } catch (err) {
       renderTopologyDataSync(['gateway_graph_sync_status_unavailable']);
+    }
+  }
+
+  function fetchGraphTraffic() {
+    try {
+      fetch('/api/gateway/graph/traffic', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.edges) || !payload.summary) {
+            throw new Error('gateway_graph_traffic_unavailable');
+          }
+          trafficFetched = true;
+          graphTrafficSnapshot = payload;
+          try { localStorage.setItem('gateway_graph_traffic_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+          drawEdges();
+          startLiveTrafficOverlay();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_traffic_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload?.edges) {
+            trafficFetched = true;
+            graphTrafficSnapshot = Object.assign({}, fallbackPayload, {
+              traffic_source: 'unavailable',
+              summary: Object.assign({}, fallbackPayload.summary || {}, {
+                active_traffic_edges: 0,
+                stale_telemetry_edges: (fallbackPayload.summary?.stale_telemetry_edges || 0) + (fallbackPayload.summary?.active_traffic_edges || 0),
+              }),
+              edges: fallbackPayload.edges.map(edge => Object.assign({}, edge, {
+                events_last_60s: 0,
+                requests_last_60s: 0,
+                bytes_in_last_60s: 0,
+                bytes_out_last_60s: 0,
+                traffic_status: edge.traffic_status === 'active' ? 'stale' : edge.traffic_status,
+                primary_reason: edge.traffic_status === 'active' ? 'telemetry_stale' : edge.primary_reason,
+              })),
+            });
+          } else {
+            trafficFetched = false;
+            graphTrafficSnapshot = null;
+          }
+          renderTopologyDataSync(['gateway_graph_traffic_unavailable']);
+          drawEdges();
+          startLiveTrafficOverlay();
+        });
+    } catch (err) {
+      trafficFetched = false;
+      graphTrafficSnapshot = null;
+      renderTopologyDataSync(['gateway_graph_traffic_unavailable']);
+      drawEdges();
     }
   }
 
@@ -2952,6 +3048,7 @@
   fetchEdgeReadiness();
   fetchTopology();
   fetchGraphSyncStatus();
+  fetchGraphTraffic();
   fetchApprovalCenter();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle
@@ -3288,20 +3385,36 @@
   let trafficOn = true;
   let trafficTimer = null;
   function liveTrafficEdges() {
-    return (canonicalTopology?.edges || []).filter(edge => {
-      const traffic = edge.traffic || {};
-      return (Number(traffic.events_last_60s) || 0) + (Number(traffic.requests_last_60s) || 0) > 0;
-    });
+    if (!graphTrafficSnapshot || graphTrafficSnapshot.traffic_source === 'unavailable') return [];
+    return (graphTrafficSnapshot.edges || [])
+      .filter(edge => edge.traffic_status === 'active' && ((Number(edge.events_last_60s) || 0) + (Number(edge.requests_last_60s) || 0) > 0))
+      .map(edge => {
+        const topologyEdge = canonicalTopology?.edges?.find(item => item.edge_id === edge.edge_id) || {};
+        return Object.assign({}, topologyEdge, {
+          edge_id: edge.edge_id,
+          source_node_id: edge.source_node_id || topologyEdge.source_node_id,
+          target_node_id: edge.target_node_id || topologyEdge.target_node_id,
+          relationship: topologyEdge.relationship || 'traffic',
+          traffic: {
+            events_last_60s: edge.events_last_60s || 0,
+            requests_last_60s: edge.requests_last_60s || 0,
+            bytes_in_last_60s: edge.bytes_in_last_60s || 0,
+            bytes_out_last_60s: edge.bytes_out_last_60s || 0,
+          },
+        });
+      });
   }
   function startLiveTrafficOverlay() {
-    // Live traffic beams are driven only by trusted topology traffic counters.
+    // Topology defines edge IDs; live traffic beams are driven only by trusted topology traffic counters from telemetry.
+    // Live traffic beams are driven only by trusted telemetry counters.
     // Static DEMO_REQUEST_STREAM data is kept as non-live sample data and is not proof of movement.
     stopTraffic();
     const liveEdges = liveTrafficEdges();
     if (!trafficOn) return;
     if (!liveEdges.length) {
       wrap.classList.add('is-idle');
-      if (topologyFetched) showToast('No live traffic proof available');
+      if (trafficFetched && graphTrafficSnapshot?.traffic_source === 'unavailable') showToast('Traffic data unavailable');
+      else if (trafficFetched) showToast('No live traffic proof available');
       return;
     }
     wrap.classList.remove('is-idle');

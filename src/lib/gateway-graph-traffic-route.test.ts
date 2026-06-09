@@ -1,0 +1,58 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
+
+const authMock = vi.hoisted(() => {
+  type AuthResult = { error: string; status: number } | { user: { role: string } }
+  return {
+    requireRole: vi.fn<() => AuthResult>(() => ({ error: 'Authentication required', status: 401 })),
+  }
+})
+
+vi.mock('@/lib/auth', () => authMock)
+
+describe('/api/gateway/graph/traffic route', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    authMock.requireRole.mockReset()
+    authMock.requireRole.mockReturnValue({ error: 'Authentication required', status: 401 })
+  })
+
+  it('returns 401 to unauthenticated callers', async () => {
+    const route = await import('@/app/api/gateway/graph/traffic/route')
+    const response = await route.GET(new NextRequest('http://localhost/api/gateway/graph/traffic'))
+
+    expect(response.status).toBe(401)
+  })
+
+  it('returns a sanitized read-only traffic snapshot for authenticated viewers', async () => {
+    authMock.requireRole.mockReturnValue({ user: { role: 'viewer' } })
+    const route = await import('@/app/api/gateway/graph/traffic/route')
+    const response = await route.GET(new NextRequest('http://localhost/api/gateway/graph/traffic'))
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    expect(authMock.requireRole).toHaveBeenCalledWith(expect.any(NextRequest), 'viewer')
+    expect(payload).toMatchObject({
+      ok: true,
+      source: 'gateway_graph_traffic',
+      traffic_source: expect.stringMatching(/^(live|partial|unavailable)$/),
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+      external_writes_executed: false,
+      broad_connector_execution_enabled: false,
+    })
+    expect(payload.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        edge_id: 'model.openrouter_to_gateway',
+        events_last_60s: expect.any(Number),
+        requests_last_60s: expect.any(Number),
+        traffic_status: expect.stringMatching(/^(active|ready_no_recent_traffic|unavailable|stale)$/),
+      }),
+    ]))
+    expect(JSON.stringify(payload)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
+  })
+})

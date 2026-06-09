@@ -24,9 +24,15 @@ describe('Zapier approved action library and Gateway copy', () => {
 
     expect(library.status).toBe('CONNECTED_CONFIGURED')
     expect(library.card_copy).toMatchObject({
-      status: 'Connected / configured',
-      detail: 'Certified exact-scope Zapier actions are available.',
-      guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.',
+      status: 'Zapier discovery ready · writes guarded',
+      detail: 'Zapier read/discovery scopes are always on. Writes require an active standing approved scope.',
+      guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution remain blocked outside explicit owner-approved scopes.',
+    })
+    expect(library.standing_scope_summary).toMatchObject({
+      active_scopes: 1,
+      read_only_scopes: 1,
+      execution_scopes: 0,
+      writes_enabled: false,
     })
     expect(library.actions.map((action) => action.action)).toEqual([
       'zapier.connection_probe',
@@ -73,9 +79,9 @@ describe('Zapier approved action library and Gateway copy', () => {
   it('uses neutral connected copy on the Gateway Zapier card and static graph data', () => {
     const zapier = AGENT_INTERFACE_LINKS.find((row) => row.name === 'Zapier')
     expect(zapier).toMatchObject({
-      status: 'Connected / configured',
-      detail: 'Certified exact-scope Zapier actions are available.',
-      guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.',
+      status: 'Zapier discovery ready · writes guarded',
+      detail: 'Zapier read/discovery scopes are always on. Writes require an active standing approved scope.',
+      guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution remain blocked outside explicit owner-approved scopes.',
     })
     expect(zapier?.blocker).toBe('')
 
@@ -83,9 +89,10 @@ describe('Zapier approved action library and Gateway copy', () => {
     const dropinGraph = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/gateway-data.js'), 'utf8')
     for (const graph of [rootGraph, dropinGraph]) {
       expect(graph).toContain("id: 'int.zapier'")
-      expect(graph).toContain("summary: 'Certified exact-scope Zapier actions are available.'")
-      expect(graph).toContain("guardrail_reason: 'Broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.'")
+      expect(graph).toContain("summary: 'Zapier discovery ready · writes guarded.'")
+      expect(graph).toContain("primary_reason: 'zapier_discovery_ready_writes_guarded'")
       expect(graph).not.toContain('Broad Zapier execution, Zap creation, and social posting remain blocked outside certified exact adapter scope')
+      expect(graph).not.toContain('Owner pre-approval required per execution scope')
       expect(graph).not.toContain('credential_required')
       expect(graph).not.toContain('adapter_missing')
     }

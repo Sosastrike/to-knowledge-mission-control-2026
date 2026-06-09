@@ -1,3 +1,9 @@
+import {
+  buildZapierStandingScopes,
+  ZAPIER_DISCOVERY_ACTIONS,
+  ZAPIER_DISCOVERY_SCOPE_ID,
+} from './zapier-standing-scopes'
+
 export type ZapierApprovedActionState =
   | 'certified_available'
   | 'prepared_internal_only'
@@ -8,6 +14,7 @@ export type ZapierApprovedAction = {
   adapter_id: 'zapier_exact_action_execute'
   action: string
   state: ZapierApprovedActionState
+  standing_scope_ids: string[]
   input_schema: Record<string, unknown>
   allowed_target: string
   audit_required: true
@@ -20,9 +27,9 @@ export type ZapierApprovedAction = {
 }
 
 export const ZAPIER_GATEWAY_CARD_COPY = {
-  status: 'Connected / configured',
-  detail: 'Certified exact-scope Zapier actions are available.',
-  guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution require approved scope.',
+  status: 'Zapier discovery ready · writes guarded',
+  detail: 'Zapier read/discovery scopes are always on. Writes require an active standing approved scope.',
+  guardrail: 'Broad Zap creation, live social posting, and arbitrary Zapier execution remain blocked outside explicit owner-approved scopes.',
 } as const
 
 const commonForbiddenActions = [
@@ -33,7 +40,8 @@ const commonForbiddenActions = [
   'unscoped external write',
 ]
 
-function action(input: Omit<ZapierApprovedAction, 'adapter_id' | 'audit_required' | 'broad_action_refusal_proof' | 'writes_enabled' | 'credential_values_exposed' | 'forbidden_actions'>): ZapierApprovedAction {
+function action(input: Omit<ZapierApprovedAction, 'adapter_id' | 'audit_required' | 'broad_action_refusal_proof' | 'writes_enabled' | 'credential_values_exposed' | 'forbidden_actions' | 'standing_scope_ids'>): ZapierApprovedAction {
+  const isDiscoveryScopeAction = ZAPIER_DISCOVERY_ACTIONS.some((actionName) => actionName === input.action)
   return {
     adapter_id: 'zapier_exact_action_execute',
     audit_required: true,
@@ -41,6 +49,9 @@ function action(input: Omit<ZapierApprovedAction, 'adapter_id' | 'audit_required
     writes_enabled: false,
     credential_values_exposed: false,
     forbidden_actions: [...commonForbiddenActions],
+    standing_scope_ids: isDiscoveryScopeAction
+      ? [ZAPIER_DISCOVERY_SCOPE_ID]
+      : [],
     ...input,
   }
 }
@@ -181,10 +192,14 @@ export const ZAPIER_APPROVED_ACTIONS: ZapierApprovedAction[] = [
 
 export function buildZapierApprovedActionLibrary() {
   const certifiedActions = ZAPIER_APPROVED_ACTIONS.filter((item) => item.state === 'certified_available')
+  const standingScopes = buildZapierStandingScopes()
   return {
     route: 'bridge.zapier.approved-actions',
     status: 'CONNECTED_CONFIGURED',
     card_copy: ZAPIER_GATEWAY_CARD_COPY,
+    zapier_runtime: standingScopes.zapier_runtime,
+    standing_scopes: standingScopes.standing_scopes,
+    standing_scope_summary: standingScopes.standing_scope_summary,
     adapter_id: 'zapier_exact_action_execute',
     canonical_execution_route: '/api/bridge/agent-zero/execute',
     actions: ZAPIER_APPROVED_ACTIONS.map((item) => ({ ...item })),

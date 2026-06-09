@@ -21,42 +21,101 @@ window.GW = (function () {
     return e;
   }
 
-  function statusPill(status, label) {
-    const text = label || G.STATUS[status]?.label || status;
-    return el('span', { class: `pill ${status}` }, el('span', { class: 'dot' }), text);
+  function cssStatusForColor(colorOrStatus) {
+    return colorOrStatus === 'cyan' ? 'blue' : (colorOrStatus || 'gray');
   }
 
-  function rwx(node) {
+  function statusPill(status, label) {
+    const cssStatus = cssStatusForColor(status);
+    const text = label || G.STATUS[cssStatus]?.label || status;
+    return el('span', { class: `pill ${cssStatus}` }, el('span', { class: 'dot' }), text);
+  }
+
+  function nodeReadiness(node) {
+    if (!node) return null;
+    if (node.node_readiness) return node.node_readiness;
+    if (G.getNodeReadiness) return G.getNodeReadiness(node.id);
+    return null;
+  }
+
+  function readinessCssStatus(readiness, fallbackStatus) {
+    if (!readiness) return cssStatusForColor(fallbackStatus || 'gray');
+    return cssStatusForColor(readiness.color || readiness.status);
+  }
+
+  function readinessColor(readiness, fallbackStatus) {
+    if (!readiness) return G.statusColor(fallbackStatus || 'gray');
+    return ({
+      green: 'var(--st-green)',
+      cyan: 'var(--brand-cyan)',
+      yellow: 'var(--st-yellow)',
+      gray: 'var(--st-gray)',
+      red: 'var(--st-red)',
+    })[readiness.color] || G.statusColor(cssStatusForColor(readiness.color || fallbackStatus || 'gray'));
+  }
+
+  function guardedWrite(readiness) {
+    if (!readiness) return false;
+    return readiness.approval_required === true && readiness.write_ready !== true;
+  }
+
+  function guardedExecute(readiness) {
+    if (!readiness) return false;
+    return readiness.approval_required === true && readiness.execute_ready !== true;
+  }
+
+  function rwx(node, readiness = nodeReadiness(node)) {
+    const readOn = readiness ? readiness.read_ready === true : Boolean(node.R);
+    const writeOn = readiness ? readiness.write_ready === true : Boolean(node.W);
+    const executeOn = readiness ? readiness.execute_ready === true : Boolean(node.X);
     return el('div', { class: 'rwx', title: 'Read · Write · Execute' },
-      el('span', { class: `rwx-pill r ${node.R ? 'on' : ''}` }, 'R'),
-      el('span', { class: `rwx-pill w ${node.W ? 'on' : ''}` }, 'W'),
-      el('span', { class: `rwx-pill x ${node.X ? 'on' : ''}` }, 'X'),
+      el('span', { class: `rwx-pill r ${readOn ? 'on' : ''}` }, 'R'),
+      el('span', { class: `rwx-pill w ${writeOn ? 'on' : guardedWrite(readiness) ? 'guarded' : ''}` }, 'W'),
+      el('span', { class: `rwx-pill x ${executeOn ? 'on' : guardedExecute(readiness) ? 'guarded' : ''}` }, 'X'),
     );
   }
 
   function lockBadge() {
-    return el('span', { class: 'bridge-lock', title: 'Requires Bridge Session', html:
+    return el('span', { class: 'bridge-lock', title: 'Writes/execution guarded by Gateway policy and owner approval', html:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
     });
   }
 
   /* ---- Node card ---- */
   function nodeCard(node, opts = {}) {
-    const card = el('div', { class: `node-card status-${node.status} type-${node.type}`, 'data-id': node.id, 'data-status': node.status });
+    const readiness = nodeReadiness(node);
+    const cssStatus = readinessCssStatus(readiness, node.status);
+    const dotColor = readinessColor(readiness, node.status);
+    const summary = readiness?.short_label || node.summary || '';
+    const card = el('div', {
+      class: `node-card status-${cssStatus} type-${node.type}`,
+      'data-id': node.id,
+      'data-status': cssStatus,
+      'data-node-readiness-status': readiness?.status || '',
+      'data-node-readiness-color': readiness?.color || '',
+      'data-node-readiness-reason': readiness?.primary_reason || '',
+    });
     const head = el('div', { class: 'nc-head' });
-    head.appendChild(el('div', { class: 'nc-dot', style: { background: G.statusColor(node.status) } }));
+    head.appendChild(el('div', { class: 'nc-dot', style: { background: dotColor } }));
     head.appendChild(el('div', { class: 'nc-name' }, node.name));
-    if (node.bridge) head.appendChild(lockBadge());
+    if (node.bridge || readiness?.approval_required) head.appendChild(lockBadge());
     card.appendChild(head);
 
     if (node.role) {
       card.appendChild(el('div', { class: 'nc-role' }, node.role));
     }
 
-    card.appendChild(rwx(node));
+    if (readiness) {
+      card.appendChild(el('div', { class: 'nc-statusline' },
+        statusPill(readiness.color, readiness.status),
+        el('span', { class: 'nc-reason', title: readiness.primary_reason }, readiness.primary_reason || ''),
+      ));
+    }
+
+    card.appendChild(rwx(node, readiness));
 
     if (!opts.compact) {
-      card.appendChild(el('div', { class: 'nc-summary' }, node.summary || ''));
+      card.appendChild(el('div', { class: 'nc-summary' }, summary));
     }
 
     const foot = el('div', { class: 'nc-foot' });
@@ -64,8 +123,11 @@ window.GW = (function () {
     if (node.cacheAge) foot.appendChild(el('span', { class: 'nc-cache' }, `cache ${node.cacheAge}`));
     card.appendChild(foot);
 
-    if (node.blocked_reason) {
-      card.appendChild(el('div', { class: 'nc-blocker' }, '⚠ ' + node.blocked_reason));
+    const blocker = readiness?.status === 'blocked'
+      ? readiness.primary_reason
+      : node.blocked_reason;
+    if (blocker) {
+      card.appendChild(el('div', { class: 'nc-blocker' }, '⚠ ' + blocker));
     }
 
     return card;
@@ -126,5 +188,5 @@ window.GW = (function () {
     return nav;
   }
 
-  return { el, statusPill, rwx, lockBadge, nodeCard, topbar, pagenav, NAV_ITEMS };
+  return { el, statusPill, rwx, lockBadge, nodeCard, topbar, pagenav, NAV_ITEMS, nodeReadiness, readinessCssStatus, readinessColor };
 })();

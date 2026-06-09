@@ -1097,24 +1097,35 @@
   // Lane mounts
   function mountInto(elId, nodes, opts) {
     const target = document.getElementById(elId);
+    if (!target) return;
+    target.innerHTML = '';
     nodes.forEach(n => target.appendChild(GW.nodeCard(n, opts)));
   }
-  mountInto('lane-brain',        G.byLane('top_brain'));
-  mountInto('lane-inputs',       G.byLane('left_input'));
-  mountInto('lane-integrations', G.byLane('right_integration'));
-  mountInto('lane-models',       G.byLane('bottom_model'), { compact: true });
-  mountInto('lane-near-l',       [G.get('agent.zero')]);
-  mountInto('lane-near-r',       [G.get('agent.hermes')]);
+  function mountAllNodes() {
+    mountInto('lane-brain',        G.byLane('top_brain'));
+    mountInto('lane-inputs',       G.byLane('left_input'));
+    mountInto('lane-integrations', G.byLane('right_integration'));
+    mountInto('lane-models',       G.byLane('bottom_model'), { compact: true });
+    mountInto('lane-near-l',       [G.get('agent.zero')].filter(Boolean));
+    mountInto('lane-near-r',       [G.get('agent.hermes')].filter(Boolean));
+  }
+  mountAllNodes();
 
   // ---- Inspector ----
   const inspector = document.getElementById('inspector');
   const edgeTooltip = document.getElementById('edge-tooltip');
   let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
+  let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
   let graphReadinessFetched = false;
+  let nodeReadinessFetched = false;
   let graphHealth = Object.assign({}, G.GRAPH_HEALTH || {}, {
     readiness_feed: G.GRAPH_HEALTH?.readiness_feed || 'healthy',
     graph_data_source: G.GRAPH_HEALTH?.graph_data_source || 'static fallback',
-    static_asset_version: G.GRAPH_HEALTH?.static_asset_version || 'gateway-edge-readiness-v2',
+    static_asset_version: G.GRAPH_HEALTH?.static_asset_version || 'gateway-node-readiness-v1',
+    edge_static_asset_version: G.GRAPH_HEALTH?.edge_static_asset_version || 'gateway-edge-readiness-v2',
+    node_count_expected: G.GRAPH_HEALTH?.node_count_expected || G.NODES.length,
+    node_count_returned: G.GRAPH_HEALTH?.node_count_returned || runtimeNodeReadiness.length,
+    node_mapping_errors: G.GRAPH_HEALTH?.node_mapping_errors || [],
   });
 
   function esc(value) {
@@ -1169,6 +1180,42 @@
     return fallback;
   }
 
+  function nodeReadinessFor(node) {
+    if (!node) return null;
+    const runtimeMatch = runtimeNodeReadiness.find(item => item.node_id === node.id);
+    if (runtimeMatch) return runtimeMatch;
+    if (node.node_readiness) return node.node_readiness;
+    if (G.getNodeReadiness) return G.getNodeReadiness(node.id);
+    if (nodeReadinessFetched) {
+      return {
+        node_id: node.id,
+        label: node.name,
+        domain: node.type || 'connector',
+        status: 'degraded',
+        color: 'yellow',
+        primary_reason: 'node_status_missing',
+        short_label: 'Node status missing',
+        next_action: 'refresh_gateway_graph_node_readiness_or_check_node_id_mapping',
+        read_ready: Boolean(node.R),
+        write_ready: false,
+        execute_ready: false,
+        approval_required: true,
+        last_success_at: node.lastSuccess || null,
+        last_heartbeat_at: null,
+      };
+    }
+    return null;
+  }
+
+  function applyRuntimeNodeReadiness(nodes) {
+    const byId = new Map(nodes.map(item => [item.node_id, item]));
+    G.NODES.forEach(node => {
+      const readiness = byId.get(node.id);
+      if (readiness) node.node_readiness = readiness;
+      else if (nodeReadinessFetched) node.node_readiness = nodeReadinessFor(node);
+    });
+  }
+
   function moveEdgeTooltip(e) {
     if (!edgeTooltip) return;
     const pad = 14;
@@ -1213,19 +1260,26 @@
     const panel = document.getElementById('graph-health');
     const target = document.getElementById('graph-health-list');
     if (!panel || !target) return;
-    const mappingErrors = Array.from(new Set([...(graphHealth.edge_mapping_errors || []), ...(extraMappingErrors || [])]));
-    const health = Object.assign({}, graphHealth, { edge_mapping_errors: mappingErrors });
+    const edgeMappingErrors = Array.from(new Set([...(graphHealth.edge_mapping_errors || []), ...(extraMappingErrors || [])]));
+    const nodeMappingErrors = Array.from(new Set([...(graphHealth.node_mapping_errors || [])]));
+    const health = Object.assign({}, graphHealth, {
+      edge_mapping_errors: edgeMappingErrors,
+      node_mapping_errors: nodeMappingErrors,
+    });
     panel.classList.toggle('failed', health.readiness_feed === 'failed');
-    panel.classList.toggle('degraded', health.readiness_feed === 'degraded' || mappingErrors.length > 0);
+    panel.classList.toggle('degraded', health.readiness_feed === 'degraded' || edgeMappingErrors.length > 0 || nodeMappingErrors.length > 0);
     const rows = [
       ['readiness feed', health.readiness_feed || 'unknown'],
       ['last fetch', health.last_successful_readiness_fetch || 'none'],
       ['data source', health.graph_data_source || 'static fallback'],
       ['edge count', `${health.edge_count_returned || runtimeEdgeReadiness.length}/${health.edge_count_expected || G.EDGES.length}`],
-      ['mapping errors', mappingErrors.length ? mappingErrors.join(', ') : 'none'],
+      ['node count', `${health.node_count_returned || runtimeNodeReadiness.length}/${health.node_count_expected || G.NODES.length}`],
+      ['edge mapping errors', edgeMappingErrors.length ? edgeMappingErrors.join(', ') : 'none'],
+      ['node mapping errors', nodeMappingErrors.length ? nodeMappingErrors.join(', ') : 'none'],
       ['model readiness', health.model_readiness || 'unknown'],
       ['connector readiness', health.connector_readiness || 'unknown'],
-      ['asset version', health.static_asset_version || 'unknown'],
+      ['node asset', health.static_asset_version || 'unknown'],
+      ['edge asset', health.edge_static_asset_version || 'unknown'],
     ];
     target.innerHTML = rows.map(([label, value]) => `
       <div class="gh-row">
@@ -1287,13 +1341,14 @@
           graphReadinessFetched = true;
           runtimeEdgeReadiness = payload.edges;
           if (Array.isArray(payload.legend)) G.EDGE_LEGEND = payload.legend;
-          graphHealth = Object.assign({}, payload.graph_health || {}, {
+          graphHealth = Object.assign({}, graphHealth, payload.graph_health || {}, {
             readiness_feed: payload.graph_health?.readiness_feed || 'healthy',
             last_successful_readiness_fetch: payload.graph_health?.last_successful_readiness_fetch || payload.generated_at || null,
             graph_data_source: 'live',
             edge_count_expected: payload.graph_health?.edge_count_expected || G.EDGES.length,
             edge_count_returned: payload.edges.length,
-            static_asset_version: payload.graph_health?.static_asset_version || 'gateway-edge-readiness-v2',
+            static_asset_version: graphHealth.static_asset_version || 'gateway-node-readiness-v1',
+            edge_static_asset_version: payload.graph_health?.static_asset_version || payload.graph_health?.edge_static_asset_version || 'gateway-edge-readiness-v2',
           });
           try { localStorage.setItem('gateway_edge_readiness_last_good', JSON.stringify(payload)); } catch (e) {}
           renderEdgeLegend();
@@ -1307,10 +1362,11 @@
           if (fallbackPayload && Array.isArray(fallbackPayload.edges)) {
             runtimeEdgeReadiness = fallbackPayload.edges;
             graphReadinessFetched = true;
-            graphHealth = Object.assign({}, fallbackPayload.graph_health || {}, {
+            graphHealth = Object.assign({}, graphHealth, fallbackPayload.graph_health || {}, {
               readiness_feed: 'degraded',
               graph_data_source: 'last-known',
-              static_asset_version: 'gateway-edge-readiness-v2',
+              static_asset_version: graphHealth.static_asset_version || 'gateway-node-readiness-v1',
+              edge_static_asset_version: 'gateway-edge-readiness-v2',
             });
           } else {
             graphReadinessFetched = false;
@@ -1333,30 +1389,114 @@
     }
   }
 
+  function fetchNodeReadiness() {
+    try {
+      fetch('/api/gateway/graph/node-readiness', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.nodes)) {
+            throw new Error('graph_node_readiness_unavailable');
+          }
+          nodeReadinessFetched = true;
+          runtimeNodeReadiness = payload.nodes;
+          applyRuntimeNodeReadiness(runtimeNodeReadiness);
+          const knownIds = new Set(G.NODES.map(node => node.id));
+          const nodeMappingErrors = runtimeNodeReadiness
+            .filter(item => !knownIds.has(item.node_id))
+            .map(item => `node_mapping_mismatch:${item.node_id}`);
+          graphHealth = Object.assign({}, graphHealth, payload.graph_health || {}, {
+            readiness_feed: payload.graph_health?.readiness_feed || graphHealth.readiness_feed || 'healthy',
+            last_successful_readiness_fetch: payload.graph_health?.last_successful_readiness_fetch || payload.generated_at || graphHealth.last_successful_readiness_fetch || null,
+            graph_data_source: 'live',
+            node_count_expected: payload.graph_health?.node_count_expected || G.NODES.length,
+            node_count_returned: payload.nodes.length,
+            node_mapping_errors: nodeMappingErrors,
+            static_asset_version: payload.graph_health?.static_asset_version || 'gateway-node-readiness-v1',
+          });
+          try { localStorage.setItem('gateway_node_readiness_last_good', JSON.stringify(payload)); } catch (e) {}
+          mountAllNodes();
+          renderGraphHealth();
+          drawEdges();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_node_readiness_last_good') || 'null'); } catch (e) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.nodes)) {
+            runtimeNodeReadiness = fallbackPayload.nodes;
+            nodeReadinessFetched = true;
+            applyRuntimeNodeReadiness(runtimeNodeReadiness);
+            graphHealth = Object.assign({}, graphHealth, fallbackPayload.graph_health || {}, {
+              readiness_feed: 'degraded',
+              graph_data_source: 'last-known',
+              static_asset_version: 'gateway-node-readiness-v1',
+            });
+            mountAllNodes();
+          } else {
+            nodeReadinessFetched = false;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+              graph_data_source: graphHealth.graph_data_source || 'static fallback',
+              node_mapping_errors: ['graph_node_readiness_unavailable'],
+            });
+          }
+          renderGraphHealth();
+          drawEdges();
+        });
+    } catch (err) {
+      graphHealth = Object.assign({}, graphHealth, {
+        readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+        graph_data_source: graphHealth.graph_data_source || 'static fallback',
+        node_mapping_errors: ['graph_node_readiness_unavailable'],
+      });
+      renderGraphHealth();
+    }
+  }
+
   function openInspector(id) {
     let n = G.get(id);
     if (!n && id === 'gateway.core') n = G.get('gateway.core');
     if (!n) return;
-    document.getElementById('ins-dot').style.background = G.statusColor(n.status);
+    const readiness = nodeReadinessFor(n);
+    const cssStatus = readiness ? GW.readinessCssStatus(readiness, n.status) : n.status;
+    document.getElementById('ins-dot').style.background = readiness ? GW.readinessColor(readiness, n.status) : G.statusColor(n.status);
     document.getElementById('ins-name').textContent = n.name;
     const pills = document.getElementById('ins-pills');
     pills.innerHTML = '';
-    pills.appendChild(GW.statusPill(n.status));
-    const rwxWrap = GW.rwx(n);
+    pills.appendChild(GW.statusPill(readiness?.color || cssStatus, readiness?.status || undefined));
+    if (readiness?.domain) pills.appendChild(GW.statusPill('blue', readiness.domain));
+    const rwxWrap = GW.rwx(n, readiness);
     pills.appendChild(rwxWrap);
-    if (n.bridge) pills.appendChild(GW.lockBadge());
+    if (n.bridge || readiness?.approval_required) pills.appendChild(GW.lockBadge());
     const body = document.getElementById('ins-body');
     body.innerHTML = '';
-    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${n.summary || ''}</p>` }));
-    if (n.blocked_reason) {
-      body.appendChild(GW.el('div', { class: 'nc-blocker', style: { marginTop: '12px', fontSize: '12px' }, html: '⚠ ' + n.blocked_reason }));
+    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${esc(readiness?.short_label || n.summary || '')}</p>` }));
+    const blocker = readiness?.status === 'blocked' ? readiness.primary_reason : n.blocked_reason;
+    if (blocker) {
+      body.appendChild(GW.el('div', { class: 'nc-blocker', style: { marginTop: '12px', fontSize: '12px' }, html: '⚠ ' + esc(blocker) }));
     }
+    const readReady = readiness ? readiness.read_ready === true : Boolean(n.R);
+    const writeReady = readiness ? readiness.write_ready === true : Boolean(n.W);
+    const executeReady = readiness ? readiness.execute_ready === true : Boolean(n.X);
+    const guarded = readiness ? readiness.approval_required === true : Boolean(n.bridge);
+    body.appendChild(GW.el('div', { class: 'ins-section', html: `
+      <h4>Node readiness</h4>
+      <dl class="kv">
+        <dt>Mode</dt><dd>${esc(readiness?.status || 'unknown')}</dd>
+        <dt>Color</dt><dd>${esc(readiness?.color || cssStatus || 'unknown')}</dd>
+        <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness?.primary_reason || 'legacy_status_only')}</dd>
+        <dt>Next action</dt><dd>${esc(readiness?.next_action || 'none')}</dd>
+        <dt>Last heartbeat</dt><dd>${esc(readiness?.last_heartbeat_at || 'none')}</dd>
+        <dt>Last success</dt><dd>${esc(readiness?.last_success_at || n.lastSuccess || '—')}</dd>
+      </dl>
+      <p style="margin:10px 0 0;color:var(--t-3);font-size:12px;">Node registered, edge status is evaluated separately.</p>
+    `}));
     body.appendChild(GW.el('div', { class: 'ins-section', html: `
       <h4>Capabilities (R / W / X)</h4>
       <div class="bool-grid">
-        <div class="bool-cell ${n.R?'on':'off'}"><span class="lbl">Read</span><span class="val">${n.R?'enabled':'off'}</span></div>
-        <div class="bool-cell ${n.W?'on':'off'}"><span class="lbl">Write</span><span class="val">${n.W?'enabled':'off'}</span></div>
-        <div class="bool-cell ${n.X?'on':'off'}"><span class="lbl">Execute</span><span class="val">${n.X?'enabled':'off'}</span></div>
+        <div class="bool-cell ${readReady ? 'on' : 'off'}"><span class="lbl">Read</span><span class="val">${readReady ? 'ready' : 'off'}</span></div>
+        <div class="bool-cell ${writeReady ? 'on' : 'off'}"><span class="lbl">Write</span><span class="val">${writeReady ? 'ready' : (guarded ? 'guarded' : 'off')}</span></div>
+        <div class="bool-cell ${executeReady ? 'on' : 'off'}"><span class="lbl">Execute</span><span class="val">${executeReady ? 'ready' : (guarded ? 'guarded' : 'off')}</span></div>
       </div>
     `}));
     body.appendChild(GW.el('div', { class: 'ins-section', html: `
@@ -1364,7 +1504,7 @@
       <dl class="kv">
         <dt>Connected</dt><dd>${n.connected?'yes':'no'}</dd>
         <dt>Configured</dt><dd>${n.configured?'yes':'no'}</dd>
-        <dt>Bridge required</dt><dd>${n.bridge?'yes — for write/execute':'no'}</dd>
+        <dt>Approval required</dt><dd>${readiness?.approval_required ? 'yes — write/execute guarded' : (n.bridge?'yes — for write/execute':'no')}</dd>
         <dt>Last success</dt><dd>${n.lastSuccess || '—'}</dd>
         <dt>Cache age</dt><dd>${n.cacheAge || '—'}</dd>
       </dl>
@@ -1460,6 +1600,7 @@
     renderGraphHealth(mappingErrors);
   }
   drawEdges();
+  fetchNodeReadiness();
   fetchEdgeReadiness();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle

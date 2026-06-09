@@ -465,7 +465,7 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     detail: ZAPIER_GATEWAY_CARD_COPY.detail,
     guardrail: ZAPIER_GATEWAY_CARD_COPY.guardrail,
     blocker: '',
-    nextFix: 'Use /api/bridge/zapier/approved-actions to inspect the exact approved-action library. Jarvis still executes only through /api/bridge/agent-zero/execute.',
+    nextFix: 'Use /api/bridge/zapier/status or /api/bridge/zapier/approved-actions to inspect standing scopes. Writes remain blocked unless an exact active execution scope applies.',
     buttons: {
       ui: disabled('Zapier has no owner UI embedded in Mission Control; use the Gateway tools/status surfaces.'),
       config: enabled(GATEWAY_TOOLS_ROUTE),
@@ -1587,7 +1587,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
           <article className="control-card">
             <strong>Zapier visibility</strong>
-            <span>Zapier is visible in Gateway and connected/configured. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary execution require approved scope.</span>
+            <span>Zapier discovery/status is visible in Gateway and always-on read-only. Broad Zap creation, live social posting, and arbitrary execution remain blocked outside explicit owner-approved scopes.</span>
           </article>
           <article className="control-card">
             <strong>Bridge-gated tools</strong>

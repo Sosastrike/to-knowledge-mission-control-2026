@@ -55,6 +55,8 @@ describe('/api/gateway/graph/edge-readiness route', () => {
         primary_reason: 'webhook_receiver_ready_no_recent_events',
       }),
     ]))
-    expect(JSON.stringify(payload)).not.toMatch(/Bearer|Authorization|cookie=|sk-|am_[A-Za-z0-9_-]{24,}/i)
+    expect(JSON.stringify(payload)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
   })
 })

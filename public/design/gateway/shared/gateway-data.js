@@ -76,9 +76,10 @@ window.GATEWAY = (function () {
     { id: 'model.openai',     name: 'OpenAI / Codex', type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'GPT family + Codex.', lastSuccess: '8s ago' },
     { id: 'model.claude',     name: 'Claude',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'Anthropic family.', lastSuccess: '<1s' },
     { id: 'model.ollama',     name: 'Ollama',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'Local models on workstation.', lastSuccess: '4m ago' },
-    { id: 'model.nvidia',     name: 'NVIDIA',      type: 'model', lane: 'bottom_model', status: 'gray', connected: 0, configured: 0, R: 0, W: 0, X: 0, bridge: 0, summary: 'NIM endpoint — not yet configured.', blocked_reason: 'NIM API key not registered.' },
+    { id: 'model.nvidia',     name: 'NVIDIA',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'NVIDIA NIM is validated from Provider Vault and routed through Gateway Runtime Bridge.', lastSuccess: '<1s' },
     { id: 'model.gemini',     name: 'Gemini',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'Google Gemini family.', lastSuccess: '37m ago' },
     { id: 'model.groq',       name: 'Groq',        type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'High-speed inference.', lastSuccess: '12m ago' },
+    { id: 'model.xai_grok',   name: 'xAI Grok',    type: 'model', lane: 'bottom_model', status: 'red', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 0, summary: 'xAI API key is present but provider returned 403 permission/billing required.', blocked_reason: 'xai_grok_permission_or_billing_required', lastSuccess: '—' },
     { id: 'model.openclawplus', name: 'OpenClaw+', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Shared skills/adapters/reports/governance runtime.', lastSuccess: '2m ago', role: 'Runtime engine' },
     { id: 'model.miniagents', name: 'Mini-agents', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Sandboxed mini-agent runner (MiroFish).', lastSuccess: '15s ago', role: 'Runtime engine' },
     { id: 'oc.parent',        name: 'OpenCloud Workers', type: 'opencloud', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Worker engine parent. Children: Build-Wiki, Farmer, Skills, Tools, Forks 1 & 2.', lastSuccess: 'live', role: 'Runtime engine' },
@@ -140,6 +141,11 @@ window.GATEWAY = (function () {
     { from: 'agent.zero', to: 'model.openrouter', relation: 'routes_through' },
     { from: 'agent.zero', to: 'model.claude',     relation: 'routes_through' },
     { from: 'agent.zero', to: 'model.openai',     relation: 'routes_through' },
+    { from: 'agent.zero', to: 'model.ollama',     relation: 'routes_through' },
+    { from: 'agent.zero', to: 'model.nvidia',     relation: 'routes_through' },
+    { from: 'agent.zero', to: 'model.gemini',     relation: 'routes_through' },
+    { from: 'agent.zero', to: 'model.groq',       relation: 'routes_through' },
+    { from: 'agent.zero', to: 'model.xai_grok',   relation: 'routes_through' },
     { from: 'agent.hermes', to: 'model.openrouter', relation: 'routes_through' },
 
     // Commanders → Right side (integrations)
@@ -171,13 +177,21 @@ window.GATEWAY = (function () {
   ];
 
   const EDGE_READINESS = [
+    { edge_id: 'model.openrouter_to_gateway', from: 'agent.zero', to: 'model.openrouter', relation: 'routes_through', source: 'OpenRouter', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'openrouter_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_model_requests_through_gateway_runtime_bridge_and_cost_governor' },
+    { edge_id: 'model.openai_codex_to_gateway', from: 'agent.zero', to: 'model.openai', relation: 'routes_through', source: 'OpenAI / Codex', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'openai_codex_account_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest account check', next_action: 'use_chatgpt_codex_account_lane_through_gateway_policy' },
+    { edge_id: 'model.claude_to_gateway', from: 'agent.zero', to: 'model.claude', relation: 'routes_through', source: 'Claude', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'claude_account_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest account check', next_action: 'use_claude_account_lane_through_gateway_policy' },
+    { edge_id: 'model.ollama_to_gateway', from: 'agent.zero', to: 'model.ollama', relation: 'routes_through', source: 'Ollama', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'ollama_local_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest local tags check', next_action: 'keep_local_model_execution_behind_gateway_runtime_bridge' },
+    { edge_id: 'model.nvidia_to_gateway', from: 'agent.zero', to: 'model.nvidia', relation: 'routes_through', source: 'NVIDIA', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'nvidia_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_nvidia_requests_through_gateway_runtime_bridge_and_cost_governor' },
+    { edge_id: 'model.gemini_to_gateway', from: 'agent.zero', to: 'model.gemini', relation: 'routes_through', source: 'Gemini', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'gemini_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_gemini_requests_through_gateway_runtime_bridge_and_cost_governor' },
+    { edge_id: 'model.groq_to_gateway', from: 'agent.zero', to: 'model.groq', relation: 'routes_through', source: 'Groq', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'groq_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_groq_requests_through_gateway_runtime_bridge_and_cost_governor' },
+    { edge_id: 'model.xai_grok_to_gateway', from: 'agent.zero', to: 'model.xai_grok', relation: 'routes_through', source: 'xAI Grok', target: 'Gateway', domain: 'model', status: 'blocked', color: 'red', primary_reason: 'xai_grok_permission_or_billing_required', blockers: ['xai_grok_permission_or_billing_required'], last_heartbeat_at: null, last_success_at: null, last_event_at: 'latest probe', next_action: 'fix_xai_console_team_api_billing_credit_or_permission_before_unlocking' },
     { edge_id: 'browser.html_surface_to_gateway', source: 'HTML', target: 'Gateway', domain: 'browser', status: 'read_only', color: 'cyan', primary_reason: 'html_surface_registered_no_runtime_bridge', blockers: [], last_heartbeat_at: null, last_success_at: 'static surface loaded', last_event_at: null, next_action: 'configure_browser_runtime_bridge_if_active_control_is_required' },
     { edge_id: 'browser.firefox_to_gateway', source: 'Firefox', target: 'Gateway', domain: 'browser', status: 'standby', color: 'gray', primary_reason: 'firefox_runtime_not_connected', blockers: ['browser_session_not_connected'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'start_or_verify_browser_runtime_bridge' },
     { edge_id: 'reports.gateway_to_reports', from: 'agent.zero', to: 'int.reports', relation: 'writes_to', source: 'Gateway', target: 'Reports', domain: 'reports', status: 'read_only', color: 'cyan', primary_reason: 'report_preview_ready_delivery_not_enabled', blockers: [], last_heartbeat_at: null, last_success_at: 'preview route ready', last_event_at: null, next_action: 'request_owner_approval_for_report_delivery_if_needed' },
     { edge_id: 'webhooks.inbound_to_gateway', from: 'input.webhook', to: 'gateway.core', relation: 'notifies', source: 'Webhooks', target: 'Gateway', domain: 'webhooks', status: 'standby', color: 'gray', primary_reason: 'webhook_receiver_ready_no_recent_events', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'send_signed_test_event_or_verify_webhook_heartbeat' },
     { edge_id: 'events.event_bus_to_gateway', from: 'input.event', to: 'gateway.core', relation: 'notifies', source: 'Events', target: 'Gateway', domain: 'events', status: 'standby', color: 'gray', primary_reason: 'event_bus_ready_no_recent_events', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'verify_event_stream_heartbeat' },
     { edge_id: 'agentmail.gateway_to_agentmail', from: 'agent.zero', to: 'int.agentmail', relation: 'writes_to', source: 'Gateway', target: 'AgentMail', domain: 'connector', status: 'ready', color: 'green', primary_reason: 'agentmail_approval_gated_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest audit', next_action: 'create_owner_approved_send_request_when_needed' },
-    { edge_id: 'connector.zapier_to_gateway', source: 'Zapier', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'zapier_write_execution_requires_owner_approval', blockers: ['zapier_writes_disabled_without_owner_approval'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_exact_zapier_action_scope' },
+    { edge_id: 'connector.zapier_to_gateway', source: 'Zapier', target: 'Gateway', domain: 'connector', status: 'read_only', color: 'cyan', primary_reason: 'zapier_discovery_ready_writes_guarded', blockers: [], last_heartbeat_at: null, last_success_at: 'readiness ready', last_event_at: null, next_action: 'request_owner_approval_for_exact_zapier_action_scope' },
     { edge_id: 'connector.google_drive_to_gateway', source: 'Google Drive', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'google_drive_upload_requires_owner_approval', blockers: ['drive_writes_approval_gated'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_upload_or_write_scope' },
     { edge_id: 'connector.onedrive_to_gateway', source: 'OneDrive', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'onedrive_upload_requires_owner_approval', blockers: ['onedrive_writes_approval_gated'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_upload_or_write_scope' },
     { edge_id: 'connector.external_apis_to_gateway', source: 'External APIs', target: 'Gateway', domain: 'connector', status: 'standby', color: 'gray', primary_reason: 'external_api_registry_ready_no_live_heartbeat', blockers: [], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'verify_specific_external_api_runtime_heartbeat_before_execution' },
@@ -186,6 +200,18 @@ window.GATEWAY = (function () {
     { edge_id: 'connector.firecrawl_to_gateway', source: 'Firecrawl', target: 'Gateway', domain: 'connector', status: 'read_only', color: 'cyan', primary_reason: 'firecrawl_readiness_available_no_write_execution', blockers: [], last_heartbeat_at: null, last_success_at: 'readiness ready', last_event_at: null, next_action: 'run_crawl_only_after_exact_owner_approved_scope' },
     { edge_id: 'connector.heygen_to_gateway', source: 'HeyGen', target: 'Gateway', domain: 'connector', status: 'approval_required', color: 'yellow', primary_reason: 'heygen_generation_requires_owner_approval', blockers: ['heygen_writes_disabled_without_owner_approval'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'request_owner_approval_for_exact_heygen_generation_scope' },
   ];
+
+  const GRAPH_HEALTH = {
+    readiness_feed: 'healthy',
+    last_successful_readiness_fetch: 'static fallback',
+    graph_data_source: 'static fallback',
+    edge_count_expected: 22,
+    edge_count_returned: EDGE_READINESS.length,
+    edge_mapping_errors: [],
+    model_readiness: 'healthy',
+    connector_readiness: 'healthy',
+    static_asset_version: 'gateway-edge-readiness-v2',
+  };
 
   // ---------- Bridge Sessions ----------
   const BRIDGE_SESSIONS = [
@@ -358,7 +384,7 @@ window.GATEWAY = (function () {
   };
 
   return {
-    STATUS, LANES, NODES, OPENCLOUD_CHILDREN, EDGES, EDGE_READINESS, EDGE_LEGEND, BRIDGE_SESSIONS, AUDIT, POLICIES, HEALTH,
+    STATUS, LANES, NODES, OPENCLOUD_CHILDREN, EDGES, EDGE_READINESS, EDGE_LEGEND, GRAPH_HEALTH, BRIDGE_SESSIONS, AUDIT, POLICIES, HEALTH,
     ENGINES, MINI_AGENTS, REQUEST_STREAM, DISPATCHER, TOKEN_LEDGER,
     get, byLane, statusOf, statusColor, getEdgeReadiness,
   };

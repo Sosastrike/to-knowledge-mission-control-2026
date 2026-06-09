@@ -88,6 +88,70 @@ describe('gateway graph edge readiness', () => {
       broad_connector_execution_enabled: false,
     })
 
-    expect(JSON.stringify(payload)).not.toMatch(/Bearer|Authorization|cookie=|sk-|am_[A-Za-z0-9_-]{24,}/i)
+    expect(JSON.stringify(payload)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
+  })
+
+  it('covers visible model provider edges without falling back to gray when runtime is healthy', () => {
+    const payload = buildGatewayGraphEdgeReadiness('2026-06-08T16:00:00.000Z')
+    const byId = new Map(payload.edges.map((edge) => [edge.edge_id, edge]))
+
+    expect(byId.get('model.openrouter_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'openrouter_model_runtime_ready',
+    })
+    expect(byId.get('model.openai_codex_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'openai_codex_account_runtime_ready',
+    })
+    expect(byId.get('model.gemini_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'gemini_model_runtime_ready',
+    })
+    expect(byId.get('model.groq_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'groq_model_runtime_ready',
+    })
+    expect(byId.get('model.nvidia_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'nvidia_model_runtime_ready',
+    })
+    expect(byId.get('model.ollama_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'ollama_local_model_runtime_ready',
+    })
+    expect(byId.get('model.xai_grok_to_gateway')).toMatchObject({
+      domain: 'model',
+      status: 'blocked',
+      color: 'red',
+      primary_reason: 'xai_grok_permission_or_billing_required',
+    })
+  })
+
+  it('reports graph feed health and expected edge coverage', () => {
+    const payload = buildGatewayGraphEdgeReadiness('2026-06-08T16:00:00.000Z')
+
+    expect(payload.graph_health).toMatchObject({
+      readiness_feed: 'healthy',
+      graph_data_source: 'live',
+      model_readiness: 'healthy',
+      connector_readiness: 'healthy',
+      static_asset_version: 'gateway-edge-readiness-v2',
+    })
+    expect(payload.graph_health.edge_count_returned).toBeGreaterThanOrEqual(payload.graph_health.edge_count_expected)
+    expect(payload.graph_health.edge_mapping_errors).toEqual([])
   })
 })

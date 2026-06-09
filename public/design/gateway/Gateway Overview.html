@@ -817,6 +817,55 @@
   color: var(--t-2);
   font-weight: 600;
 }
+.graph-health {
+  position: fixed;
+  left: 14px;
+  bottom: 170px;
+  width: 270px;
+  z-index: 55;
+  background: rgba(13,18,26,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-2);
+}
+.graph-health h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-3);
+  font-weight: 600;
+}
+.graph-health .gh-row {
+  display: grid;
+  grid-template-columns: 122px 1fr;
+  gap: 5px 8px;
+  font-size: 10.5px;
+  padding: 2px 0;
+}
+.graph-health .gh-row .lbl { color: var(--t-4); }
+.graph-health .gh-row .val {
+  color: var(--t-2);
+  font-family: var(--ff-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-health .gh-banner {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--st-yellow-bd);
+  color: var(--st-yellow);
+  background: var(--st-yellow-bg);
+  font-size: 10.5px;
+  line-height: 1.35;
+  display: none;
+}
+.graph-health.degraded .gh-banner,
+.graph-health.failed .gh-banner { display: block; }
 
 /* Bridge Session modal */
 .modal-mask {
@@ -952,6 +1001,12 @@
       <h4>Gateway edge legend</h4>
       <div id="edge-legend-list"></div>
     </aside>
+
+    <aside class="graph-health" id="graph-health" aria-label="Gateway Graph Health">
+      <h4>Gateway Graph Health</h4>
+      <div class="gh-banner">Gateway readiness feed unavailable. Last known states may be stale.</div>
+      <div id="graph-health-list"></div>
+    </aside>
   </div>
 </div>
 
@@ -1055,6 +1110,12 @@
   const inspector = document.getElementById('inspector');
   const edgeTooltip = document.getElementById('edge-tooltip');
   let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
+  let graphReadinessFetched = false;
+  let graphHealth = Object.assign({}, G.GRAPH_HEALTH || {}, {
+    readiness_feed: G.GRAPH_HEALTH?.readiness_feed || 'healthy',
+    graph_data_source: G.GRAPH_HEALTH?.graph_data_source || 'static fallback',
+    static_asset_version: G.GRAPH_HEALTH?.static_asset_version || 'gateway-edge-readiness-v2',
+  });
 
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -1095,7 +1156,17 @@
   function edgeReadinessFor(edge) {
     const fallback = edgeFallbackReadiness(edge);
     const runtimeMatch = runtimeEdgeReadiness.find(item => item.edge_id === fallback.edge_id);
-    return runtimeMatch ? Object.assign({}, fallback, runtimeMatch) : fallback;
+    if (runtimeMatch) return Object.assign({}, fallback, runtimeMatch);
+    if (graphReadinessFetched) {
+      return Object.assign({}, fallback, {
+        status: 'degraded',
+        color: 'yellow',
+        primary_reason: 'edge_status_missing',
+        blockers: ['edge_status_missing'],
+        next_action: 'refresh_gateway_graph_readiness_or_check_edge_id_mapping',
+      });
+    }
+    return fallback;
   }
 
   function moveEdgeTooltip(e) {
@@ -1134,6 +1205,32 @@
         <span class="legend-dot" style="background:${edgeColorVar(item.color)}"></span>
         <span class="legend-label">${esc(item.color)}</span>
         <span>${esc(item.label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderGraphHealth(extraMappingErrors) {
+    const panel = document.getElementById('graph-health');
+    const target = document.getElementById('graph-health-list');
+    if (!panel || !target) return;
+    const mappingErrors = Array.from(new Set([...(graphHealth.edge_mapping_errors || []), ...(extraMappingErrors || [])]));
+    const health = Object.assign({}, graphHealth, { edge_mapping_errors: mappingErrors });
+    panel.classList.toggle('failed', health.readiness_feed === 'failed');
+    panel.classList.toggle('degraded', health.readiness_feed === 'degraded' || mappingErrors.length > 0);
+    const rows = [
+      ['readiness feed', health.readiness_feed || 'unknown'],
+      ['last fetch', health.last_successful_readiness_fetch || 'none'],
+      ['data source', health.graph_data_source || 'static fallback'],
+      ['edge count', `${health.edge_count_returned || runtimeEdgeReadiness.length}/${health.edge_count_expected || G.EDGES.length}`],
+      ['mapping errors', mappingErrors.length ? mappingErrors.join(', ') : 'none'],
+      ['model readiness', health.model_readiness || 'unknown'],
+      ['connector readiness', health.connector_readiness || 'unknown'],
+      ['asset version', health.static_asset_version || 'unknown'],
+    ];
+    target.innerHTML = rows.map(([label, value]) => `
+      <div class="gh-row">
+        <span class="lbl">${esc(label)}</span>
+        <span class="val" title="${esc(value)}">${esc(value)}</span>
       </div>
     `).join('');
   }
@@ -1184,14 +1281,56 @@
       fetch('/api/gateway/graph/edge-readiness', { credentials: 'same-origin', headers: { accept: 'application/json' } })
         .then(r => r.ok ? r.json() : null)
         .then(payload => {
-          if (!payload || !Array.isArray(payload.edges)) return;
+          if (!payload || !Array.isArray(payload.edges)) {
+            throw new Error('graph_readiness_unavailable');
+          }
+          graphReadinessFetched = true;
           runtimeEdgeReadiness = payload.edges;
           if (Array.isArray(payload.legend)) G.EDGE_LEGEND = payload.legend;
+          graphHealth = Object.assign({}, payload.graph_health || {}, {
+            readiness_feed: payload.graph_health?.readiness_feed || 'healthy',
+            last_successful_readiness_fetch: payload.graph_health?.last_successful_readiness_fetch || payload.generated_at || null,
+            graph_data_source: 'live',
+            edge_count_expected: payload.graph_health?.edge_count_expected || G.EDGES.length,
+            edge_count_returned: payload.edges.length,
+            static_asset_version: payload.graph_health?.static_asset_version || 'gateway-edge-readiness-v2',
+          });
+          try { localStorage.setItem('gateway_edge_readiness_last_good', JSON.stringify(payload)); } catch (e) {}
           renderEdgeLegend();
+          renderGraphHealth();
           drawEdges();
         })
-        .catch(() => { /* static fallback stays active */ });
-    } catch (err) { /* static fallback stays active */ }
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_edge_readiness_last_good') || 'null'); } catch (e) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.edges)) {
+            runtimeEdgeReadiness = fallbackPayload.edges;
+            graphReadinessFetched = true;
+            graphHealth = Object.assign({}, fallbackPayload.graph_health || {}, {
+              readiness_feed: 'degraded',
+              graph_data_source: 'last-known',
+              static_asset_version: 'gateway-edge-readiness-v2',
+            });
+          } else {
+            graphReadinessFetched = false;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: 'failed',
+              graph_data_source: 'static fallback',
+              edge_mapping_errors: ['graph_readiness_unavailable'],
+            });
+          }
+          renderGraphHealth();
+          drawEdges();
+        });
+    } catch (err) {
+      graphHealth = Object.assign({}, graphHealth, {
+        readiness_feed: 'failed',
+        graph_data_source: 'static fallback',
+        edge_mapping_errors: ['graph_readiness_unavailable'],
+      });
+      renderGraphHealth();
+    }
   }
 
   function openInspector(id) {
@@ -1263,6 +1402,7 @@
     openInspector('gateway.core');
   };
   renderEdgeLegend();
+  renderGraphHealth();
 
   // ---- Edges drawing ----
   const svg = document.getElementById('edges-svg');
@@ -1272,6 +1412,7 @@
     svg.setAttribute('width', wrap.width);
     svg.setAttribute('height', wrap.height);
     svg.innerHTML = '';
+    const mappingErrors = [];
 
     function ctr(id) {
       let el;
@@ -1284,7 +1425,10 @@
 
     G.EDGES.forEach(edge => {
       const a = ctr(edge.from); const b = ctr(edge.to);
-      if (!a || !b) return;
+      if (!a || !b) {
+        mappingErrors.push(`edge_mapping_mismatch:${edge.from}->${edge.to}`);
+        return;
+      }
       const fromN = G.get(edge.from);
       const toN = G.get(edge.to);
       // Bezier
@@ -1313,6 +1457,7 @@
       });
       svg.appendChild(path);
     });
+    renderGraphHealth(mappingErrors);
   }
   drawEdges();
   fetchEdgeReadiness();

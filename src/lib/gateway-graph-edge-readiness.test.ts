@@ -111,8 +111,8 @@ describe('gateway graph edge readiness', () => {
       selected_visible: true,
     })
     expect(byId.get('model.xai_grok_to_gateway')).toMatchObject({
-      importance: 'critical',
-      critical: true,
+      importance: 'primary',
+      critical: false,
       default_visible: true,
     })
   })
@@ -159,9 +159,9 @@ describe('gateway graph edge readiness', () => {
     })
     expect(byId.get('model.xai_grok_to_gateway')).toMatchObject({
       domain: 'model',
-      status: 'blocked',
-      color: 'red',
-      primary_reason: 'xai_grok_permission_or_billing_required',
+      status: 'ready',
+      color: 'green',
+      primary_reason: 'xai_grok_model_runtime_ready',
     })
   })
 

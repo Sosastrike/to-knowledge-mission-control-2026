@@ -31,6 +31,22 @@ window.GW = (function () {
     return el('span', { class: `pill ${cssStatus}` }, el('span', { class: 'dot' }), text);
   }
 
+  function readinessStatusLabel(readiness) {
+    if (!readiness) return null;
+    if (readiness.status === 'live') return 'Live';
+    if (readiness.status === 'read_only') return 'Read-only active';
+    if (readiness.status === 'approval_required' || readiness.status === 'degraded') return 'Guarded';
+    if (readiness.status === 'standby') return 'Standby';
+    if (readiness.status === 'blocked') return 'Blocked';
+    if (readiness.status === 'disabled') return 'Disabled';
+    return readiness.status || 'Unknown';
+  }
+
+  function readinessText(readiness) {
+    if (!readiness) return '';
+    return readiness.ui_state_label || readiness.short_label || readiness.primary_reason || readiness.status || '';
+  }
+
   function nodeReadiness(node) {
     if (!node) return null;
     if (node.node_readiness) return node.node_readiness;
@@ -89,7 +105,7 @@ window.GW = (function () {
     const readiness = nodeReadiness(node);
     const cssStatus = readinessCssStatus(readiness, node.status);
     const dotColor = readinessColor(readiness, node.status);
-    const summary = readiness?.short_label || node.summary || '';
+    const summary = readinessText(readiness) || node.summary || '';
     const card = el('div', {
       class: `node-card status-${cssStatus} type-${node.type}`,
       'data-id': node.id,
@@ -110,8 +126,8 @@ window.GW = (function () {
 
     if (readiness) {
       card.appendChild(el('div', { class: 'nc-statusline' },
-        statusPill(readiness.color, readiness.status),
-        el('span', { class: 'nc-reason', title: readiness.primary_reason }, readiness.primary_reason || ''),
+        statusPill(readiness.color, readinessStatusLabel(readiness)),
+        el('span', { class: 'nc-reason', title: readiness.primary_reason }, readinessText(readiness)),
       ));
     }
 
@@ -126,9 +142,9 @@ window.GW = (function () {
     if (node.cacheAge) foot.appendChild(el('span', { class: 'nc-cache' }, `cache ${node.cacheAge}`));
     card.appendChild(foot);
 
-    const blocker = readiness?.status === 'blocked'
-      ? readiness.primary_reason
-      : node.blocked_reason;
+    const blocker = readiness?.status === 'blocked' || node.status === 'red'
+      ? (readiness?.primary_reason || node.blocked_reason)
+      : null;
     if (blocker) {
       card.appendChild(el('div', { class: 'nc-blocker' }, '⚠ ' + blocker));
     }
@@ -191,5 +207,5 @@ window.GW = (function () {
     return nav;
   }
 
-  return { el, statusPill, rwx, lockBadge, nodeCard, topbar, pagenav, NAV_ITEMS, nodeReadiness, readinessCssStatus, readinessColor };
+  return { el, statusPill, rwx, lockBadge, nodeCard, topbar, pagenav, NAV_ITEMS, nodeReadiness, readinessCssStatus, readinessColor, readinessStatusLabel, readinessText };
 })();

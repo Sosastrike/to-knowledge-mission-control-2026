@@ -281,6 +281,12 @@
   opacity: 0.22;
   pointer-events: none;
 }
+.edges path.edge-highway {
+  stroke-width: 2.8;
+  opacity: 0.56;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .edges path.edge-branch {
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -393,12 +399,37 @@
   font-size: 10px;
 }
 
+.gw-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%) translateY(16px);
+  z-index: 90;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(13,18,26,0.96);
+  color: var(--t-2);
+  box-shadow: var(--shadow-2);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.gw-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .side-drawer {
   position: fixed;
-  top: 112px;
+  top: 166px;
   bottom: 14px;
   width: 340px;
-  z-index: 68;
+  max-width: calc(100vw - 28px);
+  max-height: calc(100vh - 180px);
+  z-index: 78;
   background: rgba(13,18,26,0.95);
   border: 1px solid var(--line-2);
   border-radius: 10px;
@@ -406,13 +437,29 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 180ms ease;
+  transition: width 180ms ease, opacity 180ms ease;
   backdrop-filter: blur(10px);
 }
 .side-drawer.right { right: 14px; }
 .side-drawer.left { left: 14px; }
-.side-drawer.collapsed.right { transform: translateX(calc(100% - 42px)); }
-.side-drawer.collapsed.left { transform: translateX(calc(-100% + 42px)); }
+.side-drawer.collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+.side-drawer.collapsed header {
+  padding: 10px 7px;
+  justify-content: center;
+}
+.side-drawer.collapsed header h3,
+.side-drawer.collapsed .drawer-body {
+  display: none;
+}
+.side-drawer.collapsed .drawer-toggle {
+  width: 40px;
+  height: 34px;
+  padding: 0;
+  overflow: hidden;
+}
 .side-drawer header {
   display: flex;
   align-items: center;
@@ -431,6 +478,7 @@
 .side-drawer .drawer-body {
   padding: 10px 12px 14px;
   overflow-y: auto;
+  min-height: 0;
   display: grid;
   gap: 12px;
 }
@@ -1275,6 +1323,7 @@
 </div>
 
 <div class="edge-tooltip" id="edge-tooltip"></div>
+<div class="gw-toast" id="gw-toast" role="status" aria-live="polite"></div>
 
 <aside class="side-drawer right collapsed" id="gateway-diagnostics-drawer" aria-label="Gateway Diagnostics">
   <header>
@@ -1410,7 +1459,8 @@
   const wrap = document.getElementById('gw-canvas-wrap');
   const stage = document.getElementById('gw-viewport-stage');
   const svg = document.getElementById('edges-svg');
-  const PREF_KEY = 'gateway_overview_ui_v1';
+  const toast = document.getElementById('gw-toast');
+  const PREF_KEY = 'gateway_overview_ui_v2';
   let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
   let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
   let graphReadinessFetched = false;
@@ -1420,7 +1470,7 @@
   let selectedNodeId = null;
   let layoutEditing = false;
   let edgeMode = 'operator';
-  let hideStandbyLines = true;
+  let hideStandbyLines = false;
   let selectedOnly = false;
   let viewport = { x: 0, y: 0, scale: 1 };
   let nodeOffsets = {};
@@ -1438,6 +1488,14 @@
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
     })[ch]);
+  }
+
+  function showToast(message) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
   function loadPrefs() {
@@ -1475,10 +1533,20 @@
     setTimeout(drawEdges, 0);
   }
 
-  function setEdgeMode(mode) {
+  function setEdgeMode(mode, opts = {}) {
     edgeMode = ['operator', 'trace', 'diagnostics', 'quiet'].includes(mode) ? mode : 'operator';
     document.querySelectorAll('[data-edge-mode]').forEach(btn => btn.classList.toggle('on', btn.dataset.edgeMode === edgeMode));
-    if (edgeMode === 'quiet') document.getElementById('t-selected-only').checked = true;
+    const selectedToggle = document.getElementById('t-selected-only');
+    if (edgeMode === 'quiet' && selectedToggle) {
+      selectedOnly = true;
+      selectedToggle.checked = true;
+      selectedToggle.dataset.quietForced = 'true';
+    } else if (selectedToggle?.dataset.quietForced === 'true') {
+      selectedOnly = false;
+      selectedToggle.checked = false;
+      delete selectedToggle.dataset.quietForced;
+    }
+    if (!opts.silent) showToast(`Gateway edge mode: ${edgeMode}`);
     drawEdges();
     savePrefs();
   }
@@ -1930,15 +1998,15 @@
     document.getElementById('ins-name').textContent = n.name;
     const pills = document.getElementById('ins-pills');
     pills.innerHTML = '';
-    pills.appendChild(GW.statusPill(readiness?.color || cssStatus, readiness?.status || undefined));
+    pills.appendChild(GW.statusPill(readiness?.color || cssStatus, readiness ? GW.readinessStatusLabel(readiness) : undefined));
     if (readiness?.domain) pills.appendChild(GW.statusPill('blue', readiness.domain));
     const rwxWrap = GW.rwx(n, readiness);
     pills.appendChild(rwxWrap);
     if (n.bridge || readiness?.approval_required) pills.appendChild(GW.lockBadge());
     const body = document.getElementById('ins-body');
     body.innerHTML = '';
-    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${esc(readiness?.short_label || n.summary || '')}</p>` }));
-    const blocker = readiness?.status === 'blocked' ? readiness.primary_reason : n.blocked_reason;
+    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${esc(readiness ? GW.readinessText(readiness) : n.summary || '')}</p>` }));
+    const blocker = readiness?.status === 'blocked' || n.status === 'red' ? (readiness?.primary_reason || n.blocked_reason) : null;
     if (blocker) {
       body.appendChild(GW.el('div', { class: 'nc-blocker', style: { marginTop: '12px', fontSize: '12px' }, html: '⚠ ' + esc(blocker) }));
     }
@@ -1949,7 +2017,7 @@
     body.appendChild(GW.el('div', { class: 'ins-section', html: `
       <h4>Node readiness</h4>
       <dl class="kv">
-        <dt>Mode</dt><dd>${esc(readiness?.status || 'unknown')}</dd>
+        <dt>Mode</dt><dd>${esc(readiness ? GW.readinessStatusLabel(readiness) : 'unknown')}</dd>
         <dt>Color</dt><dd>${esc(readiness?.color || cssStatus || 'unknown')}</dd>
         <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness?.primary_reason || 'legacy_status_only')}</dd>
         <dt>Setup state</dt><dd>${esc(readiness?.setup_state || 'not reported')}</dd>
@@ -2034,11 +2102,16 @@
     svg.className.baseVal = `edges mode-${edgeMode}`;
     svg.innerHTML = '';
     const mappingErrors = [];
+    let cardBoxById = new Map();
 
     function box(id) {
       let el;
       if (id === 'gateway.core') el = document.getElementById('gateway-core');
-      else el = document.querySelector(`.node-card[data-id="${id}"]`);
+      else {
+        const cached = cardBoxById.get(id);
+        if (cached) return cached;
+        el = document.querySelector(`.node-card[data-id="${id}"]`);
+      }
       if (!el) return null;
       const r = el.getBoundingClientRect();
       if (r.width < 8 || r.height < 8) return null;
@@ -2216,6 +2289,33 @@
       return compact.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
     }
 
+    function installEdgeCutoutMask(cutoutBoxes) {
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', 'edge-card-cutouts');
+      mask.setAttribute('maskUnits', 'userSpaceOnUse');
+      const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      base.setAttribute('x', '0');
+      base.setAttribute('y', '0');
+      base.setAttribute('width', stageWidth);
+      base.setAttribute('height', stageHeight);
+      base.setAttribute('fill', 'white');
+      mask.appendChild(base);
+      cutoutBoxes.forEach(rect => {
+        const gap = 8;
+        const cutout = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        cutout.setAttribute('x', Math.max(0, rect.left - gap));
+        cutout.setAttribute('y', Math.max(0, rect.top - gap));
+        cutout.setAttribute('width', rect.width + gap * 2);
+        cutout.setAttribute('height', rect.height + gap * 2);
+        cutout.setAttribute('rx', '8');
+        cutout.setAttribute('fill', 'black');
+        mask.appendChild(cutout);
+      });
+      defs.appendChild(mask);
+      svg.appendChild(defs);
+    }
+
     function shouldShow(readiness, edge) {
       const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
       if (edgeMode === 'diagnostics') return true;
@@ -2225,23 +2325,33 @@
       return readiness.default_visible !== false || readiness.color !== 'gray';
     }
 
+    const boxFromElement = (el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8) return null;
+      const scale = viewport.scale || 1;
+      const left = (r.left - stageBox.left) / scale;
+      const top = (r.top - stageBox.top) / scale;
+      return {
+        id: el.dataset.id,
+        left,
+        top,
+        width: r.width / scale,
+        height: r.height / scale,
+        right: left + r.width / scale,
+        bottom: top + r.height / scale,
+        cx: left + (r.width / scale) / 2,
+        cy: top + (r.height / scale) / 2,
+      };
+    };
     const allBoxes = [...document.querySelectorAll('.node-card')]
       .map(el => {
-        const r = el.getBoundingClientRect();
-        if (r.width < 8 || r.height < 8) return null;
-        const scale = viewport.scale || 1;
-        const left = (r.left - stageBox.left) / scale;
-        const top = (r.top - stageBox.top) / scale;
-        return {
-          left,
-          top,
-          width: r.width / scale,
-          height: r.height / scale,
-          right: left + r.width / scale,
-          bottom: top + r.height / scale,
-        };
+        const rect = boxFromElement(el);
+        if (rect?.id) cardBoxById.set(rect.id, rect);
+        return rect;
       })
       .filter(Boolean);
+    const warningBoxes = [...document.querySelectorAll('.nc-blocker')].map(boxFromElement).filter(Boolean);
+    installEdgeCutoutMask([...allBoxes, ...warningBoxes]);
     const core = box('gateway.core') || { left: 650, right: 830, top: 420, bottom: 620, cx: 740, cy: 520 };
     const routed = [];
     G.EDGES.forEach((edge, edgeIndex) => {
@@ -2260,35 +2370,292 @@
       routed.push({ edge, readiness, domain, rail, a, b, obstacles, routePoints, pathData: pathFromPoints(routePoints), edgeIndex });
     });
 
-    const trunkByDomain = new Map();
-    routed.forEach(item => {
-      if (!shouldShow(item.readiness, item.edge)) return;
-      const key = `${item.domain}:${item.rail.type}:${Math.round(item.rail.v)}`;
-      const existing = trunkByDomain.get(key) || { ...item, min: Infinity, max: -Infinity };
-      if (item.rail.type === 'h') {
-        existing.min = Math.min(existing.min, item.a.x, item.b.x);
-        existing.max = Math.max(existing.max, item.a.x, item.b.x);
-      } else {
-        existing.min = Math.min(existing.min, item.a.y, item.b.y);
-        existing.max = Math.max(existing.max, item.a.y, item.b.y);
+    function nodeDomain(node, readiness) {
+      if (!node) return 'integrations';
+      if (node.id === 'int.agentmail') return 'agentmail';
+      if (node.id === 'int.zapier') return 'zapier';
+      if (node.id === 'input.webhook' || node.id === 'input.event') return 'webhooks-events';
+      if (node.id === 'int.reports') return 'reports';
+      if (node.id === 'int.gdrive' || node.id === 'int.onedrive' || node.id === 'int.datastores') return 'storage';
+      if (node.id.startsWith('brain.')) return 'knowledge';
+      if (node.id.startsWith('model.') || node.id === 'oc.parent') return 'models';
+      if (node.id.startsWith('input.') || node.id.startsWith('agent.')) return 'inputs';
+      if (readiness?.domain === 'browser') return 'browser-runtime';
+      return 'integrations';
+    }
+
+    function domainHub(domain) {
+      const hubs = {
+        models: { x: core.cx, y: core.bottom + 92 },
+        inputs: { x: core.left - 118, y: core.cy },
+        knowledge: { x: core.cx, y: Math.max(64, core.top - 92) },
+        integrations: { x: core.right + 118, y: core.cy },
+        storage: { x: core.right + 152, y: core.cy + 126 },
+        reports: { x: core.right + 152, y: core.cy - 126 },
+        'webhooks-events': { x: core.left - 150, y: core.cy - 128 },
+        agentmail: { x: core.right + 104, y: core.cy + 58 },
+        zapier: { x: core.right + 104, y: core.cy - 58 },
+        'browser-runtime': { x: core.left - 150, y: core.cy + 132 },
+      };
+      return hubs[domain] || hubs.integrations;
+    }
+
+    function unionBounds(items) {
+      return items.reduce((acc, item) => ({
+        left: Math.min(acc.left, item.rect.left),
+        top: Math.min(acc.top, item.rect.top),
+        right: Math.max(acc.right, item.rect.right),
+        bottom: Math.max(acc.bottom, item.rect.bottom),
+      }), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
+    }
+
+    function laneHubFor(domain, items) {
+      const bounds = unionBounds(items);
+      if (!Number.isFinite(bounds.left)) return domainHub(domain);
+      const midY = (bounds.top + bounds.bottom) / 2;
+      const midX = (bounds.left + bounds.right) / 2;
+      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+        return { x: Math.min(core.left - 44, bounds.right + 42), y: midY };
       }
-      trunkByDomain.set(key, existing);
+      if (domain === 'knowledge') {
+        return { x: midX, y: Math.max(36, bounds.top - 42) };
+      }
+      if (domain === 'models') {
+        return { x: midX, y: Math.min(stageHeight - 36, bounds.bottom + 42) };
+      }
+      return { x: Math.max(core.right + 44, bounds.left - 42), y: midY };
+    }
+
+    function trunkPointsFor(domain, hub) {
+      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+        return [
+          { x: core.left - 12, y: core.cy },
+          { x: hub.x, y: core.cy },
+          hub,
+        ];
+      }
+      if (domain === 'knowledge') {
+        return [
+          { x: core.cx, y: core.top - 12 },
+          { x: core.cx, y: hub.y },
+          hub,
+        ];
+      }
+      if (domain === 'models') {
+        return [
+          { x: core.cx, y: core.bottom + 12 },
+          { x: core.cx, y: hub.y },
+          hub,
+        ];
+      }
+      return [
+        { x: core.right + 12, y: core.cy },
+        { x: hub.x, y: core.cy },
+        hub,
+      ];
+    }
+
+    function branchPointsFor(domain, hub, rect) {
+      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+        return [hub, { x: hub.x, y: rect.cy }, { x: rect.right + 12, y: rect.cy }];
+      }
+      if (domain === 'knowledge') {
+        return [hub, { x: rect.cx, y: hub.y }, { x: rect.cx, y: rect.top - 12 }];
+      }
+      if (domain === 'models') {
+        return [hub, { x: rect.cx, y: hub.y }, { x: rect.cx, y: rect.bottom + 12 }];
+      }
+      return [hub, { x: hub.x, y: rect.cy }, { x: rect.left - 12, y: rect.cy }];
+    }
+
+    function domainFrame(items) {
+      const bounds = unionBounds(items);
+      const pad = 34;
+      return {
+        left: Math.max(18, bounds.left - pad),
+        right: Math.min(stageWidth - 18, bounds.right + pad),
+        top: Math.max(18, bounds.top - pad),
+        bottom: Math.min(stageHeight - 18, bounds.bottom + pad),
+        cx: (bounds.left + bounds.right) / 2,
+        cy: (bounds.top + bounds.bottom) / 2,
+      };
+    }
+
+    function framePath(frame) {
+      return [
+        { x: frame.left, y: frame.top },
+        { x: frame.right, y: frame.top },
+        { x: frame.right, y: frame.bottom },
+        { x: frame.left, y: frame.bottom },
+        { x: frame.left, y: frame.top },
+      ];
+    }
+
+    function framePortForCore(frame) {
+      const candidates = [
+        { side: 'left', x: frame.left, y: Math.max(frame.top, Math.min(frame.bottom, core.cy)) },
+        { side: 'right', x: frame.right, y: Math.max(frame.top, Math.min(frame.bottom, core.cy)) },
+        { side: 'top', x: Math.max(frame.left, Math.min(frame.right, core.cx)), y: frame.top },
+        { side: 'bottom', x: Math.max(frame.left, Math.min(frame.right, core.cx)), y: frame.bottom },
+      ];
+      candidates.sort((a, b) => Math.abs(a.x - core.cx) + Math.abs(a.y - core.cy) - (Math.abs(b.x - core.cx) + Math.abs(b.y - core.cy)));
+      return candidates[0];
+    }
+
+    function nearestFrameBranch(frame, rect) {
+      const candidates = [
+        { side: 'top', dist: Math.abs(rect.top - frame.top), port: { x: rect.cx, y: frame.top }, target: { x: rect.cx, y: rect.top - 12 } },
+        { side: 'bottom', dist: Math.abs(frame.bottom - rect.bottom), port: { x: rect.cx, y: frame.bottom }, target: { x: rect.cx, y: rect.bottom + 12 } },
+        { side: 'left', dist: Math.abs(rect.left - frame.left), port: { x: frame.left, y: rect.cy }, target: { x: rect.left - 12, y: rect.cy } },
+        { side: 'right', dist: Math.abs(frame.right - rect.right), port: { x: frame.right, y: rect.cy }, target: { x: rect.right + 12, y: rect.cy } },
+      ];
+      candidates.sort((a, b) => a.dist - b.dist);
+      return [candidates[0].port, candidates[0].target];
+    }
+
+    function coreAnchorFor(point) {
+      const dx = point.x - core.cx;
+      const dy = point.y - core.cy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return { x: dx >= 0 ? core.right + 12 : core.left - 12, y: core.cy };
+      }
+      return { x: core.cx, y: dy >= 0 ? core.bottom + 12 : core.top - 12 };
+    }
+
+    function cardAnchorFor(rect, point) {
+      const dx = point.x - rect.cx;
+      const dy = point.y - rect.cy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return { x: dx >= 0 ? rect.right + 12 : rect.left - 12, y: rect.cy };
+      }
+      return { x: rect.cx, y: dy >= 0 ? rect.bottom + 12 : rect.top - 12 };
+    }
+
+    function nodeRouteVisible(readiness, nodeId) {
+      const selected = selectedNodeId && selectedNodeId === nodeId;
+      if (edgeMode === 'diagnostics') return true;
+      if (edgeMode === 'trace' || selectedOnly) return Boolean(selected);
+      if (edgeMode === 'quiet') return Boolean(selected || readiness.status === 'blocked');
+      if (hideStandbyLines && readiness.status === 'standby') return false;
+      return true;
+    }
+
+    function appendRoutePath(routeInfo, points, classes, selected, dimmed) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathFromPoints(points));
+      path.setAttribute('class', [
+        'edge',
+        ...classes,
+        `edge-${routeInfo.color}`,
+        routeInfo.critical ? 'edge-critical' : '',
+        selected ? 'edge-selected' : '',
+        dimmed ? 'edge-dimmed' : '',
+      ].filter(Boolean).join(' '));
+      path.setAttribute('mask', 'url(#edge-card-cutouts)');
+      path.setAttribute('tabindex', '0');
+      path.setAttribute('role', 'button');
+      path.setAttribute('aria-label', `${routeInfo.source} to ${routeInfo.target}: ${routeInfo.status}, ${routeInfo.primary_reason}`);
+      path.dataset.edgeId = routeInfo.edge_id;
+      path.dataset.domain = routeInfo.domain;
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${routeInfo.source} → ${routeInfo.target}\nstatus: ${routeInfo.status}\nreason: ${routeInfo.primary_reason}\nnext: ${routeInfo.next_action}`;
+      path.appendChild(title);
+      path.addEventListener('mouseenter', evt => showEdgeTooltip(routeInfo, evt));
+      path.addEventListener('mousemove', moveEdgeTooltip);
+      path.addEventListener('mouseleave', hideEdgeTooltip);
+      path.addEventListener('focus', evt => showEdgeTooltip(routeInfo, evt));
+      path.addEventListener('blur', hideEdgeTooltip);
+      path.addEventListener('click', evt => {
+        evt.stopPropagation();
+        hideEdgeTooltip();
+        openEdgeInspector(routeInfo);
+      });
+      svg.appendChild(path);
+    }
+
+    const highwayDomains = new Map();
+    [...document.querySelectorAll('.node-card[data-id]')].forEach(card => {
+      const id = card.dataset.id;
+      const node = G.get(id);
+      if (!node) return;
+      const rect = box(id);
+      if (!rect) return;
+      const readiness = nodeReadinessFor(node) || {
+        status: node.status === 'red' ? 'blocked' : node.status === 'gray' ? 'standby' : 'ready',
+        color: node.status === 'blue' ? 'cyan' : node.status === 'red' ? 'red' : node.status === 'yellow' || node.status === 'orange' ? 'yellow' : node.status === 'gray' ? 'gray' : 'green',
+        primary_reason: node.primary_reason || node.blocked_reason || `${id.replace(/[^a-z0-9]+/gi, '_')}_registered`,
+        short_label: node.summary || '',
+        next_action: node.next_action || 'inspect_gateway_readiness',
+      };
+      const domain = nodeDomain(node, readiness);
+      const hub = domainHub(domain);
+      const visible = nodeRouteVisible(readiness, id);
+      if (!visible) return;
+      const selected = Boolean(selectedNodeId && selectedNodeId === id);
+      const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !selected);
+      const routeInfo = {
+        edge_id: `highway.${domain}.${id}`,
+        source: 'Gateway Dispatcher',
+        target: node.name,
+        domain,
+        status: readiness.status || 'ready',
+        color: readiness.color || 'gray',
+        primary_reason: readiness.primary_reason || 'node_registered',
+        blockers: readiness.status === 'blocked' ? [readiness.primary_reason] : [],
+        last_heartbeat_at: readiness.last_heartbeat_at || null,
+        last_success_at: readiness.last_success_at || node.lastSuccess || null,
+        last_event_at: null,
+        next_action: readiness.next_action || 'inspect_gateway_readiness',
+        critical: readiness.status === 'blocked',
+      };
+      const domainEntry = highwayDomains.get(domain) || { hub, color: routeInfo.color, status: routeInfo.status, primary_reason: routeInfo.primary_reason, nodes: [] };
+      if (routeInfo.color === 'red') domainEntry.color = 'red';
+      else if (domainEntry.color !== 'red' && routeInfo.color === 'green') domainEntry.color = 'green';
+      else if (!['red', 'green'].includes(domainEntry.color) && routeInfo.color === 'yellow') domainEntry.color = 'yellow';
+      else if (!['red', 'green', 'yellow'].includes(domainEntry.color) && routeInfo.color === 'cyan') domainEntry.color = 'cyan';
+      domainEntry.nodes.push({ id, rect, node, readiness, routeInfo, selected, dimmed });
+      highwayDomains.set(domain, domainEntry);
     });
 
-    trunkByDomain.forEach(trunk => {
-      if (edgeMode === 'quiet') return;
-      const d = trunk.rail.type === 'h'
-        ? `M ${trunk.min} ${trunk.rail.v} L ${trunk.max} ${trunk.rail.v}`
-        : `M ${trunk.rail.v} ${trunk.min} L ${trunk.rail.v} ${trunk.max}`;
-      const clear = trunk.rail.type === 'h'
-        ? segmentClear({ x: trunk.min, y: trunk.rail.v }, { x: trunk.max, y: trunk.rail.v }, allBoxes)
-        : segmentClear({ x: trunk.rail.v, y: trunk.min }, { x: trunk.rail.v, y: trunk.max }, allBoxes);
-      if (!clear) return;
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('class', `edge edge-trunk edge-${trunk.readiness.color} edge-domain-${trunk.domain}`);
-      svg.appendChild(path);
-    });
+    if (edgeMode !== 'diagnostics') {
+      highwayDomains.forEach((entry, domain) => {
+        const frame = domainFrame(entry.nodes);
+        if (edgeMode !== 'quiet') {
+          const trunkInfo = {
+            edge_id: `highway.${domain}.trunk`,
+            source: 'Gateway Dispatcher',
+            target: `${domain.replace(/-/g, ' ')} highway`,
+            domain,
+            status: entry.status || 'ready',
+            color: entry.color || 'gray',
+            primary_reason: `${domain.replace(/-/g, '_')}_highway_connected`,
+            blockers: [],
+            last_heartbeat_at: null,
+            last_success_at: null,
+            last_event_at: null,
+            next_action: 'select_a_card_to_trace_this_highway',
+          };
+          appendRoutePath(trunkInfo, framePath(frame), ['edge-trunk', 'edge-highway', `edge-domain-${domain}`], false, false);
+          const framePort = framePortForCore(frame);
+          const trunkStart = coreAnchorFor(framePort);
+          const trunkRail = Math.abs(framePort.x - trunkStart.x) > Math.abs(framePort.y - trunkStart.y)
+            ? { type: 'v', v: framePort.x }
+            : { type: 'h', v: framePort.y };
+          const trunkPoints = findOrthogonalRoute(trunkStart, framePort, trunkRail, allBoxes);
+          appendRoutePath(Object.assign({}, trunkInfo, { edge_id: `highway.${domain}.dispatcher-link` }), trunkPoints, ['edge-trunk', 'edge-highway', `edge-domain-${domain}`], false, false);
+        }
+
+        entry.nodes.forEach(item => {
+          const branchPoints = nearestFrameBranch(frame, item.rect);
+          appendRoutePath(item.routeInfo, branchPoints, ['edge-branch', `edge-domain-${domain}`], item.selected && (edgeMode === 'trace' || selectedOnly), item.dimmed);
+        });
+      });
+    }
+
+    if (edgeMode !== 'diagnostics') {
+      renderGraphHealth(mappingErrors);
+      return;
+    }
 
     routed.forEach(item => {
       const { edge, readiness } = item;
@@ -2382,7 +2749,7 @@
   loadPrefs();
   applyNodeOffsets();
   applyViewport();
-  setEdgeMode(edgeMode);
+  setEdgeMode(edgeMode, { silent: true });
   syncDrawerButton('gateway-diagnostics-drawer', 'toggle-diagnostics');
   syncDrawerButton('view-settings-drawer', 'toggle-view-settings');
 
@@ -2397,6 +2764,7 @@
     savePrefs();
   };
   document.getElementById('t-selected-only').onchange = (e) => {
+    delete e.target.dataset.quietForced;
     selectedOnly = e.target.checked;
     drawEdges();
     savePrefs();
@@ -2415,24 +2783,45 @@
     viewport.y = 24;
     applyViewport();
     savePrefs();
+    showToast('Gateway map fitted to view');
   };
   document.getElementById('view-reset').onclick = () => {
     viewport = { x: 0, y: 0, scale: 1 };
     applyViewport();
     savePrefs();
+    showToast('Pan and zoom reset');
   };
-  document.getElementById('view-center-dispatcher').onclick = () => focusElementInView(document.getElementById('gateway-core'), viewport.scale);
+  document.getElementById('view-center-dispatcher').onclick = () => {
+    focusElementInView(document.getElementById('gateway-core'), viewport.scale);
+    showToast('Centered on Dispatcher');
+  };
   document.getElementById('view-center-selected').onclick = () => {
+    if (!selectedNodeId) {
+      showToast('Select a card first, then center selected');
+      return;
+    }
     const el = selectedNodeId === 'gateway.core' ? document.getElementById('gateway-core') : document.querySelector(`.node-card[data-id="${selectedNodeId}"]`);
-    focusElementInView(el || document.getElementById('gateway-core'), viewport.scale);
+    if (!el) {
+      showToast('Selected card is not visible');
+      return;
+    }
+    focusElementInView(el, viewport.scale);
+    showToast('Centered selected card');
   };
-  document.getElementById('view-edit-layout').onclick = () => toggleLayoutEditing();
-  document.getElementById('view-save-layout').onclick = () => savePrefs();
+  document.getElementById('view-edit-layout').onclick = () => {
+    toggleLayoutEditing();
+    showToast(layoutEditing ? 'Layout edit mode on' : 'Layout edit mode off');
+  };
+  document.getElementById('view-save-layout').onclick = () => {
+    savePrefs();
+    showToast('Gateway layout preference saved');
+  };
   document.getElementById('view-reset-layout').onclick = () => {
     nodeOffsets = {};
     applyNodeOffsets();
     drawEdges();
     savePrefs();
+    showToast('Saved card layout cleared');
   };
 
   let panStart = null;

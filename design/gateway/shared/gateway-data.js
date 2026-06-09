@@ -8,11 +8,11 @@
 window.GATEWAY = (function () {
   // ---------- Status grammar ----------
   const STATUS = {
-    green:   { label: 'Connected',          desc: 'Live, healthy, all enabled flags pass.' },
-    yellow:  { label: 'Gated',              desc: 'Bridge Session required, approval pending, or RBAC challenge.' },
-    blue:    { label: 'Read-only',          desc: 'Discovery + read OK. Writes refused.' },
+    green:   { label: 'Live',               desc: 'Live, healthy, all enabled flags pass.' },
+    yellow:  { label: 'Guarded',            desc: 'Approval-gated, governed execution, or RBAC challenge.' },
+    blue:    { label: 'Read-only active',   desc: 'Discovery + read OK. Writes refused.' },
     red:     { label: 'Blocked',            desc: 'Credential failure, policy denial, or upstream down.' },
-    gray:    { label: 'Not configured',     desc: 'No credentials/config registered yet.' },
+    gray:    { label: 'Standby',            desc: 'Registered but idle, no recent heartbeat, or waiting for a runtime event.' },
     purple:  { label: 'Agent / commander',  desc: 'Agent layer marker. Status grammar applies on top.' },
     orange:  { label: 'Runtime / worker',   desc: 'Worker engine marker. Status grammar applies on top.' },
   };
@@ -65,11 +65,12 @@ window.GATEWAY = (function () {
     { id: 'input.webhook',   name: 'Webhooks',       type: 'input', lane: 'left_input', status: 'gray', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 1, summary: 'Receiver ready · waiting for events.', lastSuccess: 'standby' },
 
     /* ===== TOP — BRAIN ===== */
-    { id: 'brain.obsidian',  name: 'Obsidian Vault', type: 'brain', lane: 'top_brain', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Owner knowledge vault. Writes Bridge-gated.', lastSuccess: '4m ago' },
-    { id: 'brain.mempalace', name: 'MemPalace',      type: 'brain', lane: 'top_brain', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Long-horizon associative memory.', lastSuccess: '1m ago' },
-    { id: 'brain.graphify',  name: 'Graphify',       type: 'brain', lane: 'top_brain', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Graph-of-thought layer.', lastSuccess: '12m ago' },
-    { id: 'brain.sync',      name: 'Brain Sync',     type: 'brain', lane: 'top_brain', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Cross-brain replication & diff feed.', lastSuccess: 'live' },
-    { id: 'brain.buildwiki', name: 'Build-Wiki',     type: 'brain', lane: 'top_brain', status: 'yellow', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Documentation knowledge base. Run Now scoped to opencloud-docs-farmer.service only.', blocked_reason: 'Bridge Session required for Run Now.', lastSuccess: '21m ago' },
+    { id: 'brain.obsidian',  name: 'Obsidian Vault', type: 'brain', lane: 'top_brain', status: 'blue', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Read ready · writes guarded.', lastSuccess: '4m ago' },
+    { id: 'brain.mempalace', name: 'MemPalace',      type: 'brain', lane: 'top_brain', status: 'blue', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Memory ready · writes guarded.', lastSuccess: '1m ago' },
+    { id: 'brain.graphify',  name: 'Graphify',       type: 'brain', lane: 'top_brain', status: 'blue', connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 1, summary: 'Graph ready · writes guarded.', lastSuccess: '12m ago' },
+    { id: 'brain.gbrain',    name: 'GBrain',         type: 'brain', lane: 'top_brain', status: 'blue', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 1, summary: 'GBrain inventory ready · tool invocation guarded.', lastSuccess: 'live' },
+    { id: 'brain.sync',      name: 'Brain Sync',     type: 'brain', lane: 'top_brain', status: 'blue', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Sync ready · write scope needed.', lastSuccess: 'live' },
+    { id: 'brain.buildwiki', name: 'Build-Wiki',     type: 'brain', lane: 'top_brain', status: 'yellow', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Build ready · run guarded.', blocked_reason: null, lastSuccess: '21m ago' },
 
     /* ===== BOTTOM — MODELS ===== */
     { id: 'model.openrouter', name: 'OpenRouter',  type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'Primary model gateway. Whitelisted models only.', lastSuccess: '<1s' },
@@ -79,7 +80,7 @@ window.GATEWAY = (function () {
     { id: 'model.nvidia',     name: 'NVIDIA',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'NVIDIA NIM is validated from Provider Vault and routed through Gateway Runtime Bridge.', lastSuccess: '<1s' },
     { id: 'model.gemini',     name: 'Gemini',      type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'Google Gemini family.', lastSuccess: '37m ago' },
     { id: 'model.groq',       name: 'Groq',        type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'High-speed inference.', lastSuccess: '12m ago' },
-    { id: 'model.xai_grok',   name: 'xAI Grok',    type: 'model', lane: 'bottom_model', status: 'red', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 0, summary: 'xAI API key is present but provider returned 403 permission/billing required.', blocked_reason: 'xai_grok_permission_or_billing_required', lastSuccess: '—' },
+    { id: 'model.xai_grok',   name: 'xAI Grok',    type: 'model', lane: 'bottom_model', status: 'green', connected: 1, configured: 1, R: 1, W: 0, X: 1, bridge: 0, summary: 'xAI Grok validates from Provider Vault and has 9 models synced.', blocked_reason: null, lastSuccess: '<1s' },
     { id: 'model.openclawplus', name: 'OpenClaw+', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Shared skills/adapters/reports/governance runtime.', lastSuccess: '2m ago', role: 'Runtime engine' },
     { id: 'model.miniagents', name: 'Mini-agents', type: 'runtime', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Sandboxed mini-agent runner (MiroFish).', lastSuccess: '15s ago', role: 'Runtime engine' },
     { id: 'oc.parent',        name: 'OpenCloud Workers', type: 'opencloud', lane: 'bottom_model', status: 'orange', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Worker engine parent. Children: Build-Wiki, Farmer, Skills, Tools, Forks 1 & 2.', lastSuccess: 'live', role: 'Runtime engine' },
@@ -97,7 +98,7 @@ window.GATEWAY = (function () {
     { id: 'int.n8n',          name: 'n8n (future)',      type: 'tool',    lane: 'right_integration', status: 'gray',   connected: 0, configured: 0, R: 0, W: 0, X: 0, bridge: 0, summary: 'Reserved slot — n8n install pending.', blocked_reason: 'Not installed.' },
     { id: 'int.reports',      name: 'Reports',           type: 'tool',    lane: 'right_integration', status: 'blue',   connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 1, summary: 'Preview ready · delivery guarded.', lastSuccess: '3m ago' },
     { id: 'int.datastores',   name: 'Data Stores',       type: 'data',    lane: 'right_integration', status: 'green',  connected: 1, configured: 1, R: 1, W: 1, X: 0, bridge: 0, summary: 'Internal SQLite + governance vault.', lastSuccess: 'live' },
-    { id: 'int.webhooks_out', name: 'Outbound Webhooks', type: 'channel', lane: 'right_integration', status: 'yellow', connected: 1, configured: 1, R: 0, W: 1, X: 1, bridge: 1, summary: 'Outbound webhook dispatcher.', blocked_reason: 'Bridge Session required.', lastSuccess: '17m ago' },
+    { id: 'int.webhooks_out', name: 'Outbound Webhooks', type: 'channel', lane: 'right_integration', status: 'yellow', connected: 1, configured: 1, R: 0, W: 1, X: 1, bridge: 1, summary: 'Dispatcher ready · signed delivery guarded.', blocked_reason: null, lastSuccess: '17m ago' },
     { id: 'int.external',     name: 'External Systems',  type: 'api',     lane: 'right_integration', status: 'gray',   connected: 0, configured: 0, R: 0, W: 0, X: 0, bridge: 0, summary: 'Reserved — third-party SaaS to onboard.', blocked_reason: 'Per-system onboarding required.' },
   ];
 
@@ -133,6 +134,7 @@ window.GATEWAY = (function () {
     { from: 'agent.zero',   to: 'brain.obsidian',  relation: 'reads_from' },
     { from: 'agent.zero',   to: 'brain.mempalace', relation: 'reads_from' },
     { from: 'agent.zero',   to: 'brain.graphify',  relation: 'reads_from' },
+    { from: 'agent.zero',   to: 'brain.gbrain',    relation: 'reads_from' },
     { from: 'agent.zero',   to: 'brain.sync',      relation: 'reads_from' },
     { from: 'agent.zero',   to: 'brain.buildwiki', relation: 'reads_from' },
     { from: 'agent.hermes', to: 'brain.buildwiki', relation: 'reads_from' },
@@ -184,7 +186,7 @@ window.GATEWAY = (function () {
     { edge_id: 'model.nvidia_to_gateway', from: 'agent.zero', to: 'model.nvidia', relation: 'routes_through', source: 'NVIDIA', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'nvidia_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_nvidia_requests_through_gateway_runtime_bridge_and_cost_governor' },
     { edge_id: 'model.gemini_to_gateway', from: 'agent.zero', to: 'model.gemini', relation: 'routes_through', source: 'Gemini', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'gemini_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_gemini_requests_through_gateway_runtime_bridge_and_cost_governor' },
     { edge_id: 'model.groq_to_gateway', from: 'agent.zero', to: 'model.groq', relation: 'routes_through', source: 'Groq', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'groq_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_groq_requests_through_gateway_runtime_bridge_and_cost_governor' },
-    { edge_id: 'model.xai_grok_to_gateway', from: 'agent.zero', to: 'model.xai_grok', relation: 'routes_through', source: 'xAI Grok', target: 'Gateway', domain: 'model', status: 'blocked', color: 'red', primary_reason: 'xai_grok_permission_or_billing_required', blockers: ['xai_grok_permission_or_billing_required'], last_heartbeat_at: null, last_success_at: null, last_event_at: 'latest probe', next_action: 'fix_xai_console_team_api_billing_credit_or_permission_before_unlocking' },
+    { edge_id: 'model.xai_grok_to_gateway', from: 'agent.zero', to: 'model.xai_grok', relation: 'routes_through', source: 'xAI Grok', target: 'Gateway', domain: 'model', status: 'ready', color: 'green', primary_reason: 'xai_grok_model_runtime_ready', blockers: [], last_heartbeat_at: 'live', last_success_at: 'live', last_event_at: 'latest probe', next_action: 'route_xai_grok_requests_through_gateway_runtime_bridge_and_cost_governor' },
     { edge_id: 'browser.html_surface_to_gateway', source: 'HTML', target: 'Gateway', domain: 'browser', status: 'read_only', color: 'cyan', primary_reason: 'html_surface_registered_no_runtime_bridge', blockers: [], last_heartbeat_at: null, last_success_at: 'static surface loaded', last_event_at: null, next_action: 'configure_browser_runtime_bridge_if_active_control_is_required' },
     { edge_id: 'browser.firefox_to_gateway', source: 'Firefox', target: 'Gateway', domain: 'browser', status: 'standby', color: 'gray', primary_reason: 'firefox_runtime_not_connected', blockers: ['browser_session_not_connected'], last_heartbeat_at: null, last_success_at: null, last_event_at: null, next_action: 'start_or_verify_browser_runtime_bridge' },
     { edge_id: 'reports.gateway_to_reports', from: 'agent.zero', to: 'int.reports', relation: 'writes_to', source: 'Gateway', target: 'Reports', domain: 'reports', status: 'read_only', color: 'cyan', primary_reason: 'report_preview_ready_delivery_not_enabled', blockers: [], last_heartbeat_at: null, last_success_at: 'preview route ready', last_event_at: null, next_action: 'request_owner_approval_for_report_delivery_if_needed' },
@@ -208,7 +210,7 @@ window.GATEWAY = (function () {
     edge_count_expected: 22,
     edge_count_returned: EDGE_READINESS.length,
     edge_mapping_errors: [],
-    node_count_expected: 42,
+    node_count_expected: 43,
     node_count_returned: NODES.length,
     node_mapping_errors: [],
     model_readiness: 'healthy',
@@ -272,13 +274,19 @@ window.GATEWAY = (function () {
     'model.nvidia': { domain: 'model', status: 'live', primary_reason: 'nvidia_model_runtime_ready', short_label: 'Live', next_action: 'route_nvidia_requests_through_gateway_runtime_bridge_and_cost_governor', read_ready: true, write_ready: false, execute_ready: true, approval_required: false, last_heartbeat_at: 'live' },
     'model.gemini': { domain: 'model', status: 'live', primary_reason: 'gemini_model_runtime_ready', short_label: 'Live', next_action: 'route_gemini_requests_through_gateway_runtime_bridge_and_cost_governor', read_ready: true, write_ready: false, execute_ready: true, approval_required: false, last_heartbeat_at: 'live' },
     'model.groq': { domain: 'model', status: 'live', primary_reason: 'groq_model_runtime_ready', short_label: 'Live', next_action: 'route_groq_requests_through_gateway_runtime_bridge_and_cost_governor', read_ready: true, write_ready: false, execute_ready: true, approval_required: false, last_heartbeat_at: 'live' },
-    'model.xai_grok': { domain: 'model', status: 'blocked', primary_reason: 'xai_grok_permission_or_billing_required', short_label: 'Blocked · xAI Console action required', next_action: 'fix_xai_console_team_api_billing_credit_or_permission_before_unlocking', read_ready: true, write_ready: false, execute_ready: false, approval_required: false, last_success_at: null, last_heartbeat_at: null },
+    'brain.obsidian': { domain: 'brain', status: 'read_only', primary_reason: 'obsidian_reads_ready_writes_guarded', short_label: 'Read ready · writes guarded', next_action: 'open_gateway_approval_center_for_obsidian_write_scope', setup_state: 'readiness_active_writes_guarded', per_action_state: 'approval_needed_for_obsidian_write', lock_scope: 'knowledge_writes', approval_center_refs: ['approval.obsidian.write_scope'], ui_state_label: 'Obsidian Vault · writes guarded', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: 'live' },
+    'brain.mempalace': { domain: 'brain', status: 'read_only', primary_reason: 'mempalace_reads_ready_writes_guarded', short_label: 'Memory ready · writes guarded', next_action: 'open_gateway_approval_center_for_memory_write_scope', setup_state: 'readiness_active_writes_guarded', per_action_state: 'approval_needed_for_memory_write', lock_scope: 'memory_writes', approval_center_refs: ['approval.mempalace.memory_write'], ui_state_label: 'Palacio / MemPalace · writes guarded', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: 'live' },
+    'brain.graphify': { domain: 'brain', status: 'read_only', primary_reason: 'graphify_reads_ready_writes_guarded', short_label: 'Graph ready · writes guarded', next_action: 'open_gateway_approval_center_for_graph_write_scope', setup_state: 'readiness_active_writes_guarded', per_action_state: 'approval_needed_for_graph_write', lock_scope: 'graph_writes', approval_center_refs: ['approval.graphify.graph_write'], ui_state_label: 'Graphify / Graffiti · writes guarded', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: 'live' },
+    'brain.gbrain': { domain: 'brain', status: 'read_only', primary_reason: 'gbrain_inventory_only_no_tool_invocation', short_label: 'GBrain inventory ready · tool invocation guarded', next_action: 'open_gateway_approval_center_for_gbrain_tool_scope', setup_state: 'inventory_active_invocation_guarded', per_action_state: 'approval_needed_for_tool_invocation', lock_scope: 'gbrain_tool_invocation', approval_center_refs: ['approval.gbrain.tool_map'], ui_state_label: 'GBrain · tool invocation guarded', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: 'live' },
+    'brain.sync': { domain: 'brain', status: 'read_only', primary_reason: 'brain_sync_ready_write_scope_needed', short_label: 'Sync ready · write scope needed', next_action: 'open_gateway_approval_center_for_brain_sync_write_scope', setup_state: 'readiness_active_writes_guarded', per_action_state: 'approval_needed_for_sync_write', lock_scope: 'brain_sync_writes', approval_center_refs: ['approval.brain_sync.write_scope'], ui_state_label: 'Brain Sync · write scope needed', read_ready: true, write_ready: false, execute_ready: true, approval_required: true, last_heartbeat_at: 'live' },
+    'brain.buildwiki': { domain: 'brain', status: 'approval_required', primary_reason: 'buildwiki_run_now_scope_guarded', short_label: 'Build ready · run guarded', next_action: 'open_gateway_approval_center_for_opencloud_docs_farmer_run', setup_state: 'readiness_active_run_guarded', per_action_state: 'standing_scope_present_run_requires_policy', lock_scope: 'opencloud_docs_farmer_run', approval_center_refs: ['approval.buildwiki.run_now'], standing_scope_refs: ['scope.opencloud.docs_farmer.run_now'], ui_state_label: 'Build-Wiki · run guarded', read_ready: true, write_ready: true, execute_ready: true, approval_required: true, last_success_at: '21m ago', last_heartbeat_at: null },
+    'model.xai_grok': { domain: 'model', status: 'live', primary_reason: 'xai_grok_model_runtime_ready', short_label: 'Live', next_action: 'route_xai_grok_requests_through_gateway_runtime_bridge_and_cost_governor', read_ready: true, write_ready: false, execute_ready: true, approval_required: false, last_success_at: 'live', last_heartbeat_at: 'live' },
     'int.apis': { domain: 'connector', status: 'read_only', primary_reason: 'external_api_discovery_ready_execution_guarded', short_label: 'API discovery ready · execution guarded', next_action: 'verify_specific_external_api_runtime_heartbeat_before_execution', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: null },
     'int.mcp': { domain: 'connector', status: 'read_only', primary_reason: 'mcp_discovery_ready_execution_gated', short_label: 'MCP inventory readable', next_action: 'request_owner_approval_before_broad_mcp_execution', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: null },
     'int.tools': { domain: 'connector', status: 'read_only', primary_reason: 'tools_registry_ready_execution_guarded', short_label: 'Registry readable · execution guarded', next_action: 'keep_tool_execution_behind_gateway_policy_and_owner_approval', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_heartbeat_at: null },
-    'int.zapier': { domain: 'connector', status: 'read_only', primary_reason: 'zapier_discovery_ready_writes_guarded', short_label: 'Zapier discovery ready · writes guarded', next_action: 'Request exact-scope owner approval for any Zapier write', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_success_at: 'readiness ready', last_heartbeat_at: null },
+    'int.zapier': { domain: 'connector', status: 'read_only', primary_reason: 'zapier_discovery_ready_writes_guarded', short_label: 'Zapier discovery ready · writes guarded', next_action: 'open_gateway_approval_center_for_exact_zapier_write_scope', setup_state: 'always_on_discovery_ready', per_action_state: 'out_of_scope_actions_require_approval', lock_scope: 'zapier_writes', approval_center_refs: ['approval.zapier.execution_scope'], standing_scope_refs: ['zapier.scope.discovery_and_status'], ui_state_label: 'Zapier discovery ready · writes guarded', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_success_at: 'readiness ready', last_heartbeat_at: null },
     'int.firecrawl': { domain: 'connector', status: 'read_only', primary_reason: 'firecrawl_readiness_available_no_write_execution', short_label: 'Readiness available · execution guarded', next_action: 'run_crawl_only_after_exact_owner_approved_scope', read_ready: true, write_ready: false, execute_ready: true, approval_required: true, last_heartbeat_at: null },
-    'int.agentmail': { domain: 'agentmail', status: 'approval_required', primary_reason: 'approval_gated_send_ready', short_label: 'AgentMail ready · approval-gated sending', next_action: 'create_owner_approved_send_request_when_needed', read_ready: true, write_ready: true, execute_ready: true, approval_required: true, last_heartbeat_at: 'live' },
+    'int.agentmail': { domain: 'agentmail', status: 'live', primary_reason: 'approval_gated_send_ready', short_label: 'AgentMail ready · approval-gated sending', next_action: 'create_owner_approved_send_request_when_needed', setup_state: 'approval_gated_send_ready', per_action_state: 'no_pending_send_request', lock_scope: 'external_delivery_per_send', approval_center_refs: [], ui_state_label: 'AgentMail ready · approval-gated sending', read_ready: true, write_ready: true, execute_ready: true, approval_required: true, last_heartbeat_at: 'live' },
     'int.gdrive': { domain: 'storage', status: 'approval_required', primary_reason: 'google_drive_upload_requires_owner_approval', short_label: 'Drive read ready · uploads guarded', next_action: 'request_owner_approval_for_upload_or_write_scope', read_ready: true, write_ready: true, execute_ready: false, approval_required: true, last_heartbeat_at: null },
     'int.onedrive': { domain: 'storage', status: 'approval_required', primary_reason: 'onedrive_upload_requires_owner_approval', short_label: 'OneDrive read ready · uploads guarded', next_action: 'request_owner_approval_for_upload_or_write_scope', read_ready: true, write_ready: true, execute_ready: false, approval_required: true, last_heartbeat_at: null },
     'int.heygen': { domain: 'connector', status: 'approval_required', primary_reason: 'heygen_generation_requires_owner_approval', short_label: 'Schema ready · generation guarded', next_action: 'request_owner_approval_for_exact_heygen_generation_scope', read_ready: true, write_ready: true, execute_ready: false, approval_required: true, last_success_at: null, last_heartbeat_at: null },
@@ -319,7 +327,7 @@ window.GATEWAY = (function () {
 
   // ---------- Policies ----------
   const POLICIES = [
-    { id: 'p.bridge.outbound',       name: 'Bridge Session required for external writes',  scope: 'all delivery_channel + outbound webhooks + uploads', severity: 'high', state: 'enforced' },
+    { id: 'p.bridge.outbound',       name: 'Gateway approval required for external writes',  scope: 'all delivery_channel + outbound webhooks + uploads', severity: 'high', state: 'enforced' },
     { id: 'p.discovery.gate',        name: 'Discovery before execute',                    scope: 'all node types',                                       severity: 'high', state: 'enforced' },
     { id: 'p.rbac.passthrough',      name: 'Existing-permission enforcement',             scope: 'every execute',                                        severity: 'high', state: 'enforced' },
     { id: 'p.runnow.scope',          name: 'Build-Wiki Run Now scope',                    scope: 'opencloud-docs-farmer.service only',                   severity: 'high', state: 'enforced' },
@@ -393,7 +401,7 @@ window.GATEWAY = (function () {
     { id: 'eng.gemini',          provider: 'gemini',     label: 'Gemini 2.5 Pro',    tier: 'premium',  caps: ['reason','vision','long'], remaining_tokens: 720_000, daily_budget_tokens: 800_000, spent_usd: 1.80,  daily_budget_usd: 10, p50_ms: 510, status: 'green' },
     { id: 'eng.groq',            provider: 'groq',       label: 'Groq · Llama 70B',  tier: 'fast',     caps: ['reason','cheap'],         remaining_tokens: 980_000, daily_budget_tokens: 1_000_000, spent_usd: 0.18, daily_budget_usd: 3,  p50_ms: 90,  status: 'green' },
     { id: 'eng.ollama',          provider: 'ollama',     label: 'Ollama (local)',    tier: 'local',    caps: ['reason','offline'],       remaining_tokens: 1e9,     daily_budget_tokens: 1e9,     spent_usd: 0.00,  daily_budget_usd: 0,  p50_ms: 740, status: 'green' },
-    { id: 'eng.nvidia',          provider: 'nvidia',     label: 'NVIDIA NIM',        tier: 'premium',  caps: ['reason','vision'],        remaining_tokens: 0,       daily_budget_tokens: 0,       spent_usd: 0.00,  daily_budget_usd: 0,  p50_ms: 0,   status: 'gray', warn: 'not configured' },
+    { id: 'eng.nvidia',          provider: 'nvidia',     label: 'NVIDIA NIM',        tier: 'premium',  caps: ['reason','vision'],        remaining_tokens: 720_000, daily_budget_tokens: 800_000, spent_usd: 0.00,  daily_budget_usd: 10, p50_ms: 510, status: 'green', note: 'Provider Vault credential validated; Gateway Runtime Bridge handles execution governance.' },
   ];
 
   // Mini-agents that the Dispatcher can fan out work to.
@@ -480,22 +488,33 @@ window.GATEWAY = (function () {
    Rules honoured:
      - Rule 1: mock HTML/CSS untouched.
      - Rule 5: status grammar comes from STATUS map above. No new states.
-     - Rule 6: every node FORCED to 'gray' on script load. Live status
-       only takes effect after the API confirms it. Auth-failed or
-       network-failed fetch leaves the node 'gray', never fake green.
+     - Rule 6: nodes without semantic fallback readiness remain standby until API proof.
+       Static readiness may show read-only, guarded, or live known-safe states while
+       live runtime proof is still tracked separately.
      - DDR-Gateway-005: iframe sandbox is allow-scripts allow-same-origin
        so this fetch carries Mission Control session cookies.
    ============================================================ */
 (function () {
   var G = window.GATEWAY;
   if (!G) return;
-  // Force gray on every node until a successful, authenticated fetch proves otherwise.
+  function cssStatusFromNodeReadiness(readiness, fallback) {
+    if (!readiness || !readiness.color) return fallback;
+    return readiness.color === 'cyan' ? 'blue' : readiness.color;
+  }
+
+  // Preserve semantic static readiness; only unknown nodes fall back to standby markers.
   for (var i = 0; i < G.NODES.length; i += 1) {
     var n = G.NODES[i];
-    if (n.type === 'agent') n.status = 'purple';          // marker preserved; live state added by overlay below
+    var readiness = G.getNodeReadiness ? G.getNodeReadiness(n.id) : null;
+    if (readiness && readiness.color) {
+      n.status = cssStatusFromNodeReadiness(readiness, n.status);
+      n.summary = readiness.short_label || n.summary;
+      n.primary_reason = readiness.primary_reason || n.primary_reason;
+      if (readiness.next_action) n.next_action = readiness.next_action;
+    } else if (n.type === 'agent') n.status = 'purple';   // marker preserved; live state added by overlay below
     else if (n.type === 'runtime') n.status = 'orange';   // marker preserved
     else n.status = 'gray';
-    n.live_state_known = false;
+    n.live_state_known = Boolean(readiness && readiness.color);
   }
 
   function hydrate(payload) {

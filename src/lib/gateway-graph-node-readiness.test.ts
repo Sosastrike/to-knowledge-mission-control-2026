@@ -20,23 +20,23 @@ describe('gateway graph node readiness', () => {
     const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
 
     expect(payload.ok).toBe(true)
-    expect(payload.nodes.length).toBe(42)
+    expect(payload.nodes.length).toBe(43)
     expect(payload.graph_health).toMatchObject({
       readiness_feed: 'healthy',
       graph_data_source: 'live',
       edge_count_expected: 22,
-      node_count_expected: 42,
-      node_count_returned: 42,
+      node_count_expected: 43,
+      node_count_returned: 43,
       node_mapping_errors: [],
       static_asset_version: 'gateway-node-readiness-v1',
     })
   })
 
-  it('marks model cards live except xAI, which stays blocked with the real provider blocker', () => {
+  it('marks model cards live after xAI returns a fresh healthy model-list probe', () => {
     const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
     const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
 
-    for (const id of ['model.openrouter', 'model.openai', 'model.claude', 'model.ollama', 'model.nvidia', 'model.gemini', 'model.groq']) {
+    for (const id of ['model.openrouter', 'model.openai', 'model.claude', 'model.ollama', 'model.nvidia', 'model.gemini', 'model.groq', 'model.xai_grok']) {
       expect(byId.get(id)).toMatchObject({
         domain: 'model',
         status: 'live',
@@ -49,11 +49,36 @@ describe('gateway graph node readiness', () => {
 
     expect(byId.get('model.xai_grok')).toMatchObject({
       domain: 'model',
-      status: 'blocked',
-      color: 'red',
-      primary_reason: 'xai_grok_permission_or_billing_required',
-      execute_ready: false,
-      next_action: 'fix_xai_console_team_api_billing_credit_or_permission_before_unlocking',
+      status: 'live',
+      color: 'green',
+      primary_reason: 'xai_grok_model_runtime_ready',
+      execute_ready: true,
+      next_action: 'route_xai_grok_requests_through_gateway_runtime_bridge_and_cost_governor',
+    })
+  })
+
+  it('shows Knowledge/GBrain systems as readable with exact guarded-write semantics', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    expect(byId.get('brain.obsidian')).toMatchObject({
+      status: 'read_only',
+      color: 'cyan',
+      ui_state_label: 'Obsidian Vault · writes guarded',
+      approval_center_refs: ['approval.obsidian.write_scope'],
+    })
+    expect(byId.get('brain.graphify')).toMatchObject({
+      status: 'read_only',
+      color: 'cyan',
+      ui_state_label: 'Graphify / Graffiti · writes guarded',
+      approval_center_refs: ['approval.graphify.graph_write'],
+    })
+    expect(byId.get('brain.gbrain')).toMatchObject({
+      label: 'GBrain',
+      status: 'read_only',
+      color: 'cyan',
+      primary_reason: 'gbrain_inventory_only_no_tool_invocation',
+      approval_center_refs: ['approval.gbrain.tool_map'],
     })
   })
 

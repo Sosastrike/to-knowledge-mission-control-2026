@@ -27,6 +27,16 @@ describe('Gateway Approval Center', () => {
       state: 'approval_needed',
       exact_reason: 'mempalace_writes_bridge_gated',
     })
+    expect(byComponent.get('Obsidian Vault')).toMatchObject({
+      state: 'approval_needed',
+      exact_reason: 'obsidian_reads_ready_writes_guarded',
+      node_id: 'brain.obsidian',
+    })
+    expect(byComponent.get('Graphify / Graffiti')).toMatchObject({
+      state: 'approval_needed',
+      exact_reason: 'graphify_reads_ready_writes_guarded',
+      node_id: 'brain.graphify',
+    })
     expect(byComponent.get('Brain Sync')).toMatchObject({
       state: 'approval_needed',
       exact_reason: 'brain_sync_runtime_ready_writes_guarded',
@@ -34,6 +44,7 @@ describe('Gateway Approval Center', () => {
     expect(byComponent.get('GBrain')).toMatchObject({
       state: 'read_only_active',
       exact_reason: 'gbrain_inventory_only_no_tool_invocation',
+      node_id: 'brain.gbrain',
     })
   })
 

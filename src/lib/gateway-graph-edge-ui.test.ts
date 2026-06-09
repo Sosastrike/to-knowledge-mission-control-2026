@@ -22,6 +22,7 @@ describe('Gateway graph edge diagnostics UI', () => {
     expect(html).toContain('traffic_data_unavailable')
     expect(html).toContain('Traffic data unavailable')
     expect(html).toContain('Telemetry stale')
+    expect(html).toContain('missing traffic mappings')
     expect(html).toContain('relationship')
     expect(html).toContain('traffic status')
     expect(html).toContain('/api/gateway/approvals/center')

@@ -1987,6 +1987,7 @@
       ['ready/no-recent traffic edges', String(graphTrafficSnapshot?.summary?.ready_no_recent_traffic_edges || 0)],
       ['stale telemetry edges', String(graphTrafficSnapshot?.summary?.stale_telemetry_edges || 0)],
       ['unavailable telemetry edges', String(graphTrafficSnapshot?.summary?.unavailable_telemetry_edges || 0)],
+      ['missing traffic mappings', String(graphTrafficSnapshot?.summary?.missing_traffic_mappings || 0)],
       ['last telemetry fetch', graphTrafficSnapshot?.generated_at || 'none'],
       ['last live fetch', sync.last_live_fetch_at || canonicalTopology?.generated_at || 'none'],
       ['last static fallback', sync.last_static_fallback_at || 'none'],

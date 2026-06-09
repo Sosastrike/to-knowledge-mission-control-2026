@@ -82,6 +82,8 @@ Gateway node readiness was already modeled, but the static Gateway status gramma
 - Server worktree was already dirty. A minimal runtime patch was applied to the active runtime files rather than hard-resetting or overwriting unrelated live work.
 - Public runtime assets were copied into `.next/standalone/public/design/gateway`.
 - Only `mission-control.service` was restarted.
+- Source commit: `5b8d8af Harmonize Gateway node readiness cards`.
+- Push result: `codex/agentmail-hosted-connect-20260606` pushed to GitHub.
 
 ## Rollback
 Code/source rollback:

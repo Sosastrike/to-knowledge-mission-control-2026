@@ -28,6 +28,11 @@ export type GatewayGraphEdgeReadiness = {
   status: GatewayGraphEdgeStatus
   color: GatewayGraphEdgeColor
   primary_reason: string
+  bundle_domain?: string
+  importance?: 'critical' | 'primary' | 'secondary' | 'diagnostic'
+  default_visible?: boolean
+  critical?: boolean
+  selected_visible?: boolean
   blockers: string[]
   last_heartbeat_at: string | null
   last_success_at: string | null
@@ -94,6 +99,11 @@ export function edgeColorForStatus(status: GatewayGraphEdgeStatus): GatewayGraph
 function edge(input: Omit<GatewayGraphEdgeReadiness, 'color'>): GatewayGraphEdgeReadiness {
   return {
     ...input,
+    bundle_domain: input.bundle_domain || input.domain,
+    importance: input.importance || (input.status === 'blocked' ? 'critical' : input.status === 'standby' ? 'diagnostic' : 'primary'),
+    default_visible: input.default_visible ?? input.status !== 'standby',
+    critical: input.critical ?? input.status === 'blocked',
+    selected_visible: input.selected_visible ?? true,
     color: edgeColorForStatus(input.status),
   }
 }

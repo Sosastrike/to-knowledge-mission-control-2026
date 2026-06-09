@@ -75,10 +75,13 @@ describe('gateway graph node readiness', () => {
 
     expect(byId.get('int.agentmail')).toMatchObject({
       domain: 'agentmail',
-      status: 'approval_required',
-      color: 'yellow',
+      status: 'live',
+      color: 'green',
       primary_reason: 'approval_gated_send_ready',
       short_label: 'AgentMail ready · approval-gated sending',
+      setup_state: 'approval_gated_send_ready',
+      per_action_state: 'no_pending_send_request',
+      lock_scope: 'external_delivery_per_send',
       read_ready: true,
       write_ready: true,
       execute_ready: true,

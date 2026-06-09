@@ -75,8 +75,11 @@ window.GW = (function () {
     );
   }
 
-  function lockBadge() {
-    return el('span', { class: 'bridge-lock', title: 'Writes/execution guarded by Gateway policy and owner approval', html:
+  function lockBadge(scope) {
+    const detail = scope
+      ? `Locked scope: ${scope}. Writes, execution, external delivery, credentials, billing, or policy may be guarded by Gateway policy and owner approval.`
+      : 'Writes/execution guarded by Gateway policy and owner approval';
+    return el('span', { class: 'bridge-lock', title: detail, html:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
     });
   }
@@ -98,7 +101,7 @@ window.GW = (function () {
     const head = el('div', { class: 'nc-head' });
     head.appendChild(el('div', { class: 'nc-dot', style: { background: dotColor } }));
     head.appendChild(el('div', { class: 'nc-name' }, node.name));
-    if (node.bridge || readiness?.approval_required) head.appendChild(lockBadge());
+    if (node.bridge || readiness?.approval_required) head.appendChild(lockBadge(readiness?.lock_scope));
     card.appendChild(head);
 
     if (node.role) {

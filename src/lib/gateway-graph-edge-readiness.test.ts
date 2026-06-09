@@ -93,6 +93,30 @@ describe('gateway graph edge readiness', () => {
     )
   })
 
+  it('includes bundling and visibility metadata for the operator edge renderer', () => {
+    const payload = buildGatewayGraphEdgeReadiness('2026-06-08T16:00:00.000Z')
+    const byId = new Map(payload.edges.map((edge) => [edge.edge_id, edge]))
+
+    expect(byId.get('model.openrouter_to_gateway')).toMatchObject({
+      bundle_domain: 'model',
+      importance: 'primary',
+      default_visible: true,
+      critical: false,
+      selected_visible: true,
+    })
+    expect(byId.get('webhooks.inbound_to_gateway')).toMatchObject({
+      bundle_domain: 'webhooks',
+      importance: 'diagnostic',
+      default_visible: false,
+      selected_visible: true,
+    })
+    expect(byId.get('model.xai_grok_to_gateway')).toMatchObject({
+      importance: 'critical',
+      critical: true,
+      default_visible: true,
+    })
+  })
+
   it('covers visible model provider edges without falling back to gray when runtime is healthy', () => {
     const payload = buildGatewayGraphEdgeReadiness('2026-06-08T16:00:00.000Z')
     const byId = new Map(payload.edges.map((edge) => [edge.edge_id, edge]))

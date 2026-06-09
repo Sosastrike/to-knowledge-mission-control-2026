@@ -21,6 +21,54 @@
     radial-gradient(circle at 12% 0%, rgba(167,139,250,0.05) 0%, transparent 60%),
     var(--bg-1);
 }
+.gw-view-controls {
+  position: fixed;
+  top: 112px;
+  left: 14px;
+  z-index: 72;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100vw - 420px);
+  background: rgba(13,18,26,0.88);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 7px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(8px);
+}
+.gw-view-controls button,
+.drawer-toggle {
+  appearance: none;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--bg-3);
+  color: var(--t-2);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.gw-view-controls button:hover,
+.drawer-toggle:hover,
+.gw-view-controls button.on {
+  color: var(--t-1);
+  border-color: rgba(94,234,212,0.42);
+  background: rgba(94,234,212,0.10);
+}
+.gw-viewport-stage {
+  position: relative;
+  min-width: 1480px;
+  min-height: 1120px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.gw-canvas-wrap.is-panning {
+  cursor: grab;
+}
+.gw-canvas-wrap.is-panning:active {
+  cursor: grabbing;
+}
 .gw-canvas-wrap::before {
   content: '';
   position: absolute; inset: 0;
@@ -78,6 +126,19 @@
     "models   models   models   models   models";
   gap: 14px 18px;
   padding: 22px 26px;
+  z-index: 2;
+}
+.canvas.layout-editing .node-card {
+  cursor: move;
+  outline: 1px dashed rgba(94,234,212,0.28);
+}
+.canvas.compact-cards .node-card {
+  padding: 7px 9px;
+  gap: 4px;
+}
+.canvas.compact-cards .node-card .nc-summary,
+.canvas.compact-cards .node-card .nc-reason {
+  display: none;
 }
 .lane.inputs, .lane.integrations { padding-top: 14px; }
 .lane.brain { padding-top: 14px; }
@@ -215,6 +276,38 @@
   pointer-events: stroke;
   cursor: help;
 }
+.edges path.edge-trunk {
+  stroke-width: 2.4;
+  opacity: 0.22;
+  pointer-events: none;
+}
+.edges path.edge-branch {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.edges path.edge-hidden {
+  display: none;
+}
+.edges path.edge-dimmed {
+  opacity: 0.08 !important;
+}
+.edges path.edge-selected {
+  stroke-width: 2.6 !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.edges.mode-operator path.edge-gray:not(.edge-selected) {
+  opacity: 0.10 !important;
+}
+.edges.mode-quiet path:not(.edge-selected):not(.edge-critical) {
+  display: none;
+}
+.edges.mode-trace path:not(.edge-selected) {
+  opacity: 0.08 !important;
+}
+.edges.mode-diagnostics path.edge-hidden {
+  display: initial;
+}
 .edges path.edge-green {
   stroke: var(--st-green) !important;
   stroke-width: 1.6;
@@ -299,6 +392,98 @@
   color: var(--brand-cyan);
   font-size: 10px;
 }
+
+.side-drawer {
+  position: fixed;
+  top: 112px;
+  bottom: 14px;
+  width: 340px;
+  z-index: 68;
+  background: rgba(13,18,26,0.95);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  box-shadow: var(--shadow-3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 180ms ease;
+  backdrop-filter: blur(10px);
+}
+.side-drawer.right { right: 14px; }
+.side-drawer.left { left: 14px; }
+.side-drawer.collapsed.right { transform: translateX(calc(100% - 42px)); }
+.side-drawer.collapsed.left { transform: translateX(calc(-100% + 42px)); }
+.side-drawer header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+.side-drawer header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t-2);
+}
+.side-drawer .drawer-body {
+  padding: 10px 12px 14px;
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+}
+.drawer-section {
+  border: 1px solid var(--line-1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  padding: 10px;
+}
+.drawer-section h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+.approval-center-list {
+  display: grid;
+  gap: 6px;
+}
+.approval-item {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: var(--bg-3);
+  cursor: pointer;
+}
+.approval-item:hover {
+  border-color: rgba(94,234,212,0.34);
+}
+.approval-item .ai-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-1);
+  font-size: 11px;
+  font-weight: 600;
+}
+.approval-item .ai-state {
+  font-family: var(--ff-mono);
+  font-size: 9.5px;
+  color: var(--brand-cyan);
+}
+.approval-item .ai-next {
+  color: var(--t-4);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.approval-item.need .ai-state { color: var(--st-yellow); }
+.approval-item.blocked .ai-state { color: var(--st-red); }
+.approval-item.read .ai-state { color: var(--brand-cyan); }
 
 /* Tweaks panel */
 .tweaks {
@@ -918,6 +1103,27 @@
 }
 .graph-health.degraded .gh-banner,
 .graph-health.failed .gh-banner { display: block; }
+.side-drawer .edge-legend,
+.side-drawer .graph-health,
+.side-drawer .tweaks {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  top: auto;
+  width: auto;
+  z-index: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.side-drawer .tweaks .body,
+.side-drawer .tweaks.body {
+  padding: 0;
+}
 
 /* Bridge Session modal */
 .modal-mask {
@@ -958,7 +1164,22 @@
   <div id="topbar-mount"></div>
   <div id="pagenav-mount"></div>
 
-  <div class="gw-canvas-wrap">
+  <div class="gw-view-controls" aria-label="Gateway View Controls">
+    <button id="view-fit" title="Fit graph to screen">Fit</button>
+    <button id="view-reset" title="Reset pan and zoom">Reset</button>
+    <button id="view-center-dispatcher" title="Center on Dispatcher">Center Dispatcher</button>
+    <button id="view-center-selected" title="Center selected node">Center Selected</button>
+    <button id="view-edit-layout" title="Drag cards in layout edit mode">Edit Layout</button>
+    <button id="view-save-layout" title="Save layout preference">Save Layout</button>
+    <button id="view-reset-layout" title="Reset saved layout">Reset Layout</button>
+    <button id="mode-operator" class="on" data-edge-mode="operator">Operator</button>
+    <button id="mode-trace" data-edge-mode="trace">Trace</button>
+    <button id="mode-diagnostics" data-edge-mode="diagnostics">Diagnostics</button>
+    <button id="mode-quiet" data-edge-mode="quiet">Quiet</button>
+  </div>
+
+  <div class="gw-canvas-wrap" id="gw-canvas-wrap">
+    <div class="gw-viewport-stage" id="gw-viewport-stage">
     <svg class="edges" id="edges-svg"></svg>
     <div class="gateway-empty" aria-hidden="true">
       <span class="h">⏸ Idle</span>
@@ -1049,28 +1270,45 @@
       <div class="mini-grid" id="mini-grid"></div>
     </aside>
 
-    <aside class="edge-legend" aria-label="Gateway edge legend">
-      <h4>Gateway edge legend</h4>
-      <div id="edge-legend-list"></div>
-    </aside>
-
-    <aside class="graph-health" id="graph-health" aria-label="Gateway Graph Health">
-      <h4>Gateway Graph Health</h4>
-      <div class="gh-banner">Gateway readiness feed unavailable. Last known states may be stale.</div>
-      <div id="graph-health-list"></div>
-    </aside>
+    </div>
   </div>
 </div>
 
 <div class="edge-tooltip" id="edge-tooltip"></div>
 
-<!-- Tweaks panel: Kong / Balanced / n8n / Nucleus + edge density -->
-<div class="tweaks">
+<aside class="side-drawer right collapsed" id="gateway-diagnostics-drawer" aria-label="Gateway Diagnostics">
   <header>
-    Tweaks
-    <span class="kbd">T</span>
+    <h3>Gateway Diagnostics</h3>
+    <button class="drawer-toggle" id="toggle-diagnostics" aria-expanded="false">Open</button>
   </header>
-  <div class="body">
+  <div class="drawer-body">
+    <section class="drawer-section graph-health" id="graph-health" aria-label="Gateway Graph Health">
+      <h4>Gateway Graph Health</h4>
+      <div class="gh-banner">Gateway readiness feed unavailable. Last known states may be stale.</div>
+      <div id="graph-health-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway edge legend">
+      <h4>Gateway Edge Legend</h4>
+      <div id="edge-legend-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway node legend">
+      <h4>Gateway Node Legend</h4>
+      <div id="node-legend-list"></div>
+    </section>
+    <section class="drawer-section">
+      <h4>Gateway Approval Center</h4>
+      <div id="approval-center-list" class="approval-center-list"></div>
+    </section>
+  </div>
+</aside>
+
+<!-- View Settings drawer: Kong / Balanced / n8n / Nucleus + edge density -->
+<aside class="side-drawer left collapsed" id="view-settings-drawer" aria-label="Gateway View Settings">
+  <header>
+    <h3>View Settings</h3>
+    <button class="drawer-toggle" id="toggle-view-settings" aria-expanded="false">Open</button>
+  </header>
+  <div class="drawer-body body tweaks">
     <div class="row">
       <label>Hero treatment</label>
       <div class="seg" id="seg-variant" style="grid-template-columns: repeat(4, 1fr);">
@@ -1092,8 +1330,11 @@
     </div>
     <label class="toggle"><input type="checkbox" id="t-policy" /> Show policy strip</label>
     <label class="toggle"><input type="checkbox" id="t-bridge" /> Bridge expired (test yellow cascade)</label>
+    <label class="toggle"><input type="checkbox" id="t-hide-standby" checked /> Hide standby lines</label>
+    <label class="toggle"><input type="checkbox" id="t-selected-only" /> Show only selected paths</label>
+    <label class="toggle"><input type="checkbox" id="t-compact-cards" /> Compact cards</label>
   </div>
-</div>
+</aside>
 
 <!-- Inspector drawer -->
 <aside class="inspector" id="inspector">
@@ -1166,10 +1407,23 @@
   // ---- Inspector ----
   const inspector = document.getElementById('inspector');
   const edgeTooltip = document.getElementById('edge-tooltip');
+  const wrap = document.getElementById('gw-canvas-wrap');
+  const stage = document.getElementById('gw-viewport-stage');
+  const svg = document.getElementById('edges-svg');
+  const PREF_KEY = 'gateway_overview_ui_v1';
   let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
   let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
   let graphReadinessFetched = false;
   let nodeReadinessFetched = false;
+  let approvalCenterFetched = false;
+  let approvalCenterItems = [];
+  let selectedNodeId = null;
+  let layoutEditing = false;
+  let edgeMode = 'operator';
+  let hideStandbyLines = true;
+  let selectedOnly = false;
+  let viewport = { x: 0, y: 0, scale: 1 };
+  let nodeOffsets = {};
   let graphHealth = Object.assign({}, G.GRAPH_HEALTH || {}, {
     readiness_feed: G.GRAPH_HEALTH?.readiness_feed || 'healthy',
     graph_data_source: G.GRAPH_HEALTH?.graph_data_source || 'static fallback',
@@ -1184,6 +1438,93 @@
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
     })[ch]);
+  }
+
+  function loadPrefs() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+      viewport = Object.assign(viewport, raw.viewport || {});
+      nodeOffsets = raw.nodeOffsets && typeof raw.nodeOffsets === 'object' ? raw.nodeOffsets : {};
+      edgeMode = raw.edgeMode || edgeMode;
+      hideStandbyLines = raw.hideStandbyLines ?? hideStandbyLines;
+      selectedOnly = raw.selectedOnly ?? selectedOnly;
+      document.getElementById('t-hide-standby').checked = hideStandbyLines;
+      document.getElementById('t-selected-only').checked = selectedOnly;
+      document.getElementById('gateway-diagnostics-drawer')?.classList.toggle('collapsed', raw.diagnosticsCollapsed ?? true);
+      document.getElementById('view-settings-drawer')?.classList.toggle('collapsed', raw.viewSettingsCollapsed ?? true);
+    } catch (err) {}
+  }
+
+  function savePrefs() {
+    const payload = {
+      viewport,
+      nodeOffsets,
+      edgeMode,
+      hideStandbyLines,
+      selectedOnly,
+      diagnosticsCollapsed: document.getElementById('gateway-diagnostics-drawer')?.classList.contains('collapsed') ?? true,
+      viewSettingsCollapsed: document.getElementById('view-settings-drawer')?.classList.contains('collapsed') ?? true,
+    };
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(payload)); } catch (err) {}
+  }
+
+  function applyViewport() {
+    if (!stage) return;
+    viewport.scale = Math.max(0.45, Math.min(1.8, Number(viewport.scale) || 1));
+    stage.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`;
+    setTimeout(drawEdges, 0);
+  }
+
+  function setEdgeMode(mode) {
+    edgeMode = ['operator', 'trace', 'diagnostics', 'quiet'].includes(mode) ? mode : 'operator';
+    document.querySelectorAll('[data-edge-mode]').forEach(btn => btn.classList.toggle('on', btn.dataset.edgeMode === edgeMode));
+    if (edgeMode === 'quiet') document.getElementById('t-selected-only').checked = true;
+    drawEdges();
+    savePrefs();
+  }
+
+  function syncDrawerButton(drawerId, buttonId) {
+    const drawer = document.getElementById(drawerId);
+    const btn = document.getElementById(buttonId);
+    if (!drawer || !btn) return;
+    const collapsed = drawer.classList.contains('collapsed');
+    btn.textContent = collapsed ? 'Open' : 'Close';
+    btn.setAttribute('aria-expanded', String(!collapsed));
+  }
+
+  function toggleDrawer(drawerId, buttonId) {
+    const drawer = document.getElementById(drawerId);
+    if (!drawer) return;
+    drawer.classList.toggle('collapsed');
+    syncDrawerButton(drawerId, buttonId);
+    savePrefs();
+  }
+
+  function applyNodeOffsets() {
+    document.querySelectorAll('.node-card').forEach(card => {
+      const off = nodeOffsets[card.dataset.id] || { x: 0, y: 0 };
+      card.style.transform = `translate(${Number(off.x) || 0}px, ${Number(off.y) || 0}px)`;
+    });
+  }
+
+  function toggleLayoutEditing(force) {
+    layoutEditing = typeof force === 'boolean' ? force : !layoutEditing;
+    document.getElementById('canvas').classList.toggle('layout-editing', layoutEditing);
+    document.getElementById('view-edit-layout').classList.toggle('on', layoutEditing);
+  }
+
+  function focusElementInView(el, targetScale = viewport.scale) {
+    if (!el || !wrap || !stage) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const cx = (rect.left + rect.width / 2 - stageRect.left) / viewport.scale;
+    const cy = (rect.top + rect.height / 2 - stageRect.top) / viewport.scale;
+    viewport.scale = targetScale;
+    viewport.x = wrapRect.width / 2 - cx * viewport.scale;
+    viewport.y = wrapRect.height / 2 - cy * viewport.scale;
+    applyViewport();
+    savePrefs();
   }
 
   function edgeColorVar(color) {
@@ -1306,6 +1647,56 @@
         <span>${esc(item.label)}</span>
       </div>
     `).join('');
+  }
+
+  function renderNodeLegend() {
+    const target = document.getElementById('node-legend-list');
+    if (!target) return;
+    const legend = [
+      ['green', 'Live', 'Runtime healthy and usable in the current policy mode.'],
+      ['cyan', 'Read-only active', 'Discovery or preview path works; writes are guarded.'],
+      ['yellow', 'Guarded', 'Approval, policy, delivery, or execution guard applies.'],
+      ['gray', 'Standby', 'Registered but no heartbeat or recent event.'],
+      ['red', 'Blocked', 'Provider, auth, billing, or policy blocker.'],
+    ];
+    target.innerHTML = legend.map(([color, label, meaning]) => `
+      <div class="legend-row" title="${esc(meaning)}">
+        <span class="legend-dot" style="background:${edgeColorVar(color)}"></span>
+        <span class="legend-label">${esc(label)}</span>
+        <span>${esc(meaning)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderApprovalCenter() {
+    const target = document.getElementById('approval-center-list');
+    if (!target) return;
+    if (!approvalCenterItems.length) {
+      target.innerHTML = `<div style="color:var(--t-4);font-size:11px;">${approvalCenterFetched ? 'No approval records.' : 'Approval Center loading…'}</div>`;
+      return;
+    }
+    target.innerHTML = approvalCenterItems.map(item => {
+      const cls = item.state === 'approval_needed' || item.state === 'approval_pending' ? 'need'
+        : item.state === 'blocked_by_policy' ? 'blocked'
+        : item.state === 'read_only_active' || item.state === 'standing_scope_active' ? 'read'
+        : '';
+      return `
+        <button class="approval-item ${cls}" data-approval-node="${esc(item.node_id)}" title="${esc(item.exact_reason)}">
+          <span class="ai-top">${esc(item.component)} <span class="ai-state">${esc(item.state)}</span></span>
+          <span>${esc(item.label)}</span>
+          <span class="ai-next">${esc(item.next_action)}</span>
+        </button>
+      `;
+    }).join('');
+    target.querySelectorAll('[data-approval-node]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nodeId = btn.getAttribute('data-approval-node');
+        selectedNodeId = nodeId;
+        setEdgeMode('trace');
+        if (nodeId) openInspector(nodeId);
+        drawEdges();
+      });
+    });
   }
 
   function renderGraphHealth(extraMappingErrors) {
@@ -1505,6 +1896,30 @@
     }
   }
 
+  function fetchApprovalCenter() {
+    try {
+      fetch('/api/gateway/approvals/center', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.items)) throw new Error('gateway_approval_center_unavailable');
+          approvalCenterFetched = true;
+          approvalCenterItems = payload.items;
+          renderApprovalCenter();
+          try { localStorage.setItem('gateway_approval_center_last_good', JSON.stringify(payload)); } catch (err) {}
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_approval_center_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          approvalCenterFetched = Boolean(fallbackPayload);
+          approvalCenterItems = Array.isArray(fallbackPayload?.items) ? fallbackPayload.items : [];
+          renderApprovalCenter();
+        });
+    } catch (err) {
+      renderApprovalCenter();
+    }
+  }
+
   function openInspector(id) {
     let n = G.get(id);
     if (!n && id === 'gateway.core') n = G.get('gateway.core');
@@ -1537,6 +1952,10 @@
         <dt>Mode</dt><dd>${esc(readiness?.status || 'unknown')}</dd>
         <dt>Color</dt><dd>${esc(readiness?.color || cssStatus || 'unknown')}</dd>
         <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness?.primary_reason || 'legacy_status_only')}</dd>
+        <dt>Setup state</dt><dd>${esc(readiness?.setup_state || 'not reported')}</dd>
+        <dt>Per-action</dt><dd>${esc(readiness?.per_action_state || 'not reported')}</dd>
+        <dt>Lock scope</dt><dd>${esc(readiness?.lock_scope || (readiness?.approval_required ? 'write_execute_policy' : 'none'))}</dd>
+        <dt>Approval refs</dt><dd>${esc((readiness?.approval_center_refs || []).join(', ') || 'none')}</dd>
         <dt>Next action</dt><dd>${esc(readiness?.next_action || 'none')}</dd>
         <dt>Last heartbeat</dt><dd>${esc(readiness?.last_heartbeat_at || 'none')}</dd>
         <dt>Last success</dt><dd>${esc(readiness?.last_success_at || n.lastSuccess || '—')}</dd>
@@ -1587,53 +2006,313 @@
   document.addEventListener('click', (e) => {
     const card = e.target.closest('.node-card');
     if (!card) return;
+    if (layoutEditing) return;
+    selectedNodeId = card.dataset.id;
+    if (edgeMode === 'trace' || selectedOnly) drawEdges();
     openInspector(card.dataset.id);
   });
   // Click gateway core
   document.getElementById('gateway-core').onclick = () => {
+    selectedNodeId = 'gateway.core';
+    if (edgeMode === 'trace' || selectedOnly) drawEdges();
     openInspector('gateway.core');
   };
   renderEdgeLegend();
+  renderNodeLegend();
+  renderApprovalCenter();
   renderGraphHealth();
 
   // ---- Edges drawing ----
-  const svg = document.getElementById('edges-svg');
   function drawEdges() {
-    const wrap = document.querySelector('.gw-canvas-wrap').getBoundingClientRect();
-    svg.setAttribute('viewBox', `0 0 ${wrap.width} ${wrap.height}`);
-    svg.setAttribute('width', wrap.width);
-    svg.setAttribute('height', wrap.height);
+    if (!svg || !stage) return;
+    const stageBox = stage.getBoundingClientRect();
+    const stageWidth = Math.max(1480, Math.ceil(stage.scrollWidth || stageBox.width / viewport.scale));
+    const stageHeight = Math.max(1120, Math.ceil(stage.scrollHeight || stageBox.height / viewport.scale));
+    svg.setAttribute('viewBox', `0 0 ${stageWidth} ${stageHeight}`);
+    svg.setAttribute('width', stageWidth);
+    svg.setAttribute('height', stageHeight);
+    svg.className.baseVal = `edges mode-${edgeMode}`;
     svg.innerHTML = '';
     const mappingErrors = [];
 
-    function ctr(id) {
+    function box(id) {
       let el;
       if (id === 'gateway.core') el = document.getElementById('gateway-core');
       else el = document.querySelector(`.node-card[data-id="${id}"]`);
       if (!el) return null;
       const r = el.getBoundingClientRect();
-      return { x: r.left - wrap.left + r.width/2, y: r.top - wrap.top + r.height/2 };
+      if (r.width < 8 || r.height < 8) return null;
+      const scale = viewport.scale || 1;
+      const left = (r.left - stageBox.left) / scale;
+      const top = (r.top - stageBox.top) / scale;
+      const width = r.width / scale;
+      const height = r.height / scale;
+      return {
+        left, top, width, height,
+        right: left + width,
+        bottom: top + height,
+        cx: left + width / 2,
+        cy: top + height / 2,
+      };
     }
 
-    G.EDGES.forEach(edge => {
-      const a = ctr(edge.from); const b = ctr(edge.to);
-      if (!a || !b) {
+    function routeDomain(readiness) {
+      const d = readiness.bundle_domain || readiness.domain || 'connector';
+      if (d === 'model') return 'models';
+      if (d === 'report' || d === 'reports') return 'reports';
+      if (d === 'webhook' || d === 'webhooks') return 'webhooks';
+      if (d === 'event' || d === 'events') return 'events';
+      if (d === 'agentmail') return 'agentmail';
+      if (d === 'zapier') return 'zapier';
+      if (d === 'storage') return 'storage';
+      if (d === 'browser') return 'browser';
+      return 'connectors';
+    }
+
+    function railFor(domain, a, b, core) {
+      const index = {
+        models: 0, connectors: 1, storage: 2, reports: 3,
+        webhooks: 4, events: 5, browser: 6, agentmail: 7, zapier: 8,
+      }[domain] ?? 1;
+      if (domain === 'models') return { type: 'h', v: Math.max(core.bottom + 118, Math.max(a.cy, b.cy) - 72), offset: index };
+      if (domain === 'events' || domain === 'browser') return { type: 'v', v: Math.min(core.left - 116 - index * 8, Math.min(a.cx, b.cx) + 88), offset: index };
+      if (domain === 'webhooks') return { type: 'v', v: Math.min(core.left - 92, Math.min(a.cx, b.cx) + 120), offset: index };
+      if (domain === 'reports') return { type: 'v', v: Math.max(core.right + 132, Math.min(a.cx, b.cx) + 50), offset: index };
+      if (domain === 'agentmail') return { type: 'v', v: Math.max(core.right + 92, Math.min(a.cx, b.cx) + 70), offset: index };
+      if (domain === 'zapier') return { type: 'v', v: Math.max(core.right + 112, Math.min(a.cx, b.cx) + 80), offset: index };
+      if (domain === 'storage') return { type: 'v', v: Math.max(core.right + 150, Math.min(a.cx, b.cx) + 100), offset: index };
+      return { type: 'v', v: Math.max(core.right + 104, Math.min(a.cx, b.cx) + 80), offset: index };
+    }
+
+    function anchor(box, other, rail) {
+      if (rail.type === 'h') {
+        return { x: box.cx, y: other.cy > box.cy ? box.bottom + 10 : box.top - 10 };
+      }
+      return { x: other.cx > box.cx ? box.right + 10 : box.left - 10, y: box.cy };
+    }
+
+    function orthogonalPath(a, b, rail) {
+      if (rail.type === 'h') {
+        return `M ${a.x} ${a.y} L ${a.x} ${rail.v} L ${b.x} ${rail.v} L ${b.x} ${b.y}`;
+      }
+      return `M ${a.x} ${a.y} L ${rail.v} ${a.y} L ${rail.v} ${b.y} L ${b.x} ${b.y}`;
+    }
+
+    function segmentIntersectsRect(a, b, rect) {
+      const pad = 8;
+      const left = rect.left - pad;
+      const right = rect.right + pad;
+      const top = rect.top - pad;
+      const bottom = rect.bottom + pad;
+      if (Math.abs(a.x - b.x) < 0.1) {
+        const x = a.x;
+        if (x <= left || x >= right) return false;
+        return Math.max(a.y, b.y) > top && Math.min(a.y, b.y) < bottom;
+      }
+      if (Math.abs(a.y - b.y) < 0.1) {
+        const y = a.y;
+        if (y <= top || y >= bottom) return false;
+        return Math.max(a.x, b.x) > left && Math.min(a.x, b.x) < right;
+      }
+      return false;
+    }
+
+    function segmentClear(a, b, obstacles) {
+      return !obstacles.some(rect => segmentIntersectsRect(a, b, rect));
+    }
+
+    function pointClear(point, obstacles) {
+      return !obstacles.some(rect => (
+        point.x > rect.left - 8 && point.x < rect.right + 8 &&
+        point.y > rect.top - 8 && point.y < rect.bottom + 8
+      ));
+    }
+
+    function findOrthogonalRoute(a, b, rail, obstacles) {
+      const margin = 24;
+      const xs = new Set([Math.round(a.x), Math.round(b.x), 16, Math.max(16, stageWidth - 16)]);
+      const ys = new Set([Math.round(a.y), Math.round(b.y), 16, Math.max(16, stageHeight - 16)]);
+      if (rail.type === 'v') xs.add(Math.round(rail.v));
+      else ys.add(Math.round(rail.v));
+      obstacles.forEach(rect => {
+        xs.add(Math.max(16, Math.round(rect.left - margin)));
+        xs.add(Math.min(stageWidth - 16, Math.round(rect.right + margin)));
+        ys.add(Math.max(16, Math.round(rect.top - margin)));
+        ys.add(Math.min(stageHeight - 16, Math.round(rect.bottom + margin)));
+      });
+      const xList = [...xs].sort((x1, x2) => x1 - x2);
+      const yList = [...ys].sort((y1, y2) => y1 - y2);
+      const nodeKey = (x, y) => `${x},${y}`;
+      const points = new Map();
+      xList.forEach(x => yList.forEach(y => {
+        const point = { x, y };
+        if (pointClear(point, obstacles)) points.set(nodeKey(x, y), point);
+      }));
+      const startKey = nodeKey(Math.round(a.x), Math.round(a.y));
+      const endKey = nodeKey(Math.round(b.x), Math.round(b.y));
+      points.set(startKey, { x: Math.round(a.x), y: Math.round(a.y) });
+      points.set(endKey, { x: Math.round(b.x), y: Math.round(b.y) });
+      const neighbors = (point) => {
+        const out = [];
+        const xi = xList.indexOf(point.x);
+        const yi = yList.indexOf(point.y);
+        const candidates = [
+          xi > 0 ? { x: xList[xi - 1], y: point.y } : null,
+          xi < xList.length - 1 ? { x: xList[xi + 1], y: point.y } : null,
+          yi > 0 ? { x: point.x, y: yList[yi - 1] } : null,
+          yi < yList.length - 1 ? { x: point.x, y: yList[yi + 1] } : null,
+        ].filter(Boolean);
+        candidates.forEach(next => {
+          const key = nodeKey(next.x, next.y);
+          if (points.has(key) && segmentClear(point, next, obstacles)) out.push(next);
+        });
+        return out;
+      };
+      const distance = (p1, p2) => Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
+      const open = new Set([startKey]);
+      const cameFrom = new Map();
+      const gScore = new Map([[startKey, 0]]);
+      const fScore = new Map([[startKey, distance(a, b)]]);
+      while (open.size) {
+        let currentKey = null;
+        let best = Infinity;
+        open.forEach(key => {
+          const score = fScore.get(key) ?? Infinity;
+          if (score < best) { best = score; currentKey = key; }
+        });
+        if (!currentKey) break;
+        if (currentKey === endKey) {
+          const route = [points.get(currentKey)];
+          while (cameFrom.has(currentKey)) {
+            currentKey = cameFrom.get(currentKey);
+            route.unshift(points.get(currentKey));
+          }
+          return route.filter(Boolean);
+        }
+        open.delete(currentKey);
+        const current = points.get(currentKey);
+        neighbors(current).forEach(next => {
+          const nextKey = nodeKey(next.x, next.y);
+          const tentative = (gScore.get(currentKey) ?? Infinity) + distance(current, next);
+          if (tentative < (gScore.get(nextKey) ?? Infinity)) {
+            cameFrom.set(nextKey, currentKey);
+            gScore.set(nextKey, tentative);
+            fScore.set(nextKey, tentative + distance(next, b));
+            open.add(nextKey);
+          }
+        });
+      }
+      return rail.type === 'h'
+        ? [a, { x: a.x, y: rail.v }, { x: b.x, y: rail.v }, b]
+        : [a, { x: rail.v, y: a.y }, { x: rail.v, y: b.y }, b];
+    }
+
+    function pathFromPoints(points) {
+      const compact = [];
+      points.forEach(point => {
+        const last = compact[compact.length - 1];
+        if (!last || Math.abs(last.x - point.x) > 0.1 || Math.abs(last.y - point.y) > 0.1) compact.push(point);
+      });
+      return compact.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+    }
+
+    function shouldShow(readiness, edge) {
+      const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+      if (edgeMode === 'diagnostics') return true;
+      if (edgeMode === 'trace' || selectedOnly) return Boolean(incident);
+      if (edgeMode === 'quiet') return Boolean(incident || readiness.critical || readiness.color === 'red');
+      if (hideStandbyLines && readiness.status === 'standby' && !readiness.critical) return false;
+      return readiness.default_visible !== false || readiness.color !== 'gray';
+    }
+
+    const allBoxes = [...document.querySelectorAll('.node-card')]
+      .map(el => {
+        const r = el.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8) return null;
+        const scale = viewport.scale || 1;
+        const left = (r.left - stageBox.left) / scale;
+        const top = (r.top - stageBox.top) / scale;
+        return {
+          left,
+          top,
+          width: r.width / scale,
+          height: r.height / scale,
+          right: left + r.width / scale,
+          bottom: top + r.height / scale,
+        };
+      })
+      .filter(Boolean);
+    const core = box('gateway.core') || { left: 650, right: 830, top: 420, bottom: 620, cx: 740, cy: 520 };
+    const routed = [];
+    G.EDGES.forEach((edge, edgeIndex) => {
+      const aBox = box(edge.from); const bBox = box(edge.to);
+      if (!aBox || !bBox) {
         mappingErrors.push(`edge_mapping_mismatch:${edge.from}->${edge.to}`);
         return;
       }
-      const fromN = G.get(edge.from);
-      const toN = G.get(edge.to);
-      // Bezier
-      const dx = b.x - a.x;
-      const cp = Math.abs(dx) * 0.45;
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', `M ${a.x} ${a.y} C ${a.x + cp} ${a.y}, ${b.x - cp} ${b.y}, ${b.x} ${b.y}`);
       const readiness = edgeReadinessFor(edge);
-      path.setAttribute('class', `edge edge-${readiness.color}`);
+      const domain = routeDomain(readiness);
+      const rail = railFor(domain, aBox, bBox, core);
+      const a = anchor(aBox, bBox, rail);
+      const b = anchor(bBox, aBox, rail);
+      const obstacles = allBoxes.filter(rect => rect !== aBox && rect !== bBox);
+      const routePoints = findOrthogonalRoute(a, b, rail, obstacles);
+      routed.push({ edge, readiness, domain, rail, a, b, obstacles, routePoints, pathData: pathFromPoints(routePoints), edgeIndex });
+    });
+
+    const trunkByDomain = new Map();
+    routed.forEach(item => {
+      if (!shouldShow(item.readiness, item.edge)) return;
+      const key = `${item.domain}:${item.rail.type}:${Math.round(item.rail.v)}`;
+      const existing = trunkByDomain.get(key) || { ...item, min: Infinity, max: -Infinity };
+      if (item.rail.type === 'h') {
+        existing.min = Math.min(existing.min, item.a.x, item.b.x);
+        existing.max = Math.max(existing.max, item.a.x, item.b.x);
+      } else {
+        existing.min = Math.min(existing.min, item.a.y, item.b.y);
+        existing.max = Math.max(existing.max, item.a.y, item.b.y);
+      }
+      trunkByDomain.set(key, existing);
+    });
+
+    trunkByDomain.forEach(trunk => {
+      if (edgeMode === 'quiet') return;
+      const d = trunk.rail.type === 'h'
+        ? `M ${trunk.min} ${trunk.rail.v} L ${trunk.max} ${trunk.rail.v}`
+        : `M ${trunk.rail.v} ${trunk.min} L ${trunk.rail.v} ${trunk.max}`;
+      const clear = trunk.rail.type === 'h'
+        ? segmentClear({ x: trunk.min, y: trunk.rail.v }, { x: trunk.max, y: trunk.rail.v }, allBoxes)
+        : segmentClear({ x: trunk.rail.v, y: trunk.min }, { x: trunk.rail.v, y: trunk.max }, allBoxes);
+      if (!clear) return;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', `edge edge-trunk edge-${trunk.readiness.color} edge-domain-${trunk.domain}`);
+      svg.appendChild(path);
+    });
+
+    routed.forEach(item => {
+      const { edge, readiness } = item;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', item.pathData);
+      const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+      const hidden = !shouldShow(readiness, edge);
+      const selected = Boolean(incident && (edgeMode === 'trace' || selectedOnly));
+      const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !incident);
+      path.setAttribute('class', [
+        'edge',
+        'edge-branch',
+        `edge-${readiness.color}`,
+        `edge-domain-${item.domain}`,
+        readiness.critical ? 'edge-critical' : '',
+        hidden ? 'edge-hidden' : '',
+        selected ? 'edge-selected' : '',
+        dimmed ? 'edge-dimmed' : '',
+      ].filter(Boolean).join(' '));
       path.setAttribute('tabindex', '0');
       path.setAttribute('role', 'button');
       path.setAttribute('aria-label', `${readiness.source} to ${readiness.target}: ${readiness.status}, ${readiness.primary_reason}`);
       path.dataset.edgeId = readiness.edge_id;
+      path.dataset.domain = item.domain;
       const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
       title.textContent = `${readiness.source} → ${readiness.target}\nstatus: ${readiness.status}\nreason: ${readiness.primary_reason}\nnext: ${readiness.next_action}`;
       path.appendChild(title);
@@ -1654,6 +2333,7 @@
   drawEdges();
   fetchNodeReadiness();
   fetchEdgeReadiness();
+  fetchApprovalCenter();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle
   setTimeout(drawEdges, 250);
@@ -1697,6 +2377,123 @@
       location.reload();
     }
   };
+
+  // ---- View controls, drawers, pan/zoom, and safe UI preference persistence ----
+  loadPrefs();
+  applyNodeOffsets();
+  applyViewport();
+  setEdgeMode(edgeMode);
+  syncDrawerButton('gateway-diagnostics-drawer', 'toggle-diagnostics');
+  syncDrawerButton('view-settings-drawer', 'toggle-view-settings');
+
+  document.getElementById('toggle-diagnostics').onclick = () => toggleDrawer('gateway-diagnostics-drawer', 'toggle-diagnostics');
+  document.getElementById('toggle-view-settings').onclick = () => toggleDrawer('view-settings-drawer', 'toggle-view-settings');
+  document.querySelectorAll('[data-edge-mode]').forEach(btn => {
+    btn.addEventListener('click', () => setEdgeMode(btn.dataset.edgeMode));
+  });
+  document.getElementById('t-hide-standby').onchange = (e) => {
+    hideStandbyLines = e.target.checked;
+    drawEdges();
+    savePrefs();
+  };
+  document.getElementById('t-selected-only').onchange = (e) => {
+    selectedOnly = e.target.checked;
+    drawEdges();
+    savePrefs();
+  };
+  document.getElementById('t-compact-cards').onchange = (e) => {
+    document.getElementById('canvas').classList.toggle('compact-cards', e.target.checked);
+    savePrefs();
+  };
+  document.getElementById('view-fit').onclick = () => {
+    const content = document.getElementById('canvas');
+    const wrapRect = wrap.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    const scale = Math.max(0.52, Math.min(1.2, Math.min((wrapRect.width - 48) / (contentRect.width / viewport.scale), (wrapRect.height - 48) / (contentRect.height / viewport.scale))));
+    viewport.scale = scale;
+    viewport.x = 24;
+    viewport.y = 24;
+    applyViewport();
+    savePrefs();
+  };
+  document.getElementById('view-reset').onclick = () => {
+    viewport = { x: 0, y: 0, scale: 1 };
+    applyViewport();
+    savePrefs();
+  };
+  document.getElementById('view-center-dispatcher').onclick = () => focusElementInView(document.getElementById('gateway-core'), viewport.scale);
+  document.getElementById('view-center-selected').onclick = () => {
+    const el = selectedNodeId === 'gateway.core' ? document.getElementById('gateway-core') : document.querySelector(`.node-card[data-id="${selectedNodeId}"]`);
+    focusElementInView(el || document.getElementById('gateway-core'), viewport.scale);
+  };
+  document.getElementById('view-edit-layout').onclick = () => toggleLayoutEditing();
+  document.getElementById('view-save-layout').onclick = () => savePrefs();
+  document.getElementById('view-reset-layout').onclick = () => {
+    nodeOffsets = {};
+    applyNodeOffsets();
+    drawEdges();
+    savePrefs();
+  };
+
+  let panStart = null;
+  wrap.addEventListener('pointerdown', (e) => {
+    if (layoutEditing || e.target.closest('.node-card, button, .side-drawer, .inspector, .modal-mask, .edge')) return;
+    panStart = { x: e.clientX, y: e.clientY, vx: viewport.x, vy: viewport.y };
+    wrap.setPointerCapture?.(e.pointerId);
+    wrap.classList.add('is-panning');
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!panStart) return;
+    viewport.x = panStart.vx + (e.clientX - panStart.x);
+    viewport.y = panStart.vy + (e.clientY - panStart.y);
+    applyViewport();
+  });
+  wrap.addEventListener('pointerup', (e) => {
+    if (!panStart) return;
+    panStart = null;
+    wrap.releasePointerCapture?.(e.pointerId);
+    wrap.classList.remove('is-panning');
+    savePrefs();
+  });
+  wrap.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    const oldScale = viewport.scale;
+    const nextScale = Math.max(0.45, Math.min(1.8, oldScale * (e.deltaY > 0 ? 0.92 : 1.08)));
+    const wrapRect = wrap.getBoundingClientRect();
+    const mx = e.clientX - wrapRect.left;
+    const my = e.clientY - wrapRect.top;
+    viewport.x = mx - (mx - viewport.x) * (nextScale / oldScale);
+    viewport.y = my - (my - viewport.y) * (nextScale / oldScale);
+    viewport.scale = nextScale;
+    applyViewport();
+    savePrefs();
+  }, { passive: false });
+
+  let dragStart = null;
+  document.addEventListener('pointerdown', (e) => {
+    const card = e.target.closest('.node-card');
+    if (!layoutEditing || !card) return;
+    e.preventDefault();
+    selectedNodeId = card.dataset.id;
+    const current = nodeOffsets[selectedNodeId] || { x: 0, y: 0 };
+    dragStart = { card, id: selectedNodeId, x: e.clientX, y: e.clientY, ox: Number(current.x) || 0, oy: Number(current.y) || 0 };
+    card.setPointerCapture?.(e.pointerId);
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!dragStart) return;
+    const dx = (e.clientX - dragStart.x) / viewport.scale;
+    const dy = (e.clientY - dragStart.y) / viewport.scale;
+    nodeOffsets[dragStart.id] = { x: Math.round(dragStart.ox + dx), y: Math.round(dragStart.oy + dy) };
+    applyNodeOffsets();
+    drawEdges();
+  });
+  document.addEventListener('pointerup', (e) => {
+    if (!dragStart) return;
+    dragStart.card.releasePointerCapture?.(e.pointerId);
+    dragStart = null;
+    savePrefs();
+  });
 
   // ---- Live Nucleus rendering ----------------------------------------------
   const dfRows = document.getElementById('df-rows');
@@ -1775,7 +2572,6 @@
   placeSatellites();
 
   // ---- Live request beam animation ----
-  const wrap = document.querySelector('.gw-canvas-wrap');
   let beamCount = 0;
   function fireBeam(req) {
     const wrapRect = wrap.getBoundingClientRect();

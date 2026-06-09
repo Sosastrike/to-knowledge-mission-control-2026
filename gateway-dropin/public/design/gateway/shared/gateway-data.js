@@ -419,11 +419,9 @@ window.GATEWAY = (function () {
     { id: 'mini.dispatcher',  label: 'Sub-dispatcher', role: 'fan-out planner',     status: 'green',  load: 0.33, allowance: 3000,  used: 990  },
   ];
 
-  // Live request stream — each entry is one engine asking the Gateway
-  // for data. The nucleus view animates these as they fly to the core,
-  // get routed by the Dispatcher, and resolve.
-  // (Pre-seeded; the nucleus view also generates new ones in real time.)
-  const REQUEST_STREAM = [
+  // Demo request stream — static sample data for non-live documentation only.
+  // It is not runtime proof and must never drive the live traffic overlay.
+  const DEMO_REQUEST_STREAM = [
     { id: 'r-9182', t: 0,    from: 'agent.zero',    asks: 'brain.obsidian',  op: 'read',     payload: 'project · gateway · todo',          tokens_in: 320,  tokens_out: 180,  engine: 'eng.claude.haiku',  ms: 210, result: 'ok' },
     { id: 'r-9183', t: 220,  from: 'agent.zero',    asks: 'int.firecrawl',   op: 'execute',  payload: 'crawl konghq.com/products/ai-gateway', tokens_in: 0,  tokens_out: 0,    engine: null,                ms: 1820, result: 'ok' },
     { id: 'r-9184', t: 380,  from: 'mini.crawler',  asks: 'gateway.core',    op: 'discover', payload: 'getTools(domain=mail)',              tokens_in: 0,    tokens_out: 0,    engine: null,                ms: 18,  result: 'ok' },
@@ -472,7 +470,7 @@ window.GATEWAY = (function () {
 
   return {
     STATUS, LANES, NODES, OPENCLOUD_CHILDREN, EDGES, EDGE_READINESS, EDGE_LEGEND, NODE_READINESS, GRAPH_HEALTH, BRIDGE_SESSIONS, AUDIT, POLICIES, HEALTH,
-    ENGINES, MINI_AGENTS, REQUEST_STREAM, DISPATCHER, TOKEN_LEDGER,
+    ENGINES, MINI_AGENTS, REQUEST_STREAM: DEMO_REQUEST_STREAM, DEMO_REQUEST_STREAM, DISPATCHER, TOKEN_LEDGER,
     get, byLane, statusOf, statusColor, getEdgeReadiness, getNodeReadiness,
   };
 })();

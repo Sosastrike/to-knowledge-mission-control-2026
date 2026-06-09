@@ -532,6 +532,50 @@
 .approval-item.need .ai-state { color: var(--st-yellow); }
 .approval-item.blocked .ai-state { color: var(--st-red); }
 .approval-item.read .ai-state { color: var(--brand-cyan); }
+.approval-proposal-heading {
+  margin: 8px 0 2px;
+  color: var(--t-3);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.approval-proposal {
+  display: grid;
+  gap: 4px;
+  border: 1px dashed rgba(94,234,212,0.28);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: rgba(94,234,212,0.035);
+}
+.approval-proposal.preview {
+  border-color: rgba(255,214,102,0.28);
+  background: rgba(255,214,102,0.035);
+}
+.approval-proposal .ai-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-1);
+  font-size: 11px;
+  font-weight: 600;
+}
+.approval-proposal .ai-state {
+  font-family: var(--ff-mono);
+  font-size: 9.5px;
+  color: var(--brand-cyan);
+}
+.approval-proposal.preview .ai-state {
+  color: var(--st-yellow);
+}
+.approval-proposal .ai-next,
+.approval-proposal .ai-scope {
+  color: var(--t-4);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.approval-proposal .ai-scope {
+  font-family: var(--ff-mono);
+}
 
 /* Tweaks panel */
 .tweaks {
@@ -1231,7 +1275,7 @@
     <svg class="edges" id="edges-svg"></svg>
     <div class="gateway-empty" aria-hidden="true">
       <span class="h">⏸ Idle</span>
-      <span class="s">No traffic. Toggle <strong>Live request beams</strong> to resume the live request stream.</span>
+      <span class="s">No traffic. The live overlay stays idle until trusted topology traffic counters show recent movement.</span>
     </div>
     <div class="canvas" id="canvas">
       <div class="gw-policy-strip">
@@ -1336,6 +1380,11 @@
       <div class="gh-banner">Gateway readiness feed unavailable. Last known states may be stale.</div>
       <div id="graph-health-list"></div>
     </section>
+    <section class="drawer-section graph-health" id="topology-data-sync" aria-label="Topology/Data Sync">
+      <h4>Topology/Data Sync</h4>
+      <div class="gh-banner">Visual topology and runtime graph data disagree. Inspect missing mappings before trusting pathlines.</div>
+      <div id="topology-data-sync-list"></div>
+    </section>
     <section class="drawer-section edge-legend" aria-label="Gateway edge legend">
       <h4>Gateway Edge Legend</h4>
       <div id="edge-legend-list"></div>
@@ -1367,7 +1416,7 @@
         <button data-v="nucleus" class="on">Nucleus</button>
       </div>
     </div>
-    <label class="toggle"><input type="checkbox" id="t-traffic" checked /> Live request beams</label>
+    <label class="toggle"><input type="checkbox" id="t-traffic" checked /> Live traffic overlay</label>
     <label class="toggle"><input type="checkbox" id="t-fanout" /> Fan-out burst (split big task)</label>
     <div class="row">
       <label>Edge animation</label>
@@ -1463,10 +1512,15 @@
   const PREF_KEY = 'gateway_overview_ui_v2';
   let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
   let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
+  let canonicalTopology = null;
+  let graphSyncStatus = null;
   let graphReadinessFetched = false;
   let nodeReadinessFetched = false;
+  let topologyFetched = false;
+  let syncStatusFetched = false;
   let approvalCenterFetched = false;
   let approvalCenterItems = [];
+  let approvalCenterProposals = Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : [];
   let selectedNodeId = null;
   let layoutEditing = false;
   let edgeMode = 'operator';
@@ -1605,6 +1659,49 @@
     })[color] || 'var(--st-gray)';
   }
 
+  function topologyColor(status) {
+    return ({
+      live: 'green',
+      read_only: 'cyan',
+      guarded: 'yellow',
+      standby: 'gray',
+      blocked: 'red',
+      disabled: 'gray',
+    })[status] || 'gray';
+  }
+
+  function edgeLabelFromTopology(edge) {
+    if (!edge) return null;
+    return {
+      edge_id: edge.edge_id,
+      source: edge.source_label || edge.source_node_id || 'Gateway Dispatcher',
+      target: edge.target_label || edge.target_node_id || 'Gateway',
+      domain: edge.route_group || edge.domain || 'connector',
+      status: edge.status || 'standby',
+      color: topologyColor(edge.status),
+      primary_reason: edge.primary_reason || 'topology_edge_registered',
+      blockers: Array.isArray(edge.blockers) ? edge.blockers : [],
+      last_heartbeat_at: edge.last_heartbeat_at || null,
+      last_success_at: edge.last_success_at || null,
+      last_event_at: edge.last_event_at || null,
+      next_action: edge.next_action || 'inspect_topology_data_sync',
+      source_node_id: edge.source_node_id,
+      target_node_id: edge.target_node_id,
+      relationship: edge.relationship || 'structural',
+      route_group: edge.route_group,
+      traffic_state: edge.traffic_state || 'traffic_data_unavailable',
+      traffic: edge.traffic || { events_last_60s: 0, requests_last_60s: 0, bytes_in_last_60s: 0, bytes_out_last_60s: 0 },
+      critical: edge.status === 'blocked',
+    };
+  }
+
+  function topologyEdgeForHighway(edgeId, mappingErrors) {
+    const edge = canonicalTopology?.edges?.find(item => item.edge_id === edgeId);
+    if (edge) return edgeLabelFromTopology(edge);
+    mappingErrors?.push(`missing_edge_mappings:${edgeId}`);
+    return null;
+  }
+
   function edgeFallbackReadiness(edge) {
     if (G.getEdgeReadiness) return G.getEdgeReadiness(edge);
     const fromN = G.get(edge.from);
@@ -1693,6 +1790,7 @@
     edgeTooltip.innerHTML = `
       <div class="edge-title">${esc(readiness.source)} → ${esc(readiness.target)}</div>
       <div>status: <code>${esc(readiness.status)}</code> · color: <code>${esc(readiness.color)}</code></div>
+      <div>relationship: <code>${esc(readiness.relationship || 'readiness')}</code> · traffic: <code>${esc(readiness.traffic_state || 'traffic_data_unavailable')}</code></div>
       <div>reason: <code>${esc(readiness.primary_reason)}</code></div>
       <div>next: ${esc(readiness.next_action || 'none')}</div>
     `;
@@ -1739,11 +1837,11 @@
   function renderApprovalCenter() {
     const target = document.getElementById('approval-center-list');
     if (!target) return;
-    if (!approvalCenterItems.length) {
+    if (!approvalCenterItems.length && !approvalCenterProposals.length) {
       target.innerHTML = `<div style="color:var(--t-4);font-size:11px;">${approvalCenterFetched ? 'No approval records.' : 'Approval Center loading…'}</div>`;
       return;
     }
-    target.innerHTML = approvalCenterItems.map(item => {
+    const itemHtml = approvalCenterItems.map(item => {
       const cls = item.state === 'approval_needed' || item.state === 'approval_pending' ? 'need'
         : item.state === 'blocked_by_policy' ? 'blocked'
         : item.state === 'read_only_active' || item.state === 'standing_scope_active' ? 'read'
@@ -1756,6 +1854,23 @@
         </button>
       `;
     }).join('');
+    const proposalHtml = approvalCenterProposals.length ? `
+      <div class="approval-proposal-heading">Standing Scope Proposals</div>
+      ${approvalCenterProposals.map(scope => {
+        const cls = scope.status === 'preview_only' ? 'preview' : 'read';
+        const allowed = Array.isArray(scope.allowed_operations) ? scope.allowed_operations.slice(0, 4).join(', ') : 'none';
+        return `
+          <div class="approval-proposal ${cls}" title="${esc(scope.scope_id || '')}">
+            <span class="ai-top">${esc(scope.name || 'Scope proposal')} <span class="ai-state">${esc(scope.status || 'preview_only')}</span></span>
+            <span class="ai-scope">${esc(scope.scope_id || '')}</span>
+            <span>${esc((scope.components || []).join(' · '))}</span>
+            <span class="ai-next">Allowed: ${esc(allowed)} · writes/execution: disabled until owner approval</span>
+            <span class="ai-next">${esc(scope.next_action || 'Review before activation.')}</span>
+          </div>
+        `;
+      }).join('')}
+    ` : '';
+    target.innerHTML = `${itemHtml}${proposalHtml}`;
     target.querySelectorAll('[data-approval-node]').forEach(btn => {
       btn.addEventListener('click', () => {
         const nodeId = btn.getAttribute('data-approval-node');
@@ -1798,6 +1913,48 @@
         <span class="val" title="${esc(value)}">${esc(value)}</span>
       </div>
     `).join('');
+    renderTopologyDataSync(edgeMappingErrors);
+  }
+
+  function renderTopologyDataSync(extraMappingErrors) {
+    const panel = document.getElementById('topology-data-sync');
+    const target = document.getElementById('topology-data-sync-list');
+    if (!panel || !target) return;
+    const sync = graphSyncStatus?.graph_sync || {};
+    const topologyNodes = canonicalTopology?.nodes?.length || sync.topology_node_count || 0;
+    const topologyEdges = canonicalTopology?.edges?.length || sync.topology_edge_count || 0;
+    const renderedNodeCount = document.querySelectorAll('.node-card[data-id]').length + 1;
+    const renderedEdgeIds = [...document.querySelectorAll('#edges-svg path[data-edge-id]')].map(path => path.dataset.edgeId).filter(Boolean);
+    const missingEdges = Array.from(new Set([
+      ...(sync.missing_edge_mappings || []),
+      ...(extraMappingErrors || []).filter(item => String(item).includes('missing_edge_mappings')),
+    ]));
+    const status = missingEdges.length ? 'degraded' : (sync.status || (topologyFetched ? 'healthy' : 'stale'));
+    panel.classList.toggle('failed', status === 'failed');
+    panel.classList.toggle('degraded', status !== 'healthy');
+    const rows = [
+      ['sync status', status],
+      ['snapshot id', canonicalTopology?.snapshot_id || sync.snapshot_id || 'none'],
+      ['topology nodes', String(topologyNodes)],
+      ['rendered nodes', String(sync.rendered_node_count || renderedNodeCount)],
+      ['topology edges', String(topologyEdges)],
+      ['rendered edges', String(renderedEdgeIds.length || sync.rendered_edge_count || 0)],
+      ['missing node mappings', (sync.missing_node_mappings || []).join(', ') || 'none'],
+      ['missing edge mappings', missingEdges.join(', ') || 'none'],
+      ['stale edges', (sync.stale_edges || []).join(', ') || 'none'],
+      ['status mismatches', (sync.status_mismatches || []).join(', ') || 'none'],
+      ['traffic mismatches', (sync.traffic_mismatches || []).join(', ') || 'none'],
+      ['traffic source', canonicalTopology?.traffic_data_source || 'traffic_data_unavailable'],
+      ['last live fetch', sync.last_live_fetch_at || canonicalTopology?.generated_at || 'none'],
+      ['last static fallback', sync.last_static_fallback_at || 'none'],
+      ['primary blocker', sync.primary_blocker || (topologyFetched ? 'none' : 'topology_data_unavailable')],
+    ];
+    target.innerHTML = rows.map(([label, value]) => `
+      <div class="gh-row">
+        <span class="lbl">${esc(label)}</span>
+        <span class="val" title="${esc(value)}">${esc(value)}</span>
+      </div>
+    `).join('');
   }
 
   function openEdgeInspector(readiness) {
@@ -1822,6 +1979,13 @@
       <div class="ins-section">
         <h4>Edge readiness</h4>
         <dl class="kv">
+          <dt>Visual edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'none')}</dd>
+          <dt>Data edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'edge_mapping_missing')}</dd>
+          <dt>Relationship</dt><dd>${esc(readiness.relationship || 'readiness')}</dd>
+          <dt>traffic status</dt><dd>${esc(readiness.traffic_state || 'traffic_data_unavailable')}</dd>
+          <dt>Traffic counters</dt><dd>${esc(`${readiness.traffic?.events_last_60s || 0} events · ${readiness.traffic?.requests_last_60s || 0} requests`)}</dd>
+          <dt>Source node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_node_id || 'not reported')}</dd>
+          <dt>Target node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.target_node_id || 'not reported')}</dd>
           <dt>Current color</dt><dd>${esc(readiness.color)}</dd>
           <dt>Status</dt><dd>${esc(readiness.status)}</dd>
           <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.primary_reason)}</dd>
@@ -1964,6 +2128,104 @@
     }
   }
 
+  function fetchTopology() {
+    try {
+      fetch('/api/gateway/graph/topology', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+            throw new Error('gateway_graph_topology_unavailable');
+          }
+          topologyFetched = true;
+          canonicalTopology = payload;
+          graphHealth = Object.assign({}, graphHealth, {
+            graph_data_source: 'live',
+            static_asset_version: payload.asset_version || graphHealth.static_asset_version,
+          });
+          try { localStorage.setItem('gateway_graph_topology_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+          drawEdges();
+          startLiveTrafficOverlay();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_topology_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.edges)) {
+            canonicalTopology = fallbackPayload;
+            topologyFetched = true;
+            graphHealth = Object.assign({}, graphHealth, { graph_data_source: 'last-known' });
+          } else {
+            topologyFetched = false;
+            canonicalTopology = null;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+              graph_data_source: graphHealth.graph_data_source || 'static fallback',
+              edge_mapping_errors: Array.from(new Set([...(graphHealth.edge_mapping_errors || []), 'gateway_graph_topology_unavailable'])),
+            });
+          }
+          renderGraphHealth();
+          renderTopologyDataSync(['gateway_graph_topology_unavailable']);
+          drawEdges();
+        });
+    } catch (err) {
+      topologyFetched = false;
+      canonicalTopology = null;
+      renderTopologyDataSync(['gateway_graph_topology_unavailable']);
+    }
+  }
+
+  function fetchGraphSyncStatus() {
+    try {
+      fetch('/api/gateway/graph/sync-status', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !payload.graph_sync) throw new Error('gateway_graph_sync_status_unavailable');
+          syncStatusFetched = true;
+          graphSyncStatus = payload;
+          try { localStorage.setItem('gateway_graph_sync_status_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_sync_status_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload?.graph_sync) {
+            syncStatusFetched = true;
+            graphSyncStatus = Object.assign({}, fallbackPayload, {
+              graph_sync: Object.assign({}, fallbackPayload.graph_sync, {
+                status: fallbackPayload.graph_sync.status === 'healthy' ? 'stale' : fallbackPayload.graph_sync.status,
+                last_static_fallback_at: new Date().toISOString(),
+              }),
+            });
+          } else {
+            syncStatusFetched = false;
+            graphSyncStatus = {
+              graph_sync: {
+                status: 'degraded',
+                snapshot_id: canonicalTopology?.snapshot_id || 'none',
+                last_live_fetch_at: null,
+                last_static_fallback_at: new Date().toISOString(),
+                topology_node_count: canonicalTopology?.nodes?.length || 0,
+                rendered_node_count: document.querySelectorAll('.node-card[data-id]').length + 1,
+                topology_edge_count: canonicalTopology?.edges?.length || 0,
+                rendered_edge_count: document.querySelectorAll('#edges-svg path[data-edge-id]').length,
+                missing_node_mappings: [],
+                missing_edge_mappings: [],
+                stale_edges: [],
+                status_mismatches: ['gateway_graph_sync_status_unavailable'],
+                traffic_mismatches: [],
+                primary_blocker: 'gateway_graph_sync_status_unavailable',
+              },
+            };
+          }
+          renderTopologyDataSync();
+        });
+    } catch (err) {
+      renderTopologyDataSync(['gateway_graph_sync_status_unavailable']);
+    }
+  }
+
   function fetchApprovalCenter() {
     try {
       fetch('/api/gateway/approvals/center', { credentials: 'same-origin', headers: { accept: 'application/json' } })
@@ -1972,6 +2234,7 @@
           if (!payload || !Array.isArray(payload.items)) throw new Error('gateway_approval_center_unavailable');
           approvalCenterFetched = true;
           approvalCenterItems = payload.items;
+          approvalCenterProposals = Array.isArray(payload.standing_scope_proposals) ? payload.standing_scope_proposals : [];
           renderApprovalCenter();
           try { localStorage.setItem('gateway_approval_center_last_good', JSON.stringify(payload)); } catch (err) {}
         })
@@ -1981,6 +2244,9 @@
           })();
           approvalCenterFetched = Boolean(fallbackPayload);
           approvalCenterItems = Array.isArray(fallbackPayload?.items) ? fallbackPayload.items : [];
+          approvalCenterProposals = Array.isArray(fallbackPayload?.standing_scope_proposals)
+            ? fallbackPayload.standing_scope_proposals
+            : (approvalCenterProposals.length ? approvalCenterProposals : (Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : []));
           renderApprovalCenter();
         });
     } catch (err) {
@@ -2089,6 +2355,7 @@
   renderNodeLegend();
   renderApprovalCenter();
   renderGraphHealth();
+  renderTopologyDataSync();
 
   // ---- Edges drawing ----
   function drawEdges() {
@@ -2374,13 +2641,14 @@
       if (!node) return 'integrations';
       if (node.id === 'int.agentmail') return 'agentmail';
       if (node.id === 'int.zapier') return 'zapier';
-      if (node.id === 'input.webhook' || node.id === 'input.event') return 'webhooks-events';
+      if (node.id === 'input.webhook') return 'webhooks';
+      if (node.id === 'input.event') return 'events';
       if (node.id === 'int.reports') return 'reports';
       if (node.id === 'int.gdrive' || node.id === 'int.onedrive' || node.id === 'int.datastores') return 'storage';
       if (node.id.startsWith('brain.')) return 'knowledge';
       if (node.id.startsWith('model.') || node.id === 'oc.parent') return 'models';
       if (node.id.startsWith('input.') || node.id.startsWith('agent.')) return 'inputs';
-      if (readiness?.domain === 'browser') return 'browser-runtime';
+      if (readiness?.domain === 'browser') return 'browser';
       return 'integrations';
     }
 
@@ -2392,10 +2660,11 @@
         integrations: { x: core.right + 118, y: core.cy },
         storage: { x: core.right + 152, y: core.cy + 126 },
         reports: { x: core.right + 152, y: core.cy - 126 },
-        'webhooks-events': { x: core.left - 150, y: core.cy - 128 },
+        webhooks: { x: core.left - 150, y: core.cy - 128 },
+        events: { x: core.left - 150, y: core.cy - 64 },
         agentmail: { x: core.right + 104, y: core.cy + 58 },
         zapier: { x: core.right + 104, y: core.cy - 58 },
-        'browser-runtime': { x: core.left - 150, y: core.cy + 132 },
+        browser: { x: core.left - 150, y: core.cy + 132 },
       };
       return hubs[domain] || hubs.integrations;
     }
@@ -2414,7 +2683,7 @@
       if (!Number.isFinite(bounds.left)) return domainHub(domain);
       const midY = (bounds.top + bounds.bottom) / 2;
       const midX = (bounds.left + bounds.right) / 2;
-      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
         return { x: Math.min(core.left - 44, bounds.right + 42), y: midY };
       }
       if (domain === 'knowledge') {
@@ -2427,7 +2696,7 @@
     }
 
     function trunkPointsFor(domain, hub) {
-      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
         return [
           { x: core.left - 12, y: core.cy },
           { x: hub.x, y: core.cy },
@@ -2456,7 +2725,7 @@
     }
 
     function branchPointsFor(domain, hub, rect) {
-      if (domain === 'inputs' || domain === 'webhooks-events' || domain === 'browser-runtime') {
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
         return [hub, { x: hub.x, y: rect.cy }, { x: rect.right + 12, y: rect.cy }];
       }
       if (domain === 'knowledge') {
@@ -2557,6 +2826,8 @@
       path.setAttribute('aria-label', `${routeInfo.source} to ${routeInfo.target}: ${routeInfo.status}, ${routeInfo.primary_reason}`);
       path.dataset.edgeId = routeInfo.edge_id;
       path.dataset.domain = routeInfo.domain;
+      path.setAttribute('data-edge-relationship', routeInfo.relationship || 'readiness');
+      path.setAttribute('data-traffic-state', routeInfo.traffic_state || 'traffic_data_unavailable');
       const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
       title.textContent = `${routeInfo.source} → ${routeInfo.target}\nstatus: ${routeInfo.status}\nreason: ${routeInfo.primary_reason}\nnext: ${routeInfo.next_action}`;
       path.appendChild(title);
@@ -2593,21 +2864,8 @@
       if (!visible) return;
       const selected = Boolean(selectedNodeId && selectedNodeId === id);
       const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !selected);
-      const routeInfo = {
-        edge_id: `highway.${domain}.${id}`,
-        source: 'Gateway Dispatcher',
-        target: node.name,
-        domain,
-        status: readiness.status || 'ready',
-        color: readiness.color || 'gray',
-        primary_reason: readiness.primary_reason || 'node_registered',
-        blockers: readiness.status === 'blocked' ? [readiness.primary_reason] : [],
-        last_heartbeat_at: readiness.last_heartbeat_at || null,
-        last_success_at: readiness.last_success_at || node.lastSuccess || null,
-        last_event_at: null,
-        next_action: readiness.next_action || 'inspect_gateway_readiness',
-        critical: readiness.status === 'blocked',
-      };
+      const routeInfo = topologyEdgeForHighway(`highway.${domain}.${id}`, mappingErrors);
+      if (!routeInfo) return;
       const domainEntry = highwayDomains.get(domain) || { hub, color: routeInfo.color, status: routeInfo.status, primary_reason: routeInfo.primary_reason, nodes: [] };
       if (routeInfo.color === 'red') domainEntry.color = 'red';
       else if (domainEntry.color !== 'red' && routeInfo.color === 'green') domainEntry.color = 'green';
@@ -2621,33 +2879,21 @@
       highwayDomains.forEach((entry, domain) => {
         const frame = domainFrame(entry.nodes);
         if (edgeMode !== 'quiet') {
-          const trunkInfo = {
-            edge_id: `highway.${domain}.trunk`,
-            source: 'Gateway Dispatcher',
-            target: `${domain.replace(/-/g, ' ')} highway`,
-            domain,
-            status: entry.status || 'ready',
-            color: entry.color || 'gray',
-            primary_reason: `${domain.replace(/-/g, '_')}_highway_connected`,
-            blockers: [],
-            last_heartbeat_at: null,
-            last_success_at: null,
-            last_event_at: null,
-            next_action: 'select_a_card_to_trace_this_highway',
-          };
-          appendRoutePath(trunkInfo, framePath(frame), ['edge-trunk', 'edge-highway', `edge-domain-${domain}`], false, false);
+          const trunkInfo = topologyEdgeForHighway(`highway.${domain}.trunk`, mappingErrors);
+          if (trunkInfo) appendRoutePath(trunkInfo, framePath(frame), ['edge-trunk', 'edge-highway', 'edge-structural', `edge-domain-${domain}`], false, false);
           const framePort = framePortForCore(frame);
           const trunkStart = coreAnchorFor(framePort);
           const trunkRail = Math.abs(framePort.x - trunkStart.x) > Math.abs(framePort.y - trunkStart.y)
             ? { type: 'v', v: framePort.x }
             : { type: 'h', v: framePort.y };
           const trunkPoints = findOrthogonalRoute(trunkStart, framePort, trunkRail, allBoxes);
-          appendRoutePath(Object.assign({}, trunkInfo, { edge_id: `highway.${domain}.dispatcher-link` }), trunkPoints, ['edge-trunk', 'edge-highway', `edge-domain-${domain}`], false, false);
+          const dispatcherLinkInfo = topologyEdgeForHighway(`highway.${domain}.dispatcher-link`, mappingErrors);
+          if (dispatcherLinkInfo) appendRoutePath(dispatcherLinkInfo, trunkPoints, ['edge-trunk', 'edge-highway', 'edge-structural', `edge-domain-${domain}`], false, false);
         }
 
         entry.nodes.forEach(item => {
           const branchPoints = nearestFrameBranch(frame, item.rect);
-          appendRoutePath(item.routeInfo, branchPoints, ['edge-branch', `edge-domain-${domain}`], item.selected && (edgeMode === 'trace' || selectedOnly), item.dimmed);
+          appendRoutePath(item.routeInfo, branchPoints, ['edge-branch', 'edge-structural', `edge-domain-${domain}`], item.selected && (edgeMode === 'trace' || selectedOnly), item.dimmed);
         });
       });
     }
@@ -2659,39 +2905,43 @@
 
     routed.forEach(item => {
       const { edge, readiness } = item;
+      const topologyReadiness = edgeLabelFromTopology(canonicalTopology?.edges?.find(topoEdge => topoEdge.edge_id === readiness.edge_id));
+      const displayReadiness = Object.assign({}, readiness, topologyReadiness || {});
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', item.pathData);
       const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
-      const hidden = !shouldShow(readiness, edge);
+      const hidden = !shouldShow(displayReadiness, edge);
       const selected = Boolean(incident && (edgeMode === 'trace' || selectedOnly));
       const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !incident);
       path.setAttribute('class', [
         'edge',
         'edge-branch',
-        `edge-${readiness.color}`,
+        `edge-${displayReadiness.color}`,
         `edge-domain-${item.domain}`,
-        readiness.critical ? 'edge-critical' : '',
+        displayReadiness.critical ? 'edge-critical' : '',
         hidden ? 'edge-hidden' : '',
         selected ? 'edge-selected' : '',
         dimmed ? 'edge-dimmed' : '',
       ].filter(Boolean).join(' '));
       path.setAttribute('tabindex', '0');
       path.setAttribute('role', 'button');
-      path.setAttribute('aria-label', `${readiness.source} to ${readiness.target}: ${readiness.status}, ${readiness.primary_reason}`);
-      path.dataset.edgeId = readiness.edge_id;
+      path.setAttribute('aria-label', `${displayReadiness.source} to ${displayReadiness.target}: ${displayReadiness.status}, ${displayReadiness.primary_reason}`);
+      path.dataset.edgeId = displayReadiness.edge_id;
       path.dataset.domain = item.domain;
+      path.setAttribute('data-edge-relationship', displayReadiness.relationship || 'readiness');
+      path.setAttribute('data-traffic-state', displayReadiness.traffic_state || 'traffic_data_unavailable');
       const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-      title.textContent = `${readiness.source} → ${readiness.target}\nstatus: ${readiness.status}\nreason: ${readiness.primary_reason}\nnext: ${readiness.next_action}`;
+      title.textContent = `${displayReadiness.source} → ${displayReadiness.target}\nstatus: ${displayReadiness.status}\nreason: ${displayReadiness.primary_reason}\ntraffic: ${displayReadiness.traffic_state || 'traffic_data_unavailable'}\nnext: ${displayReadiness.next_action}`;
       path.appendChild(title);
-      path.addEventListener('mouseenter', evt => showEdgeTooltip(readiness, evt));
+      path.addEventListener('mouseenter', evt => showEdgeTooltip(displayReadiness, evt));
       path.addEventListener('mousemove', moveEdgeTooltip);
       path.addEventListener('mouseleave', hideEdgeTooltip);
-      path.addEventListener('focus', evt => showEdgeTooltip(readiness, evt));
+      path.addEventListener('focus', evt => showEdgeTooltip(displayReadiness, evt));
       path.addEventListener('blur', hideEdgeTooltip);
       path.addEventListener('click', evt => {
         evt.stopPropagation();
         hideEdgeTooltip();
-        openEdgeInspector(readiness);
+        openEdgeInspector(displayReadiness);
       });
       svg.appendChild(path);
     });
@@ -2700,6 +2950,8 @@
   drawEdges();
   fetchNodeReadiness();
   fetchEdgeReadiness();
+  fetchTopology();
+  fetchGraphSyncStatus();
   fetchApprovalCenter();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle
@@ -3035,15 +3287,37 @@
 
   let trafficOn = true;
   let trafficTimer = null;
-  function startTraffic() {
+  function liveTrafficEdges() {
+    return (canonicalTopology?.edges || []).filter(edge => {
+      const traffic = edge.traffic || {};
+      return (Number(traffic.events_last_60s) || 0) + (Number(traffic.requests_last_60s) || 0) > 0;
+    });
+  }
+  function startLiveTrafficOverlay() {
+    // Live traffic beams are driven only by trusted topology traffic counters.
+    // Static DEMO_REQUEST_STREAM data is kept as non-live sample data and is not proof of movement.
     stopTraffic();
+    const liveEdges = liveTrafficEdges();
+    if (!trafficOn) return;
+    if (!liveEdges.length) {
+      wrap.classList.add('is-idle');
+      if (topologyFetched) showToast('No live traffic proof available');
+      return;
+    }
+    wrap.classList.remove('is-idle');
     let i = 0;
     trafficTimer = setInterval(() => {
       if (!trafficOn) return;
-      const r = G.REQUEST_STREAM[i % G.REQUEST_STREAM.length];
-      fireBeam(r);
+      const edge = liveEdges[i % liveEdges.length];
+      fireBeam({
+        from: edge.source_node_id || 'gateway.core',
+        asks: edge.target_node_id || 'gateway.core',
+        op: edge.relationship === 'traffic' ? 'traffic' : 'event',
+        result: 'ok',
+        edge_id: edge.edge_id,
+      });
       i++;
-    }, 700);
+    }, 900);
   }
   function stopTraffic() {
     if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
@@ -3051,8 +3325,7 @@
   document.getElementById('t-traffic').onchange = (e) => {
     trafficOn = e.target.checked;
     if (trafficOn) {
-      wrap.classList.remove('is-idle');
-      startTraffic();
+      startLiveTrafficOverlay();
     } else {
       wrap.classList.add('is-idle');
       stopTraffic();
@@ -3082,14 +3355,8 @@
   // Fan-out burst — fires 6 beams from input.scheduled toward dispatcher
   document.getElementById('t-fanout').onchange = (e) => {
     if (!e.target.checked) return;
-    const tasks = ['classify·12','classify·12','classify·6','summarize·4','tag·8','route·30'];
-    tasks.forEach((t, i) => {
-      setTimeout(() => fireBeam({
-        from: 'input.scheduled', asks: 'gateway.core', op: 'fan-out',
-        result: 'ok', engine: 'eng.groq',
-      }), i * 140);
-    });
-    setTimeout(() => { e.target.checked = false; }, 1500);
+    showToast('Fan-out burst is disabled until trusted live traffic events are present');
+    setTimeout(() => { e.target.checked = false; }, 500);
   };
 
   // Toggle nucleus overlays + traffic when variant changes
@@ -3097,7 +3364,7 @@
     document.getElementById('dispatch-feed').classList.toggle('on', on);
     document.getElementById('engine-ledger').classList.toggle('on', on);
     document.getElementById('mini-strip').classList.toggle('on', on);
-    if (on) startTraffic(); else stopTraffic();
+    if (on) startLiveTrafficOverlay(); else stopTraffic();
   }
 
   // Re-hook variant switch to also drive nucleus overlays

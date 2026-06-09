@@ -33,7 +33,7 @@
   --st-yellow:  #f5b50a;   /* gated / Bridge Session required */
   --st-blue:    #4aa3ff;   /* read-only */
   --st-red:     #ef4444;   /* blocked */
-  --st-gray:    #6b7280;   /* not configured */
+  --st-gray:    #6b7280;   /* standby / no recent heartbeat */
   --st-purple:  #a78bfa;   /* agent / commander layer */
   --st-orange:  #ff8a3d;   /* runtime / worker engine */
 

@@ -68,10 +68,10 @@ The final direction is **one design**, not three products.
 | Color   | Meaning                                                        |
 |---------|----------------------------------------------------------------|
 | Green   | Connected — live, healthy, all enabled flags pass              |
-| Yellow  | Gated — Bridge Session required, approval pending, RBAC challenge |
+| Yellow  | Gated — owner approval, governed execution, RBAC challenge |
 | Blue    | Read-only                                                      |
 | Red     | Blocked                                                        |
-| Gray    | Not configured                                                 |
+| Gray    | Standby — registered but idle, no recent heartbeat, or waiting for runtime events |
 | Purple  | Agent / commander layer marker (status grammar still applies)  |
 | Orange  | Runtime / worker engine marker (status grammar still applies)  |
 

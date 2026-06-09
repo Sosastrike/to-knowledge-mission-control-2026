@@ -37,9 +37,13 @@ describe('Gateway graph edge diagnostics UI', () => {
     expect(data).toContain('zapier_discovery_ready_writes_guarded')
     expect(data).toContain('gateway-edge-readiness-v2')
     expect(data).toContain('gateway-node-readiness-v1')
+    expect(data).toContain("yellow:  { label: 'Gated',              desc: 'Owner approval, governed execution, or RBAC challenge.' }")
     expect(data).toContain('Preview ready · delivery guarded')
     expect(data).toContain('Receiver ready · waiting for events')
     expect(data).toContain('Event bus ready · no recent events')
+    expect(data).toContain("label: 'NVIDIA NIM'")
+    expect(data).toContain("status: 'green', note: 'Provider Vault credential validated; Gateway Runtime Bridge handles execution governance.'")
+    expect(data).not.toContain("warn: 'not configured'")
   })
 
   it('keeps Gateway lane mount containers scrollable and prevents card stacking overlap', () => {
@@ -53,5 +57,60 @@ describe('Gateway graph edge diagnostics UI', () => {
     expect(html).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
     expect(html).toContain('grid-template-columns: repeat(10, minmax(120px, 1fr))')
     expect(html).toContain('min-height: 1040px')
+  })
+
+  it('labels gray node cards as standby instead of offline or not configured', () => {
+    const rootData = readFileSync(join(process.cwd(), 'public/design/gateway/shared/gateway-data.js'), 'utf8')
+    const dropinData = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/gateway-data.js'), 'utf8')
+    const rootCss = readFileSync(join(process.cwd(), 'public/design/gateway/shared/tokens.css'), 'utf8')
+    const dropinCss = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/tokens.css'), 'utf8')
+    const rootHealth = readFileSync(join(process.cwd(), 'public/design/gateway/Gateway Health.html'), 'utf8')
+    const dropinHealth = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/Gateway Health.html'), 'utf8')
+
+    for (const data of [rootData, dropinData]) {
+      expect(data).toContain("gray:    { label: 'Standby'")
+      expect(data).toContain('Registered but idle, no recent heartbeat, or waiting for a runtime event.')
+      expect(data).not.toContain("gray:    { label: 'Not configured'")
+      expect(data).toContain("summary: 'Receiver ready · waiting for events.'")
+      expect(data).toContain("summary: 'Event bus ready · no recent events.'")
+    }
+
+    for (const css of [rootCss, dropinCss]) {
+      expect(css).toContain('/* standby / no recent heartbeat */')
+      expect(css).not.toContain('/* not configured */')
+    }
+
+    for (const health of [rootHealth, dropinHealth]) {
+      expect(health).toContain('<div class="card gray"><div class="lbl">Standby</div>')
+      expect(health).not.toContain('<div class="card gray"><div class="lbl">Not configured</div>')
+    }
+  })
+
+  it('preserves semantic static readiness instead of forcing guarded/read-only nodes gray', () => {
+    const rootData = readFileSync(join(process.cwd(), 'public/design/gateway/shared/gateway-data.js'), 'utf8')
+    const dropinData = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/gateway-data.js'), 'utf8')
+
+    for (const data of [rootData, dropinData]) {
+      expect(data).toContain('cssStatusFromNodeReadiness')
+      expect(data).toContain("n.live_state_known = Boolean(readiness && readiness.color)")
+      expect(data).not.toContain("every node FORCED to 'gray'")
+      expect(data).toContain('nodes without semantic fallback readiness remain standby until API proof')
+    }
+  })
+
+  it('shows guarded write/execute badges as guarded instead of off', () => {
+    const rootCss = readFileSync(join(process.cwd(), 'public/design/gateway/shared/tokens.css'), 'utf8')
+    const dropinCss = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/tokens.css'), 'utf8')
+    const renderer = readFileSync(join(process.cwd(), 'public/design/gateway/shared/render.js'), 'utf8')
+
+    for (const css of [rootCss, dropinCss]) {
+      expect(css).toContain('.rwx .rwx-pill.guarded')
+      expect(css).toContain('var(--st-yellow)')
+      expect(css).toContain('var(--st-yellow-bg)')
+    }
+
+    expect(renderer).toContain("guardedWrite(readiness) ? 'guarded'")
+    expect(renderer).toContain("guardedExecute(readiness) ? 'guarded'")
+    expect(renderer).toContain('Writes/execution guarded by Gateway policy and owner approval')
   })
 })

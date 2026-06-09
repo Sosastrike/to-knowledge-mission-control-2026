@@ -9,10 +9,10 @@ window.GATEWAY = (function () {
   // ---------- Status grammar ----------
   const STATUS = {
     green:   { label: 'Connected',          desc: 'Live, healthy, all enabled flags pass.' },
-    yellow:  { label: 'Gated',              desc: 'Bridge Session required, approval pending, or RBAC challenge.' },
+    yellow:  { label: 'Gated',              desc: 'Owner approval, governed execution, or RBAC challenge.' },
     blue:    { label: 'Read-only',          desc: 'Discovery + read OK. Writes refused.' },
     red:     { label: 'Blocked',            desc: 'Credential failure, policy denial, or upstream down.' },
-    gray:    { label: 'Not configured',     desc: 'No credentials/config registered yet.' },
+    gray:    { label: 'Standby',            desc: 'Registered but idle, no recent heartbeat, or waiting for a runtime event.' },
     purple:  { label: 'Agent / commander',  desc: 'Agent layer marker. Status grammar applies on top.' },
     orange:  { label: 'Runtime / worker',   desc: 'Worker engine marker. Status grammar applies on top.' },
   };
@@ -393,7 +393,7 @@ window.GATEWAY = (function () {
     { id: 'eng.gemini',          provider: 'gemini',     label: 'Gemini 2.5 Pro',    tier: 'premium',  caps: ['reason','vision','long'], remaining_tokens: 720_000, daily_budget_tokens: 800_000, spent_usd: 1.80,  daily_budget_usd: 10, p50_ms: 510, status: 'green' },
     { id: 'eng.groq',            provider: 'groq',       label: 'Groq · Llama 70B',  tier: 'fast',     caps: ['reason','cheap'],         remaining_tokens: 980_000, daily_budget_tokens: 1_000_000, spent_usd: 0.18, daily_budget_usd: 3,  p50_ms: 90,  status: 'green' },
     { id: 'eng.ollama',          provider: 'ollama',     label: 'Ollama (local)',    tier: 'local',    caps: ['reason','offline'],       remaining_tokens: 1e9,     daily_budget_tokens: 1e9,     spent_usd: 0.00,  daily_budget_usd: 0,  p50_ms: 740, status: 'green' },
-    { id: 'eng.nvidia',          provider: 'nvidia',     label: 'NVIDIA NIM',        tier: 'premium',  caps: ['reason','vision'],        remaining_tokens: 0,       daily_budget_tokens: 0,       spent_usd: 0.00,  daily_budget_usd: 0,  p50_ms: 0,   status: 'gray', warn: 'not configured' },
+    { id: 'eng.nvidia',          provider: 'nvidia',     label: 'NVIDIA NIM',        tier: 'premium',  caps: ['reason','vision'],        remaining_tokens: 720_000, daily_budget_tokens: 800_000, spent_usd: 0.00,  daily_budget_usd: 10, p50_ms: 510, status: 'green', note: 'Provider Vault credential validated; Gateway Runtime Bridge handles execution governance.' },
   ];
 
   // Mini-agents that the Dispatcher can fan out work to.
@@ -480,22 +480,33 @@ window.GATEWAY = (function () {
    Rules honoured:
      - Rule 1: mock HTML/CSS untouched.
      - Rule 5: status grammar comes from STATUS map above. No new states.
-     - Rule 6: every node FORCED to 'gray' on script load. Live status
-       only takes effect after the API confirms it. Auth-failed or
-       network-failed fetch leaves the node 'gray', never fake green.
+     - Rule 6: nodes without semantic fallback readiness remain standby until API proof.
+       Static readiness may show read-only, guarded, or live known-safe states while
+       live runtime proof is still tracked separately.
      - DDR-Gateway-005: iframe sandbox is allow-scripts allow-same-origin
        so this fetch carries Mission Control session cookies.
    ============================================================ */
 (function () {
   var G = window.GATEWAY;
   if (!G) return;
-  // Force gray on every node until a successful, authenticated fetch proves otherwise.
+  function cssStatusFromNodeReadiness(readiness, fallback) {
+    if (!readiness || !readiness.color) return fallback;
+    return readiness.color === 'cyan' ? 'blue' : readiness.color;
+  }
+
+  // Preserve semantic static readiness; only unknown nodes fall back to standby markers.
   for (var i = 0; i < G.NODES.length; i += 1) {
     var n = G.NODES[i];
-    if (n.type === 'agent') n.status = 'purple';          // marker preserved; live state added by overlay below
+    var readiness = G.getNodeReadiness ? G.getNodeReadiness(n.id) : null;
+    if (readiness && readiness.color) {
+      n.status = cssStatusFromNodeReadiness(readiness, n.status);
+      n.summary = readiness.short_label || n.summary;
+      n.primary_reason = readiness.primary_reason || n.primary_reason;
+      if (readiness.next_action) n.next_action = readiness.next_action;
+    } else if (n.type === 'agent') n.status = 'purple';   // marker preserved; live state added by overlay below
     else if (n.type === 'runtime') n.status = 'orange';   // marker preserved
     else n.status = 'gray';
-    n.live_state_known = false;
+    n.live_state_known = Boolean(readiness && readiness.color);
   }
 
   function hydrate(payload) {

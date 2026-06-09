@@ -41,4 +41,17 @@ describe('Gateway graph edge diagnostics UI', () => {
     expect(data).toContain('Receiver ready · waiting for events')
     expect(data).toContain('Event bus ready · no recent events')
   })
+
+  it('keeps Gateway lane mount containers scrollable and prevents card stacking overlap', () => {
+    const html = readFileSync(join(process.cwd(), 'public/design/gateway/Gateway Overview.html'), 'utf8')
+
+    expect(html).toContain('overflow: auto')
+    expect(html).toContain('.lane.brain #lane-brain')
+    expect(html).toContain('.lane.models #lane-models')
+    expect(html).toContain('.lane.inputs #lane-inputs')
+    expect(html).toContain('.lane.integrations #lane-integrations')
+    expect(html).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+    expect(html).toContain('grid-template-columns: repeat(10, minmax(120px, 1fr))')
+    expect(html).toContain('min-height: 1040px')
+  })
 })

@@ -14,7 +14,8 @@
 .gw-canvas-wrap {
   height: calc(100vh - 56px - 44px);
   position: relative;
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-gutter: stable;
   background:
     radial-gradient(circle at 50% 50%, rgba(94,234,212,0.06) 0%, transparent 55%),
     radial-gradient(circle at 12% 0%, rgba(167,139,250,0.05) 0%, transparent 60%),
@@ -31,11 +32,43 @@
   opacity: 0.6;
   pointer-events: none;
 }
+.gw-canvas-wrap,
+.canvas.variant-nucleus .lane.inputs #lane-inputs,
+.canvas.variant-nucleus .lane.integrations #lane-integrations,
+.dispatch-feed,
+.engine-ledger {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94,234,212,0.42) rgba(13,18,26,0.72);
+}
+.gw-canvas-wrap::-webkit-scrollbar,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar,
+.dispatch-feed::-webkit-scrollbar,
+.engine-ledger::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.gw-canvas-wrap::-webkit-scrollbar-track,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar-track,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar-track,
+.dispatch-feed::-webkit-scrollbar-track,
+.engine-ledger::-webkit-scrollbar-track {
+  background: rgba(13,18,26,0.72);
+}
+.gw-canvas-wrap::-webkit-scrollbar-thumb,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar-thumb,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar-thumb,
+.dispatch-feed::-webkit-scrollbar-thumb,
+.engine-ledger::-webkit-scrollbar-thumb {
+  background: rgba(94,234,212,0.42);
+  border-radius: 999px;
+}
 
 /* ---- Lane scaffold ---- */
 .canvas {
   position: relative;
   height: 100%;
+  min-height: 100%;
   display: grid;
   grid-template-columns: 220px 1fr 240px 1fr 220px;
   grid-template-rows: 150px 1fr 150px;
@@ -81,19 +114,29 @@
 }
 .lane.inputs .node-card, .lane.integrations .node-card { max-width: none; }
 
-.lane.brain {
+.lane.brain #lane-brain {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
+  width: 100%;
 }
-.lane.models {
+.lane.models #lane-models {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(10, minmax(120px, 1fr));
   gap: 8px;
   align-items: start;
+  width: 100%;
 }
 .lane.brain .node-card, .lane.models .node-card { max-width: none; min-width: 0; }
+.lane.inputs #lane-inputs,
+.lane.integrations #lane-integrations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  width: 100%;
+}
 
 /* ---- Center lane: Gateway Core ---- */
 .lane.center {
@@ -279,7 +322,7 @@
    ============================================================ */
 .canvas.variant-nucleus {
   grid-template-columns: 300px 240px 1fr 240px 280px;
-  grid-template-rows: 56px 130px 1fr 110px 130px;
+  grid-template-rows: 56px minmax(150px, auto) minmax(360px, 1fr) minmax(150px, auto) minmax(150px, auto);
   grid-template-areas:
     "feed   .       .        .         ledger"
     "feed   brain   brain    brain     ledger"
@@ -288,14 +331,15 @@
     "feed   mini    mini     mini      ledger";
   padding: 18px 14px;
   gap: 10px 14px;
+  min-height: 1040px;
 }
 .canvas.variant-nucleus .lane.near-l,
 .canvas.variant-nucleus .lane.near-r { display: none; }
-.canvas.variant-nucleus .lane.brain { grid-area: brain; grid-template-columns: repeat(5, 1fr); }
+.canvas.variant-nucleus .lane.brain { grid-area: brain; }
 .canvas.variant-nucleus .lane.inputs { grid-area: inputs; padding-right: 0; }
 .canvas.variant-nucleus .lane.center { grid-area: center; }
 .canvas.variant-nucleus .lane.integrations { grid-area: integ; padding-right: 0; }
-.canvas.variant-nucleus .lane.models { grid-area: models; grid-template-columns: repeat(10, 1fr); }
+.canvas.variant-nucleus .lane.models { grid-area: models; }
 .canvas.variant-nucleus .dispatch-feed,
 .canvas.variant-nucleus .engine-ledger { position: relative; top: auto; left: auto; right: auto; max-height: none; width: auto; }
 .canvas.variant-nucleus .dispatch-feed { grid-area: feed; overflow-y: auto; }
@@ -303,7 +347,15 @@
 .canvas.variant-nucleus .mini-strip { position: relative; left: auto; right: auto; bottom: auto; grid-area: mini; }
 
 .canvas.variant-nucleus .lane.inputs,
-.canvas.variant-nucleus .lane.integrations { overflow: hidden; }
+.canvas.variant-nucleus .lane.integrations { overflow: visible; min-height: 0; }
+.canvas.variant-nucleus .lane.inputs #lane-inputs,
+.canvas.variant-nucleus .lane.integrations #lane-integrations {
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.canvas.variant-nucleus .lane.brain #lane-brain { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.canvas.variant-nucleus .lane.models #lane-models { grid-template-columns: repeat(10, minmax(120px, 1fr)); }
 .canvas.variant-nucleus .lane.inputs .node-card,
 .canvas.variant-nucleus .lane.integrations .node-card {
   min-width: 0; max-width: none; padding: 8px 10px; gap: 4px;

@@ -46,6 +46,24 @@ describe('/api/gateway/approvals/center route', () => {
       expect.objectContaining({ component: 'Zapier', standing_scope_id: 'zapier.scope.discovery_and_status' }),
       expect.objectContaining({ component: 'OpenCloud / OCTM', state: 'approval_needed' }),
     ]))
+    expect(payload.standing_scope_proposals).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        scope_id: 'scope.knowledge.read.preview',
+        status: 'preview_only',
+        write_enabled: false,
+        execute_enabled: false,
+      }),
+      expect.objectContaining({
+        scope_id: 'zapier.scope.discovery_and_status',
+        status: 'already_active_read_only',
+        write_enabled: false,
+        execute_enabled: false,
+      }),
+    ]))
+    expect(payload.standing_scope_proposal_summary).toMatchObject({
+      write_scopes_activation_enabled: false,
+      execute_scopes_activation_enabled: false,
+    })
     expect(JSON.stringify(payload)).not.toMatch(
       /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
     )

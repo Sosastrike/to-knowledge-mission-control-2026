@@ -532,6 +532,50 @@
 .approval-item.need .ai-state { color: var(--st-yellow); }
 .approval-item.blocked .ai-state { color: var(--st-red); }
 .approval-item.read .ai-state { color: var(--brand-cyan); }
+.approval-proposal-heading {
+  margin: 8px 0 2px;
+  color: var(--t-3);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.approval-proposal {
+  display: grid;
+  gap: 4px;
+  border: 1px dashed rgba(94,234,212,0.28);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: rgba(94,234,212,0.035);
+}
+.approval-proposal.preview {
+  border-color: rgba(255,214,102,0.28);
+  background: rgba(255,214,102,0.035);
+}
+.approval-proposal .ai-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-1);
+  font-size: 11px;
+  font-weight: 600;
+}
+.approval-proposal .ai-state {
+  font-family: var(--ff-mono);
+  font-size: 9.5px;
+  color: var(--brand-cyan);
+}
+.approval-proposal.preview .ai-state {
+  color: var(--st-yellow);
+}
+.approval-proposal .ai-next,
+.approval-proposal .ai-scope {
+  color: var(--t-4);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.approval-proposal .ai-scope {
+  font-family: var(--ff-mono);
+}
 
 /* Tweaks panel */
 .tweaks {
@@ -1467,6 +1511,7 @@
   let nodeReadinessFetched = false;
   let approvalCenterFetched = false;
   let approvalCenterItems = [];
+  let approvalCenterProposals = Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : [];
   let selectedNodeId = null;
   let layoutEditing = false;
   let edgeMode = 'operator';
@@ -1739,11 +1784,11 @@
   function renderApprovalCenter() {
     const target = document.getElementById('approval-center-list');
     if (!target) return;
-    if (!approvalCenterItems.length) {
+    if (!approvalCenterItems.length && !approvalCenterProposals.length) {
       target.innerHTML = `<div style="color:var(--t-4);font-size:11px;">${approvalCenterFetched ? 'No approval records.' : 'Approval Center loading…'}</div>`;
       return;
     }
-    target.innerHTML = approvalCenterItems.map(item => {
+    const itemHtml = approvalCenterItems.map(item => {
       const cls = item.state === 'approval_needed' || item.state === 'approval_pending' ? 'need'
         : item.state === 'blocked_by_policy' ? 'blocked'
         : item.state === 'read_only_active' || item.state === 'standing_scope_active' ? 'read'
@@ -1756,6 +1801,23 @@
         </button>
       `;
     }).join('');
+    const proposalHtml = approvalCenterProposals.length ? `
+      <div class="approval-proposal-heading">Standing Scope Proposals</div>
+      ${approvalCenterProposals.map(scope => {
+        const cls = scope.status === 'preview_only' ? 'preview' : 'read';
+        const allowed = Array.isArray(scope.allowed_operations) ? scope.allowed_operations.slice(0, 4).join(', ') : 'none';
+        return `
+          <div class="approval-proposal ${cls}" title="${esc(scope.scope_id || '')}">
+            <span class="ai-top">${esc(scope.name || 'Scope proposal')} <span class="ai-state">${esc(scope.status || 'preview_only')}</span></span>
+            <span class="ai-scope">${esc(scope.scope_id || '')}</span>
+            <span>${esc((scope.components || []).join(' · '))}</span>
+            <span class="ai-next">Allowed: ${esc(allowed)} · writes/execution: disabled until owner approval</span>
+            <span class="ai-next">${esc(scope.next_action || 'Review before activation.')}</span>
+          </div>
+        `;
+      }).join('')}
+    ` : '';
+    target.innerHTML = `${itemHtml}${proposalHtml}`;
     target.querySelectorAll('[data-approval-node]').forEach(btn => {
       btn.addEventListener('click', () => {
         const nodeId = btn.getAttribute('data-approval-node');
@@ -1972,6 +2034,7 @@
           if (!payload || !Array.isArray(payload.items)) throw new Error('gateway_approval_center_unavailable');
           approvalCenterFetched = true;
           approvalCenterItems = payload.items;
+          approvalCenterProposals = Array.isArray(payload.standing_scope_proposals) ? payload.standing_scope_proposals : [];
           renderApprovalCenter();
           try { localStorage.setItem('gateway_approval_center_last_good', JSON.stringify(payload)); } catch (err) {}
         })
@@ -1981,6 +2044,9 @@
           })();
           approvalCenterFetched = Boolean(fallbackPayload);
           approvalCenterItems = Array.isArray(fallbackPayload?.items) ? fallbackPayload.items : [];
+          approvalCenterProposals = Array.isArray(fallbackPayload?.standing_scope_proposals)
+            ? fallbackPayload.standing_scope_proposals
+            : (approvalCenterProposals.length ? approvalCenterProposals : (Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : []));
           renderApprovalCenter();
         });
     } catch (err) {

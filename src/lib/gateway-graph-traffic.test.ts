@@ -271,6 +271,7 @@ describe('gateway graph traffic snapshot', () => {
         source_system: 'agent_config',
         classification: 'missing_node_alias',
         identity_confidence: 'low',
+        identity_reason: 'agent_config_sync_identity_missing',
         candidate_node_id: null,
         candidate_edge_id: null,
         severity: 'warning',
@@ -280,7 +281,7 @@ describe('gateway graph traffic snapshot', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
-  it('maps high-confidence agent_config_sync identity and leaves medium-confidence records unanimated', () => {
+  it('maps source-provided agent_config_sync identity and leaves owner/display-name records unanimated', () => {
     const root = mkdtempSync(join(tmpdir(), 'gateway-agent-config-identity-'))
     const dbPath = join(root, 'mission-control.db')
     const db = new Database(dbPath)
@@ -297,11 +298,36 @@ describe('gateway graph traffic snapshot', () => {
       );
     `)
     db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run('agent_config_agent_zero', 'agent_config_sync', 'scheduled', null, 'agent', 'agent.zero', '{"agent_slug":"agent-zero","runtime_id":"gateway-agent-sync"}', '2026-06-09T14:59:50.000Z')
+      .run('agent_config_agent_zero', 'agent_config_sync', 'scheduled', null, 'gateway_node', null, JSON.stringify({
+        event_type: 'agent_config_sync',
+        source_system: 'agent_config',
+        canonical_agent_id: 'agent.zero',
+        canonical_node_id: 'agent.zero',
+        canonical_edge_id: 'highway.inputs.agent.zero',
+        route_group: 'inputs',
+        confidence: 'source_provided',
+        source_runtime: 'gateway_agent_sync',
+        config_target: 'openclaw.agent:agent-zero',
+        safe_event_summary: 'agent_config_sync:updated',
+      }), '2026-06-09T14:59:50.000Z')
     db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .run('agent_config_tony', 'agent_config_sync', 'scheduled', null, null, null, '{"synced":13,"agents":["Tony"]}', '2026-06-09T14:59:49.000Z')
     db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run('agent_config_gbrain', 'agent_config_sync', 'scheduled', null, 'agent', 'brain.gbrain', '{"agent_id":"gbrain","provider":"gbrain"}', '2026-06-09T14:59:48.000Z')
+      .run('agent_config_owner_tony', 'agent_config_sync', 'scheduled', null, 'agent_config', null, JSON.stringify({
+        event_type: 'agent_config_sync',
+        source_system: 'agent_config',
+        canonical_agent_id: 'owner.tony',
+        canonical_node_id: 'input.owner',
+        canonical_edge_id: null,
+        route_group: 'inputs',
+        confidence: 'source_provided',
+        source_runtime: 'gateway_agent_sync',
+        config_target: 'openclaw.agent:tony',
+        safe_event_summary: 'agent_config_sync:updated',
+        reason: 'owner_operator_identity_outside_gateway_agent_edges',
+      }), '2026-06-09T14:59:48.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run('agent_config_gbrain', 'agent_config_sync', 'scheduled', null, 'agent', 'brain.gbrain', '{"agent_id":"brain.gbrain","provider":"gbrain"}', '2026-06-09T14:59:47.000Z')
     db.close()
 
     const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
@@ -315,27 +341,82 @@ describe('gateway graph traffic snapshot', () => {
       telemetry_source: 'agent_request_events',
       source_record_id: 'audit_log:agent_config_agent_zero',
       telemetry_kind: 'agent_config_sync',
+      identity_reason: 'source_provided_canonical_identity',
     })
     expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.gbrain')).toMatchObject({
       traffic_status: 'active',
       telemetry_source: 'knowledge_runtime_events',
       source_record_id: 'audit_log:agent_config_gbrain',
     })
-    expect(snapshot.summary.missing_traffic_mappings).toBe(1)
+    expect(snapshot.summary.missing_traffic_mappings).toBe(2)
     expect(snapshot.summary.agent_config_sync_resolved).toBe(2)
-    expect(snapshot.summary.agent_config_sync_unresolved).toBe(1)
+    expect(snapshot.summary.agent_config_sync_unresolved).toBe(2)
+    expect(snapshot.summary.agent_config_sync_identity_missing).toBe(1)
+    expect(snapshot.summary.source_provided_canonical_identity).toBe(2)
     expect(snapshot.summary.auth_login_outside_topology).toBe(0)
     expect(snapshot.summary.confidence.high).toBeGreaterThanOrEqual(2)
     expect(snapshot.summary.confidence.medium).toBe(1)
-    expect(snapshot.missing_traffic_mappings).toEqual([
+    expect(snapshot.summary.confidence.low).toBe(1)
+    expect(snapshot.missing_traffic_mappings).toEqual(expect.arrayContaining([
       expect.objectContaining({
         telemetry_kind: 'agent_config_sync',
         source_system: 'agent_config',
-        identity_confidence: 'medium',
+        identity_confidence: 'low',
+        identity_reason: 'agent_config_sync_identity_missing',
         candidate_node_id: null,
         candidate_edge_id: null,
         classification: 'missing_node_alias',
         recommended_mapping_fix: 'add_explicit_agent_identity_to_agent_config_sync_detail',
+      }),
+      expect.objectContaining({
+        telemetry_kind: 'agent_config_sync',
+        source_system: 'agent_config',
+        identity_confidence: 'medium',
+        identity_reason: 'owner_operator_identity_outside_gateway_agent_edges',
+        source_provided_identity: true,
+        candidate_node_id: 'input.owner',
+        candidate_edge_id: null,
+      }),
+    ]))
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('classifies broad protected-action-check writes as target ambiguous without creating a pulse', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-protected-action-ambiguous-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.exec(`
+      CREATE TABLE audit_log (
+        id TEXT PRIMARY KEY,
+        action TEXT,
+        target_type TEXT,
+        target_id TEXT,
+        detail TEXT,
+        created_at TEXT
+      );
+    `)
+    db.prepare(`INSERT INTO audit_log (id, action, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)`)
+      .run('protected_write', 'write', 'protected-action-check', 'protected-action-check', '{"tool":"protected-action-check","scope":"probe"}', '2026-06-09T14:59:50.000Z')
+    db.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    expect(snapshot.summary.active_traffic_edges).toBe(0)
+    expect(snapshot.summary.protected_action_check_unresolved).toBe(1)
+    expect(snapshot.summary.unmapped_event_type_count).toBe(0)
+    expect(snapshot.missing_traffic_mappings).toEqual([
+      expect.objectContaining({
+        source_event_type: 'write',
+        source_system: 'protected-action-check',
+        classification: 'protected_action_check_target_ambiguous',
+        candidate_node_id: null,
+        candidate_edge_id: null,
+        recommended_mapping_fix: 'add_exact_protected_action_target_edge_or_keep_in_approval_center',
       }),
     ])
 

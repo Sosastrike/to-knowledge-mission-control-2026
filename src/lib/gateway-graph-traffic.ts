@@ -7,6 +7,12 @@ import {
 } from '@/lib/gateway-graph-topology'
 import Database from 'better-sqlite3'
 import { config } from '@/lib/config'
+import {
+  findCanonicalGatewayTelemetryIdentity,
+  normalizeGatewayTelemetryIdentityAlias,
+  type GatewayTelemetryIdentityContract,
+  type GatewayTelemetrySourceId,
+} from '@/lib/gateway-telemetry-identity'
 
 export type GatewayGraphTrafficSourceStatus = 'readable' | 'unavailable'
 export type GatewayGraphTrafficSourceId =
@@ -51,6 +57,7 @@ export type GatewayGraphMissingTrafficMappingClassification =
   | 'unmapped_event_type'
   | 'missing_node_alias'
   | 'auth_login_event_outside_gateway_topology'
+  | 'protected_action_check_target_ambiguous'
   | 'telemetry_source_has_no_topology_edge'
 
 export type GatewayGraphTrafficSeverity = 'info' | 'warning' | 'error'
@@ -77,6 +84,7 @@ export type GatewayGraphEdgeActivity = {
   telemetry_kind?: string | null
   identity_confidence?: GatewayGraphTrafficMappingConfidence | null
   identity_reason?: string | null
+  source_provided_identity?: boolean | null
 }
 
 export type GatewayGraphMissingTrafficMapping = {
@@ -94,6 +102,7 @@ export type GatewayGraphMissingTrafficMapping = {
   route_group?: GatewayGraphTopologyRouteGroup | null
   identity_confidence?: GatewayGraphTrafficMappingConfidence | null
   identity_reason?: string | null
+  source_provided_identity?: boolean | null
   candidate_node_id: string | null
   candidate_edge_id: string | null
   classification: GatewayGraphMissingTrafficMappingClassification
@@ -146,6 +155,9 @@ export type GatewayGraphTrafficPayload = {
     auth_login_outside_topology: number
     agent_config_sync_resolved: number
     agent_config_sync_unresolved: number
+    agent_config_sync_identity_missing: number
+    source_provided_canonical_identity: number
+    protected_action_check_unresolved: number
     unmapped_event_type_count: number
     resolved_this_pass: number
     still_unresolved: number
@@ -378,6 +390,18 @@ function summarize(
     activity.telemetry_kind === 'agent_config_sync' && activity.identity_confidence === 'high'
   )).length
   const agentConfigUnresolved = missing.filter((mapping) => mapping.telemetry_kind === 'agent_config_sync').length
+  const agentConfigIdentityMissing = missing.filter((mapping) => (
+    mapping.telemetry_kind === 'agent_config_sync' &&
+    (mapping.identity_reason === 'agent_config_sync_identity_missing' || mapping.identity_reason === 'canonical_identity_missing')
+  )).length
+  const sourceProvidedCanonicalIdentity = activities.filter((activity) => (
+    activity.telemetry_kind === 'agent_config_sync' && activity.source_provided_identity === true
+  )).length + missing.filter((mapping) => (
+    mapping.telemetry_kind === 'agent_config_sync' && mapping.source_provided_identity === true
+  )).length
+  const protectedActionCheckUnresolved = missing.filter((mapping) => (
+    mapping.classification === 'protected_action_check_target_ambiguous'
+  )).length
 
   return {
     total_edges: edges.length,
@@ -389,6 +413,9 @@ function summarize(
     auth_login_outside_topology: missing.filter((mapping) => mapping.classification === 'auth_login_event_outside_gateway_topology').length,
     agent_config_sync_resolved: agentConfigResolved,
     agent_config_sync_unresolved: agentConfigUnresolved,
+    agent_config_sync_identity_missing: agentConfigIdentityMissing,
+    source_provided_canonical_identity: sourceProvidedCanonicalIdentity,
+    protected_action_check_unresolved: protectedActionCheckUnresolved,
     unmapped_event_type_count: missing.filter((mapping) => mapping.classification === 'unmapped_event_type').length,
     resolved_this_pass: agentConfigResolved,
     still_unresolved: missing.length,
@@ -523,6 +550,7 @@ function addActivity(
     telemetry_kind?: string | null
     identity_confidence?: GatewayGraphTrafficMappingConfidence | null
     identity_reason?: string | null
+    source_provided_identity?: boolean | null
   },
 ) {
   if (!input.occurred_at) return
@@ -538,6 +566,7 @@ function addActivity(
     telemetry_kind: sanitizeTelemetryText(input.telemetry_kind),
     identity_confidence: input.identity_confidence || null,
     identity_reason: input.identity_reason ? sanitizeTelemetryText(input.identity_reason) : null,
+    source_provided_identity: input.source_provided_identity || null,
   })
 }
 
@@ -679,6 +708,7 @@ function resolveTrafficAlias(text: string): TrafficAliasResolution | null {
 
 function edgeForAuditText(text: string): string | null {
   const lower = text.toLowerCase()
+  if (/\bprotected[-_. ]?action[-_. ]?check\b/.test(lower)) return null
   const alias = resolveTrafficAlias(lower)
   if (alias?.confidence === 'high') return alias.edge_id
   if (lower.includes('zapier')) return 'connector.zapier_to_gateway'
@@ -718,74 +748,42 @@ type AgentConfigSyncIdentityResolution = {
   source_id: GatewayGraphTrafficSourceId
   confidence: GatewayGraphTrafficMappingConfidence
   reason: string
+  source_provided_identity?: boolean
 }
 
-const AGENT_CONFIG_CANONICAL_TARGETS: Array<{
-  node_id: string
-  edge_id: string
-  route_group: GatewayGraphTopologyRouteGroup
-  source_id: GatewayGraphTrafficSourceId
-  aliases: string[]
-}> = [
-  {
-    node_id: 'agent.zero',
-    edge_id: 'highway.inputs.agent.zero',
-    route_group: 'inputs',
-    source_id: 'agent_request_events',
-    aliases: ['agent.zero', 'agent zero', 'agent-zero', 'agent_zero', 'agentzero', 'jarvis', 'jarvis88', 'zero'],
-  },
-  {
-    node_id: 'agent.hermes',
-    edge_id: 'highway.inputs.agent.hermes',
-    route_group: 'inputs',
-    source_id: 'agent_request_events',
-    aliases: ['agent.hermes', 'agent hermes', 'agent-hermes', 'agent_hermes', 'hermes'],
-  },
-  {
-    node_id: 'brain.gbrain',
-    edge_id: 'highway.knowledge.brain.gbrain',
-    route_group: 'knowledge',
-    source_id: 'knowledge_runtime_events',
-    aliases: ['brain.gbrain', 'gbrain', 'g-brain', 'g_brain', 'google brain'],
-  },
-  {
-    node_id: 'brain.sync',
-    edge_id: 'highway.knowledge.brain.sync',
-    route_group: 'knowledge',
-    source_id: 'knowledge_runtime_events',
-    aliases: ['brain.sync', 'brain sync', 'brain-sync', 'brain_sync'],
-  },
-  {
-    node_id: 'brain.buildwiki',
-    edge_id: 'highway.knowledge.brain.buildwiki',
-    route_group: 'knowledge',
-    source_id: 'knowledge_runtime_events',
-    aliases: ['brain.buildwiki', 'buildwiki', 'build-wiki', 'build wiki', 'opencloud docs farmer'],
-  },
-  {
-    node_id: 'input.agentreq',
-    edge_id: 'highway.inputs.input.agentreq',
-    route_group: 'inputs',
-    source_id: 'agent_request_events',
-    aliases: ['input.agentreq', 'agent requests', 'agent_request', 'agent-request', 'agentreq'],
-  },
-  {
-    node_id: 'input.aiapp',
-    edge_id: 'highway.inputs.input.aiapp',
-    route_group: 'inputs',
-    source_id: 'ai_app_request_events',
-    aliases: ['input.aiapp', 'ai app', 'ai_app', 'ai-app', 'aiapp'],
-  },
-]
+const TRAFFIC_SOURCE_IDS = new Set<GatewayGraphTrafficSourceId>([
+  'model_request_logs',
+  'connector_readiness_events',
+  'agentmail_events',
+  'gateway_event_bus',
+  'knowledge_runtime_events',
+  'report_preview_events',
+  'zapier_discovery_events',
+  'storage_sync_events',
+  'bridge_queue_events',
+  'workflow_trigger_events',
+  'ai_app_request_events',
+  'agent_request_events',
+])
+
+function trafficSourceIdForTelemetryIdentity(
+  value: GatewayTelemetrySourceId | string | null | undefined,
+  routeGroup: GatewayGraphTopologyRouteGroup | null,
+): GatewayGraphTrafficSourceId {
+  if (value && TRAFFIC_SOURCE_IDS.has(value as GatewayGraphTrafficSourceId)) return value as GatewayGraphTrafficSourceId
+  if (routeGroup === 'knowledge') return 'knowledge_runtime_events'
+  if (routeGroup === 'agentmail') return 'agentmail_events'
+  if (routeGroup === 'zapier') return 'zapier_discovery_events'
+  if (routeGroup === 'models') return 'agent_request_events'
+  if (routeGroup === 'inputs') return 'agent_request_events'
+  if (routeGroup === 'storage') return 'storage_sync_events'
+  if (routeGroup === 'reports') return 'report_preview_events'
+  if (routeGroup === 'webhooks' || routeGroup === 'events') return 'gateway_event_bus'
+  return 'connector_readiness_events'
+}
 
 function normalizeIdentityAlias(value: unknown): string {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/@agentmail\.to\b/g, '')
-    .replace(/[^\w.]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return normalizeGatewayTelemetryIdentityAlias(value)
 }
 
 function parseJsonObject(value: unknown): Record<string, unknown> | null {
@@ -824,6 +822,138 @@ function firstSanitizedIdentityValue(values: unknown[]): string | null {
   return null
 }
 
+function routeGroupFromUnknown(value: unknown): GatewayGraphTopologyRouteGroup | null {
+  const text = sanitizeTelemetryText(value, '')
+  if (['models', 'inputs', 'knowledge', 'storage', 'integrations', 'reports', 'webhooks', 'events', 'agentmail', 'zapier', 'browser'].includes(text)) {
+    return text as GatewayGraphTopologyRouteGroup
+  }
+  return null
+}
+
+function contractFromRecord(value: unknown): GatewayTelemetryIdentityContract | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  const confidence = record.confidence === 'source_provided'
+    ? 'source_provided'
+    : record.confidence === 'unresolved' || record.mapping_confidence === 'unresolved'
+      ? 'unresolved'
+      : null
+  const hasCanonicalField = Boolean(record.canonical_agent_id || record.canonical_node_id || record.canonical_edge_id)
+  if (!confidence && !hasCanonicalField) return null
+  return {
+    event_type: sanitizeTelemetryText(record.event_type || 'agent_config_sync'),
+    source_system: sanitizeTelemetryText(record.source_system || 'agent_config'),
+    canonical_agent_id: firstSanitizedIdentityValue([record.canonical_agent_id]),
+    canonical_node_id: firstSanitizedIdentityValue([record.canonical_node_id]),
+    canonical_edge_id: firstSanitizedIdentityValue([record.canonical_edge_id]),
+    route_group: routeGroupFromUnknown(record.route_group),
+    scope_id: firstSanitizedIdentityValue([record.scope_id]),
+    confidence: confidence || (hasCanonicalField ? 'source_provided' : 'unresolved'),
+    occurred_at: firstSanitizedIdentityValue([record.occurred_at]),
+    source_runtime: firstSanitizedIdentityValue([record.source_runtime]),
+    config_target: firstSanitizedIdentityValue([record.config_target]),
+    safe_event_summary: firstSanitizedIdentityValue([record.safe_event_summary]),
+    reason: firstSanitizedIdentityValue([record.reason]),
+  }
+}
+
+function sourceProvidedContractFromDetail(detail: Record<string, unknown> | null): GatewayTelemetryIdentityContract | null {
+  if (!detail) return null
+  const direct = contractFromRecord(detail)
+  if (direct?.confidence === 'source_provided') return direct
+
+  const contracts = Array.isArray(detail.identity_contracts)
+    ? detail.identity_contracts.map(contractFromRecord).filter(Boolean) as GatewayTelemetryIdentityContract[]
+    : []
+  const sourceProvided = contracts.filter((contract) => contract.confidence === 'source_provided')
+  if (sourceProvided.length === 1) return sourceProvided[0]
+  if (sourceProvided.length > 1) {
+    return {
+      event_type: 'agent_config_sync',
+      source_system: 'agent_config',
+      canonical_agent_id: null,
+      canonical_node_id: null,
+      canonical_edge_id: null,
+      route_group: null,
+      scope_id: null,
+      confidence: 'unresolved',
+      source_runtime: 'gateway_agent_sync',
+      config_target: 'openclaw.agents.list',
+      safe_event_summary: 'agent_config_sync_batch',
+      reason: 'multiple_source_provided_identities_in_batch',
+    }
+  }
+  return direct
+}
+
+function resolveSourceProvidedAgentConfigIdentity(
+  contract: GatewayTelemetryIdentityContract,
+  topologyEdgeIds: Set<string>,
+): AgentConfigSyncIdentityResolution {
+  const sourceId = trafficSourceIdForTelemetryIdentity(null, contract.route_group)
+  if (contract.confidence !== 'source_provided') {
+    return {
+      agent_id: contract.canonical_agent_id,
+      agent_slug: null,
+      provider: null,
+      runtime_id: contract.source_runtime || null,
+      node_id: null,
+      edge_id: null,
+      route_group: contract.route_group,
+      source_id: sourceId,
+      confidence: 'low',
+      reason: contract.reason || 'agent_config_sync_identity_missing',
+      source_provided_identity: false,
+    }
+  }
+
+  if (!contract.canonical_edge_id) {
+    return {
+      agent_id: contract.canonical_agent_id,
+      agent_slug: null,
+      provider: null,
+      runtime_id: contract.source_runtime || null,
+      node_id: contract.canonical_node_id,
+      edge_id: null,
+      route_group: contract.route_group,
+      source_id: sourceId,
+      confidence: contract.canonical_agent_id ? 'medium' : 'low',
+      reason: contract.reason || 'source_provided_identity_without_gateway_edge',
+      source_provided_identity: true,
+    }
+  }
+
+  if (!topologyEdgeIds.has(contract.canonical_edge_id)) {
+    return {
+      agent_id: contract.canonical_agent_id,
+      agent_slug: null,
+      provider: null,
+      runtime_id: contract.source_runtime || null,
+      node_id: contract.canonical_node_id,
+      edge_id: null,
+      route_group: contract.route_group,
+      source_id: sourceId,
+      confidence: 'medium',
+      reason: 'source_provided_edge_missing_from_topology',
+      source_provided_identity: true,
+    }
+  }
+
+  return {
+    agent_id: contract.canonical_agent_id,
+    agent_slug: null,
+    provider: null,
+    runtime_id: contract.source_runtime || null,
+    node_id: contract.canonical_node_id,
+    edge_id: contract.canonical_edge_id,
+    route_group: contract.route_group,
+    source_id: sourceId,
+    confidence: 'high',
+    reason: 'source_provided_canonical_identity',
+    source_provided_identity: true,
+  }
+}
+
 function resolveCanonicalAgentTarget(
   candidates: string[],
   topologyEdgeIds: Set<string>,
@@ -831,35 +961,57 @@ function resolveCanonicalAgentTarget(
   for (const candidate of candidates) {
     const normalized = normalizeIdentityAlias(candidate)
     if (!normalized) continue
-    for (const target of AGENT_CONFIG_CANONICAL_TARGETS) {
-      const aliases = [target.node_id, target.edge_id, ...target.aliases].map(normalizeIdentityAlias)
-      if (!aliases.some((alias) => alias && (normalized === alias || normalized.includes(alias)))) continue
-      if (!topologyEdgeIds.has(target.edge_id)) {
+    const identity = findCanonicalGatewayTelemetryIdentity([candidate])
+    if (!identity) continue
+    const explicitCanonicalValues = [
+      identity.canonical_agent_id,
+      identity.canonical_node_id,
+      identity.canonical_edge_id,
+    ].filter(Boolean).map(normalizeIdentityAlias)
+    if (!explicitCanonicalValues.includes(normalized)) continue
+    const sourceId = trafficSourceIdForTelemetryIdentity(identity.telemetry_source_id, identity.route_group)
+    if (!identity.canonical_edge_id || !identity.canonical_node_id || !identity.route_group) {
+      return {
+        agent_id: sanitizeTelemetryText(identity.canonical_agent_id),
+        agent_slug: sanitizeTelemetryText(candidate),
+        provider: null,
+        runtime_id: null,
+        node_id: identity.canonical_node_id,
+        edge_id: null,
+        route_group: identity.route_group,
+        source_id: sourceId,
+        confidence: 'medium',
+        reason: identity.reason_when_unmapped || 'canonical_identity_has_no_gateway_topology_edge',
+        source_provided_identity: false,
+      }
+    }
+    if (!topologyEdgeIds.has(identity.canonical_edge_id)) {
         return {
-          agent_id: sanitizeTelemetryText(target.node_id),
+          agent_id: sanitizeTelemetryText(identity.canonical_agent_id),
           agent_slug: sanitizeTelemetryText(candidate),
           provider: null,
           runtime_id: null,
           node_id: null,
           edge_id: null,
-          route_group: target.route_group,
-          source_id: target.source_id,
+          route_group: identity.route_group,
+          source_id: sourceId,
           confidence: 'medium',
           reason: 'canonical_agent_identity_found_but_topology_edge_missing',
+          source_provided_identity: false,
         }
-      }
-      return {
-        agent_id: sanitizeTelemetryText(target.node_id),
-        agent_slug: sanitizeTelemetryText(candidate),
-        provider: null,
-        runtime_id: null,
-        node_id: target.node_id,
-        edge_id: target.edge_id,
-        route_group: target.route_group,
-        source_id: target.source_id,
-        confidence: 'high',
-        reason: 'explicit_canonical_agent_identity_resolved',
-      }
+    }
+    return {
+      agent_id: sanitizeTelemetryText(identity.canonical_agent_id),
+      agent_slug: sanitizeTelemetryText(candidate),
+      provider: null,
+      runtime_id: null,
+      node_id: identity.canonical_node_id,
+      edge_id: identity.canonical_edge_id,
+      route_group: identity.route_group,
+      source_id: sourceId,
+      confidence: 'high',
+      reason: 'explicit_canonical_agent_identity_resolved',
+      source_provided_identity: false,
     }
   }
   return null
@@ -870,6 +1022,11 @@ function resolveAgentConfigSyncIdentity(
   topologyEdgeIds: Set<string>,
 ): AgentConfigSyncIdentityResolution {
   const detail = parseJsonObject(row.detail) || parseJsonObject(row.metadata_json)
+  const sourceProvidedContract = sourceProvidedContractFromDetail(detail)
+  if (sourceProvidedContract) {
+    return resolveSourceProvidedAgentConfigIdentity(sourceProvidedContract, topologyEdgeIds)
+  }
+
   const explicitCandidates = [
     row.target_id,
     row.actor_id,
@@ -902,7 +1059,6 @@ function resolveAgentConfigSyncIdentity(
   const explicitNames = detailStringValues(detail, ['agent_id', 'agent_slug', 'agent', 'agents', 'provider', 'runtime_id', 'runtime', 'name', 'slug'])
     .concat([row.target_id, row.actor_id, row.target].filter((value) => value != null && String(value).trim()).map(String))
   if (explicitNames.length > 0) {
-    const hasHumanOwnerName = explicitNames.some((value) => normalizeIdentityAlias(value) === 'tony')
     return {
       agent_id: firstSanitizedIdentityValue([detail?.agent_id, row.target_id]),
       agent_slug: firstSanitizedIdentityValue([detail?.agent_slug, detail?.agent, detail?.agents, row.target]),
@@ -912,10 +1068,9 @@ function resolveAgentConfigSyncIdentity(
       edge_id: null,
       route_group: null,
       source_id: 'agent_request_events',
-      confidence: 'medium',
-      reason: hasHumanOwnerName
-        ? 'noncanonical_agent_identity_tony_requires_explicit_gateway_agent_id'
-        : 'agent_config_sync_identity_not_canonical',
+      confidence: 'low',
+      reason: 'agent_config_sync_identity_missing',
+      source_provided_identity: false,
     }
   }
 
@@ -930,6 +1085,7 @@ function resolveAgentConfigSyncIdentity(
     source_id: 'agent_request_events',
     confidence: 'low',
     reason: 'agent_config_sync_identity_missing',
+    source_provided_identity: false,
   }
 }
 
@@ -947,21 +1103,24 @@ function missingMapping(input: {
   const alias = resolveTrafficAlias(text)
   const looksAuth = /\blogin\b|\bauth\b/.test(text)
   const looksAgentConfig = /\bagent[-_. ]?config\b|\bagent_config_sync\b/.test(text)
+  const looksProtectedActionCheck = /\bprotected[-_. ]?action[-_. ]?check\b/.test(text)
   const looksLegacyRoute = /\blegacy\b|[-_. ]route\b/.test(text)
   const looksStatic = /\bstatic\b|\bfallback\b/.test(text)
   const classification: GatewayGraphMissingTrafficMappingClassification = looksAuth
     ? 'auth_login_event_outside_gateway_topology'
     : looksAgentConfig
       ? 'missing_node_alias'
-      : looksLegacyRoute
-        ? 'legacy_route_group'
-        : looksStatic
-          ? 'stale_static_name'
-          : alias
-            ? 'missing_edge_id'
-            : input.source_system
-              ? 'unmapped_event_type'
-              : 'unknown_source_system'
+      : looksProtectedActionCheck
+        ? 'protected_action_check_target_ambiguous'
+        : looksLegacyRoute
+          ? 'legacy_route_group'
+          : looksStatic
+            ? 'stale_static_name'
+            : alias
+              ? 'missing_edge_id'
+              : input.source_system
+                ? 'unmapped_event_type'
+                : 'unknown_source_system'
   const candidateNodeId = looksAgentConfig ? input.agentIdentity?.node_id || null : alias?.candidate_node_id || null
   const candidateEdgeId = looksAgentConfig ? input.agentIdentity?.edge_id || null : alias?.edge_id || null
   const sourceSystem = sanitizeTelemetryText(
@@ -971,9 +1130,11 @@ function missingMapping(input: {
     ? 'leave_unmapped_auth_events_outside_gateway_topology'
     : looksAgentConfig
       ? 'add_explicit_agent_identity_to_agent_config_sync_detail'
-      : alias
-        ? `map_alias_to_${alias.edge_id}`
-        : 'add_explicit_canonical_edge_mapping_or_keep_unmapped'
+      : looksProtectedActionCheck
+        ? 'add_exact_protected_action_target_edge_or_keep_in_approval_center'
+        : alias
+          ? `map_alias_to_${alias.edge_id}`
+          : 'add_explicit_canonical_edge_mapping_or_keep_unmapped'
   const severity: GatewayGraphTrafficSeverity = classification === 'auth_login_event_outside_gateway_topology'
     ? 'info'
     : classification === 'unknown_source_system'
@@ -994,6 +1155,7 @@ function missingMapping(input: {
     route_group: input.agentIdentity?.route_group || null,
     identity_confidence: input.agentIdentity?.confidence || (looksAgentConfig ? 'low' : null),
     identity_reason: input.agentIdentity?.reason || (looksAgentConfig ? 'agent_config_sync_identity_missing' : null),
+    source_provided_identity: input.agentIdentity?.source_provided_identity || null,
     candidate_node_id: candidateNodeId,
     candidate_edge_id: candidateEdgeId,
     classification,
@@ -1193,6 +1355,7 @@ function inspectAuditTables(
             telemetry_kind: 'agent_config_sync',
             identity_confidence: agentIdentity.confidence,
             identity_reason: agentIdentity.reason,
+            source_provided_identity: agentIdentity.source_provided_identity || false,
           })
           continue
         }

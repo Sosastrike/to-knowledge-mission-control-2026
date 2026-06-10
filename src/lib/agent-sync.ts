@@ -13,6 +13,7 @@ import { existsSync, readFileSync, statSync } from 'fs'
 import { resolveWithin } from './paths'
 import { logger } from './logger'
 import { parseJsonRelaxed } from './json-relaxed'
+import { buildAgentConfigSyncIdentityContract } from './gateway-telemetry-identity'
 
 interface OpenClawAgent {
   id: string
@@ -287,10 +288,51 @@ export async function syncAgentsFromConfig(actor: string = 'system'): Promise<Sy
 
   // Log audit event
   if (created > 0 || updated > 0) {
+    const changedAgents = results.filter(a => a.action !== 'unchanged')
+    const agentsById = new Map(agents.map((agent) => [agent.id, agent]))
+    const occurredAt = new Date().toISOString()
+    const identityContracts = changedAgents.map((result) => buildAgentConfigSyncIdentityContract({
+      openclawAgent: agentsById.get(result.id) || null,
+      agentName: result.name,
+      action: result.action,
+      occurredAt,
+      sourceRuntime: 'gateway_agent_sync',
+    }))
+    const edgeBackedContracts = identityContracts.filter((contract) => (
+      contract.confidence === 'source_provided' && Boolean(contract.canonical_edge_id)
+    ))
+    const singleEdgeBackedContract = changedAgents.length === 1 && edgeBackedContracts.length === 1
+      ? edgeBackedContracts[0]
+      : null
+    const singleProvidedContract = changedAgents.length === 1 && identityContracts.length === 1
+      ? identityContracts[0]
+      : null
+    const topLevelContract = singleEdgeBackedContract || singleProvidedContract || null
+
     logAuditEvent({
       action: 'agent_config_sync',
       actor,
-      detail: { synced, created, updated, agents: results.filter(a => a.action !== 'unchanged').map(a => a.name) },
+      target_type: topLevelContract?.canonical_node_id ? 'gateway_node' : 'agent_config',
+      detail: {
+        synced,
+        created,
+        updated,
+        agents: changedAgents.map(a => a.name),
+        event_type: 'agent_config_sync',
+        source_system: 'agent_config',
+        source_runtime: 'gateway_agent_sync',
+        config_target: 'openclaw.agents.list',
+        safe_event_summary: 'agent_config_sync_summary',
+        canonical_agent_id: topLevelContract?.canonical_agent_id || null,
+        canonical_node_id: topLevelContract?.canonical_node_id || null,
+        canonical_edge_id: topLevelContract?.canonical_edge_id || null,
+        route_group: topLevelContract?.route_group || null,
+        scope_id: topLevelContract?.scope_id || null,
+        confidence: topLevelContract?.confidence || 'unresolved',
+        mapping_confidence: topLevelContract?.confidence || 'unresolved',
+        reason: topLevelContract?.reason || 'batch_or_missing_canonical_identity',
+        identity_contracts: identityContracts,
+      },
     })
 
     // Broadcast sync event

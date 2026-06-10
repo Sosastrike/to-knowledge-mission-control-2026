@@ -50,9 +50,11 @@ export type GatewayGraphMissingTrafficMappingClassification =
   | 'stale_static_name'
   | 'unmapped_event_type'
   | 'missing_node_alias'
+  | 'auth_login_event_outside_gateway_topology'
   | 'telemetry_source_has_no_topology_edge'
 
 export type GatewayGraphTrafficSeverity = 'info' | 'warning' | 'error'
+export type GatewayGraphTrafficMappingConfidence = 'high' | 'medium' | 'low'
 
 export type GatewayGraphTrafficSource = {
   source_id: GatewayGraphTrafficSourceId
@@ -73,6 +75,8 @@ export type GatewayGraphEdgeActivity = {
   source_id: GatewayGraphTrafficSourceId
   record_id?: string | null
   telemetry_kind?: string | null
+  identity_confidence?: GatewayGraphTrafficMappingConfidence | null
+  identity_reason?: string | null
 }
 
 export type GatewayGraphMissingTrafficMapping = {
@@ -84,6 +88,12 @@ export type GatewayGraphMissingTrafficMapping = {
   reason: 'traffic_edge_mapping_missing'
   table: string
   provider?: string | null
+  agent_id?: string | null
+  agent_slug?: string | null
+  runtime_id?: string | null
+  route_group?: GatewayGraphTopologyRouteGroup | null
+  identity_confidence?: GatewayGraphTrafficMappingConfidence | null
+  identity_reason?: string | null
   candidate_node_id: string | null
   candidate_edge_id: string | null
   classification: GatewayGraphMissingTrafficMappingClassification
@@ -109,6 +119,8 @@ export type GatewayGraphTrafficEdge = {
   telemetry_source: GatewayGraphTrafficSourceId | null
   source_record_id: string | null
   telemetry_kind: string | null
+  identity_confidence: GatewayGraphTrafficMappingConfidence | null
+  identity_reason: string | null
   stale_threshold_seconds: number
   recommended_next_action: string
   primary_reason: string
@@ -131,6 +143,13 @@ export type GatewayGraphTrafficPayload = {
     stale_telemetry_edges: number
     unavailable_telemetry_edges: number
     missing_traffic_mappings: number
+    auth_login_outside_topology: number
+    agent_config_sync_resolved: number
+    agent_config_sync_unresolved: number
+    unmapped_event_type_count: number
+    resolved_this_pass: number
+    still_unresolved: number
+    confidence: Record<GatewayGraphTrafficMappingConfidence, number>
   }
   missing_traffic_mappings: GatewayGraphMissingTrafficMapping[]
   credential_values_exposed: false
@@ -277,6 +296,8 @@ function trafficEdgeFromTopology(input: {
       telemetry_source: null,
       source_record_id: null,
       telemetry_kind: null,
+      identity_confidence: null,
+      identity_reason: null,
       stale_threshold_seconds: staleThresholdSecondsForEdge(input.edge),
       recommended_next_action: recommendedNextActionForEdge(input.edge, trafficClassification),
       primary_reason: 'traffic_data_unavailable',
@@ -327,6 +348,8 @@ function trafficEdgeFromTopology(input: {
     telemetry_source: source.source_id,
     source_record_id: activity?.record_id || null,
     telemetry_kind: activity?.telemetry_kind || null,
+    identity_confidence: activity?.identity_confidence || null,
+    identity_reason: activity?.identity_reason ? sanitizeTelemetryText(activity.identity_reason) : null,
     stale_threshold_seconds: staleThresholdSeconds,
     recommended_next_action: recommendedNextActionForEdge(input.edge, trafficClassification),
     primary_reason: active
@@ -339,14 +362,37 @@ function trafficEdgeFromTopology(input: {
   }
 }
 
-function summarize(edges: GatewayGraphTrafficEdge[]): GatewayGraphTrafficPayload['summary'] {
+function summarize(
+  edges: GatewayGraphTrafficEdge[],
+  activities: GatewayGraphEdgeActivity[] = [],
+  missing: GatewayGraphMissingTrafficMapping[] = [],
+): GatewayGraphTrafficPayload['summary'] {
+  const confidence: Record<GatewayGraphTrafficMappingConfidence, number> = { high: 0, medium: 0, low: 0 }
+  for (const activity of activities) {
+    if (activity.identity_confidence) confidence[activity.identity_confidence] += 1
+  }
+  for (const mapping of missing) {
+    if (mapping.identity_confidence) confidence[mapping.identity_confidence] += 1
+  }
+  const agentConfigResolved = activities.filter((activity) => (
+    activity.telemetry_kind === 'agent_config_sync' && activity.identity_confidence === 'high'
+  )).length
+  const agentConfigUnresolved = missing.filter((mapping) => mapping.telemetry_kind === 'agent_config_sync').length
+
   return {
     total_edges: edges.length,
     active_traffic_edges: edges.filter((edge) => edge.traffic_status === 'active').length,
     ready_no_recent_traffic_edges: edges.filter((edge) => edge.traffic_status === 'ready_no_recent_traffic').length,
     stale_telemetry_edges: edges.filter((edge) => edge.traffic_status === 'stale').length,
     unavailable_telemetry_edges: edges.filter((edge) => edge.traffic_status === 'unavailable').length,
-    missing_traffic_mappings: 0,
+    missing_traffic_mappings: missing.length,
+    auth_login_outside_topology: missing.filter((mapping) => mapping.classification === 'auth_login_event_outside_gateway_topology').length,
+    agent_config_sync_resolved: agentConfigResolved,
+    agent_config_sync_unresolved: agentConfigUnresolved,
+    unmapped_event_type_count: missing.filter((mapping) => mapping.classification === 'unmapped_event_type').length,
+    resolved_this_pass: agentConfigResolved,
+    still_unresolved: missing.length,
+    confidence,
   }
 }
 
@@ -379,8 +425,7 @@ export function buildGatewayGraphTrafficSnapshot({
     sources,
     activities: edgeActivity,
   }))
-  const summary = summarize(edges)
-  summary.missing_traffic_mappings = missingTrafficMappings.length
+  const summary = summarize(edges, edgeActivity, missingTrafficMappings)
 
   return {
     ok: true,
@@ -476,6 +521,8 @@ function addActivity(
     bytes_out?: number
     record_id?: string | null
     telemetry_kind?: string | null
+    identity_confidence?: GatewayGraphTrafficMappingConfidence | null
+    identity_reason?: string | null
   },
 ) {
   if (!input.occurred_at) return
@@ -489,6 +536,8 @@ function addActivity(
     bytes_out: input.bytes_out,
     record_id: sanitizeRecordRef(input.record_id),
     telemetry_kind: sanitizeTelemetryText(input.telemetry_kind),
+    identity_confidence: input.identity_confidence || null,
+    identity_reason: input.identity_reason ? sanitizeTelemetryText(input.identity_reason) : null,
   })
 }
 
@@ -658,6 +707,232 @@ function sourceIdsFromAuditEdge(edgeId: string | null): GatewayGraphTrafficSourc
   return ['connector_readiness_events']
 }
 
+type AgentConfigSyncIdentityResolution = {
+  agent_id: string | null
+  agent_slug: string | null
+  provider: string | null
+  runtime_id: string | null
+  node_id: string | null
+  edge_id: string | null
+  route_group: GatewayGraphTopologyRouteGroup | null
+  source_id: GatewayGraphTrafficSourceId
+  confidence: GatewayGraphTrafficMappingConfidence
+  reason: string
+}
+
+const AGENT_CONFIG_CANONICAL_TARGETS: Array<{
+  node_id: string
+  edge_id: string
+  route_group: GatewayGraphTopologyRouteGroup
+  source_id: GatewayGraphTrafficSourceId
+  aliases: string[]
+}> = [
+  {
+    node_id: 'agent.zero',
+    edge_id: 'highway.inputs.agent.zero',
+    route_group: 'inputs',
+    source_id: 'agent_request_events',
+    aliases: ['agent.zero', 'agent zero', 'agent-zero', 'agent_zero', 'agentzero', 'jarvis', 'jarvis88', 'zero'],
+  },
+  {
+    node_id: 'agent.hermes',
+    edge_id: 'highway.inputs.agent.hermes',
+    route_group: 'inputs',
+    source_id: 'agent_request_events',
+    aliases: ['agent.hermes', 'agent hermes', 'agent-hermes', 'agent_hermes', 'hermes'],
+  },
+  {
+    node_id: 'brain.gbrain',
+    edge_id: 'highway.knowledge.brain.gbrain',
+    route_group: 'knowledge',
+    source_id: 'knowledge_runtime_events',
+    aliases: ['brain.gbrain', 'gbrain', 'g-brain', 'g_brain', 'google brain'],
+  },
+  {
+    node_id: 'brain.sync',
+    edge_id: 'highway.knowledge.brain.sync',
+    route_group: 'knowledge',
+    source_id: 'knowledge_runtime_events',
+    aliases: ['brain.sync', 'brain sync', 'brain-sync', 'brain_sync'],
+  },
+  {
+    node_id: 'brain.buildwiki',
+    edge_id: 'highway.knowledge.brain.buildwiki',
+    route_group: 'knowledge',
+    source_id: 'knowledge_runtime_events',
+    aliases: ['brain.buildwiki', 'buildwiki', 'build-wiki', 'build wiki', 'opencloud docs farmer'],
+  },
+  {
+    node_id: 'input.agentreq',
+    edge_id: 'highway.inputs.input.agentreq',
+    route_group: 'inputs',
+    source_id: 'agent_request_events',
+    aliases: ['input.agentreq', 'agent requests', 'agent_request', 'agent-request', 'agentreq'],
+  },
+  {
+    node_id: 'input.aiapp',
+    edge_id: 'highway.inputs.input.aiapp',
+    route_group: 'inputs',
+    source_id: 'ai_app_request_events',
+    aliases: ['input.aiapp', 'ai app', 'ai_app', 'ai-app', 'aiapp'],
+  },
+]
+
+function normalizeIdentityAlias(value: unknown): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/@agentmail\.to\b/g, '')
+    .replace(/[^\w.]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function parseJsonObject(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'string') return null
+  try {
+    const parsed = JSON.parse(value)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null
+  } catch {
+    return null
+  }
+}
+
+function detailStringValues(detail: Record<string, unknown> | null, keys: string[]): string[] {
+  if (!detail) return []
+  const values: string[] = []
+  for (const key of keys) {
+    const value = detail[key]
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string' || typeof item === 'number') values.push(String(item))
+      }
+    } else if (typeof value === 'string' || typeof value === 'number') {
+      values.push(String(value))
+    }
+  }
+  return values
+}
+
+function firstSanitizedIdentityValue(values: unknown[]): string | null {
+  for (const value of values) {
+    const text = sanitizeTelemetryText(value, '')
+    if (text) return text
+  }
+  return null
+}
+
+function resolveCanonicalAgentTarget(
+  candidates: string[],
+  topologyEdgeIds: Set<string>,
+): AgentConfigSyncIdentityResolution | null {
+  for (const candidate of candidates) {
+    const normalized = normalizeIdentityAlias(candidate)
+    if (!normalized) continue
+    for (const target of AGENT_CONFIG_CANONICAL_TARGETS) {
+      const aliases = [target.node_id, target.edge_id, ...target.aliases].map(normalizeIdentityAlias)
+      if (!aliases.some((alias) => alias && (normalized === alias || normalized.includes(alias)))) continue
+      if (!topologyEdgeIds.has(target.edge_id)) {
+        return {
+          agent_id: sanitizeTelemetryText(target.node_id),
+          agent_slug: sanitizeTelemetryText(candidate),
+          provider: null,
+          runtime_id: null,
+          node_id: null,
+          edge_id: null,
+          route_group: target.route_group,
+          source_id: target.source_id,
+          confidence: 'medium',
+          reason: 'canonical_agent_identity_found_but_topology_edge_missing',
+        }
+      }
+      return {
+        agent_id: sanitizeTelemetryText(target.node_id),
+        agent_slug: sanitizeTelemetryText(candidate),
+        provider: null,
+        runtime_id: null,
+        node_id: target.node_id,
+        edge_id: target.edge_id,
+        route_group: target.route_group,
+        source_id: target.source_id,
+        confidence: 'high',
+        reason: 'explicit_canonical_agent_identity_resolved',
+      }
+    }
+  }
+  return null
+}
+
+function resolveAgentConfigSyncIdentity(
+  row: Record<string, unknown>,
+  topologyEdgeIds: Set<string>,
+): AgentConfigSyncIdentityResolution {
+  const detail = parseJsonObject(row.detail) || parseJsonObject(row.metadata_json)
+  const explicitCandidates = [
+    row.target_id,
+    row.actor_id,
+    row.target,
+    ...detailStringValues(detail, [
+      'node_id',
+      'edge_id',
+      'agent_id',
+      'agent_slug',
+      'agent',
+      'agents',
+      'provider',
+      'runtime_id',
+      'runtime',
+      'name',
+      'slug',
+    ]),
+  ].filter((value) => value != null && String(value).trim()).map(String)
+  const canonical = resolveCanonicalAgentTarget(explicitCandidates, topologyEdgeIds)
+  if (canonical) {
+    return {
+      ...canonical,
+      agent_id: firstSanitizedIdentityValue([detail?.agent_id, row.target_id, canonical.agent_id]),
+      agent_slug: firstSanitizedIdentityValue([detail?.agent_slug, detail?.agent, detail?.agents, canonical.agent_slug]),
+      provider: firstSanitizedIdentityValue([detail?.provider]),
+      runtime_id: firstSanitizedIdentityValue([detail?.runtime_id, detail?.runtime]),
+    }
+  }
+
+  const explicitNames = detailStringValues(detail, ['agent_id', 'agent_slug', 'agent', 'agents', 'provider', 'runtime_id', 'runtime', 'name', 'slug'])
+    .concat([row.target_id, row.actor_id, row.target].filter((value) => value != null && String(value).trim()).map(String))
+  if (explicitNames.length > 0) {
+    const hasHumanOwnerName = explicitNames.some((value) => normalizeIdentityAlias(value) === 'tony')
+    return {
+      agent_id: firstSanitizedIdentityValue([detail?.agent_id, row.target_id]),
+      agent_slug: firstSanitizedIdentityValue([detail?.agent_slug, detail?.agent, detail?.agents, row.target]),
+      provider: firstSanitizedIdentityValue([detail?.provider]),
+      runtime_id: firstSanitizedIdentityValue([detail?.runtime_id, detail?.runtime]),
+      node_id: null,
+      edge_id: null,
+      route_group: null,
+      source_id: 'agent_request_events',
+      confidence: 'medium',
+      reason: hasHumanOwnerName
+        ? 'noncanonical_agent_identity_tony_requires_explicit_gateway_agent_id'
+        : 'agent_config_sync_identity_not_canonical',
+    }
+  }
+
+  return {
+    agent_id: null,
+    agent_slug: null,
+    provider: null,
+    runtime_id: null,
+    node_id: null,
+    edge_id: null,
+    route_group: null,
+    source_id: 'agent_request_events',
+    confidence: 'low',
+    reason: 'agent_config_sync_identity_missing',
+  }
+}
+
 function missingMapping(input: {
   source_id: GatewayGraphTrafficSourceId
   telemetry_kind: string
@@ -666,6 +941,7 @@ function missingMapping(input: {
   provider?: string | null
   source_system?: string | null
   text?: string | null
+  agentIdentity?: AgentConfigSyncIdentityResolution | null
 }): GatewayGraphMissingTrafficMapping {
   const text = `${input.text || ''} ${input.provider || ''} ${input.telemetry_kind || ''}`.toLowerCase()
   const alias = resolveTrafficAlias(text)
@@ -674,7 +950,7 @@ function missingMapping(input: {
   const looksLegacyRoute = /\blegacy\b|[-_. ]route\b/.test(text)
   const looksStatic = /\bstatic\b|\bfallback\b/.test(text)
   const classification: GatewayGraphMissingTrafficMappingClassification = looksAuth
-    ? 'telemetry_source_has_no_topology_edge'
+    ? 'auth_login_event_outside_gateway_topology'
     : looksAgentConfig
       ? 'missing_node_alias'
       : looksLegacyRoute
@@ -686,19 +962,19 @@ function missingMapping(input: {
             : input.source_system
               ? 'unmapped_event_type'
               : 'unknown_source_system'
-  const candidateNodeId = looksAgentConfig ? 'agent.zero' : alias?.candidate_node_id || null
-  const candidateEdgeId = looksAgentConfig ? 'highway.inputs.agent.zero' : alias?.edge_id || null
+  const candidateNodeId = looksAgentConfig ? input.agentIdentity?.node_id || null : alias?.candidate_node_id || null
+  const candidateEdgeId = looksAgentConfig ? input.agentIdentity?.edge_id || null : alias?.edge_id || null
   const sourceSystem = sanitizeTelemetryText(
     input.source_system || (looksAuth ? 'auth' : looksAgentConfig ? 'agent_config' : alias?.source_system || input.provider || 'unknown'),
   )
   const recommendedMappingFix = looksAuth
     ? 'leave_unmapped_auth_events_outside_gateway_topology'
     : looksAgentConfig
-      ? 'add_agent_config_sync_alias_when_agent_identity_is_explicit'
+      ? 'add_explicit_agent_identity_to_agent_config_sync_detail'
       : alias
         ? `map_alias_to_${alias.edge_id}`
         : 'add_explicit_canonical_edge_mapping_or_keep_unmapped'
-  const severity: GatewayGraphTrafficSeverity = classification === 'telemetry_source_has_no_topology_edge'
+  const severity: GatewayGraphTrafficSeverity = classification === 'auth_login_event_outside_gateway_topology'
     ? 'info'
     : classification === 'unknown_source_system'
       ? 'error'
@@ -712,6 +988,12 @@ function missingMapping(input: {
     reason: 'traffic_edge_mapping_missing',
     table: input.table,
     provider: input.provider ? sanitizeTelemetryText(input.provider) : null,
+    agent_id: input.agentIdentity?.agent_id || null,
+    agent_slug: input.agentIdentity?.agent_slug || null,
+    runtime_id: input.agentIdentity?.runtime_id || null,
+    route_group: input.agentIdentity?.route_group || null,
+    identity_confidence: input.agentIdentity?.confidence || (looksAgentConfig ? 'low' : null),
+    identity_reason: input.agentIdentity?.reason || (looksAgentConfig ? 'agent_config_sync_identity_missing' : null),
     candidate_node_id: candidateNodeId,
     candidate_edge_id: candidateEdgeId,
     classification,
@@ -860,7 +1142,13 @@ function inspectGatewayActivities(db: Database.Database, generatedAt: string, ac
   return readableSource('gateway_event_bus', generatedAt, 'activities_table_read_only', ['events.event_bus_to_gateway'])
 }
 
-function inspectAuditTables(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[], missing: GatewayGraphMissingTrafficMapping[]) {
+function inspectAuditTables(
+  db: Database.Database,
+  generatedAt: string,
+  activities: GatewayGraphEdgeActivity[],
+  missing: GatewayGraphMissingTrafficMapping[],
+  topology: GatewayGraphTopologyPayload,
+) {
   const sourceStatus = new Map<GatewayGraphTrafficSourceId, GatewayGraphTrafficSource>()
   for (const sourceId of ['connector_readiness_events', 'zapier_discovery_events', 'storage_sync_events', 'knowledge_runtime_events', 'agent_request_events', 'ai_app_request_events'] as GatewayGraphTrafficSourceId[]) {
     sourceStatus.set(sourceId, unavailableSource(sourceId, generatedAt, 'audit_source_table_missing'))
@@ -874,9 +1162,11 @@ function inspectAuditTables(db: Database.Database, generatedAt: string, activiti
     sourceStatus.set(sourceId, readableSource(sourceId, generatedAt, 'audit_tables_read_only'))
   }
 
+  const topologyEdgeIds = new Set(topology.edges.map((edge) => edge.edge_id))
+
   for (const table of auditTables) {
     const cols = columnsFor(db, table)
-    const textColumns = ['action', 'event', 'target', 'target_type', 'outcome', 'metadata_json', 'detail']
+    const textColumns = ['action', 'event', 'actor', 'actor_id', 'target', 'target_type', 'target_id', 'outcome', 'metadata_json', 'detail']
       .filter((column) => cols.has(column))
     const timeColumn = ['created_at', 'ts', 'timestamp', 'updated_at'].find((column) => cols.has(column))
     const idColumn = cols.has('id') ? 'id' : null
@@ -886,12 +1176,44 @@ function inspectAuditTables(db: Database.Database, generatedAt: string, activiti
     for (const row of rows) {
       const text = textColumns.map((column) => String(row[column] || '')).join(' ')
       const occurredAt = isoFromUnknownTimestamp(row[timeColumn])
+      const telemetryKind = sanitizeTelemetryText(row.action || row.event || 'audit_event')
+      const looksAgentConfig = telemetryKind === 'agent_config_sync' || /\bagent[-_. ]?config\b|\bagent_config_sync\b/i.test(text)
+      if (looksAgentConfig) {
+        const agentIdentity = resolveAgentConfigSyncIdentity(row, topologyEdgeIds)
+        if (agentIdentity.confidence === 'high' && agentIdentity.edge_id) {
+          if (!sourceStatus.has(agentIdentity.source_id) || sourceStatus.get(agentIdentity.source_id)?.status !== 'readable') {
+            sourceStatus.set(agentIdentity.source_id, readableSource(agentIdentity.source_id, generatedAt, 'audit_tables_read_only'))
+          }
+          addActivity(activities, {
+            edge_id: agentIdentity.edge_id,
+            source_id: agentIdentity.source_id,
+            occurred_at: occurredAt,
+            events: 1,
+            record_id: row[idColumn || ''] ? `${table}:${row[idColumn || '']}` : `${table}:agent_config_sync`,
+            telemetry_kind: 'agent_config_sync',
+            identity_confidence: agentIdentity.confidence,
+            identity_reason: agentIdentity.reason,
+          })
+          continue
+        }
+        missing.push(missingMapping({
+          source_id: agentIdentity.source_id,
+          telemetry_kind: 'agent_config_sync',
+          observed_at: occurredAt,
+          table,
+          provider: agentIdentity.provider,
+          source_system: 'agent_config',
+          text,
+          agentIdentity,
+        }))
+        continue
+      }
       const edgeId = edgeForAuditText(text)
       const sourceIds = sourceIdsFromAuditEdge(edgeId)
       if (!edgeId || !sourceIds.length) {
         missing.push(missingMapping({
           source_id: 'connector_readiness_events',
-          telemetry_kind: sanitizeTelemetryText(row.action || row.event || 'audit_event'),
+          telemetry_kind: telemetryKind,
           observed_at: occurredAt,
           table,
           provider: null,
@@ -910,7 +1232,7 @@ function inspectAuditTables(db: Database.Database, generatedAt: string, activiti
           occurred_at: occurredAt,
           events: 1,
           record_id: row[idColumn || ''] ? `${table}:${row[idColumn || '']}` : `${table}:${sanitizeTelemetryText(row.action || row.event || edgeId)}`,
-          telemetry_kind: sanitizeTelemetryText(row.action || row.event || 'audit_event'),
+          telemetry_kind: telemetryKind,
         })
       }
     }
@@ -952,7 +1274,7 @@ export function buildGatewayGraphTrafficFromReadOnlyDatabase({
       inspectWebhookDeliveries(db, generatedAt, activities),
       inspectReports(db, generatedAt, activities),
       inspectGatewayActivities(db, generatedAt, activities),
-      ...inspectAuditTables(db, generatedAt, activities, missing),
+      ...inspectAuditTables(db, generatedAt, activities, missing, topology),
     ]
     const sourceIds = new Set(sources.map((source) => source.source_id))
     for (const sourceId of RUNTIME_SOURCE_IDS) {

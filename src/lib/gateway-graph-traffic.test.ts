@@ -262,7 +262,7 @@ describe('gateway graph traffic snapshot', () => {
       expect.objectContaining({
         telemetry_kind: 'login',
         source_system: 'auth',
-        classification: 'telemetry_source_has_no_topology_edge',
+        classification: 'auth_login_event_outside_gateway_topology',
         severity: 'info',
         recommended_mapping_fix: 'leave_unmapped_auth_events_outside_gateway_topology',
       }),
@@ -270,11 +270,74 @@ describe('gateway graph traffic snapshot', () => {
         telemetry_kind: 'agent_config_sync',
         source_system: 'agent_config',
         classification: 'missing_node_alias',
-        candidate_node_id: 'agent.zero',
-        candidate_edge_id: 'highway.inputs.agent.zero',
+        identity_confidence: 'low',
+        candidate_node_id: null,
+        candidate_edge_id: null,
         severity: 'warning',
       }),
     ]))
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('maps high-confidence agent_config_sync identity and leaves medium-confidence records unanimated', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-agent-config-identity-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.exec(`
+      CREATE TABLE audit_log (
+        id TEXT PRIMARY KEY,
+        action TEXT,
+        actor TEXT,
+        actor_id TEXT,
+        target_type TEXT,
+        target_id TEXT,
+        detail TEXT,
+        created_at TEXT
+      );
+    `)
+    db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run('agent_config_agent_zero', 'agent_config_sync', 'scheduled', null, 'agent', 'agent.zero', '{"agent_slug":"agent-zero","runtime_id":"gateway-agent-sync"}', '2026-06-09T14:59:50.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run('agent_config_tony', 'agent_config_sync', 'scheduled', null, null, null, '{"synced":13,"agents":["Tony"]}', '2026-06-09T14:59:49.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, actor, actor_id, target_type, target_id, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run('agent_config_gbrain', 'agent_config_sync', 'scheduled', null, 'agent', 'brain.gbrain', '{"agent_id":"gbrain","provider":"gbrain"}', '2026-06-09T14:59:48.000Z')
+    db.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'agent_request_events',
+      source_record_id: 'audit_log:agent_config_agent_zero',
+      telemetry_kind: 'agent_config_sync',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.gbrain')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'knowledge_runtime_events',
+      source_record_id: 'audit_log:agent_config_gbrain',
+    })
+    expect(snapshot.summary.missing_traffic_mappings).toBe(1)
+    expect(snapshot.summary.agent_config_sync_resolved).toBe(2)
+    expect(snapshot.summary.agent_config_sync_unresolved).toBe(1)
+    expect(snapshot.summary.auth_login_outside_topology).toBe(0)
+    expect(snapshot.summary.confidence.high).toBeGreaterThanOrEqual(2)
+    expect(snapshot.summary.confidence.medium).toBe(1)
+    expect(snapshot.missing_traffic_mappings).toEqual([
+      expect.objectContaining({
+        telemetry_kind: 'agent_config_sync',
+        source_system: 'agent_config',
+        identity_confidence: 'medium',
+        candidate_node_id: null,
+        candidate_edge_id: null,
+        classification: 'missing_node_alias',
+        recommended_mapping_fix: 'add_explicit_agent_identity_to_agent_config_sync_detail',
+      }),
+    ])
 
     rmSync(root, { recursive: true, force: true })
   })

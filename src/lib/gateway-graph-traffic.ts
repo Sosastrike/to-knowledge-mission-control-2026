@@ -29,6 +29,31 @@ export type GatewayGraphTrafficStatus =
   | 'unavailable'
   | 'stale'
 
+export type GatewayGraphTrafficClassification =
+  | 'active_recent_traffic'
+  | 'ready_no_recent_traffic'
+  | 'telemetry_stale'
+  | 'telemetry_source_not_implemented'
+  | 'telemetry_table_empty'
+  | 'connector_has_no_event_log'
+  | 'system_is_standby_by_design'
+  | 'read_only_without_traffic_counters'
+  | 'provider_route_unavailable'
+  | 'auth_unavailable'
+
+export type GatewayGraphTrafficType = 'event' | 'request' | 'mixed' | 'none'
+
+export type GatewayGraphMissingTrafficMappingClassification =
+  | 'missing_edge_id'
+  | 'unknown_source_system'
+  | 'legacy_route_group'
+  | 'stale_static_name'
+  | 'unmapped_event_type'
+  | 'missing_node_alias'
+  | 'telemetry_source_has_no_topology_edge'
+
+export type GatewayGraphTrafficSeverity = 'info' | 'warning' | 'error'
+
 export type GatewayGraphTrafficSource = {
   source_id: GatewayGraphTrafficSourceId
   status: GatewayGraphTrafficSourceStatus
@@ -46,15 +71,24 @@ export type GatewayGraphEdgeActivity = {
   bytes_out?: number
   occurred_at: string
   source_id: GatewayGraphTrafficSourceId
+  record_id?: string | null
+  telemetry_kind?: string | null
 }
 
 export type GatewayGraphMissingTrafficMapping = {
   source_id: GatewayGraphTrafficSourceId
   telemetry_kind: string
+  source_event_type: string
+  source_system: string
   observed_at: string | null
   reason: 'traffic_edge_mapping_missing'
   table: string
   provider?: string | null
+  candidate_node_id: string | null
+  candidate_edge_id: string | null
+  classification: GatewayGraphMissingTrafficMappingClassification
+  recommended_mapping_fix: string
+  severity: GatewayGraphTrafficSeverity
 }
 
 export type GatewayGraphTrafficEdge = {
@@ -69,7 +103,14 @@ export type GatewayGraphTrafficEdge = {
   last_event_at: string | null
   last_request_at: string | null
   traffic_status: GatewayGraphTrafficStatus
+  traffic_classification: GatewayGraphTrafficClassification
+  traffic_label: string
+  traffic_type: GatewayGraphTrafficType
   telemetry_source: GatewayGraphTrafficSourceId | null
+  source_record_id: string | null
+  telemetry_kind: string | null
+  stale_threshold_seconds: number
+  recommended_next_action: string
   primary_reason: string
 }
 
@@ -116,6 +157,71 @@ const SOURCE_ROUTE_GROUPS: Record<GatewayGraphTrafficSourceId, GatewayGraphTopol
 
 const READY_STATUSES: GatewayGraphTopologyStatus[] = ['live', 'read_only', 'guarded']
 
+const DEFAULT_STALE_THRESHOLD_SECONDS = 300
+
+function staleThresholdSecondsForEdge(edge: GatewayGraphTopologyEdge): number {
+  if (edge.route_group === 'models') return 120
+  return DEFAULT_STALE_THRESHOLD_SECONDS
+}
+
+function unavailableClassificationForEdge(edge: GatewayGraphTopologyEdge): GatewayGraphTrafficClassification {
+  if (edge.status === 'blocked') return 'provider_route_unavailable'
+  if (edge.route_group === 'events' || edge.route_group === 'webhooks') return 'system_is_standby_by_design'
+  if (edge.route_group === 'reports') return 'read_only_without_traffic_counters'
+  if (edge.route_group === 'browser') return 'telemetry_source_not_implemented'
+  if (edge.route_group === 'storage' || edge.route_group === 'integrations' || edge.route_group === 'zapier') {
+    return 'connector_has_no_event_log'
+  }
+  return 'telemetry_source_not_implemented'
+}
+
+function trafficLabelFor(classification: GatewayGraphTrafficClassification): string {
+  const labels: Record<GatewayGraphTrafficClassification, string> = {
+    active_recent_traffic: 'Live traffic',
+    ready_no_recent_traffic: 'Ready · no recent traffic',
+    telemetry_stale: 'Ready · telemetry stale',
+    telemetry_source_not_implemented: 'Traffic source unavailable',
+    telemetry_table_empty: 'Traffic source unavailable',
+    connector_has_no_event_log: 'Traffic source unavailable',
+    system_is_standby_by_design: 'Standby · no heartbeat',
+    read_only_without_traffic_counters: 'Traffic source unavailable',
+    provider_route_unavailable: 'Blocked · exact blocker',
+    auth_unavailable: 'Traffic source unavailable',
+  }
+  return labels[classification]
+}
+
+function recommendedNextActionForEdge(
+  edge: GatewayGraphTopologyEdge,
+  classification: GatewayGraphTrafficClassification,
+): string {
+  if (classification === 'active_recent_traffic') return 'inspect_gateway_diagnostics_for_request_details'
+  if (classification === 'ready_no_recent_traffic') return 'wait_for_real_runtime_activity_or_run_read_only_probe'
+  if (classification === 'telemetry_stale') {
+    if (edge.route_group === 'agentmail') return 'verify_agentmail_event_listener_or_recent_readiness_probe'
+    if (edge.route_group === 'models') return 'wait_for_model_request_or_run_safe_model_readiness_probe'
+    if (edge.route_group === 'zapier') return 'run_read_only_zapier_discovery_probe'
+    if (edge.route_group === 'reports') return 'run_report_preview_readiness_probe'
+    if (edge.route_group === 'webhooks' || edge.route_group === 'events') return 'verify_event_feed_or_recent_signed_event'
+    return 'refresh_read_only_gateway_telemetry_source'
+  }
+  if (classification === 'system_is_standby_by_design') return 'wait_for_signed_event_or_verify_event_stream_heartbeat'
+  if (classification === 'read_only_without_traffic_counters') return 'run_preview_or_readiness_probe_to_create_telemetry'
+  if (classification === 'connector_has_no_event_log') return 'add_read_only_connector_event_log_or_keep_idle'
+  if (classification === 'provider_route_unavailable') return edge.next_action || 'inspect_exact_provider_blocker'
+  return 'implement_read_only_telemetry_source_for_this_edge'
+}
+
+function trafficTypeFor(activity: GatewayGraphEdgeActivity | null): GatewayGraphTrafficType {
+  if (!activity) return 'none'
+  const events = Math.max(0, activity.events || 0)
+  const requests = Math.max(0, activity.requests || 0)
+  if (events > 0 && requests > 0) return 'mixed'
+  if (requests > 0) return 'request'
+  if (events > 0) return 'event'
+  return 'none'
+}
+
 function trafficSnapshotIdFor(generatedAt: string): string {
   return `gateway-traffic-${generatedAt.replace(/[^0-9A-Za-z]/g, '')}`
 }
@@ -152,6 +258,7 @@ function trafficEdgeFromTopology(input: {
 }): GatewayGraphTrafficEdge {
   const sources = readableSourcesForEdge(input.sources, input.edge)
   if (!sources.length) {
+    const trafficClassification = unavailableClassificationForEdge(input.edge)
     return {
       edge_id: input.edge.edge_id,
       route_group: input.edge.route_group,
@@ -164,7 +271,14 @@ function trafficEdgeFromTopology(input: {
       last_event_at: null,
       last_request_at: null,
       traffic_status: 'unavailable',
+      traffic_classification: trafficClassification,
+      traffic_label: trafficLabelFor(trafficClassification),
+      traffic_type: 'none',
       telemetry_source: null,
+      source_record_id: null,
+      telemetry_kind: null,
+      stale_threshold_seconds: staleThresholdSecondsForEdge(input.edge),
+      recommended_next_action: recommendedNextActionForEdge(input.edge, trafficClassification),
       primary_reason: 'traffic_data_unavailable',
     }
   }
@@ -174,12 +288,20 @@ function trafficEdgeFromTopology(input: {
     ? sources.find((item) => item.source_id === activity.source_id) || sources[0]
     : sources[0]
   const ageSeconds = activity ? secondsBetween(input.generatedAt, activity.occurred_at) : Number.POSITIVE_INFINITY
+  const staleThresholdSeconds = staleThresholdSecondsForEdge(input.edge)
   const recent = Boolean(activity && ageSeconds <= 60)
   const events = recent ? Math.max(0, activity?.events || 0) : 0
   const requests = recent ? Math.max(0, activity?.requests || 0) : 0
   const active = events + requests > 0
-  const stale = Boolean(activity && !active)
+  const stale = Boolean(activity && !active && ageSeconds >= staleThresholdSeconds)
   const ready = READY_STATUSES.includes(input.edge.status)
+  const trafficClassification: GatewayGraphTrafficClassification = active
+    ? 'active_recent_traffic'
+    : stale
+      ? 'telemetry_stale'
+      : ready
+        ? 'ready_no_recent_traffic'
+        : unavailableClassificationForEdge(input.edge)
 
   return {
     edge_id: input.edge.edge_id,
@@ -199,7 +321,14 @@ function trafficEdgeFromTopology(input: {
         : ready
           ? 'ready_no_recent_traffic'
           : 'unavailable',
+    traffic_classification: trafficClassification,
+    traffic_label: trafficLabelFor(trafficClassification),
+    traffic_type: trafficTypeFor(activity),
     telemetry_source: source.source_id,
+    source_record_id: activity?.record_id || null,
+    telemetry_kind: activity?.telemetry_kind || null,
+    stale_threshold_seconds: staleThresholdSeconds,
+    recommended_next_action: recommendedNextActionForEdge(input.edge, trafficClassification),
     primary_reason: active
       ? 'trusted_recent_traffic_observed'
       : stale
@@ -345,6 +474,8 @@ function addActivity(
     requests?: number
     bytes_in?: number
     bytes_out?: number
+    record_id?: string | null
+    telemetry_kind?: string | null
   },
 ) {
   if (!input.occurred_at) return
@@ -356,7 +487,19 @@ function addActivity(
     requests: input.requests,
     bytes_in: input.bytes_in,
     bytes_out: input.bytes_out,
+    record_id: sanitizeRecordRef(input.record_id),
+    telemetry_kind: sanitizeTelemetryText(input.telemetry_kind),
   })
+}
+
+function sanitizeTelemetryText(value: unknown, fallback = 'unknown'): string {
+  const text = String(value || '').replace(/[^\w.:-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '')
+  return (text || fallback).slice(0, 80)
+}
+
+function sanitizeRecordRef(value: unknown): string | null {
+  if (value == null) return null
+  return sanitizeTelemetryText(value, '').slice(0, 120) || null
 }
 
 const PROVIDER_EDGE_MAP: Record<string, string> = {
@@ -384,8 +527,111 @@ function modelEdgeFor(provider: unknown, model: unknown): string | null {
   return null
 }
 
+type TrafficAliasResolution = {
+  edge_id: string
+  source_ids: GatewayGraphTrafficSourceId[]
+  source_system: string
+  candidate_node_id: string
+  confidence: 'high' | 'low'
+}
+
+const TRAFFIC_ALIAS_RULES: Array<{
+  pattern: RegExp
+  resolution: TrafficAliasResolution
+}> = [
+  {
+    pattern: /\bwebhooks?[-_. ]?events?\b|\bworkflow[-_. ]?trigger\b/i,
+    resolution: {
+      edge_id: 'webhooks.inbound_to_gateway',
+      source_ids: ['workflow_trigger_events', 'gateway_event_bus'],
+      source_system: 'webhooks',
+      candidate_node_id: 'input.webhook',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bbrowser[-_. ]?runtime\b|\bfirefox[-_. ]?runtime\b/i,
+    resolution: {
+      edge_id: 'browser.firefox_to_gateway',
+      source_ids: ['connector_readiness_events'],
+      source_system: 'browser',
+      candidate_node_id: 'browser.firefox',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bagentmail[-_. ]?send\b|\bagentmail\b/i,
+    resolution: {
+      edge_id: 'agentmail.gateway_to_agentmail',
+      source_ids: ['agentmail_events'],
+      source_system: 'agentmail',
+      candidate_node_id: 'int.agentmail',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bzapier[-_. ]?readiness\b|\bzapier\b/i,
+    resolution: {
+      edge_id: 'connector.zapier_to_gateway',
+      source_ids: ['zapier_discovery_events', 'connector_readiness_events'],
+      source_system: 'zapier',
+      candidate_node_id: 'int.zapier',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bmodel[-_. ]?request[-_. ]?openrouter\b|\bopenrouter\b/i,
+    resolution: {
+      edge_id: 'model.openrouter_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.openrouter',
+      candidate_node_id: 'model.openrouter',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bprovider[-_. ]?xai[-_. ]?grok\b|\bxai[-_. ]?grok\b|\bgrok\b/i,
+    resolution: {
+      edge_id: 'model.xai_grok_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.xai_grok',
+      candidate_node_id: 'model.xai_grok',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bbuild[-_. ]?wiki\b|\bbuildwiki\b|\bopencloud[-_. ]?docs[-_. ]?farmer\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.buildwiki',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'buildwiki',
+      candidate_node_id: 'brain.buildwiki',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bbrain[-_. ]?bridge\b|\bbrain[-_. ]?sync\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.sync',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'brain_sync',
+      candidate_node_id: 'brain.sync',
+      confidence: 'high',
+    },
+  },
+]
+
+function resolveTrafficAlias(text: string): TrafficAliasResolution | null {
+  for (const rule of TRAFFIC_ALIAS_RULES) {
+    if (rule.pattern.test(text)) return rule.resolution
+  }
+  return null
+}
+
 function edgeForAuditText(text: string): string | null {
   const lower = text.toLowerCase()
+  const alias = resolveTrafficAlias(lower)
+  if (alias?.confidence === 'high') return alias.edge_id
   if (lower.includes('zapier')) return 'connector.zapier_to_gateway'
   if (lower.includes('google') || lower.includes('gdrive')) return 'connector.google_drive_to_gateway'
   if (lower.includes('onedrive')) return 'connector.onedrive_to_gateway'
@@ -406,6 +652,9 @@ function sourceIdsFromAuditEdge(edgeId: string | null): GatewayGraphTrafficSourc
   if (edgeId === 'reports.gateway_to_reports') return ['report_preview_events']
   if (edgeId === 'webhooks.inbound_to_gateway') return ['workflow_trigger_events', 'gateway_event_bus']
   if (edgeId.startsWith('highway.knowledge.')) return ['knowledge_runtime_events']
+  if (edgeId.startsWith('model.')) return ['model_request_logs']
+  if (edgeId.startsWith('browser.')) return ['connector_readiness_events']
+  if (edgeId === 'agentmail.gateway_to_agentmail') return ['agentmail_events']
   return ['connector_readiness_events']
 }
 
@@ -415,40 +664,96 @@ function missingMapping(input: {
   observed_at: string | null
   table: string
   provider?: string | null
+  source_system?: string | null
+  text?: string | null
 }): GatewayGraphMissingTrafficMapping {
+  const text = `${input.text || ''} ${input.provider || ''} ${input.telemetry_kind || ''}`.toLowerCase()
+  const alias = resolveTrafficAlias(text)
+  const looksAuth = /\blogin\b|\bauth\b/.test(text)
+  const looksAgentConfig = /\bagent[-_. ]?config\b|\bagent_config_sync\b/.test(text)
+  const looksLegacyRoute = /\blegacy\b|[-_. ]route\b/.test(text)
+  const looksStatic = /\bstatic\b|\bfallback\b/.test(text)
+  const classification: GatewayGraphMissingTrafficMappingClassification = looksAuth
+    ? 'telemetry_source_has_no_topology_edge'
+    : looksAgentConfig
+      ? 'missing_node_alias'
+      : looksLegacyRoute
+        ? 'legacy_route_group'
+        : looksStatic
+          ? 'stale_static_name'
+          : alias
+            ? 'missing_edge_id'
+            : input.source_system
+              ? 'unmapped_event_type'
+              : 'unknown_source_system'
+  const candidateNodeId = looksAgentConfig ? 'agent.zero' : alias?.candidate_node_id || null
+  const candidateEdgeId = looksAgentConfig ? 'highway.inputs.agent.zero' : alias?.edge_id || null
+  const sourceSystem = sanitizeTelemetryText(
+    input.source_system || (looksAuth ? 'auth' : looksAgentConfig ? 'agent_config' : alias?.source_system || input.provider || 'unknown'),
+  )
+  const recommendedMappingFix = looksAuth
+    ? 'leave_unmapped_auth_events_outside_gateway_topology'
+    : looksAgentConfig
+      ? 'add_agent_config_sync_alias_when_agent_identity_is_explicit'
+      : alias
+        ? `map_alias_to_${alias.edge_id}`
+        : 'add_explicit_canonical_edge_mapping_or_keep_unmapped'
+  const severity: GatewayGraphTrafficSeverity = classification === 'telemetry_source_has_no_topology_edge'
+    ? 'info'
+    : classification === 'unknown_source_system'
+      ? 'error'
+      : 'warning'
   return {
     source_id: input.source_id,
-    telemetry_kind: input.telemetry_kind.slice(0, 80),
+    telemetry_kind: sanitizeTelemetryText(input.telemetry_kind),
+    source_event_type: sanitizeTelemetryText(input.telemetry_kind),
+    source_system: sourceSystem,
     observed_at: input.observed_at,
     reason: 'traffic_edge_mapping_missing',
     table: input.table,
-    provider: input.provider ? input.provider.slice(0, 80) : null,
+    provider: input.provider ? sanitizeTelemetryText(input.provider) : null,
+    candidate_node_id: candidateNodeId,
+    candidate_edge_id: candidateEdgeId,
+    classification,
+    recommended_mapping_fix: recommendedMappingFix,
+    severity,
   }
 }
 
 function inspectModelRuns(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[], missing: GatewayGraphMissingTrafficMapping[]): GatewayGraphTrafficSource {
   if (!tableExists(db, 'runs')) return unavailableSource('model_request_logs', generatedAt, 'runs_table_missing')
   const cols = columnsFor(db, 'runs')
+  const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
   const providerExpr = cols.has('provider') ? 'provider' : 'NULL AS provider'
   const modelExpr = cols.has('model') ? 'model' : 'NULL AS model'
   const startedExpr = cols.has('started_at') ? 'started_at' : 'NULL AS started_at'
   const endedExpr = cols.has('ended_at') ? 'ended_at' : 'NULL AS ended_at'
   const rows = safeLimitRows(() => db.prepare(`
-    SELECT ${providerExpr}, ${modelExpr}, ${startedExpr}, ${endedExpr}
+    SELECT ${idExpr}, ${providerExpr}, ${modelExpr}, ${startedExpr}, ${endedExpr}
     FROM runs
     ORDER BY COALESCE(ended_at, started_at) DESC
     LIMIT 200
-  `).all() as Array<{ provider: unknown; model: unknown; started_at: unknown; ended_at: unknown }>)
+  `).all() as Array<{ id: unknown; provider: unknown; model: unknown; started_at: unknown; ended_at: unknown }>)
   for (const row of rows) {
     const occurredAt = isoFromUnknownTimestamp(row.ended_at) || isoFromUnknownTimestamp(row.started_at)
     const edgeId = modelEdgeFor(row.provider, row.model)
-    if (edgeId) addActivity(activities, { edge_id: edgeId, source_id: 'model_request_logs', occurred_at: occurredAt, requests: 1 })
+    if (edgeId) {
+      addActivity(activities, {
+        edge_id: edgeId,
+        source_id: 'model_request_logs',
+        occurred_at: occurredAt,
+        requests: 1,
+        record_id: row.id ? `runs:${row.id}` : null,
+        telemetry_kind: 'model_run',
+      })
+    }
     else missing.push(missingMapping({
       source_id: 'model_request_logs',
       telemetry_kind: 'model_run',
       observed_at: occurredAt,
       table: 'runs',
       provider: String(row.provider || row.model || 'unknown'),
+      text: `${row.provider || ''} ${row.model || ''}`,
     }))
   }
   return readableSource('model_request_logs', generatedAt, 'runs_table_read_only')
@@ -460,9 +765,10 @@ function inspectAgentMail(db: Database.Database, generatedAt: string, activities
   if (!readableTables.length) return unavailableSource('agentmail_events', generatedAt, 'agentmail_event_tables_missing')
   for (const table of readableTables) {
     const cols = columnsFor(db, table)
+    const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
     const createdExpr = cols.has('created_at') ? 'created_at' : 'NULL AS created_at'
     const updatedExpr = cols.has('updated_at') ? 'updated_at' : 'NULL AS updated_at'
-    const rows = safeLimitRows(() => db.prepare(`SELECT ${createdExpr}, ${updatedExpr} FROM ${table} ORDER BY COALESCE(updated_at, created_at) DESC LIMIT 80`).all() as Array<{ created_at: unknown; updated_at: unknown }>)
+    const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, ${createdExpr}, ${updatedExpr} FROM ${table} ORDER BY COALESCE(updated_at, created_at) DESC LIMIT 80`).all() as Array<{ id: unknown; created_at: unknown; updated_at: unknown }>)
     for (const row of rows) {
       addActivity(activities, {
         edge_id: 'agentmail.gateway_to_agentmail',
@@ -470,6 +776,8 @@ function inspectAgentMail(db: Database.Database, generatedAt: string, activities
         occurred_at: isoFromUnknownTimestamp(row.updated_at) || isoFromUnknownTimestamp(row.created_at),
         events: table === 'agentmail_send_requests' ? 0 : 1,
         requests: table === 'agentmail_send_requests' ? 1 : 0,
+        record_id: row.id ? `${table}:${row.id}` : null,
+        telemetry_kind: table,
       })
     }
   }
@@ -478,13 +786,17 @@ function inspectAgentMail(db: Database.Database, generatedAt: string, activities
 
 function inspectBridgeQueue(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[]): GatewayGraphTrafficSource {
   if (!tableExists(db, 'agentmail_bridge_queue')) return unavailableSource('bridge_queue_events', generatedAt, 'bridge_queue_table_missing')
-  const rows = safeLimitRows(() => db.prepare(`SELECT created_at FROM agentmail_bridge_queue ORDER BY created_at DESC LIMIT 80`).all() as Array<{ created_at: unknown }>)
+  const cols = columnsFor(db, 'agentmail_bridge_queue')
+  const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
+  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, created_at FROM agentmail_bridge_queue ORDER BY created_at DESC LIMIT 80`).all() as Array<{ id: unknown; created_at: unknown }>)
   for (const row of rows) {
     addActivity(activities, {
       edge_id: 'agentmail.gateway_to_agentmail',
       source_id: 'bridge_queue_events',
       occurred_at: isoFromUnknownTimestamp(row.created_at),
       events: 1,
+      record_id: row.id ? `agentmail_bridge_queue:${row.id}` : null,
+      telemetry_kind: 'agentmail_bridge_queue',
     })
   }
   return readableSource('bridge_queue_events', generatedAt, 'bridge_queue_table_read_only', ['agentmail.gateway_to_agentmail'])
@@ -492,7 +804,9 @@ function inspectBridgeQueue(db: Database.Database, generatedAt: string, activiti
 
 function inspectWebhookDeliveries(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[]): GatewayGraphTrafficSource {
   if (!tableExists(db, 'webhook_deliveries')) return unavailableSource('workflow_trigger_events', generatedAt, 'webhook_deliveries_table_missing')
-  const rows = safeLimitRows(() => db.prepare(`SELECT created_at, duration_ms FROM webhook_deliveries ORDER BY created_at DESC LIMIT 80`).all() as Array<{ created_at: unknown; duration_ms: unknown }>)
+  const cols = columnsFor(db, 'webhook_deliveries')
+  const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
+  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, created_at, duration_ms FROM webhook_deliveries ORDER BY created_at DESC LIMIT 80`).all() as Array<{ id: unknown; created_at: unknown; duration_ms: unknown }>)
   for (const row of rows) {
     addActivity(activities, {
       edge_id: 'webhooks.inbound_to_gateway',
@@ -501,6 +815,8 @@ function inspectWebhookDeliveries(db: Database.Database, generatedAt: string, ac
       events: 1,
       bytes_in: 0,
       bytes_out: 0,
+      record_id: row.id ? `webhook_deliveries:${row.id}` : null,
+      telemetry_kind: 'webhook_delivery',
     })
   }
   return readableSource('workflow_trigger_events', generatedAt, 'webhook_deliveries_table_read_only', ['webhooks.inbound_to_gateway'])
@@ -509,15 +825,18 @@ function inspectWebhookDeliveries(db: Database.Database, generatedAt: string, ac
 function inspectReports(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[]): GatewayGraphTrafficSource {
   if (!tableExists(db, 'scheduled_reports')) return unavailableSource('report_preview_events', generatedAt, 'scheduled_reports_table_missing')
   const cols = columnsFor(db, 'scheduled_reports')
+  const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
   const lastExpr = cols.has('last_run_at') ? 'last_run_at' : 'NULL AS last_run_at'
   const updatedExpr = cols.has('updated_at') ? 'updated_at' : 'NULL AS updated_at'
-  const rows = safeLimitRows(() => db.prepare(`SELECT ${lastExpr}, ${updatedExpr} FROM scheduled_reports ORDER BY COALESCE(last_run_at, updated_at) DESC LIMIT 80`).all() as Array<{ last_run_at: unknown; updated_at: unknown }>)
+  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, ${lastExpr}, ${updatedExpr} FROM scheduled_reports ORDER BY COALESCE(last_run_at, updated_at) DESC LIMIT 80`).all() as Array<{ id: unknown; last_run_at: unknown; updated_at: unknown }>)
   for (const row of rows) {
     addActivity(activities, {
       edge_id: 'reports.gateway_to_reports',
       source_id: 'report_preview_events',
       occurred_at: isoFromUnknownTimestamp(row.last_run_at) || isoFromUnknownTimestamp(row.updated_at),
       requests: 1,
+      record_id: row.id ? `scheduled_reports:${row.id}` : null,
+      telemetry_kind: 'report_preview',
     })
   }
   return readableSource('report_preview_events', generatedAt, 'scheduled_reports_table_read_only', ['reports.gateway_to_reports'])
@@ -525,13 +844,17 @@ function inspectReports(db: Database.Database, generatedAt: string, activities: 
 
 function inspectGatewayActivities(db: Database.Database, generatedAt: string, activities: GatewayGraphEdgeActivity[]): GatewayGraphTrafficSource {
   if (!tableExists(db, 'activities')) return unavailableSource('gateway_event_bus', generatedAt, 'activities_table_missing')
-  const rows = safeLimitRows(() => db.prepare(`SELECT created_at FROM activities ORDER BY created_at DESC LIMIT 120`).all() as Array<{ created_at: unknown }>)
+  const cols = columnsFor(db, 'activities')
+  const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
+  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, created_at FROM activities ORDER BY created_at DESC LIMIT 120`).all() as Array<{ id: unknown; created_at: unknown }>)
   for (const row of rows) {
     addActivity(activities, {
       edge_id: 'events.event_bus_to_gateway',
       source_id: 'gateway_event_bus',
       occurred_at: isoFromUnknownTimestamp(row.created_at),
       events: 1,
+      record_id: row.id ? `activities:${row.id}` : null,
+      telemetry_kind: 'gateway_activity',
     })
   }
   return readableSource('gateway_event_bus', generatedAt, 'activities_table_read_only', ['events.event_bus_to_gateway'])
@@ -556,8 +879,9 @@ function inspectAuditTables(db: Database.Database, generatedAt: string, activiti
     const textColumns = ['action', 'event', 'target', 'target_type', 'outcome', 'metadata_json', 'detail']
       .filter((column) => cols.has(column))
     const timeColumn = ['created_at', 'ts', 'timestamp', 'updated_at'].find((column) => cols.has(column))
+    const idColumn = cols.has('id') ? 'id' : null
     if (!textColumns.length || !timeColumn) continue
-    const selected = [...textColumns, timeColumn].join(', ')
+    const selected = [...(idColumn ? [idColumn] : []), ...textColumns, timeColumn].join(', ')
     const rows = safeLimitRows(() => db.prepare(`SELECT ${selected} FROM ${table} ORDER BY ${timeColumn} DESC LIMIT 160`).all() as Record<string, unknown>[])
     for (const row of rows) {
       const text = textColumns.map((column) => String(row[column] || '')).join(' ')
@@ -567,19 +891,26 @@ function inspectAuditTables(db: Database.Database, generatedAt: string, activiti
       if (!edgeId || !sourceIds.length) {
         missing.push(missingMapping({
           source_id: 'connector_readiness_events',
-          telemetry_kind: 'audit_event',
+          telemetry_kind: sanitizeTelemetryText(row.action || row.event || 'audit_event'),
           observed_at: occurredAt,
           table,
           provider: null,
+          source_system: String(row.target_type || row.target || ''),
+          text,
         }))
         continue
       }
       for (const sourceId of sourceIds) {
+        if (!sourceStatus.has(sourceId) || sourceStatus.get(sourceId)?.status !== 'readable') {
+          sourceStatus.set(sourceId, readableSource(sourceId, generatedAt, 'audit_tables_read_only'))
+        }
         addActivity(activities, {
           edge_id: edgeId,
           source_id: sourceId,
           occurred_at: occurredAt,
           events: 1,
+          record_id: row[idColumn || ''] ? `${table}:${row[idColumn || '']}` : `${table}:${sanitizeTelemetryText(row.action || row.event || edgeId)}`,
+          telemetry_kind: sanitizeTelemetryText(row.action || row.event || 'audit_event'),
         })
       }
     }

@@ -1725,9 +1725,15 @@
       route_group: edge.route_group,
       traffic_state: trafficEdge ? trafficStateForStatus(trafficEdge.traffic_status) : (edge.traffic_state || 'traffic_data_unavailable'),
       traffic_status: trafficEdge?.traffic_status || 'unavailable',
-      traffic_label: trafficLabel(trafficEdge?.traffic_status || 'unavailable'),
+      traffic_label: trafficEdge?.traffic_label || trafficLabel(trafficEdge?.traffic_status || 'unavailable'),
+      traffic_classification: trafficEdge?.traffic_classification || null,
+      traffic_type: trafficEdge?.traffic_type || 'none',
       telemetry_source: trafficEdge?.telemetry_source || null,
+      source_record_id: trafficEdge?.source_record_id || null,
+      telemetry_kind: trafficEdge?.telemetry_kind || null,
+      stale_threshold_seconds: trafficEdge?.stale_threshold_seconds || null,
       traffic: trafficCounters,
+      traffic_next_action: trafficEdge?.recommended_next_action || null,
       critical: edge.status === 'blocked',
     };
   }
@@ -1828,8 +1834,9 @@
       <div class="edge-title">${esc(readiness.source)} → ${esc(readiness.target)}</div>
       <div>status: <code>${esc(readiness.status)}</code> · color: <code>${esc(readiness.color)}</code></div>
       <div>relationship: <code>${esc(readiness.relationship || 'readiness')}</code> · traffic: <code>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</code></div>
+      <div>traffic type: <code>${esc(readiness.traffic_type || 'none')}</code> · source: <code>${esc(readiness.telemetry_source || 'none')}</code></div>
       <div>reason: <code>${esc(readiness.primary_reason)}</code></div>
-      <div>next: ${esc(readiness.next_action || 'none')}</div>
+      <div>next: ${esc(readiness.traffic_next_action || readiness.next_action || 'none')}</div>
     `;
     edgeTooltip.classList.add('show');
     moveEdgeTooltip(e);
@@ -1993,12 +2000,20 @@
       ['last static fallback', sync.last_static_fallback_at || 'none'],
       ['primary blocker', sync.primary_blocker || (topologyFetched ? 'none' : 'topology_data_unavailable')],
     ];
+    const gapRows = (graphTrafficSnapshot?.missing_traffic_mappings || []).slice(0, 8).map(gap => `
+      <div class="gh-row">
+        <span class="lbl">gap · ${esc(gap.source_event_type || gap.telemetry_kind || gap.source_id || 'event')}</span>
+        <span class="val" title="${esc(`${gap.classification || 'unmapped'} · ${gap.source_system || 'unknown'} · ${gap.recommended_mapping_fix || 'add explicit mapping'}`)}">
+          ${esc(gap.severity || 'warning')} · ${esc(gap.classification || 'unmapped')}
+        </span>
+      </div>
+    `).join('');
     target.innerHTML = rows.map(([label, value]) => `
       <div class="gh-row">
         <span class="lbl">${esc(label)}</span>
         <span class="val" title="${esc(value)}">${esc(value)}</span>
       </div>
-    `).join('');
+    `).join('') + gapRows;
   }
 
   function openEdgeInspector(readiness) {
@@ -2027,8 +2042,13 @@
           <dt>Data edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'edge_mapping_missing')}</dd>
           <dt>Relationship</dt><dd>${esc(readiness.relationship || 'readiness')}</dd>
           <dt>traffic status</dt><dd>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</dd>
+          <dt>traffic class</dt><dd>${esc(readiness.traffic_classification || 'not reported')}</dd>
+          <dt>traffic type</dt><dd>${esc(readiness.traffic_type || 'none')}</dd>
           <dt>Telemetry source</dt><dd>${esc(readiness.telemetry_source || 'none')}</dd>
+          <dt>Telemetry kind</dt><dd>${esc(readiness.telemetry_kind || 'none')}</dd>
+          <dt>Source record</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_record_id || 'none')}</dd>
           <dt>Traffic counters</dt><dd>${esc(`${readiness.traffic?.events_last_60s || 0} events · ${readiness.traffic?.requests_last_60s || 0} requests`)}</dd>
+          <dt>Stale threshold</dt><dd>${esc(readiness.stale_threshold_seconds ? `${readiness.stale_threshold_seconds}s` : 'not reported')}</dd>
           <dt>Source node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_node_id || 'not reported')}</dd>
           <dt>Target node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.target_node_id || 'not reported')}</dd>
           <dt>Current color</dt><dd>${esc(readiness.color)}</dd>
@@ -2038,7 +2058,7 @@
           <dt>Last heartbeat</dt><dd>${esc(readiness.last_heartbeat_at || 'none')}</dd>
           <dt>Last success</dt><dd>${esc(readiness.last_success_at || 'none')}</dd>
           <dt>Last event</dt><dd>${esc(readiness.last_event_at || 'none')}</dd>
-          <dt>Next action</dt><dd>${esc(readiness.next_action || 'none')}</dd>
+          <dt>Next action</dt><dd>${esc(readiness.traffic_next_action || readiness.next_action || 'none')}</dd>
         </dl>
         ${standbyNote}
       </div>

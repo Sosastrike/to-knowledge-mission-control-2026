@@ -217,4 +217,140 @@ describe('gateway graph traffic snapshot', () => {
       telemetry_source: 'bridge_queue_events',
     })
   })
+
+  it('classifies missing traffic mapping gaps and resolves confident aliases', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-traffic-gaps-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.exec(`
+      CREATE TABLE audit_log (
+        id TEXT PRIMARY KEY,
+        action TEXT,
+        target_type TEXT,
+        created_at TEXT
+      );
+    `)
+    db.prepare(`INSERT INTO audit_log (id, action, target_type, created_at) VALUES (?, ?, ?, ?)`)
+      .run('zapier_readiness_alias', 'zapier_readiness', 'zapier', '2026-06-09T14:59:45.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, target_type, created_at) VALUES (?, ?, ?, ?)`)
+      .run('legacy_webhooks_alias', 'webhooks-events', 'legacy_route', '2026-06-09T14:59:44.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, target_type, created_at) VALUES (?, ?, ?, ?)`)
+      .run('login_unmapped', 'login', 'auth', '2026-06-09T14:59:43.000Z')
+    db.prepare(`INSERT INTO audit_log (id, action, target_type, created_at) VALUES (?, ?, ?, ?)`)
+      .run('agent_config_unmapped', 'agent_config_sync', 'agent_config', '2026-06-09T14:59:42.000Z')
+    db.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'connector.zapier_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'zapier_discovery_events',
+      source_record_id: 'audit_log:zapier_readiness_alias',
+      traffic_type: 'event',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'webhooks.inbound_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'workflow_trigger_events',
+      source_record_id: 'audit_log:legacy_webhooks_alias',
+    })
+    expect(snapshot.summary.missing_traffic_mappings).toBe(2)
+    expect(snapshot.missing_traffic_mappings).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        telemetry_kind: 'login',
+        source_system: 'auth',
+        classification: 'telemetry_source_has_no_topology_edge',
+        severity: 'info',
+        recommended_mapping_fix: 'leave_unmapped_auth_events_outside_gateway_topology',
+      }),
+      expect.objectContaining({
+        telemetry_kind: 'agent_config_sync',
+        source_system: 'agent_config',
+        classification: 'missing_node_alias',
+        candidate_node_id: 'agent.zero',
+        candidate_edge_id: 'highway.inputs.agent.zero',
+        severity: 'warning',
+      }),
+    ]))
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('explains stale telemetry with threshold and next action', () => {
+    const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
+    const snapshot = buildGatewayGraphTrafficSnapshot({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology,
+      trustedSources: [{ source_id: 'agentmail_events', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' }],
+      edgeActivity: [{
+        edge_id: 'agentmail.gateway_to_agentmail',
+        events: 1,
+        occurred_at: '2026-06-09T14:50:00.000Z',
+        source_id: 'agentmail_events',
+        record_id: 'agentmail_audit:receive_check',
+        telemetry_kind: 'agentmail_receive_verification_passed',
+      }],
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'agentmail.gateway_to_agentmail')).toMatchObject({
+      traffic_status: 'stale',
+      traffic_classification: 'telemetry_stale',
+      traffic_label: 'Ready · telemetry stale',
+      stale_threshold_seconds: 300,
+      recommended_next_action: 'verify_agentmail_event_listener_or_recent_readiness_probe',
+      source_record_id: 'agentmail_audit:receive_check',
+      traffic_type: 'event',
+    })
+  })
+
+  it('classifies unavailable telemetry edges without marking them broken', () => {
+    const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
+    const snapshot = buildGatewayGraphTrafficSnapshot({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'events.event_bus_to_gateway')).toMatchObject({
+      traffic_status: 'unavailable',
+      traffic_classification: 'system_is_standby_by_design',
+      traffic_label: 'Standby · no heartbeat',
+      recommended_next_action: 'wait_for_signed_event_or_verify_event_stream_heartbeat',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'reports.gateway_to_reports')).toMatchObject({
+      traffic_status: 'unavailable',
+      traffic_classification: 'read_only_without_traffic_counters',
+      traffic_label: 'Traffic source unavailable',
+    })
+  })
+
+  it('exposes safe active-edge drilldown metadata without raw payloads', () => {
+    const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
+    const snapshot = buildGatewayGraphTrafficSnapshot({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology,
+      trustedSources: [{ source_id: 'model_request_logs', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' }],
+      edgeActivity: [{
+        edge_id: 'model.openrouter_to_gateway',
+        requests: 1,
+        occurred_at: '2026-06-09T14:59:45.000Z',
+        source_id: 'model_request_logs',
+        record_id: 'runs:run_recent_openrouter',
+        telemetry_kind: 'model_run',
+      }],
+    })
+
+    const active = snapshot.edges.find((edge) => edge.edge_id === 'model.openrouter_to_gateway')
+    expect(active).toMatchObject({
+      traffic_status: 'active',
+      traffic_classification: 'active_recent_traffic',
+      traffic_label: 'Live traffic',
+      source_record_id: 'runs:run_recent_openrouter',
+      traffic_type: 'request',
+      recommended_next_action: 'inspect_gateway_diagnostics_for_request_details',
+    })
+    expect(JSON.stringify(active)).not.toMatch(/Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i)
+  })
 })

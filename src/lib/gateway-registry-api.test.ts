@@ -6,6 +6,7 @@ import {
   buildGatewayNodesPayload,
   buildGatewayRegistrySnapshot,
   buildGatewayStatusPayload,
+  buildGatewayHealthPayload,
   getGatewayNodeDetail,
 } from './gateway-registry-api'
 
@@ -357,6 +358,7 @@ describe('Gateway registry API model', () => {
     const registry = buildGatewayRegistrySnapshot({ context, generatedAt: '2026-05-04T00:00:00.000Z' })
     const nodes = new Set(registry.nodes.map((node) => node.id))
     const capabilities = new Set(registry.capabilities.map((capability) => capability.id))
+    const edges = new Set(registry.edges.map((edge) => `${edge.source}->${edge.target}`))
 
     expect(nodes.has('gateway')).toBe(true)
     expect(nodes.has('agent_zero')).toBe(true)
@@ -382,7 +384,10 @@ describe('Gateway registry API model', () => {
     expect(nodes.has('model_groq')).toBe(true)
     expect(nodes.has('model_gemini')).toBe(true)
     expect(nodes.has('brain')).toBe(true)
-        expect(nodes.has('obsidian')).toBe(true)
+    expect(nodes.has('brain_bridge')).toBe(true)
+    expect(nodes.has('memory_approvals')).toBe(true)
+    expect(nodes.has('gateway_tools')).toBe(true)
+    expect(nodes.has('obsidian')).toBe(true)
     expect(nodes.has('mempalace')).toBe(true)
     expect(nodes.has('skills')).toBe(true)
     expect(nodes.has('data_sources')).toBe(true)
@@ -401,6 +406,16 @@ describe('Gateway registry API model', () => {
     expect(capabilities.has('model_gemini')).toBe(true)
     expect(capabilities.has('brain_obsidian')).toBe(true)
     expect(capabilities.has('brain_buildwiki')).toBe(true)
+    expect(edges.has('agent_zero->brain_bridge')).toBe(true)
+    expect(edges.has('hermes->brain_bridge')).toBe(true)
+    expect(edges.has('brain_bridge->obsidian')).toBe(true)
+    expect(edges.has('brain_bridge->mempalace')).toBe(true)
+    expect(edges.has('brain_bridge->graphify')).toBe(true)
+    expect(edges.has('brain_bridge->buildwiki')).toBe(true)
+    expect(edges.has('brain_bridge->memory_approvals')).toBe(true)
+    expect(edges.has('brain_bridge->gateway_tools')).toBe(true)
+    expect(edges.has('hermes->gateway_tools')).toBe(true)
+    expect(edges.has('gateway_tools->tools')).toBe(true)
     expect(capabilities.has('openclaw_plus_runtime_dependency')).toBe(true)
     expect(capabilities.has('integration_firecrawl')).toBe(true)
     expect(capabilities.has('space_agent_research_packet')).toBe(true)
@@ -630,6 +645,23 @@ describe('Gateway registry API model', () => {
     expect(registry.capabilities.find((capability) => capability.id === 'model_gemini')?.blockers).toContain('missing_credential')
     expect(registry.capabilities.find((capability) => capability.id === 'model_nvidia')?.blockers).toContain('nvidia_not_configured_or_not_visible_in_provider_registry')
     expect(JSON.stringify(registry)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony/)
+  })
+
+  it('treats Ron/Hermes READY as live proof in Gateway health', () => {
+    const readyContext = {
+      ...context,
+      agents: {
+        ...context.agents,
+        items: context.agents.items.map((agent) => agent.id === 'hermes' ? { ...agent, status: 'READY' } : agent),
+      },
+    } satisfies AgentZeroReadOnlyContext
+    const registry = buildGatewayRegistrySnapshot({ context: readyContext, generatedAt: '2026-05-04T00:00:00.000Z' })
+    const status = buildGatewayStatusPayload(registry)
+    const health = buildGatewayHealthPayload(registry)
+
+    expect(status.hermes.status).toBe('connected')
+    expect(status.hermes.blockers).toEqual([])
+    expect(health.blocked_nodes.map((node) => node.id)).not.toContain('hermes')
   })
 
   it('summarizes Gateway health, nodes, flows, and policies without enabling writes', () => {
@@ -966,5 +998,123 @@ describe('Gateway registry API model', () => {
       'public_hermes_ui',
     ]))
     expect(JSON.stringify(policies)).not.toMatch(/sk-[A-Za-z0-9]|Bearer\s+[A-Za-z0-9]|\/home\/tony|auth\.json/)
+  })
+
+  it('keeps NVIDIA blocked without credential proof and configured only when provider proof exists', () => {
+    const blockedRegistry = buildGatewayRegistrySnapshot({ context, generatedAt: '2026-05-04T00:00:00.000Z' })
+    const blockedNvidia = blockedRegistry.capabilities.find((capability) => capability.id === 'model_nvidia')
+
+    expect(blockedNvidia).toMatchObject({
+      status: 'blocked',
+      read_enabled: false,
+      execution_enabled: false,
+      write_enabled: false,
+      required_credentials: ['NVIDIA_API_KEY'],
+    })
+    expect(blockedNvidia?.blockers).toContain('nvidia_not_configured_or_not_visible_in_provider_registry')
+    expect(blockedNvidia?.status_details).toMatchObject({
+      api_key_configured: false,
+      api_billing_in_use: false,
+    })
+
+    const contextWithNvidia = {
+      ...context,
+      models: {
+        ...context.models,
+        provider_registry: [
+          ...context.models.provider_registry,
+          {
+            id: 'nvidia',
+            name: 'NVIDIA NIM',
+            status: 'configured',
+            credential_present: true,
+            credential_names: ['NVIDIA_API_KEY'],
+            bridge_session_required: true,
+            blocked_reason: null,
+            model_count: 1,
+            models: ['nvidia/llama-3.1-nemotron-70b-instruct'],
+          },
+        ],
+        catalog: [
+          ...context.models.catalog,
+          { alias: 'nvidia-nemotron', provider: 'nvidia', name: 'nvidia/llama-3.1-nemotron-70b-instruct' },
+        ],
+      },
+    } as AgentZeroReadOnlyContext
+    const configuredRegistry = buildGatewayRegistrySnapshot({ context: contextWithNvidia, generatedAt: '2026-05-04T00:00:00.000Z' })
+    const configuredNvidia = configuredRegistry.capabilities.find((capability) => capability.id === 'model_nvidia')
+
+    expect(configuredNvidia).toMatchObject({
+      status: 'read_only',
+      read_enabled: true,
+      execution_enabled: false,
+      write_enabled: false,
+      blockers: [],
+    })
+    expect(configuredNvidia?.status_details).toMatchObject({
+      configured: true,
+      api_key_configured: true,
+      api_billing_in_use: true,
+      models: 'nvidia/llama-3.1-nemotron-70b-instruct',
+    })
+    expect(JSON.stringify(configuredNvidia)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9_-]{8,}/)
+  })
+
+  it('separates Groq hosted inference from xAI Grok and exposes truthful provider fields', () => {
+    const registry = buildGatewayRegistrySnapshot({ context, generatedAt: '2026-05-04T00:00:00.000Z' })
+    const status = buildGatewayStatusPayload(registry)
+    const groqCapability = registry.capabilities.find((capability) => capability.id === 'model_groq')
+    const grokCapability = registry.capabilities.find((capability) => capability.id === 'model_xai_grok')
+    const groqProvider = status.llm_gateway.providers.find((provider) => provider.id === 'groq')
+    const grokProvider = status.llm_gateway.providers.find((provider) => provider.id === 'xai_grok')
+
+    expect(groqCapability).toMatchObject({
+      label: 'Groq',
+      status: 'read_only',
+      execution_enabled: false,
+    })
+    expect(grokCapability).toMatchObject({
+      label: 'xAI Grok',
+      status: 'blocked',
+      execution_enabled: false,
+      required_credentials: ['XAI_API_KEY'],
+    })
+    expect(grokCapability?.blockers).toContain('xai_grok_not_configured_or_not_visible_in_provider_registry')
+    expect(groqCapability?.status_details).toMatchObject({
+      provider_family: 'groq',
+      execution_enabled: false,
+      bridge_required: true,
+    })
+    expect(grokCapability?.status_details).toMatchObject({
+      provider_family: 'xai',
+      credential_required: true,
+      credential_configured: false,
+      execution_enabled: false,
+      exact_blocker: 'xai_grok_not_configured_or_not_visible_in_provider_registry',
+    })
+
+    expect(groqProvider).toMatchObject({
+      id: 'groq',
+      label: 'Groq',
+      registered: true,
+      reachable: true,
+      credential_required: true,
+      credential_configured: true,
+      bridge_required: true,
+      execution_enabled: false,
+      exact_blocker: null,
+    })
+    expect(grokProvider).toMatchObject({
+      id: 'xai_grok',
+      label: 'xAI Grok',
+      registered: true,
+      reachable: false,
+      credential_required: true,
+      credential_configured: false,
+      bridge_required: true,
+      execution_enabled: false,
+      exact_blocker: 'xai_grok_not_configured_or_not_visible_in_provider_registry',
+    })
+    expect(JSON.stringify(status.llm_gateway.providers)).not.toMatch(/sk-[A-Za-z0-9_-]{8,}|Bearer\s+[A-Za-z0-9._-]+|api[_-]?key\s*=/i)
   })
 })

@@ -21,6 +21,9 @@ import { getGitHubToken } from '@/lib/github'
 import { getAgentZeroObsidianStatus } from '@/lib/agent-zero-obsidian-adapter'
 import { getAgentZeroMemPalaceStatus } from '@/lib/agent-zero-mempalace-adapter'
 import { readLatestAgentZeroBridgeSession } from '@/lib/agent-zero-bridge-session'
+import { buildJarvisAccessTruth } from '@/lib/jarvis-access-truth'
+import { buildHermesWebUiStatus } from '@/lib/hermes-webui-status'
+import { listProviderPublicStates, normalizeProviderVaultId, type ProviderPublicState } from '@/lib/provider-vault'
 import {
   type AgentZeroCapabilityState,
   type AgentZeroBrainApiSummary,
@@ -576,17 +579,17 @@ function readSkillRegistry(): SkillRegistryReadResult {
     },
     {
       source: 'hermes' as const,
-      label: 'Hermes shared skills',
+      label: 'Ron Weasley shared skills',
       root: '/home/tony/.hermes/skills',
     },
     {
       source: 'hermes' as const,
-      label: 'Hermes agent skills',
+      label: 'Ron Weasley agent skills',
       root: '/home/tony/.hermes/hermes-agent/skills',
     },
     {
       source: 'hermes' as const,
-      label: 'Hermes sandbox skills',
+      label: 'Ron Weasley sandbox skills',
       root: '/home/tony/sandbox/hermes-home-20260428/skills',
     },
     {
@@ -1133,6 +1136,7 @@ function modelProviderStatus(input: {
 function buildModelProviderRegistry(input: {
   providers: ProviderStatus[]
   models: Array<{ provider: string; name: string }>
+  providerPublicStates?: Pick<ProviderPublicState, 'provider_id' | 'credential_configured' | 'enabled'>[]
 }): AgentZeroModelProviderSummary[] {
   const modelsByProvider = new Map<string, string[]>()
   for (const model of input.models) {
@@ -1152,7 +1156,13 @@ function buildModelProviderRegistry(input: {
     includeBlocked?: boolean
   }): AgentZeroModelProviderSummary | null => {
     const providerState = providerStateFor(input.providers, provider.providerIds || [provider.id, provider.name])
-    const credentialPresent = hasCredential(provider.credentialNames)
+    const normalizedProviderId = normalizeProviderVaultId(provider.id)
+    const vaultCredentialPresent = Boolean(input.providerPublicStates?.some((state) => (
+      normalizeProviderVaultId(state.provider_id) === normalizedProviderId
+        && state.credential_configured
+        && state.enabled !== false
+    )))
+    const credentialPresent = hasCredential(provider.credentialNames) || vaultCredentialPresent
     const status = modelProviderStatus({
       credentialPresent,
       providerState,
@@ -1250,6 +1260,16 @@ function buildModelProviderRegistry(input: {
       includeBlocked: true,
     })!,
     build({
+      id: 'xai',
+      name: 'xAI Grok',
+      modelProvider: 'xai',
+      providerIds: ['xai', 'grok'],
+      credentialNames: ['XAI_API_KEY'],
+      bestUseCase: 'xAI Grok hosted reasoning tasks when configured through Gateway credential brokering.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session_and_cost_governor',
+      includeBlocked: true,
+    })!,
+    build({
       id: 'ollama',
       name: 'Ollama / Local',
       modelProvider: 'ollama',
@@ -1257,7 +1277,17 @@ function buildModelProviderRegistry(input: {
       credentialNames: [],
       bestUseCase: 'Local/private fallback tasks where latency and model quality are acceptable.',
       executionMode: 'local_status_visible_read_only; execution_requires_owner_approved_bridge_session_and_local_adapter',
-      localConfigured: Boolean(process.env.OLLAMA_HOST?.trim()) || Boolean(providerStateFor(input.providers, ['ollama', 'local'])),
+      localConfigured: Boolean(process.env.OLLAMA_HOST?.trim()) || Boolean(process.env.OLLAMA_BASE_URL?.trim()) || Boolean(providerStateFor(input.providers, ['ollama', 'local'])),
+      includeBlocked: true,
+    })!,
+    build({
+      id: 'nvidia',
+      name: 'NVIDIA NIM',
+      modelProvider: 'nvidia',
+      providerIds: ['nvidia', 'nim'],
+      credentialNames: ['NVIDIA_API_KEY'],
+      bestUseCase: 'NVIDIA NIM GPU-backed inference routes when credentials and cost-governor proof are approved.',
+      executionMode: 'mission_control_proxy_read_only_now; execution_requires_owner_approved_bridge_session_and_cost_governor',
       includeBlocked: true,
     })!,
   ]
@@ -1423,6 +1453,17 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
   const providers = Array.isArray((providersResult.payload as any)?.providers)
     ? ((providersResult.payload as any).providers as ProviderStatus[])
     : []
+  const providerPublicStates = (() => {
+    try {
+      return listProviderPublicStates().map((state) => ({
+        provider_id: state.provider_id,
+        credential_configured: state.credential_configured,
+        enabled: state.enabled,
+      }))
+    } catch {
+      return []
+    }
+  })()
   const allModels = getAllModels()
   const providerIds = providers.map(providerId).filter(Boolean)
   const zapierTools = Array.isArray((zapierResult as any).tools)
@@ -1600,7 +1641,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       toolCount: paperclipStatus?.workforce_summary.active_agents ?? null,
       source: 'mission_control_paperclip_bridge',
       blockedReason: paperclipStatus?.blocker || (paperclipStatus?.reachable ? 'paperclip_write_adapter_not_configured' : 'paperclip_service_not_configured'),
-      notes: 'Paperclip status is visible to Agent Zero through Gateway. Agent Zero may request workforce tasks, Hermes/SpaceAgent/Pi/mini-agent assignments, and co-worker proposals only through the protected Paperclip Gateway route; Paperclip issue creation and status mutation require Bridge Session and a configured write adapter.',
+      notes: 'Paperclip status is visible to Agent Zero through Gateway. Agent Zero may request workforce tasks, Ron Weasley/SpaceAgent/Pi/mini-agent assignments, and co-worker proposals only through the protected Paperclip Gateway route; Paperclip issue creation and status mutation require Bridge Session and a configured write adapter.',
     }),
     capability({
       id: 'github',
@@ -2152,6 +2193,18 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
       blockedReason: tool.blocker || 'tool_invocation_disabled_in_agent_zero_read_only_context',
     }))
   const bridgeSessionRead = readLatestAgentZeroBridgeSession({ sync: true })
+  const jarvisAccessTruth = buildJarvisAccessTruth()
+  const jarvisBridgeSessionActive = jarvisAccessTruth.bridge_session_active && jarvisAccessTruth.exact_scope_execution_enabled
+  const effectiveBridgeSession = {
+    ...bridgeSessionRead.session,
+    status: jarvisBridgeSessionActive ? 'active' as const : bridgeSessionRead.session.status,
+    execution_enabled: jarvisBridgeSessionActive || bridgeSessionRead.session.execution_enabled,
+    bridge_session_required: jarvisBridgeSessionActive ? false : bridgeSessionRead.session.bridge_session_required,
+    blocked_reason: jarvisBridgeSessionActive ? null : bridgeSessionRead.session.blocked_reason,
+    note: jarvisBridgeSessionActive
+      ? 'Canonical Jarvis Bridge Session is active for certified exact-scope adapters. Legacy Agent Zero session records are historical and must not override live Bridge Session truth.'
+      : bridgeSessionRead.session.note,
+  }
 
   const toolRegistry = [
     toolRegistryItem({
@@ -2323,23 +2376,28 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     ...fallbackZapierToolRegistry,
   ]
 
+  const hermesWebUiStatus = await buildHermesWebUiStatus().catch(() => null)
+  const hermesDirectLineReady = hermesWebUiStatus?.state === 'READY' && hermesWebUiStatus.health_reachable === true
   const ecosystemAgents = providers
     .filter((provider) => ['agent_zero', 'tony_legacy', 'hermes', 'openclaw_gateway'].includes(String(provider.id || '').toLowerCase()))
-    .map((provider) => ({
-      id: String(provider.id || provider.name || ''),
-      status: String(provider.state || 'unknown'),
-      role: String(provider.category || provider.type || 'agent'),
-      execution_enabled: false,
-      direct_access: false,
-      proxy_access: true,
-    }))
+    .map((provider) => {
+      const id = String(provider.id || provider.name || '')
+      return {
+        id,
+        status: id.toLowerCase() === 'hermes' && hermesDirectLineReady ? 'READY' : String(provider.state || 'unknown'),
+        role: String(provider.category || provider.type || 'agent'),
+        execution_enabled: false,
+        direct_access: id.toLowerCase() === 'hermes' ? hermesDirectLineReady : false,
+        proxy_access: true,
+      }
+    })
   if (!ecosystemAgents.some((agent) => agent.id === 'hermes')) {
     ecosystemAgents.push({
       id: 'hermes',
-      status: 'degraded',
+      status: hermesDirectLineReady ? 'READY' : 'degraded',
       role: 'lieutenant / skill and workflow specialist',
       execution_enabled: false,
-      direct_access: false,
+      direct_access: hermesDirectLineReady,
       proxy_access: true,
     })
   }
@@ -2360,6 +2418,7 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     modelProviderRegistry: buildModelProviderRegistry({
       providers,
       models: allModels.map((model) => ({ provider: model.provider, name: model.name })),
+      providerPublicStates,
     }),
     skillNames,
     skillRegistry: skillRegistry.items,
@@ -2403,7 +2462,8 @@ export async function buildAgentZeroEcosystemContext(): Promise<AgentZeroReadOnl
     timerActive,
     latestBuildWikiRunState: runState.ui_state,
     buildWikiFarmerStatus,
-    bridgeSessionAvailable: latestRunNow.persistence_ready || bridgeSessionRead.persistence_ready,
-    bridgeSession: bridgeSessionRead.session,
+    bridgeSessionAvailable: jarvisBridgeSessionActive || latestRunNow.persistence_ready || bridgeSessionRead.persistence_ready,
+    bridgeSession: effectiveBridgeSession,
+    jarvisAccessTruth,
   })
 }

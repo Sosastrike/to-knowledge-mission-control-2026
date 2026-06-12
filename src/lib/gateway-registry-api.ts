@@ -21,6 +21,10 @@ import {
   type GatewayStatus,
 } from './gateway-model'
 import {
+  gatewayPublicColorForNode,
+  type GatewayPublicColorToken,
+} from './gateway-status-grammar'
+import {
   GATEWAY_POLICY_BADGES,
   GATEWAY_POLICY_RULES,
   GATEWAY_ROUTE_DECISIONS,
@@ -102,6 +106,14 @@ export type GatewayStatusPayload = {
       status: GatewayStatus
       connected: boolean
       configured: boolean
+      registered: boolean
+      reachable: boolean
+      credential_required: boolean
+      credential_configured: boolean
+      bridge_required: boolean
+      execution_enabled: false
+      last_probe: string
+      exact_blocker: string | null
       model_count: number
       fallback_provider: string | null
       blocker: string | null
@@ -204,14 +216,25 @@ export type GatewayPoliciesPayload = {
 
 export type GatewayApiNode = GatewayNode & {
   name: string
+  display_name: string
   type: GatewayNodeKind
+  system_type: GatewayNodeKind
+  color_token: GatewayPublicColorToken
   connected: boolean
   configured: boolean
   read_enabled: boolean
   write_enabled: boolean
   execution_enabled: boolean
   requires_bridge_session: boolean
+  bridge_required: boolean
+  auth_required: true
   blocked_reason: string | null
+  local_ui_url: string | null
+  tailnet_url: string | null
+  iframe_allowed: boolean
+  embed_safe: boolean
+  audit_count: number
+  route_count: number
   last_success: string | null
   last_error: string | null
 }
@@ -221,6 +244,105 @@ export type GatewayNodesPayload = {
   mode: 'gateway_nodes_read_only'
   generated_at: string
   nodes: GatewayApiNode[]
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type GatewayEnginesPayload = {
+  ok: true
+  mode: 'gateway_engines_read_only'
+  generated_at: string
+  engines: Array<{
+    id: string
+    name: string
+    type: GatewayNodeKind
+    color_token: GatewayPublicColorToken
+    status: GatewayStatus
+    blocked_reason: string | null
+    requires_bridge_session: boolean
+    read_enabled: boolean
+    write_enabled: boolean
+    execution_enabled: boolean
+  }>
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type GatewayDispatcherDecisionsPayload = {
+  ok: true
+  mode: 'gateway_dispatcher_decisions_read_only'
+  generated_at: string
+  decisions: Array<{
+    id: string
+    source: string
+    target: string
+    requested_action: string
+    route_decision: GatewayFlowPolicyResult['route_decision']
+    requires_bridge_session: boolean
+    blocked_reason: string | null
+    status: GatewayStatus
+    color_token: GatewayPublicColorToken
+  }>
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type GatewayBridgeSessionsPayload = {
+  ok: true
+  mode: 'gateway_bridge_sessions_read_only'
+  generated_at: string
+  active_session_present: false
+  approved_scope_present: false
+  dangerous_actions_server_gated: true
+  actions_requiring_bridge_session: string[]
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type GatewayAuditPayload = {
+  ok: true
+  mode: 'gateway_audit_read_only'
+  generated_at: string
+  audit_count: number
+  route_count: number
+  external_writes_enabled: false
+  secrets_exposed: false
+  entries: Array<{
+    audit_id: string | null
+    flow_id: string
+    source: string
+    target: string
+    events: string[]
+    external_write: false
+    secrets_exposed: false
+  }>
+}
+
+export type GatewayHealthPayload = {
+  ok: true
+  mode: 'gateway_health_read_only'
+  generated_at: string
+  status: GatewayStatus
+  color_token: GatewayPublicColorToken
+  totals: {
+    nodes: number
+    blocked: number
+    degraded: number
+    missing: number
+  }
+  blocked_nodes: Array<{ id: string; name: string; blocked_reason: string | null; color_token: GatewayPublicColorToken }>
+  execution_enabled: false
+  writes_enabled: false
+}
+
+export type GatewayRequestStreamPayload = {
+  ok: true
+  mode: 'gateway_request_stream_polling_read_only'
+  generated_at: string
+  live_stream_enabled: false
+  backend_required: 'real_gateway_request_event_stream_not_configured'
+  polling_routes: string[]
+  latest_decisions: GatewayDispatcherDecisionsPayload['decisions']
   execution_enabled: false
   writes_enabled: false
 }
@@ -432,7 +554,7 @@ export function buildGatewayNodesPayload(registry: GatewayRegistry): GatewayNode
 export function buildGatewayStatusPayload(registry: GatewayRegistry): GatewayStatusPayload {
   const flows = buildGatewayFlows(registry)
   const agentZero = summarizeNode(registry, 'agent_zero', 'Agent Zero')
-  const hermes = summarizeNode(registry, 'hermes', 'Hermes')
+  const hermes = summarizeNode(registry, 'hermes', 'Ron Weasley')
   const bridge = registry.nodes.find((node) => node.id === 'bridge_mcp')
   const mcpServers = registry.capabilities.filter((capability) => capability.kind === 'mcp_server')
   const providers = registry.capabilities.filter((capability) => capability.id.startsWith('bridge_provider_'))
@@ -549,6 +671,158 @@ export function buildGatewayPoliciesPayload(registry: GatewayRegistry): GatewayP
   }
 }
 
+export function buildGatewayEnginesPayload(registry: GatewayRegistry): GatewayEnginesPayload {
+  const engineKinds = new Set<GatewayNodeKind>(['gateway', 'runtime_engine', 'buildwiki_farmer', 'mcp_server', 'model', 'api'])
+  return {
+    ok: true,
+    mode: 'gateway_engines_read_only',
+    generated_at: registry.generated_at,
+    engines: registry.nodes
+      .filter((node) => engineKinds.has(node.kind))
+      .map((node) => {
+        const apiNode = toGatewayApiNode(registry, node)
+        return {
+          id: apiNode.id,
+          name: apiNode.name,
+          type: apiNode.type,
+          color_token: apiNode.color_token,
+          status: apiNode.status,
+          blocked_reason: apiNode.blocked_reason,
+          requires_bridge_session: apiNode.requires_bridge_session,
+          read_enabled: apiNode.read_enabled,
+          write_enabled: apiNode.write_enabled,
+          execution_enabled: apiNode.execution_enabled,
+        }
+      }),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+export function buildGatewayDispatcherDecisionsPayload(registry: GatewayRegistry): GatewayDispatcherDecisionsPayload {
+  return {
+    ok: true,
+    mode: 'gateway_dispatcher_decisions_read_only',
+    generated_at: registry.generated_at,
+    decisions: buildGatewayFlows(registry).map((flow) => ({
+      id: flow.flow_id,
+      source: flow.source,
+      target: flow.target,
+      requested_action: flow.requested_action,
+      route_decision: flow.policy_result.route_decision,
+      requires_bridge_session: flow.policy_result.requires_bridge_session,
+      blocked_reason: flow.policy_result.blocked_reason,
+      status: flow.status,
+      color_token: gatewayPublicColorForNode({
+        id: flow.target,
+        status: flow.status,
+        blocked_reason: flow.policy_result.blocked_reason,
+      }),
+    })),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+export function buildGatewayBridgeSessionsPayload(registry: GatewayRegistry): GatewayBridgeSessionsPayload {
+  const required = new Set<string>()
+  for (const capability of registry.capabilities) {
+    if (capability.requires_session) required.add(capability.id)
+  }
+  for (const edge of registry.edges) {
+    if (edge.requires_session) required.add(`${edge.source}->${edge.target}:${edge.kind}`)
+  }
+  for (const flow of buildGatewayFlows(registry)) {
+    if (flow.policy_result.requires_bridge_session) required.add(flow.requested_action)
+  }
+
+  return {
+    ok: true,
+    mode: 'gateway_bridge_sessions_read_only',
+    generated_at: registry.generated_at,
+    active_session_present: false,
+    approved_scope_present: false,
+    dangerous_actions_server_gated: true,
+    actions_requiring_bridge_session: Array.from(required).sort(),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+export function buildGatewayAuditPayload(registry: GatewayRegistry): GatewayAuditPayload {
+  const flows = buildGatewayFlows(registry)
+  return {
+    ok: true,
+    mode: 'gateway_audit_read_only',
+    generated_at: registry.generated_at,
+    audit_count: flows.length,
+    route_count: registry.edges.length,
+    external_writes_enabled: false,
+    secrets_exposed: false,
+    entries: flows.map((flow) => ({
+      audit_id: flow.audit.audit_id,
+      flow_id: flow.flow_id,
+      source: flow.source,
+      target: flow.target,
+      events: flow.audit.events,
+      external_write: false,
+      secrets_exposed: false,
+    })),
+  }
+}
+
+export function buildGatewayHealthPayload(registry: GatewayRegistry): GatewayHealthPayload {
+  const blockedNodes = registry.nodes.filter((node) => ['blocked', 'missing', 'legacy_archived', 'degraded'].includes(node.status))
+  const blocked = registry.nodes.filter((node) => node.status === 'blocked').length
+  const degraded = registry.nodes.filter((node) => node.status === 'degraded').length
+  const missing = registry.nodes.filter((node) => node.status === 'missing' || node.status === 'legacy_archived').length
+  const status: GatewayStatus = blocked || missing || degraded ? 'degraded' : 'connected'
+
+  return {
+    ok: true,
+    mode: 'gateway_health_read_only',
+    generated_at: registry.generated_at,
+    status,
+    color_token: gatewayPublicColorForNode({ id: 'gateway', kind: 'gateway', status }),
+    totals: {
+      nodes: registry.nodes.length,
+      blocked,
+      degraded,
+      missing,
+    },
+    blocked_nodes: blockedNodes.map((node) => {
+      const apiNode = toGatewayApiNode(registry, node)
+      return {
+        id: apiNode.id,
+        name: apiNode.name,
+        blocked_reason: apiNode.blocked_reason,
+        color_token: apiNode.color_token,
+      }
+    }),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
+export function buildGatewayRequestStreamPayload(registry: GatewayRegistry): GatewayRequestStreamPayload {
+  return {
+    ok: true,
+    mode: 'gateway_request_stream_polling_read_only',
+    generated_at: registry.generated_at,
+    live_stream_enabled: false,
+    backend_required: 'real_gateway_request_event_stream_not_configured',
+    polling_routes: [
+      '/api/gateway/status',
+      '/api/gateway/nodes',
+      '/api/gateway/dispatcher-decisions',
+      '/api/gateway/audit',
+    ],
+    latest_decisions: buildGatewayDispatcherDecisionsPayload(registry).decisions.slice(0, 12),
+    execution_enabled: false,
+    writes_enabled: false,
+  }
+}
+
 
 function toGatewayApiNode(registry: GatewayRegistry, node: GatewayNode): GatewayApiNode {
   const relatedCapabilities = registry.capabilities.filter((capability) => capability.source_node === node.id)
@@ -568,17 +842,50 @@ function toGatewayApiNode(registry: GatewayRegistry, node: GatewayNode): Gateway
   return {
     ...node,
     name: node.label,
+    display_name: node.label,
     type: node.kind,
+    system_type: node.kind,
+    color_token: gatewayPublicColorForNode({
+      id: node.id,
+      kind: node.kind,
+      status: node.status,
+      blocked_reason: blockedReason,
+      status_details: node.status_details,
+    }),
     connected: statusConnected,
     configured: node.status !== 'missing' && node.status !== 'legacy_archived' && !missingCredential,
     read_enabled: (statusConnected || capabilityReadEnabled) && node.status !== 'blocked' && node.status !== 'missing',
     write_enabled: node.status === 'write_enabled' || node.status === 'execution_enabled' || capabilityWriteEnabled,
     execution_enabled: node.status === 'execution_enabled' || capabilityExecutionEnabled,
     requires_bridge_session: requiresBridgeSession,
+    bridge_required: requiresBridgeSession,
+    auth_required: true,
     blocked_reason: blockedReason,
+    local_ui_url: gatewayLocalUiUrlForNode(node.id),
+    tailnet_url: null,
+    iframe_allowed: false,
+    embed_safe: gatewayEmbedSafeForNode(node.id),
+    audit_count: relatedCapabilities.length,
+    route_count: relatedEdges.length,
     last_success: lastSuccess,
     last_error: lastError,
   }
+}
+
+function gatewayLocalUiUrlForNode(id: string): string | null {
+  const normalizedId = gatewayId(id)
+  if (normalizedId === 'gateway') return '/gateway/overview'
+  if (normalizedId === 'agent_zero') return '/gateway/agent-hub/agent-zero/config'
+  if (normalizedId === 'hermes') return '/gateway/agent-hub/ron/config'
+  if (normalizedId === 'space_agent') return '/gateway/agent-hub/spaceagent/config'
+  if (normalizedId === 'pi') return '/gateway/agent-hub/pi/config'
+  if (normalizedId === 'paperclip') return '/gateway/agent-hub/paperclip'
+  if (normalizedId === 'brain_sync' || normalizedId === 'gbrain') return '/designer-mission-control/Mission%20Control.html?page=gbrain-sync'
+  return null
+}
+
+function gatewayEmbedSafeForNode(id: string): boolean {
+  return gatewayLocalUiUrlForNode(id)?.startsWith('/gateway') || false
 }
 
 function buildGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
@@ -658,7 +965,7 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       edge_kind: 'delegation' as const,
       hops: ['agent_zero', 'gateway', 'hermes'],
       requires_session: false,
-      purpose: 'Agent Zero dispatches planning-only skill and workflow requests to Hermes through Gateway.',
+      purpose: 'Agent Zero dispatches planning-only skill and workflow requests to Ron Weasley through Gateway.',
     },
     {
       flow_id: 'flow_agent_zero_gateway_space_agent_research',
@@ -678,7 +985,7 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       edge_kind: 'delegation' as const,
       hops: ['hermes', 'gateway', 'agent_zero', 'paperclip'],
       requires_session: true,
-      purpose: 'Hermes can read the Paperclip skills/task registry and draft workflow templates, mini-agent specs, routines, and skill proposal documents. Paperclip issue/work-product storage is blocked until Agent Zero/Gateway approval, Bridge Session scope, and a configured Paperclip write adapter exist.',
+      purpose: 'Ron Weasley can read the Paperclip skills/task registry and draft workflow templates, mini-agent specs, routines, and skill proposal documents. Paperclip issue/work-product storage is blocked until Agent Zero/Gateway approval, Bridge Session scope, and a configured Paperclip write adapter exist.',
     },
     {
       flow_id: 'flow_pi_gateway_agent_zero_paperclip_dispatch_recommendation',
@@ -698,7 +1005,7 @@ function buildCanonicalGatewayFlows(registry: GatewayRegistry): GatewayFlow[] {
       edge_kind: 'delegation' as const,
       hops: ['agent_zero', 'gateway', 'paperclip'],
       requires_session: true,
-      purpose: 'Agent Zero can see Paperclip status and route workforce task issue requests through Gateway. Paperclip issue creation, assignment to Hermes, SpaceAgent, Pi review, or mini-agents, status tracking, and completion review require Bridge Session scope and a configured Paperclip write adapter.',
+      purpose: 'Agent Zero can see Paperclip status and route workforce task issue requests through Gateway. Paperclip issue creation, assignment to Ron Weasley, SpaceAgent, Pi review, or mini-agents, status tracking, and completion review require Bridge Session scope and a configured Paperclip write adapter.',
     },
     {
       flow_id: 'flow_agent_zero_gateway_paperclip_space_agent_research_task',
@@ -878,7 +1185,7 @@ function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | 
     request: {
       source: 'agent_zero',
       target: 'hermes',
-      purpose: 'Agent Zero delegates skill and workflow planning to Hermes, then reviews the plan before any execution.',
+      purpose: 'Agent Zero delegates skill and workflow planning to Ron Weasley, then reviews the plan before any execution.',
     },
     route: {
       source: 'agent_zero',
@@ -897,8 +1204,8 @@ function buildHermesCollaborationFlow(registry: GatewayRegistry): GatewayFlow | 
     result: {
       status,
       summary: blocker
-        ? `Hermes collaboration is degraded: ${blocker}.`
-        : 'Agent Zero can dispatch planning requests to Hermes and retain final command authority.',
+        ? `Ron Weasley collaboration is degraded: ${blocker}.`
+        : 'Agent Zero can dispatch planning requests to Ron Weasley and retain final command authority.',
       blocker,
     },
   })
@@ -928,6 +1235,18 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       status: 'connected',
       capabilities: ['route', 'govern', 'observe', 'control'],
       lastSeen: generatedAt,
+    }),
+    makeNode({
+      id: 'agent_lieutenants',
+      label: 'Agent Lieutenant Layer',
+      kind: 'lieutenant',
+      status: 'read_only',
+      capabilities: ['direct-line oversight', 'delegated planning', 'Jarvis-supervised coordination'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        jarvis_remains_commander: true,
+        openclaw_hidden_intermediary: false,
+      },
     }),
     makeNode({
       id: 'models',
@@ -992,16 +1311,66 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       label: 'Tools',
       kind: 'tool',
       status: toolCount > 0 ? 'read_only' : 'degraded',
-      capabilities: ['registered adapters', 'tool schemas', 'Bridge Session gated execution'],
+      capabilities: ['registered adapters', 'tool schemas', 'public_webpage_read', 'youtube_transcript', 'Bridge Session gated writes'],
       blockers: toolCount > 0 ? [] : ['tool_registry_empty_or_not_visible'],
       lastSeen: generatedAt,
+    }),
+    makeNode({
+      id: 'gateway_tools',
+      label: 'Gateway Tools',
+      kind: 'tool',
+      status: toolCount > 0 ? 'read_only' : 'degraded',
+      capabilities: ['canonical Gateway tool registry', 'registered adapters', 'tool schemas', 'session-gated writes'],
+      blockers: toolCount > 0 ? [] : ['tool_registry_empty_or_not_visible'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        alias_for: 'tools',
+        route: '/api/gateway/registry',
+        openclaw_hidden_intermediary: false,
+        writes_require_bridge_session: true,
+      },
+    }),
+    makeNode({
+      id: 'public_webpage_read',
+      label: 'Public Web Read',
+      kind: 'tool',
+      status: 'read_only',
+      capabilities: ['HTTP GET only', 'public pages', 'no cookies', 'no auth headers', 'visible task proof'],
+      blockers: [],
+      lastSeen: generatedAt,
+      statusDetails: {
+        adapter_id: 'public_webpage_read',
+        action: 'web.public_page.read',
+        route: '/api/bridge/agent-zero/execute',
+        bridge_session_required: false,
+        writes_enabled: false,
+        credential_values_exposed: false,
+      },
+    }),
+    makeNode({
+      id: 'youtube_transcript',
+      label: 'YouTube Transcript',
+      kind: 'tool',
+      status: 'read_only',
+      capabilities: ['YouTube watch URLs', 'youtu.be URLs', 'Shorts URLs', 'embed URLs', 'no hallucination blockers'],
+      blockers: [],
+      lastSeen: generatedAt,
+      statusDetails: {
+        adapter_id: 'youtube_transcript',
+        action: 'youtube.transcript.read',
+        route: '/api/youtube/transcript',
+        bridge_session_required: false,
+        cookies_used: false,
+        writes_enabled: false,
+        credential_values_exposed: false,
+      },
     }),
     makeNode({
       id: 'skills',
       label: 'Skills',
       kind: 'skill',
       status: skillCount > 0 ? 'read_only' : 'degraded',
-      capabilities: ['OpenClaw+ shared skills', 'Hermes skill proposals', 'Bridge Session gated activation'],
+      capabilities: ['OpenClaw+ shared skills', 'Ron Weasley skill proposals', 'Bridge Session gated activation'],
       blockers: skillCount > 0 ? [] : ['skill_registry_empty_or_not_visible'],
       lastSeen: generatedAt,
     }),
@@ -1033,6 +1402,33 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       lastSeen: generatedAt,
     }),
     makeNode({
+      id: 'mission_control_tasks',
+      label: 'Mission Control Tasks',
+      kind: 'api',
+      status: 'read_only',
+      capabilities: ['/api/tasks', '/api/tasks/:id', '/api/tasks/:id/events', 'owner-visible proof'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        route: '/api/tasks',
+        backing_store: 'SQLite tasks',
+        progress_field: 'tasks.metadata.progress',
+      },
+    }),
+    makeNode({
+      id: 'memory_approvals',
+      label: 'Memory Approvals',
+      kind: 'api',
+      status: 'read_only',
+      capabilities: ['memory write approval queue', 'Jarvis concurrence', 'audit visibility', 'rollback/no-state proof'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        route: '/api/bridge/brain-sync/memory-approvals/status',
+        memory_write_layer: 'approval_gated',
+        broad_memory_deletion_allowed: false,
+        credential_values_exposed: false,
+      },
+    }),
+    makeNode({
       id: 'brain',
       label: 'Brain',
       kind: 'brain_system',
@@ -1040,6 +1436,46 @@ function buildGatewayNodes(context: AgentZeroReadOnlyContext | null, generatedAt
       capabilities: ['Brain Sync', 'Obsidian', 'MemPalace', 'Graphify', 'Build-Wiki/Farmer'],
       blockers: brainVisible ? [] : ['brain_registry_not_visible'],
       lastSeen: generatedAt,
+    }),
+    makeNode({
+      id: 'brain_bridge',
+      label: 'Brain Bridge Mode',
+      kind: 'brain_system',
+      status: 'read_only',
+      capabilities: ['Gateway-connected brain status', 'exact lane states', 'memory approval visibility', 'Ron Weasley/Jarvis brain route proof'],
+      blockers: ['brain_bridge_event_stream_required'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        route: '/api/bridge/brain-sync/gateway-status',
+        openclaw_is_brain_bridge: false,
+        jarvis_connected: true,
+        hermes_connected: true,
+        memory_write_layer: 'approval_gated',
+      },
+    }),
+    makeNode({
+      id: 'hermes_webui',
+      label: 'Ron Weasley WebUI',
+      kind: 'api',
+      status: 'read_only',
+      capabilities: [
+        'loopback browser control surface',
+        'Ron Weasley direct-line identity proof',
+        'Mission Control Ron Weasley control-plane links',
+        'Jarvis concurrence gate visibility',
+      ],
+      blockers: ['hermes_agent_checkout_or_config_required_for_full_agent_features'],
+      lastSeen: generatedAt,
+      statusDetails: {
+        route: '/api/bridge/hermes-webui/status',
+        preflight_route: '/api/bridge/hermes-webui/preflight',
+        identity_route: '/api/bridge/hermes-webui/identity',
+        local_url: 'http://127.0.0.1:8787/',
+        target_agent: 'hermes',
+        conversation_owner: 'ron-weasley',
+        openclaw_hidden_intermediary: false,
+        second_hermes_brain: false,
+      },
     }),
     ...buildProviderNodes(context, generatedAt),
     ...buildMcpServerNodes(context, generatedAt),
@@ -1073,19 +1509,38 @@ function buildGatewayEdges(context: AgentZeroReadOnlyContext | null, generatedAt
     makeEdge('gateway', 'models', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'llm_gateway', 'model-call', true, generatedAt, null),
     makeEdge('gateway', 'tools', 'tool-call', true, generatedAt, null),
+    makeEdge('gateway', 'gateway_tools', 'tool-call', true, generatedAt, null),
+    makeEdge('gateway_tools', 'tools', 'tool-call', true, generatedAt, null),
+    makeEdge('tools', 'public_webpage_read', 'tool-call', false, generatedAt, null),
+    makeEdge('tools', 'youtube_transcript', 'tool-call', false, generatedAt, null),
     makeEdge('gateway', 'integrations', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'skills', 'tool-call', true, generatedAt, null),
     makeEdge('gateway', 'data_sources', 'sync', false, generatedAt, null),
     makeEdge('gateway', 'events', 'event', false, generatedAt, null),
     makeEdge('gateway', 'brain', 'memory', false, generatedAt, null),
+    makeEdge('gateway', 'brain_bridge', 'memory', false, generatedAt, null),
     makeEdge('gateway', 'brain_sync', 'memory', true, generatedAt, null),
+    makeEdge('agent_zero', 'brain_bridge', 'memory', false, generatedAt, null),
+    makeEdge('hermes', 'brain_bridge', 'memory', false, generatedAt, null),
+    makeEdge('brain_bridge', 'obsidian', 'memory', true, generatedAt, null),
+    makeEdge('brain_bridge', 'mempalace', 'memory', true, generatedAt, null),
+    makeEdge('brain_bridge', 'graphify', 'memory', true, generatedAt, 'brain_bridge_event_stream_required'),
+    makeEdge('brain_bridge', 'buildwiki', 'sync', true, generatedAt, 'buildwiki_event_stream_required'),
+    makeEdge('brain_bridge', 'memory_approvals', 'approval', true, generatedAt, null),
+    makeEdge('brain_bridge', 'tools', 'tool-call', true, generatedAt, null),
+    makeEdge('brain_bridge', 'gateway_tools', 'tool-call', true, generatedAt, null),
+    makeEdge('hermes', 'gateway_tools', 'tool-call', true, generatedAt, null),
+    makeEdge('hermes', 'hermes_webui', 'command', false, generatedAt, null),
+    makeEdge('hermes_webui', 'hermes', 'command', false, generatedAt, null),
+    makeEdge('hermes_webui', 'brain_bridge', 'memory', false, generatedAt, null),
+    makeEdge('hermes_webui', 'tools', 'tool-call', true, generatedAt, null),
+    makeEdge('hermes_webui', 'mission_control_tasks', 'sync', true, generatedAt, null),
     makeEdge('brain', 'brain_sync', 'memory', false, generatedAt, null),
     makeEdge('data_sources', 'brain', 'sync', false, generatedAt, null),
     makeEdge('brain', 'obsidian', 'memory', true, generatedAt, null),
     makeEdge('brain', 'mempalace', 'memory', true, generatedAt, null),
     makeEdge('brain', 'graphify', 'memory', true, generatedAt, null),
     makeEdge('brain', 'buildwiki', 'sync', true, generatedAt, null),
-    makeEdge('openclaw_plus', 'buildwiki', 'sync', true, generatedAt, null),
     makeEdge('hermes', 'agent_zero', 'delegation', false, generatedAt, null),
     makeEdge('bridge_mcp', 'mcp_tools', 'mcp-call', true, generatedAt, null),
     makeEdge('mcp_gateway', 'mcp_tools', 'mcp-call', true, generatedAt, null),
@@ -1108,12 +1563,51 @@ function buildGatewayCapabilities(context: AgentZeroReadOnlyContext | null, gene
       last_seen: generatedAt,
     }),
     createGatewayCapability({
-      id: 'hermes.lieutenant',
-      label: 'Hermes lieutenant planning',
+      id: 'hermes.nuclear_dispatcher',
+      label: 'Ron Weasley — Nuclear Dispatcher planning',
       kind: 'agent',
       status: deriveHermesStatus(context).blocker ? 'degraded' : 'connected',
       source_node: 'hermes',
       blockers: blockersList(deriveHermesStatus(context).blocker),
+      last_seen: generatedAt,
+    }),
+    createGatewayCapability({
+      id: 'web.public_page.read',
+      label: 'Public webpage read-only research',
+      kind: 'tool',
+      status: 'connected',
+      source_node: 'public_webpage_read',
+      requires_session: false,
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: true,
+      blockers: [],
+      last_seen: generatedAt,
+    }),
+    createGatewayCapability({
+      id: 'youtube.transcript.read',
+      label: 'YouTube transcript read-only research',
+      kind: 'tool',
+      status: 'connected',
+      source_node: 'youtube_transcript',
+      requires_session: false,
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: true,
+      blockers: [],
+      last_seen: generatedAt,
+    }),
+    createGatewayCapability({
+      id: 'brain.bridge.status.read',
+      label: 'Brain Bridge Mode Gateway status',
+      kind: 'brain',
+      status: 'connected',
+      source_node: 'brain_bridge',
+      requires_session: false,
+      read_enabled: true,
+      write_enabled: false,
+      execution_enabled: false,
+      blockers: ['brain_bridge_event_stream_required'],
       last_seen: generatedAt,
     }),
     ...providerCapabilities(context, generatedAt),
@@ -1626,6 +2120,7 @@ type LlmProviderView = {
   oauthSubscriptionConfigured: boolean
   pluginConnected: boolean
   bestUseCase: string | null
+  providerFamily: string
 }
 
 const LLM_PROVIDER_DEFINITIONS: LlmProviderDefinition[] = [
@@ -1714,6 +2209,18 @@ const LLM_PROVIDER_DEFINITIONS: LlmProviderDefinition[] = [
     modelAliases: ['groq'],
   },
   {
+    id: 'xai_grok',
+    label: 'xAI Grok',
+    aliases: ['xai', 'grok', 'xai_grok'],
+    credentialNames: ['XAI_API_KEY'],
+    authMethod: 'api_key_or_gateway_provider',
+    billingMode: 'xAI/Grok API billing when execution is approved',
+    taskClasses: ['hosted Grok reasoning', 'xAI-family analysis'],
+    fallbackOrder: ['openrouter', 'openai', 'ollama'],
+    missingBlocker: 'xai_grok_not_configured_or_not_visible_in_provider_registry',
+    modelAliases: ['xai', 'grok'],
+  },
+  {
     id: 'gemini',
     label: 'Gemini',
     aliases: ['gemini', 'google', 'google_ai'],
@@ -1760,6 +2267,15 @@ function modelCapabilities(context: AgentZeroReadOnlyContext | null, generatedAt
       raw_tracebacks_exposed: false,
       failure_fallback_policy: 'redact_litellm_openrouter_tracebacks_and_use_configured_fallback_or_blocked_status',
       best_use_case: view.bestUseCase,
+      provider_family: view.providerFamily,
+      registered: true,
+      reachable: view.connected || view.configured,
+      credential_required: view.definition.credentialNames.length > 0,
+      credential_configured: view.apiKeyConfigured,
+      bridge_required: true,
+      execution_enabled: false,
+      exact_blocker: view.blocker,
+      last_probe: generatedAt,
     },
     last_seen: generatedAt,
   }))
@@ -2097,6 +2613,7 @@ function buildLlmProviderViews(context: AgentZeroReadOnlyContext | null): LlmPro
       oauthSubscriptionConfigured,
       pluginConnected,
       bestUseCase: stringOrNull(provider?.best_use_case) || definition.taskClasses.join(', '),
+      providerFamily: definition.id === 'xai_grok' ? 'xai' : definition.id,
     } satisfies LlmProviderView
   })
 
@@ -2167,6 +2684,14 @@ function summarizeLlmGateway(capabilities: GatewayCapability[]): GatewayStatusPa
       status: capability.status,
       connected: detailBoolean(capability.status_details, 'connected'),
       configured: detailBoolean(capability.status_details, 'configured'),
+      registered: detailBoolean(capability.status_details, 'registered'),
+      reachable: detailBoolean(capability.status_details, 'reachable'),
+      credential_required: detailBoolean(capability.status_details, 'credential_required'),
+      credential_configured: detailBoolean(capability.status_details, 'credential_configured'),
+      bridge_required: detailBoolean(capability.status_details, 'bridge_required'),
+      execution_enabled: false,
+      last_probe: detailString(capability.status_details, 'last_probe') || capability.last_seen || '',
+      exact_blocker: detailString(capability.status_details, 'exact_blocker'),
       model_count: numericValue(capability.status_details.model_count) ?? 0,
       fallback_provider: detailString(capability.status_details, 'fallback_provider'),
       blocker: capability.blockers[0] || null,
@@ -2274,7 +2799,7 @@ function deriveHermesStatus(context: AgentZeroReadOnlyContext | null) {
     }
   }
   const status = String(hermes.status || '').toLowerCase()
-  const connected = ['active', 'connected', 'healthy'].some((value) => status.includes(value))
+  const connected = ['active', 'connected', 'healthy', 'ready', 'recovered', 'direct'].some((value) => status.includes(value))
   const blocked = ['blocked', 'missing', 'offline', 'unreachable'].some((value) => status.includes(value))
   return {
     installed: true,

@@ -4,17 +4,14 @@ import { db_helpers, getDatabase, logAuditEvent } from '@/lib/db'
 import { mergeTaskMetadataForAgentWorkTicket } from '@/lib/agent-work-tickets'
 import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
 import { evaluateOpenCloudAuthority, isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
-import { SOFIA_DEPUTY_IDENTITY } from '@/lib/sofia-identity'
 
 export type AgentSystemType =
   | 'commander'
   | 'nuclear_dispatcher'
   | 'advisory_dispatcher'
-  | 'gateway_full_access_agent'
   | 'company_workforce_system'
   | 'specialist_agent_system'
   | 'brain_intelligence_system'
-  | 'deputy_dispatcher'
   | 'browser_control_surface'
   | 'integration_system'
   | 'tool_layer'
@@ -34,8 +31,16 @@ export type AgentRoutingLine = {
   allowed_tools: string[]
   forbidden_intermediaries: string[]
   opencloud_allowed_role: 'supporting_tool_only' | 'not_allowed'
-  openclaw_allowed_role: 'supporting_tool_only' | 'not_allowed'
   direct_line_active: boolean
+  normal_chat_bridge_required: boolean
+  gateway_tools_visible: boolean
+  skills_visible: boolean
+  mcp_visible: boolean
+  models_visible: boolean
+  gateway_runtime_visible: boolean
+  hidden_intermediary_required: boolean
+  dangerous_actions_require_scope: boolean
+  credential_values_exposed: false
   last_verified: string
   visible_task_required: true
   audit_required: true
@@ -50,9 +55,7 @@ export type AgentRoutingLine = {
   allowed_as_tool?: boolean
   allowed_as_intermediary?: boolean
   allowed_as_commander?: boolean
-  opencloud_intermediary_allowed?: false
   blocker?: string | null
-  legacy_names?: string[]
 }
 
 type AgentRoutingLineTemplate = Omit<AgentRoutingLine, 'last_verified'>
@@ -101,17 +104,47 @@ export type AgentRoutingSendInput = {
   visible_task_id?: string | number | null
 }
 
-function line(input: Omit<AgentRoutingLineTemplate, 'visible_task_required' | 'audit_required' | 'rollback_required' | 'forbidden_intermediaries' | 'opencloud_allowed_role' | 'openclaw_allowed_role'> & {
+function line(input: Omit<AgentRoutingLineTemplate,
+  | 'visible_task_required'
+  | 'audit_required'
+  | 'rollback_required'
+  | 'forbidden_intermediaries'
+  | 'opencloud_allowed_role'
+  | 'normal_chat_bridge_required'
+  | 'gateway_tools_visible'
+  | 'skills_visible'
+  | 'mcp_visible'
+  | 'models_visible'
+  | 'gateway_runtime_visible'
+  | 'hidden_intermediary_required'
+  | 'dangerous_actions_require_scope'
+  | 'credential_values_exposed'
+> & {
   forbidden_intermediaries?: string[]
   opencloud_allowed_role?: AgentRoutingLine['opencloud_allowed_role']
-  openclaw_allowed_role?: AgentRoutingLine['openclaw_allowed_role']
+  normal_chat_bridge_required?: boolean
+  gateway_tools_visible?: boolean
+  skills_visible?: boolean
+  mcp_visible?: boolean
+  models_visible?: boolean
+  gateway_runtime_visible?: boolean
+  hidden_intermediary_required?: boolean
+  dangerous_actions_require_scope?: boolean
 }): AgentRoutingLineTemplate {
-  const allowedRole = input.openclaw_allowed_role || input.opencloud_allowed_role || 'supporting_tool_only'
+  const directVisibility = input.direct_line_active
   return {
     ...input,
     forbidden_intermediaries: input.forbidden_intermediaries || ['opencloud', 'openclaw', 'openclaw_plus', 'claudeclaw'],
-    opencloud_allowed_role: input.opencloud_allowed_role || allowedRole,
-    openclaw_allowed_role: allowedRole,
+    opencloud_allowed_role: input.opencloud_allowed_role || 'supporting_tool_only',
+    normal_chat_bridge_required: input.normal_chat_bridge_required ?? false,
+    gateway_tools_visible: input.gateway_tools_visible ?? directVisibility,
+    skills_visible: input.skills_visible ?? directVisibility,
+    mcp_visible: input.mcp_visible ?? directVisibility,
+    models_visible: input.models_visible ?? directVisibility,
+    gateway_runtime_visible: input.gateway_runtime_visible ?? directVisibility,
+    hidden_intermediary_required: input.hidden_intermediary_required ?? false,
+    dangerous_actions_require_scope: input.dangerous_actions_require_scope ?? true,
+    credential_values_exposed: false,
     visible_task_required: true,
     audit_required: true,
     rollback_required: true,
@@ -132,7 +165,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     execution_policy: 'commander_owner_operator_exact_scope_only',
   }),
   line({
-    agent_id: 'ron-weasley',
+    agent_id: 'hermes',
     display_name: RON_WEASLEY_IDENTITY.full_title,
     system_type: 'nuclear_dispatcher',
     communication_route: '/api/bridge/hermes/*',
@@ -142,25 +175,6 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     allowed_tools: ['gateway_tools', 'brain_bridge', 'mini_agent_market', 'jarvis_delegated_exact_scope_adapters'],
     direct_line_active: true,
     execution_policy: 'full_visibility_jarvis_delegation_required_for_writes',
-    legacy_names: ['Hermes', 'Hermans'],
-  }),
-  line({
-    agent_id: SOFIA_DEPUTY_IDENTITY.agent_id,
-    display_name: SOFIA_DEPUTY_IDENTITY.display_name,
-    system_type: 'deputy_dispatcher',
-    communication_route: '/api/bridge/sofia/*',
-    gateway_route: SOFIA_DEPUTY_IDENTITY.gateway_route,
-    conversation_owner: SOFIA_DEPUTY_IDENTITY.conversation_owner,
-    reports_to: SOFIA_DEPUTY_IDENTITY.reports_to,
-    allowed_tools: ['ron_skill_registry_drafts', 'gateway_improvement_drafts', 'cybersecurity_review_drafts', 'brain_hygiene_drafts', 'visible_task_updates'],
-    direct_line_active: true,
-    execution_policy: 'ron_deputy_internal_planning_ron_and_jarvis_concurrence_for_production',
-    allowed_actions: ['read_status', 'draft_recommendation', 'request_ron_review', 'request_jarvis_concurrence', 'update_visible_task_draft'],
-    write_policy: 'internal_records_only_ron_and_jarvis_concurrence_for_production',
-    allowed_as_tool: false,
-    allowed_as_intermediary: false,
-    allowed_as_commander: false,
-    opencloud_intermediary_allowed: false,
   }),
   line({
     agent_id: 'hermes-webui',
@@ -178,38 +192,24 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
   line({
     agent_id: 'pi',
     display_name: 'Pi',
-    system_type: 'gateway_full_access_agent',
+    system_type: 'specialist_agent_system',
     communication_route: '/api/bridge/pi/*',
     gateway_route: '/api/bridge/pi/*',
     conversation_owner: 'pi',
     reports_to: 'agent-zero-jarvis',
     allowed_tools: [
-      'gateway.tools.full_access',
-      'gateway.skills.full_access',
-      'mcp.registry.full_access',
-      'provider.model.full_access',
-      'brain.bridge.read',
-      'task.event.write',
-      'certified_exact_scope_adapters',
-      'pipeline.run.request',
-      'jarvis.concurrence.request',
+      'gateway_tools',
+      'skills_registry',
+      'mcp_tool_layer',
+      'provider_model_layer',
+      'brain_bridge',
+      'paperclip_read_only_inventory',
+      'spaceagent_research_readiness',
+      'direct_line_recommendations',
+      'exact_scope_adapter_requests',
     ],
     direct_line_active: true,
-    execution_policy: 'full_brokered_gateway_access_jarvis_gated_for_production',
-    allowed_actions: [
-      'read_gateway_state',
-      'read_tools_skills_mcp_and_providers',
-      'create_internal_recommendation',
-      'write_visible_task_event',
-      'request_exact_scope_adapter',
-      'request_pipeline_run',
-      'request_jarvis_concurrence',
-    ],
-    write_policy: 'gateway_brokered_exact_scope_jarvis_concurrence_for_production',
-    allowed_as_tool: false,
-    allowed_as_intermediary: false,
-    allowed_as_commander: false,
-    opencloud_intermediary_allowed: false,
+    execution_policy: 'direct_gateway_agent_exact_scope_for_dangerous_actions',
   }),
   line({
     agent_id: 'paperclip',
@@ -222,45 +222,38 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     allowed_tools: ['paperclip_read_only_inventory', 'paperclip_exact_scope_adapters'],
     direct_line_active: true,
     company_scope_required: true,
-    execution_policy: 'writes_bridge_gated_company_scope_required',
+    execution_policy: 'direct_gateway_workforce_agent_exact_scope_for_writes',
     blocker: 'paperclip_board_admin_credential_required_for_company_bootstrap',
   }),
   line({
     agent_id: 'spaceagent',
     display_name: 'SpaceAgent',
     system_type: 'specialist_agent_system',
-    communication_route: '/api/bridge/spaceagent/*',
-    gateway_route: '/api/bridge/spaceagent/*',
+    communication_route: '/api/bridge/space-agent/*',
+    gateway_route: '/api/bridge/space-agent/*',
     conversation_owner: 'spaceagent',
     reports_to: 'agent-zero-jarvis',
     allowed_tools: [
-      'gateway.status.read',
-      'brain.status.read',
-      'task.list.read',
-      'task.event.write',
-      'report.draft',
-      'jarvis.concurrence.request',
-      'public_webpage_read',
-      'youtube_transcript',
+      'gateway_tools',
+      'skills_registry',
+      'mcp_tool_layer',
+      'provider_model_layer',
       'playwright_mcp_local_only',
-      'firecrawl.read',
+      'read_only_research',
+      'firecrawl_readiness',
+      'youtube_transcript_readiness',
+      'exact_scope_browser_action_requests',
     ],
     direct_line_active: true,
-    execution_policy: 'certified_exact_scope_or_read_only',
-    allowed_actions: ['read_status', 'read_gateway_state', 'read_brain_state', 'draft_report', 'create_internal_recommendation', 'request_jarvis_concurrence', 'request_exact_scope_adapter'],
-    write_policy: 'internal_records_and_visible_task_events_only_jarvis_concurrence_for_production',
-    allowed_as_tool: false,
-    allowed_as_intermediary: false,
-    allowed_as_commander: false,
-    legacy_names: ['space-agent'],
+    execution_policy: 'direct_gateway_research_agent_exact_scope_for_browser_actions',
   }),
   line({
-    agent_id: 'brain-bridge',
-    display_name: 'Brain Bridge',
+    agent_id: 'brain-sync',
+    display_name: 'Brain Bridge Mode',
     system_type: 'brain_intelligence_system',
     communication_route: '/api/bridge/brain-sync/*',
     gateway_route: '/api/bridge/brain-sync/gateway-status',
-    conversation_owner: 'brain-bridge',
+    conversation_owner: 'brain-sync',
     reports_to: 'agent-zero-jarvis',
     allowed_tools: ['brain.status.read', 'brain.memory.read', 'brain.memory.propose_write'],
     direct_line_active: true,
@@ -288,7 +281,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     reports_to: 'agent-zero-jarvis',
     allowed_tools: ['brain.buildwiki.status', 'brain.buildwiki.run_now_approval', 'brain.buildwiki.events'],
     direct_line_active: true,
-    execution_policy: 'run_now_bridge_gated_docs_farmer_scope_only',
+    execution_policy: 'run_now_bridge_gated_opencloud_docs_farmer_scope_only',
   }),
   line({
     agent_id: 'obsidian',
@@ -297,7 +290,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     communication_route: '/api/bridge/brain-sync/obsidian/status',
     gateway_route: '/api/bridge/brain-sync/obsidian/status',
     conversation_owner: 'obsidian',
-    reports_to: 'brain-bridge',
+    reports_to: 'brain-sync',
     allowed_tools: ['brain.obsidian.read', 'brain.obsidian.write_gated'],
     direct_line_active: true,
     execution_policy: 'read_status_live_writes_approval_gated',
@@ -309,7 +302,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     communication_route: '/api/bridge/brain-sync/mempalace/status',
     gateway_route: '/api/bridge/brain-sync/mempalace/status',
     conversation_owner: 'mempalace',
-    reports_to: 'brain-bridge',
+    reports_to: 'brain-sync',
     allowed_tools: ['brain.mempalace.read', 'brain.mempalace.write_gated'],
     direct_line_active: true,
     execution_policy: 'read_status_live_writes_approval_gated',
@@ -321,7 +314,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     communication_route: '/api/bridge/brain-sync/graphify/status',
     gateway_route: '/api/bridge/brain-sync/graphify/status',
     conversation_owner: 'graphify',
-    reports_to: 'brain-bridge',
+    reports_to: 'brain-sync',
     allowed_tools: ['brain.graphify.read', 'brain.graphify.event_stream'],
     direct_line_active: true,
     execution_policy: 'read_status_live_event_stream_required_for_ready',
@@ -333,7 +326,7 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     communication_route: '/api/bridge/brain-sync/memory-approvals/status',
     gateway_route: '/api/bridge/brain-sync/memory-approvals/status',
     conversation_owner: 'memory-approvals',
-    reports_to: 'brain-bridge',
+    reports_to: 'brain-sync',
     allowed_tools: ['brain.memory_approvals.read', 'brain.memory_approvals.write_gated'],
     direct_line_active: true,
     execution_policy: 'approval_status_live_memory_writes_gated',
@@ -466,36 +459,34 @@ const PAPERCLIP_COMPANY_AGENT_LINES = [
   blocker: company_slug === 'pacman-cybersecurity' ? 'paperclip_board_admin_credential_required' : null,
 }))
 
-const RON_MINI_AGENT_LINES = [
-  ['ron-mini-agent.researcher', 'Ron Weasley Mini-Agent Researcher', 'safe_research'],
-  ['ron-mini-agent.classifier', 'Ron Weasley Mini-Agent Classifier', 'safe_classification'],
-  ['ron-mini-agent.workflow-drafter', 'Ron Weasley Mini-Agent Workflow Drafter', 'workflow_draft'],
+const HERMES_MINI_AGENT_LINES = [
+  ['hermes-mini-agent.researcher', 'Ron Weasley Mini-Agent Researcher', 'safe_research'],
+  ['hermes-mini-agent.classifier', 'Ron Weasley Mini-Agent Classifier', 'safe_classification'],
+  ['hermes-mini-agent.workflow-drafter', 'Ron Weasley Mini-Agent Workflow Drafter', 'workflow_draft'],
 ].map(([agent_id, display_name, scope]) => line({
   agent_id,
   display_name,
-  system_type: 'ron_mini_agent',
+  system_type: 'hermes_mini_agent',
   communication_route: '/api/bridge/hermes/mini-agent-registry',
   gateway_route: '/api/bridge/hermes/mini-agent-registry',
   conversation_owner: agent_id,
-  reports_to: 'ron-weasley',
+  reports_to: 'hermes',
   allowed_tools: ['safe_internal_work', scope],
   direct_line_active: true,
-  execution_policy: 'parent_ron_final_authority_agent_zero_no_secrets_no_production_writes',
-  legacy_names: [String(agent_id).replace('ron-mini-agent.', 'hermes-mini-agent.')],
+  execution_policy: 'parent_hermes_final_authority_agent_zero_no_secrets_no_production_writes',
 }))
 
 const OPENCLOUD_LINE = line({
-  agent_id: 'openclaw',
-  display_name: 'OpenClaw / OpenCloud Supporting Runtime',
+  agent_id: 'opencloud',
+  display_name: 'OpenCloud / OpenClaw+ Supporting Runtime',
   system_type: 'supporting_runtime_system',
   communication_route: '/api/openclaw-plus/status',
   gateway_route: '/api/openclaw-plus/status',
   conversation_owner: 'none',
-  reports_to: 'nuclear-gateway',
+  reports_to: 'mission-control-gateway',
   allowed_tools: ['diagnostics_when_invoked', 'supporting_runtime_execution_when_exact_scope_certified'],
   forbidden_intermediaries: ['opencloud', 'openclaw', 'openclaw_plus', 'claudeclaw'],
   opencloud_allowed_role: 'not_allowed',
-  openclaw_allowed_role: 'not_allowed',
   direct_line_active: false,
   execution_policy: 'supporting_runtime_tool_provider_only',
   allowed_as_tool: true,
@@ -504,7 +495,7 @@ const OPENCLOUD_LINE = line({
 })
 
 export function listAgentRoutingLines(generatedAt = new Date().toISOString()): AgentRoutingLine[] {
-  return [...CORE_LINES, ...PAPERCLIP_COMPANY_AGENT_LINES, ...RON_MINI_AGENT_LINES, OPENCLOUD_LINE]
+  return [...CORE_LINES, ...PAPERCLIP_COMPANY_AGENT_LINES, ...HERMES_MINI_AGENT_LINES, OPENCLOUD_LINE]
     .map((item) => ({ ...item, last_verified: generatedAt }))
 }
 
@@ -522,10 +513,9 @@ export function resolveAgentRoutingLine(value: unknown): AgentRoutingLine | null
     jarvis88sbot: 'agent-zero-jarvis',
     'jarvis-88sbot': 'agent-zero-jarvis',
     'jarvis-88-bot': 'agent-zero-jarvis',
-    brain: 'brain-bridge',
-    'brain-sync': 'brain-bridge',
-    'brain-bridge': 'brain-bridge',
-    'brain-bridge-mode': 'brain-bridge',
+    brain: 'brain-sync',
+    'brain-bridge': 'brain-sync',
+    'brain-bridge-mode': 'brain-sync',
     buildwiki: 'build-wiki-farmer',
     'build-wiki': 'build-wiki-farmer',
     farmer: 'build-wiki-farmer',
@@ -544,23 +534,18 @@ export function resolveAgentRoutingLine(value: unknown): AgentRoutingLine | null
     providers: 'provider-model-layer',
     models: 'provider-model-layer',
     'model-layer': 'provider-model-layer',
-    ron: 'ron-weasley',
-    'ron-weasley': 'ron-weasley',
-    'ron-weasley-nuclear-dispatcher': 'ron-weasley',
-    hermes: 'ron-weasley',
-    hermans: 'ron-weasley',
-    sofia: 'sofia',
-    'sofia-deputy': 'sofia',
-    'deputy-nuclear-dispatcher': 'sofia',
+    ron: 'hermes',
+    'ron-weasley': 'hermes',
+    'ron-weasley-nuclear-dispatcher': 'hermes',
+    hermans: 'hermes',
     'pi-dispatcher': 'pi',
-    spaceagent: 'spaceagent',
     'space-agent': 'spaceagent',
-    openclaw: 'openclaw',
-    'openclaw+': 'openclaw',
-    'openclaw-plus': 'openclaw',
-    opencloud: 'openclaw',
+    openclaw: 'opencloud',
+    'openclaw+': 'opencloud',
+    'openclaw-plus': 'opencloud',
+    opencloud: 'opencloud',
   }
-  const wanted = aliases[id] || (id.startsWith('hermes-mini-agent.') ? id.replace('hermes-mini-agent.', 'ron-mini-agent.') : id)
+  const wanted = aliases[id] || id
   return listAgentRoutingLines().find((item) => item.agent_id === wanted) || null
 }
 
@@ -572,11 +557,15 @@ export function buildAgentRoutingLinesStatus() {
     mode: 'universal_direct_agent_lines',
     status: 'UNIVERSAL_DIRECT_AGENT_LINES_POLICY',
     generated_at: generatedAt,
-    gateway_architecture: 'owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line',
-    nuclear_gateway_active: true,
     opencloud_demoted_to_supporting_runtime: true,
-    openclaw_demoted_to_supporting_runtime: true,
     hidden_intermediaries_allowed: false,
+    normal_chat_bridge_required: false,
+    gateway_tools_visible: true,
+    skills_visible: true,
+    mcp_visible: true,
+    models_visible: true,
+    gateway_runtime_visible: true,
+    dangerous_actions_require_scope: true,
     credential_values_exposed: false,
     no_secrets_exposed: true,
     project_continues: true,
@@ -605,7 +594,7 @@ function asStringArray(value: unknown): string[] {
 }
 
 export function routeTraceForLine(line: AgentRoutingLine): string[] {
-  const base = ['owner', 'mission-control', 'nuclear-gateway']
+  const base = ['owner', 'mission_control_gateway']
 
   if (line.system_type === 'paperclip_company_agent') {
     return [
@@ -616,9 +605,9 @@ export function routeTraceForLine(line: AgentRoutingLine): string[] {
     ]
   }
 
-  if (line.system_type === 'hermes_mini_agent' || line.system_type === 'ron_mini_agent') return [...base, 'ron-weasley', line.agent_id]
-  if (line.agent_id === 'hermes-webui') return [...base, 'ron-weasley', 'hermes-webui']
-  if (line.reports_to === 'brain-bridge') return [...base, 'brain-bridge', line.agent_id]
+  if (line.system_type === 'hermes_mini_agent') return [...base, 'hermes', line.agent_id]
+  if (line.agent_id === 'hermes-webui') return [...base, 'hermes', 'hermes-webui']
+  if (line.reports_to === 'brain-sync') return [...base, 'brain-sync', line.agent_id]
 
   return [...base, line.agent_id]
 }
@@ -639,7 +628,7 @@ export function buildAgentMessageEnvelope(input: AgentRoutingSendInput, line: Ag
     message_id: `msg_${randomUUID()}`,
     conversation_id: String(input.conversation_id || `conv_${hashText(`${line.agent_id}:${normalized}`).slice(0, 16)}`),
     owner_id_redacted: String(input.owner_id_redacted || 'owner_redacted'),
-    source_channel: String(input.source_channel || 'nuclear_gateway'),
+    source_channel: String(input.source_channel || 'mission_control_gateway'),
     target_agent: line.agent_id,
     target_system: targetSystem,
     conversation_owner: line.conversation_owner,
@@ -745,21 +734,21 @@ export function ensureAgentRoutingVisibleTask(input: {
       ticket_id: String(taskId),
       task_title: input.title,
       assigned_agent: input.assigned_to,
-      agent_runtime: metadataString(metadataInput, 'agent_runtime', 'Mission Control Nuclear Gateway direct-line router') || 'Mission Control Nuclear Gateway direct-line router',
+      agent_runtime: metadataString(metadataInput, 'agent_runtime', 'Mission Control Gateway direct-line router') || 'Mission Control Gateway direct-line router',
       current_status: metadataString(metadataInput, 'current_status', input.blocker ? 'awaiting_owner' : 'in_progress') || (input.blocker ? 'awaiting_owner' : 'in_progress'),
       current_phase: metadataString(metadataInput, 'current_phase', input.blocker ? 'Direct-line blocker isolated' : 'Direct-line route traced'),
       progress_percent: metadataNumber(metadataInput, 'progress', input.blocker ? 75 : 90),
       delivery_state: metadataString(metadataInput, 'delivery_state', input.blocker ? 'VISIBLE_BLOCKER_CREATED' : 'DIRECT_LINE_TRACE_RECORDED') || (input.blocker ? 'VISIBLE_BLOCKER_CREATED' : 'DIRECT_LINE_TRACE_RECORDED'),
       blocker: input.blocker || null,
       current_blocker: input.blocker || null,
-      next_action: metadataString(metadataInput, 'next_action', input.blocker ? 'Resolve the exact direct-line blocker through Nuclear Gateway policy.' : 'Continue certified exact-scope route execution.'),
+      next_action: metadataString(metadataInput, 'next_action', input.blocker ? 'Resolve the exact direct-line blocker through Mission Control Gateway policy.' : 'Continue certified exact-scope route execution.'),
       proof_visible_to_owner: true,
       proof_records: metadataStringArray(metadataInput, 'proof_records', ['/api/bridge/agent-routing/lines', `/api/tasks/${taskId}`]),
       audit_records: [`agent-routing:${hashText(`${taskId}:${input.title}`).slice(0, 16)}`],
       rollback_path: metadataString(metadataInput, 'rollback_path', 'No external mutation occurred; archive this Mission Control task to roll back the visible proof record.'),
       blocked_lane: input.blocker ? metadataString(metadataInput, 'blocked_lane', 'direct_agent_line') : metadataString(metadataInput, 'blocked_lane', null),
-      affected_system: metadataString(metadataInput, 'affected_system', 'Mission Control Nuclear Gateway agent routing'),
-      needed_to_unblock: input.blocker ? metadataString(metadataInput, 'needed_to_unblock', 'Use a registered direct line and remove OpenClaw/OpenCloud as hidden intermediary.') : metadataString(metadataInput, 'needed_to_unblock', null),
+      affected_system: metadataString(metadataInput, 'affected_system', 'Mission Control Gateway agent routing'),
+      needed_to_unblock: input.blocker ? metadataString(metadataInput, 'needed_to_unblock', 'Use a registered direct line and remove OpenCloud/OpenClaw as hidden intermediary.') : metadataString(metadataInput, 'needed_to_unblock', null),
       blocker_reason: input.blocker || null,
       continued_work: metadataStringArray(metadataInput, 'continued_work', ['All unrelated safe source, route, registry, and test lanes continue.']),
       next_safe_lane: metadataString(metadataInput, 'next_safe_lane', 'Continue direct-line registry and Gateway UI enforcement.'),
@@ -848,7 +837,7 @@ function visibleTaskProofRoutes(taskId: number | string) {
 export function routeAgentMessage(input: AgentRoutingSendInput = {}) {
   const requestedTarget = String(input.target_agent || '').trim()
   const line = resolveAgentRoutingLine(requestedTarget)
-  const baseTitle = 'OpenClaw Removal / Nuclear Gateway Migration'
+  const baseTitle = 'OpenCloud Privilege Demotion + Direct Agent Lines'
   const requestedIntermediaries = asStringArray(input.intermediaries)
 
   if (!requestedTarget || !line) {
@@ -859,7 +848,7 @@ export function routeAgentMessage(input: AgentRoutingSendInput = {}) {
     )
     const task = ensureAgentRoutingVisibleTask({
       title: `${baseTitle}: missing direct line`,
-      description: `Target "${requestedTarget || 'unknown'}" has no registered direct Nuclear Gateway line.`,
+      description: `Target "${requestedTarget || 'unknown'}" has no registered direct Mission Control Gateway line.`,
       assigned_to: 'agent-zero-jarvis',
       blocker: 'agent_direct_line_missing_visible_ticket_required',
       metadata: {
@@ -907,8 +896,8 @@ export function routeAgentMessage(input: AgentRoutingSendInput = {}) {
       'opencloud_is_supporting_runtime_not_commander',
     )
     const task = ensureAgentRoutingVisibleTask({
-      title: `${baseTitle}: OpenClaw commander refusal`,
-      description: 'OpenClaw/OpenCloud was selected as an agent or commander. It is supporting runtime/tool-only.',
+      title: `${baseTitle}: OpenCloud commander refusal`,
+      description: 'OpenCloud/OpenClaw was selected as an agent or commander. It is supporting runtime/tool-only.',
       assigned_to: 'agent-zero-jarvis',
       blocker: 'opencloud_is_supporting_runtime_not_commander',
       metadata: {
@@ -958,7 +947,7 @@ export function routeAgentMessage(input: AgentRoutingSendInput = {}) {
     const proof = buildAgentRoutingProof('hidden_intermediary_refused', line.agent_id, blocker)
     const task = ensureAgentRoutingVisibleTask({
       title: `${baseTitle}: hidden intermediary refusal`,
-      description: `Owner request for ${line.display_name} included a hidden intermediary. Owner traffic must use Owner → Mission Control → Nuclear Gateway → Target Agent.`,
+      description: `Owner request for ${line.display_name} included a hidden intermediary. Owner traffic must use Owner → Mission Control Gateway → Target Agent.`,
       assigned_to: line.agent_id,
       blocker,
       metadata: {
@@ -1091,8 +1080,8 @@ export function auditOpenCloudReferences(rows: Array<{ file: string; text: strin
       const explicitlyDemoted = /(not|never|must not|cannot|can't|no)\s+.{0,80}(commander|conversation owner|dispatcher|interpreter|telegram identity|agent identity|hidden intermediary|owner)|supporting (runtime|tool)|tool-only|supporting_tool_only|supporting runtime/.test(text)
       const wrong = !explicitlyDemoted && (
         /open(cloud|claw)\W+.{0,80}(commander|owner[-_\s]?operator|conversation owner|hidden dispatcher|telegram identity|agent identity proxy)/.test(text)
-        || /(owner|jarvis|ron|hermes|pi|paperclip|spaceagent)\W+.{0,80}(routes? through|via|before)\W+.{0,40}open(cloud|claw)/.test(text)
-        || /open(cloud|claw)\W+.{0,80}(answers as|decides routing|routes owner|receives all owner|commands jarvis|commands ron|commands hermes|commands pi|commands paperclip)/.test(text)
+        || /(owner|jarvis|hermes|pi|paperclip|spaceagent)\W+.{0,80}(routes? through|via|before)\W+.{0,40}open(cloud|claw)/.test(text)
+        || /open(cloud|claw)\W+.{0,80}(answers as|decides routing|routes owner|receives all owner|commands jarvis|commands hermes|commands pi|commands paperclip)/.test(text)
         || /routes_through_open(cloud|claw)|before_open(cloud|claw)/.test(text)
       )
       return {

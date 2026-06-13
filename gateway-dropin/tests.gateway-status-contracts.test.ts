@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { statusForGatewayApiPath } from '../src/components/gateway/gateway-status-contracts'
+import { statusForGatewayApiPath } from './src/components/gateway/gateway-status-contracts'
 
 describe('statusForGatewayApiPath - standalone Gateway read-only status contracts', () => {
   it('reports Agent Zero as operational through exact-scope execution', () => {

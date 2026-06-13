@@ -19,6 +19,21 @@ const SERVICE_CONTROL_BLOCKED = {
   restart_started: false,
 }
 
+const DIRECT_GATEWAY_AGENT_ACCESS = {
+  gateway_access_enabled: true,
+  normal_chat_bridge_required: false,
+  gateway_tools_visible: true,
+  skills_visible: true,
+  mcp_visible: true,
+  models_visible: true,
+  gateway_runtime_visible: true,
+  hidden_intermediary_required: false,
+  dangerous_actions_require_scope: true,
+  exact_scope_execution_enabled: true,
+  broad_connector_execution_allowed: false,
+  credential_values_exposed: false,
+}
+
 function serviceDown(agentId: string, label: string, runtimeHint: string): GatewayStatusPayload {
   return {
     ok: false,
@@ -96,7 +111,7 @@ function connectorReadiness(): GatewayStatusPayload {
   return {
     ok: true,
     route: 'bridge.connector-readiness',
-    state: 'READY',
+    state: 'READ_ONLY',
     blocker_class: 'NONE',
     connectors,
     summary: {
@@ -114,21 +129,21 @@ function capabilityMatrix(): GatewayStatusPayload {
   const piStatus = piDispatcherStatus()
   const agents = [
     { id: 'agent-zero', status: 'operational_go', visible_to_gateway: true, visible_to_agent_zero: true, visible_to_PI: true, visible_to_agent_runtime: true, visible_to_runtime: true, read_allowed: true, write_allowed: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_no_secret_values', health: 'operational_go', exact_blocker: 'owner_hard_stops_only_remaining', blocker: 'owner_hard_stops_only_remaining' },
-    { id: 'pi', status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_names_only_no_secret_values', blocker: 'production_execution_requires_jarvis_concurrence' },
+    { id: 'pi', status: 'direct_gateway_agent_ready', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, dangerous_actions_require_scope: true, adapter_present: true, credential_policy: 'gateway_brokered_no_secret_values', blocker: null },
     { id: 'hermes', status: 'FULL_ACCESS_DELEGATED', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access_jarvis_delegated', blocker: 'jarvis_signed_exact_scope_delegation_required' },
-    { id: 'paperclip', status: 'ready_read_only', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: true, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'paperclip_auth_preserved_no_password_storage', blocker: 'paperclip_writes_bridge_gated' },
-    { id: 'spaceagent', status: 'partial', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: false, execution_allowed: false, bridge_required: true, adapter_present: true, credential_policy: 'playwright_local_only_firecrawl_credential_gated', blocker: 'no_standalone_spaceagent_ui' },
+    { id: 'paperclip', status: 'direct_gateway_workforce_ready', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, dangerous_actions_require_scope: true, adapter_present: true, credential_policy: 'paperclip_auth_preserved_no_password_storage', blocker: 'paperclip_writes_exact_scope_required' },
+    { id: 'spaceagent', status: 'direct_gateway_research_agent_ready', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, can_open_ui: true, execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, dangerous_actions_require_scope: true, adapter_present: true, credential_policy: 'playwright_local_only_firecrawl_credential_gated', blocker: 'browser_actions_exact_scope_required' },
     { id: 'openclaw-plus', status: 'partial', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: false, can_open_ui: true, execution_allowed: false, bridge_required: true, adapter_present: false, credential_policy: 'owner_tunnel_only_no_public_exposure', blocker: 'openclaw_doctor_runtime_not_reachable' },
   ]
 
   return {
     ok: true,
     route: 'bridge.capability-matrix',
-    state: 'READY',
+    state: 'READ_ONLY',
     blocker_class: 'NONE',
     agents,
     connectors: connectorReadiness().connectors,
-    pi_gateway_agent: piStatus,
+    pi_dispatcher: piStatus,
     pi_visibility_contract: piStatus.visibility_contract,
     ...SAFE_READ_ONLY,
     next_action: 'Use /gateway/tools for the owner UI wrapper. This API remains machine-readable and never executes protected actions.',
@@ -137,12 +152,12 @@ function capabilityMatrix(): GatewayStatusPayload {
 
 function piVisibilityContract() {
   return [
-    { id: 'provider_registry', label: 'Provider registry', endpoint: '/api/bridge/providers', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'gateway_brokered_names_only_no_secret_values', health: 'full_access' },
-    { id: 'capability_matrix', label: 'Capability matrix', endpoint: '/api/bridge/capability-matrix', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'not_required_for_read_only_inventory', health: 'full_access' },
-    { id: 'mcp_health', label: 'MCP health', endpoint: '/api/bridge/mcp-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'no_direct_secret_access', health: 'full_access_or_degraded' },
-    { id: 'agent_roster', label: 'Agent roster', endpoint: '/api/agents', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_roster', health: 'full_access' },
-    { id: 'bridge_readiness', label: 'Bridge readiness', endpoint: '/api/bridge/approval-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'owner_approval_required_for_mutations', health: 'full_access' },
-    { id: 'skills_tools_inventory', label: 'Skills/tools inventory', endpoint: '/api/skills', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: true, bridge_required: true, adapter_present: true, credential_policy: 'install_mutation_owner_gated', health: 'full_access' },
+    { id: 'provider_registry', label: 'Provider registry', endpoint: '/api/bridge/providers', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'names_only_no_secret_values', health: 'read_only' },
+    { id: 'capability_matrix', label: 'Capability matrix', endpoint: '/api/bridge/capability-matrix', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_inventory', health: 'read_only' },
+    { id: 'mcp_health', label: 'MCP health', endpoint: '/api/bridge/mcp-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'no_direct_secret_access', health: 'read_only_or_degraded' },
+    { id: 'agent_roster', label: 'Agent roster', endpoint: '/api/agents', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'not_required_for_read_only_roster', health: 'read_only' },
+    { id: 'bridge_readiness', label: 'Approval readiness', endpoint: '/api/bridge/approval-readiness', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'owner_approval_required_for_mutations', health: 'read_only' },
+    { id: 'skills_tools_inventory', label: 'Skills/tools inventory', endpoint: '/api/skills', visible_to_gateway: true, visible_to_PI: true, visible_to_agent_runtime: true, execution_allowed: false, bridge_required: false, adapter_present: true, credential_policy: 'install_mutation_owner_gated', health: 'read_only' },
   ]
 }
 
@@ -151,17 +166,16 @@ function piDispatcherStatus(): GatewayStatusPayload {
   return {
     ok: true,
     route: 'bridge.pi.status',
-    state: 'READY',
+    state: 'DIRECT_GATEWAY_READY',
     blocker_class: 'NONE',
     agent_id: 'pi',
     label: 'Pi',
-    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
-    role: 'Full Access Gateway Agent',
-    runtime_status: 'direct_gateway_pipeline_registered',
-    runtime_blocker: 'production_execution_requires_jarvis_concurrence',
-    exact_blocker: 'production_execution_requires_jarvis_concurrence',
+    status: 'DIRECT GATEWAY PIPELINE - EXACT-SCOPE ACTIONS GUARDED',
+    role: 'Gateway direct-line specialist agent',
+    runtime_status: 'direct_gateway_agent_ready',
+    runtime_blocker: null,
+    exact_blocker: null,
     visibility_contract: visibility,
-    pi_visibility_contract: visibility,
     inventory_summary: {
       visible_to_gateway: visibility.filter((item) => item.visible_to_gateway).length,
       visible_to_PI: visibility.filter((item) => item.visible_to_PI).length,
@@ -170,28 +184,29 @@ function piDispatcherStatus(): GatewayStatusPayload {
       bridge_required: visibility.filter((item) => item.bridge_required).length,
       adapter_present: visibility.filter((item) => item.adapter_present).length,
     },
-    pi_full_access_contract: {
-      no_write_route_selection: false,
-      execution_enabled: true,
-      writes_enabled: true,
-      protected_execution_enabled: true,
+    pi_direct_gateway_contract: {
+      normal_chat_bridge_required: false,
+      gateway_tools_visible: true,
+      skills_visible: true,
+      mcp_visible: true,
+      models_visible: true,
+      gateway_runtime_visible: true,
+      dangerous_actions_require_scope: true,
+      exact_scope_execution_enabled: true,
+      writes_enabled: false,
+      protected_execution_enabled: false,
       approval_request_created: false,
       audit_record_written: false,
       credential_values_exposed: false,
       fake_success_allowed: false,
-      go_claim_allowed: true,
-      no_go_claim: false,
-      rollback_command: 'revert Pi to Gateway-brokered read-only mode and restart mission-control.service',
+      go_claim_allowed: false,
+      no_go_claim: true,
+      rollback_command: 'disable Pi direct-line Gateway route and return to read-only dispatcher copy',
     },
     ...SAFE_READ_ONLY,
     ...SERVICE_CONTROL_BLOCKED,
-    execution_enabled: true,
-    writes_enabled: true,
-    protected_execution_enabled: true,
-    go_claim_allowed: true,
-    no_go_claim: false,
-    can_open_ui: true,
-    next_action: 'Pi has direct Gateway pipeline access to tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests. Production-impacting execution remains Jarvis-gated.',
+    ...DIRECT_GATEWAY_AGENT_ACCESS,
+    next_action: 'Pi has a direct Gateway line for normal chat, tools, skills, MCP, and model visibility. Dangerous writes or external execution still require exact Gateway scope and approval.',
   }
 }
 
@@ -209,7 +224,7 @@ function runtimeServices(): GatewayStatusPayload {
       route: 'hermes.status',
       agent_id: 'hermes',
       label: 'Ron Weasley',
-      state: 'READ_ONLY',
+      state: 'DIRECT_GATEWAY_READY',
       blocker_class: 'NONE',
       local_bind_address: '127.0.0.1',
       local_port: '3000',
@@ -228,23 +243,25 @@ function runtimeServices(): GatewayStatusPayload {
       local_bind_address: '127.0.0.1',
       local_port: '8931',
       playwright_mcp_status: 'live_local_only',
-      owner_access_blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript',
+      owner_access_blocker: 'browser_actions_exact_scope_required; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript',
       ...SAFE_READ_ONLY,
       ...SERVICE_CONTROL_BLOCKED,
-      next_action: 'Keep Playwright MCP local-only and expose SpaceAgent status/config through Mission Control.',
+      ...DIRECT_GATEWAY_AGENT_ACCESS,
+      next_action: 'SpaceAgent has a direct Gateway line for normal chat, tools, skills, MCP, model, and research visibility. Browser actions and crawls remain exact-scope guarded.',
     },
     {
       ok: true,
       route: 'bridge.dispatcher.status',
       agent_id: 'pi',
       label: 'Pi',
-      state: 'READY',
+      state: 'DIRECT_GATEWAY_READY',
       blocker_class: 'NONE',
-      runtime_mode: 'full_access_gateway_pipeline',
+      runtime_mode: 'direct_gateway_agent',
       ...SAFE_READ_ONLY,
       ...SERVICE_CONTROL_BLOCKED,
-      owner_access_blocker: 'production_execution_requires_jarvis_concurrence',
-      next_action: 'Pi is configured through Mission Control UI and direct Nuclear Gateway pipeline; production execution remains Jarvis-gated.',
+      ...DIRECT_GATEWAY_AGENT_ACCESS,
+      owner_access_blocker: null,
+      next_action: 'Pi routes directly through Gateway for normal chat and capability visibility; dangerous actions require exact scopes.',
     },
   ]
 
@@ -291,46 +308,34 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
   const issuesUrl = 'http://100.116.35.95:3100/ECO/issues'
   const companies = [
     {
-      name: 'To Knowledge Gateway',
-      issue_prefix: 'TOK',
-      route_prefix: 'TKG',
-      access: 'owner_accessible',
-      active_user_members: 2,
-      agents: 10,
-      issues: 0,
-    },
-    {
       name: 'E copier Solutions',
       issue_prefix: 'ECO',
-      route_prefix: 'ECO',
       access: 'owner_accessible',
-      active_user_members: 2,
-      agents: 7,
-      issues: 38,
+      active_user_members: 3,
+      agents: 2,
+      issues: 6,
     },
     {
-      name: 'E copier ITT',
-      issue_prefix: 'ECOA',
-      route_prefix: 'ITT',
-      access: 'owner_accessible',
-      active_user_members: 1,
-      agents: 2,
-      issues: 31,
+      name: 'To Knowledge Gateway',
+      issue_prefix: 'TOK',
+      access: 'legacy_membership_warning',
+      active_user_members: 11,
+      agents: 10,
+      issues: 0,
+      blocker: 'tok_owner_membership_not_repaired',
     },
   ]
   const items = resource === 'companies'
     ? companies
     : resource === 'agents'
       ? [
-        { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 10, state: 'read_only_visible' },
-        { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 7, state: 'read_only_visible' },
-        { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 2, state: 'read_only_visible' },
+        { company: 'E copier Solutions', issue_prefix: 'ECO', count: 2, state: 'read_only_visible' },
+        { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 10, state: 'blocked_for_owner_until_membership_repair' },
       ]
       : resource === 'issues'
         ? [
-          { company: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG', count: 0, state: 'read_only_visible' },
-          { company: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO', count: 38, state: 'read_only_visible' },
-          { company: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT', count: 31, state: 'read_only_visible' },
+          { company: 'E copier Solutions', issue_prefix: 'ECO', count: 6, state: 'read_only_visible' },
+          { company: 'To Knowledge Gateway', issue_prefix: 'TOK', count: 0, state: 'blocked_for_owner_until_membership_repair' },
         ]
         : []
   return {
@@ -347,7 +352,7 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
     bridge_read_status: 'read_only_live',
     write_status: 'bridge_gated',
     exact_blocker: 'paperclip_writes_bridge_gated',
-    active_company: companies.find((company) => company.issue_prefix === 'ECO') || companies[0],
+    active_company: companies[0],
     legacy_company_warning: 'Workspace truth now drives owner-visible Paperclip launches. Blocked or mismatched workspaces must show disabled reasons instead of silently routing to ECO.',
     service_process: 'paperclip-lab dev runner (node/tsx)',
     paperclip_sandbox_service_not_running: false,
@@ -366,17 +371,6 @@ function paperclipBridge(resource: string): GatewayStatusPayload {
       bootstrap_invite_active: false,
     },
     items,
-    expected_workspaces: [
-      { name: 'To Knowledge Gateway', issue_prefix: 'TOK', route_prefix: 'TKG' },
-      { name: 'E copier Solutions', issue_prefix: 'ECO', route_prefix: 'ECO' },
-      { name: 'E copier ITT', issue_prefix: 'ECOA', route_prefix: 'ITT' },
-    ],
-    expected_workspaces_ready: true,
-    workspace_route_aliases: [
-      { issue_prefix: 'TOK', route_prefix: 'TKG', aliases: ['TKG', 'TOK'] },
-      { issue_prefix: 'ECO', route_prefix: 'ECO', aliases: ['ECO'] },
-      { issue_prefix: 'ECOA', route_prefix: 'ITT', aliases: ['E Copier ITT', 'eCoppier ITT', 'ITT', 'ECOA'] },
-    ],
     company_data_enabled: true,
     gateway_inventory: paperclipGatewayInventory().gateway_inventory,
     gateway_inventory_endpoint: '/api/bridge/paperclip/gateway-inventory',
@@ -471,9 +465,9 @@ function agentLocalInterfaces(): GatewayStatusPayload {
     agents: [
       { name: 'Agent Zero (Jarvis)', status: 'operational_go_exact_scope_execution_certified', tailnet_url: 'http://100.116.35.95:50080/', mission_control_route: '/api/bridge/agent-zero/status', blocker: 'owner_hard_stops_only_remaining' },
       { name: 'Ron Weasley', status: 'FULL_ACCESS_DELEGATED', local_url: 'http://127.0.0.1:8787/', mission_control_route: '/api/bridge/hermes/webui/status', blocker: 'jarvis_signed_exact_scope_delegation_required; hermes_webui_service_not_running_if_8787_unreachable' },
-      { name: 'Pi', status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE', mission_control_route: '/api/bridge/pi/status', blocker: 'production_execution_requires_jarvis_concurrence' },
-      { name: 'SpaceAgent', status: 'partial_mission_control_panel_only_youtube_transcript_ready', mission_control_route: '/api/bridge/space-agent/status', blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript' },
-      { name: 'Paperclip', status: 'installed_ready_writes_bridge_gated', tailnet_url: 'workspace_selector:/gateway/agent-hub/paperclip/status', mission_control_route: '/api/bridge/paperclip/workspace-truth', blocker: 'paperclip_writes_bridge_gated' },
+      { name: 'Pi', status: 'direct_gateway_agent_ready', mission_control_route: '/api/bridge/pi/status', blocker: null },
+      { name: 'SpaceAgent', status: 'direct_gateway_research_agent_ready', mission_control_route: '/api/bridge/space-agent/status', blocker: 'browser_actions_exact_scope_required; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript' },
+      { name: 'Paperclip', status: 'direct_gateway_workforce_ready_writes_exact_scope_guarded', tailnet_url: 'workspace_selector:/gateway/agent-hub/paperclip/status', mission_control_route: '/api/bridge/paperclip/workspace-truth', blocker: 'paperclip_writes_exact_scope_required' },
       { name: 'OpenClaw+', status: 'tunnel_live_doctor_cli_blocked', owner_tunnel_url: 'http://127.0.0.1:18789/', mission_control_route: '/api/openclaw-plus/status', blocker: 'openclaw_doctor_runtime_not_reachable' },
     ],
     ...SAFE_READ_ONLY,
@@ -622,6 +616,7 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
     case 'bridge/paperclip/agents':
     case 'bridge/paperclip/issues':
       return paperclipBridge(key.split('/').at(-1) || 'status')
+    case 'spaceagent/status':
     case 'bridge/space-agent/status':
       return (runtimeServices().services as GatewayStatusPayload[])[3]
     case 'bridge/space-agent/playwright-mcp/status':
@@ -660,11 +655,11 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
         ...piDispatcherStatus(),
         route: 'bridge.dispatcher.status',
         dispatcher_registry: [
-          { id: 'pi', state: 'READY', execution_allowed: true, bridge_required: true, blocker: 'production_execution_requires_jarvis_concurrence' },
-          { id: 'paperclip', state: 'READ_ONLY', execution_allowed: false, bridge_required: true, blocker: 'paperclip_writes_bridge_gated' },
-          { id: 'agent-zero', state: 'OPERATIONAL_GO', execution_allowed: true, bridge_required: true, blocker: 'owner_hard_stops_only_remaining' },
-          { id: 'hermes', state: 'FULL_ACCESS_DELEGATED', execution_allowed: true, bridge_required: true, blocker: 'jarvis_signed_exact_scope_delegation_required' },
-          { id: 'spaceagent', state: 'READ_ONLY', execution_allowed: false, bridge_required: true, blocker: 'no_standalone_spaceagent_ui' },
+          { id: 'pi', state: 'DIRECT_GATEWAY_READY', execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, blocker: null },
+          { id: 'paperclip', state: 'DIRECT_GATEWAY_WORKFORCE_READY', execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, blocker: 'paperclip_writes_exact_scope_required' },
+          { id: 'agent-zero', state: 'OPERATIONAL_GO', execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, blocker: 'owner_hard_stops_only_remaining' },
+          { id: 'hermes', state: 'FULL_ACCESS_DELEGATED', execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, blocker: 'jarvis_signed_exact_scope_delegation_required_for_major_changes' },
+          { id: 'spaceagent', state: 'DIRECT_GATEWAY_RESEARCH_AGENT_READY', execution_allowed: true, bridge_required: false, normal_chat_bridge_required: false, blocker: 'browser_actions_exact_scope_required' },
         ],
       }
     case 'bridge/runtime-services':

@@ -15,8 +15,6 @@ describe('Universal direct agent routing lines', () => {
     const lines = status.by_id
 
     expect(status.opencloud_demoted_to_supporting_runtime).toBe(true)
-    expect(status.openclaw_demoted_to_supporting_runtime).toBe(true)
-    expect(status.gateway_architecture).toBe('owner_to_mission_control_to_nuclear_gateway_to_direct_agent_line')
     expect(status.no_secrets_exposed).toBe(true)
     expect(status.project_continues).toBe(true)
     expect(status.generated_at).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/))
@@ -28,17 +26,16 @@ describe('Universal direct agent routing lines', () => {
       gateway_route: '/api/bridge/agent-zero/*',
       opencloud_allowed_role: 'supporting_tool_only',
     })
-    expect(lines['ron-weasley']).toMatchObject({
+    expect(lines.hermes).toMatchObject({
       direct_line_active: true,
       conversation_owner: 'ron-weasley',
       reports_to: 'agent-zero-jarvis',
       gateway_route: '/api/bridge/hermes/*',
-      legacy_names: ['Hermes', 'Hermans'],
     })
     expect(lines.pi).toMatchObject({
       direct_line_active: true,
       conversation_owner: 'pi',
-      execution_policy: 'full_brokered_gateway_access_jarvis_gated_for_production',
+      execution_policy: 'direct_gateway_agent_exact_scope_for_dangerous_actions',
     })
     expect(lines.paperclip).toMatchObject({
       direct_line_active: true,
@@ -49,7 +46,7 @@ describe('Universal direct agent routing lines', () => {
       direct_line_active: true,
       conversation_owner: 'spaceagent',
     })
-    expect(lines.openclaw).toMatchObject({
+    expect(lines.opencloud).toMatchObject({
       system_type: 'supporting_runtime_system',
       direct_line_active: false,
       conversation_owner: 'none',
@@ -59,7 +56,48 @@ describe('Universal direct agent routing lines', () => {
     })
   })
 
-  it('gives Paperclip company agents and Ron mini-agents scoped direct lines', () => {
+  it('gives Pi, SpaceAgent, and Paperclip the same normal-chat Gateway access contract as Jarvis and Hermes', () => {
+    const status = buildAgentRoutingLinesStatus()
+    const directAgents = [
+      status.by_id['agent-zero-jarvis'],
+      status.by_id.hermes,
+      status.by_id.pi,
+      status.by_id.spaceagent,
+      status.by_id.paperclip,
+    ]
+
+    for (const line of directAgents) {
+      expect(line).toMatchObject({
+        direct_line_active: true,
+        normal_chat_bridge_required: false,
+        gateway_tools_visible: true,
+        skills_visible: true,
+        mcp_visible: true,
+        models_visible: true,
+        gateway_runtime_visible: true,
+        hidden_intermediary_required: false,
+        dangerous_actions_require_scope: true,
+        credential_values_exposed: false,
+      })
+      expect(line.forbidden_intermediaries).toEqual(expect.arrayContaining(['opencloud', 'openclaw', 'claudeclaw']))
+    }
+
+    expect(status.normal_chat_bridge_required).toBe(false)
+    expect(status.dangerous_actions_require_scope).toBe(true)
+    expect(status.by_id.pi).toMatchObject({
+      system_type: 'specialist_agent_system',
+      display_name: 'Pi',
+      execution_policy: 'direct_gateway_agent_exact_scope_for_dangerous_actions',
+    })
+    expect(status.by_id.spaceagent).toMatchObject({
+      execution_policy: 'direct_gateway_research_agent_exact_scope_for_browser_actions',
+    })
+    expect(status.by_id.paperclip).toMatchObject({
+      execution_policy: 'direct_gateway_workforce_agent_exact_scope_for_writes',
+    })
+  })
+
+  it('gives Paperclip company agents and Hermes mini-agents scoped direct lines', () => {
     const ids = listAgentRoutingLines().map((line) => line.agent_id)
 
     expect(ids).toEqual(expect.arrayContaining([
@@ -71,9 +109,9 @@ describe('Universal direct agent routing lines', () => {
       'paperclip.eco.social-coordinator',
       'paperclip.eco.video-producer',
       'paperclip.pacman-cybersecurity.ceo',
-      'ron-mini-agent.researcher',
-      'ron-mini-agent.classifier',
-      'ron-mini-agent.workflow-drafter',
+      'hermes-mini-agent.researcher',
+      'hermes-mini-agent.classifier',
+      'hermes-mini-agent.workflow-drafter',
       'memory-approvals',
     ]))
 
@@ -93,19 +131,16 @@ describe('Universal direct agent routing lines', () => {
       blocker: null,
     })
     expect(resolveAgentRoutingLine('hermes-mini-agent.researcher')).toMatchObject({
-      agent_id: 'ron-mini-agent.researcher',
-      reports_to: 'ron-weasley',
-      execution_policy: 'parent_ron_final_authority_agent_zero_no_secrets_no_production_writes',
+      reports_to: 'hermes',
+      execution_policy: 'parent_hermes_final_authority_agent_zero_no_secrets_no_production_writes',
     })
   })
 
   it('resolves human-friendly aliases for Brain, Build-Wiki, tools, and providers', () => {
-    expect(resolveAgentRoutingLine('ron')).toMatchObject({ agent_id: 'ron-weasley' })
-    expect(resolveAgentRoutingLine('ron-weasley')).toMatchObject({ agent_id: 'ron-weasley' })
-    expect(resolveAgentRoutingLine('Ron Weasley')).toMatchObject({ agent_id: 'ron-weasley' })
-    expect(resolveAgentRoutingLine('hermes')).toMatchObject({ agent_id: 'ron-weasley' })
-    expect(resolveAgentRoutingLine('brain-bridge')).toMatchObject({ agent_id: 'brain-bridge' })
-    expect(resolveAgentRoutingLine('brain-sync')).toMatchObject({ agent_id: 'brain-bridge' })
+    expect(resolveAgentRoutingLine('ron')).toMatchObject({ agent_id: 'hermes' })
+    expect(resolveAgentRoutingLine('ron-weasley')).toMatchObject({ agent_id: 'hermes' })
+    expect(resolveAgentRoutingLine('Ron Weasley')).toMatchObject({ agent_id: 'hermes' })
+    expect(resolveAgentRoutingLine('brain-bridge')).toMatchObject({ agent_id: 'brain-sync' })
     expect(resolveAgentRoutingLine('buildwiki')).toMatchObject({ agent_id: 'build-wiki-farmer' })
     expect(resolveAgentRoutingLine('farmer')).toMatchObject({ agent_id: 'build-wiki-farmer' })
     expect(resolveAgentRoutingLine('memory-approval')).toMatchObject({ agent_id: 'memory-approvals' })
@@ -123,7 +158,7 @@ describe('Universal direct agent routing lines', () => {
       conversation_owner: 'agent-zero-jarvis',
     })
     expect(resolveAgentRoutingLine('openclaw')).toMatchObject({
-      agent_id: 'openclaw',
+      agent_id: 'opencloud',
       direct_line_active: false,
       conversation_owner: 'none',
     })
@@ -146,10 +181,10 @@ describe('Universal direct agent routing lines', () => {
 
     expect(envelope).toMatchObject({
       source_channel: 'telegram',
-      target_agent: 'ron-weasley',
+      target_agent: 'hermes',
       conversation_owner: 'ron-weasley',
       direct_line_used: true,
-      route_trace: ['owner', 'mission-control', 'nuclear-gateway', 'ron-weasley'],
+      route_trace: ['owner', 'mission_control_gateway', 'hermes'],
       intermediaries: [],
       opencloud_used: false,
       opencloud_role: 'not_used',
@@ -166,31 +201,27 @@ describe('Universal direct agent routing lines', () => {
 
     expect(buildAgentMessageEnvelope({ message: 'status' }, ecoCeo).route_trace).toEqual([
       'owner',
-      'mission-control',
-      'nuclear-gateway',
+      'mission_control_gateway',
       'paperclip',
       'paperclip.company.eco',
       'paperclip.eco.ceo',
     ])
     expect(buildAgentMessageEnvelope({ message: 'status' }, miniAgent).route_trace).toEqual([
       'owner',
-      'mission-control',
-      'nuclear-gateway',
-      'ron-weasley',
-      'ron-mini-agent.researcher',
+      'mission_control_gateway',
+      'hermes',
+      'hermes-mini-agent.researcher',
     ])
     expect(buildAgentMessageEnvelope({ message: 'status' }, obsidian).route_trace).toEqual([
       'owner',
-      'mission-control',
-      'nuclear-gateway',
-      'brain-bridge',
+      'mission_control_gateway',
+      'brain-sync',
       'obsidian',
     ])
     expect(buildAgentMessageEnvelope({ message: 'status' }, hermesWebui).route_trace).toEqual([
       'owner',
-      'mission-control',
-      'nuclear-gateway',
-      'ron-weasley',
+      'mission_control_gateway',
+      'hermes',
       'hermes-webui',
     ])
   })
@@ -207,10 +238,10 @@ describe('Universal direct agent routing lines', () => {
       route: 'bridge.agent-routing.send',
       mode: 'direct_agent_line_envelope_recorded',
       envelope: {
-        target_agent: 'ron-weasley',
+        target_agent: 'hermes',
         conversation_owner: 'ron-weasley',
         direct_line_used: true,
-        route_trace: ['owner', 'mission-control', 'nuclear-gateway', 'ron-weasley'],
+        route_trace: ['owner', 'mission_control_gateway', 'hermes'],
         intermediaries: [],
         opencloud_used: false,
       },
@@ -273,7 +304,7 @@ describe('Universal direct agent routing lines', () => {
       ok: false,
       exact_blocker: 'hidden_intermediary_forbidden',
       envelope: {
-        target_agent: 'ron-weasley',
+        target_agent: 'hermes',
         conversation_owner: 'ron-weasley',
         direct_line_used: false,
         intermediaries: ['legacy-transport-layer'],
@@ -332,7 +363,7 @@ describe('Universal direct agent routing lines', () => {
     expect(explicitToolCall).toMatchObject({
       ok: true,
       envelope: {
-        target_agent: 'ron-weasley',
+        target_agent: 'hermes',
         direct_line_used: true,
         intermediaries: [],
         tools_called: ['openclaw'],

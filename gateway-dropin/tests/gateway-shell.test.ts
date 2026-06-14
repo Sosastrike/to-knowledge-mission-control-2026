@@ -432,7 +432,7 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
       enabled: true,
       href: '/gateway/agent-hub/ron/config',
     })
-    expect(byName.get('PI Dispatcher')?.buttons.config).toMatchObject({
+    expect(byName.get('Pi')?.buttons.config).toMatchObject({
       enabled: true,
       href: '/gateway/agent-hub/pi/config',
     })
@@ -462,7 +462,7 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
   it('exposes Pi, SpaceAgent, and Paperclip owner localhost/UI surfaces instead of disabled status-only rows', () => {
     const byName = new Map(AGENT_INTERFACE_LINKS.map((row) => [row.name, row]))
 
-    expect(byName.get('PI Dispatcher')).toMatchObject({
+    expect(byName.get('Pi')).toMatchObject({
       localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
       tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
       buttons: {
@@ -495,9 +495,9 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     expect(byName.get('Agent Zero')?.blocker).toContain('owner_hard_stops_only_remaining')
     expect(byName.get('Ron Weasley')?.status).toContain('FULL_ACCESS_DELEGATED')
     expect(byName.get('Ron Weasley')?.blocker).toContain('standalone_hermes_webui_proxy_required_if_8787_unreachable')
-    expect(byName.get('PI Dispatcher')?.status).toContain('READ_ONLY / DISPATCHER REGISTERED')
-    expect(byName.get('PI Dispatcher')?.blocker).toContain('protected_execution_requires_owner_scope')
-    expect(byName.get('SpaceAgent')?.status).toContain('Mission Control UI ready')
+    expect(byName.get('Pi')?.status).toContain('advisory')
+    expect(byName.get('Pi')?.blocker).toContain('pi_runtime_session_not_proven')
+    expect(byName.get('SpaceAgent')?.status).toContain('Mission Control panel only')
     expect(byName.get('SpaceAgent')?.blocker).toContain('interactive_browser_actions_require_bridge_session')
     expect(byName.get('Paperclip')?.status).toContain('INSTALLED / READY')
     expect(byName.get('Paperclip')?.blocker).toContain('paperclip_writes_bridge_gated')

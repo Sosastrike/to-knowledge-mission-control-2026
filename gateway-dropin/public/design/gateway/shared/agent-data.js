@@ -112,7 +112,7 @@ window.AGENTS = (function () {
       models: ['claude-haiku-4-5', 'gpt-5-mini'],
       tools: ['firecrawl', 'playwright-mcp', 'youtube-api', 'browser-headless'],
       blocked_reason: null,
-      gated_reason: 'SpaceAgent owner UI is available through Mission Control. Firecrawl and YouTube remain Gateway-gated tools; interactive browser actions require exact-scope approval.',
+      gated_reason: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Browser, Firecrawl, Playwright MCP, and YouTube research. Read-only by design. Playwright MCP is a tool — SpaceAgent is the agent.'
     },
@@ -123,13 +123,12 @@ window.AGENTS = (function () {
       role: 'Dispatcher · Route Optimizer',
       tagline: 'Read-only dispatcher. Sees Gateway inventory and recommends routes without execution.',
       status: 'blue',
-      status_label: 'READ-ONLY / DISPATCHER REGISTERED - OWNER UI READY',
+      status_label: 'READ-ONLY / DISPATCHER REGISTERED',
       marker: 'orange',
       kind: 'dispatcher',
       bridge: false,
       R: true, W: false, X: false,
-      localhost: 'Mission Control Pi panel: /gateway/agent-hub/pi/config',
-      ui_url: '/gateway/agent-hub/pi/config',
+      localhost: 'Mission Control advisory panel only',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
@@ -138,7 +137,7 @@ window.AGENTS = (function () {
       models: ['claude-haiku-4-5'],
       tools: ['provider-registry:read', 'capability-matrix:read', 'mcp-health:read', 'agent-roster:read', 'bridge-readiness:read', 'skills-inventory:read'],
       blocked_reason: null,
-      gated_reason: 'PI can read Gateway inventory and open the Mission Control owner UI. Execution and writes remain disabled unless a separate exact-scope approval exists.',
+      gated_reason: 'pi_runtime_session_not_proven. PI can read Gateway inventory, but execution and writes are disabled unless Bridge approves a future protected action.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
       summary: 'Dispatcher/control-plane recommender. Reads Gateway capability inventory and routes work conceptually; no protected execution.'
     }
@@ -230,7 +229,7 @@ window.AGENTS = (function () {
       working_set: ['Bootstrap workforce ledger', 'First co-worker registration'],
       co_workers: 0, tasks: 0, work_products: 0
     },
-    'space-agent': { working_set: ['Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'Mission Control panel only; no standalone SpaceAgent UI.' },
+    'space-agent': { working_set: ['SpaceAgent owner UI link', 'Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'SpaceAgent opens through Mission Control; Playwright MCP remains a local-only tool.' },
     'pi-mono': { working_set: ['Engine cost table cache (5m TTL)'], routes_observed: 27 }
   };
 

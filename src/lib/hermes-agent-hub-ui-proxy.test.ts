@@ -68,7 +68,7 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
   it('exposes Pi, SpaceAgent, and Paperclip through owner-openable Mission Control localhost surfaces', () => {
     const byName = new Map(AGENT_INTERFACE_LINKS.map((agent) => [agent.name, agent]))
 
-    expect(byName.get('PI Dispatcher')).toMatchObject({
+    expect(byName.get('Pi')).toMatchObject({
       localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
       tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
       buttons: {

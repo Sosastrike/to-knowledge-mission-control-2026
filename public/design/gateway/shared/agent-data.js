@@ -95,12 +95,10 @@ window.AGENTS = (function () {
 
     {
       id: 'space-agent',
-      canonical_id: 'spaceagent',
       name: 'SpaceAgent',
       role: 'Browser · Firecrawl · Playwright MCP · YouTube research',
       tagline: 'Web research specialist. Uses Playwright MCP through Gateway policy.',
       status: 'yellow',                // partial: Mission Control panel only
-      status_label: 'PARTIAL / OWNER UI READY',
       marker: 'orange',
       kind: 'specialist',
       bridge: true,
@@ -115,35 +113,35 @@ window.AGENTS = (function () {
       models: ['claude-haiku-4-5', 'gpt-5-mini'],
       tools: ['firecrawl', 'playwright-mcp', 'youtube-api', 'browser-headless'],
       blocked_reason: null,
-      gated_reason: 'SpaceAgent owner UI is available through Mission Control. Firecrawl and YouTube remain Gateway-gated tools; interactive browser actions require exact-scope approval.',
+      gated_reason: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_connector_not_proven.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Browser, Firecrawl, Playwright MCP, and YouTube research. Read-only by design. Playwright MCP is a tool; use the Mission Control panel for owner access.'
+      summary: 'Browser, Firecrawl, Playwright MCP, and YouTube research. Read-only by design. Playwright MCP is a tool — SpaceAgent is the agent.'
     },
 
     {
       id: 'pi-mono',
-      name: 'PI Dispatcher',
-      role: 'Dispatcher · Route Optimizer',
-      tagline: 'Read-only dispatcher. Sees Gateway inventory and recommends routes without execution.',
-      status: 'blue',
-      status_label: 'READ-ONLY / DISPATCHER REGISTERED - OWNER UI READY',
+      name: 'Pi',
+      role: 'Full Access Gateway Agent',
+      tagline: 'Direct Gateway pipeline agent with brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests.',
+      status: 'green',
+      status_label: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
       marker: 'orange',
-      kind: 'dispatcher',
-      bridge: false,
-      R: true, W: false, X: false,
+      kind: 'gateway-agent',
+      bridge: true,
+      R: true, W: true, X: true,
       localhost: 'Mission Control Pi panel: /gateway/agent-hub/pi/config',
       ui_url: '/gateway/agent-hub/pi/config',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
       repo_grounding: 'pending',
-      caps: ['route recommendation', 'cost estimate', 'engine pick', 'capability visibility', 'bridge readiness read'],
-      models: ['claude-haiku-4-5'],
-      tools: ['provider-registry:read', 'capability-matrix:read', 'mcp-health:read', 'agent-roster:read', 'bridge-readiness:read', 'skills-inventory:read'],
-      blocked_reason: null,
-      gated_reason: 'PI can read Gateway inventory and open the Mission Control owner UI. Execution and writes remain disabled unless a separate exact-scope approval exists.',
+      caps: ['gateway tools full access', 'skills full access', 'MCP registry full access', 'provider/model full access', 'Brain read', 'visible task events', 'pipeline requests', 'Jarvis concurrence requests'],
+      models: ['claude-haiku-4-5', 'gpt-5-mini', 'gateway-selected'],
+      tools: ['provider-registry:brokered', 'capability-matrix:brokered', 'mcp-health:brokered', 'agent-roster:brokered', 'bridge-readiness:brokered', 'skills-inventory:brokered', 'task-events:write-gated', 'pipeline:request'],
+      blocked_reason: 'production_execution_requires_jarvis_concurrence',
+      gated_reason: 'Pi has full brokered Gateway access. Production-impacting execution, external writes, and protected adapters require Jarvis concurrence, audit, rollback, and no raw secret exposure.',
       pulse: { req_per_min: 0, p95_ms: null, error_rate: 0 },
-      summary: 'Dispatcher/control-plane recommender. Reads Gateway capability inventory and routes work conceptually; no protected execution.'
+      summary: 'Full Access Gateway Agent. Pi is not a dispatcher and is not a hidden intermediary; Pi uses a direct Nuclear Gateway pipeline with Jarvis final authority for production execution.'
     }
   ];
 
@@ -233,7 +231,7 @@ window.AGENTS = (function () {
       working_set: ['Bootstrap workforce ledger', 'First co-worker registration'],
       co_workers: 0, tasks: 0, work_products: 0
     },
-    'space-agent': { working_set: ['SpaceAgent direct-line panel', 'Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript read-only route'], note: 'SpaceAgent opens through Mission Control; Playwright MCP, Firecrawl, and YouTube are tools, not the agent identity.' },
+    'space-agent': { working_set: ['SpaceAgent owner UI link', 'Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'SpaceAgent opens through Mission Control; Playwright MCP remains a local-only tool.' },
     'pi-mono': { working_set: ['Gateway tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests'], routes_observed: 27 }
   };
 
@@ -265,7 +263,7 @@ window.AGENTS = (function () {
     ],
     'paperclip':   [],
     'space-agent': [
-      { ts: '00:00:00', code: 'PRODUCTION_EXECUTION_GATED', target: 'SpaceAgent panel', detail: 'Mission Control SpaceAgent panel is configured; production execution requires Jarvis concurrence and interactive browser actions require Bridge Session.', retried: 0, resolved: false }
+      { ts: '00:00:00', code: 'NO_STANDALONE_UI', target: 'SpaceAgent panel', detail: 'Mission Control panel only; Playwright MCP remains local-only.', retried: 0, resolved: false }
     ],
     'pi-mono':     []
   };
@@ -389,17 +387,17 @@ window.AGENTS = (function () {
         },
         {
           id: 'youtube-research',
-          name: 'YouTube transcript',
+          name: 'YouTube research',
           role: 'transcript / metadata / summary / evidence packet',
-          status: 'blue',
-          installed: true,
-          endpoint: '/api/youtube/transcript',
-          auth: 'mission control session',
+          status: 'red',
+          installed: false,
+          endpoint: 'localhost only',
+          auth: 'youtube api key',
           requires_bridge: false,
           bridge_for_writes: false,
           last_job: null,
-          gated_reason: 'Read-only transcript route is available. Full video downloads and authenticated YouTube actions remain blocked until exact-scope proof exists.',
-          blocked_reason: null
+          gated_reason: null,
+          blocked_reason: 'youtube_transcript_connector_not_proven'
         }
       ],
       // safe owner buttons; UI-only in design — no live calls.

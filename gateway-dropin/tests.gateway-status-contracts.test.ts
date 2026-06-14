@@ -72,6 +72,7 @@ describe('statusForGatewayApiPath - standalone Gateway read-only status contract
     expect(missionControlAgents.map((agent) => agent.label)).toContain('Agent Zero (Jarvis)')
     expect(missionControlAgents.map((agent) => agent.label)).toContain('Paperclip')
     expect(missionControlAgents.map((agent) => agent.label)).toContain('PI Dispatcher')
+    expect(missionControlAgents.map((agent) => agent.label)).toContain('Hermes')
     expect(missionControlAgents.map((agent) => agent.label)).not.toContain('Developer')
     expect(missionControlAgents.map((agent) => agent.label)).not.toContain('Researcher')
     expect(missionControlAgents.map((agent) => agent.label)).not.toContain('Hacker')
@@ -103,17 +104,40 @@ describe('statusForGatewayApiPath - standalone Gateway read-only status contract
       service_control_enabled: false,
     })
     expect(statusForGatewayApiPath(['bridge', 'space-agent', 'status'])).toMatchObject({
-      state: 'DIRECT_GATEWAY_READY',
+      state: 'READ_ONLY',
       playwright_mcp_status: 'live_local_only',
-      normal_chat_bridge_required: false,
-      gateway_tools_visible: true,
       service_control_enabled: false,
     })
     expect(statusForGatewayApiPath(['spaceagent', 'status'])).toMatchObject({
-      state: 'DIRECT_GATEWAY_READY',
-      normal_chat_bridge_required: false,
+      state: 'READ_ONLY',
       service_control_enabled: false,
     })
+  })
+
+  it('exposes owner-openable Mission Control UI links for Pi, SpaceAgent, and Paperclip local interfaces', () => {
+    const status = statusForGatewayApiPath(['agent-local-interfaces'])
+
+    expect(status.agents).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: 'PI Dispatcher',
+        local_url: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
+        tailnet_url: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
+        mission_control_ui: '/gateway/agent-hub/pi/config',
+      }),
+      expect.objectContaining({
+        name: 'SpaceAgent',
+        local_url: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
+        tailnet_url: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
+        mission_control_ui: '/gateway/agent-hub/spaceagent/config',
+      }),
+      expect.objectContaining({
+        name: 'Paperclip',
+        local_url: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
+        tailnet_url: 'http://100.116.35.95:3100/ECO/dashboard',
+        mission_control_ui: '/gateway/agent-hub/paperclip/ui',
+      }),
+    ]))
+    expect(JSON.stringify(status)).not.toContain('workspace_selector:')
   })
 
   it('returns connector readiness without enabling external writes', () => {
@@ -233,24 +257,16 @@ describe('statusForGatewayApiPath - standalone Gateway read-only status contract
     expect(JSON.stringify(concierge)).toContain('not_configured_for_v1')
   })
 
-  it('registers Pi as a direct Gateway agent with exact-scope guards for dangerous actions', () => {
+  it('registers PI as a read-only dispatcher with owner UI access', () => {
     const pi = statusForGatewayApiPath(['bridge', 'pi', 'status'])
     expect(pi).toMatchObject({
       ok: true,
-      state: 'DIRECT_GATEWAY_READY',
+      state: 'READ_ONLY',
       agent_id: 'pi',
-      label: 'Pi',
-      runtime_blocker: null,
-      normal_chat_bridge_required: false,
-      gateway_tools_visible: true,
-      skills_visible: true,
-      mcp_visible: true,
-      models_visible: true,
-      gateway_runtime_visible: true,
-      dangerous_actions_require_scope: true,
-      exact_scope_execution_enabled: true,
+      label: 'PI Dispatcher',
+      runtime_blocker: 'protected_execution_requires_owner_scope',
       writes_enabled: false,
-      broad_connector_execution_allowed: false,
+      mission_control_ui: '/gateway/agent-hub/pi/config',
     })
     expect(Array.isArray(pi.visibility_contract)).toBe(true)
     expect(JSON.stringify(pi.visibility_contract)).toContain('visible_to_PI')
@@ -258,11 +274,11 @@ describe('statusForGatewayApiPath - standalone Gateway read-only status contract
 
     const matrix = statusForGatewayApiPath(['bridge', 'capability-matrix'])
     expect(JSON.stringify(matrix)).toContain('pi_visibility_contract')
-    expect(JSON.stringify(matrix)).toContain('direct_gateway_agent_ready')
+    expect(JSON.stringify(matrix)).toContain('read_only_dispatcher_owner_ui_ready')
     expect(JSON.stringify(matrix)).toContain('execution_readiness_matrix')
     expect(JSON.stringify(matrix)).toContain('visible_to_agent_zero')
     expect(JSON.stringify(matrix)).toContain('write_allowed')
-    expect(JSON.stringify(matrix)).not.toContain('pi_runtime_session_not_proven')
+    expect(JSON.stringify(matrix)).toContain('protected_execution_requires_owner_scope')
   })
 
   it('keeps PI recommendations read-only and handed off to Jarvis for protected execution', () => {

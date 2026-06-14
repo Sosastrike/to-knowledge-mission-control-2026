@@ -25,7 +25,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SyntheticEvent } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { attachGatewayActionHandler } from './gateway-actions'
+import { ZAPIER_GATEWAY_CARD_COPY } from '@/lib/zapier-approved-action-library'
+import { PAPERCLIP_ECO_DASHBOARD, PAPERCLIP_ECO_WINDOW_NAME, attachGatewayActionHandler } from './gateway-actions'
 
 // Mission Control root. Verified target on production 2026-05-11.
 const MISSION_CONTROL_HOME = '/'
@@ -82,6 +83,12 @@ const BY_ID = new Map(TABS.map((t) => [t.id, t]))
 const BY_SEG = new Map(TABS.map((t) => [t.seg, t]))
 const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
 
+function gatewayFrameSrcFor(t: Tab, q?: URLSearchParams | null): string {
+  const src = encodeURI(`${BASE}/design/gateway/${t.src}`)
+  if (t.id === 'overview' && q?.get('trace') === 'zapier') return `${src}?trace=zapier`
+  return src
+}
+
 type AgentAccessButton = {
   enabled: boolean
   href: string | null
@@ -107,12 +114,42 @@ type AgentInterfaceLink = {
   proxyRoute: string
   authRequired: true
   status: string
+  detail?: string
+  guardrail?: string
   blocker: string
   nextFix: string
   buttons: AgentAccessButtons
 }
 
 type AgentInterfacePanelMode = 'expanded' | 'collapsed'
+
+type PaperclipWorkspaceLaunch = {
+  workspace_name: string
+  issue_prefix: string | null
+  canonical_launch_url: string | null
+  open_enabled: boolean
+  disabled_reason: string | null
+}
+
+type PaperclipWorkspaceTruthPayload = {
+  ok?: boolean
+  generated_at?: string
+  live_workspace_names?: string[]
+  expected_owner_workspaces?: string[]
+  missing_expected_workspaces?: string[]
+  workspace_selector_required?: boolean
+  mismatch_detected?: boolean
+  hard_coded_eco_only?: false
+  selected_default_workspace?: string | null
+  workspace_launches?: PaperclipWorkspaceLaunch[]
+  execution_enabled?: false
+  writes_enabled?: false
+  credential_values_exposed?: false
+  no_secrets_exposed?: true
+  next_action?: string
+  blocker?: string
+  error?: string
+}
 
 const enabled = (href: string): AgentAccessButton => ({ enabled: true, href, blocker: '' })
 const disabled = (blocker: string): AgentAccessButton => ({ enabled: false, href: null, blocker })
@@ -131,9 +168,9 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     tailnetUrl: 'http://100.116.35.95:50080/',
     proxyRoute: '/api/agent-zero/status',
     authRequired: true,
-    status: 'partial · UI restored · fd guard pending',
-    blocker: 'agent_zero_fd_exhaustion_guard_pending · Owner UI, login, and /api/health recovered after an Agent Zero container restart; long-term file descriptor exhaustion guard is still pending.',
-    nextFix: 'Add an Agent Zero fd-leak guard/health monitor and keep /health, /status, and /api/status documented as absent unless the upstream app adds them.',
+    status: 'operational · exact-scope execution certified',
+    blocker: 'owner_hard_stops_only_remaining · Jarvis has an active owner Bridge Session and certified exact-scope execution adapters. Raw secrets, .env edits, public exposure, broad connector execution, and credential injection remain hard stops.',
+    nextFix: 'Continue the Jarvis Full GO adapter sprint through exact-scope routes with audit and rollback. Do not mark broad external connectors unlocked until their own adapter proof exists.',
     buttons: {
       ui: enabled('http://100.116.35.95:50080/'),
       config: enabled(agentControlRoute('agent-zero', 'config')),
@@ -145,16 +182,16 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   },
   {
     name: 'Hermes',
-    service: 'hermes-gateway.service',
-    localBind: '127.0.0.1',
-    port: '3000',
-    localUrl: 'server-local only: 127.0.0.1:3000',
+    service: 'Mission Control Hermes control plane',
+    localBind: 'Mission Control',
+    port: 'bridge',
+    localUrl: null,
     tailnetUrl: null,
-    proxyRoute: '/api/hermes/status',
+    proxyRoute: '/api/bridge/hermes/status',
     authRequired: true,
-    status: 'partial · service active · safe live adapter proven · owner proxy not wired',
-    blocker: 'hermes_owner_proxy_not_wired · Live server-local health on 127.0.0.1:3000; no safe Tailnet/proxy UI route yet.',
-    nextFix: 'Keep Hermes local-only and expose owner inspection through the Mission Control status/config panel.',
+    status: 'foundation ready · Nuclear Dispatcher command center',
+    blocker: 'jarvis_concurrence_required_for_major_changes · Hermes can observe, recommend, draft, and create internal plans. Jarvis remains final authority for execution.',
+    nextFix: 'Use /api/bridge/hermes/* for Hermes command-center status, capability maps, drafts, dispatch plans, and Jarvis concurrence requests.',
     buttons: {
       ui: disabled('Hermes binds to server localhost only; no safe owner Tailnet UI/proxy exists yet.'),
       config: enabled(agentControlRoute('hermes', 'config')),
@@ -165,22 +202,22 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
-    name: 'Pi',
+    name: 'PI Dispatcher',
     service: 'Mission Control dispatcher contract',
-    localBind: 'none',
-    port: 'none',
-    localUrl: null,
-    tailnetUrl: null,
-    proxyRoute: '/api/bridge/dispatcher/status',
+    localBind: 'Mission Control',
+    port: '3337',
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
+    tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
+    proxyRoute: '/api/bridge/pi/status',
     authRequired: true,
-    status: 'advisory · runtime not proven',
-    blocker: 'pi_runtime_session_not_proven · Advisory dispatcher contract only. No standalone Pi service/UI found.',
-    nextFix: 'Keep Pi advisory-only and show recommendations/blocked route reasons in Mission Control.',
+    status: 'READ_ONLY / DISPATCHER REGISTERED - OWNER UI READY',
+    blocker: 'production_execution_requires_jarvis_concurrence · Pi can use the Gateway UI and inventory; protected writes/execution remain exact-scope gated.',
+    nextFix: 'Open Pi through Mission Control at /gateway/agent-hub/pi/config.',
     buttons: {
-      ui: disabled('No standalone Pi UI/service has been found.'),
+      ui: enabled(agentControlRoute('pi', 'config')),
       config: enabled(agentControlRoute('pi', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
-      chat: disabled('Pi has no chat/runtime session; advisory mode only.'),
+      chat: enabled(agentControlRoute('pi', 'recommend')),
       tools: enabled(GATEWAY_TOOLS_ROUTE),
       health: enabled(agentControlRoute('pi', 'config')),
     },
@@ -188,17 +225,17 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   {
     name: 'SpaceAgent',
     service: 'Mission Control SpaceAgent contract; Playwright MCP local service',
-    localBind: '127.0.0.1',
-    port: '8931 via Playwright MCP',
-    localUrl: null,
-    tailnetUrl: null,
+    localBind: 'Mission Control + 127.0.0.1 Playwright MCP',
+    port: '3337; Playwright MCP 8931 local-only',
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
+    tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
     proxyRoute: '/api/bridge/space-agent/status',
     authRequired: true,
-    status: 'partial · Mission Control panel only · Playwright local-only',
-    blocker: 'no_standalone_spaceagent_ui · firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_connector_not_proven · Playwright MCP is local-only on server 127.0.0.1:8931.',
-    nextFix: 'Manage SpaceAgent through Mission Control; keep Playwright MCP private and surface Firecrawl/YouTube blockers.',
+    status: 'partial · Mission Control UI ready · Playwright local-only',
+    blocker: 'firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_connector_not_proven · interactive_browser_actions_require_bridge_session.',
+    nextFix: 'Open SpaceAgent through Mission Control at /gateway/agent-hub/spaceagent/config; keep Playwright MCP private.',
     buttons: {
-      ui: disabled('No standalone SpaceAgent UI exists.'),
+      ui: enabled(agentControlRoute('spaceagent', 'config')),
       config: enabled(agentControlRoute('spaceagent', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: enabled(agentControlRoute('spaceagent', 'research')),
@@ -211,15 +248,15 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     service: 'paperclip-lab dev runner',
     localBind: '100.116.35.95',
     port: '3100',
-    localUrl: null,
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
     tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
     proxyRoute: '/api/bridge/paperclip/status',
     authRequired: true,
     status: 'INSTALLED / READY - WRITES BRIDGE-GATED',
-    blocker: 'paperclip_writes_bridge_gated · Owner-accessible Paperclip company is E copier Solutions (ECO). Legacy To Knowledge Gateway (TOK) still needs owner membership repair before that company route can be used.',
-    nextFix: 'Use the ECO Paperclip dashboard for owner work now. Keep real task creation Bridge-gated; repair TOK membership separately if that legacy company must remain active.',
+    blocker: 'paperclip_writes_bridge_gated · Paperclip workspace truth is read-only and selector-backed. Real task creation and company/team bootstrap remain exact-scope adapter gated.',
+    nextFix: 'Use the Paperclip workspace selector to open visible workspaces. Blocked workspaces must show a disabled reason; no Paperclip writes run from this surface.',
     buttons: {
-      ui: enabled('http://100.116.35.95:3100/ECO/dashboard'),
+      ui: enabled(paperclipControlRoute('ui')),
       config: enabled(paperclipControlRoute('config')),
       brain: disabled('paperclip_brain_surface_not_configured · Paperclip work-product/memory surface has not been proven yet.'),
       chat: disabled('paperclip_chat_surface_not_configured · No safe Paperclip chat/task-prompt surface is proven.'),
@@ -320,9 +357,9 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     tailnetUrl: 'http://100.116.35.95:3337/gateway/bridge-session',
     proxyRoute: '/api/bridge/approval-requests',
     authRequired: true,
-    status: 'partial',
-    blocker: 'Approval records available; protected execution still disabled until runner/audit/rollback proof.',
-    nextFix: 'Use for scoped approval records only until dispatch runner, audit export, and rollback proof are complete.',
+    status: 'active · exact-scope execution enabled',
+    blocker: 'owner_hard_stops_only_remaining · Bridge Session is active for Jarvis certified adapters; raw secrets, .env edits, credential injection, public exposure, destructive actions, and broad connector execution remain hard stops.',
+    nextFix: 'Continue exact-scope adapter expansion through audit and rollback. Do not enable broad connectors outside an approved adapter scope.',
     buttons: {
       ui: enabled('http://100.116.35.95:3337/gateway/bridge-session'),
       config: enabled('/gateway/bridge-session'),
@@ -375,6 +412,29 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
+    name: 'Zapier',
+    service: 'Zapier MCP connector through Gateway',
+    localBind: 'none',
+    port: 'MCP brokered',
+    localUrl: null,
+    tailnetUrl: null,
+    proxyRoute: '/api/bridge/zapier/status',
+    authRequired: true,
+    status: ZAPIER_GATEWAY_CARD_COPY.status,
+    detail: ZAPIER_GATEWAY_CARD_COPY.detail,
+    guardrail: ZAPIER_GATEWAY_CARD_COPY.guardrail,
+    blocker: '',
+    nextFix: 'Use /api/bridge/zapier/approved-actions to inspect the exact approved-action library. Jarvis still executes only through /api/bridge/agent-zero/execute.',
+    buttons: {
+      ui: disabled('Zapier has no owner UI embedded in Mission Control; use the Gateway tools/status surfaces.'),
+      config: enabled(GATEWAY_TOOLS_ROUTE),
+      brain: enabled(GATEWAY_BRAIN_ROUTE),
+      chat: disabled('Zapier is a connector, not a chat surface.'),
+      tools: enabled(GATEWAY_TOOLS_ROUTE),
+      health: enabled(GATEWAY_TOOLS_ROUTE),
+    },
+  },
+  {
     name: 'Google Drive',
     service: 'Google Drive delivery connector',
     localBind: 'none',
@@ -418,13 +478,25 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   },
 ] as const
 
+function externalLinkTarget(href: string): { target: string; rel?: string } {
+  if (href === PAPERCLIP_ECO_DASHBOARD) return { target: PAPERCLIP_ECO_WINDOW_NAME }
+  if (/^https?:\/\//.test(href)) return { target: '_blank', rel: 'noreferrer' }
+  return { target: '' }
+}
+
 function LinkButton({ button, children }: { button: AgentAccessButton; children: string }) {
   if (!button.enabled || !button.href) {
     return <button type="button" className="agent-link disabled" title={button.blocker} disabled>{children}</button>
   }
-  const isExternal = /^https?:\/\//.test(button.href)
+  const target = externalLinkTarget(button.href)
   return (
-    <a className="agent-link" href={button.href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noreferrer' : undefined}>
+    <a
+      className="agent-link"
+      href={button.href}
+      target={target.target || undefined}
+      rel={target.rel}
+      onClick={(event) => event.stopPropagation()}
+    >
       {children}
     </a>
   )
@@ -478,14 +550,18 @@ function AgentInterfaceInventory({
               <span>service: {agent.service} · bind: {agent.localBind} · port: {agent.port}</span>
               <span>local: {agent.localUrl ?? 'not available'} · tailnet: {agent.tailnetUrl ?? 'not available'}</span>
               <span>proxy/config: {agent.proxyRoute}</span>
-              <small>{agent.blocker}</small>
-              <small>next fix: {agent.nextFix}</small>
+              <small>{agent.detail || agent.blocker}</small>
+              {agent.guardrail ? (
+                <small>guardrail: {agent.guardrail}</small>
+              ) : (
+                <small>next fix: {agent.nextFix}</small>
+              )}
             </div>
             <div className="agent-row-actions">
               <LinkButton button={agent.buttons.ui}>Open UI</LinkButton>
               <LinkButton button={agent.buttons.config}>Open Config</LinkButton>
               <LinkButton button={agent.buttons.brain}>Open Brain</LinkButton>
-              <LinkButton button={agent.buttons.chat}>{agent.name === 'Pi' ? 'Open Recommend' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
+              <LinkButton button={agent.buttons.chat}>{agent.name === 'PI Dispatcher' ? 'Open Recommend' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
               <LinkButton button={agent.buttons.tools}>Open Tools</LinkButton>
               <LinkButton button={agent.buttons.health}>Health</LinkButton>
             </div>
@@ -498,7 +574,7 @@ function AgentInterfaceInventory({
 }
 
 type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'paperclip' | 'openclaw'
-type AgentPanelMode = 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help'
+type AgentPanelMode = 'config' | 'chat' | 'recommend' | 'research' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help' | 'telegram-agent'
 type GatewayControlView =
   | { kind: 'tools' }
   | { kind: 'brain' }
@@ -521,34 +597,34 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     slug: 'agent-zero',
     name: 'Agent Zero',
     role: 'Commander',
-    status: 'partial · UI restored · fd guard pending',
+    status: 'operational · exact-scope execution certified',
     endpoint: '/api/agent-zero/status',
     uiHref: 'http://100.116.35.95:50080/',
-    blocker: 'agent_zero_fd_exhaustion_guard_pending',
-    nextAction: 'Use the UI for owner login/inspection. Commands and protected execution remain Bridge-gated until safe command routing is proven.',
+    blocker: 'owner_hard_stops_only_remaining',
+    nextAction: 'Jarvis can execute certified exact-scope adapters through Mission Control now. Remaining blocks are owner-hard-stop categories and connectors that still need credentials or adapter proof.',
     modes: ['config', 'chat'],
   },
   hermes: {
     slug: 'hermes',
     name: 'Hermes',
-    role: 'Lieutenant · workflow specialist',
-    status: 'partial · service active · safe live adapter proven · owner proxy not wired',
-    endpoint: '/api/hermes/status',
+    role: 'Nuclear Dispatcher · optimization and workflow architect',
+    status: 'foundation ready · Nuclear Dispatcher command center',
+    endpoint: '/api/bridge/hermes/status',
     uiHref: null,
-    blocker: 'hermes_owner_proxy_not_wired',
-    nextAction: 'Inspect Hermes through this Mission Control panel. Do not expose server-local 127.0.0.1:3000 publicly.',
+    blocker: 'jarvis_concurrence_required_for_major_changes',
+    nextAction: 'Inspect Hermes through Mission Control. Hermes drafts and recommends; Jarvis approves major changes and executes certified adapters.',
     modes: ['config', 'chat'],
   },
   pi: {
     slug: 'pi',
-    name: 'Pi',
-    role: 'Dispatcher / route optimizer candidate',
-    status: 'advisory · runtime not proven',
-    endpoint: '/api/bridge/dispatcher/status',
-    uiHref: null,
-    blocker: 'pi_runtime_session_not_proven',
-    nextAction: 'Keep Pi advisory-only. Show route recommendations and blockers without enabling execution or writes.',
-    modes: ['config', 'recommend'],
+    name: 'PI Dispatcher',
+    role: 'Gateway dispatcher / route optimizer',
+    status: 'READ_ONLY / DISPATCHER REGISTERED - OWNER UI READY',
+    endpoint: '/api/bridge/pi/status',
+    uiHref: agentControlRoute('pi', 'config'),
+    blocker: 'protected_execution_requires_owner_scope',
+    nextAction: 'PI can inspect Gateway provider/capability/MCP/agent/Bridge/skills inventory and recommend lanes. Writes and protected actions remain disabled unless a separate exact-scope approval exists.',
+    modes: ['config', 'recommend', 'tools'],
   },
   spaceagent: {
     slug: 'spaceagent',
@@ -556,9 +632,9 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     role: 'Browser · Playwright · Firecrawl · YouTube research',
     status: 'partial · Mission Control panel only · Playwright local-only',
     endpoint: '/api/bridge/space-agent/status',
-    uiHref: null,
-    blocker: 'no_standalone_spaceagent_ui · firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_connector_not_proven',
-    nextAction: 'Manage research tooling here. Playwright MCP remains local-only at 127.0.0.1:8931; Firecrawl/YouTube stay blocked until credentials/connectors are proven.',
+    uiHref: agentControlRoute('spaceagent', 'config'),
+    blocker: 'firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_connector_not_proven · interactive_browser_actions_require_bridge_session',
+    nextAction: 'Manage research tooling here. Playwright MCP remains local-only at 127.0.0.1:8931; Firecrawl and YouTube stay Gateway-gated until credentials/connectors are proven.',
     modes: ['config', 'research'],
   },
   paperclip: {
@@ -567,10 +643,10 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     role: 'Workforce control plane',
     status: 'INSTALLED / READY - WRITES BRIDGE-GATED',
     endpoint: '/api/bridge/paperclip/status',
-    uiHref: 'http://100.116.35.95:3100/ECO/dashboard',
+    uiHref: paperclipControlRoute('status'),
     blocker: 'paperclip_writes_bridge_gated',
-    nextAction: 'Use the owner-accessible ECO company dashboard for Paperclip. Real task writes remain Bridge-gated; the legacy TOK company still needs membership repair before routing there.',
-    modes: ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help'],
+    nextAction: 'Use the Paperclip workspace selector for visible companies. Real task writes, comments, company bootstrap, and agent hires remain Bridge-gated exact-scope adapter actions.',
+    modes: ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help', 'telegram-agent'],
   },
   openclaw: {
     slug: 'openclaw',
@@ -597,9 +673,10 @@ const CONTROL_MODE_LABELS: Record<AgentPanelMode, string> = {
   status: 'Status',
   audit: 'Audit',
   help: 'Help',
+  'telegram-agent': 'Telegram Agent',
 }
 
-const CONTROL_MODE_MATCH = '(config|chat|recommend|research|tools|companies|agents|issues|status|audit|help)'
+const CONTROL_MODE_MATCH = '(config|chat|recommend|research|tools|companies|agents|issues|status|audit|help|telegram-agent)'
 
 function controlViewFrom(pathname: string | null, q: URLSearchParams | null): GatewayControlView | null {
   const control = q?.get('control')
@@ -620,13 +697,13 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   if (parts[1] === 'agent-hub' && parts[2] && parts[3]) {
     const slug = parts[2] as AgentSlug
     const mode = parts[3] as AgentPanelMode
-    if (AGENT_CONTROL_DEFS[slug] && ['config', 'chat', 'recommend', 'research', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(mode)) {
+    if (AGENT_CONTROL_DEFS[slug] && ['config', 'chat', 'recommend', 'research', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help', 'telegram-agent'].includes(mode)) {
       return { kind: 'agent', slug, mode }
     }
   }
   if (parts[1] === 'agents' && parts[2] === 'paperclip') {
     const requestedMode = parts[3] as AgentPanelMode | undefined
-    const mode = requestedMode && ['config', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help'].includes(requestedMode)
+    const mode = requestedMode && ['config', 'tools', 'companies', 'agents', 'issues', 'status', 'audit', 'help', 'telegram-agent'].includes(requestedMode)
       ? requestedMode
       : 'status'
     return { kind: 'agent', slug: 'paperclip', mode }
@@ -757,12 +834,132 @@ function ReadableStatusPanel({ endpoint, fallbackPayload }: { endpoint: string; 
 
 function ControlLink({ href, children, disabled }: { href: string | null; children: string; disabled?: boolean }) {
   if (!href || disabled) return <button type="button" className="control-action disabled" disabled>{children}</button>
-  const isExternal = /^https?:\/\//.test(href)
-  return <a className="control-action" href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noreferrer' : undefined}>{children}</a>
+  const target = externalLinkTarget(href)
+  return (
+    <a
+      className="control-action"
+      href={href}
+      target={target.target || undefined}
+      rel={target.rel}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {children}
+    </a>
+  )
+}
+
+function PaperclipWorkspaceSelectorPanel() {
+  const [state, setState] = useState<{
+    phase: 'loading' | 'ready' | 'error'
+    status?: number
+    payload?: PaperclipWorkspaceTruthPayload
+    error?: string
+  }>({ phase: 'loading' })
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/bridge/paperclip/workspace-truth', { credentials: 'include' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => null)
+        if (cancelled) return
+        if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+          setState({ phase: 'ready', status: response.status, payload: payload as PaperclipWorkspaceTruthPayload })
+          return
+        }
+        setState({ phase: 'error', status: response.status, error: 'Workspace truth route did not return JSON.' })
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setState({ phase: 'error', error: error instanceof Error ? error.message : 'unknown error' })
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  if (state.phase === 'loading') {
+    return (
+      <section className="control-status muted" data-testid="paperclip-workspace-selector">
+        Loading Paperclip workspace truth...
+      </section>
+    )
+  }
+
+  if (state.phase === 'error') {
+    return (
+      <section className="control-status warning" data-testid="paperclip-workspace-selector">
+        <strong>Workspace selector unavailable</strong>
+        <span>{state.error}</span>
+        <small>No Paperclip writes were attempted.</small>
+      </section>
+    )
+  }
+
+  const payload = state.payload || {}
+  const launches = payload.workspace_launches || []
+  const authRequired = state.status === 401
+  return (
+    <section className="control-status" data-testid="paperclip-workspace-selector" data-paperclip-hard-coded-eco-only={String(payload.hard_coded_eco_only === false ? false : true)}>
+      <div className="status-head">
+        <strong>Paperclip Workspace Selector</strong>
+        <span>HTTP {state.status ?? 'unknown'} · hard-coded ECO only: {payload.hard_coded_eco_only === false ? 'false' : 'unknown'}</span>
+      </div>
+      {authRequired ? (
+        <div className="control-status warning">
+          <strong>Owner authentication required</strong>
+          <span>Sign in to Mission Control to load Paperclip workspace truth. No Paperclip writes were attempted.</span>
+        </div>
+      ) : (
+        <>
+          <dl>
+            <div>
+              <dt>visible workspaces</dt>
+              <dd>{(payload.live_workspace_names || []).join(', ') || 'none visible'}</dd>
+            </div>
+            <div>
+              <dt>selected default</dt>
+              <dd>{payload.selected_default_workspace || 'none'}</dd>
+            </div>
+            <div>
+              <dt>mismatch detected</dt>
+              <dd>{payload.mismatch_detected ? 'yes' : 'no'}</dd>
+            </div>
+            <div>
+              <dt>writes</dt>
+              <dd>{payload.writes_enabled === false ? 'disabled' : 'unknown'}</dd>
+            </div>
+          </dl>
+          <div className="workspace-launch-grid" aria-label="Paperclip workspace launches">
+            {launches.map((workspace) => {
+              const target = workspace.canonical_launch_url ? externalLinkTarget(workspace.canonical_launch_url) : { target: undefined, rel: undefined }
+              return (
+                <article
+                  key={workspace.workspace_name}
+                  className="control-card"
+                  data-paperclip-workspace={workspace.workspace_name}
+                  data-paperclip-workspace-open-enabled={String(workspace.open_enabled)}
+                >
+                  <strong>{workspace.workspace_name}</strong>
+                  <span>{workspace.issue_prefix || 'no issue prefix'} · {workspace.open_enabled ? 'visible' : 'blocked'}</span>
+                  <small>{workspace.open_enabled ? workspace.canonical_launch_url : workspace.disabled_reason || 'workspace launch blocked'}</small>
+                  {workspace.open_enabled && workspace.canonical_launch_url ? (
+                    <div className="workspace-launch-actions">
+                      <a className="control-action" href={workspace.canonical_launch_url} target={target.target || undefined} rel={target.rel}>Open UI</a>
+                      <a className="control-action" href={workspace.canonical_launch_url} target="_blank" rel="noreferrer">Open in New Tab</a>
+                    </div>
+                  ) : (
+                    <button type="button" className="control-action disabled" disabled>{workspace.disabled_reason || 'workspace blocked'}</button>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+          <small>{payload.next_action || 'Workspace truth is read-only; writes require exact-scope adapter proof.'}</small>
+        </>
+      )}
+    </section>
+  )
 }
 
 function GatewayToolsPanel() {
-  const connectors = AGENT_INTERFACE_LINKS.filter((row) => ['Telegram', 'AgentMail', 'Google Drive', 'OneDrive', 'Firecrawl', 'YouTube', 'Playwright MCP'].includes(row.name))
+  const connectors = AGENT_INTERFACE_LINKS.filter((row) => ['Telegram', 'AgentMail', 'Zapier', 'Google Drive', 'OneDrive', 'Firecrawl', 'YouTube', 'Playwright MCP'].includes(row.name))
   return (
     <main className="control-page" data-testid="gateway-tools-panel">
       <header className="control-hero">
@@ -806,17 +1003,21 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
     recommend: 'Advisory recommendations only. Execution and writes remain disabled.',
     research: 'Research control surface for browser evidence packets, Firecrawl readiness, and YouTube transcript state.',
     tools: 'Readable tool inventory. Real task creation remains Bridge-gated; this page does not perform writes.',
-    companies: 'Read-only company inventory from the Paperclip bridge. ECO is owner-accessible; TOK remains a legacy membership warning.',
-    agents: 'Read-only Paperclip workforce roster for the owner-accessible company. No task execution happens from this page.',
+    companies: 'Read-only company inventory from the Paperclip bridge. Workspace visibility comes from workspace-truth, not an ECO-only shortcut.',
+    agents: 'Read-only Paperclip workforce roster for the selected visible workspace. No task execution happens from this page.',
     issues: 'Read-only issue/task queue for Paperclip. Creating or changing tasks still requires Bridge approval.',
-    status: 'Readable Paperclip health and owner-accessible ECO status. This page does not parse HTML as JSON.',
+    status: 'Readable Paperclip health and workspace selector status. This page does not parse HTML as JSON.',
     audit: 'Read-only Paperclip audit surface. If no audit sink is connected, this page shows an empty state instead of redirecting.',
-    help: 'Paperclip owner help for the current buttons, ECO routing, and Bridge-gated write policy.',
+    help: 'Paperclip owner help for workspace launches and Bridge-gated write policy.',
+    'telegram-agent': 'Read-only planning surface for a future Telegram-capable Paperclip agent. No connector execution happens here.',
   }
   const isPaperclip = slug === 'paperclip'
-  const statusEndpoint = isPaperclip && ['companies', 'agents', 'issues'].includes(mode)
-    ? `/api/bridge/paperclip/${mode}`
-    : agent.endpoint
+  const isPi = slug === 'pi'
+  const statusEndpoint = isPaperclip && mode === 'tools'
+    ? '/api/bridge/paperclip/gateway-inventory'
+    : isPaperclip && ['companies', 'agents', 'issues'].includes(mode)
+      ? `/api/bridge/paperclip/${mode}`
+      : agent.endpoint
   const brainDisabled = isPaperclip
   const chatDisabled = isPaperclip
   const toolsHref = isPaperclip ? paperclipControlRoute('tools') : GATEWAY_TOOLS_ROUTE
@@ -841,6 +1042,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         {isPaperclip && <ControlLink href={paperclipControlRoute('status')}>Status</ControlLink>}
         {isPaperclip && <ControlLink href={paperclipControlRoute('audit')}>Audit</ControlLink>}
         {isPaperclip && <ControlLink href={paperclipControlRoute('help')}>Help</ControlLink>}
+        {isPaperclip && <ControlLink href={paperclipControlRoute('telegram-agent')}>Telegram Agent</ControlLink>}
         <ControlLink href={toolsHref}>Open Tools</ControlLink>
       </section>
       <section className="control-grid">
@@ -861,7 +1063,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid paperclip-only">
           <article className="control-card">
             <strong>Company access</strong>
-            <span>E copier Solutions (ECO) is the owner-accessible Paperclip company. To Knowledge Gateway (TOK) still shows a membership warning and is not used for owner routing.</span>
+            <span>Workspace access is selector-backed by /api/bridge/paperclip/workspace-truth. Mission Control no longer hard-codes ECO when multiple Paperclip workspaces are visible.</span>
           </article>
           <article className="control-card">
             <strong>Readable routes</strong>
@@ -873,19 +1075,96 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
         </section>
       )}
+      {isPaperclip && <PaperclipWorkspaceSelectorPanel />}
+      {isPaperclip && (mode === 'tools' || mode === 'agents' || mode === 'telegram-agent') && (
+        <section className="control-grid paperclip-only">
+          <article className="control-card">
+            <strong>Telegram Agent</strong>
+            <span>Telegram Agent is not enabled yet. Creating or connecting a Telegram-capable Paperclip agent requires Bridge Session, exact scope, owner approval, audit trail, and rollback.</span>
+          </article>
+          <article className="control-card">
+            <strong>Candidate agents</strong>
+            <span>CEO, CMO, CTO, Avatar Specialist, Field Service Advisor, Social Coordinator, and Video Producer can be reviewed as candidates. No Telegram bridge execution is started from this page.</span>
+          </article>
+          <article className="control-card">
+            <strong>Gated request shape</strong>
+            <small>connector: paperclip · action: telegram_agent_connect · company: ECO · target: selected_agent · status: owner_approval_required / bridge_gated</small>
+          </article>
+        </section>
+      )}
+      {isPaperclip && mode === 'telegram-agent' && (
+        <section className="control-grid paperclip-only">
+          {['CEO', 'CMO', 'CTO', 'Avatar Specialist', 'Field Service Advisor', 'Social Coordinator', 'Video Producer'].map((candidate) => (
+            <article key={candidate} className="control-card">
+              <strong>{candidate}</strong>
+              <span>not_connected</span>
+              <small>owner_approval_required · bridge_gated · read-only planning only</small>
+            </article>
+          ))}
+        </section>
+      )}
+      {isPi && (
+        <section className="control-grid pi-only">
+          <article className="control-card">
+            <strong>Gateway visibility</strong>
+            <span>PI can read provider registry, capability matrix, MCP health, agent roster, Bridge readiness, and skills/tools inventory through Mission Control routes.</span>
+          </article>
+          <article className="control-card">
+            <strong>Runtime execution</strong>
+            <span>visible_to_agent_runtime is false until a PI runtime/session is proven. PI cannot execute writes, run tools, or dispatch protected work.</span>
+          </article>
+          <article className="control-card">
+            <strong>Bridge policy</strong>
+            <span>Any write/run/mutate recommendation stays Bridge-gated with exact scope, owner approval, audit trail, and rollback.</span>
+          </article>
+        </section>
+      )}
+      {isPi && mode === 'recommend' && (
+        <section className="control-grid pi-only">
+          {[
+            ['Web research', 'Recommend SpaceAgent, Firecrawl, or Playwright based on current blockers.'],
+            ['Workflow design', 'Recommend Hermes for skill/workflow planning through the Nuclear Dispatcher command center.'],
+            ['Workforce task', 'Recommend Paperclip for workspace-scoped workforce organization; writes stay gated.'],
+            ['Runtime action', 'Recommend OpenClaw+ only after Bridge approval and runtime proof.'],
+            ['Provider/model choice', 'Read provider registry and token governor state without seeing secrets.'],
+            ['Brain visibility', 'Read Brain readiness status; memory writes remain Bridge-gated.'],
+          ].map(([title, copy]) => (
+            <article key={title} className="control-card">
+              <strong>{title}</strong>
+              <span>{copy}</span>
+            </article>
+          ))}
+        </section>
+      )}
       {isPaperclip && mode === 'tools' && (
         <section className="control-grid paperclip-only">
           <article className="control-card">
-            <strong>Read-only tools</strong>
+            <strong>Paperclip Native Tools</strong>
             <span>Open UI, config, status, companies, agents, issues, audit, and help are inspection routes only.</span>
           </article>
           <article className="control-card">
+            <strong>Mission Control Gateway Tools</strong>
+            <span>Providers, models, skills, MCP tools, integrations, Zapier, and n8n visibility come from /api/bridge/paperclip/gateway-inventory and /api/bridge/paperclip/agent-context for Paperclip agents.</span>
+          </article>
+          <article className="control-card">
+            <strong>Zapier visibility</strong>
+            <span>Zapier is visible in Gateway and connected/configured. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary execution require approved scope.</span>
+          </article>
+          <article className="control-card">
+            <strong>n8n visibility</strong>
+            <span>n8n is visible in Gateway as credential-gated. Workflow activation and execution remain blocked until approved credentials, Bridge Session, audit, and rollback exist.</span>
+          </article>
+          <article className="control-card">
             <strong>Bridge-gated tools</strong>
-            <span>Task creation, comments, issue edits, uploads, sends, and workforce mutations remain locked until Bridge Session approval, adapter proof, audit, and rollback exist.</span>
+            <span>Task creation, comments, issue edits, uploads, sends, Zapier actions, and workforce mutations remain locked until Bridge Session approval, adapter proof, audit, and rollback exist.</span>
           </article>
           <article className="control-card">
             <strong>Company scope</strong>
-            <span>ECO only for owner-facing Paperclip work. TOK remains a separate legacy company blocker and is not repaired in this hop.</span>
+            <span>Owner-facing Paperclip workspace scope comes from the live workspace selector. Blocked workspaces must show a readable disabled reason.</span>
+          </article>
+          <article className="control-card">
+            <strong>Agent context rule</strong>
+            <span>CEO, CMO, CTO, Avatar Specialist, Field Service Advisor, Social Coordinator, and Video Producer should answer Gateway questions from the read-only inventory, and must not say Zapier is missing when it is visible, connected/configured, and exact-scope approved.</span>
           </article>
         </section>
       )}
@@ -901,7 +1180,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
           <article className="control-card">
             <strong>Current state</strong>
-            <span>Read-only ECO status is available. No Paperclip write or task mutation is enabled from Mission Control.</span>
+            <span>Read-only workspace status is available. No Paperclip write or task mutation is enabled from Mission Control.</span>
           </article>
         </section>
       )}
@@ -909,7 +1188,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid paperclip-only">
           <article className="control-card">
             <strong>Open UI</strong>
-            <span>Opens the ECO Paperclip dashboard at 100.116.35.95:3100/ECO/dashboard in a new tab. It does not require Bridge Session.</span>
+            <span>Use the workspace selector. Each visible workspace gets Open UI and Open in New Tab links; blocked workspaces show a disabled reason.</span>
           </article>
           <article className="control-card">
             <strong>Read buttons</strong>
@@ -986,6 +1265,8 @@ export default function GatewayShell() {
         .gateway-shell .gw-side{background:#0e1218;border-right:1px solid rgba(255,255,255,.10);padding:20px 12px;overflow-y:auto}
         .gateway-shell .gw-side h3{margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:#9aa3b2;padding:0 10px}
         .gateway-shell .gw-side .sub{font-size:10.5px;color:#6b7280;padding:0 10px;margin-bottom:14px}
+        .gateway-shell .gw-side .trace-link{display:inline-flex;margin-top:8px;color:#78f2e2;text-decoration:none;font-weight:700}
+        .gateway-shell .gw-side .trace-link:hover{text-decoration:underline}
         .gateway-shell .gw-side .gw-tab{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:6px;font-size:12.5px;cursor:pointer;color:#cdd4df;border:1px solid transparent;margin-bottom:2px;background:transparent;width:100%;text-align:left}
         .gateway-shell .gw-side .gw-tab:hover{background:#131923;color:#f1f4f9}
         .gateway-shell .gw-side .gw-tab.active{background:#1a212d;color:#f1f4f9;border-color:rgba(255,255,255,.10)}
@@ -1044,9 +1325,11 @@ export default function GatewayShell() {
         .gateway-shell .control-status dl div{display:grid;gap:3px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:#0d131c;padding:10px}
         .gateway-shell .control-status dt{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#798599}
         .gateway-shell .control-status dd{margin:0;font-size:12px;color:#dce6f2;overflow-wrap:anywhere}
+        .gateway-shell .workspace-launch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+        .gateway-shell .workspace-launch-actions{display:flex;flex-wrap:wrap;gap:8px}
         @media (max-width:1100px){.gateway-shell{grid-template-columns:180px minmax(0,1fr)}.gateway-shell .gw-content.has-access.access-expanded,.gateway-shell .gw-content.has-access.access-collapsed{grid-template-columns:1fr}.gateway-shell .gw-access-rail{order:-1;max-height:none;border-left:0;border-bottom:1px solid rgba(255,255,255,.10)}.gateway-shell .agent-interface-panel{min-height:0;max-height:48vh}.gateway-shell .agent-row-actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
-        @media (max-width:1100px){.gateway-shell .control-grid{grid-template-columns:1fr 1fr}.gateway-shell .control-status dl{grid-template-columns:1fr}}
-        @media (max-width:760px){.gateway-shell{grid-template-columns:1fr}.gateway-shell .gw-side{position:relative;border-right:0;border-bottom:1px solid rgba(255,255,255,.10)}.gateway-shell .agent-row-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.gateway-shell .control-page{padding:20px}.gateway-shell .control-grid{grid-template-columns:1fr}}
+        @media (max-width:1100px){.gateway-shell .control-grid,.gateway-shell .workspace-launch-grid{grid-template-columns:1fr 1fr}.gateway-shell .control-status dl{grid-template-columns:1fr}}
+        @media (max-width:760px){.gateway-shell{grid-template-columns:1fr}.gateway-shell .gw-side{position:relative;border-right:0;border-bottom:1px solid rgba(255,255,255,.10)}.gateway-shell .agent-row-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.gateway-shell .control-page{padding:20px}.gateway-shell .control-grid,.gateway-shell .workspace-launch-grid{grid-template-columns:1fr}}
       `}</style>
       <aside className="gw-side">
         <h3>Gateway</h3>
@@ -1061,6 +1344,10 @@ export default function GatewayShell() {
             aria-label="Return to Mission Control board"
             data-testid="gateway-shell-return-home"
           >Mission Control</a> · Gateway
+          <br />
+          <a className="trace-link" href="/gateway/overview?trace=zapier" data-testid="gateway-trace-zapier-link">
+            Trace Zapier Wire
+          </a>
         </div>
         {TABS.map((t) => (
           <button
@@ -1092,7 +1379,7 @@ export default function GatewayShell() {
                 ref={iframeRef}
                 key={active.id}
                 className="gw-frame"
-                src={encodeURI(`${BASE}/design/gateway/${active.src}`)}
+                src={gatewayFrameSrcFor(active, sp)}
                 title={`Gateway · ${active.label}`}
                 loading="lazy"
                 sandbox="allow-scripts allow-same-origin"
@@ -1121,7 +1408,7 @@ export default function GatewayShell() {
 
 export { TABS as GATEWAY_TABS, resolveTab as activeTabFrom }
 export { gatewayActionForButton } from './gateway-actions'
-export function iframeSrcFor(t: Tab): string { return encodeURI(`${BASE}/design/gateway/${t.src}`) }
+export function iframeSrcFor(t: Tab, q?: URLSearchParams | null): string { return gatewayFrameSrcFor(t, q) }
 export function controlViewFromPath(pathname: string | null, q: URLSearchParams | null): GatewayControlView | null {
   return controlViewFrom(pathname, q)
 }

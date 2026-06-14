@@ -35,7 +35,7 @@ describe('Universal direct agent routing lines', () => {
     expect(lines.pi).toMatchObject({
       direct_line_active: true,
       conversation_owner: 'pi',
-      execution_policy: 'direct_gateway_agent_exact_scope_for_dangerous_actions',
+      execution_policy: 'advisory_only_until_certified',
     })
     expect(lines.paperclip).toMatchObject({
       direct_line_active: true,
@@ -56,7 +56,7 @@ describe('Universal direct agent routing lines', () => {
     })
   })
 
-  it('gives Pi, SpaceAgent, and Paperclip the same normal-chat Gateway access contract as Jarvis and Hermes', () => {
+  it('keeps Pi, SpaceAgent, and Paperclip visible without granting broad execution', () => {
     const status = buildAgentRoutingLinesStatus()
     const directAgents = [
       status.by_id['agent-zero-jarvis'],
@@ -85,15 +85,17 @@ describe('Universal direct agent routing lines', () => {
     expect(status.normal_chat_bridge_required).toBe(false)
     expect(status.dangerous_actions_require_scope).toBe(true)
     expect(status.by_id.pi).toMatchObject({
-      system_type: 'specialist_agent_system',
-      display_name: 'Pi',
-      execution_policy: 'direct_gateway_agent_exact_scope_for_dangerous_actions',
+      system_type: 'advisory_dispatcher',
+      display_name: 'Pi Advisory Dispatcher',
+      execution_policy: 'advisory_only_until_certified',
+      allowed_tools: ['read_only_recommendations', 'gateway_status'],
     })
     expect(status.by_id.spaceagent).toMatchObject({
-      execution_policy: 'direct_gateway_research_agent_exact_scope_for_browser_actions',
+      execution_policy: 'local_only_browser_research_no_public_exposure',
+      allowed_tools: ['playwright_mcp_local_only', 'read_only_research'],
     })
     expect(status.by_id.paperclip).toMatchObject({
-      execution_policy: 'direct_gateway_workforce_agent_exact_scope_for_writes',
+      execution_policy: 'writes_bridge_gated_company_scope_required',
     })
   })
 

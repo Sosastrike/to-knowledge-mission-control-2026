@@ -173,7 +173,7 @@ const paperclipControlRoute = (mode: string): string => agentControlRoute('paper
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
 const AGENT_AUTO_UPDATE_RUN_ROUTE = '/api/bridge/agent-updates/run'
 const AUTO_UPDATE_SAFE_TARGETS = ['Ron Weasley WebUI', 'Ron Weasley Agent'] as const
-const AUTO_UPDATE_VISIBLE_TASK_TARGETS = ['Mission Control', 'Agent Zero / Jarvis', 'SpaceAgent', 'Pi', 'Paperclip', 'OpenClaw / OpenCloud Supporting Runtime Only'] as const
+const AUTO_UPDATE_VISIBLE_TASK_TARGETS = ['Mission Control', 'Agent Zero / Jarvis', 'SpaceAgent', 'Pi Dispatcher', 'Paperclip', 'OpenClaw / OpenCloud Supporting Runtime Only'] as const
 const GATEWAY_ROUTE_TRUTH_STATUS_ROUTE = '/api/gateway/agent-hub/status'
 const GATEWAY_ROUTE_TRUTH_ROUTES = ['/api/gateway/status', '/api/gateway/registry', '/api/gateway/flows', '/api/bridge/playwright-mcp/status'] as const
 const GATEWAY_ROUTE_TRUTH_LEGACY_FIXES = ['/tools -> /gateway/tools', '/routes -> /api/gateway/flows', '/health -> /api/gateway/status'] as const
@@ -222,17 +222,17 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
-    name: 'Pi',
-    service: 'Mission Control full-access Gateway pipeline',
-    localBind: 'Mission Control authenticated Gateway',
-    port: 'Gateway-brokered',
-    localUrl: null,
-    tailnetUrl: null,
+    name: 'PI Dispatcher',
+    service: 'Mission Control dispatcher contract',
+    localBind: 'Mission Control',
+    port: '3337',
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
+    tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
     proxyRoute: '/api/bridge/pi/status',
     authRequired: true,
-    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
-    blocker: 'production_execution_requires_jarvis_concurrence · Pi has brokered Gateway access but production-impacting execution stays Jarvis-gated. No raw secrets, cookies, .env values, or auth files are exposed.',
-    nextFix: 'Use Pi as a full-access Gateway agent. Tools, skills, MCPs, providers, Brain reads, visible task events, exact-scope adapter requests, and pipeline requests route directly through Nuclear Gateway.',
+    status: 'READ_ONLY / DISPATCHER REGISTERED - OWNER UI READY',
+    blocker: 'protected_execution_requires_owner_scope · PI can inspect Gateway inventory and open the owner UI; writes and protected actions remain gated.',
+    nextFix: 'Open Pi through Mission Control at /gateway/agent-hub/pi/config. Use recommendations only unless a separate exact-scope approval exists.',
     buttons: {
       ui: enabled(agentControlRoute('pi', 'config')),
       config: enabled(agentControlRoute('pi', 'config')),
@@ -244,18 +244,18 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   },
   {
     name: 'SpaceAgent',
-    service: 'Mission Control SpaceAgent direct line; Playwright MCP is a local tool',
-    localBind: '127.0.0.1',
-    port: '8931 via Playwright MCP',
-    localUrl: null,
-    tailnetUrl: null,
-    proxyRoute: '/api/bridge/spaceagent/status',
+    service: 'Mission Control SpaceAgent contract; Playwright MCP local service',
+    localBind: 'Mission Control + 127.0.0.1 Playwright MCP',
+    port: '3337; Playwright MCP 8931 local-only',
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
+    tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
+    proxyRoute: '/api/bridge/space-agent/status',
     authRequired: true,
-    status: 'configured · first-class direct-line agent · Jarvis final authority',
-    blocker: 'production_execution_requires_jarvis_concurrence · firecrawl_credential_required · interactive_browser_actions_require_bridge_session · Playwright MCP is local-only on server 127.0.0.1:8931.',
-    nextFix: 'Manage SpaceAgent through the canonical /api/bridge/spaceagent/* routes. Playwright MCP, Firecrawl, and YouTube are tools under SpaceAgent, not identity routes; production-impacting actions require Jarvis concurrence.',
+    status: 'partial · Mission Control UI ready · Playwright local-only',
+    blocker: 'firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_ready_via_/api/youtube/transcript · interactive_browser_actions_require_bridge_session.',
+    nextFix: 'Open SpaceAgent through Mission Control at /gateway/agent-hub/spaceagent/config. Keep Playwright MCP private and separate browser execution behind exact-scope approval.',
     buttons: {
-      ui: disabled('No standalone SpaceAgent UI exists.'),
+      ui: enabled(agentControlRoute('spaceagent', 'config')),
       config: enabled(agentControlRoute('spaceagent', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: enabled(agentControlRoute('spaceagent', 'research')),
@@ -268,7 +268,7 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     service: 'paperclip-lab dev runner',
     localBind: '100.116.35.95',
     port: '3100',
-    localUrl: null,
+    localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
     tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
     proxyRoute: '/api/bridge/paperclip/status',
     authRequired: true,
@@ -411,6 +411,27 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     },
   },
   {
+    name: 'Gbrain',
+    service: 'Brain Sync Mission Control surface',
+    localBind: 'Mission Control authenticated UI',
+    port: 'Gateway-brokered',
+    localUrl: null,
+    tailnetUrl: null,
+    proxyRoute: '/api/bridge/gbrain/runtime-proof',
+    authRequired: true,
+    status: 'READABLE / BROWSER-PROOF REQUIRED',
+    blocker: 'gbrain_sync_pipeline_not_certified · Run Gbrain Browser Proof · session_id_value_exposed:false · tokens_cookies_exposed:false · raw tools JSON exposed:false',
+    nextFix: 'Open Brain Sync through Mission Control and run /api/bridge/gbrain/browser-proof, /api/bridge/gbrain/runtime-proof, /api/bridge/gbrain/search, and /api/bridge/gbrain/tool-map. Gbrain Tool Map stays inventory_only_no_tool_invocation with tools inventoried until the sync pipeline is certified.',
+    buttons: {
+      ui: enabled('/designer-mission-control/Mission%20Control.html?page=gbrain-sync'),
+      config: enabled(agentControlRoute('gbrain', 'config')),
+      brain: enabled(GATEWAY_BRAIN_ROUTE),
+      chat: disabled('Gbrain is a Brain Sync/readiness surface, not a chat surface.'),
+      tools: enabled('/api/bridge/gbrain/tool-map'),
+      health: enabled('/api/bridge/gbrain/runtime-proof'),
+    },
+  },
+  {
     name: 'AgentMail',
     service: 'AgentMail delivery connector',
     localBind: 'none',
@@ -419,14 +440,14 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     tailnetUrl: null,
     proxyRoute: '/api/bridge/agentmail-readiness',
     authRequired: true,
-    status: 'blocked',
-    blocker: 'agentmail_inbox_limit_exceeded · AgentMail inbox limit exceeded. 5 inboxes could not be provisioned: Pi, Agent Zero, Bridge Unit, Mission Control Monitor, Audit Archive.',
-    nextFix: 'Increase AgentMail inbox capacity or explicitly approve a safe reuse mapping in AgentMail Local Control. Do not treat Bridge Session as the primary blocker until inboxes and scoped credentials are ready.',
+    status: 'ready · approval-gated sending',
+    blocker: 'AgentMail ready · approval-gated sending. Setup is complete; per-send dispatch still requires owner approval, Gateway policy, scoped inbox credential, audit, and provider allowlist clearance.',
+    nextFix: 'Use AgentMail Local Control to create a send preview and approval request. Auto-send and bulk-send remain disabled.',
     buttons: {
       ui: enabled('/agentmail'),
       config: enabled(GATEWAY_TOOLS_ROUTE),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
-      chat: disabled('AgentMail send/reply is disabled. Current primary blocker: agentmail_inbox_limit_exceeded. Bridge Session is a later send gate after inboxes, scoped credentials, permissions, and approval are ready.'),
+      chat: disabled('AgentMail sends are server-side and approval-gated. Open AgentMail Local Control to preview, approve, and audit a specific send request.'),
       tools: enabled(GATEWAY_TOOLS_ROUTE),
       health: enabled(GATEWAY_TOOLS_ROUTE),
     },
@@ -444,7 +465,7 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     detail: ZAPIER_GATEWAY_CARD_COPY.detail,
     guardrail: ZAPIER_GATEWAY_CARD_COPY.guardrail,
     blocker: '',
-    nextFix: 'Use /api/bridge/zapier/approved-actions to inspect the exact approved-action library. Jarvis still executes only through /api/bridge/agent-zero/execute.',
+    nextFix: 'Use /api/bridge/zapier/status or /api/bridge/zapier/approved-actions to inspect standing scopes. Writes remain blocked unless an exact active execution scope applies.',
     buttons: {
       ui: disabled('Zapier has no owner UI embedded in Mission Control; use the Gateway tools/status surfaces.'),
       config: enabled(GATEWAY_TOOLS_ROUTE),
@@ -615,7 +636,7 @@ function AgentInterfaceInventory({
               <LinkButton button={agent.buttons.ui}>Open UI</LinkButton>
               <LinkButton button={agent.buttons.config}>Open Config</LinkButton>
               <LinkButton button={agent.buttons.brain}>Open Brain</LinkButton>
-              <LinkButton button={agent.buttons.chat}>{agent.name === 'Pi' ? 'Open Pi' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
+              <LinkButton button={agent.buttons.chat}>{agent.name === 'PI Dispatcher' ? 'Open Recommend' : agent.name === 'SpaceAgent' ? 'Open Research' : 'Open Chat'}</LinkButton>
               <LinkButton button={agent.buttons.tools}>Open Tools</LinkButton>
               <LinkButton button={agent.buttons.health}>Health</LinkButton>
             </div>
@@ -679,7 +700,7 @@ function GatewayRouteCdpTruthPanel() {
   )
 }
 
-type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'paperclip' | 'openclaw'
+type AgentSlug = 'agent-zero' | 'hermes' | 'pi' | 'spaceagent' | 'gbrain' | 'paperclip' | 'openclaw'
 type BaseAgentPanelMode = 'config' | 'chat' | 'recommend' | 'research' | 'ui' | 'tools' | 'companies' | 'agents' | 'issues' | 'status' | 'audit' | 'help' | 'telegram-agent'
 type AgentPanelMode = BaseAgentPanelMode | HermesWebInterfaceMode
 type GatewayControlView =
@@ -724,25 +745,36 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
   },
   pi: {
     slug: 'pi',
-    name: 'Pi',
-    role: 'Full Access Gateway Agent',
-    status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE',
+    name: 'PI Dispatcher',
+    role: 'Gateway dispatcher / route optimizer',
+    status: 'READ_ONLY / DISPATCHER REGISTERED - OWNER UI READY',
     endpoint: '/api/bridge/pi/status',
     uiHref: agentControlRoute('pi', 'config'),
-    blocker: 'production_execution_requires_jarvis_concurrence',
-    nextAction: 'Pi has direct brokered Gateway access to tools, skills, MCPs, providers, Brain reads, visible task events, exact-scope adapter requests, and pipeline requests. Production-impacting execution remains Jarvis-gated.',
+    blocker: 'protected_execution_requires_owner_scope',
+    nextAction: 'PI can inspect Gateway provider/capability/MCP/agent/Bridge/skills inventory and recommend lanes. Writes and protected actions remain disabled unless a separate exact-scope approval exists.',
     modes: ['config', 'recommend', 'tools'],
   },
   spaceagent: {
     slug: 'spaceagent',
     name: 'SpaceAgent',
-    role: 'Independent specialized agent · Gateway pipeline',
-    status: 'configured · first-class direct-line agent · Jarvis final authority',
-    endpoint: '/api/bridge/spaceagent/status',
-    uiHref: null,
-    blocker: 'production_execution_requires_jarvis_concurrence · firecrawl_credential_required · interactive_browser_actions_require_bridge_session',
-    nextAction: 'Use canonical /api/bridge/spaceagent/* for status, readiness, capability, authority, report drafts, and Jarvis concurrence requests. Tools stay brokered through Gateway and exact-scope adapters.',
+    role: 'Browser · Playwright · Firecrawl · YouTube research',
+    status: 'partial · Mission Control UI ready · Playwright local-only',
+    endpoint: '/api/bridge/space-agent/status',
+    uiHref: agentControlRoute('spaceagent', 'config'),
+    blocker: 'firecrawl_credential_required · firecrawl_backend_adapter_not_configured · youtube_transcript_ready_via_/api/youtube/transcript · interactive_browser_actions_require_bridge_session',
+    nextAction: 'Manage research tooling here. YouTube transcript is available through /api/youtube/transcript; Playwright MCP remains local-only at 127.0.0.1:8931 and Firecrawl stays credential-gated.',
     modes: ['config', 'research'],
+  },
+  gbrain: {
+    slug: 'gbrain',
+    name: 'Gbrain',
+    role: 'Brain Sync and tool-map visibility',
+    status: 'READABLE / BROWSER-PROOF REQUIRED',
+    endpoint: '/api/bridge/gbrain/runtime-proof',
+    uiHref: '/designer-mission-control/Mission%20Control.html?page=gbrain-sync',
+    blocker: 'gbrain_sync_pipeline_not_certified',
+    nextAction: 'Run Gbrain Browser Proof through /api/bridge/gbrain/browser-proof. Runtime proof uses /api/bridge/gbrain/runtime-proof; search uses /api/bridge/gbrain/search; Gbrain Tool Map uses /api/bridge/gbrain/tool-map. Tool map result is inventory_only_no_tool_invocation, tools inventoried, session_id_value_exposed:false, tokens_cookies_exposed:false, raw tools JSON exposed:false.',
+    modes: ['config', 'tools', 'status'],
   },
   paperclip: {
     slug: 'paperclip',
@@ -818,7 +850,7 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   const control = q?.get('control')
   if (control === 'tools') return { kind: 'tools' }
   if (control === 'brain') return { kind: 'brain' }
-  const controlMatch = control?.match(new RegExp(`^(agent-zero|hermes|pi|spaceagent|paperclip|openclaw)-${CONTROL_MODE_MATCH}$`))
+  const controlMatch = control?.match(new RegExp(`^(agent-zero|hermes|pi|spaceagent|gbrain|paperclip|openclaw)-${CONTROL_MODE_MATCH}$`))
   if (controlMatch) {
     return { kind: 'agent', slug: controlMatch[1] as AgentSlug, mode: controlMatch[2] as AgentPanelMode }
   }
@@ -1396,7 +1428,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
     overview: 'Mission Control command center for the selected agent.',
     config: 'Inspect runtime, owner access, blockers, and next safe configuration actions.',
     chat: 'Safe chat/test surface. If a real chat route is not proven, this page only shows status and the exact blocker.',
-    recommend: 'Full Access Gateway Agent recommendation surface. Gateway brokers tools, skills, MCPs, providers, visible task events, exact-scope adapter requests, and pipeline requests while production execution remains Jarvis-gated.',
+    recommend: 'Advisory recommendations only. Execution and writes remain disabled unless a separate exact-scope approval exists.',
     research: 'Research control surface for browser evidence packets, Firecrawl readiness, and YouTube transcript state.',
     ui: 'Paperclip workspace selector for the three-company owner profile. Open a visible company through its Tailnet dashboard link; writes remain Bridge-gated.',
     tools: 'Readable tool inventory. Real task creation remains Bridge-gated; this page does not perform writes.',
@@ -1514,15 +1546,15 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid pi-only">
           <article className="control-card">
             <strong>Gateway visibility</strong>
-            <span>Pi has full brokered Gateway visibility across provider registry, capability matrix, MCP health, agent roster, Bridge readiness, skills, tools, Brain reads, visible tasks, and pipeline requests.</span>
+            <span>PI can read provider registry, capability matrix, MCP health, agent roster, Bridge readiness, and skills/tools inventory through Mission Control routes.</span>
           </article>
           <article className="control-card">
-            <strong>Direct Gateway pipeline</strong>
-            <span>Pi is not a dispatcher. The direct line is owner to Mission Control to Nuclear Gateway to Pi, with tools and skills brokered by Gateway.</span>
+            <strong>Runtime execution</strong>
+            <span>PI is an advisory dispatcher/control-plane surface. It does not execute writes, run tools, or dispatch protected work without a separate exact-scope approval.</span>
           </article>
           <article className="control-card">
             <strong>Bridge policy</strong>
-            <span>Writes, adapter execution, and production-impacting actions require exact scope, Jarvis concurrence, audit trail, rollback, and no raw secret exposure.</span>
+            <span>Any write/run/mutate recommendation stays owner-gated with exact scope, audit trail, and rollback.</span>
           </article>
         </section>
       )}
@@ -1530,9 +1562,9 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
         <section className="control-grid pi-only">
           {[
             ['Web research', 'Recommend SpaceAgent, Firecrawl, or Playwright based on current blockers.'],
-            ['Workflow design', 'Use the Gateway pipeline to work with Ron Weasley for skill/workflow planning through the Nuclear Dispatcher command center.'],
+            ['Workflow design', 'Recommend Ron Weasley for skill/workflow planning through the Nuclear Dispatcher command center.'],
             ['Workforce task', 'Recommend Paperclip for workspace-scoped workforce organization; writes stay gated.'],
-            ['Runtime action', 'Use OpenClaw/OpenCloud only as an explicit supporting runtime/tool after Bridge approval and runtime proof.'],
+            ['Runtime action', 'Recommend OpenClaw/OpenCloud only as an explicit supporting runtime/tool after Bridge approval and runtime proof.'],
             ['Provider/model choice', 'Read provider registry and token governor state without seeing secrets.'],
             ['Brain visibility', 'Read Brain readiness status; memory writes remain Bridge-gated.'],
           ].map(([title, copy]) => (
@@ -1555,7 +1587,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
           <article className="control-card">
             <strong>Zapier visibility</strong>
-            <span>Zapier is visible in Gateway and connected/configured. Certified exact-scope Zapier actions are available; broad Zap creation, live social posting, and arbitrary execution require approved scope.</span>
+            <span>Zapier discovery/status is visible in Gateway and always-on read-only. Broad Zap creation, live social posting, and arbitrary execution remain blocked outside explicit owner-approved scopes.</span>
           </article>
           <article className="control-card">
             <strong>Bridge-gated tools</strong>

@@ -27,6 +27,8 @@ const GATEWAY_SHELL_SOURCE = readFileSync(
   join(HERE, '..', 'src', 'components', 'gateway', 'GatewayShell.tsx'),
   'utf8',
 )
+const GATEWAY_OVERVIEW_SOURCE = readFileSync(join(MOCKS_ROOT, 'Gateway Overview.html'), 'utf8')
+const GATEWAY_DATA_SOURCE = readFileSync(join(MOCKS_ROOT, 'shared', 'gateway-data.js'), 'utf8')
 
 function searchParamsOf(qs: string): URLSearchParams {
   return new URLSearchParams(qs)
@@ -69,6 +71,11 @@ describe('iframeSrcFor — URL encoding (D5) + basePath', () => {
     expect(iframeSrcFor(overview)).toBe('/design/gateway/Gateway%20Overview.html')
   })
 
+  it('passes the Zapier trace query only to Gateway Overview', () => {
+    expect(iframeSrcFor(overview, searchParamsOf('trace=zapier'))).toBe('/design/gateway/Gateway%20Overview.html?trace=zapier')
+    expect(iframeSrcFor(agentHub, searchParamsOf('trace=zapier'))).toBe('/design/gateway/Agent%20Hub.html')
+  })
+
   it('never emits a leading double slash', () => {
     for (const t of GATEWAY_TABS) {
       const src = iframeSrcFor(t)
@@ -84,6 +91,35 @@ describe('iframeSrcFor — URL encoding (D5) + basePath', () => {
       expect(src).not.toMatch(/^\/home\//)
       expect(src).not.toMatch(/^\/Volumes\//)
     }
+  })
+})
+
+describe('Gateway Overview Zapier visual wire contract', () => {
+  it('keeps the canonical Agent Zero to Zapier edge in graph data', () => {
+    expect(GATEWAY_DATA_SOURCE).toContain("from: 'agent.zero', to: 'int.zapier'")
+    expect(GATEWAY_DATA_SOURCE).toContain("status: 'green'")
+    expect(GATEWAY_DATA_SOURCE).toContain('Certified exact-scope Zapier actions are available.')
+    expect(GATEWAY_DATA_SOURCE).toContain('guardrail_reason')
+    expect(GATEWAY_DATA_SOURCE).not.toContain("int.zapier',       name: 'Zapier',            type: 'tool',    lane: 'right_integration', status: 'yellow'")
+    expect(GATEWAY_DATA_SOURCE).not.toContain('zapier_credential_required')
+    expect(GATEWAY_DATA_SOURCE).not.toContain('adapter_missing')
+  })
+
+  it('renders trace hooks and owner graph controls for the Zapier wire', () => {
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain("data-from")
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain("data-to")
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain("edge.from === 'agent.zero' && edge.to === 'int.zapier'")
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain('zapier-link')
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain('Fit Graph')
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain('Center Gateway')
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain('Trace Zapier')
+    expect(GATEWAY_OVERVIEW_SOURCE).toContain('data-trace-target="zapier"')
+  })
+
+  it('exposes a Gateway shell link to the Zapier trace view', () => {
+    expect(GATEWAY_SHELL_SOURCE).toContain('/gateway/overview?trace=zapier')
+    expect(GATEWAY_SHELL_SOURCE).toContain('Trace Zapier Wire')
+    expect(GATEWAY_SHELL_SOURCE).toContain('gateway-trace-zapier-link')
   })
 })
 
@@ -134,9 +170,9 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
   })
 
   it('routes delegate open buttons to the matching Gateway pages', () => {
-    expect(gatewayActionForButton({ label: 'open', nearbyText: 'Hermes · lieutenant read-bias · gated writes' })).toMatchObject({
-      kind: 'frame',
-      href: '/design/gateway/Hermes%20Lieutenant.html',
+    expect(gatewayActionForButton({ label: 'open', nearbyText: 'Hermes · Nuclear Dispatcher · Jarvis concurrence required' })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/ron/webui/app',
     })
     expect(gatewayActionForButton({ label: 'open', nearbyText: 'Build-Wiki worker · workflow runner OpenCloud n8n' })).toMatchObject({
       kind: 'frame',
@@ -181,7 +217,7 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
     })).toMatchObject({
       kind: 'openExternal',
-      href: 'http://100.116.35.95:3100/ECO/dashboard',
+      href: '/gateway/agent-hub/paperclip/ui',
     })
     expect(gatewayActionForButton({
       label: 'Open localhost',
@@ -189,7 +225,7 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       nearbyText: 'Owner → Gateway → Agent Zero / Pi / Hermes → Paperclip workforce control plane',
     })).toMatchObject({
       kind: 'openExternal',
-      href: 'http://100.116.35.95:3100/ECO/dashboard',
+      href: '/gateway/agent-hub/paperclip/ui',
     })
     expect(gatewayActionForButton({
       label: 'Open UI',
@@ -265,6 +301,27 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       kind: 'navigate',
       href: '/gateway/agent-hub/paperclip/help',
     })
+    expect(gatewayActionForButton({
+      label: 'Telegram Agent',
+      nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/paperclip/telegram-agent',
+    })
+    expect(gatewayActionForButton({
+      label: 'Open Recommendations',
+      nearbyText: 'Pi route optimizer Gateway inventory',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/pi/recommend',
+    })
+    expect(gatewayActionForButton({
+      label: 'Recheck health',
+      nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
+    })).toMatchObject({
+      kind: 'status',
+      endpoint: '/api/bridge/paperclip/status',
+    })
   })
 })
 
@@ -283,7 +340,7 @@ describe('controlViewFromPath — Paperclip normalized owner routes', () => {
   })
 
   it('supports the full Paperclip ECO control route map', () => {
-    for (const mode of ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help']) {
+    for (const mode of ['config', 'ui', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help', 'telegram-agent']) {
       expect(controlViewFromPath(`/gateway/agent-hub/paperclip/${mode}`, null)).toMatchObject({
         kind: 'agent',
         slug: 'paperclip',
@@ -296,7 +353,7 @@ describe('controlViewFromPath — Paperclip normalized owner routes', () => {
 describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
   const requiredSurfaces = [
     'Agent Zero',
-    'Hermes',
+    'Ron Weasley',
     'Pi',
     'SpaceAgent',
     'Paperclip',
@@ -307,6 +364,7 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     'Bridge Session',
     'Telegram',
     'AgentMail',
+    'Zapier',
     'Google Drive',
     'OneDrive',
   ]
@@ -326,7 +384,7 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
       expect(row.proxyRoute).toMatch(/^\/|^$/)
       expect(row.authRequired).toBe(true)
       expect(row.status.length).toBeGreaterThan(0)
-      expect(row.blocker.length).toBeGreaterThan(0)
+      expect((row.blocker || row.guardrail || '').length).toBeGreaterThan(0)
       expect(row.nextFix.length).toBeGreaterThan(0)
       expect(row.proxyRoute).not.toBe('/api/spaceagent/status')
     }
@@ -339,13 +397,13 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
       href: 'http://100.116.35.95:50080/',
     })
     expect(byName.get('Agent Zero')?.tailnetUrl).toBe('http://100.116.35.95:50080/')
-    expect(byName.get('Agent Zero')?.blocker).toContain('file descriptor')
-    expect(byName.get('Hermes')?.tailnetUrl).toBeNull()
+    expect(byName.get('Agent Zero')?.blocker).toContain('owner_hard_stops_only_remaining')
+    expect(byName.get('Ron Weasley')?.tailnetUrl).toBeNull()
     expect(byName.get('Playwright MCP')?.tailnetUrl).toBeNull()
     expect(byName.get('Playwright MCP')?.localUrl).toBe('server-local only: 127.0.0.1:8931')
     expect(byName.get('Paperclip')?.buttons.ui).toMatchObject({
       enabled: true,
-      href: 'http://100.116.35.95:3100/ECO/dashboard',
+      href: '/gateway/agent-hub/paperclip/ui',
     })
     expect(byName.get('Paperclip')?.buttons.health).toMatchObject({
       enabled: true,
@@ -370,11 +428,11 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
       enabled: true,
       href: '/gateway/agent-hub/agent-zero/config',
     })
-    expect(byName.get('Hermes')?.buttons.config).toMatchObject({
+    expect(byName.get('Ron Weasley')?.buttons.config).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/hermes/config',
+      href: '/gateway/agent-hub/ron/config',
     })
-    expect(byName.get('Pi')?.buttons.config).toMatchObject({
+    expect(byName.get('PI Dispatcher')?.buttons.config).toMatchObject({
       enabled: true,
       href: '/gateway/agent-hub/pi/config',
     })
@@ -401,20 +459,65 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     }
   })
 
+  it('exposes Pi, SpaceAgent, and Paperclip owner localhost/UI surfaces instead of disabled status-only rows', () => {
+    const byName = new Map(AGENT_INTERFACE_LINKS.map((row) => [row.name, row]))
+
+    expect(byName.get('PI Dispatcher')).toMatchObject({
+      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
+      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
+      buttons: {
+        ui: { enabled: true, href: '/gateway/agent-hub/pi/config' },
+        chat: { enabled: true, href: '/gateway/agent-hub/pi/recommend' },
+      },
+    })
+
+    expect(byName.get('SpaceAgent')).toMatchObject({
+      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
+      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
+      buttons: {
+        ui: { enabled: true, href: '/gateway/agent-hub/spaceagent/config' },
+        chat: { enabled: true, href: '/gateway/agent-hub/spaceagent/research' },
+      },
+    })
+
+    expect(byName.get('Paperclip')).toMatchObject({
+      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
+      tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
+      buttons: {
+        ui: { enabled: true, href: '/gateway/agent-hub/paperclip/ui' },
+      },
+    })
+  })
+
   it('uses the requested owner-facing truth table labels', () => {
     const byName = new Map(AGENT_INTERFACE_LINKS.map((row) => [row.name, row]))
-    expect(byName.get('Agent Zero')?.status).toContain('UI restored')
-    expect(byName.get('Agent Zero')?.blocker).toContain('agent_zero_fd_exhaustion_guard_pending')
-    expect(byName.get('Hermes')?.status).toContain('service active')
-    expect(byName.get('Hermes')?.blocker).toContain('hermes_owner_proxy_not_wired')
-    expect(byName.get('Pi')?.status).toContain('advisory')
-    expect(byName.get('Pi')?.blocker).toContain('pi_runtime_session_not_proven')
-    expect(byName.get('SpaceAgent')?.status).toContain('Mission Control panel only')
-    expect(byName.get('SpaceAgent')?.blocker).toContain('no_standalone_spaceagent_ui')
+    expect(byName.get('Agent Zero')?.status).toContain('exact-scope execution certified')
+    expect(byName.get('Agent Zero')?.blocker).toContain('owner_hard_stops_only_remaining')
+    expect(byName.get('Ron Weasley')?.status).toContain('FULL_ACCESS_DELEGATED')
+    expect(byName.get('Ron Weasley')?.blocker).toContain('standalone_hermes_webui_proxy_required_if_8787_unreachable')
+    expect(byName.get('PI Dispatcher')?.status).toContain('READ_ONLY / DISPATCHER REGISTERED')
+    expect(byName.get('PI Dispatcher')?.blocker).toContain('protected_execution_requires_owner_scope')
+    expect(byName.get('SpaceAgent')?.status).toContain('Mission Control UI ready')
+    expect(byName.get('SpaceAgent')?.blocker).toContain('interactive_browser_actions_require_bridge_session')
     expect(byName.get('Paperclip')?.status).toContain('INSTALLED / READY')
     expect(byName.get('Paperclip')?.blocker).toContain('paperclip_writes_bridge_gated')
     expect(byName.get('OpenClaw+')?.status).toContain('tunnel live')
     expect(byName.get('OpenClaw+')?.blocker).toContain('openclaw_doctor_runtime_not_reachable')
+  })
+
+  it('routes Paperclip UI launches through workspace truth instead of a hard-coded ECO shortcut', () => {
+    const paperclip = AGENT_INTERFACE_LINKS.find((row) => row.name === 'Paperclip')
+    expect(paperclip?.buttons.ui).toMatchObject({
+      enabled: true,
+      href: '/gateway/agent-hub/paperclip/ui',
+    })
+    expect(paperclip?.blocker).toContain('selector-backed')
+    expect(GATEWAY_SHELL_SOURCE).toContain('PaperclipWorkspaceSelectorPanel')
+    expect(GATEWAY_SHELL_SOURCE).toContain('/api/bridge/paperclip/workspace-truth')
+    expect(GATEWAY_SHELL_SOURCE).toContain('data-testid="paperclip-workspace-selector"')
+    expect(GATEWAY_SHELL_SOURCE).toContain('data-paperclip-hard-coded-eco-only')
+    expect(GATEWAY_SHELL_SOURCE).toContain('data-paperclip-workspace-open-enabled')
+    expect(GATEWAY_SHELL_SOURCE).not.toContain('ECO only for owner-facing Paperclip work')
   })
 })
 
@@ -444,6 +547,9 @@ describe('AgentInterfaceInventory layout contract', () => {
     expect(GATEWAY_SHELL_SOURCE).toContain('Recommendations')
     expect(GATEWAY_SHELL_SOURCE).toContain('Research')
     expect(GATEWAY_SHELL_SOURCE).toContain('Issues / Tasks')
+    expect(GATEWAY_SHELL_SOURCE).toContain('Telegram Agent')
+    expect(GATEWAY_SHELL_SOURCE).toContain('telegram_agent_connect')
+    expect(GATEWAY_SHELL_SOURCE).toContain('PI can read provider registry')
     expect(GATEWAY_SHELL_SOURCE).toContain('BRAIN_READINESS_FALLBACK')
     expect(GATEWAY_SHELL_SOURCE).toContain('brain_readiness_endpoint_not_readable_or_owner_auth_required')
   })

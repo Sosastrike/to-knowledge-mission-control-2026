@@ -7,12 +7,15 @@ type GatewayActionContext = {
 type GatewayFrameAction =
   | { kind: 'navigate'; href: string; title: string; detail: string }
   | { kind: 'frame'; href: string; title: string; detail: string }
-  | { kind: 'openExternal'; href: string; title: string; detail: string }
+  | { kind: 'openExternal'; href: string; title: string; detail: string; targetName?: string }
   | { kind: 'status'; endpoint: string; title: string; detail: string }
   | { kind: 'gated'; title: string; detail: string; href?: string }
   | { kind: 'copy'; title: string; detail: string; value: string }
 
 const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+export const PAPERCLIP_ECO_DASHBOARD = 'http://100.116.35.95:3100/ECO/dashboard'
+export const PAPERCLIP_ECO_WINDOW_NAME = 'tkmc_paperclip_eco'
+export const PAPERCLIP_WORKSPACE_SELECTOR_ROUTE = '/gateway/agent-hub/paperclip/ui'
 
 function normalized(value: string | undefined): string {
   return (value || '').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -43,10 +46,18 @@ function connectorEndpoint(text: string): string | null {
   return null
 }
 
-function ownerUiLink(text: string): string | null {
-  if (hasAny(text, 'paperclip', 'workforce control plane')) return 'http://100.116.35.95:3100/ECO/dashboard'
-  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return 'http://100.116.35.95:50080/'
-  if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return 'http://127.0.0.1:18789/'
+function ownerUiTarget(text: string): { href: string; targetName?: string } | null {
+  if (hasAny(text, 'paperclip', 'workforce control plane')) {
+    return { href: shellHref(PAPERCLIP_WORKSPACE_SELECTOR_ROUTE) }
+  }
+  if (hasAny(text, 'pi-mono', 'pi ', 'dispatcher candidate', 'route optimizer')) {
+    return { href: shellHref('/gateway/agent-hub/pi/config') }
+  }
+  if (hasAny(text, 'spaceagent', 'space agent', 'playwright', 'browser research')) {
+    return { href: shellHref('/gateway/agent-hub/spaceagent/config') }
+  }
+  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: 'http://100.116.35.95:50080/' }
+  if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return { href: 'http://127.0.0.1:18789/' }
   return null
 }
 
@@ -155,7 +166,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         kind: 'navigate',
         href,
         title: 'Opening Paperclip companies',
-        detail: 'Opening the read-only ECO company inventory. TOK remains a separate legacy blocker.',
+        detail: 'Opening the read-only Paperclip company inventory. Workspace launches are handled by the workspace selector.',
       }
     }
   }
@@ -167,7 +178,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
         kind: 'navigate',
         href,
         title: 'Opening Paperclip agents',
-        detail: 'Opening the read-only Paperclip workforce roster for ECO.',
+        detail: 'Opening the read-only Paperclip workforce roster for the visible workspace scope.',
       }
     }
   }
@@ -212,6 +223,16 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
+  if (label === 'open recommendations' || label === 'recommendations') {
+    const href = agentControlHref(text, 'recommend')
+    if (href) return {
+      kind: 'navigate',
+      href,
+      title: 'Opening PI recommendations',
+      detail: 'Opening the read-only PI dispatcher recommendation panel. Execution and writes remain disabled.',
+    }
+  }
+
   if (label === 'view audit' || label === 'audit' || label.includes('audit')) {
     const href = agentControlHref(text, 'audit')
     if (href) {
@@ -242,6 +263,15 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
+  if (label === 'telegram agent' || label === 'create telegram agent' || label.includes('telegram agent')) {
+    return {
+      kind: 'navigate',
+      href: shellHref('/gateway/agent-hub/paperclip/telegram-agent'),
+      title: 'Opening Telegram Agent option',
+      detail: 'This is a read-only planning surface. Connecting a Telegram-capable Paperclip agent remains Bridge-gated and does not execute here.',
+    }
+  }
+
   if (label.includes('bridge') || label.includes('approve') || label.includes('open bridge')) {
     return {
       kind: 'navigate',
@@ -252,18 +282,20 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label === 'open ui') {
-    const href = ownerUiLink(text)
-    if (href) {
+    const target = ownerUiTarget(text)
+    if (target) {
       return {
         kind: 'openExternal',
-        href,
+        ...target,
         title: 'Opening owner UI',
-        detail: 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
+        detail: target.href.includes('/gateway/agent-hub/paperclip')
+          ? 'Opening the Paperclip workspace selector. Use Open UI or Open in New Tab on the selected visible workspace; no Paperclip writes are executed.'
+          : 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
       }
     }
     return {
       kind: 'status',
-      endpoint: hasAny(text, 'hermes') ? '/api/hermes/status'
+      endpoint: hasAny(text, 'hermes') ? '/api/bridge/hermes/status'
         : hasAny(text, 'pi') ? '/api/bridge/dispatcher/status'
           : hasAny(text, 'spaceagent', 'space agent', 'playwright') ? '/api/bridge/space-agent/status'
             : '/api/agent-local-interfaces',
@@ -285,10 +317,10 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
     if (hasAny(text, 'hermes')) {
       return {
-        kind: 'frame',
-        href: designHref('Hermes Lieutenant.html'),
-        title: 'Opening Hermes',
-        detail: 'Loading the Hermes lieutenant surface in the Gateway pane.',
+        kind: 'status',
+        endpoint: '/api/bridge/hermes/status',
+        title: 'Hermes Nuclear Dispatcher status',
+        detail: 'Checking the Hermes command-center route instead of opening a legacy static mock.',
       }
     }
     if (hasAny(text, 'build-wiki', 'farmer', 'opencloud', 'n8n')) {
@@ -347,13 +379,15 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
   }
 
   if (label.includes('open localhost') || label.includes('open in new tab') || label.includes('preview ui')) {
-    const href = ownerUiLink(text)
-    if (href) {
+    const target = ownerUiTarget(text)
+    if (target) {
       return {
         kind: 'openExternal',
-        href,
+        ...target,
         title: 'Opening owner UI',
-        detail: 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
+        detail: target.href.includes('/gateway/agent-hub/paperclip')
+          ? 'Opening the Paperclip workspace selector. Use Open UI or Open in New Tab on the selected visible workspace; no Paperclip writes are executed.'
+          : 'Opening the real owner-accessible interface in a new tab. Bridge Session is not required for safe navigation.',
       }
     }
     if (hasAny(text, 'agent zero')) {
@@ -367,9 +401,9 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     if (hasAny(text, 'hermes')) {
       return {
         kind: 'status',
-        endpoint: '/api/hermes/status',
-        title: 'Hermes local status',
-        detail: 'Checking Hermes runtime reachability before opening the localhost surface.',
+        endpoint: '/api/bridge/hermes/status',
+        title: 'Hermes command-center status',
+        detail: 'Checking the Mission Control Hermes Nuclear Dispatcher control plane.',
       }
     }
     if (hasAny(text, 'paperclip')) {
@@ -414,7 +448,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     }
   }
 
-  if (label.includes('recheck handshake')) {
+  if (label.includes('recheck handshake') || label.includes('recheck health')) {
     return {
       kind: 'status',
       endpoint: hasAny(text, 'paperclip') ? '/api/bridge/paperclip/status' : '/api/bridge/runtime-services',
@@ -533,7 +567,14 @@ function actionHeaders(): HeadersInit {
   return key ? { 'x-api-key': key } : {}
 }
 
-function showGatewayNotice(doc: Document, title: string, detail: string, tone: 'info' | 'ok' | 'warn' | 'error' = 'info') {
+function showGatewayNotice(
+  doc: Document,
+  title: string,
+  detail: string,
+  tone: 'info' | 'ok' | 'warn' | 'error' = 'info',
+  fallbackHref?: string,
+  fallbackTarget?: string,
+) {
   let style = doc.getElementById('cc-gateway-action-style')
   if (!style) {
     style = doc.createElement('style')
@@ -560,6 +601,19 @@ function showGatewayNotice(doc: Document, title: string, detail: string, tone: '
   titleNode.textContent = title
   const detailNode = doc.createElement('span')
   detailNode.textContent = detail
+  if (fallbackHref) {
+    const link = doc.createElement('a')
+    link.href = fallbackHref
+    link.target = fallbackTarget || '_blank'
+    link.rel = fallbackTarget ? '' : 'noreferrer'
+    link.textContent = 'Open fallback link'
+    link.style.display = 'inline-flex'
+    link.style.marginTop = '8px'
+    link.style.color = '#7dd3fc'
+    link.style.fontWeight = '700'
+    toast.replaceChildren(titleNode, detailNode, link)
+    return
+  }
   toast.replaceChildren(titleNode, detailNode)
 }
 
@@ -589,8 +643,26 @@ async function executeGatewayAction(action: GatewayFrameAction, iframe: HTMLIFra
 
   if (action.kind === 'openExternal') {
     showGatewayNotice(doc, action.title, action.detail, 'ok')
-    const opened = window.open(action.href, '_blank', 'noopener,noreferrer')
-    if (!opened) window.location.href = action.href
+    const opened = action.targetName
+      ? window.open(action.href, action.targetName)
+      : window.open(action.href, '_blank', 'noopener,noreferrer')
+    if (opened) {
+      try {
+        opened.opener = null
+      } catch (_err) {
+        /* cross-origin window proxy can reject opener mutation; launcher still uses a named tab */
+      }
+      opened.focus?.()
+      return
+    }
+    showGatewayNotice(
+      doc,
+      'Popup blocked',
+      'The browser blocked the launch. Use the fallback link; Mission Control stays open.',
+      'warn',
+      action.href,
+      action.targetName,
+    )
     return
   }
 

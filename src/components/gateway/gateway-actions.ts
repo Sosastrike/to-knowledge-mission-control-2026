@@ -69,9 +69,6 @@ function ownerUiTarget(text: string): { href: string; targetName?: string } | nu
     return { href: shellHref(PAPERCLIP_WORKSPACE_SELECTOR_ROUTE) }
   }
   if (isRonWeasleySurface(text)) return { href: shellHref('/gateway/agent-hub/ron/webui/app') }
-  if (hasAny(text, 'pi-mono', 'pi ', 'pi full access', 'full access gateway agent')) return { href: shellHref('/gateway/agent-hub/pi/config') }
-  if (hasAny(text, 'spaceagent', 'space agent', 'playwright', 'browser research')) return { href: shellHref('/gateway/agent-hub/spaceagent/config') }
-  if (hasAny(text, 'gbrain', 'brain sync')) return { href: shellHref('/designer-mission-control/Mission%20Control.html?page=gbrain-sync') }
   if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: 'http://100.116.35.95:50080/' }
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return { href: 'http://127.0.0.1:18789/' }
   return null
@@ -381,7 +378,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
       kind: 'status',
       endpoint: isRonWeasleySurface(text) ? '/api/bridge/hermes/full-access/status'
         : hasAny(text, 'pi') ? '/api/bridge/pi/status'
-          : hasAny(text, 'spaceagent', 'space agent', 'playwright') ? '/api/bridge/spaceagent/status'
+          : hasAny(text, 'spaceagent', 'space agent', 'playwright') ? '/api/bridge/space-agent/status'
             : '/api/agent-local-interfaces',
       title: 'Owner UI unavailable',
       detail: 'No safe owner UI link is exposed for this surface. Checking the JSON status/config route instead.',
@@ -501,7 +498,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     if (hasAny(text, 'spaceagent', 'playwright', 'browser')) {
       return {
         kind: 'status',
-        endpoint: '/api/bridge/spaceagent/status',
+        endpoint: '/api/bridge/space-agent/status',
         title: 'SpaceAgent local status',
         detail: 'Checking SpaceAgent and Playwright MCP readiness before opening browser automation.',
       }
@@ -606,8 +603,8 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
 
   return {
     kind: 'gated',
-    title: 'Action routed to Gateway',
-    detail: `The "${context.label.trim() || 'button'}" control is wired. It is blocked from direct execution until an explicit Gateway contract is attached.`,
+    title: 'Gateway action is guarded',
+    detail: `The "${context.label.trim() || 'button'}" control is connected, but it does not run anything by itself yet. Nothing executed. Use the card status, Health, Config, or Approval Center to attach a safe read-only destination or an owner-approved action scope.`,
     href: shellHref('/gateway/bridge-session'),
   }
 }
@@ -751,8 +748,7 @@ async function executeGatewayAction(action: GatewayFrameAction, iframe: HTMLIFra
   }
 
   if (action.kind === 'gated') {
-    const suffix = action.href ? ` Open Bridge Session from ${action.href}.` : ''
-    showGatewayNotice(doc, action.title, `${action.detail}${suffix}`, 'warn')
+    showGatewayNotice(doc, action.title, action.detail, 'warn')
     return
   }
 

@@ -1,0 +1,181 @@
+import { describe, expect, it } from 'vitest'
+
+import {
+  buildGatewayGraphNodeReadiness,
+  nodeColorForStatus,
+} from '@/lib/gateway-graph-node-readiness'
+
+describe('gateway graph node readiness', () => {
+  it('maps node readiness status to card colors without making guarded systems look offline', () => {
+    expect(nodeColorForStatus('live')).toBe('green')
+    expect(nodeColorForStatus('read_only')).toBe('cyan')
+    expect(nodeColorForStatus('approval_required')).toBe('yellow')
+    expect(nodeColorForStatus('standby')).toBe('gray')
+    expect(nodeColorForStatus('degraded')).toBe('yellow')
+    expect(nodeColorForStatus('blocked')).toBe('red')
+    expect(nodeColorForStatus('disabled')).toBe('gray')
+  })
+
+  it('covers every visible Gateway card and keeps readiness separate from edge health', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+
+    expect(payload.ok).toBe(true)
+    expect(payload.nodes.length).toBe(46)
+    expect(payload.graph_health).toMatchObject({
+      readiness_feed: 'healthy',
+      graph_data_source: 'live',
+      edge_count_expected: 22,
+      node_count_expected: 46,
+      node_count_returned: 46,
+      node_mapping_errors: [],
+      static_asset_version: 'gateway-node-readiness-v1',
+    })
+  })
+
+  it('adds Pi, Space Agent, and Paperclip as direct guarded Gateway agents without normal-chat bridge requirements', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    for (const id of ['agent.pi', 'agent.space', 'agent.paperclip']) {
+      expect(byId.get(id)).toMatchObject({
+        domain: 'agent',
+        status: 'read_only',
+        color: 'cyan',
+        read_ready: true,
+        write_ready: false,
+        execute_ready: false,
+        approval_required: true,
+        setup_state: 'standing_gateway_read_ready',
+        per_action_state: 'external_actions_require_scope',
+        lock_scope: 'external_actions',
+      })
+      expect(byId.get(id)?.primary_reason).not.toMatch(/opencloud|octm|tony|legacy|buildwiki|farmer/i)
+      expect(byId.get(id)?.next_action).toContain('gateway_scope')
+    }
+  })
+
+  it('marks model cards live after xAI returns a fresh healthy model-list probe', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    for (const id of ['model.openrouter', 'model.openai', 'model.claude', 'model.ollama', 'model.nvidia', 'model.gemini', 'model.groq', 'model.xai_grok']) {
+      expect(byId.get(id)).toMatchObject({
+        domain: 'model',
+        status: 'live',
+        color: 'green',
+        read_ready: true,
+        execute_ready: true,
+        approval_required: false,
+      })
+    }
+
+    expect(byId.get('model.xai_grok')).toMatchObject({
+      domain: 'model',
+      status: 'live',
+      color: 'green',
+      primary_reason: 'xai_grok_model_runtime_ready',
+      execute_ready: true,
+      next_action: 'route_xai_grok_requests_through_gateway_runtime_bridge_and_cost_governor',
+    })
+  })
+
+  it('shows Knowledge/GBrain systems as readable with exact guarded-write semantics', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    expect(byId.get('brain.obsidian')).toMatchObject({
+      status: 'read_only',
+      color: 'cyan',
+      ui_state_label: 'Obsidian Vault · writes guarded',
+      approval_center_refs: ['approval.obsidian.write_scope'],
+    })
+    expect(byId.get('brain.graphify')).toMatchObject({
+      status: 'read_only',
+      color: 'cyan',
+      ui_state_label: 'Graphify / Graffiti · writes guarded',
+      approval_center_refs: ['approval.graphify.graph_write'],
+    })
+    expect(byId.get('brain.gbrain')).toMatchObject({
+      label: 'GBrain',
+      status: 'read_only',
+      color: 'cyan',
+      primary_reason: 'gbrain_inventory_only_no_tool_invocation',
+      approval_center_refs: ['approval.gbrain.tool_map'],
+    })
+  })
+
+  it('shows guarded and read-only connectors as active states instead of gray offline cards', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    expect(byId.get('int.zapier')).toMatchObject({
+      domain: 'connector',
+      status: 'read_only',
+      color: 'cyan',
+      primary_reason: 'zapier_discovery_ready_writes_guarded',
+      short_label: 'Zapier discovery ready · writes guarded',
+      read_ready: true,
+      write_ready: false,
+      execute_ready: false,
+      approval_required: true,
+    })
+
+    expect(byId.get('int.agentmail')).toMatchObject({
+      domain: 'agentmail',
+      status: 'live',
+      color: 'green',
+      primary_reason: 'approval_gated_send_ready',
+      short_label: 'AgentMail ready · approval-gated sending',
+      setup_state: 'approval_gated_send_ready',
+      per_action_state: 'no_pending_send_request',
+      lock_scope: 'external_delivery_per_send',
+      read_ready: true,
+      write_ready: true,
+      execute_ready: true,
+      approval_required: true,
+    })
+
+    expect(byId.get('int.reports')).toMatchObject({
+      domain: 'report',
+      status: 'read_only',
+      color: 'cyan',
+      short_label: 'Preview ready · delivery guarded',
+      primary_reason: 'report_preview_ready_delivery_not_enabled',
+    })
+  })
+
+  it('keeps standby cards gray with exact not-offline copy', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    expect(byId.get('input.webhook')).toMatchObject({
+      domain: 'webhook',
+      status: 'standby',
+      color: 'gray',
+      short_label: 'Receiver ready · waiting for events',
+      primary_reason: 'webhook_receiver_ready_no_recent_events',
+    })
+    expect(byId.get('input.event')).toMatchObject({
+      domain: 'connector',
+      status: 'standby',
+      color: 'gray',
+      short_label: 'Event bus ready · no recent events',
+      primary_reason: 'event_bus_ready_no_recent_events',
+    })
+  })
+
+  it('does not expose secrets or enable external writes in node readiness', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+
+    expect(payload).toMatchObject({
+      credential_values_exposed: false,
+      tokens_exposed: false,
+      env_values_exposed: false,
+      external_writes_executed: false,
+      broad_connector_execution_enabled: false,
+    })
+    expect(JSON.stringify(payload)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
+  })
+})

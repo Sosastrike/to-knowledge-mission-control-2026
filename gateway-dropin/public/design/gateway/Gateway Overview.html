@@ -14,11 +14,60 @@
 .gw-canvas-wrap {
   height: calc(100vh - 56px - 44px);
   position: relative;
-  overflow: hidden;
+  overflow: auto;
+  scrollbar-gutter: stable;
   background:
     radial-gradient(circle at 50% 50%, rgba(94,234,212,0.06) 0%, transparent 55%),
     radial-gradient(circle at 12% 0%, rgba(167,139,250,0.05) 0%, transparent 60%),
     var(--bg-1);
+}
+.gw-view-controls {
+  position: fixed;
+  top: 112px;
+  left: 14px;
+  z-index: 72;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100vw - 420px);
+  background: rgba(13,18,26,0.88);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 7px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(8px);
+}
+.gw-view-controls button,
+.drawer-toggle {
+  appearance: none;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--bg-3);
+  color: var(--t-2);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.gw-view-controls button:hover,
+.drawer-toggle:hover,
+.gw-view-controls button.on {
+  color: var(--t-1);
+  border-color: rgba(94,234,212,0.42);
+  background: rgba(94,234,212,0.10);
+}
+.gw-viewport-stage {
+  position: relative;
+  min-width: 1480px;
+  min-height: 1120px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.gw-canvas-wrap.is-panning {
+  cursor: grab;
+}
+.gw-canvas-wrap.is-panning:active {
+  cursor: grabbing;
 }
 .gw-canvas-wrap::before {
   content: '';
@@ -31,11 +80,43 @@
   opacity: 0.6;
   pointer-events: none;
 }
+.gw-canvas-wrap,
+.canvas.variant-nucleus .lane.inputs #lane-inputs,
+.canvas.variant-nucleus .lane.integrations #lane-integrations,
+.dispatch-feed,
+.engine-ledger {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94,234,212,0.42) rgba(13,18,26,0.72);
+}
+.gw-canvas-wrap::-webkit-scrollbar,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar,
+.dispatch-feed::-webkit-scrollbar,
+.engine-ledger::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.gw-canvas-wrap::-webkit-scrollbar-track,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar-track,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar-track,
+.dispatch-feed::-webkit-scrollbar-track,
+.engine-ledger::-webkit-scrollbar-track {
+  background: rgba(13,18,26,0.72);
+}
+.gw-canvas-wrap::-webkit-scrollbar-thumb,
+.canvas.variant-nucleus .lane.inputs #lane-inputs::-webkit-scrollbar-thumb,
+.canvas.variant-nucleus .lane.integrations #lane-integrations::-webkit-scrollbar-thumb,
+.dispatch-feed::-webkit-scrollbar-thumb,
+.engine-ledger::-webkit-scrollbar-thumb {
+  background: rgba(94,234,212,0.42);
+  border-radius: 999px;
+}
 
 /* ---- Lane scaffold ---- */
 .canvas {
   position: relative;
   height: 100%;
+  min-height: 100%;
   display: grid;
   grid-template-columns: 220px 1fr 240px 1fr 220px;
   grid-template-rows: 150px 1fr 150px;
@@ -45,6 +126,19 @@
     "models   models   models   models   models";
   gap: 14px 18px;
   padding: 22px 26px;
+  z-index: 2;
+}
+.canvas.layout-editing .node-card {
+  cursor: move;
+  outline: 1px dashed rgba(94,234,212,0.28);
+}
+.canvas.compact-cards .node-card {
+  padding: 7px 9px;
+  gap: 4px;
+}
+.canvas.compact-cards .node-card .nc-summary,
+.canvas.compact-cards .node-card .nc-reason {
+  display: none;
 }
 .lane.inputs, .lane.integrations { padding-top: 14px; }
 .lane.brain { padding-top: 14px; }
@@ -81,19 +175,29 @@
 }
 .lane.inputs .node-card, .lane.integrations .node-card { max-width: none; }
 
-.lane.brain {
+.lane.brain #lane-brain {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
+  width: 100%;
 }
-.lane.models {
+.lane.models #lane-models {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(10, minmax(120px, 1fr));
   gap: 8px;
   align-items: start;
+  width: 100%;
 }
 .lane.brain .node-card, .lane.models .node-card { max-width: none; min-width: 0; }
+.lane.inputs #lane-inputs,
+.lane.integrations #lane-integrations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  width: 100%;
+}
 
 /* ---- Center lane: Gateway Core ---- */
 .lane.center {
@@ -162,13 +266,83 @@
 /* ---- Edges layer (SVG) ---- */
 .edges {
   position: absolute; inset: 0;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 1;
 }
 .edges path {
   fill: none;
   stroke: rgba(255,255,255,0.10);
   stroke-width: 1.2;
+  pointer-events: stroke;
+  cursor: help;
+}
+.edges path.edge-trunk {
+  stroke-width: 2.4;
+  opacity: 0.22;
+  pointer-events: none;
+}
+.edges path.edge-highway {
+  stroke-width: 2.8;
+  opacity: 0.56;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.edges path.edge-branch {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.edges path.edge-hidden {
+  display: none;
+}
+.edges path.edge-dimmed {
+  opacity: 0.08 !important;
+}
+.edges path.edge-selected {
+  stroke-width: 2.6 !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.edges.mode-operator path.edge-gray:not(.edge-selected) {
+  opacity: 0.10 !important;
+}
+.edges.mode-quiet path:not(.edge-selected):not(.edge-critical) {
+  display: none;
+}
+.edges.mode-trace path:not(.edge-selected) {
+  opacity: 0.08 !important;
+}
+.edges.mode-diagnostics path.edge-hidden {
+  display: initial;
+}
+.edges path.edge-green {
+  stroke: var(--st-green) !important;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 4;
+  animation: dash-flow 1.4s linear infinite;
+  opacity: 0.86;
+}
+.edges path.edge-cyan {
+  stroke: var(--brand-cyan) !important;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.82;
+}
+.edges path.edge-yellow {
+  stroke: var(--st-yellow) !important;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+  opacity: 0.86;
+}
+.edges path.edge-gray {
+  stroke: rgba(255,255,255,0.16) !important;
+  stroke-width: 1.2;
+  stroke-dasharray: 3 6;
+  opacity: 0.62;
+}
+.edges path.edge-red {
+  stroke: var(--st-red) !important;
+  stroke-width: 1.5;
+  opacity: 0.68;
 }
 .edges path.active {
   stroke: var(--brand-cyan);
@@ -186,10 +360,238 @@
   stroke: var(--st-red);
   opacity: 0.6;
 }
+.edges path:hover,
+.edges path:focus {
+  stroke-width: 2.2;
+  opacity: 1;
+  outline: none;
+}
 @keyframes dash-flow { to { stroke-dashoffset: -16; } }
 
-/* Particle traffic dots */
-.edges circle.particle { fill: var(--brand-cyan); }
+/* Real traffic beads: only rendered when trusted telemetry counters are active for a canonical edge_id. */
+.edges path.edge-has-traffic {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.edges .traffic-bead {
+  fill: var(--brand-cyan);
+  pointer-events: none;
+  filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 13px currentColor);
+  opacity: 0.96;
+}
+.edges .traffic-bead-green { fill: var(--st-green); color: var(--st-green); }
+.edges .traffic-bead-cyan { fill: var(--brand-cyan); color: var(--brand-cyan); }
+.edges .traffic-bead-yellow { fill: var(--st-yellow); color: var(--st-yellow); }
+.edges .traffic-bead-red { fill: var(--st-red); color: var(--st-red); }
+.edges .traffic-bead-gray { fill: var(--st-gray); color: var(--st-gray); opacity: 0.55; }
+.edges.mode-quiet .traffic-bead:not(.traffic-bead-critical) {
+  display: none;
+}
+
+.edge-tooltip {
+  position: fixed;
+  z-index: 75;
+  min-width: 260px;
+  max-width: 360px;
+  pointer-events: none;
+  display: none;
+  background: rgba(13,18,26,0.96);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  box-shadow: var(--shadow-3);
+  padding: 10px 12px;
+  color: var(--t-2);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.edge-tooltip.show { display: block; }
+.edge-tooltip .edge-title {
+  color: var(--t-1);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.edge-tooltip code {
+  font-family: var(--ff-mono);
+  color: var(--brand-cyan);
+  font-size: 10px;
+}
+
+.gw-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%) translateY(16px);
+  z-index: 90;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(13,18,26,0.96);
+  color: var(--t-2);
+  box-shadow: var(--shadow-2);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.gw-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.side-drawer {
+  position: fixed;
+  top: 166px;
+  bottom: 14px;
+  width: 340px;
+  max-width: calc(100vw - 28px);
+  max-height: calc(100vh - 180px);
+  z-index: 78;
+  background: rgba(13,18,26,0.95);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  box-shadow: var(--shadow-3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 180ms ease, opacity 180ms ease;
+  backdrop-filter: blur(10px);
+}
+.side-drawer.right { right: 14px; }
+.side-drawer.left { left: 14px; }
+.side-drawer.collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+.side-drawer.collapsed header {
+  padding: 10px 7px;
+  justify-content: center;
+}
+.side-drawer.collapsed header h3,
+.side-drawer.collapsed .drawer-body {
+  display: none;
+}
+.side-drawer.collapsed .drawer-toggle {
+  width: 40px;
+  height: 34px;
+  padding: 0;
+  overflow: hidden;
+}
+.side-drawer header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+.side-drawer header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t-2);
+}
+.side-drawer .drawer-body {
+  padding: 10px 12px 14px;
+  overflow-y: auto;
+  min-height: 0;
+  display: grid;
+  gap: 12px;
+}
+.drawer-section {
+  border: 1px solid var(--line-1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  padding: 10px;
+}
+.drawer-section h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t-3);
+}
+.approval-center-list {
+  display: grid;
+  gap: 6px;
+}
+.approval-item {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: var(--bg-3);
+  cursor: pointer;
+}
+.approval-item:hover {
+  border-color: rgba(94,234,212,0.34);
+}
+.approval-item .ai-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-1);
+  font-size: 11px;
+  font-weight: 600;
+}
+.approval-item .ai-state {
+  font-family: var(--ff-mono);
+  font-size: 9.5px;
+  color: var(--brand-cyan);
+}
+.approval-item .ai-next {
+  color: var(--t-4);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.approval-item.need .ai-state { color: var(--st-yellow); }
+.approval-item.blocked .ai-state { color: var(--st-red); }
+.approval-item.read .ai-state { color: var(--brand-cyan); }
+.approval-proposal-heading {
+  margin: 8px 0 2px;
+  color: var(--t-3);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.approval-proposal {
+  display: grid;
+  gap: 4px;
+  border: 1px dashed rgba(94,234,212,0.28);
+  border-radius: 6px;
+  padding: 7px 8px;
+  background: rgba(94,234,212,0.035);
+}
+.approval-proposal.preview {
+  border-color: rgba(255,214,102,0.28);
+  background: rgba(255,214,102,0.035);
+}
+.approval-proposal .ai-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-1);
+  font-size: 11px;
+  font-weight: 600;
+}
+.approval-proposal .ai-state {
+  font-family: var(--ff-mono);
+  font-size: 9.5px;
+  color: var(--brand-cyan);
+}
+.approval-proposal.preview .ai-state {
+  color: var(--st-yellow);
+}
+.approval-proposal .ai-next,
+.approval-proposal .ai-scope {
+  color: var(--t-4);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.approval-proposal .ai-scope {
+  font-family: var(--ff-mono);
+}
 
 /* Tweaks panel */
 .tweaks {
@@ -279,7 +681,7 @@
    ============================================================ */
 .canvas.variant-nucleus {
   grid-template-columns: 300px 240px 1fr 240px 280px;
-  grid-template-rows: 56px 130px 1fr 110px 130px;
+  grid-template-rows: 56px minmax(150px, auto) minmax(360px, 1fr) minmax(150px, auto) minmax(150px, auto);
   grid-template-areas:
     "feed   .       .        .         ledger"
     "feed   brain   brain    brain     ledger"
@@ -288,14 +690,15 @@
     "feed   mini    mini     mini      ledger";
   padding: 18px 14px;
   gap: 10px 14px;
+  min-height: 1040px;
 }
 .canvas.variant-nucleus .lane.near-l,
 .canvas.variant-nucleus .lane.near-r { display: none; }
-.canvas.variant-nucleus .lane.brain { grid-area: brain; grid-template-columns: repeat(5, 1fr); }
+.canvas.variant-nucleus .lane.brain { grid-area: brain; }
 .canvas.variant-nucleus .lane.inputs { grid-area: inputs; padding-right: 0; }
 .canvas.variant-nucleus .lane.center { grid-area: center; }
 .canvas.variant-nucleus .lane.integrations { grid-area: integ; padding-right: 0; }
-.canvas.variant-nucleus .lane.models { grid-area: models; grid-template-columns: repeat(10, 1fr); }
+.canvas.variant-nucleus .lane.models { grid-area: models; }
 .canvas.variant-nucleus .dispatch-feed,
 .canvas.variant-nucleus .engine-ledger { position: relative; top: auto; left: auto; right: auto; max-height: none; width: auto; }
 .canvas.variant-nucleus .dispatch-feed { grid-area: feed; overflow-y: auto; }
@@ -303,7 +706,15 @@
 .canvas.variant-nucleus .mini-strip { position: relative; left: auto; right: auto; bottom: auto; grid-area: mini; }
 
 .canvas.variant-nucleus .lane.inputs,
-.canvas.variant-nucleus .lane.integrations { overflow: hidden; }
+.canvas.variant-nucleus .lane.integrations { overflow: visible; min-height: 0; }
+.canvas.variant-nucleus .lane.inputs #lane-inputs,
+.canvas.variant-nucleus .lane.integrations #lane-integrations {
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.canvas.variant-nucleus .lane.brain #lane-brain { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.canvas.variant-nucleus .lane.models #lane-models { grid-template-columns: repeat(10, minmax(120px, 1fr)); }
 .canvas.variant-nucleus .lane.inputs .node-card,
 .canvas.variant-nucleus .lane.integrations .node-card {
   min-width: 0; max-width: none; padding: 8px 10px; gap: 4px;
@@ -467,10 +878,11 @@
   backdrop-filter: blur(4px);
   text-align: center;
 }
-.gateway-empty .h {
-  color: var(--brand-cyan); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-}
-.gateway-empty .s { color: var(--t-4); letter-spacing: 0.04em; text-transform: none; font-size: 10.5px; max-width: 260px; line-height: 1.5; }
+	.gateway-empty .h {
+	  color: var(--brand-cyan); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+	}
+	.gateway-empty .s { color: var(--t-4); letter-spacing: 0.04em; text-transform: none; font-size: 10.5px; max-width: 260px; line-height: 1.5; }
+	.gateway-empty .s strong { color: var(--t-2); font-weight: 700; }
 .gw-canvas-wrap.is-idle .gateway-empty { display: flex; }
 .gw-canvas-wrap.is-idle .gateway-core { filter: saturate(0.55) brightness(0.85); }
 
@@ -644,6 +1056,13 @@
   font-family: var(--ff-mono); font-size: 10px;
   color: var(--t-4); letter-spacing: 0.06em; text-transform: none;
 }
+.mini-help {
+  color: var(--t-4);
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin: -3px 0 8px;
+}
+.mini-help strong { color: var(--t-2); font-weight: 700; }
 .mini-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
 .mini-card {
   background: var(--bg-3);
@@ -712,6 +1131,116 @@
 
 .actions-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.edge-legend {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  width: 270px;
+  z-index: 55;
+  background: rgba(13,18,26,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-2);
+}
+.edge-legend h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-3);
+  font-weight: 600;
+}
+.edge-legend .legend-row {
+  display: grid;
+  grid-template-columns: 14px 72px 1fr;
+  gap: 7px;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 10.5px;
+  color: var(--t-3);
+}
+.edge-legend .legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.edge-legend .legend-label {
+  color: var(--t-2);
+  font-weight: 600;
+}
+.graph-health {
+  position: fixed;
+  left: 14px;
+  bottom: 170px;
+  width: 270px;
+  z-index: 55;
+  background: rgba(13,18,26,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-2);
+}
+.graph-health h4 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t-3);
+  font-weight: 600;
+}
+.graph-health .gh-row {
+  display: grid;
+  grid-template-columns: 122px 1fr;
+  gap: 5px 8px;
+  font-size: 10.5px;
+  padding: 2px 0;
+}
+.graph-health .gh-row .lbl { color: var(--t-4); }
+.graph-health .gh-row .val {
+  color: var(--t-2);
+  font-family: var(--ff-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-health .gh-banner {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--st-yellow-bd);
+  color: var(--st-yellow);
+  background: var(--st-yellow-bg);
+  font-size: 10.5px;
+  line-height: 1.35;
+  display: none;
+}
+.graph-health.degraded .gh-banner,
+.graph-health.failed .gh-banner { display: block; }
+.side-drawer .edge-legend,
+.side-drawer .graph-health,
+.side-drawer .tweaks {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  top: auto;
+  width: auto;
+  z-index: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.side-drawer .tweaks .body,
+.side-drawer .tweaks.body {
+  padding: 0;
+}
+
 /* Bridge Session modal */
 .modal-mask {
   position: fixed; inset: 0;
@@ -751,11 +1280,26 @@
   <div id="topbar-mount"></div>
   <div id="pagenav-mount"></div>
 
-  <div class="gw-canvas-wrap">
+  <div class="gw-view-controls" aria-label="Gateway View Controls">
+    <button id="view-fit" title="Fit graph to screen">Fit</button>
+    <button id="view-reset" title="Reset pan and zoom">Reset</button>
+    <button id="view-center-dispatcher" title="Center on Dispatcher">Center Dispatcher</button>
+    <button id="view-center-selected" title="Center selected node">Center Selected</button>
+    <button id="view-edit-layout" title="Drag cards in layout edit mode">Edit Layout</button>
+    <button id="view-save-layout" title="Save layout preference">Save Layout</button>
+    <button id="view-reset-layout" title="Reset saved layout">Reset Layout</button>
+    <button id="mode-operator" class="on" data-edge-mode="operator">Operator</button>
+    <button id="mode-trace" data-edge-mode="trace">Trace</button>
+    <button id="mode-diagnostics" data-edge-mode="diagnostics">Diagnostics</button>
+    <button id="mode-quiet" data-edge-mode="quiet">Quiet</button>
+  </div>
+
+  <div class="gw-canvas-wrap" id="gw-canvas-wrap">
+    <div class="gw-viewport-stage" id="gw-viewport-stage">
     <svg class="edges" id="edges-svg"></svg>
     <div class="gateway-empty" aria-hidden="true">
       <span class="h">⏸ Idle</span>
-      <span class="s">No traffic. Toggle <strong>Live request beams</strong> to resume the live request stream.</span>
+      <span class="s"><strong>Ready · no recent traffic.</strong> Dots appear only when a trusted runtime event/request is mapped to a canonical Gateway line.</span>
     </div>
     <div class="canvas" id="canvas">
       <div class="gw-policy-strip">
@@ -839,18 +1383,59 @@
 
     <aside class="mini-strip" id="mini-strip">
       <h4>Mini-agents <span class="roll" id="mini-roll">8 workers · 2.7k / 50k tokens used</span></h4>
+      <div class="mini-help"><strong>Research, Classify, Write, Code, Review, Archive, and Sub-dispatch</strong> are dispatcher worker roles. They show how work is split after Gateway chooses a safe route; they are not direct execution buttons.</div>
       <div class="mini-grid" id="mini-grid"></div>
     </aside>
+
+    </div>
   </div>
 </div>
 
-<!-- Tweaks panel: Kong / Balanced / n8n / Nucleus + edge density -->
-<div class="tweaks">
+<div class="edge-tooltip" id="edge-tooltip"></div>
+<div class="gw-toast" id="gw-toast" role="status" aria-live="polite"></div>
+
+<aside class="side-drawer right collapsed" id="gateway-diagnostics-drawer" aria-label="Gateway Diagnostics">
   <header>
-    Tweaks
-    <span class="kbd">T</span>
+    <h3>Gateway Diagnostics</h3>
+    <button class="drawer-toggle" id="toggle-diagnostics" aria-expanded="false">Open</button>
   </header>
-  <div class="body">
+  <div class="drawer-body">
+    <section class="drawer-section graph-health" id="graph-health" aria-label="Gateway Graph Health">
+      <h4>Gateway Graph Health</h4>
+      <div class="gh-banner">Gateway readiness feed unavailable. Last known states may be stale.</div>
+      <div id="graph-health-list"></div>
+    </section>
+    <section class="drawer-section graph-health" id="topology-data-sync" aria-label="Topology/Data Sync">
+      <h4>Topology/Data Sync</h4>
+      <div class="gh-banner">Visual topology and runtime graph data disagree. Inspect missing mappings before trusting pathlines.</div>
+      <div id="topology-data-sync-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway edge legend">
+      <h4>Gateway Edge Legend</h4>
+      <div id="edge-legend-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway node legend">
+      <h4>Gateway Node Legend</h4>
+      <div id="node-legend-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway traffic legend">
+      <h4>Traffic Dot Legend</h4>
+      <div id="traffic-legend-list"></div>
+    </section>
+    <section class="drawer-section">
+      <h4>Gateway Approval Center</h4>
+      <div id="approval-center-list" class="approval-center-list"></div>
+    </section>
+  </div>
+</aside>
+
+<!-- View Settings drawer: Kong / Balanced / n8n / Nucleus + edge density -->
+<aside class="side-drawer left collapsed" id="view-settings-drawer" aria-label="Gateway View Settings">
+  <header>
+    <h3>View Settings</h3>
+    <button class="drawer-toggle" id="toggle-view-settings" aria-expanded="false">Open</button>
+  </header>
+  <div class="drawer-body body tweaks">
     <div class="row">
       <label>Hero treatment</label>
       <div class="seg" id="seg-variant" style="grid-template-columns: repeat(4, 1fr);">
@@ -860,7 +1445,7 @@
         <button data-v="nucleus" class="on">Nucleus</button>
       </div>
     </div>
-    <label class="toggle"><input type="checkbox" id="t-traffic" checked /> Live request beams</label>
+    <label class="toggle"><input type="checkbox" id="t-traffic" checked /> Live traffic overlay</label>
     <label class="toggle"><input type="checkbox" id="t-fanout" /> Fan-out burst (split big task)</label>
     <div class="row">
       <label>Edge animation</label>
@@ -872,8 +1457,11 @@
     </div>
     <label class="toggle"><input type="checkbox" id="t-policy" /> Show policy strip</label>
     <label class="toggle"><input type="checkbox" id="t-bridge" /> Bridge expired (test yellow cascade)</label>
+    <label class="toggle"><input type="checkbox" id="t-hide-standby" checked /> Hide standby lines</label>
+    <label class="toggle"><input type="checkbox" id="t-selected-only" /> Show only selected paths</label>
+    <label class="toggle"><input type="checkbox" id="t-compact-cards" /> Compact cards</label>
   </div>
-</div>
+</aside>
 
 <!-- Inspector drawer -->
 <aside class="inspector" id="inspector">
@@ -929,41 +1517,991 @@
   // Lane mounts
   function mountInto(elId, nodes, opts) {
     const target = document.getElementById(elId);
+    if (!target) return;
+    target.innerHTML = '';
     nodes.forEach(n => target.appendChild(GW.nodeCard(n, opts)));
   }
-  mountInto('lane-brain',        G.byLane('top_brain'));
-  mountInto('lane-inputs',       G.byLane('left_input'));
-  mountInto('lane-integrations', G.byLane('right_integration'));
-  mountInto('lane-models',       G.byLane('bottom_model'), { compact: true });
-  mountInto('lane-near-l',       [G.get('agent.zero')]);
-  mountInto('lane-near-r',       [G.get('agent.hermes')]);
+  function mountAllNodes() {
+    mountInto('lane-brain',        G.byLane('top_brain'));
+    mountInto('lane-inputs',       G.byLane('left_input'));
+    mountInto('lane-integrations', G.byLane('right_integration'));
+    mountInto('lane-models',       G.byLane('bottom_model'), { compact: true });
+    mountInto('lane-near-l',       [G.get('agent.zero')].filter(Boolean));
+    mountInto('lane-near-r',       [G.get('agent.hermes')].filter(Boolean));
+  }
+  mountAllNodes();
 
   // ---- Inspector ----
   const inspector = document.getElementById('inspector');
+  const edgeTooltip = document.getElementById('edge-tooltip');
+  const wrap = document.getElementById('gw-canvas-wrap');
+  const stage = document.getElementById('gw-viewport-stage');
+  const svg = document.getElementById('edges-svg');
+  const toast = document.getElementById('gw-toast');
+  const PREF_KEY = 'gateway_overview_ui_v2';
+  let runtimeEdgeReadiness = Array.isArray(G.EDGE_READINESS) ? G.EDGE_READINESS.slice() : [];
+  let runtimeNodeReadiness = Array.isArray(G.NODE_READINESS) ? G.NODE_READINESS.slice() : [];
+  let canonicalTopology = null;
+  let graphSyncStatus = null;
+  let graphTrafficSnapshot = null;
+  let graphReadinessFetched = false;
+  let nodeReadinessFetched = false;
+  let topologyFetched = false;
+  let syncStatusFetched = false;
+  let trafficFetched = false;
+  let approvalCenterFetched = false;
+  let approvalCenterItems = [];
+  let approvalCenterProposals = Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : [];
+  let selectedNodeId = null;
+  let layoutEditing = false;
+  let edgeMode = 'operator';
+  let hideStandbyLines = false;
+  let selectedOnly = false;
+  let viewport = { x: 0, y: 0, scale: 1 };
+  let nodeOffsets = {};
+  let graphHealth = Object.assign({}, G.GRAPH_HEALTH || {}, {
+    readiness_feed: G.GRAPH_HEALTH?.readiness_feed || 'healthy',
+    graph_data_source: G.GRAPH_HEALTH?.graph_data_source || 'static fallback',
+    static_asset_version: G.GRAPH_HEALTH?.static_asset_version || 'gateway-node-readiness-v1',
+    edge_static_asset_version: G.GRAPH_HEALTH?.edge_static_asset_version || 'gateway-edge-readiness-v2',
+    node_count_expected: G.GRAPH_HEALTH?.node_count_expected || G.NODES.length,
+    node_count_returned: G.GRAPH_HEALTH?.node_count_returned || runtimeNodeReadiness.length,
+    node_mapping_errors: G.GRAPH_HEALTH?.node_mapping_errors || [],
+  });
+
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+    })[ch]);
+  }
+
+  function showToast(message) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function loadPrefs() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+      viewport = Object.assign(viewport, raw.viewport || {});
+      nodeOffsets = raw.nodeOffsets && typeof raw.nodeOffsets === 'object' ? raw.nodeOffsets : {};
+      edgeMode = raw.edgeMode || edgeMode;
+      hideStandbyLines = raw.hideStandbyLines ?? hideStandbyLines;
+      selectedOnly = raw.selectedOnly ?? selectedOnly;
+      document.getElementById('t-hide-standby').checked = hideStandbyLines;
+      document.getElementById('t-selected-only').checked = selectedOnly;
+      document.getElementById('gateway-diagnostics-drawer')?.classList.toggle('collapsed', raw.diagnosticsCollapsed ?? true);
+      document.getElementById('view-settings-drawer')?.classList.toggle('collapsed', raw.viewSettingsCollapsed ?? true);
+    } catch (err) {}
+  }
+
+  function savePrefs() {
+    const payload = {
+      viewport,
+      nodeOffsets,
+      edgeMode,
+      hideStandbyLines,
+      selectedOnly,
+      diagnosticsCollapsed: document.getElementById('gateway-diagnostics-drawer')?.classList.contains('collapsed') ?? true,
+      viewSettingsCollapsed: document.getElementById('view-settings-drawer')?.classList.contains('collapsed') ?? true,
+    };
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(payload)); } catch (err) {}
+  }
+
+  function applyViewport() {
+    if (!stage) return;
+    viewport.scale = Math.max(0.45, Math.min(1.8, Number(viewport.scale) || 1));
+    stage.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`;
+    setTimeout(drawEdges, 0);
+  }
+
+  function setEdgeMode(mode, opts = {}) {
+    edgeMode = ['operator', 'trace', 'diagnostics', 'quiet'].includes(mode) ? mode : 'operator';
+    document.querySelectorAll('[data-edge-mode]').forEach(btn => btn.classList.toggle('on', btn.dataset.edgeMode === edgeMode));
+    const selectedToggle = document.getElementById('t-selected-only');
+    if (edgeMode === 'quiet' && selectedToggle) {
+      selectedOnly = true;
+      selectedToggle.checked = true;
+      selectedToggle.dataset.quietForced = 'true';
+    } else if (selectedToggle?.dataset.quietForced === 'true') {
+      selectedOnly = false;
+      selectedToggle.checked = false;
+      delete selectedToggle.dataset.quietForced;
+    }
+    if (!opts.silent) showToast(`Gateway edge mode: ${edgeMode}`);
+    drawEdges();
+    savePrefs();
+  }
+
+  function syncDrawerButton(drawerId, buttonId) {
+    const drawer = document.getElementById(drawerId);
+    const btn = document.getElementById(buttonId);
+    if (!drawer || !btn) return;
+    const collapsed = drawer.classList.contains('collapsed');
+    const label = drawerId === 'gateway-diagnostics-drawer' ? 'Diagnostics'
+      : drawerId === 'view-settings-drawer' ? 'View Settings'
+      : 'Panel';
+    btn.textContent = collapsed ? `Open ${label}` : `Close ${label}`;
+    btn.setAttribute('aria-expanded', String(!collapsed));
+  }
+
+  function toggleDrawer(drawerId, buttonId) {
+    const drawer = document.getElementById(drawerId);
+    if (!drawer) return;
+    drawer.classList.toggle('collapsed');
+    syncDrawerButton(drawerId, buttonId);
+    savePrefs();
+  }
+
+  function applyNodeOffsets() {
+    document.querySelectorAll('.node-card').forEach(card => {
+      const off = nodeOffsets[card.dataset.id] || { x: 0, y: 0 };
+      card.style.transform = `translate(${Number(off.x) || 0}px, ${Number(off.y) || 0}px)`;
+    });
+  }
+
+  function toggleLayoutEditing(force) {
+    layoutEditing = typeof force === 'boolean' ? force : !layoutEditing;
+    document.getElementById('canvas').classList.toggle('layout-editing', layoutEditing);
+    document.getElementById('view-edit-layout').classList.toggle('on', layoutEditing);
+  }
+
+  function focusElementInView(el, targetScale = viewport.scale) {
+    if (!el || !wrap || !stage) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const cx = (rect.left + rect.width / 2 - stageRect.left) / viewport.scale;
+    const cy = (rect.top + rect.height / 2 - stageRect.top) / viewport.scale;
+    viewport.scale = targetScale;
+    viewport.x = wrapRect.width / 2 - cx * viewport.scale;
+    viewport.y = wrapRect.height / 2 - cy * viewport.scale;
+    applyViewport();
+    savePrefs();
+  }
+
+  function edgeColorVar(color) {
+    return ({
+      green: 'var(--st-green)',
+      cyan: 'var(--brand-cyan)',
+      yellow: 'var(--st-yellow)',
+      gray: 'var(--st-gray)',
+      red: 'var(--st-red)',
+    })[color] || 'var(--st-gray)';
+  }
+
+  function topologyColor(status) {
+    return ({
+      live: 'green',
+      read_only: 'cyan',
+      guarded: 'yellow',
+      standby: 'gray',
+      blocked: 'red',
+      disabled: 'gray',
+    })[status] || 'gray';
+  }
+
+  function trafficForEdge(edgeId) {
+    return graphTrafficSnapshot?.edges?.find(item => item.edge_id === edgeId) || null;
+  }
+
+  function trafficForTopologyEdge(edge) {
+    const direct = trafficForEdge(edge?.edge_id);
+    if (direct) return direct;
+    if (!edge || edge.relationship !== 'structural' || !Array.isArray(graphTrafficSnapshot?.edges)) return null;
+    const candidateNodeIds = [edge.source_node_id, edge.target_node_id]
+      .filter(Boolean)
+      .filter(id => id !== 'gateway.core' && !String(id).startsWith('highway.'));
+    if (!candidateNodeIds.length) return null;
+    return graphTrafficSnapshot.edges.find(item => {
+      if (item.edge_id === edge.edge_id) return false;
+      if (item.route_group && edge.route_group && item.route_group !== edge.route_group) return false;
+      return candidateNodeIds.includes(item.source_node_id) || candidateNodeIds.includes(item.target_node_id);
+    }) || null;
+  }
+
+  function trafficStateForStatus(status) {
+    return ({
+      active: 'live_recent',
+      ready_no_recent_traffic: 'ready_no_recent_traffic',
+      stale: 'telemetry_stale',
+      unavailable: 'traffic_data_unavailable',
+    })[status] || 'traffic_data_unavailable';
+  }
+
+  function trafficLabel(status) {
+    return ({
+      active: 'Active traffic',
+      ready_no_recent_traffic: 'Ready · no recent traffic',
+      stale: 'Telemetry stale',
+      unavailable: 'Traffic data unavailable',
+    })[status] || 'Traffic data unavailable';
+  }
+
+  function edgeLabelFromTopology(edge) {
+    if (!edge) return null;
+    const trafficEdge = trafficForTopologyEdge(edge);
+    const trafficCounters = trafficEdge
+      ? {
+          events_last_60s: trafficEdge.events_last_60s || 0,
+          requests_last_60s: trafficEdge.requests_last_60s || 0,
+          bytes_in_last_60s: trafficEdge.bytes_in_last_60s || 0,
+          bytes_out_last_60s: trafficEdge.bytes_out_last_60s || 0,
+        }
+      : (edge.traffic || { events_last_60s: 0, requests_last_60s: 0, bytes_in_last_60s: 0, bytes_out_last_60s: 0 });
+    return {
+      edge_id: edge.edge_id,
+      source: edge.source_label || edge.source_node_id || 'Gateway Dispatcher',
+      target: edge.target_label || edge.target_node_id || 'Gateway',
+      domain: edge.route_group || edge.domain || 'connector',
+      status: edge.status || 'standby',
+      color: topologyColor(edge.status),
+      primary_reason: edge.primary_reason || 'topology_edge_registered',
+      blockers: Array.isArray(edge.blockers) ? edge.blockers : [],
+      last_heartbeat_at: edge.last_heartbeat_at || null,
+      last_success_at: edge.last_success_at || null,
+      last_event_at: trafficEdge?.last_event_at || edge.last_event_at || null,
+      last_request_at: trafficEdge?.last_request_at || null,
+      next_action: edge.next_action || 'inspect_topology_data_sync',
+      source_node_id: edge.source_node_id,
+      target_node_id: edge.target_node_id,
+      relationship: edge.relationship || 'structural',
+      route_group: edge.route_group,
+      traffic_state: trafficEdge ? trafficStateForStatus(trafficEdge.traffic_status) : (edge.traffic_state || 'traffic_data_unavailable'),
+      traffic_status: trafficEdge?.traffic_status || 'unavailable',
+      traffic_label: trafficEdge?.traffic_label || trafficLabel(trafficEdge?.traffic_status || 'unavailable'),
+      traffic_source_edge_id: trafficEdge?.edge_id || null,
+      traffic_classification: trafficEdge?.traffic_classification || null,
+      traffic_type: trafficEdge?.traffic_type || 'none',
+      telemetry_source: trafficEdge?.telemetry_source || null,
+      source_record_id: trafficEdge?.source_record_id || null,
+      telemetry_kind: trafficEdge?.telemetry_kind || null,
+      stale_threshold_seconds: trafficEdge?.stale_threshold_seconds || null,
+      traffic: trafficCounters,
+      traffic_next_action: trafficEdge?.recommended_next_action || null,
+      critical: edge.status === 'blocked',
+    };
+  }
+
+  function topologyEdgeForHighway(edgeId, mappingErrors) {
+    const edge = canonicalTopology?.edges?.find(item => item.edge_id === edgeId);
+    if (edge) return edgeLabelFromTopology(edge);
+    mappingErrors?.push(`missing_edge_mappings:${edgeId}`);
+    return null;
+  }
+
+  function edgeFallbackReadiness(edge) {
+    if (G.getEdgeReadiness) return G.getEdgeReadiness(edge);
+    const fromN = G.get(edge.from);
+    const toN = G.get(edge.to);
+    return {
+      edge_id: `${edge.from}->${edge.to}:${edge.relation}`,
+      source: fromN?.name || edge.from,
+      target: toN?.name || edge.to,
+      domain: 'connector',
+      status: 'standby',
+      color: 'gray',
+      primary_reason: 'registered_edge_no_runtime_heartbeat',
+      blockers: [],
+      last_heartbeat_at: null,
+      last_success_at: null,
+      last_event_at: null,
+      next_action: 'verify_edge_runtime_heartbeat_if_live_control_is_required',
+    };
+  }
+
+  function edgeReadinessFor(edge) {
+    const fallback = edgeFallbackReadiness(edge);
+    const runtimeMatch = runtimeEdgeReadiness.find(item => item.edge_id === fallback.edge_id);
+    if (runtimeMatch) return Object.assign({}, fallback, runtimeMatch);
+    if (graphReadinessFetched) {
+      return Object.assign({}, fallback, {
+        status: 'degraded',
+        color: 'yellow',
+        primary_reason: 'edge_status_missing',
+        blockers: ['edge_status_missing'],
+        next_action: 'refresh_gateway_graph_readiness_or_check_edge_id_mapping',
+      });
+    }
+    return fallback;
+  }
+
+  function nodeReadinessFor(node) {
+    if (!node) return null;
+    const runtimeMatch = runtimeNodeReadiness.find(item => item.node_id === node.id);
+    if (runtimeMatch) return runtimeMatch;
+    if (node.node_readiness) return node.node_readiness;
+    if (G.getNodeReadiness) return G.getNodeReadiness(node.id);
+    if (nodeReadinessFetched) {
+      return {
+        node_id: node.id,
+        label: node.name,
+        domain: node.type || 'connector',
+        status: 'degraded',
+        color: 'yellow',
+        primary_reason: 'node_status_missing',
+        short_label: 'Node status missing',
+        next_action: 'refresh_gateway_graph_node_readiness_or_check_node_id_mapping',
+        read_ready: Boolean(node.R),
+        write_ready: false,
+        execute_ready: false,
+        approval_required: true,
+        last_success_at: node.lastSuccess || null,
+        last_heartbeat_at: null,
+      };
+    }
+    return null;
+  }
+
+  function applyRuntimeNodeReadiness(nodes) {
+    const byId = new Map(nodes.map(item => [item.node_id, item]));
+    G.NODES.forEach(node => {
+      const readiness = byId.get(node.id);
+      if (readiness) node.node_readiness = readiness;
+      else if (nodeReadinessFetched) node.node_readiness = nodeReadinessFor(node);
+    });
+  }
+
+  function moveEdgeTooltip(e) {
+    if (!edgeTooltip) return;
+    const pad = 14;
+    const rawX = typeof e.clientX === 'number' ? e.clientX : window.innerWidth / 2;
+    const rawY = typeof e.clientY === 'number' ? e.clientY : 120;
+    const x = Math.min(rawX + pad, window.innerWidth - edgeTooltip.offsetWidth - pad);
+    const y = Math.min(rawY + pad, window.innerHeight - edgeTooltip.offsetHeight - pad);
+    edgeTooltip.style.left = `${Math.max(pad, x)}px`;
+    edgeTooltip.style.top = `${Math.max(64, y)}px`;
+  }
+
+  function showEdgeTooltip(readiness, e) {
+    if (!edgeTooltip || !readiness) return;
+    edgeTooltip.innerHTML = `
+      <div class="edge-title">${esc(readiness.source)} → ${esc(readiness.target)}</div>
+      <div>status: <code>${esc(readiness.status)}</code> · color: <code>${esc(readiness.color)}</code></div>
+      <div>relationship: <code>${esc(readiness.relationship || 'readiness')}</code> · traffic: <code>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</code></div>
+      <div>traffic type: <code>${esc(readiness.traffic_type || 'none')}</code> · source: <code>${esc(readiness.telemetry_source || 'none')}</code></div>
+      <div>reason: <code>${esc(readiness.primary_reason)}</code></div>
+      <div>next: ${esc(readiness.traffic_next_action || readiness.next_action || 'none')}</div>
+    `;
+    edgeTooltip.classList.add('show');
+    moveEdgeTooltip(e);
+  }
+
+  function hideEdgeTooltip() {
+    if (edgeTooltip) edgeTooltip.classList.remove('show');
+  }
+
+  function renderEdgeLegend() {
+    const target = document.getElementById('edge-legend-list');
+    if (!target) return;
+    const legend = Array.isArray(G.EDGE_LEGEND) ? G.EDGE_LEGEND : [];
+    target.innerHTML = legend.map(item => `
+      <div class="legend-row" title="${esc(item.meaning)}">
+        <span class="legend-dot" style="background:${edgeColorVar(item.color)}"></span>
+        <span class="legend-label">${esc(item.color)}</span>
+        <span>${esc(item.label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderNodeLegend() {
+    const target = document.getElementById('node-legend-list');
+    if (!target) return;
+    const legend = [
+      ['green', 'Live', 'Runtime healthy and usable in the current policy mode.'],
+      ['cyan', 'Read-only active', 'Discovery or preview path works; writes are guarded.'],
+      ['yellow', 'Guarded', 'Approval, policy, delivery, or execution guard applies.'],
+      ['gray', 'Standby', 'Registered but no heartbeat or recent event.'],
+      ['red', 'Blocked', 'Provider, auth, billing, or policy blocker.'],
+    ];
+    target.innerHTML = legend.map(([color, label, meaning]) => `
+      <div class="legend-row" title="${esc(meaning)}">
+        <span class="legend-dot" style="background:${edgeColorVar(color)}"></span>
+        <span class="legend-label">${esc(label)}</span>
+        <span>${esc(meaning)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderTrafficLegend() {
+    const target = document.getElementById('traffic-legend-list');
+    if (!target) return;
+    const rows = [
+      ['cyan dot', 'Real read/event traffic', 'A trusted runtime event/request is mapped to this exact Gateway line.'],
+      ['green/yellow/red dot', 'Traffic with line state', 'Dot color follows the line readiness: live, guarded, or blocked.'],
+      ['no dot', 'Ready but idle', 'The line can be used, but no mapped traffic counter is active in the current window.'],
+      ['gray line', 'Standby/no heartbeat', 'Registered path with no current heartbeat or recent event.'],
+      ['no pulse rendered', 'Unmapped or low-confidence telemetry', 'Telemetry exists but is not animated until it has a canonical edge_id.'],
+    ];
+    target.innerHTML = rows.map(([label, title, meaning]) => `
+      <div class="legend-row" title="${esc(meaning)}">
+        <span class="legend-dot" style="background:${label.includes('cyan') ? 'var(--brand-cyan)' : label.includes('green') ? 'var(--st-green)' : 'var(--st-gray)'}"></span>
+        <span class="legend-label">${esc(label)}</span>
+        <span>${esc(title)} · ${esc(meaning)}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderApprovalCenter() {
+    const target = document.getElementById('approval-center-list');
+    if (!target) return;
+    if (!approvalCenterItems.length && !approvalCenterProposals.length) {
+      target.innerHTML = `<div style="color:var(--t-4);font-size:11px;">${approvalCenterFetched ? 'No approval records.' : 'Approval Center loading…'}</div>`;
+      return;
+    }
+    const itemHtml = approvalCenterItems.map(item => {
+      const cls = item.state === 'approval_needed' || item.state === 'approval_pending' ? 'need'
+        : item.state === 'blocked_by_policy' ? 'blocked'
+        : item.state === 'read_only_active' || item.state === 'standing_scope_active' ? 'read'
+        : '';
+      return `
+        <button class="approval-item ${cls}" data-approval-node="${esc(item.node_id)}" title="${esc(item.exact_reason)}">
+          <span class="ai-top">${esc(item.component)} <span class="ai-state">${esc(item.state)}</span></span>
+          <span>${esc(item.label)}</span>
+          <span class="ai-next">${esc(item.next_action)}</span>
+        </button>
+      `;
+    }).join('');
+    const proposalHtml = approvalCenterProposals.length ? `
+      <div class="approval-proposal-heading">Standing Scope Proposals</div>
+      ${approvalCenterProposals.map(scope => {
+        const cls = scope.status === 'preview_only' ? 'preview' : 'read';
+        const allowed = Array.isArray(scope.allowed_operations) ? scope.allowed_operations.slice(0, 4).join(', ') : 'none';
+        return `
+          <div class="approval-proposal ${cls}" title="${esc(scope.scope_id || '')}">
+            <span class="ai-top">${esc(scope.name || 'Scope proposal')} <span class="ai-state">${esc(scope.status || 'preview_only')}</span></span>
+            <span class="ai-scope">${esc(scope.scope_id || '')}</span>
+            <span>${esc((scope.components || []).join(' · '))}</span>
+            <span class="ai-next">Allowed: ${esc(allowed)} · writes/execution: disabled until owner approval</span>
+            <span class="ai-next">${esc(scope.next_action || 'Review before activation.')}</span>
+          </div>
+        `;
+      }).join('')}
+    ` : '';
+    target.innerHTML = `${itemHtml}${proposalHtml}`;
+    target.querySelectorAll('[data-approval-node]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nodeId = btn.getAttribute('data-approval-node');
+        selectedNodeId = nodeId;
+        setEdgeMode('trace');
+        if (nodeId) openInspector(nodeId);
+        drawEdges();
+      });
+    });
+  }
+
+  function renderGraphHealth(extraMappingErrors) {
+    const panel = document.getElementById('graph-health');
+    const target = document.getElementById('graph-health-list');
+    if (!panel || !target) return;
+    const edgeMappingErrors = Array.from(new Set([...(graphHealth.edge_mapping_errors || []), ...(extraMappingErrors || [])]));
+    const nodeMappingErrors = Array.from(new Set([...(graphHealth.node_mapping_errors || [])]));
+    const health = Object.assign({}, graphHealth, {
+      edge_mapping_errors: edgeMappingErrors,
+      node_mapping_errors: nodeMappingErrors,
+    });
+    panel.classList.toggle('failed', health.readiness_feed === 'failed');
+    panel.classList.toggle('degraded', health.readiness_feed === 'degraded' || edgeMappingErrors.length > 0 || nodeMappingErrors.length > 0);
+    const rows = [
+      ['readiness feed', health.readiness_feed || 'unknown'],
+      ['last fetch', health.last_successful_readiness_fetch || 'none'],
+      ['data source', health.graph_data_source || 'static fallback'],
+      ['edge count', `${health.edge_count_returned || runtimeEdgeReadiness.length}/${health.edge_count_expected || G.EDGES.length}`],
+      ['node count', `${health.node_count_returned || runtimeNodeReadiness.length}/${health.node_count_expected || G.NODES.length}`],
+      ['edge mapping errors', edgeMappingErrors.length ? edgeMappingErrors.join(', ') : 'none'],
+      ['node mapping errors', nodeMappingErrors.length ? nodeMappingErrors.join(', ') : 'none'],
+      ['model readiness', health.model_readiness || 'unknown'],
+      ['connector readiness', health.connector_readiness || 'unknown'],
+      ['node asset', health.static_asset_version || 'unknown'],
+      ['edge asset', health.edge_static_asset_version || 'unknown'],
+    ];
+    target.innerHTML = rows.map(([label, value]) => `
+      <div class="gh-row">
+        <span class="lbl">${esc(label)}</span>
+        <span class="val" title="${esc(value)}">${esc(value)}</span>
+      </div>
+    `).join('');
+    renderTopologyDataSync(edgeMappingErrors);
+  }
+
+  function renderTopologyDataSync(extraMappingErrors) {
+    const panel = document.getElementById('topology-data-sync');
+    const target = document.getElementById('topology-data-sync-list');
+    if (!panel || !target) return;
+    const sync = graphSyncStatus?.graph_sync || {};
+    const topologyNodes = canonicalTopology?.nodes?.length || sync.topology_node_count || 0;
+    const topologyEdges = canonicalTopology?.edges?.length || sync.topology_edge_count || 0;
+    const renderedNodeCount = document.querySelectorAll('.node-card[data-id]').length + 1;
+    const renderedEdgeIds = [...document.querySelectorAll('#edges-svg path[data-edge-id]')].map(path => path.dataset.edgeId).filter(Boolean);
+    const missingEdges = Array.from(new Set([
+      ...(sync.missing_edge_mappings || []),
+      ...(extraMappingErrors || []).filter(item => String(item).includes('missing_edge_mappings')),
+    ]));
+    const status = missingEdges.length ? 'degraded' : (sync.status || (topologyFetched ? 'healthy' : 'stale'));
+    panel.classList.toggle('failed', status === 'failed');
+    panel.classList.toggle('degraded', status !== 'healthy');
+    const trafficSummary = graphTrafficSnapshot?.summary || {};
+    const confidence = trafficSummary.confidence || {};
+    const renderedBeads = document.querySelectorAll('#edges-svg .traffic-bead[data-traffic-proof="trusted_telemetry_counter"]').length;
+    const rows = [
+      ['sync status', status],
+      ['snapshot id', canonicalTopology?.snapshot_id || sync.snapshot_id || 'none'],
+      ['topology nodes', String(topologyNodes)],
+      ['rendered nodes', String(sync.rendered_node_count || renderedNodeCount)],
+      ['topology edges', String(topologyEdges)],
+      ['rendered edges', String(renderedEdgeIds.length || sync.rendered_edge_count || 0)],
+      ['missing node mappings', (sync.missing_node_mappings || []).join(', ') || 'none'],
+      ['missing edge mappings', missingEdges.join(', ') || 'none'],
+      ['stale edges', (sync.stale_edges || []).join(', ') || 'none'],
+      ['status mismatches', (sync.status_mismatches || []).join(', ') || 'none'],
+      ['traffic mismatches', (sync.traffic_mismatches || []).join(', ') || 'none'],
+      ['traffic source', graphTrafficSnapshot?.traffic_source || canonicalTopology?.traffic_data_source || 'traffic_data_unavailable'],
+      ['telemetry snapshot id', graphTrafficSnapshot?.telemetry_snapshot_id || 'none'],
+      ['rendered traffic dots', String(renderedBeads)],
+      ['active traffic edges', String(graphTrafficSnapshot?.summary?.active_traffic_edges || 0)],
+      ['ready/no-recent traffic edges', String(graphTrafficSnapshot?.summary?.ready_no_recent_traffic_edges || 0)],
+      ['stale telemetry edges', String(graphTrafficSnapshot?.summary?.stale_telemetry_edges || 0)],
+      ['unavailable telemetry edges', String(graphTrafficSnapshot?.summary?.unavailable_telemetry_edges || 0)],
+      ['missing traffic mappings', String(graphTrafficSnapshot?.summary?.missing_traffic_mappings || 0)],
+      ['auth/login outside topology', String(trafficSummary.auth_login_outside_topology || 0)],
+      ['agent_config_sync resolved', String(trafficSummary.agent_config_sync_resolved || 0)],
+      ['agent_config_sync unresolved', String(trafficSummary.agent_config_sync_unresolved || 0)],
+      ['agent_config_sync identity missing', String(trafficSummary.agent_config_sync_identity_missing || 0)],
+      ['source-provided canonical identity', String(trafficSummary.source_provided_canonical_identity || 0)],
+      ['protected-action-check unresolved', String(trafficSummary.protected_action_check_unresolved || 0)],
+      ['unmapped event types', String(trafficSummary.unmapped_event_type_count || 0)],
+      ['resolved this pass', String(trafficSummary.resolved_this_pass || 0)],
+      ['still unresolved', String(trafficSummary.still_unresolved || graphTrafficSnapshot?.summary?.missing_traffic_mappings || 0)],
+      ['mapping confidence', `high ${confidence.high || 0} · medium ${confidence.medium || 0} · low ${confidence.low || 0}`],
+      ['reason no pulse rendered', (graphTrafficSnapshot?.summary?.missing_traffic_mappings || 0) > 0 ? 'unmapped_or_low_confidence_telemetry' : 'none'],
+      ['last telemetry fetch', graphTrafficSnapshot?.generated_at || 'none'],
+      ['last live fetch', sync.last_live_fetch_at || canonicalTopology?.generated_at || 'none'],
+      ['last static fallback', sync.last_static_fallback_at || 'none'],
+      ['primary blocker', sync.primary_blocker || (topologyFetched ? 'none' : 'topology_data_unavailable')],
+    ];
+    const gapRows = (graphTrafficSnapshot?.missing_traffic_mappings || []).slice(0, 8).map(gap => `
+      <div class="gh-row">
+        <span class="lbl">gap · ${esc(gap.source_event_type || gap.telemetry_kind || gap.source_id || 'event')}</span>
+        <span class="val" title="${esc(`${gap.classification || 'unmapped'} · ${gap.source_system || 'unknown'} · confidence ${gap.identity_confidence || 'n/a'} · ${gap.identity_reason || 'no identity detail'} · candidate ${gap.candidate_edge_id || 'none'} · no pulse rendered · ${gap.recommended_mapping_fix || 'add explicit mapping'}`)}">
+          ${esc(gap.severity || 'warning')} · ${esc(gap.classification || 'unmapped')}${gap.identity_confidence ? ` · ${esc(gap.identity_confidence)}` : ''}
+        </span>
+      </div>
+    `).join('');
+    target.innerHTML = rows.map(([label, value]) => `
+      <div class="gh-row">
+        <span class="lbl">${esc(label)}</span>
+        <span class="val" title="${esc(value)}">${esc(value)}</span>
+      </div>
+    `).join('') + gapRows;
+  }
+
+  function openEdgeInspector(readiness) {
+    if (!readiness) return;
+    document.getElementById('ins-dot').style.background = edgeColorVar(readiness.color);
+    document.getElementById('ins-name').textContent = `${readiness.source} → ${readiness.target}`;
+    const pills = document.getElementById('ins-pills');
+    const colorPill = readiness.color === 'cyan' ? 'blue' : readiness.color;
+    pills.innerHTML = `
+      <span class="pill ${colorPill}">${esc(readiness.status)}</span>
+      <span class="pill blue">${esc(readiness.domain)}</span>
+      <span class="pill gray">${esc(readiness.color)} edge</span>
+    `;
+    const body = document.getElementById('ins-body');
+    const blockers = Array.isArray(readiness.blockers) && readiness.blockers.length
+      ? readiness.blockers.map(b => `<div style="font-family:var(--ff-mono);font-size:11px;">${esc(b)}</div>`).join('')
+      : '<span style="color:var(--t-4);">none</span>';
+    const standbyNote = readiness.color === 'gray' || readiness.status === 'standby'
+      ? '<p style="margin:10px 0 0;color:var(--t-3);font-size:12px;">Node registered, edge standby.</p>'
+      : '';
+    body.innerHTML = `
+      <div class="ins-section">
+        <h4>Edge readiness</h4>
+        <dl class="kv">
+          <dt>Visual edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'none')}</dd>
+          <dt>Data edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'edge_mapping_missing')}</dd>
+          <dt>Traffic source edge</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.traffic_source_edge_id || readiness.edge_id || 'none')}</dd>
+          <dt>Relationship</dt><dd>${esc(readiness.relationship || 'readiness')}</dd>
+          <dt>traffic status</dt><dd>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</dd>
+          <dt>traffic class</dt><dd>${esc(readiness.traffic_classification || 'not reported')}</dd>
+          <dt>traffic type</dt><dd>${esc(readiness.traffic_type || 'none')}</dd>
+          <dt>Telemetry source</dt><dd>${esc(readiness.telemetry_source || 'none')}</dd>
+          <dt>Telemetry kind</dt><dd>${esc(readiness.telemetry_kind || 'none')}</dd>
+          <dt>Source record</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_record_id || 'none')}</dd>
+          <dt>Traffic counters</dt><dd>${esc(`${readiness.traffic?.events_last_60s || 0} events · ${readiness.traffic?.requests_last_60s || 0} requests`)}</dd>
+          <dt>Stale threshold</dt><dd>${esc(readiness.stale_threshold_seconds ? `${readiness.stale_threshold_seconds}s` : 'not reported')}</dd>
+          <dt>Source node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.source_node_id || 'not reported')}</dd>
+          <dt>Target node</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.target_node_id || 'not reported')}</dd>
+          <dt>Current color</dt><dd>${esc(readiness.color)}</dd>
+          <dt>Status</dt><dd>${esc(readiness.status)}</dd>
+          <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.primary_reason)}</dd>
+          <dt>Blockers</dt><dd>${blockers}</dd>
+          <dt>Last heartbeat</dt><dd>${esc(readiness.last_heartbeat_at || 'none')}</dd>
+          <dt>Last success</dt><dd>${esc(readiness.last_success_at || 'none')}</dd>
+          <dt>Last event</dt><dd>${esc(readiness.last_event_at || 'none')}</dd>
+          <dt>Next action</dt><dd>${esc(readiness.traffic_next_action || readiness.next_action || 'none')}</dd>
+        </dl>
+        ${standbyNote}
+      </div>
+      <div class="ins-section">
+        <h4>Why a green card can have a gray line</h4>
+        <p style="color:var(--t-3);font-size:12px;line-height:1.55;margin:0;">Cards show registered node readiness. Edges require separate runtime proof such as a heartbeat, a recent signed event, or a successful edge-specific check.</p>
+      </div>
+    `;
+    inspector.classList.add('open');
+  }
+
+  function fetchEdgeReadiness() {
+    try {
+      fetch('/api/gateway/graph/edge-readiness', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.edges)) {
+            throw new Error('graph_readiness_unavailable');
+          }
+          graphReadinessFetched = true;
+          runtimeEdgeReadiness = payload.edges;
+          if (Array.isArray(payload.legend)) G.EDGE_LEGEND = payload.legend;
+          graphHealth = Object.assign({}, graphHealth, payload.graph_health || {}, {
+            readiness_feed: payload.graph_health?.readiness_feed || 'healthy',
+            last_successful_readiness_fetch: payload.graph_health?.last_successful_readiness_fetch || payload.generated_at || null,
+            graph_data_source: 'live',
+            edge_count_expected: payload.graph_health?.edge_count_expected || G.EDGES.length,
+            edge_count_returned: payload.edges.length,
+            static_asset_version: graphHealth.static_asset_version || 'gateway-node-readiness-v1',
+            edge_static_asset_version: payload.graph_health?.static_asset_version || payload.graph_health?.edge_static_asset_version || 'gateway-edge-readiness-v2',
+          });
+          try { localStorage.setItem('gateway_edge_readiness_last_good', JSON.stringify(payload)); } catch (e) {}
+          renderEdgeLegend();
+          renderGraphHealth();
+          drawEdges();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_edge_readiness_last_good') || 'null'); } catch (e) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.edges)) {
+            runtimeEdgeReadiness = fallbackPayload.edges;
+            graphReadinessFetched = true;
+            graphHealth = Object.assign({}, graphHealth, fallbackPayload.graph_health || {}, {
+              readiness_feed: 'degraded',
+              graph_data_source: 'last-known',
+              static_asset_version: graphHealth.static_asset_version || 'gateway-node-readiness-v1',
+              edge_static_asset_version: 'gateway-edge-readiness-v2',
+            });
+          } else {
+            graphReadinessFetched = false;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: 'failed',
+              graph_data_source: 'static fallback',
+              edge_mapping_errors: ['graph_readiness_unavailable'],
+            });
+          }
+          renderGraphHealth();
+          drawEdges();
+        });
+    } catch (err) {
+      graphHealth = Object.assign({}, graphHealth, {
+        readiness_feed: 'failed',
+        graph_data_source: 'static fallback',
+        edge_mapping_errors: ['graph_readiness_unavailable'],
+      });
+      renderGraphHealth();
+    }
+  }
+
+  function fetchNodeReadiness() {
+    try {
+      fetch('/api/gateway/graph/node-readiness', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.nodes)) {
+            throw new Error('graph_node_readiness_unavailable');
+          }
+          nodeReadinessFetched = true;
+          runtimeNodeReadiness = payload.nodes;
+          applyRuntimeNodeReadiness(runtimeNodeReadiness);
+          const knownIds = new Set(G.NODES.map(node => node.id));
+          const nodeMappingErrors = runtimeNodeReadiness
+            .filter(item => !knownIds.has(item.node_id))
+            .map(item => `node_mapping_mismatch:${item.node_id}`);
+          graphHealth = Object.assign({}, graphHealth, payload.graph_health || {}, {
+            readiness_feed: payload.graph_health?.readiness_feed || graphHealth.readiness_feed || 'healthy',
+            last_successful_readiness_fetch: payload.graph_health?.last_successful_readiness_fetch || payload.generated_at || graphHealth.last_successful_readiness_fetch || null,
+            graph_data_source: 'live',
+            node_count_expected: payload.graph_health?.node_count_expected || G.NODES.length,
+            node_count_returned: payload.nodes.length,
+            node_mapping_errors: nodeMappingErrors,
+            static_asset_version: payload.graph_health?.static_asset_version || 'gateway-node-readiness-v1',
+          });
+          try { localStorage.setItem('gateway_node_readiness_last_good', JSON.stringify(payload)); } catch (e) {}
+          mountAllNodes();
+          renderGraphHealth();
+          drawEdges();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_node_readiness_last_good') || 'null'); } catch (e) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.nodes)) {
+            runtimeNodeReadiness = fallbackPayload.nodes;
+            nodeReadinessFetched = true;
+            applyRuntimeNodeReadiness(runtimeNodeReadiness);
+            graphHealth = Object.assign({}, graphHealth, fallbackPayload.graph_health || {}, {
+              readiness_feed: 'degraded',
+              graph_data_source: 'last-known',
+              static_asset_version: 'gateway-node-readiness-v1',
+            });
+            mountAllNodes();
+          } else {
+            nodeReadinessFetched = false;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+              graph_data_source: graphHealth.graph_data_source || 'static fallback',
+              node_mapping_errors: ['graph_node_readiness_unavailable'],
+            });
+          }
+          renderGraphHealth();
+          drawEdges();
+        });
+    } catch (err) {
+      graphHealth = Object.assign({}, graphHealth, {
+        readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+        graph_data_source: graphHealth.graph_data_source || 'static fallback',
+        node_mapping_errors: ['graph_node_readiness_unavailable'],
+      });
+      renderGraphHealth();
+    }
+  }
+
+  function fetchTopology() {
+    try {
+      fetch('/api/gateway/graph/topology', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+            throw new Error('gateway_graph_topology_unavailable');
+          }
+          topologyFetched = true;
+          canonicalTopology = payload;
+          graphHealth = Object.assign({}, graphHealth, {
+            graph_data_source: 'live',
+            static_asset_version: payload.asset_version || graphHealth.static_asset_version,
+          });
+          try { localStorage.setItem('gateway_graph_topology_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+          drawEdges();
+          startLiveTrafficOverlay();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_topology_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload && Array.isArray(fallbackPayload.edges)) {
+            canonicalTopology = fallbackPayload;
+            topologyFetched = true;
+            graphHealth = Object.assign({}, graphHealth, { graph_data_source: 'last-known' });
+          } else {
+            topologyFetched = false;
+            canonicalTopology = null;
+            graphHealth = Object.assign({}, graphHealth, {
+              readiness_feed: graphHealth.readiness_feed === 'failed' ? 'failed' : 'degraded',
+              graph_data_source: graphHealth.graph_data_source || 'static fallback',
+              edge_mapping_errors: Array.from(new Set([...(graphHealth.edge_mapping_errors || []), 'gateway_graph_topology_unavailable'])),
+            });
+          }
+          renderGraphHealth();
+          renderTopologyDataSync(['gateway_graph_topology_unavailable']);
+          drawEdges();
+        });
+    } catch (err) {
+      topologyFetched = false;
+      canonicalTopology = null;
+      renderTopologyDataSync(['gateway_graph_topology_unavailable']);
+    }
+  }
+
+  function fetchGraphSyncStatus() {
+    try {
+      fetch('/api/gateway/graph/sync-status', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !payload.graph_sync) throw new Error('gateway_graph_sync_status_unavailable');
+          syncStatusFetched = true;
+          graphSyncStatus = payload;
+          try { localStorage.setItem('gateway_graph_sync_status_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_sync_status_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload?.graph_sync) {
+            syncStatusFetched = true;
+            graphSyncStatus = Object.assign({}, fallbackPayload, {
+              graph_sync: Object.assign({}, fallbackPayload.graph_sync, {
+                status: fallbackPayload.graph_sync.status === 'healthy' ? 'stale' : fallbackPayload.graph_sync.status,
+                last_static_fallback_at: new Date().toISOString(),
+              }),
+            });
+          } else {
+            syncStatusFetched = false;
+            graphSyncStatus = {
+              graph_sync: {
+                status: 'degraded',
+                snapshot_id: canonicalTopology?.snapshot_id || 'none',
+                last_live_fetch_at: null,
+                last_static_fallback_at: new Date().toISOString(),
+                topology_node_count: canonicalTopology?.nodes?.length || 0,
+                rendered_node_count: document.querySelectorAll('.node-card[data-id]').length + 1,
+                topology_edge_count: canonicalTopology?.edges?.length || 0,
+                rendered_edge_count: document.querySelectorAll('#edges-svg path[data-edge-id]').length,
+                missing_node_mappings: [],
+                missing_edge_mappings: [],
+                stale_edges: [],
+                status_mismatches: ['gateway_graph_sync_status_unavailable'],
+                traffic_mismatches: [],
+                primary_blocker: 'gateway_graph_sync_status_unavailable',
+              },
+            };
+          }
+          renderTopologyDataSync();
+        });
+    } catch (err) {
+      renderTopologyDataSync(['gateway_graph_sync_status_unavailable']);
+    }
+  }
+
+  function fetchGraphTraffic() {
+    try {
+      fetch('/api/gateway/graph/traffic', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.edges) || !payload.summary) {
+            throw new Error('gateway_graph_traffic_unavailable');
+          }
+          trafficFetched = true;
+          graphTrafficSnapshot = payload;
+          try { localStorage.setItem('gateway_graph_traffic_last_good', JSON.stringify(payload)); } catch (err) {}
+          renderTopologyDataSync();
+          drawEdges();
+          startLiveTrafficOverlay();
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_graph_traffic_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          if (fallbackPayload?.edges) {
+            trafficFetched = true;
+            graphTrafficSnapshot = Object.assign({}, fallbackPayload, {
+              traffic_source: 'unavailable',
+              summary: Object.assign({}, fallbackPayload.summary || {}, {
+                active_traffic_edges: 0,
+                stale_telemetry_edges: (fallbackPayload.summary?.stale_telemetry_edges || 0) + (fallbackPayload.summary?.active_traffic_edges || 0),
+              }),
+              edges: fallbackPayload.edges.map(edge => Object.assign({}, edge, {
+                events_last_60s: 0,
+                requests_last_60s: 0,
+                bytes_in_last_60s: 0,
+                bytes_out_last_60s: 0,
+                traffic_status: edge.traffic_status === 'active' ? 'stale' : edge.traffic_status,
+                primary_reason: edge.traffic_status === 'active' ? 'telemetry_stale' : edge.primary_reason,
+              })),
+            });
+          } else {
+            trafficFetched = false;
+            graphTrafficSnapshot = null;
+          }
+          renderTopologyDataSync(['gateway_graph_traffic_unavailable']);
+          drawEdges();
+          startLiveTrafficOverlay();
+        });
+    } catch (err) {
+      trafficFetched = false;
+      graphTrafficSnapshot = null;
+      renderTopologyDataSync(['gateway_graph_traffic_unavailable']);
+      drawEdges();
+    }
+  }
+
+  function fetchApprovalCenter() {
+    try {
+      fetch('/api/gateway/approvals/center', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(payload => {
+          if (!payload || !Array.isArray(payload.items)) throw new Error('gateway_approval_center_unavailable');
+          approvalCenterFetched = true;
+          approvalCenterItems = payload.items;
+          approvalCenterProposals = Array.isArray(payload.standing_scope_proposals) ? payload.standing_scope_proposals : [];
+          renderApprovalCenter();
+          try { localStorage.setItem('gateway_approval_center_last_good', JSON.stringify(payload)); } catch (err) {}
+        })
+        .catch(() => {
+          const fallbackPayload = (() => {
+            try { return JSON.parse(localStorage.getItem('gateway_approval_center_last_good') || 'null'); } catch (err) { return null; }
+          })();
+          approvalCenterFetched = Boolean(fallbackPayload);
+          approvalCenterItems = Array.isArray(fallbackPayload?.items) ? fallbackPayload.items : [];
+          approvalCenterProposals = Array.isArray(fallbackPayload?.standing_scope_proposals)
+            ? fallbackPayload.standing_scope_proposals
+            : (approvalCenterProposals.length ? approvalCenterProposals : (Array.isArray(G.APPROVAL_CENTER_PROPOSALS) ? G.APPROVAL_CENTER_PROPOSALS.slice() : []));
+          renderApprovalCenter();
+        });
+    } catch (err) {
+      renderApprovalCenter();
+    }
+  }
+
   function openInspector(id) {
     let n = G.get(id);
     if (!n && id === 'gateway.core') n = G.get('gateway.core');
     if (!n) return;
-    document.getElementById('ins-dot').style.background = G.statusColor(n.status);
+    const readiness = nodeReadinessFor(n);
+    const cssStatus = readiness ? GW.readinessCssStatus(readiness, n.status) : n.status;
+    document.getElementById('ins-dot').style.background = readiness ? GW.readinessColor(readiness, n.status) : G.statusColor(n.status);
     document.getElementById('ins-name').textContent = n.name;
     const pills = document.getElementById('ins-pills');
     pills.innerHTML = '';
-    pills.appendChild(GW.statusPill(n.status));
-    const rwxWrap = GW.rwx(n);
+    pills.appendChild(GW.statusPill(readiness?.color || cssStatus, readiness ? GW.readinessStatusLabel(readiness) : undefined));
+    if (readiness?.domain) pills.appendChild(GW.statusPill('blue', readiness.domain));
+    const rwxWrap = GW.rwx(n, readiness);
     pills.appendChild(rwxWrap);
-    if (n.bridge) pills.appendChild(GW.lockBadge());
+    if (n.bridge || readiness?.approval_required) pills.appendChild(GW.lockBadge());
     const body = document.getElementById('ins-body');
     body.innerHTML = '';
-    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${n.summary || ''}</p>` }));
-    if (n.blocked_reason) {
-      body.appendChild(GW.el('div', { class: 'nc-blocker', style: { marginTop: '12px', fontSize: '12px' }, html: '⚠ ' + n.blocked_reason }));
+    body.appendChild(GW.el('div', { html: `<p style="color:var(--t-2);font-size:13px;line-height:1.55;margin:0;">${esc(readiness ? GW.readinessText(readiness) : n.summary || '')}</p>` }));
+    const blocker = readiness?.status === 'blocked' || n.status === 'red' ? (readiness?.primary_reason || n.blocked_reason) : null;
+    if (blocker) {
+      body.appendChild(GW.el('div', { class: 'nc-blocker', style: { marginTop: '12px', fontSize: '12px' }, html: '⚠ ' + esc(blocker) }));
     }
+    const readReady = readiness ? readiness.read_ready === true : Boolean(n.R);
+    const writeReady = readiness ? readiness.write_ready === true : Boolean(n.W);
+    const executeReady = readiness ? readiness.execute_ready === true : Boolean(n.X);
+    const guarded = readiness ? readiness.approval_required === true : Boolean(n.bridge);
+    body.appendChild(GW.el('div', { class: 'ins-section', html: `
+      <h4>Node readiness</h4>
+      <dl class="kv">
+        <dt>Mode</dt><dd>${esc(readiness ? GW.readinessStatusLabel(readiness) : 'unknown')}</dd>
+        <dt>Color</dt><dd>${esc(readiness?.color || cssStatus || 'unknown')}</dd>
+        <dt>Reason</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness?.primary_reason || 'legacy_status_only')}</dd>
+        <dt>Setup state</dt><dd>${esc(readiness?.setup_state || 'not reported')}</dd>
+        <dt>Per-action</dt><dd>${esc(readiness?.per_action_state || 'not reported')}</dd>
+        <dt>Lock scope</dt><dd>${esc(readiness?.lock_scope || (readiness?.approval_required ? 'write_execute_policy' : 'none'))}</dd>
+        <dt>Approval refs</dt><dd>${esc((readiness?.approval_center_refs || []).join(', ') || 'none')}</dd>
+        <dt>Next action</dt><dd>${esc(readiness?.next_action || 'none')}</dd>
+        <dt>Last heartbeat</dt><dd>${esc(readiness?.last_heartbeat_at || 'none')}</dd>
+        <dt>Last success</dt><dd>${esc(readiness?.last_success_at || n.lastSuccess || '—')}</dd>
+      </dl>
+      <p style="margin:10px 0 0;color:var(--t-3);font-size:12px;">Node registered, edge status is evaluated separately.</p>
+    `}));
     body.appendChild(GW.el('div', { class: 'ins-section', html: `
       <h4>Capabilities (R / W / X)</h4>
       <div class="bool-grid">
-        <div class="bool-cell ${n.R?'on':'off'}"><span class="lbl">Read</span><span class="val">${n.R?'enabled':'off'}</span></div>
-        <div class="bool-cell ${n.W?'on':'off'}"><span class="lbl">Write</span><span class="val">${n.W?'enabled':'off'}</span></div>
-        <div class="bool-cell ${n.X?'on':'off'}"><span class="lbl">Execute</span><span class="val">${n.X?'enabled':'off'}</span></div>
+        <div class="bool-cell ${readReady ? 'on' : 'off'}"><span class="lbl">Read</span><span class="val">${readReady ? 'ready' : 'off'}</span></div>
+        <div class="bool-cell ${writeReady ? 'on' : 'off'}"><span class="lbl">Write</span><span class="val">${writeReady ? 'ready' : (guarded ? 'guarded' : 'off')}</span></div>
+        <div class="bool-cell ${executeReady ? 'on' : 'off'}"><span class="lbl">Execute</span><span class="val">${executeReady ? 'ready' : (guarded ? 'guarded' : 'off')}</span></div>
       </div>
     `}));
     body.appendChild(GW.el('div', { class: 'ins-section', html: `
@@ -971,7 +2509,7 @@
       <dl class="kv">
         <dt>Connected</dt><dd>${n.connected?'yes':'no'}</dd>
         <dt>Configured</dt><dd>${n.configured?'yes':'no'}</dd>
-        <dt>Bridge required</dt><dd>${n.bridge?'yes — for write/execute':'no'}</dd>
+        <dt>Approval required</dt><dd>${readiness?.approval_required ? 'yes — write/execute guarded' : (n.bridge?'yes — for write/execute':'no')}</dd>
         <dt>Last success</dt><dd>${n.lastSuccess || '—'}</dd>
         <dt>Cache age</dt><dd>${n.cacheAge || '—'}</dd>
       </dl>
@@ -1002,50 +2540,670 @@
   document.addEventListener('click', (e) => {
     const card = e.target.closest('.node-card');
     if (!card) return;
+    if (layoutEditing) return;
+    selectedNodeId = card.dataset.id;
+    if (edgeMode === 'trace' || selectedOnly) drawEdges();
     openInspector(card.dataset.id);
   });
   // Click gateway core
   document.getElementById('gateway-core').onclick = () => {
+    selectedNodeId = 'gateway.core';
+    if (edgeMode === 'trace' || selectedOnly) drawEdges();
     openInspector('gateway.core');
   };
+  renderEdgeLegend();
+  renderNodeLegend();
+  renderTrafficLegend();
+  renderApprovalCenter();
+  renderGraphHealth();
+  renderTopologyDataSync();
 
   // ---- Edges drawing ----
-  const svg = document.getElementById('edges-svg');
   function drawEdges() {
-    const wrap = document.querySelector('.gw-canvas-wrap').getBoundingClientRect();
-    svg.setAttribute('viewBox', `0 0 ${wrap.width} ${wrap.height}`);
-    svg.setAttribute('width', wrap.width);
-    svg.setAttribute('height', wrap.height);
+    if (!svg || !stage) return;
+    const stageBox = stage.getBoundingClientRect();
+    const stageWidth = Math.max(1480, Math.ceil(stage.scrollWidth || stageBox.width / viewport.scale));
+    const stageHeight = Math.max(1120, Math.ceil(stage.scrollHeight || stageBox.height / viewport.scale));
+    svg.setAttribute('viewBox', `0 0 ${stageWidth} ${stageHeight}`);
+    svg.setAttribute('width', stageWidth);
+    svg.setAttribute('height', stageHeight);
+    svg.className.baseVal = `edges mode-${edgeMode}`;
     svg.innerHTML = '';
+    const mappingErrors = [];
+    let cardBoxById = new Map();
 
-    function ctr(id) {
+    function box(id) {
       let el;
       if (id === 'gateway.core') el = document.getElementById('gateway-core');
-      else el = document.querySelector(`.node-card[data-id="${id}"]`);
+      else {
+        const cached = cardBoxById.get(id);
+        if (cached) return cached;
+        el = document.querySelector(`.node-card[data-id="${id}"]`);
+      }
       if (!el) return null;
       const r = el.getBoundingClientRect();
-      return { x: r.left - wrap.left + r.width/2, y: r.top - wrap.top + r.height/2 };
+      if (r.width < 8 || r.height < 8) return null;
+      const scale = viewport.scale || 1;
+      const left = (r.left - stageBox.left) / scale;
+      const top = (r.top - stageBox.top) / scale;
+      const width = r.width / scale;
+      const height = r.height / scale;
+      return {
+        left, top, width, height,
+        right: left + width,
+        bottom: top + height,
+        cx: left + width / 2,
+        cy: top + height / 2,
+      };
     }
 
-    G.EDGES.forEach(edge => {
-      const a = ctr(edge.from); const b = ctr(edge.to);
-      if (!a || !b) return;
-      const fromN = G.get(edge.from);
-      const toN = G.get(edge.to);
-      // Bezier
-      const dx = b.x - a.x;
-      const cp = Math.abs(dx) * 0.45;
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', `M ${a.x} ${a.y} C ${a.x + cp} ${a.y}, ${b.x - cp} ${b.y}, ${b.x} ${b.y}`);
-      let cls = 'edge';
-      if (toN && (toN.status === 'red' || fromN?.status === 'red')) cls += ' blocked';
-      else if (toN && (toN.status === 'yellow' || fromN?.status === 'yellow')) cls += ' gated';
-      else if (edge.relation === 'commands' || edge.relation === 'delegates_to' || edge.relation === 'routes_through') cls += ' active';
-      path.setAttribute('class', cls);
-      svg.appendChild(path);
+    function routeDomain(readiness) {
+      const d = readiness.bundle_domain || readiness.domain || 'connector';
+      if (d === 'model') return 'models';
+      if (d === 'report' || d === 'reports') return 'reports';
+      if (d === 'webhook' || d === 'webhooks') return 'webhooks';
+      if (d === 'event' || d === 'events') return 'events';
+      if (d === 'agentmail') return 'agentmail';
+      if (d === 'zapier') return 'zapier';
+      if (d === 'storage') return 'storage';
+      if (d === 'browser') return 'browser';
+      return 'connectors';
+    }
+
+    function railFor(domain, a, b, core) {
+      const index = {
+        models: 0, connectors: 1, storage: 2, reports: 3,
+        webhooks: 4, events: 5, browser: 6, agentmail: 7, zapier: 8,
+      }[domain] ?? 1;
+      if (domain === 'models') return { type: 'h', v: Math.max(core.bottom + 118, Math.max(a.cy, b.cy) - 72), offset: index };
+      if (domain === 'events' || domain === 'browser') return { type: 'v', v: Math.min(core.left - 116 - index * 8, Math.min(a.cx, b.cx) + 88), offset: index };
+      if (domain === 'webhooks') return { type: 'v', v: Math.min(core.left - 92, Math.min(a.cx, b.cx) + 120), offset: index };
+      if (domain === 'reports') return { type: 'v', v: Math.max(core.right + 132, Math.min(a.cx, b.cx) + 50), offset: index };
+      if (domain === 'agentmail') return { type: 'v', v: Math.max(core.right + 92, Math.min(a.cx, b.cx) + 70), offset: index };
+      if (domain === 'zapier') return { type: 'v', v: Math.max(core.right + 112, Math.min(a.cx, b.cx) + 80), offset: index };
+      if (domain === 'storage') return { type: 'v', v: Math.max(core.right + 150, Math.min(a.cx, b.cx) + 100), offset: index };
+      return { type: 'v', v: Math.max(core.right + 104, Math.min(a.cx, b.cx) + 80), offset: index };
+    }
+
+    function anchor(box, other, rail) {
+      if (rail.type === 'h') {
+        return { x: box.cx, y: other.cy > box.cy ? box.bottom + 10 : box.top - 10 };
+      }
+      return { x: other.cx > box.cx ? box.right + 10 : box.left - 10, y: box.cy };
+    }
+
+    function orthogonalPath(a, b, rail) {
+      if (rail.type === 'h') {
+        return `M ${a.x} ${a.y} L ${a.x} ${rail.v} L ${b.x} ${rail.v} L ${b.x} ${b.y}`;
+      }
+      return `M ${a.x} ${a.y} L ${rail.v} ${a.y} L ${rail.v} ${b.y} L ${b.x} ${b.y}`;
+    }
+
+    function segmentIntersectsRect(a, b, rect) {
+      const pad = 8;
+      const left = rect.left - pad;
+      const right = rect.right + pad;
+      const top = rect.top - pad;
+      const bottom = rect.bottom + pad;
+      if (Math.abs(a.x - b.x) < 0.1) {
+        const x = a.x;
+        if (x <= left || x >= right) return false;
+        return Math.max(a.y, b.y) > top && Math.min(a.y, b.y) < bottom;
+      }
+      if (Math.abs(a.y - b.y) < 0.1) {
+        const y = a.y;
+        if (y <= top || y >= bottom) return false;
+        return Math.max(a.x, b.x) > left && Math.min(a.x, b.x) < right;
+      }
+      return false;
+    }
+
+    function segmentClear(a, b, obstacles) {
+      return !obstacles.some(rect => segmentIntersectsRect(a, b, rect));
+    }
+
+    function pointClear(point, obstacles) {
+      return !obstacles.some(rect => (
+        point.x > rect.left - 8 && point.x < rect.right + 8 &&
+        point.y > rect.top - 8 && point.y < rect.bottom + 8
+      ));
+    }
+
+    function findOrthogonalRoute(a, b, rail, obstacles) {
+      const margin = 24;
+      const xs = new Set([Math.round(a.x), Math.round(b.x), 16, Math.max(16, stageWidth - 16)]);
+      const ys = new Set([Math.round(a.y), Math.round(b.y), 16, Math.max(16, stageHeight - 16)]);
+      if (rail.type === 'v') xs.add(Math.round(rail.v));
+      else ys.add(Math.round(rail.v));
+      obstacles.forEach(rect => {
+        xs.add(Math.max(16, Math.round(rect.left - margin)));
+        xs.add(Math.min(stageWidth - 16, Math.round(rect.right + margin)));
+        ys.add(Math.max(16, Math.round(rect.top - margin)));
+        ys.add(Math.min(stageHeight - 16, Math.round(rect.bottom + margin)));
+      });
+      const xList = [...xs].sort((x1, x2) => x1 - x2);
+      const yList = [...ys].sort((y1, y2) => y1 - y2);
+      const nodeKey = (x, y) => `${x},${y}`;
+      const points = new Map();
+      xList.forEach(x => yList.forEach(y => {
+        const point = { x, y };
+        if (pointClear(point, obstacles)) points.set(nodeKey(x, y), point);
+      }));
+      const startKey = nodeKey(Math.round(a.x), Math.round(a.y));
+      const endKey = nodeKey(Math.round(b.x), Math.round(b.y));
+      points.set(startKey, { x: Math.round(a.x), y: Math.round(a.y) });
+      points.set(endKey, { x: Math.round(b.x), y: Math.round(b.y) });
+      const neighbors = (point) => {
+        const out = [];
+        const xi = xList.indexOf(point.x);
+        const yi = yList.indexOf(point.y);
+        const candidates = [
+          xi > 0 ? { x: xList[xi - 1], y: point.y } : null,
+          xi < xList.length - 1 ? { x: xList[xi + 1], y: point.y } : null,
+          yi > 0 ? { x: point.x, y: yList[yi - 1] } : null,
+          yi < yList.length - 1 ? { x: point.x, y: yList[yi + 1] } : null,
+        ].filter(Boolean);
+        candidates.forEach(next => {
+          const key = nodeKey(next.x, next.y);
+          if (points.has(key) && segmentClear(point, next, obstacles)) out.push(next);
+        });
+        return out;
+      };
+      const distance = (p1, p2) => Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
+      const open = new Set([startKey]);
+      const cameFrom = new Map();
+      const gScore = new Map([[startKey, 0]]);
+      const fScore = new Map([[startKey, distance(a, b)]]);
+      while (open.size) {
+        let currentKey = null;
+        let best = Infinity;
+        open.forEach(key => {
+          const score = fScore.get(key) ?? Infinity;
+          if (score < best) { best = score; currentKey = key; }
+        });
+        if (!currentKey) break;
+        if (currentKey === endKey) {
+          const route = [points.get(currentKey)];
+          while (cameFrom.has(currentKey)) {
+            currentKey = cameFrom.get(currentKey);
+            route.unshift(points.get(currentKey));
+          }
+          return route.filter(Boolean);
+        }
+        open.delete(currentKey);
+        const current = points.get(currentKey);
+        neighbors(current).forEach(next => {
+          const nextKey = nodeKey(next.x, next.y);
+          const tentative = (gScore.get(currentKey) ?? Infinity) + distance(current, next);
+          if (tentative < (gScore.get(nextKey) ?? Infinity)) {
+            cameFrom.set(nextKey, currentKey);
+            gScore.set(nextKey, tentative);
+            fScore.set(nextKey, tentative + distance(next, b));
+            open.add(nextKey);
+          }
+        });
+      }
+      return rail.type === 'h'
+        ? [a, { x: a.x, y: rail.v }, { x: b.x, y: rail.v }, b]
+        : [a, { x: rail.v, y: a.y }, { x: rail.v, y: b.y }, b];
+    }
+
+    function pathFromPoints(points) {
+      const compact = [];
+      points.forEach(point => {
+        const last = compact[compact.length - 1];
+        if (!last || Math.abs(last.x - point.x) > 0.1 || Math.abs(last.y - point.y) > 0.1) compact.push(point);
+      });
+      return compact.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+    }
+
+    function installEdgeCutoutMask(cutoutBoxes) {
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', 'edge-card-cutouts');
+      mask.setAttribute('maskUnits', 'userSpaceOnUse');
+      const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      base.setAttribute('x', '0');
+      base.setAttribute('y', '0');
+      base.setAttribute('width', stageWidth);
+      base.setAttribute('height', stageHeight);
+      base.setAttribute('fill', 'white');
+      mask.appendChild(base);
+      cutoutBoxes.forEach(rect => {
+        const gap = 8;
+        const cutout = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        cutout.setAttribute('x', Math.max(0, rect.left - gap));
+        cutout.setAttribute('y', Math.max(0, rect.top - gap));
+        cutout.setAttribute('width', rect.width + gap * 2);
+        cutout.setAttribute('height', rect.height + gap * 2);
+        cutout.setAttribute('rx', '8');
+        cutout.setAttribute('fill', 'black');
+        mask.appendChild(cutout);
+      });
+      defs.appendChild(mask);
+      svg.appendChild(defs);
+    }
+
+    function shouldShow(readiness, edge) {
+      const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+      if (edgeMode === 'diagnostics') return true;
+      if (edgeMode === 'trace' || selectedOnly) return Boolean(incident);
+      if (edgeMode === 'quiet') return Boolean(incident || readiness.critical || readiness.color === 'red');
+      if (hideStandbyLines && readiness.status === 'standby' && !readiness.critical) return false;
+      return readiness.default_visible !== false || readiness.color !== 'gray';
+    }
+
+    const boxFromElement = (el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8) return null;
+      const scale = viewport.scale || 1;
+      const left = (r.left - stageBox.left) / scale;
+      const top = (r.top - stageBox.top) / scale;
+      return {
+        id: el.dataset.id,
+        left,
+        top,
+        width: r.width / scale,
+        height: r.height / scale,
+        right: left + r.width / scale,
+        bottom: top + r.height / scale,
+        cx: left + (r.width / scale) / 2,
+        cy: top + (r.height / scale) / 2,
+      };
+    };
+    const allBoxes = [...document.querySelectorAll('.node-card')]
+      .map(el => {
+        const rect = boxFromElement(el);
+        if (rect?.id) cardBoxById.set(rect.id, rect);
+        return rect;
+      })
+      .filter(Boolean);
+    const warningBoxes = [...document.querySelectorAll('.nc-blocker')].map(boxFromElement).filter(Boolean);
+    installEdgeCutoutMask([...allBoxes, ...warningBoxes]);
+    const core = box('gateway.core') || { left: 650, right: 830, top: 420, bottom: 620, cx: 740, cy: 520 };
+    const routed = [];
+    G.EDGES.forEach((edge, edgeIndex) => {
+      const aBox = box(edge.from); const bBox = box(edge.to);
+      if (!aBox || !bBox) {
+        mappingErrors.push(`edge_mapping_mismatch:${edge.from}->${edge.to}`);
+        return;
+      }
+      const readiness = edgeReadinessFor(edge);
+      const domain = routeDomain(readiness);
+      const rail = railFor(domain, aBox, bBox, core);
+      const a = anchor(aBox, bBox, rail);
+      const b = anchor(bBox, aBox, rail);
+      const obstacles = allBoxes.filter(rect => rect !== aBox && rect !== bBox);
+      const routePoints = findOrthogonalRoute(a, b, rail, obstacles);
+      routed.push({ edge, readiness, domain, rail, a, b, obstacles, routePoints, pathData: pathFromPoints(routePoints), edgeIndex });
     });
+
+    function nodeDomain(node, readiness) {
+      if (!node) return 'integrations';
+      if (node.id === 'int.agentmail') return 'agentmail';
+      if (node.id === 'int.zapier') return 'zapier';
+      if (node.id === 'input.webhook') return 'webhooks';
+      if (node.id === 'input.event') return 'events';
+      if (node.id === 'int.reports') return 'reports';
+      if (node.id === 'int.gdrive' || node.id === 'int.onedrive' || node.id === 'int.datastores') return 'storage';
+      if (node.id.startsWith('brain.')) return 'knowledge';
+      if (node.id.startsWith('model.') || node.id === 'oc.parent') return 'models';
+      if (node.id.startsWith('input.') || node.id.startsWith('agent.')) return 'inputs';
+      if (readiness?.domain === 'browser') return 'browser';
+      return 'integrations';
+    }
+
+    function domainHub(domain) {
+      const hubs = {
+        models: { x: core.cx, y: core.bottom + 92 },
+        inputs: { x: core.left - 118, y: core.cy },
+        knowledge: { x: core.cx, y: Math.max(64, core.top - 92) },
+        integrations: { x: core.right + 118, y: core.cy },
+        storage: { x: core.right + 152, y: core.cy + 126 },
+        reports: { x: core.right + 152, y: core.cy - 126 },
+        webhooks: { x: core.left - 150, y: core.cy - 128 },
+        events: { x: core.left - 150, y: core.cy - 64 },
+        agentmail: { x: core.right + 104, y: core.cy + 58 },
+        zapier: { x: core.right + 104, y: core.cy - 58 },
+        browser: { x: core.left - 150, y: core.cy + 132 },
+      };
+      return hubs[domain] || hubs.integrations;
+    }
+
+    function unionBounds(items) {
+      return items.reduce((acc, item) => ({
+        left: Math.min(acc.left, item.rect.left),
+        top: Math.min(acc.top, item.rect.top),
+        right: Math.max(acc.right, item.rect.right),
+        bottom: Math.max(acc.bottom, item.rect.bottom),
+      }), { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
+    }
+
+    function laneHubFor(domain, items) {
+      const bounds = unionBounds(items);
+      if (!Number.isFinite(bounds.left)) return domainHub(domain);
+      const midY = (bounds.top + bounds.bottom) / 2;
+      const midX = (bounds.left + bounds.right) / 2;
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
+        return { x: Math.min(core.left - 44, bounds.right + 42), y: midY };
+      }
+      if (domain === 'knowledge') {
+        return { x: midX, y: Math.max(36, bounds.top - 42) };
+      }
+      if (domain === 'models') {
+        return { x: midX, y: Math.min(stageHeight - 36, bounds.bottom + 42) };
+      }
+      return { x: Math.max(core.right + 44, bounds.left - 42), y: midY };
+    }
+
+    function trunkPointsFor(domain, hub) {
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
+        return [
+          { x: core.left - 12, y: core.cy },
+          { x: hub.x, y: core.cy },
+          hub,
+        ];
+      }
+      if (domain === 'knowledge') {
+        return [
+          { x: core.cx, y: core.top - 12 },
+          { x: core.cx, y: hub.y },
+          hub,
+        ];
+      }
+      if (domain === 'models') {
+        return [
+          { x: core.cx, y: core.bottom + 12 },
+          { x: core.cx, y: hub.y },
+          hub,
+        ];
+      }
+      return [
+        { x: core.right + 12, y: core.cy },
+        { x: hub.x, y: core.cy },
+        hub,
+      ];
+    }
+
+    function branchPointsFor(domain, hub, rect) {
+      if (domain === 'inputs' || domain === 'webhooks' || domain === 'events' || domain === 'browser') {
+        return [hub, { x: hub.x, y: rect.cy }, { x: rect.right + 12, y: rect.cy }];
+      }
+      if (domain === 'knowledge') {
+        return [hub, { x: rect.cx, y: hub.y }, { x: rect.cx, y: rect.top - 12 }];
+      }
+      if (domain === 'models') {
+        return [hub, { x: rect.cx, y: hub.y }, { x: rect.cx, y: rect.bottom + 12 }];
+      }
+      return [hub, { x: hub.x, y: rect.cy }, { x: rect.left - 12, y: rect.cy }];
+    }
+
+    function domainFrame(items) {
+      const bounds = unionBounds(items);
+      const pad = 34;
+      return {
+        left: Math.max(18, bounds.left - pad),
+        right: Math.min(stageWidth - 18, bounds.right + pad),
+        top: Math.max(18, bounds.top - pad),
+        bottom: Math.min(stageHeight - 18, bounds.bottom + pad),
+        cx: (bounds.left + bounds.right) / 2,
+        cy: (bounds.top + bounds.bottom) / 2,
+      };
+    }
+
+    function framePath(frame) {
+      return [
+        { x: frame.left, y: frame.top },
+        { x: frame.right, y: frame.top },
+        { x: frame.right, y: frame.bottom },
+        { x: frame.left, y: frame.bottom },
+        { x: frame.left, y: frame.top },
+      ];
+    }
+
+    function framePortForCore(frame) {
+      const candidates = [
+        { side: 'left', x: frame.left, y: Math.max(frame.top, Math.min(frame.bottom, core.cy)) },
+        { side: 'right', x: frame.right, y: Math.max(frame.top, Math.min(frame.bottom, core.cy)) },
+        { side: 'top', x: Math.max(frame.left, Math.min(frame.right, core.cx)), y: frame.top },
+        { side: 'bottom', x: Math.max(frame.left, Math.min(frame.right, core.cx)), y: frame.bottom },
+      ];
+      candidates.sort((a, b) => Math.abs(a.x - core.cx) + Math.abs(a.y - core.cy) - (Math.abs(b.x - core.cx) + Math.abs(b.y - core.cy)));
+      return candidates[0];
+    }
+
+    function nearestFrameBranch(frame, rect) {
+      const candidates = [
+        { side: 'top', dist: Math.abs(rect.top - frame.top), port: { x: rect.cx, y: frame.top }, target: { x: rect.cx, y: rect.top - 12 } },
+        { side: 'bottom', dist: Math.abs(frame.bottom - rect.bottom), port: { x: rect.cx, y: frame.bottom }, target: { x: rect.cx, y: rect.bottom + 12 } },
+        { side: 'left', dist: Math.abs(rect.left - frame.left), port: { x: frame.left, y: rect.cy }, target: { x: rect.left - 12, y: rect.cy } },
+        { side: 'right', dist: Math.abs(frame.right - rect.right), port: { x: frame.right, y: rect.cy }, target: { x: rect.right + 12, y: rect.cy } },
+      ];
+      candidates.sort((a, b) => a.dist - b.dist);
+      return [candidates[0].port, candidates[0].target];
+    }
+
+    function coreAnchorFor(point) {
+      const dx = point.x - core.cx;
+      const dy = point.y - core.cy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return { x: dx >= 0 ? core.right + 12 : core.left - 12, y: core.cy };
+      }
+      return { x: core.cx, y: dy >= 0 ? core.bottom + 12 : core.top - 12 };
+    }
+
+    function cardAnchorFor(rect, point) {
+      const dx = point.x - rect.cx;
+      const dy = point.y - rect.cy;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return { x: dx >= 0 ? rect.right + 12 : rect.left - 12, y: rect.cy };
+      }
+      return { x: rect.cx, y: dy >= 0 ? rect.bottom + 12 : rect.top - 12 };
+    }
+
+    function nodeRouteVisible(readiness, nodeId) {
+      const selected = selectedNodeId && selectedNodeId === nodeId;
+      if (edgeMode === 'diagnostics') return true;
+      if (edgeMode === 'trace' || selectedOnly) return Boolean(selected);
+      if (edgeMode === 'quiet') return Boolean(selected || readiness.status === 'blocked');
+      if (hideStandbyLines && readiness.status === 'standby') return false;
+      return true;
+    }
+
+    function appendRoutePath(routeInfo, points, classes, selected, dimmed) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const edgePathIndex = svg.querySelectorAll('path.edge').length;
+      const edgePathId = `edge-path-${String(routeInfo.edge_id || 'unknown').replace(/[^a-z0-9_-]+/gi, '-')}-${edgePathIndex}`;
+      path.setAttribute('d', pathFromPoints(points));
+      path.setAttribute('id', edgePathId);
+      path.setAttribute('class', [
+        'edge',
+        ...classes,
+        `edge-${routeInfo.color}`,
+        routeHasRecentTraffic(routeInfo) ? 'edge-has-traffic' : '',
+        routeInfo.critical ? 'edge-critical' : '',
+        selected ? 'edge-selected' : '',
+        dimmed ? 'edge-dimmed' : '',
+      ].filter(Boolean).join(' '));
+      path.setAttribute('mask', 'url(#edge-card-cutouts)');
+      path.setAttribute('tabindex', '0');
+      path.setAttribute('role', 'button');
+      path.setAttribute('aria-label', `${routeInfo.source} to ${routeInfo.target}: ${routeInfo.status}, ${routeInfo.primary_reason}`);
+      path.dataset.edgeId = routeInfo.edge_id;
+      path.dataset.domain = routeInfo.domain;
+      path.setAttribute('data-edge-relationship', routeInfo.relationship || 'readiness');
+      path.setAttribute('data-traffic-state', routeInfo.traffic_state || 'traffic_data_unavailable');
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${routeInfo.source} → ${routeInfo.target}\nstatus: ${routeInfo.status}\nreason: ${routeInfo.primary_reason}\nnext: ${routeInfo.next_action}`;
+      path.appendChild(title);
+      path.addEventListener('mouseenter', evt => showEdgeTooltip(routeInfo, evt));
+      path.addEventListener('mousemove', moveEdgeTooltip);
+      path.addEventListener('mouseleave', hideEdgeTooltip);
+      path.addEventListener('focus', evt => showEdgeTooltip(routeInfo, evt));
+      path.addEventListener('blur', hideEdgeTooltip);
+      path.addEventListener('click', evt => {
+        evt.stopPropagation();
+        hideEdgeTooltip();
+        openEdgeInspector(routeInfo);
+      });
+      svg.appendChild(path);
+      appendTrafficBeads(routeInfo, edgePathId, selected);
+    }
+
+    function routeTrafficTotal(routeInfo) {
+      const traffic = routeInfo?.traffic || {};
+      return (Number(traffic.events_last_60s) || 0) + (Number(traffic.requests_last_60s) || 0);
+    }
+
+    function routeHasRecentTraffic(routeInfo) {
+      return routeInfo?.traffic_status === 'active' && routeTrafficTotal(routeInfo) > 0;
+    }
+
+    function appendTrafficBeads(routeInfo, pathId, selected) {
+      if (!routeHasRecentTraffic(routeInfo)) return;
+      const total = routeTrafficTotal(routeInfo);
+      const beadCount = Math.max(1, Math.min(4, Math.ceil(total / 2)));
+      const color = ['green', 'cyan', 'yellow', 'red', 'gray'].includes(routeInfo.color) ? routeInfo.color : 'cyan';
+      for (let index = 0; index < beadCount; index += 1) {
+        const bead = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bead.setAttribute('r', selected ? '4.4' : '3.6');
+        bead.setAttribute('class', [
+          'traffic-bead',
+          `traffic-bead-${color}`,
+          routeInfo.critical ? 'traffic-bead-critical' : '',
+        ].filter(Boolean).join(' '));
+        bead.setAttribute('data-edge-id', routeInfo.edge_id);
+        if (routeInfo.traffic_source_edge_id) bead.setAttribute('data-traffic-source-edge-id', routeInfo.traffic_source_edge_id);
+        bead.setAttribute('data-traffic-proof', 'trusted_telemetry_counter');
+        const motion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+        motion.setAttribute('dur', `${Math.max(1.2, 2.6 - Math.min(total, 8) * 0.12)}s`);
+        motion.setAttribute('begin', `${(index * 0.38).toFixed(2)}s`);
+        motion.setAttribute('repeatCount', 'indefinite');
+        motion.setAttribute('rotate', 'auto');
+        const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+        mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${pathId}`);
+        mpath.setAttribute('href', `#${pathId}`);
+        motion.appendChild(mpath);
+        bead.appendChild(motion);
+        svg.appendChild(bead);
+      }
+    }
+
+    const highwayDomains = new Map();
+    [...document.querySelectorAll('.node-card[data-id]')].forEach(card => {
+      const id = card.dataset.id;
+      const node = G.get(id);
+      if (!node) return;
+      const rect = box(id);
+      if (!rect) return;
+      const readiness = nodeReadinessFor(node) || {
+        status: node.status === 'red' ? 'blocked' : node.status === 'gray' ? 'standby' : 'ready',
+        color: node.status === 'blue' ? 'cyan' : node.status === 'red' ? 'red' : node.status === 'yellow' || node.status === 'orange' ? 'yellow' : node.status === 'gray' ? 'gray' : 'green',
+        primary_reason: node.primary_reason || node.blocked_reason || `${id.replace(/[^a-z0-9]+/gi, '_')}_registered`,
+        short_label: node.summary || '',
+        next_action: node.next_action || 'inspect_gateway_readiness',
+      };
+      const domain = nodeDomain(node, readiness);
+      const hub = domainHub(domain);
+      const visible = nodeRouteVisible(readiness, id);
+      if (!visible) return;
+      const selected = Boolean(selectedNodeId && selectedNodeId === id);
+      const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !selected);
+      const routeInfo = topologyEdgeForHighway(`highway.${domain}.${id}`, mappingErrors);
+      if (!routeInfo) return;
+      const domainEntry = highwayDomains.get(domain) || { hub, color: routeInfo.color, status: routeInfo.status, primary_reason: routeInfo.primary_reason, nodes: [] };
+      if (routeInfo.color === 'red') domainEntry.color = 'red';
+      else if (domainEntry.color !== 'red' && routeInfo.color === 'green') domainEntry.color = 'green';
+      else if (!['red', 'green'].includes(domainEntry.color) && routeInfo.color === 'yellow') domainEntry.color = 'yellow';
+      else if (!['red', 'green', 'yellow'].includes(domainEntry.color) && routeInfo.color === 'cyan') domainEntry.color = 'cyan';
+      domainEntry.nodes.push({ id, rect, node, readiness, routeInfo, selected, dimmed });
+      highwayDomains.set(domain, domainEntry);
+    });
+
+    if (edgeMode !== 'diagnostics') {
+      highwayDomains.forEach((entry, domain) => {
+        const frame = domainFrame(entry.nodes);
+        if (edgeMode !== 'quiet') {
+          const trunkInfo = topologyEdgeForHighway(`highway.${domain}.trunk`, mappingErrors);
+          if (trunkInfo) appendRoutePath(trunkInfo, framePath(frame), ['edge-trunk', 'edge-highway', 'edge-structural', `edge-domain-${domain}`], false, false);
+          const framePort = framePortForCore(frame);
+          const trunkStart = coreAnchorFor(framePort);
+          const trunkRail = Math.abs(framePort.x - trunkStart.x) > Math.abs(framePort.y - trunkStart.y)
+            ? { type: 'v', v: framePort.x }
+            : { type: 'h', v: framePort.y };
+          const trunkPoints = findOrthogonalRoute(trunkStart, framePort, trunkRail, allBoxes);
+          const dispatcherLinkInfo = topologyEdgeForHighway(`highway.${domain}.dispatcher-link`, mappingErrors);
+          if (dispatcherLinkInfo) appendRoutePath(dispatcherLinkInfo, trunkPoints, ['edge-trunk', 'edge-highway', 'edge-structural', `edge-domain-${domain}`], false, false);
+        }
+
+        entry.nodes.forEach(item => {
+          const branchPoints = nearestFrameBranch(frame, item.rect);
+          appendRoutePath(item.routeInfo, branchPoints, ['edge-branch', 'edge-structural', `edge-domain-${domain}`], item.selected && (edgeMode === 'trace' || selectedOnly), item.dimmed);
+        });
+      });
+    }
+
+    if (edgeMode !== 'diagnostics') {
+      renderGraphHealth(mappingErrors);
+      return;
+    }
+
+    routed.forEach(item => {
+      const { edge, readiness } = item;
+      const topologyReadiness = edgeLabelFromTopology(canonicalTopology?.edges?.find(topoEdge => topoEdge.edge_id === readiness.edge_id));
+      const displayReadiness = Object.assign({}, readiness, topologyReadiness || {});
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const edgePathIndex = svg.querySelectorAll('path.edge').length;
+      const edgePathId = `edge-path-${String(displayReadiness.edge_id || 'diagnostic').replace(/[^a-z0-9_-]+/gi, '-')}-${edgePathIndex}`;
+      path.setAttribute('d', item.pathData);
+      path.setAttribute('id', edgePathId);
+      const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
+      const hidden = !shouldShow(displayReadiness, edge);
+      const selected = Boolean(incident && (edgeMode === 'trace' || selectedOnly));
+      const dimmed = Boolean((edgeMode === 'trace' || selectedOnly) && selectedNodeId && !incident);
+      path.setAttribute('class', [
+        'edge',
+        'edge-branch',
+        `edge-${displayReadiness.color}`,
+        `edge-domain-${item.domain}`,
+        routeHasRecentTraffic(displayReadiness) ? 'edge-has-traffic' : '',
+        displayReadiness.critical ? 'edge-critical' : '',
+        hidden ? 'edge-hidden' : '',
+        selected ? 'edge-selected' : '',
+        dimmed ? 'edge-dimmed' : '',
+      ].filter(Boolean).join(' '));
+      path.setAttribute('tabindex', '0');
+      path.setAttribute('role', 'button');
+      path.setAttribute('aria-label', `${displayReadiness.source} to ${displayReadiness.target}: ${displayReadiness.status}, ${displayReadiness.primary_reason}`);
+      path.dataset.edgeId = displayReadiness.edge_id;
+      path.dataset.domain = item.domain;
+      path.setAttribute('data-edge-relationship', displayReadiness.relationship || 'readiness');
+      path.setAttribute('data-traffic-state', displayReadiness.traffic_state || 'traffic_data_unavailable');
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${displayReadiness.source} → ${displayReadiness.target}\nstatus: ${displayReadiness.status}\nreason: ${displayReadiness.primary_reason}\ntraffic: ${displayReadiness.traffic_state || 'traffic_data_unavailable'}\nnext: ${displayReadiness.next_action}`;
+      path.appendChild(title);
+      path.addEventListener('mouseenter', evt => showEdgeTooltip(displayReadiness, evt));
+      path.addEventListener('mousemove', moveEdgeTooltip);
+      path.addEventListener('mouseleave', hideEdgeTooltip);
+      path.addEventListener('focus', evt => showEdgeTooltip(displayReadiness, evt));
+      path.addEventListener('blur', hideEdgeTooltip);
+      path.addEventListener('click', evt => {
+        evt.stopPropagation();
+        hideEdgeTooltip();
+        openEdgeInspector(displayReadiness);
+      });
+      svg.appendChild(path);
+      appendTrafficBeads(displayReadiness, edgePathId, selected);
+    });
+    renderGraphHealth(mappingErrors);
   }
   drawEdges();
+  fetchNodeReadiness();
+  fetchEdgeReadiness();
+  fetchTopology();
+  fetchGraphSyncStatus();
+  fetchGraphTraffic();
+  fetchApprovalCenter();
   window.addEventListener('resize', drawEdges);
   // Redraw shortly after fonts settle
   setTimeout(drawEdges, 250);
@@ -1089,6 +3247,145 @@
       location.reload();
     }
   };
+
+  // ---- View controls, drawers, pan/zoom, and safe UI preference persistence ----
+  loadPrefs();
+  applyNodeOffsets();
+  applyViewport();
+  setEdgeMode(edgeMode, { silent: true });
+  syncDrawerButton('gateway-diagnostics-drawer', 'toggle-diagnostics');
+  syncDrawerButton('view-settings-drawer', 'toggle-view-settings');
+
+  document.getElementById('toggle-diagnostics').onclick = () => toggleDrawer('gateway-diagnostics-drawer', 'toggle-diagnostics');
+  document.getElementById('toggle-view-settings').onclick = () => toggleDrawer('view-settings-drawer', 'toggle-view-settings');
+  document.querySelectorAll('[data-edge-mode]').forEach(btn => {
+    btn.addEventListener('click', () => setEdgeMode(btn.dataset.edgeMode));
+  });
+  document.getElementById('t-hide-standby').onchange = (e) => {
+    hideStandbyLines = e.target.checked;
+    drawEdges();
+    savePrefs();
+  };
+  document.getElementById('t-selected-only').onchange = (e) => {
+    delete e.target.dataset.quietForced;
+    selectedOnly = e.target.checked;
+    drawEdges();
+    savePrefs();
+  };
+  document.getElementById('t-compact-cards').onchange = (e) => {
+    document.getElementById('canvas').classList.toggle('compact-cards', e.target.checked);
+    savePrefs();
+  };
+  document.getElementById('view-fit').onclick = () => {
+    const content = document.getElementById('canvas');
+    const wrapRect = wrap.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    const scale = Math.max(0.52, Math.min(1.2, Math.min((wrapRect.width - 48) / (contentRect.width / viewport.scale), (wrapRect.height - 48) / (contentRect.height / viewport.scale))));
+    viewport.scale = scale;
+    viewport.x = 24;
+    viewport.y = 24;
+    applyViewport();
+    savePrefs();
+    showToast('Gateway map fitted to view');
+  };
+  document.getElementById('view-reset').onclick = () => {
+    viewport = { x: 0, y: 0, scale: 1 };
+    applyViewport();
+    savePrefs();
+    showToast('Pan and zoom reset');
+  };
+  document.getElementById('view-center-dispatcher').onclick = () => {
+    focusElementInView(document.getElementById('gateway-core'), viewport.scale);
+    showToast('Centered on Dispatcher');
+  };
+  document.getElementById('view-center-selected').onclick = () => {
+    if (!selectedNodeId) {
+      showToast('Select a card first, then center selected');
+      return;
+    }
+    const el = selectedNodeId === 'gateway.core' ? document.getElementById('gateway-core') : document.querySelector(`.node-card[data-id="${selectedNodeId}"]`);
+    if (!el) {
+      showToast('Selected card is not visible');
+      return;
+    }
+    focusElementInView(el, viewport.scale);
+    showToast('Centered selected card');
+  };
+  document.getElementById('view-edit-layout').onclick = () => {
+    toggleLayoutEditing();
+    showToast(layoutEditing ? 'Layout edit mode on' : 'Layout edit mode off');
+  };
+  document.getElementById('view-save-layout').onclick = () => {
+    savePrefs();
+    showToast('Gateway layout preference saved');
+  };
+  document.getElementById('view-reset-layout').onclick = () => {
+    nodeOffsets = {};
+    applyNodeOffsets();
+    drawEdges();
+    savePrefs();
+    showToast('Saved card layout cleared');
+  };
+
+  let panStart = null;
+  wrap.addEventListener('pointerdown', (e) => {
+    if (layoutEditing || e.target.closest('.node-card, button, .side-drawer, .inspector, .modal-mask, .edge')) return;
+    panStart = { x: e.clientX, y: e.clientY, vx: viewport.x, vy: viewport.y };
+    wrap.setPointerCapture?.(e.pointerId);
+    wrap.classList.add('is-panning');
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!panStart) return;
+    viewport.x = panStart.vx + (e.clientX - panStart.x);
+    viewport.y = panStart.vy + (e.clientY - panStart.y);
+    applyViewport();
+  });
+  wrap.addEventListener('pointerup', (e) => {
+    if (!panStart) return;
+    panStart = null;
+    wrap.releasePointerCapture?.(e.pointerId);
+    wrap.classList.remove('is-panning');
+    savePrefs();
+  });
+  wrap.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    const oldScale = viewport.scale;
+    const nextScale = Math.max(0.45, Math.min(1.8, oldScale * (e.deltaY > 0 ? 0.92 : 1.08)));
+    const wrapRect = wrap.getBoundingClientRect();
+    const mx = e.clientX - wrapRect.left;
+    const my = e.clientY - wrapRect.top;
+    viewport.x = mx - (mx - viewport.x) * (nextScale / oldScale);
+    viewport.y = my - (my - viewport.y) * (nextScale / oldScale);
+    viewport.scale = nextScale;
+    applyViewport();
+    savePrefs();
+  }, { passive: false });
+
+  let dragStart = null;
+  document.addEventListener('pointerdown', (e) => {
+    const card = e.target.closest('.node-card');
+    if (!layoutEditing || !card) return;
+    e.preventDefault();
+    selectedNodeId = card.dataset.id;
+    const current = nodeOffsets[selectedNodeId] || { x: 0, y: 0 };
+    dragStart = { card, id: selectedNodeId, x: e.clientX, y: e.clientY, ox: Number(current.x) || 0, oy: Number(current.y) || 0 };
+    card.setPointerCapture?.(e.pointerId);
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!dragStart) return;
+    const dx = (e.clientX - dragStart.x) / viewport.scale;
+    const dy = (e.clientY - dragStart.y) / viewport.scale;
+    nodeOffsets[dragStart.id] = { x: Math.round(dragStart.ox + dx), y: Math.round(dragStart.oy + dy) };
+    applyNodeOffsets();
+    drawEdges();
+  });
+  document.addEventListener('pointerup', (e) => {
+    if (!dragStart) return;
+    dragStart.card.releasePointerCapture?.(e.pointerId);
+    dragStart = null;
+    savePrefs();
+  });
 
   // ---- Live Nucleus rendering ----------------------------------------------
   const dfRows = document.getElementById('df-rows');
@@ -1167,7 +3464,6 @@
   placeSatellites();
 
   // ---- Live request beam animation ----
-  const wrap = document.querySelector('.gw-canvas-wrap');
   let beamCount = 0;
   function fireBeam(req) {
     const wrapRect = wrap.getBoundingClientRect();
@@ -1242,15 +3538,45 @@
 
   let trafficOn = true;
   let trafficTimer = null;
-  function startTraffic() {
+  let lastTrafficToastAt = 0;
+  function liveTrafficEdges() {
+    if (!graphTrafficSnapshot || graphTrafficSnapshot.traffic_source === 'unavailable') return [];
+    return (graphTrafficSnapshot.edges || [])
+      .filter(edge => edge.traffic_status === 'active' && ((Number(edge.events_last_60s) || 0) + (Number(edge.requests_last_60s) || 0) > 0))
+      .map(edge => {
+        const topologyEdge = canonicalTopology?.edges?.find(item => item.edge_id === edge.edge_id) || {};
+        return Object.assign({}, topologyEdge, {
+          edge_id: edge.edge_id,
+          source_node_id: edge.source_node_id || topologyEdge.source_node_id,
+          target_node_id: edge.target_node_id || topologyEdge.target_node_id,
+          relationship: topologyEdge.relationship || 'traffic',
+          traffic: {
+            events_last_60s: edge.events_last_60s || 0,
+            requests_last_60s: edge.requests_last_60s || 0,
+            bytes_in_last_60s: edge.bytes_in_last_60s || 0,
+            bytes_out_last_60s: edge.bytes_out_last_60s || 0,
+          },
+        });
+      });
+  }
+  function startLiveTrafficOverlay() {
+    // Topology defines edge IDs; live traffic beads are rendered on visible paths only from trusted telemetry counters.
+    // Static DEMO_REQUEST_STREAM data is kept as non-live sample data and is not proof of movement.
     stopTraffic();
-    let i = 0;
-    trafficTimer = setInterval(() => {
-      if (!trafficOn) return;
-      const r = G.REQUEST_STREAM[i % G.REQUEST_STREAM.length];
-      fireBeam(r);
-      i++;
-    }, 700);
+    const liveEdges = liveTrafficEdges();
+    if (!trafficOn) return;
+    trafficTimer = setInterval(fetchGraphTraffic, 10000);
+    if (!liveEdges.length) {
+      wrap.classList.add('is-idle');
+      const now = Date.now();
+      if (now - lastTrafficToastAt > 20000) {
+        if (trafficFetched && graphTrafficSnapshot?.traffic_source === 'unavailable') showToast('Traffic data unavailable');
+        else if (trafficFetched) showToast('Ready · no recent traffic');
+        lastTrafficToastAt = now;
+      }
+      return;
+    }
+    wrap.classList.remove('is-idle');
   }
   function stopTraffic() {
     if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }
@@ -1258,8 +3584,7 @@
   document.getElementById('t-traffic').onchange = (e) => {
     trafficOn = e.target.checked;
     if (trafficOn) {
-      wrap.classList.remove('is-idle');
-      startTraffic();
+      startLiveTrafficOverlay();
     } else {
       wrap.classList.add('is-idle');
       stopTraffic();
@@ -1289,14 +3614,8 @@
   // Fan-out burst — fires 6 beams from input.scheduled toward dispatcher
   document.getElementById('t-fanout').onchange = (e) => {
     if (!e.target.checked) return;
-    const tasks = ['classify·12','classify·12','classify·6','summarize·4','tag·8','route·30'];
-    tasks.forEach((t, i) => {
-      setTimeout(() => fireBeam({
-        from: 'input.scheduled', asks: 'gateway.core', op: 'fan-out',
-        result: 'ok', engine: 'eng.groq',
-      }), i * 140);
-    });
-    setTimeout(() => { e.target.checked = false; }, 1500);
+    showToast('Fan-out burst is disabled until trusted live traffic events are present');
+    setTimeout(() => { e.target.checked = false; }, 500);
   };
 
   // Toggle nucleus overlays + traffic when variant changes
@@ -1304,7 +3623,7 @@
     document.getElementById('dispatch-feed').classList.toggle('on', on);
     document.getElementById('engine-ledger').classList.toggle('on', on);
     document.getElementById('mini-strip').classList.toggle('on', on);
-    if (on) startTraffic(); else stopTraffic();
+    if (on) startLiveTrafficOverlay(); else stopTraffic();
   }
 
   // Re-hook variant switch to also drive nucleus overlays

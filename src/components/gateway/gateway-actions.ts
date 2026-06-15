@@ -603,8 +603,8 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
 
   return {
     kind: 'gated',
-    title: 'Action routed to Gateway',
-    detail: `The "${context.label.trim() || 'button'}" control is wired. It is blocked from direct execution until an explicit Gateway contract is attached.`,
+    title: 'Gateway action is guarded',
+    detail: `The "${context.label.trim() || 'button'}" control is connected, but it does not run anything by itself yet. Nothing executed. Use the card status, Health, Config, or Approval Center to attach a safe read-only destination or an owner-approved action scope.`,
     href: shellHref('/gateway/bridge-session'),
   }
 }
@@ -748,8 +748,7 @@ async function executeGatewayAction(action: GatewayFrameAction, iframe: HTMLIFra
   }
 
   if (action.kind === 'gated') {
-    const suffix = action.href ? ` Open Bridge Session from ${action.href}.` : ''
-    showGatewayNotice(doc, action.title, `${action.detail}${suffix}`, 'warn')
+    showGatewayNotice(doc, action.title, action.detail, 'warn')
     return
   }
 

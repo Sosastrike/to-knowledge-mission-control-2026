@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AGENT_NETWORK_STATUS_STATES,
   CANONICAL_AGENT_NETWORK_HIERARCHY,
-  HERMES_LIEUTENANT_CAPABILITIES,
+  HERMES_NUCLEAR_DISPATCHER_CAPABILITIES,
   getCanonicalAgentNetworkRows,
   getCanonicalAgentNetworkTierDefs,
   getHermesHierarchyStatus,
@@ -10,18 +10,21 @@ import {
   isTonyActiveInHierarchy,
 } from './agent-network-hierarchy'
 
-describe('canonical Agent Zero and Hermes hierarchy', () => {
-  it('places Agent Zero as commander and Hermes as lieutenant under him', () => {
+describe('canonical Agent Zero and Ron Weasley hierarchy', () => {
+  it('places Agent Zero as commander and Ron Weasley as Nuclear Dispatcher under him', () => {
     const hierarchy = CANONICAL_AGENT_NETWORK_HIERARCHY
 
     expect(hierarchy.owner.role).toContain('Owner')
     expect(hierarchy.commander.id).toBe('agent_zero')
     expect(hierarchy.commander.role).toBe('Commander / ecosystem lead')
     expect(hierarchy.commander.reports_to).toBe('owner')
-    expect(hierarchy.lieutenant.id).toBe('hermes')
-    expect(hierarchy.lieutenant.role).toBe('Lieutenant / skill-workflow specialist')
-    expect(hierarchy.lieutenant.supports).toBe('agent_zero')
-    expect(hierarchy.edges).toContainEqual({ from: 'agent_zero', to: 'hermes', relation: 'supported_by' })
+    expect(hierarchy.nuclear_dispatcher.id).toBe('hermes')
+    expect(hierarchy.nuclear_dispatcher.name).toBe('Ron Weasley')
+    expect(hierarchy.nuclear_dispatcher.short_name).toBe('Ron')
+    expect(hierarchy.nuclear_dispatcher.legacy_names).toEqual(['Hermes', 'Hermans'])
+    expect(hierarchy.nuclear_dispatcher.role).toBe('Nuclear Dispatcher / optimization and workflow architect')
+    expect(hierarchy.nuclear_dispatcher.supports).toBe('agent_zero')
+    expect(hierarchy.edges).toContainEqual({ from: 'agent_zero', to: 'hermes', relation: 'delegates_to' })
   })
 
   it('keeps Tony archived and out of active hierarchy', () => {
@@ -42,13 +45,17 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
 
     expect(hierarchy.labels.approval_queue).toBe('Approval Queue - Agent Zero Bridge Session')
     expect(hierarchy.labels.report_identity).toContain('Agent Zero commander')
-    expect(hierarchy.labels.report_identity).toContain('Hermes lieutenant')
+    expect(hierarchy.labels.report_identity).toContain('Ron Weasley')
+    expect(hierarchy.labels.report_identity).toContain('Nuclear Dispatcher')
     expect(hierarchy.skill_policy.available_to).toEqual(['agent_zero', 'hermes'])
     expect(hierarchy.skill_policy.tony_owns_skill_system).toBe(false)
   })
 
-  it('shows Hermes capability and execution states without enabling execution', () => {
-    expect(HERMES_LIEUTENANT_CAPABILITIES).toEqual([
+  it('shows Ron Weasley capability and delegated execution states', () => {
+    expect(HERMES_NUCLEAR_DISPATCHER_CAPABILITIES).toEqual([
+      'full ecosystem visibility',
+      'Jarvis command registry parity',
+      'delegated exact-scope execution',
       'skills',
       'workflow planning',
       'automation design',
@@ -64,8 +71,8 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(blocked).toMatchObject({ state: 'blocked', blocker: 'hermes_runtime_not_installed_or_not_detected' })
     expect(pending).toMatchObject({ state: 'pending', blocker: 'hermes_live_health_not_proven' })
     expect(connected).toMatchObject({ state: 'connected', blocker: null })
-    expect(CANONICAL_AGENT_NETWORK_HIERARCHY.lieutenant.execution_enabled).toBe(false)
-    expect(CANONICAL_AGENT_NETWORK_HIERARCHY.lieutenant.bridge_session_required).toBe(true)
+    expect(CANONICAL_AGENT_NETWORK_HIERARCHY.nuclear_dispatcher.execution_enabled).toBe(true)
+    expect(CANONICAL_AGENT_NETWORK_HIERARCHY.nuclear_dispatcher.bridge_session_required).toBe(true)
   })
 
   it('builds Gateway rows from canonical hierarchy and filters compatibility aliases', () => {
@@ -76,7 +83,8 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
     expect(ids).toEqual(['agent_zero', 'hermes', 'openclaw_plus', 'bridge_mcp'])
     expect(hermes?.status).toBe('degraded')
     expect(hermes?.blocker).toBe('hermes_auth_not_configured')
-    expect(hermes?.support_edge).toBe('Hermes supports Agent Zero')
+    expect(hermes?.name).toBe('Ron Weasley')
+    expect(hermes?.support_edge).toBe('Agent Zero delegates certified exact scopes to Ron Weasley as Nuclear Dispatcher')
     expect(isCanonicalAgentNetworkSeedId('agent-zero')).toBe(true)
     expect(isCanonicalAgentNetworkSeedId('main')).toBe(true)
     expect(isCanonicalAgentNetworkSeedId('tony_legacy')).toBe(true)
@@ -85,7 +93,7 @@ describe('canonical Agent Zero and Hermes hierarchy', () => {
   it('keeps the tier headings aligned with the canonical hierarchy', () => {
     expect(getCanonicalAgentNetworkTierDefs().map((tier) => tier.id)).toEqual([
       'commander',
-      'lieutenant',
+      'nuclear_dispatcher',
       'runtime',
       'system',
     ])

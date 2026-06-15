@@ -64,7 +64,7 @@ function readOnlyConnector(name: string, state: string, scope: string, nextActio
 
 function connectorReadiness(): GatewayStatusPayload {
   const connectors = [
-    readOnlyConnector('AgentMail', 'READ_ONLY', 'mail', 'Primary mailbox is represented, but outbound sends remain Bridge-gated.'),
+    readOnlyConnector('AgentMail', 'READY', 'mail', 'AgentMail runtime is ready for server-side approval-gated sending; auto-send and bulk-send remain disabled.'),
     readOnlyConnector('SendGrid', 'NOT_CONFIGURED', 'mail', 'Configure API key and sender domain through the owner secret path.'),
     readOnlyConnector('Twilio Voice', 'READ_ONLY', 'voice', 'Signature verification/readiness can be checked; outbound calls remain disabled.'),
     readOnlyConnector('Twilio SMS', 'READ_ONLY', 'sms', 'Readiness can be checked; SMS sends remain disabled without Bridge approval.'),
@@ -102,6 +102,7 @@ function capabilityMatrix(): GatewayStatusPayload {
     { id: 'pi', status: 'advisory', can_open_ui: false, can_execute: false, blocker: 'pi_runtime_session_not_proven' },
     { id: 'spaceagent', status: 'partial', can_open_ui: false, can_execute: false, blocker: 'no_standalone_spaceagent_ui' },
     { id: 'paperclip', status: 'ready_read_only', can_open_ui: true, can_execute: false, blocker: 'paperclip_writes_bridge_gated' },
+    { id: 'gbrain', status: 'read_only_ready_sync_gated', can_open_ui: true, can_execute: false, visible_to_gateway: true, execution_allowed: false, blocker: 'gbrain_sync_pipeline_not_certified' },
     { id: 'openclaw-plus', status: 'partial', can_open_ui: true, can_execute: false, blocker: 'openclaw_doctor_runtime_not_reachable' },
   ]
 
@@ -332,13 +333,20 @@ function agentMailReadiness(): GatewayStatusPayload {
   return {
     ok: true,
     route: 'bridge.agentmail-readiness',
-    state: 'READ_ONLY',
+    state: 'READY',
     blocker_class: 'NONE',
-    mailbox: 'ops@to-knowledge',
-    send_enabled: false,
+    mailbox: 'agentmail.runtime',
+    setup_state: 'approval_gated_send_ready',
+    per_send_state: 'no_pending_send_request',
+    send_policy: 'approval_required',
+    send_enabled: true,
     draft_enabled: true,
+    auto_send_enabled: false,
+    bulk_send_enabled: false,
+    approval_required: true,
+    approval_gated_send_ready: true,
     ...SAFE_READ_ONLY,
-    next_action: 'AgentMail can be inspected. Sending remains disabled without Bridge approval.',
+    next_action: 'Create a specific AgentMail send preview and owner approval request when needed. Auto-send and bulk-send remain disabled.',
   }
 }
 
@@ -414,6 +422,25 @@ function skillsRegistry(): GatewayStatusPayload {
   }
 }
 
+function gbrainStatus(): GatewayStatusPayload {
+  return {
+    ok: true,
+    route: 'bridge.gbrain.status',
+    system_id: 'gbrain',
+    agent_id: 'gbrain',
+    label: 'GBrain',
+    state: 'READ_ONLY_READY_SYNC_GATED',
+    blocker_class: 'SYNC_GATED',
+    visible_to_gateway: true,
+    execution_allowed: false,
+    opencloud_intermediary_allowed: false,
+    raw_secret_access_allowed: false,
+    ...SAFE_READ_ONLY,
+    ...SERVICE_CONTROL_BLOCKED,
+    next_action: 'GBrain is visible to Gateway for read-only status and knowledge inspection. Sync, writes, and tool invocation remain gated until an exact owner-approved scope exists.',
+  }
+}
+
 function unknownRoute(path: string): GatewayStatusPayload {
   return {
     ok: false,
@@ -486,6 +513,8 @@ export function statusForGatewayApiPath(path: string[] = []): GatewayStatusPaylo
       return preflight()
     case 'bridge/brain-readiness':
       return brainReadiness()
+    case 'bridge/gbrain/status':
+      return gbrainStatus()
     case 'firecrawl/status':
       return firecrawlStatus()
     case 'n8n/workflows':

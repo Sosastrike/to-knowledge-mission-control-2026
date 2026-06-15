@@ -213,7 +213,7 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
 .gw-hero p { margin: 0; color: var(--t-3); font-size: 12.5px; max-width: 720px; }
 .gw-hero .actions { display: flex; gap: 6px; }
 
-/* Lane canvas — slimmed Nucleus-style strip showing Commander -> Lieutenant -> Workers chain */
+/* Lane canvas — slimmed Nucleus-style strip showing Commander -> Nuclear Dispatcher -> Workers chain */
 .canvas-strip {
   position: relative; z-index: 2;
   margin: 18px 22px 0;
@@ -466,7 +466,7 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
         <div class="group">
           <h5>Command tree</h5>
           <a href="Agent Zero Commander.html"><span class="pdot" style="background:var(--st-purple)"></span> Agent Zero</a>
-          <a href="Hermes Lieutenant.html"><span class="pdot" style="background:var(--st-yellow)"></span> Hermes <span class="count">gated</span></a>
+          <a href="Hermes Lieutenant.html"><span class="pdot" style="background:var(--st-green)"></span> Ron Weasley <span class="count">delegated</span></a>
         </div>
         <div class="group">
           <h5>Engines & workers</h5>
@@ -484,7 +484,7 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
         <div class="gw-hero">
           <div>
             <h1>Gateway · Nucleus <span class="replaces">replaces Agent Network</span></h1>
-            <p>Single hop for every owner intent. Discovery-first, RBAC-respecting, Bridge-Session-gated, fully audited. Agent Zero commands · Hermes (gated) lieutenant · OpenCloud worker engine.</p>
+            <p>Single hop for every owner intent. Discovery-first, RBAC-respecting, Bridge-Session-gated, fully audited. Agent Zero / Jarvis commands · Ron Weasley has full delegated access with Jarvis-gated execution · Pi optimizes routes · Paperclip runs workforce tasks · OpenCloud/OpenClaw remain supporting tools.</p>
           </div>
           <div class="actions">
             <a href="Gateway Overview.html" style="text-decoration:none;color:inherit;font-family:inherit;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--line-3);background:var(--bg-3);color:var(--t-1);">Open full Nucleus →</a>
@@ -518,7 +518,7 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
               <div class="mini-node blue">
                 <div class="nm"><span class="pdot" style="background:var(--st-blue)"></span>Workflow triggers</div>
                 <div class="role">Input · read-only</div>
-                <div class="blocker">Gated by Hermes proof.</div>
+                <div class="blocker">Bridge gated until owner-scoped workflow trigger proof.</div>
               </div>
 
               <div style="height:8px;"></div>
@@ -553,18 +553,18 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
           <!-- CENTER: Gateway core + commander row -->
           <div class="center-stack">
 
-            <!-- Commander + Lieutenant -->
+            <!-- Commander + Nuclear Dispatcher -->
             <div class="commander-row">
               <div class="mini-node purple" style="background:linear-gradient(180deg,rgba(167,139,250,0.10),var(--bg-3));">
                 <div class="nm"><span class="pdot" style="background:var(--st-purple)"></span>Agent Zero <span style="margin-left:auto;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--brand-violet);">Commander</span></div>
                 <div class="role">All intents land here</div>
                 <div class="meta">memory · Tony R/O · last 2m ago</div>
               </div>
-              <div class="mini-node yellow" style="background:linear-gradient(180deg,rgba(245,181,10,0.06),var(--bg-3));">
-                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>Hermes <span style="margin-left:auto;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--st-yellow);">Lieutenant</span></div>
+              <div class="mini-node green" style="background:linear-gradient(180deg,rgba(43,213,118,0.08),var(--bg-3));">
+                <div class="nm"><span class="pdot" style="background:var(--st-green)"></span>Ron Weasley <span style="margin-left:auto;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--st-green);">FULL ACCESS DELEGATED</span></div>
                 <span class="lock">🔒</span>
                 <div class="role">Skill / workflow specialist</div>
-                <div class="blocker">Yellow until <code style="color:var(--t-1);font-family:var(--ff-mono);">hermes_called:true</code> is proven.</div>
+                <div class="blocker">Protected writes require Jarvis concurrence. Direct-line chat remains NOT_INSTALLED until live proof exists.</div>
               </div>
             </div>
 
@@ -642,11 +642,11 @@ body { background: var(--bg-0); color: var(--t-1); font-family: var(--ff-sans); 
                 <div class="role">Channel · send</div>
                 <div class="blocker">Approval-gated sending ready.</div>
               </div>
-              <div class="mini-node yellow">
-                <div class="nm"><span class="pdot" style="background:var(--st-yellow)"></span>Zapier</div>
+              <div class="mini-node blue">
+                <div class="nm"><span class="pdot" style="background:var(--st-blue)"></span>Zapier</div>
                 <span class="lock">🔒</span>
-                <div class="role">Tool · per-exec scope</div>
-                <div class="blocker">Owner pre-approval per execution.</div>
+                <div class="role">Discovery · writes guarded</div>
+                <div class="blocker">Zapier discovery ready · writes guarded.</div>
               </div>
               <div class="mini-node orange">
                 <div class="nm"><span class="pdot" style="background:var(--st-orange)"></span>OpenCloud Workers</div>

@@ -281,6 +281,57 @@ describe('gateway graph traffic snapshot', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
+  it('maps owner-visible knowledge and Telegram activity aliases to their exact Gateway branches', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-traffic-knowledge-aliases-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.exec(`
+      CREATE TABLE audit_log (
+        id TEXT PRIMARY KEY,
+        action TEXT,
+        target_type TEXT,
+        created_at TEXT
+      );
+    `)
+    const insert = db.prepare(`INSERT INTO audit_log (id, action, target_type, created_at) VALUES (?, ?, ?, ?)`)
+    insert.run('obsidian_read', 'obsidian_vault_readiness', 'obsidian', '2026-06-09T14:59:50.000Z')
+    insert.run('mempalace_read', 'main_policy_memory_lookup', 'palacio', '2026-06-09T14:59:49.000Z')
+    insert.run('graphify_read', 'graffiti_graph_preview', 'graphify', '2026-06-09T14:59:48.000Z')
+    insert.run('gbrain_read', 'gbrain_inventory_refresh', 'gbrain', '2026-06-09T14:59:47.000Z')
+    insert.run('brain_sync_read', 'brain_synchronization_status', 'brain_sync', '2026-06-09T14:59:46.000Z')
+    insert.run('telegram_input', 'telegram_owner_request_received', 'telegram', '2026-06-09T14:59:45.000Z')
+    db.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    for (const edgeId of [
+      'highway.knowledge.brain.obsidian',
+      'highway.knowledge.brain.mempalace',
+      'highway.knowledge.brain.graphify',
+      'highway.knowledge.brain.gbrain',
+      'highway.knowledge.brain.sync',
+      'highway.inputs.input.telegram',
+    ]) {
+      expect(snapshot.edges.find((edge) => edge.edge_id === edgeId)).toMatchObject({
+        traffic_status: 'active',
+        events_last_60s: 1,
+        traffic_type: 'event',
+      })
+    }
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.trunk')).toMatchObject({
+      traffic_status: 'ready_no_recent_traffic',
+      events_last_60s: 0,
+      requests_last_60s: 0,
+    })
+    expect(snapshot.summary.missing_traffic_mappings).toBe(0)
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
   it('maps source-provided agent_config_sync identity and leaves owner/display-name records unanimated', () => {
     const root = mkdtempSync(join(tmpdir(), 'gateway-agent-config-identity-'))
     const dbPath = join(root, 'mission-control.db')

@@ -368,8 +368,24 @@
 }
 @keyframes dash-flow { to { stroke-dashoffset: -16; } }
 
-/* Particle traffic dots */
-.edges circle.particle { fill: var(--brand-cyan); }
+/* Real traffic beads: only rendered when trusted telemetry counters are active for a canonical edge_id. */
+.edges path.edge-has-traffic {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.edges .traffic-bead {
+  fill: var(--brand-cyan);
+  pointer-events: none;
+  filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 13px currentColor);
+  opacity: 0.96;
+}
+.edges .traffic-bead-green { fill: var(--st-green); color: var(--st-green); }
+.edges .traffic-bead-cyan { fill: var(--brand-cyan); color: var(--brand-cyan); }
+.edges .traffic-bead-yellow { fill: var(--st-yellow); color: var(--st-yellow); }
+.edges .traffic-bead-red { fill: var(--st-red); color: var(--st-red); }
+.edges .traffic-bead-gray { fill: var(--st-gray); color: var(--st-gray); opacity: 0.55; }
+.edges.mode-quiet .traffic-bead:not(.traffic-bead-critical) {
+  display: none;
+}
 
 .edge-tooltip {
   position: fixed;
@@ -862,10 +878,11 @@
   backdrop-filter: blur(4px);
   text-align: center;
 }
-.gateway-empty .h {
-  color: var(--brand-cyan); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-}
-.gateway-empty .s { color: var(--t-4); letter-spacing: 0.04em; text-transform: none; font-size: 10.5px; max-width: 260px; line-height: 1.5; }
+	.gateway-empty .h {
+	  color: var(--brand-cyan); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+	}
+	.gateway-empty .s { color: var(--t-4); letter-spacing: 0.04em; text-transform: none; font-size: 10.5px; max-width: 260px; line-height: 1.5; }
+	.gateway-empty .s strong { color: var(--t-2); font-weight: 700; }
 .gw-canvas-wrap.is-idle .gateway-empty { display: flex; }
 .gw-canvas-wrap.is-idle .gateway-core { filter: saturate(0.55) brightness(0.85); }
 
@@ -1039,6 +1056,13 @@
   font-family: var(--ff-mono); font-size: 10px;
   color: var(--t-4); letter-spacing: 0.06em; text-transform: none;
 }
+.mini-help {
+  color: var(--t-4);
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin: -3px 0 8px;
+}
+.mini-help strong { color: var(--t-2); font-weight: 700; }
 .mini-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
 .mini-card {
   background: var(--bg-3);
@@ -1275,7 +1299,7 @@
     <svg class="edges" id="edges-svg"></svg>
     <div class="gateway-empty" aria-hidden="true">
       <span class="h">⏸ Idle</span>
-      <span class="s">No traffic. The live overlay stays idle until trusted topology traffic counters show recent movement.</span>
+      <span class="s"><strong>Ready · no recent traffic.</strong> Dots appear only when a trusted runtime event/request is mapped to a canonical Gateway line.</span>
     </div>
     <div class="canvas" id="canvas">
       <div class="gw-policy-strip">
@@ -1359,6 +1383,7 @@
 
     <aside class="mini-strip" id="mini-strip">
       <h4>Mini-agents <span class="roll" id="mini-roll">8 workers · 2.7k / 50k tokens used</span></h4>
+      <div class="mini-help"><strong>Research, Classify, Write, Code, Review, Archive, and Sub-dispatch</strong> are dispatcher worker roles. They show how work is split after Gateway chooses a safe route; they are not direct execution buttons.</div>
       <div class="mini-grid" id="mini-grid"></div>
     </aside>
 
@@ -1392,6 +1417,10 @@
     <section class="drawer-section edge-legend" aria-label="Gateway node legend">
       <h4>Gateway Node Legend</h4>
       <div id="node-legend-list"></div>
+    </section>
+    <section class="drawer-section edge-legend" aria-label="Gateway traffic legend">
+      <h4>Traffic Dot Legend</h4>
+      <div id="traffic-legend-list"></div>
     </section>
     <section class="drawer-section">
       <h4>Gateway Approval Center</h4>
@@ -1612,7 +1641,10 @@
     const btn = document.getElementById(buttonId);
     if (!drawer || !btn) return;
     const collapsed = drawer.classList.contains('collapsed');
-    btn.textContent = collapsed ? 'Open' : 'Close';
+    const label = drawerId === 'gateway-diagnostics-drawer' ? 'Diagnostics'
+      : drawerId === 'view-settings-drawer' ? 'View Settings'
+      : 'Panel';
+    btn.textContent = collapsed ? `Open ${label}` : `Close ${label}`;
     btn.setAttribute('aria-expanded', String(!collapsed));
   }
 
@@ -1676,6 +1708,21 @@
     return graphTrafficSnapshot?.edges?.find(item => item.edge_id === edgeId) || null;
   }
 
+  function trafficForTopologyEdge(edge) {
+    const direct = trafficForEdge(edge?.edge_id);
+    if (direct) return direct;
+    if (!edge || edge.relationship !== 'structural' || !Array.isArray(graphTrafficSnapshot?.edges)) return null;
+    const candidateNodeIds = [edge.source_node_id, edge.target_node_id]
+      .filter(Boolean)
+      .filter(id => id !== 'gateway.core' && !String(id).startsWith('highway.'));
+    if (!candidateNodeIds.length) return null;
+    return graphTrafficSnapshot.edges.find(item => {
+      if (item.edge_id === edge.edge_id) return false;
+      if (item.route_group && edge.route_group && item.route_group !== edge.route_group) return false;
+      return candidateNodeIds.includes(item.source_node_id) || candidateNodeIds.includes(item.target_node_id);
+    }) || null;
+  }
+
   function trafficStateForStatus(status) {
     return ({
       active: 'live_recent',
@@ -1696,7 +1743,7 @@
 
   function edgeLabelFromTopology(edge) {
     if (!edge) return null;
-    const trafficEdge = trafficForEdge(edge.edge_id);
+    const trafficEdge = trafficForTopologyEdge(edge);
     const trafficCounters = trafficEdge
       ? {
           events_last_60s: trafficEdge.events_last_60s || 0,
@@ -1726,6 +1773,7 @@
       traffic_state: trafficEdge ? trafficStateForStatus(trafficEdge.traffic_status) : (edge.traffic_state || 'traffic_data_unavailable'),
       traffic_status: trafficEdge?.traffic_status || 'unavailable',
       traffic_label: trafficEdge?.traffic_label || trafficLabel(trafficEdge?.traffic_status || 'unavailable'),
+      traffic_source_edge_id: trafficEdge?.edge_id || null,
       traffic_classification: trafficEdge?.traffic_classification || null,
       traffic_type: trafficEdge?.traffic_type || 'none',
       telemetry_source: trafficEdge?.telemetry_source || null,
@@ -1878,6 +1926,25 @@
     `).join('');
   }
 
+  function renderTrafficLegend() {
+    const target = document.getElementById('traffic-legend-list');
+    if (!target) return;
+    const rows = [
+      ['cyan dot', 'Real read/event traffic', 'A trusted runtime event/request is mapped to this exact Gateway line.'],
+      ['green/yellow/red dot', 'Traffic with line state', 'Dot color follows the line readiness: live, guarded, or blocked.'],
+      ['no dot', 'Ready but idle', 'The line can be used, but no mapped traffic counter is active in the current window.'],
+      ['gray line', 'Standby/no heartbeat', 'Registered path with no current heartbeat or recent event.'],
+      ['no pulse rendered', 'Unmapped or low-confidence telemetry', 'Telemetry exists but is not animated until it has a canonical edge_id.'],
+    ];
+    target.innerHTML = rows.map(([label, title, meaning]) => `
+      <div class="legend-row" title="${esc(meaning)}">
+        <span class="legend-dot" style="background:${label.includes('cyan') ? 'var(--brand-cyan)' : label.includes('green') ? 'var(--st-green)' : 'var(--st-gray)'}"></span>
+        <span class="legend-label">${esc(label)}</span>
+        <span>${esc(title)} · ${esc(meaning)}</span>
+      </div>
+    `).join('');
+  }
+
   function renderApprovalCenter() {
     const target = document.getElementById('approval-center-list');
     if (!target) return;
@@ -1978,6 +2045,7 @@
     panel.classList.toggle('degraded', status !== 'healthy');
     const trafficSummary = graphTrafficSnapshot?.summary || {};
     const confidence = trafficSummary.confidence || {};
+    const renderedBeads = document.querySelectorAll('#edges-svg .traffic-bead[data-traffic-proof="trusted_telemetry_counter"]').length;
     const rows = [
       ['sync status', status],
       ['snapshot id', canonicalTopology?.snapshot_id || sync.snapshot_id || 'none'],
@@ -1992,6 +2060,7 @@
       ['traffic mismatches', (sync.traffic_mismatches || []).join(', ') || 'none'],
       ['traffic source', graphTrafficSnapshot?.traffic_source || canonicalTopology?.traffic_data_source || 'traffic_data_unavailable'],
       ['telemetry snapshot id', graphTrafficSnapshot?.telemetry_snapshot_id || 'none'],
+      ['rendered traffic dots', String(renderedBeads)],
       ['active traffic edges', String(graphTrafficSnapshot?.summary?.active_traffic_edges || 0)],
       ['ready/no-recent traffic edges', String(graphTrafficSnapshot?.summary?.ready_no_recent_traffic_edges || 0)],
       ['stale telemetry edges', String(graphTrafficSnapshot?.summary?.stale_telemetry_edges || 0)],
@@ -2053,6 +2122,7 @@
         <dl class="kv">
           <dt>Visual edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'none')}</dd>
           <dt>Data edge id</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.edge_id || 'edge_mapping_missing')}</dd>
+          <dt>Traffic source edge</dt><dd style="font-family:var(--ff-mono);font-size:11px;">${esc(readiness.traffic_source_edge_id || readiness.edge_id || 'none')}</dd>
           <dt>Relationship</dt><dd>${esc(readiness.relationship || 'readiness')}</dd>
           <dt>traffic status</dt><dd>${esc(readiness.traffic_label || readiness.traffic_state || 'Traffic data unavailable')}</dd>
           <dt>traffic class</dt><dd>${esc(readiness.traffic_classification || 'not reported')}</dd>
@@ -2483,6 +2553,7 @@
   };
   renderEdgeLegend();
   renderNodeLegend();
+  renderTrafficLegend();
   renderApprovalCenter();
   renderGraphHealth();
   renderTopologyDataSync();
@@ -2941,11 +3012,15 @@
 
     function appendRoutePath(routeInfo, points, classes, selected, dimmed) {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const edgePathIndex = svg.querySelectorAll('path.edge').length;
+      const edgePathId = `edge-path-${String(routeInfo.edge_id || 'unknown').replace(/[^a-z0-9_-]+/gi, '-')}-${edgePathIndex}`;
       path.setAttribute('d', pathFromPoints(points));
+      path.setAttribute('id', edgePathId);
       path.setAttribute('class', [
         'edge',
         ...classes,
         `edge-${routeInfo.color}`,
+        routeHasRecentTraffic(routeInfo) ? 'edge-has-traffic' : '',
         routeInfo.critical ? 'edge-critical' : '',
         selected ? 'edge-selected' : '',
         dimmed ? 'edge-dimmed' : '',
@@ -2972,6 +3047,46 @@
         openEdgeInspector(routeInfo);
       });
       svg.appendChild(path);
+      appendTrafficBeads(routeInfo, edgePathId, selected);
+    }
+
+    function routeTrafficTotal(routeInfo) {
+      const traffic = routeInfo?.traffic || {};
+      return (Number(traffic.events_last_60s) || 0) + (Number(traffic.requests_last_60s) || 0);
+    }
+
+    function routeHasRecentTraffic(routeInfo) {
+      return routeInfo?.traffic_status === 'active' && routeTrafficTotal(routeInfo) > 0;
+    }
+
+    function appendTrafficBeads(routeInfo, pathId, selected) {
+      if (!routeHasRecentTraffic(routeInfo)) return;
+      const total = routeTrafficTotal(routeInfo);
+      const beadCount = Math.max(1, Math.min(4, Math.ceil(total / 2)));
+      const color = ['green', 'cyan', 'yellow', 'red', 'gray'].includes(routeInfo.color) ? routeInfo.color : 'cyan';
+      for (let index = 0; index < beadCount; index += 1) {
+        const bead = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bead.setAttribute('r', selected ? '4.4' : '3.6');
+        bead.setAttribute('class', [
+          'traffic-bead',
+          `traffic-bead-${color}`,
+          routeInfo.critical ? 'traffic-bead-critical' : '',
+        ].filter(Boolean).join(' '));
+        bead.setAttribute('data-edge-id', routeInfo.edge_id);
+        if (routeInfo.traffic_source_edge_id) bead.setAttribute('data-traffic-source-edge-id', routeInfo.traffic_source_edge_id);
+        bead.setAttribute('data-traffic-proof', 'trusted_telemetry_counter');
+        const motion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+        motion.setAttribute('dur', `${Math.max(1.2, 2.6 - Math.min(total, 8) * 0.12)}s`);
+        motion.setAttribute('begin', `${(index * 0.38).toFixed(2)}s`);
+        motion.setAttribute('repeatCount', 'indefinite');
+        motion.setAttribute('rotate', 'auto');
+        const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+        mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${pathId}`);
+        mpath.setAttribute('href', `#${pathId}`);
+        motion.appendChild(mpath);
+        bead.appendChild(motion);
+        svg.appendChild(bead);
+      }
     }
 
     const highwayDomains = new Map();
@@ -3038,7 +3153,10 @@
       const topologyReadiness = edgeLabelFromTopology(canonicalTopology?.edges?.find(topoEdge => topoEdge.edge_id === readiness.edge_id));
       const displayReadiness = Object.assign({}, readiness, topologyReadiness || {});
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const edgePathIndex = svg.querySelectorAll('path.edge').length;
+      const edgePathId = `edge-path-${String(displayReadiness.edge_id || 'diagnostic').replace(/[^a-z0-9_-]+/gi, '-')}-${edgePathIndex}`;
       path.setAttribute('d', item.pathData);
+      path.setAttribute('id', edgePathId);
       const incident = selectedNodeId && (edge.from === selectedNodeId || edge.to === selectedNodeId);
       const hidden = !shouldShow(displayReadiness, edge);
       const selected = Boolean(incident && (edgeMode === 'trace' || selectedOnly));
@@ -3048,6 +3166,7 @@
         'edge-branch',
         `edge-${displayReadiness.color}`,
         `edge-domain-${item.domain}`,
+        routeHasRecentTraffic(displayReadiness) ? 'edge-has-traffic' : '',
         displayReadiness.critical ? 'edge-critical' : '',
         hidden ? 'edge-hidden' : '',
         selected ? 'edge-selected' : '',
@@ -3074,6 +3193,7 @@
         openEdgeInspector(displayReadiness);
       });
       svg.appendChild(path);
+      appendTrafficBeads(displayReadiness, edgePathId, selected);
     });
     renderGraphHealth(mappingErrors);
   }
@@ -3418,6 +3538,7 @@
 
   let trafficOn = true;
   let trafficTimer = null;
+  let lastTrafficToastAt = 0;
   function liveTrafficEdges() {
     if (!graphTrafficSnapshot || graphTrafficSnapshot.traffic_source === 'unavailable') return [];
     return (graphTrafficSnapshot.edges || [])
@@ -3439,32 +3560,23 @@
       });
   }
   function startLiveTrafficOverlay() {
-    // Topology defines edge IDs; live traffic beams are driven only by trusted topology traffic counters from telemetry.
-    // Live traffic beams are driven only by trusted telemetry counters.
+    // Topology defines edge IDs; live traffic beads are rendered on visible paths only from trusted telemetry counters.
     // Static DEMO_REQUEST_STREAM data is kept as non-live sample data and is not proof of movement.
     stopTraffic();
     const liveEdges = liveTrafficEdges();
     if (!trafficOn) return;
+    trafficTimer = setInterval(fetchGraphTraffic, 10000);
     if (!liveEdges.length) {
       wrap.classList.add('is-idle');
-      if (trafficFetched && graphTrafficSnapshot?.traffic_source === 'unavailable') showToast('Traffic data unavailable');
-      else if (trafficFetched) showToast('No live traffic proof available');
+      const now = Date.now();
+      if (now - lastTrafficToastAt > 20000) {
+        if (trafficFetched && graphTrafficSnapshot?.traffic_source === 'unavailable') showToast('Traffic data unavailable');
+        else if (trafficFetched) showToast('Ready · no recent traffic');
+        lastTrafficToastAt = now;
+      }
       return;
     }
     wrap.classList.remove('is-idle');
-    let i = 0;
-    trafficTimer = setInterval(() => {
-      if (!trafficOn) return;
-      const edge = liveEdges[i % liveEdges.length];
-      fireBeam({
-        from: edge.source_node_id || 'gateway.core',
-        asks: edge.target_node_id || 'gateway.core',
-        op: edge.relationship === 'traffic' ? 'traffic' : 'event',
-        result: 'ok',
-        edge_id: edge.edge_id,
-      });
-      i++;
-    }, 900);
   }
   function stopTraffic() {
     if (trafficTimer) { clearInterval(trafficTimer); trafficTimer = null; }

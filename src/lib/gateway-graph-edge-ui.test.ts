@@ -89,45 +89,67 @@ describe('Gateway graph edge diagnostics UI', () => {
 
   it('does not use static request stream data as live traffic animation proof', () => {
     const html = readFileSync(join(process.cwd(), 'public/design/gateway/Gateway Overview.html'), 'utf8')
+    const dropinHtml = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/Gateway Overview.html'), 'utf8')
     const data = readFileSync(join(process.cwd(), 'public/design/gateway/shared/gateway-data.js'), 'utf8')
 
-    expect(html).toContain('function startLiveTrafficOverlay')
-    expect(html).toContain('trusted topology traffic counters')
-    expect(html).toContain('trusted telemetry counters')
-    expect(html).toContain('No live traffic proof available')
-    expect(html).not.toContain('const r = G.REQUEST_STREAM[i % G.REQUEST_STREAM.length]')
+    for (const source of [html, dropinHtml]) {
+      expect(source).toContain('function startLiveTrafficOverlay')
+      expect(source).toContain('trusted runtime event/request is mapped to a canonical Gateway line')
+      expect(source).toContain('traffic-bead')
+      expect(source).toContain('edge-has-traffic')
+      expect(source).toContain('trafficForTopologyEdge')
+      expect(source).toContain('routeHasRecentTraffic')
+      expect(source).toContain('trusted_telemetry_counter')
+      expect(source).toContain('data-traffic-source-edge-id')
+      expect(source).toContain('Traffic Dot Legend')
+      expect(source).toContain('Traffic source edge')
+      expect(source).toContain('rendered traffic dots')
+      expect(source).toContain('Open ${label}')
+      expect(source).toContain('Diagnostics')
+      expect(source).toContain('View Settings')
+      expect(source).toContain('Ready · no recent traffic')
+      expect(source).toContain('Dots appear only when a trusted runtime event/request is mapped to a canonical Gateway line.')
+      expect(source).toContain('fetchGraphTraffic, 10000')
+      expect(source).toContain('Research, Classify, Write, Code, Review, Archive, and Sub-dispatch')
+      expect(source).not.toContain('const r = G.REQUEST_STREAM[i % G.REQUEST_STREAM.length]')
+    }
     expect(data).toContain('DEMO_REQUEST_STREAM')
     expect(data).toContain('REQUEST_STREAM: DEMO_REQUEST_STREAM')
   })
 
   it('ships static fallback reasons for the observed gray edges', () => {
     const data = readFileSync(join(process.cwd(), 'public/design/gateway/shared/gateway-data.js'), 'utf8')
+    const dropinData = readFileSync(join(process.cwd(), 'gateway-dropin/public/design/gateway/shared/gateway-data.js'), 'utf8')
 
-    expect(data).toContain('html_surface_registered_no_runtime_bridge')
-    expect(data).toContain('firefox_runtime_not_connected')
-    expect(data).toContain('report_preview_ready_delivery_not_enabled')
-    expect(data).toContain('webhook_receiver_ready_no_recent_events')
-    expect(data).toContain('event_bus_ready_no_recent_events')
-    expect(data).toContain('openrouter_model_runtime_ready')
-    expect(data).toContain('nvidia_model_runtime_ready')
-    expect(data).toContain('zapier_discovery_ready_writes_guarded')
-    expect(data).toContain('gateway-edge-readiness-v2')
-    expect(data).toContain('gateway-node-readiness-v1')
-    expect(data).toContain("yellow:  { label: 'Guarded'")
-    expect(data).toContain('Preview ready · delivery guarded')
-    expect(data).toContain('Receiver ready · waiting for events')
-    expect(data).toContain('Event bus ready · no recent events')
-    expect(data).toContain("status: 'live', primary_reason: 'approval_gated_send_ready'")
-    expect(data).toContain("per_action_state: 'no_pending_send_request'")
-    expect(data).toContain('zapier.scope.discovery_and_status')
-    expect(data).toContain("name: 'GBrain'")
-    expect(data).toContain('GBrain inventory ready · tool invocation guarded')
-    expect(data).toContain('xai_grok_model_runtime_ready')
-    expect(data).not.toContain('xai_grok_permission_or_billing_required')
-    expect(data).not.toContain('Bridge Session required for Run Now')
-    expect(data).toContain("label: 'NVIDIA NIM'")
-    expect(data).toContain("status: 'green', note: 'Provider Vault credential validated; Gateway Runtime Bridge handles execution governance.'")
-    expect(data).not.toContain("warn: 'not configured'")
+    for (const source of [data, dropinData]) {
+      expect(source).toContain('html_surface_registered_no_runtime_bridge')
+      expect(source).toContain('firefox_runtime_not_connected')
+      expect(source).toContain('report_preview_ready_delivery_not_enabled')
+      expect(source).toContain('webhook_receiver_ready_no_recent_events')
+      expect(source).toContain('event_bus_ready_no_recent_events')
+      expect(source).toContain('openrouter_model_runtime_ready')
+      expect(source).toContain('nvidia_model_runtime_ready')
+      expect(source).toContain('zapier_discovery_ready_writes_guarded')
+      expect(source).toContain('gateway-edge-readiness-v2')
+      expect(source).toContain('gateway-node-readiness-v1')
+      expect(source).toContain("yellow:  { label: 'Guarded'")
+      expect(source).toContain('Preview ready · delivery guarded')
+      expect(source).toContain('Receiver ready · waiting for events')
+      expect(source).toContain('Event bus ready · no recent events')
+      expect(source).toContain("status: 'live', primary_reason: 'approval_gated_send_ready'")
+      expect(source).toContain("per_action_state: 'no_pending_send_request'")
+      expect(source).toContain('zapier.scope.discovery_and_status')
+      expect(source).toContain('APPROVAL_CENTER_PROPOSALS')
+      expect(source).toContain("scope_id: 'scope.gbrain.invocation.preview'")
+      expect(source).toContain("name: 'GBrain'")
+      expect(source).toContain('GBrain inventory ready · tool invocation guarded')
+      expect(source).toContain('xai_grok_model_runtime_ready')
+      expect(source).not.toContain('xai_grok_permission_or_billing_required')
+      expect(source).not.toContain('Bridge Session required for Run Now')
+      expect(source).toContain("label: 'NVIDIA NIM'")
+      expect(source).toContain("status: 'green', note: 'Provider Vault credential validated; Gateway Runtime Bridge handles execution governance.'")
+      expect(source).not.toContain("warn: 'not configured'")
+    }
   })
 
   it('keeps Gateway lane mount containers scrollable and prevents card stacking overlap', () => {
@@ -196,5 +218,41 @@ describe('Gateway graph edge diagnostics UI', () => {
     expect(renderer).toContain("guardedWrite(readiness) ? 'guarded'")
     expect(renderer).toContain("guardedExecute(readiness) ? 'guarded'")
     expect(renderer).toContain('Writes/execution guarded by Gateway policy and owner approval')
+  })
+
+  it('keeps Gateway public and drop-in mirrors free of stale AgentMail/Zapier blocker copy', () => {
+    const files = [
+      'public/design/gateway/Mission Control + Gateway.html',
+      'gateway-dropin/public/design/gateway/Mission Control + Gateway.html',
+      'public/design/gateway/shared/gateway-data.js',
+      'gateway-dropin/public/design/gateway/shared/gateway-data.js',
+      'src/components/gateway/GatewayShell.tsx',
+      'gateway-dropin/src/components/gateway/GatewayShell.tsx',
+      'src/components/gateway/gateway-status-contracts.ts',
+      'gateway-dropin/src/components/gateway/gateway-status-contracts.ts',
+      'src/components/gateway/gateway-actions.ts',
+      'gateway-dropin/src/components/gateway/gateway-actions.ts',
+    ].map((file) => readFileSync(join(process.cwd(), file), 'utf8'))
+
+    for (const source of files) {
+      expect(source).not.toContain('Owner pre-approval per execution')
+      expect(source).not.toContain('Owner pre-approval required per execution scope')
+      expect(source).not.toContain('AGENTMAIL_API_KEY and allowed-recipient policy are missing')
+      expect(source).not.toContain('AgentMail send/reply is disabled until credentials')
+      expect(source).not.toContain('Bridge Session required to send mail')
+      expect(source).not.toContain('Primary mailbox is represented, but outbound sends remain Bridge-gated')
+      expect(source).not.toContain('Sending remains disabled without Bridge approval')
+      expect(source).not.toContain('It is blocked from direct execution until an explicit Gateway contract is attached')
+      expect(source).not.toContain('Open Bridge Session from')
+      expect(source).not.toContain('https://app.agentmail.to')
+    }
+
+    expect(files.join('\n')).toContain('Zapier discovery ready · writes guarded')
+    expect(files.join('\n')).toContain('AgentMail ready · approval-gated sending')
+    expect(files.join('\n')).toContain('approval_gated_send_ready')
+    expect(files.join('\n')).toContain('auto_send_enabled: false')
+    expect(files.join('\n')).toContain('bulk_send_enabled: false')
+    expect(files.join('\n')).toContain('Gateway action is guarded')
+    expect(files.join('\n')).toContain('Nothing executed.')
   })
 })

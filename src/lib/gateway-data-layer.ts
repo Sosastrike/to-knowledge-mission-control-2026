@@ -4,6 +4,7 @@ export const GATEWAY_DATA_LAYER_NODE_TYPES = [
   'owner',
   'gateway',
   'commander',
+  'nuclear_dispatcher',
   'lieutenant',
   'specialist_agent',
   'mini_agent',
@@ -582,6 +583,8 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'owner'
     case 'commander':
       return 'commander'
+    case 'nuclear_dispatcher':
+      return 'nuclear_dispatcher'
     case 'lieutenant':
       return 'lieutenant'
     case 'specialist_agent':
@@ -614,6 +617,8 @@ function nodeTypeFromGatewayNode(node: GatewayNode): GatewayDataLayerNodeType {
       return 'data_source'
     case 'delivery_channel':
       return 'delivery_channel'
+    default:
+      return 'tool'
   }
 }
 

@@ -53,6 +53,27 @@ window.GATEWAY = (function () {
       blocked_reason: 'Live chat not proven yet. Awaiting hermes_called:true heartbeat.',
       lastSuccess: '14m ago', cacheAge: '32s' },
 
+    { id: 'agent.pi', name: 'Pi', type: 'agent', lane: 'near_center',
+      status: 'blue', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 0,
+      summary: 'Gateway read ready · actions guarded. Normal chat does not require Bridge Session; external actions require exact Gateway scope.',
+      role: 'Reasoning observer',
+      blocked_reason: null,
+      lastSuccess: 'readiness ready', cacheAge: '—' },
+
+    { id: 'agent.space', name: 'Space Agent', type: 'agent', lane: 'near_center',
+      status: 'blue', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 0,
+      summary: 'Gateway read ready · actions guarded. Research visibility is available; external actions require exact Gateway scope.',
+      role: 'Research specialist',
+      blocked_reason: null,
+      lastSuccess: 'readiness ready', cacheAge: '—' },
+
+    { id: 'agent.paperclip', name: 'Paperclip', type: 'agent', lane: 'near_center',
+      status: 'blue', connected: 1, configured: 1, R: 1, W: 0, X: 0, bridge: 0,
+      summary: 'Gateway read ready · actions guarded. Workforce visibility is available; external actions require exact Gateway scope.',
+      role: 'Workforce specialist',
+      blocked_reason: null,
+      lastSuccess: 'readiness ready', cacheAge: '—' },
+
     /* ===== LEFT — INPUTS ===== */
     { id: 'input.owner',     name: 'Owner Commands', type: 'input', lane: 'left_input', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 0, summary: 'Owner-issued commands from Mission Control or chat.', lastSuccess: 'live' },
     { id: 'input.telegram',  name: 'Telegram',       type: 'input', lane: 'left_input', status: 'green', connected: 1, configured: 1, R: 1, W: 1, X: 1, bridge: 1, summary: 'Owner Telegram bot — bidirectional.', lastSuccess: '1m ago' },
@@ -129,6 +150,9 @@ window.GATEWAY = (function () {
     // Gateway → Commanders
     { from: 'gateway.core', to: 'agent.zero',   relation: 'delegates_to' },
     { from: 'gateway.core', to: 'agent.hermes', relation: 'delegates_to' },
+    { from: 'gateway.core', to: 'agent.pi', relation: 'delegates_to' },
+    { from: 'gateway.core', to: 'agent.space', relation: 'delegates_to' },
+    { from: 'gateway.core', to: 'agent.paperclip', relation: 'delegates_to' },
 
     // Commanders → Brain (read)
     { from: 'agent.zero',   to: 'brain.obsidian',  relation: 'reads_from' },
@@ -210,7 +234,7 @@ window.GATEWAY = (function () {
     edge_count_expected: 22,
     edge_count_returned: EDGE_READINESS.length,
     edge_mapping_errors: [],
-    node_count_expected: 43,
+    node_count_expected: 46,
     node_count_returned: NODES.length,
     node_mapping_errors: [],
     model_readiness: 'healthy',

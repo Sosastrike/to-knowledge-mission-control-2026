@@ -120,6 +120,30 @@ function liveModel(node_id: string, label: string, reason: string, next_action: 
   })
 }
 
+function directGatewayAgent(node_id: string, label: string, uiLabel: string): GatewayGraphNodeReadiness {
+  return node({
+    node_id,
+    label,
+    domain: 'agent',
+    status: 'read_only',
+    primary_reason: 'direct_gateway_agent_read_ready_actions_guarded',
+    short_label: `${label} ready · actions guarded`,
+    next_action: 'request_exact_gateway_scope_before_external_action',
+    setup_state: 'standing_gateway_read_ready',
+    per_action_state: 'external_actions_require_scope',
+    lock_scope: 'external_actions',
+    approval_center_refs: [`approval.${node_id.replace(/^agent\./, '')}.external_action_scope`],
+    standing_scope_refs: ['scope.gateway.agent_read'],
+    ui_state_label: uiLabel,
+    read_ready: true,
+    write_ready: false,
+    execute_ready: false,
+    approval_required: true,
+    last_success_at: null,
+    last_heartbeat_at: null,
+  })
+}
+
 export function buildGatewayGraphNodeReadiness(
   generatedAt = new Date().toISOString(),
 ): GatewayGraphNodeReadinessPayload {
@@ -127,6 +151,9 @@ export function buildGatewayGraphNodeReadiness(
     node({ node_id: 'gateway.core', label: 'Gateway Core', domain: 'gateway', status: 'live', primary_reason: 'gateway_core_runtime_ready', short_label: 'Live', next_action: 'route_all_requests_through_gateway_policy_and_audit', read_ready: true, write_ready: true, execute_ready: true, approval_required: false, last_success_at: generatedAt, last_heartbeat_at: generatedAt }),
     node({ node_id: 'agent.zero', label: 'Agent Zero', domain: 'agent', status: 'live', primary_reason: 'agent_zero_commander_runtime_ready', short_label: 'Live', next_action: 'continue_routing_owner_intent_through_gateway', read_ready: true, write_ready: true, execute_ready: true, approval_required: true, last_success_at: generatedAt, last_heartbeat_at: generatedAt }),
     node({ node_id: 'agent.hermes', label: 'Hermes', domain: 'agent', status: 'approval_required', primary_reason: 'hermes_live_chat_proof_required', short_label: 'Guarded', next_action: 'prove_hermes_live_chat_before_write_execute_paths', read_ready: true, write_ready: false, execute_ready: false, approval_required: true, last_success_at: '14m ago', last_heartbeat_at: null }),
+    directGatewayAgent('agent.pi', 'Pi', 'Pi · Gateway read ready · actions guarded'),
+    directGatewayAgent('agent.space', 'Space Agent', 'Space Agent · Gateway read ready · actions guarded'),
+    directGatewayAgent('agent.paperclip', 'Paperclip', 'Paperclip · Gateway read ready · actions guarded'),
 
     node({ node_id: 'input.owner', label: 'Owner Commands', domain: 'input', status: 'live', primary_reason: 'owner_command_channel_live', short_label: 'Live', next_action: 'none', read_ready: true, write_ready: true, execute_ready: true, approval_required: false, last_success_at: generatedAt, last_heartbeat_at: generatedAt }),
     node({ node_id: 'input.telegram', label: 'Telegram', domain: 'input', status: 'live', primary_reason: 'telegram_owner_channel_live', short_label: 'Live', next_action: 'keep_owner_approval_channel_canonical', read_ready: true, write_ready: true, execute_ready: true, approval_required: true, last_success_at: '1m ago', last_heartbeat_at: generatedAt }),
@@ -185,7 +212,7 @@ export function buildGatewayGraphNodeReadiness(
       edge_count_expected: 22,
       edge_count_returned: 22,
       edge_mapping_errors: [],
-      node_count_expected: 43,
+      node_count_expected: 46,
       node_count_returned: nodes.length,
       node_mapping_errors: [],
       model_readiness: 'healthy',

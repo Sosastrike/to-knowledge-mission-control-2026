@@ -57,7 +57,7 @@ describe('/api/gateway/graph/node-readiness route', () => {
         per_action_state: 'no_pending_send_request',
       }),
     ]))
-    expect(payload.graph_health.node_count_returned).toBe(43)
+    expect(payload.graph_health.node_count_returned).toBe(46)
     expect(JSON.stringify(payload)).not.toMatch(
       /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
     )

@@ -63,10 +63,10 @@ The atomic unit of the Gateway. Every registered entity (agent, runtime, brain, 
   | State | Trigger | Visual |
   |---|---|---|
   | green | all enabled flags pass | green dot, full text |
-  | yellow / gated | owner approval, governed execution, or RBAC challenge | yellow dot, guarded lock if writes/execution require policy, blocker reason chip |
+  | yellow / gated | Bridge Session required, approval pending | yellow dot, 🔒 if `requiresBridge`, blocker reason chip |
   | blue / read-only | discovery clean, no write/execute | blue dot, R filled · W/X hollow |
   | red / blocked | hard block (e.g. Fork 2 / SMB) | red dot, blocker reason chip |
-  | gray / standby | registered but idle, no recent heartbeat, or waiting for a runtime event | gray dot, "Standby" label |
+  | gray / not configured | node registered but no credentials | gray dot, "Not configured" label |
   | stale | `cacheAge > ttl` | green/yellow/blue dot dimmed 60%, "stale 11m" pill |
   | hover | pointerenter | border `--line-strong`, slight raise |
   | focus | keyboard | 2px focus ring `--brand-cyan` |

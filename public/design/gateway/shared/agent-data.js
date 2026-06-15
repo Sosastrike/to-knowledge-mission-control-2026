@@ -103,9 +103,10 @@ window.AGENTS = (function () {
       kind: 'specialist',
       bridge: true,
       R: true, W: false, X: false,
-      localhost: 'Mission Control panel only; Playwright MCP local-only 127.0.0.1:8931',
-      iframe_safe: false,
-      auth: 'tailnet',
+      localhost: 'Mission Control SpaceAgent panel: /gateway/agent-hub/spaceagent/config',
+      ui_url: '/gateway/agent-hub/spaceagent/config',
+      iframe_safe: true,
+      auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-space-agent',
       repo_grounding: 'pending',
       caps: ['web browse', 'firecrawl scrape', 'playwright automation', 'youtube transcript', 'page summarize', 'screenshot evidence'],
@@ -129,6 +130,7 @@ window.AGENTS = (function () {
       bridge: true,
       R: true, W: true, X: true,
       localhost: 'Mission Control Pi panel: /gateway/agent-hub/pi/config',
+      ui_url: '/gateway/agent-hub/pi/config',
       iframe_safe: true,
       auth: 'mission control session',
       repo: 'github.com/Sosastrike/To-Knowledge-Pi-mono',
@@ -229,7 +231,7 @@ window.AGENTS = (function () {
       working_set: ['Bootstrap workforce ledger', 'First co-worker registration'],
       co_workers: 0, tasks: 0, work_products: 0
     },
-    'space-agent': { working_set: ['Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'Mission Control panel only; no standalone SpaceAgent UI.' },
+    'space-agent': { working_set: ['SpaceAgent owner UI link', 'Playwright MCP local-only status', 'Firecrawl credential blocker', 'YouTube transcript proof blocker'], note: 'SpaceAgent opens through Mission Control; Playwright MCP remains a local-only tool.' },
     'pi-mono': { working_set: ['Gateway tools, skills, MCPs, providers, Brain reads, visible task events, and pipeline requests'], routes_observed: 27 }
   };
 

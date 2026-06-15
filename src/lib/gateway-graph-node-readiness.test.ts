@@ -20,16 +20,38 @@ describe('gateway graph node readiness', () => {
     const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
 
     expect(payload.ok).toBe(true)
-    expect(payload.nodes.length).toBe(43)
+    expect(payload.nodes.length).toBe(46)
     expect(payload.graph_health).toMatchObject({
       readiness_feed: 'healthy',
       graph_data_source: 'live',
       edge_count_expected: 22,
-      node_count_expected: 43,
-      node_count_returned: 43,
+      node_count_expected: 46,
+      node_count_returned: 46,
       node_mapping_errors: [],
       static_asset_version: 'gateway-node-readiness-v1',
     })
+  })
+
+  it('adds Pi, Space Agent, and Paperclip as direct guarded Gateway agents without normal-chat bridge requirements', () => {
+    const payload = buildGatewayGraphNodeReadiness('2026-06-08T20:00:00.000Z')
+    const byId = new Map(payload.nodes.map((node) => [node.node_id, node]))
+
+    for (const id of ['agent.pi', 'agent.space', 'agent.paperclip']) {
+      expect(byId.get(id)).toMatchObject({
+        domain: 'agent',
+        status: 'read_only',
+        color: 'cyan',
+        read_ready: true,
+        write_ready: false,
+        execute_ready: false,
+        approval_required: true,
+        setup_state: 'standing_gateway_read_ready',
+        per_action_state: 'external_actions_require_scope',
+        lock_scope: 'external_actions',
+      })
+      expect(byId.get(id)?.primary_reason).not.toMatch(/opencloud|octm|tony|legacy|buildwiki|farmer/i)
+      expect(byId.get(id)?.next_action).toContain('gateway_scope')
+    }
   })
 
   it('marks model cards live after xAI returns a fresh healthy model-list probe', () => {

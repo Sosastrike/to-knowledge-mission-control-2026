@@ -25,6 +25,9 @@ describe('gateway graph topology snapshot', () => {
       'highway.models.dispatcher-link',
       'highway.models.trunk',
       'highway.models.model.openrouter',
+      'highway.inputs.agent.pi',
+      'highway.inputs.agent.space',
+      'highway.inputs.agent.paperclip',
       'highway.knowledge.trunk',
       'highway.knowledge.brain.gbrain',
       'highway.agentmail.int.agentmail',
@@ -32,6 +35,49 @@ describe('gateway graph topology snapshot', () => {
       'model.openrouter_to_gateway',
     ]))
     expect(snapshot.graph_mapping_errors).toEqual([])
+  })
+
+  it('adds Pi, Space Agent, and Paperclip as additive input-lane agent nodes without changing highway groups', () => {
+    const snapshot = buildGatewayGraphTopology('2026-06-09T14:00:00.000Z')
+    const byNode = new Map(snapshot.nodes.map((node) => [node.node_id, node]))
+    const byEdge = new Map(snapshot.edges.map((edge) => [edge.edge_id, edge]))
+
+    expect(snapshot.nodes.length).toBe(48)
+    expect(snapshot.edges.length).toBe(87)
+
+    for (const id of ['agent.pi', 'agent.space', 'agent.paperclip']) {
+      expect(byNode.get(id)).toMatchObject({
+        domain: 'agent',
+        route_group: 'inputs',
+        status: 'read_only',
+      })
+      expect(byEdge.get(`highway.inputs.${id}`)).toMatchObject({
+        relationship: 'structural',
+        route_group: 'inputs',
+        source_node_id: 'gateway.core',
+        target_node_id: id,
+        status: 'read_only',
+        traffic_state: 'traffic_data_unavailable',
+        traffic: {
+          events_last_60s: 0,
+          requests_last_60s: 0,
+        },
+      })
+    }
+
+    expect(new Set(snapshot.nodes.map((node) => node.route_group))).toEqual(new Set([
+      'models',
+      'inputs',
+      'knowledge',
+      'storage',
+      'integrations',
+      'reports',
+      'webhooks',
+      'events',
+      'agentmail',
+      'zapier',
+      'browser',
+    ]))
   })
 
   it('separates structural topology from readiness and live traffic', () => {

@@ -71,10 +71,10 @@ Engineering must use these exact statuses. Do not invent new ones; do not collap
 | Status | Color token | Meaning |
 |---|---|---|
 | `green`  | `--st-green`  | Connected. Live, healthy, all enabled flags pass. |
-| `yellow` | `--st-yellow` | Gated. Owner approval, governed execution, or RBAC challenge. |
+| `yellow` | `--st-yellow` | Gated. Bridge Session required, approval pending, or RBAC challenge. |
 | `blue`   | `--st-blue`   | Read-only. Discovery + read OK. Writes refused. |
 | `red`    | `--st-red`    | Blocked. Credential failure, policy denial, or upstream down. |
-| `gray`   | `--st-gray`   | Standby. Registered but idle, no recent heartbeat, or waiting for a runtime event. |
+| `gray`   | `--st-gray`   | Not configured. No credentials/config registered yet. |
 | `purple` | `--st-purple` | Agent / commander layer marker. Status grammar applies on top. |
 | `orange` | `--st-orange` | Runtime / worker engine marker. Status grammar applies on top. |
 
@@ -83,7 +83,7 @@ Defined once in `design/gateway/shared/tokens.css`. Every Gateway page reads fro
 ### Specific node states
 - **Hermes is yellow / gated** until `hermes_called:true` is proven (live chat heartbeat). Engineering must not promote Hermes to green without that flag.
 - **Fork 2 / SMB is blocked (red).** SMB connector unavailable / SMB mount not proven. Do not surface as gray ("not configured") — it is explicitly blocked with a known fix path.
-- **NVIDIA NIM is green when Provider Vault validation is healthy.** Execution remains Gateway-governed; do not show it as standby unless the live provider probe fails or runtime proof is absent.
+- **NVIDIA NIM is gray.** Reserved slot, no API key registered. Do not auto-create a green path.
 
 ---
 

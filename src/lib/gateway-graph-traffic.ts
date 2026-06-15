@@ -688,12 +688,62 @@ const TRAFFIC_ALIAS_RULES: Array<{
     },
   },
   {
-    pattern: /\bbrain[-_. ]?bridge\b|\bbrain[-_. ]?sync\b/i,
+    pattern: /\bobsidian\b|\bobsidian[-_. ]?vault\b|\bbrain[-_. ]?obsidian\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.obsidian',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'obsidian',
+      candidate_node_id: 'brain.obsidian',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bmem[-_. ]?palace\b|\bmempalace\b|\bpalacio\b|\bmain[-_. ]?policy\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.mempalace',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'mempalace',
+      candidate_node_id: 'brain.mempalace',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bgraphify\b|\bgraffiti\b|\bgraph[-_. ]?runtime\b|\bbrain[-_. ]?graph\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.graphify',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'graphify',
+      candidate_node_id: 'brain.graphify',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bg[-_. ]?brain\b|\bgbrain\b|\bgoogle[-_. ]?brain\b|\bbrain[-_. ]?gbrain\b/i,
+    resolution: {
+      edge_id: 'highway.knowledge.brain.gbrain',
+      source_ids: ['knowledge_runtime_events'],
+      source_system: 'gbrain',
+      candidate_node_id: 'brain.gbrain',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bbrain[-_. ]?bridge\b|\bbrain[-_. ]?sync\b|\bbrain[-_. ]?synchronization\b/i,
     resolution: {
       edge_id: 'highway.knowledge.brain.sync',
       source_ids: ['knowledge_runtime_events'],
       source_system: 'brain_sync',
       candidate_node_id: 'brain.sync',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\btelegram\b|\btelegram[-_. ]?owner\b|\bowner[-_. ]?telegram\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.input.telegram',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'telegram',
+      candidate_node_id: 'input.telegram',
       confidence: 'high',
     },
   },
@@ -731,6 +781,7 @@ function sourceIdsFromAuditEdge(edgeId: string | null): GatewayGraphTrafficSourc
   if (edgeId === 'reports.gateway_to_reports') return ['report_preview_events']
   if (edgeId === 'webhooks.inbound_to_gateway') return ['workflow_trigger_events', 'gateway_event_bus']
   if (edgeId.startsWith('highway.knowledge.')) return ['knowledge_runtime_events']
+  if (edgeId.startsWith('highway.inputs.')) return ['agent_request_events', 'gateway_event_bus']
   if (edgeId.startsWith('model.')) return ['model_request_logs']
   if (edgeId.startsWith('browser.')) return ['connector_readiness_events']
   if (edgeId === 'agentmail.gateway_to_agentmail') return ['agentmail_events']

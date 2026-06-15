@@ -24,6 +24,24 @@ describe('Gateway telemetry identity contract', () => {
       canonical_node_id: 'oc.parent',
       canonical_edge_id: 'highway.models.oc.parent',
     })
+    expect(findCanonicalGatewayTelemetryIdentity(['pi-88'])).toMatchObject({
+      canonical_agent_id: 'agent.pi',
+      canonical_node_id: 'agent.pi',
+      canonical_edge_id: 'highway.inputs.agent.pi',
+      route_group: 'inputs',
+    })
+    expect(findCanonicalGatewayTelemetryIdentity(['Space Agent'])).toMatchObject({
+      canonical_agent_id: 'agent.space',
+      canonical_node_id: 'agent.space',
+      canonical_edge_id: 'highway.inputs.agent.space',
+      route_group: 'inputs',
+    })
+    expect(findCanonicalGatewayTelemetryIdentity(['paperclip'])).toMatchObject({
+      canonical_agent_id: 'agent.paperclip',
+      canonical_node_id: 'agent.paperclip',
+      canonical_edge_id: 'highway.inputs.agent.paperclip',
+      route_group: 'inputs',
+    })
   })
 
   it('keeps Tony as owner/operator identity instead of an agent edge', () => {

@@ -1,0 +1,103 @@
+export const HERMES_SKILL_CATEGORIES = [
+  'research',
+  'coding',
+  'reporting',
+  'routing',
+  'Paperclip',
+  'Gateway',
+  'Brain',
+  'n8n',
+  'Zapier',
+  'Drive',
+  'webhooks',
+  'provider/model',
+  'memory',
+  'diagnostics',
+] as const
+
+export const HERMES_MINI_AGENT_TEMPLATES = [
+  {
+    id: 'classification-mini-agent',
+    label: 'Classification Mini-Agent',
+    allowed_scope: 'classification_only',
+    output: 'label plus confidence',
+  },
+  {
+    id: 'summarization-mini-agent',
+    label: 'Summarization Mini-Agent',
+    allowed_scope: 'read_only_summary',
+    output: 'short summary with source references',
+  },
+  {
+    id: 'status-check-mini-agent',
+    label: 'Status Check Mini-Agent',
+    allowed_scope: 'read_only_status_compare',
+    output: 'status delta report',
+  },
+  {
+    id: 'duplicate-detection-mini-agent',
+    label: 'Duplicate Detection Mini-Agent',
+    allowed_scope: 'read_only_duplicate_detection',
+    output: 'duplicate candidates',
+  },
+  {
+    id: 'report-draft-mini-agent',
+    label: 'Report Draft Mini-Agent',
+    allowed_scope: 'report_draft_only',
+    output: 'internal report draft',
+  },
+  {
+    id: 'memory-tagging-mini-agent',
+    label: 'Memory Tagging Mini-Agent',
+    allowed_scope: 'tag_suggestions_only',
+    output: 'memory tag draft',
+  },
+  {
+    id: 'tool-inventory-mini-agent',
+    label: 'Tool Inventory Mini-Agent',
+    allowed_scope: 'read_only_tool_inventory',
+    output: 'tool readiness comparison',
+  },
+  {
+    id: 'workflow-preflight-mini-agent',
+    label: 'Workflow Preflight Mini-Agent',
+    allowed_scope: 'workflow_preflight_only',
+    output: 'workflow preflight checklist',
+  },
+] as const
+
+export const HERMES_TOOL_MAP = [
+  { id: 'gateway_inventory', source: '/api/bridge/capability-matrix', state: 'read_only', execution_enabled: false },
+  { id: 'agent_roster', source: '/api/bridge/agent-zero/agent-roster', state: 'read_only', execution_enabled: false },
+  { id: 'brain_map', source: '/api/bridge/hermes/brain-map', state: 'read_only', execution_enabled: false },
+  { id: 'memory_quality', source: '/api/bridge/hermes/memory-quality', state: 'read_only', execution_enabled: false },
+  { id: 'memory_correction_draft', source: '/api/bridge/hermes/memory-correction-draft', state: 'internal_record_only', execution_enabled: false },
+  { id: 'skill_registry', source: '/api/bridge/hermes/skill-registry', state: 'draft_only', execution_enabled: false },
+  { id: 'skill_foundry', source: '/api/bridge/hermes/skill-foundry', state: 'draft_only', execution_enabled: false },
+  { id: 'skill_test_plan', source: '/api/bridge/hermes/skill-test-plan', state: 'internal_record_only', execution_enabled: false },
+  { id: 'mini_agent_registry', source: '/api/bridge/hermes/mini-agent-registry', state: 'draft_only', execution_enabled: false },
+  { id: 'mini_agent_factory', source: '/api/bridge/hermes/mini-agent-factory', state: 'draft_only', execution_enabled: false },
+  { id: 'mini_agent_blueprint', source: '/api/bridge/hermes/mini-agent-blueprint', state: 'internal_record_only', execution_enabled: false },
+  { id: 'smart_agent_routing', source: '/api/bridge/hermes/smart-agent-routing', state: 'read_only', execution_enabled: false },
+  { id: 'routing_decision', source: '/api/bridge/hermes/routing-decision', state: 'internal_record_only', execution_enabled: false },
+  { id: 'gateway_tool_intelligence', source: '/api/bridge/hermes/gateway-tool-intelligence', state: 'read_only', execution_enabled: false },
+  { id: 'public_webpage_read', source: '/api/bridge/agent-zero/execute', state: 'read_only_certified', execution_enabled: true, writes_enabled: false, jarvis_delegation_required: false },
+  { id: 'youtube_transcript', source: '/api/youtube/transcript', state: 'read_only_certified', execution_enabled: true, writes_enabled: false, jarvis_delegation_required: false },
+  { id: 'brain_bridge_status', source: '/api/bridge/brain-sync/gateway-status', state: 'read_only', execution_enabled: false },
+  { id: 'brain_bridge_events', source: '/api/bridge/brain-sync/events', state: 'read_only_polling', execution_enabled: false },
+  { id: 'brain_memory_write_request', source: '/api/bridge/brain-sync/memory/write-request', state: 'write_gated', execution_enabled: false, jarvis_delegation_required: true },
+  { id: 'tool_recommendation', source: '/api/bridge/hermes/tool-recommendation', state: 'internal_record_only', execution_enabled: false },
+  { id: 'provider_model_optimization', source: '/api/bridge/hermes/provider-model-optimization', state: 'read_only', execution_enabled: false },
+  { id: 'model_route_recommendation', source: '/api/bridge/hermes/model-route-recommendation', state: 'internal_record_only', execution_enabled: false },
+  { id: 'workflow_compiler', source: '/api/bridge/hermes/workflow-compiler', state: 'draft_only', execution_enabled: false },
+  { id: 'workflow_pattern_draft', source: '/api/bridge/hermes/workflow-pattern-draft', state: 'internal_record_only', execution_enabled: false },
+  { id: 'automation_recommendation', source: '/api/bridge/hermes/automation-recommendation', state: 'internal_record_only', execution_enabled: false },
+  { id: 'jarvis_execute', source: '/api/bridge/agent-zero/execute', state: 'jarvis_only', execution_enabled: false },
+] as const
+
+export const HERMES_BRAIN_SOURCES = [
+  { id: 'mission_control_truth', label: 'Mission Control canonical routes', freshness_policy: 'live_route_first' },
+  { id: 'mempalace', label: 'MemPalace safe summaries', freshness_policy: 'mark_stale_before_replacement' },
+  { id: 'obsidian', label: 'Obsidian project notes', freshness_policy: 'append_or_version_before_change' },
+  { id: 'agent_runtime_memory', label: 'Agent runtime memory', freshness_policy: 'detect_false_claims_and_promote_canonical_truth' },
+] as const

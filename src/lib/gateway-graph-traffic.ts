@@ -618,6 +618,56 @@ const TRAFFIC_ALIAS_RULES: Array<{
   resolution: TrafficAliasResolution
 }> = [
   {
+    pattern: /\b(agent[-_. ]?zero|agent\.zero|jarvis|a0)\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.agent.zero',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'agent_zero',
+      candidate_node_id: 'agent.zero',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(agent[-_. ]?hermes|agent\.hermes|hermes|ron[-_. ]?weasley)\b|\bron\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.agent.hermes',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'hermes',
+      candidate_node_id: 'agent.hermes',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(agent[-_. ]?pi|agent\.pi|canonical_agent_id["']?\s*:\s*["']agent\.pi|pi[-_. ]?88@agentmail\.to)\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.agent.pi',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'pi',
+      candidate_node_id: 'agent.pi',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(agent[-_. ]?space|agent\.space|space[-_. ]?agent)\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.agent.space',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'space_agent',
+      candidate_node_id: 'agent.space',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(agent[-_. ]?paperclip|agent\.paperclip|paperclip)\b/i,
+    resolution: {
+      edge_id: 'highway.inputs.agent.paperclip',
+      source_ids: ['gateway_event_bus', 'agent_request_events'],
+      source_system: 'paperclip',
+      candidate_node_id: 'agent.paperclip',
+      confidence: 'high',
+    },
+  },
+  {
     pattern: /\bwebhooks?[-_. ]?events?\b|\bworkflow[-_. ]?trigger\b/i,
     resolution: {
       edge_id: 'webhooks.inbound_to_gateway',
@@ -668,12 +718,102 @@ const TRAFFIC_ALIAS_RULES: Array<{
     },
   },
   {
+    pattern: /\b(openai|openai[-_. ]?codex|chatgpt|gpt[-_. ]?4o|gpt[-_. ]?4|o3|o4[-_. ]?mini|codex)\b/i,
+    resolution: {
+      edge_id: 'model.openai_codex_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.openai',
+      candidate_node_id: 'model.openai',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(claude|anthropic)\b/i,
+    resolution: {
+      edge_id: 'model.claude_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.claude',
+      candidate_node_id: 'model.claude',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(ollama|local[-_. ]?llama|llama[-_. ]?local)\b/i,
+    resolution: {
+      edge_id: 'model.ollama_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.ollama',
+      candidate_node_id: 'model.ollama',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(nvidia|nvidia[-_. ]?nim|\bnim\b)\b/i,
+    resolution: {
+      edge_id: 'model.nvidia_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.nvidia',
+      candidate_node_id: 'model.nvidia',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\b(gemini|google[-_. ]?gemini)\b/i,
+    resolution: {
+      edge_id: 'model.gemini_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.gemini',
+      candidate_node_id: 'model.gemini',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bgroq\b/i,
+    resolution: {
+      edge_id: 'model.groq_to_gateway',
+      source_ids: ['model_request_logs'],
+      source_system: 'model.groq',
+      candidate_node_id: 'model.groq',
+      confidence: 'high',
+    },
+  },
+  {
     pattern: /\bprovider[-_. ]?xai[-_. ]?grok\b|\bxai[-_. ]?grok\b|\bgrok\b/i,
     resolution: {
       edge_id: 'model.xai_grok_to_gateway',
       source_ids: ['model_request_logs'],
       source_system: 'model.xai_grok',
       candidate_node_id: 'model.xai_grok',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bmcp\b|\bncp\b|\bmcp[-_. ]?servers?\b|\bmcp[-_. ]?tool\b/i,
+    resolution: {
+      edge_id: 'connector.mcp_servers_to_gateway',
+      source_ids: ['connector_readiness_events'],
+      source_system: 'mcp_servers',
+      candidate_node_id: 'int.mcp',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\btools?[-_. ]?registry\b|\bskills?[-_. ]?(registry|lookup|list)\b|\btool[-_. ]?(lookup|list|inventory)\b/i,
+    resolution: {
+      edge_id: 'connector.tools_registry_to_gateway',
+      source_ids: ['connector_readiness_events'],
+      source_system: 'tools_registry',
+      candidate_node_id: 'int.tools',
+      confidence: 'high',
+    },
+  },
+  {
+    pattern: /\bexternal[-_. ]?apis?\b|\bapi[-_. ]?(registry|discovery|inventory)\b|\bint\.apis\b/i,
+    resolution: {
+      edge_id: 'connector.external_apis_to_gateway',
+      source_ids: ['connector_readiness_events'],
+      source_system: 'external_apis',
+      candidate_node_id: 'int.apis',
       confidence: 'high',
     },
   },
@@ -762,12 +902,13 @@ function edgeForAuditText(text: string): string | null {
   const alias = resolveTrafficAlias(lower)
   if (alias?.confidence === 'high') return alias.edge_id
   if (lower.includes('zapier')) return 'connector.zapier_to_gateway'
-  if (lower.includes('google') || lower.includes('gdrive')) return 'connector.google_drive_to_gateway'
+  if (lower.includes('google drive') || lower.includes('gdrive')) return 'connector.google_drive_to_gateway'
   if (lower.includes('onedrive')) return 'connector.onedrive_to_gateway'
   if (lower.includes('firecrawl')) return 'connector.firecrawl_to_gateway'
   if (lower.includes('heygen')) return 'connector.heygen_to_gateway'
-  if (lower.includes('mcp')) return 'connector.mcp_servers_to_gateway'
-  if (lower.includes('tool')) return 'connector.tools_registry_to_gateway'
+  if (lower.includes('mcp') || lower.includes('ncp')) return 'connector.mcp_servers_to_gateway'
+  if (lower.includes('tool') || lower.includes('skill')) return 'connector.tools_registry_to_gateway'
+  if (lower.includes('external api')) return 'connector.external_apis_to_gateway'
   if (lower.includes('report')) return 'reports.gateway_to_reports'
   if (lower.includes('webhook')) return 'webhooks.inbound_to_gateway'
   if (lower.includes('memory') || lower.includes('brain') || lower.includes('obsidian') || lower.includes('gbrain') || lower.includes('wiki')) return 'highway.knowledge.trunk'
@@ -786,6 +927,51 @@ function sourceIdsFromAuditEdge(edgeId: string | null): GatewayGraphTrafficSourc
   if (edgeId.startsWith('browser.')) return ['connector_readiness_events']
   if (edgeId === 'agentmail.gateway_to_agentmail') return ['agentmail_events']
   return ['connector_readiness_events']
+}
+
+const CANONICAL_ACTIVITY_TARGET_EDGE_MAP: Record<string, string> = {
+  'agent.zero': 'highway.inputs.agent.zero',
+  'agent.hermes': 'highway.inputs.agent.hermes',
+  'agent.pi': 'highway.inputs.agent.pi',
+  'agent.space': 'highway.inputs.agent.space',
+  'agent.paperclip': 'highway.inputs.agent.paperclip',
+  'model.openrouter': 'model.openrouter_to_gateway',
+  'model.openai': 'model.openai_codex_to_gateway',
+  'model.claude': 'model.claude_to_gateway',
+  'model.ollama': 'model.ollama_to_gateway',
+  'model.nvidia': 'model.nvidia_to_gateway',
+  'model.gemini': 'model.gemini_to_gateway',
+  'model.groq': 'model.groq_to_gateway',
+  'model.xai_grok': 'model.xai_grok_to_gateway',
+  'int.apis': 'connector.external_apis_to_gateway',
+  'int.mcp': 'connector.mcp_servers_to_gateway',
+  'int.tools': 'connector.tools_registry_to_gateway',
+  'int.firecrawl': 'connector.firecrawl_to_gateway',
+  'int.heygen': 'connector.heygen_to_gateway',
+  'int.zapier': 'connector.zapier_to_gateway',
+  'int.gdrive': 'connector.google_drive_to_gateway',
+  'int.onedrive': 'connector.onedrive_to_gateway',
+  'int.agentmail': 'agentmail.gateway_to_agentmail',
+  'int.reports': 'reports.gateway_to_reports',
+  'brain.obsidian': 'highway.knowledge.brain.obsidian',
+  'brain.mempalace': 'highway.knowledge.brain.mempalace',
+  'brain.graphify': 'highway.knowledge.brain.graphify',
+  'brain.gbrain': 'highway.knowledge.brain.gbrain',
+  'brain.sync': 'highway.knowledge.brain.sync',
+  'brain.buildwiki': 'highway.knowledge.brain.buildwiki',
+  'input.telegram': 'highway.inputs.input.telegram',
+  'input.webhook': 'webhooks.inbound_to_gateway',
+  'input.event': 'events.event_bus_to_gateway',
+}
+
+function edgeForGatewayActivityTarget(row: Record<string, unknown>): string | null {
+  for (const column of ['canonical_node_id', 'node_id', 'entity_id', 'target_id']) {
+    const value = row[column]
+    if (value == null) continue
+    const key = String(value).trim().toLowerCase()
+    if (CANONICAL_ACTIVITY_TARGET_EDGE_MAP[key]) return CANONICAL_ACTIVITY_TARGET_EDGE_MAP[key]
+  }
+  return null
 }
 
 type AgentConfigSyncIdentityResolution = {
@@ -1341,18 +1527,43 @@ function inspectGatewayActivities(db: Database.Database, generatedAt: string, ac
   if (!tableExists(db, 'activities')) return unavailableSource('gateway_event_bus', generatedAt, 'activities_table_missing')
   const cols = columnsFor(db, 'activities')
   const idExpr = cols.has('id') ? 'id' : 'NULL AS id'
-  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, created_at FROM activities ORDER BY created_at DESC LIMIT 120`).all() as Array<{ id: unknown; created_at: unknown }>)
+  const textColumns = [
+    'type',
+    'entity_type',
+    'entity_id',
+    'actor',
+    'description',
+    'data',
+    'canonical_node_id',
+    'node_id',
+    'target_type',
+    'target_id',
+    'action',
+    'provider',
+    'model',
+    'tool',
+    'route',
+    'metadata',
+    'metadata_json',
+  ].filter((column) => cols.has(column))
+  const selectColumns = textColumns.map((column) => `"${column.replace(/"/g, '""')}"`).join(', ')
+  const rows = safeLimitRows(() => db.prepare(`SELECT ${idExpr}, created_at${selectColumns ? `, ${selectColumns}` : ''} FROM activities ORDER BY created_at DESC LIMIT 120`).all() as Array<Record<string, unknown> & { id: unknown; created_at: unknown }>)
+  const sourceEdgeIds = new Set<string>(['events.event_bus_to_gateway'])
   for (const row of rows) {
+    const text = textColumns.map((column) => row[column]).filter((value) => value != null).join(' ')
+    const edgeId = edgeForGatewayActivityTarget(row) || edgeForAuditText(text) || 'events.event_bus_to_gateway'
+    sourceEdgeIds.add(edgeId)
     addActivity(activities, {
-      edge_id: 'events.event_bus_to_gateway',
+      edge_id: edgeId,
       source_id: 'gateway_event_bus',
       occurred_at: isoFromUnknownTimestamp(row.created_at),
-      events: 1,
+      events: edgeId.startsWith('model.') ? 0 : 1,
+      requests: edgeId.startsWith('model.') ? 1 : 0,
       record_id: row.id ? `activities:${row.id}` : null,
       telemetry_kind: 'gateway_activity',
     })
   }
-  return readableSource('gateway_event_bus', generatedAt, 'activities_table_read_only', ['events.event_bus_to_gateway'])
+  return readableSource('gateway_event_bus', generatedAt, 'activities_table_read_only', Array.from(sourceEdgeIds))
 }
 
 function inspectAuditTables(

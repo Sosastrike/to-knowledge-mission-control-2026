@@ -158,6 +158,62 @@ describe('gateway graph traffic snapshot', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
+  it('maps Gateway activity rows to specific agent, model, tool, MCP, and API edges', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-traffic-activities-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.exec(`
+      CREATE TABLE activities (
+        id TEXT PRIMARY KEY,
+        type TEXT,
+        entity_type TEXT,
+        entity_id TEXT,
+        actor TEXT,
+        description TEXT,
+        data TEXT,
+        created_at TEXT,
+        workspace_id INTEGER
+      );
+    `)
+    const insertActivity = db.prepare(`
+      INSERT INTO activities (id, type, entity_type, entity_id, actor, description, data, created_at, workspace_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `)
+    insertActivity.run('activity_agent_zero', 'agent_request', 'agent', 'agent.zero', 'jarvis', 'Agent Zero normal Gateway chat turn', '{"canonical_agent_id":"agent.zero"}', '2026-06-09T14:59:58.000Z')
+    insertActivity.run('activity_pi', 'agent_request', 'agent', 'agent.pi', 'pi', 'Pi direct Gateway chat turn', '{"canonical_agent_id":"agent.pi"}', '2026-06-09T14:59:57.000Z')
+    insertActivity.run('activity_mcp', 'connector_read', 'connector', 'int.mcp', 'gateway', 'MCP Servers discovery completed', '{"tool":"mcp.list"}', '2026-06-09T14:59:56.000Z')
+    insertActivity.run('activity_tools', 'connector_read', 'connector', 'int.tools', 'gateway', 'Tools Registry skill lookup completed', '{"tool":"skills.list"}', '2026-06-09T14:59:55.000Z')
+    insertActivity.run('activity_api', 'connector_read', 'connector', 'int.apis', 'gateway', 'External APIs registry read completed', '{"target":"external_apis"}', '2026-06-09T14:59:54.000Z')
+    insertActivity.run('activity_claude', 'model_request', 'model', 'model.claude', 'agent.zero', 'Claude model request completed', '{"provider":"anthropic","model":"claude-opus-4-7"}', '2026-06-09T14:59:53.000Z')
+    db.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    for (const edgeId of [
+      'highway.inputs.agent.zero',
+      'highway.inputs.agent.pi',
+      'connector.mcp_servers_to_gateway',
+      'connector.tools_registry_to_gateway',
+      'connector.external_apis_to_gateway',
+      'model.claude_to_gateway',
+    ]) {
+      expect(snapshot.edges.find((edge) => edge.edge_id === edgeId), edgeId).toMatchObject({
+        traffic_status: 'active',
+        telemetry_source: 'gateway_event_bus',
+      })
+    }
+    expect(snapshot.summary.active_traffic_edges).toBeGreaterThanOrEqual(6)
+    expect(JSON.stringify(snapshot)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
   it('reports telemetry records that cannot be mapped to a canonical edge without animating them', () => {
     const root = mkdtempSync(join(tmpdir(), 'gateway-traffic-unmapped-'))
     const dbPath = join(root, 'mission-control.db')

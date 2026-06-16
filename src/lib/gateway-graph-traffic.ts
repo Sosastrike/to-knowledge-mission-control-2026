@@ -190,6 +190,21 @@ const SOURCE_ROUTE_GROUPS: Record<GatewayGraphTrafficSourceId, GatewayGraphTopol
 const READY_STATUSES: GatewayGraphTopologyStatus[] = ['live', 'read_only', 'guarded']
 
 const DEFAULT_STALE_THRESHOLD_SECONDS = 300
+const DEFAULT_ACTIVE_TRAFFIC_WINDOW_SECONDS = 60
+const PERIODIC_CLAUDECLAW_ACTIVE_TRAFFIC_WINDOW_SECONDS = 180
+
+function activeTrafficWindowSecondsForActivity(activity: GatewayGraphEdgeActivity | null): number {
+  const kind = activity?.telemetry_kind || ''
+  if (
+    kind === 'claudeclaw_agent_memory_usage' ||
+    kind === 'claudeclaw_agent_memory_usage_model' ||
+    kind === 'claudeclaw_agent_memory_usage_tool' ||
+    kind === 'claudeclaw_knowledge_graph_event'
+  ) {
+    return PERIODIC_CLAUDECLAW_ACTIVE_TRAFFIC_WINDOW_SECONDS
+  }
+  return DEFAULT_ACTIVE_TRAFFIC_WINDOW_SECONDS
+}
 
 function staleThresholdSecondsForEdge(edge: GatewayGraphTopologyEdge): number {
   if (edge.route_group === 'models') return 120
@@ -323,7 +338,8 @@ function trafficEdgeFromTopology(input: {
     : sources[0]
   const ageSeconds = activity ? secondsBetween(input.generatedAt, activity.occurred_at) : Number.POSITIVE_INFINITY
   const staleThresholdSeconds = staleThresholdSecondsForEdge(input.edge)
-  const recent = Boolean(activity && ageSeconds <= 60)
+  const activeTrafficWindowSeconds = activeTrafficWindowSecondsForActivity(activity)
+  const recent = Boolean(activity && ageSeconds <= activeTrafficWindowSeconds)
   const events = recent ? Math.max(0, activity?.events || 0) : 0
   const requests = recent ? Math.max(0, activity?.requests || 0) : 0
   const active = events + requests > 0

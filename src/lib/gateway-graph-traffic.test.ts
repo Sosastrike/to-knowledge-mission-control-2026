@@ -1047,4 +1047,57 @@ describe('gateway graph traffic snapshot', () => {
     })
     expect(JSON.stringify(active)).not.toMatch(/Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i)
   })
+
+  it('keeps trusted ClaudeClaw periodic memory and knowledge heartbeats active for their source cadence only', () => {
+    const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
+    const snapshot = buildGatewayGraphTrafficSnapshot({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology,
+      trustedSources: [
+        { source_id: 'agent_request_events', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' },
+        { source_id: 'knowledge_runtime_events', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' },
+        { source_id: 'model_request_logs', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' },
+      ],
+      edgeActivity: [
+        {
+          edge_id: 'highway.inputs.agent.zero',
+          events: 1,
+          occurred_at: '2026-06-09T14:58:05.000Z',
+          source_id: 'agent_request_events',
+          telemetry_kind: 'claudeclaw_agent_memory_usage',
+        },
+        {
+          edge_id: 'highway.knowledge.brain.sync',
+          events: 1,
+          occurred_at: '2026-06-09T14:58:05.000Z',
+          source_id: 'knowledge_runtime_events',
+          telemetry_kind: 'claudeclaw_knowledge_graph_event',
+        },
+        {
+          edge_id: 'model.openrouter_to_gateway',
+          requests: 1,
+          occurred_at: '2026-06-09T14:58:55.000Z',
+          source_id: 'model_request_logs',
+          telemetry_kind: 'model_run',
+        },
+      ],
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'active',
+      events_last_60s: 1,
+      telemetry_kind: 'claudeclaw_agent_memory_usage',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.sync')).toMatchObject({
+      traffic_status: 'active',
+      events_last_60s: 1,
+      telemetry_kind: 'claudeclaw_knowledge_graph_event',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.openrouter_to_gateway')).toMatchObject({
+      traffic_status: 'ready_no_recent_traffic',
+      requests_last_60s: 0,
+      telemetry_kind: 'model_run',
+    })
+  })
+
 })

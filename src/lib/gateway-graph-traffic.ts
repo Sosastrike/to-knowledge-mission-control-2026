@@ -1891,6 +1891,132 @@ function inspectClaudeClawReadOnlyTraffic(
       }
     }
 
+    if (tableExists(db, 'agent_memory_usage')) {
+      const cols = columnsFor(db, 'agent_memory_usage')
+      if (cols.has('ts')) {
+        const rows = safeLimitRows(() => db!.prepare(`
+          SELECT
+            ${sqlExpr(cols, 'id')},
+            ${sqlExpr(cols, 'ts')},
+            ${sqlExpr(cols, 'agent_id')},
+            ${sqlExpr(cols, 'source')},
+            ${sqlExpr(cols, 'tool')},
+            ${sqlExpr(cols, 'model')},
+            ${sqlExpr(cols, 'skill')}
+          FROM agent_memory_usage
+          ORDER BY ts DESC
+          LIMIT 240
+        `).all() as Array<Record<string, unknown>>)
+
+        for (const row of rows) {
+          const occurredAt = isoFromUnknownTimestamp(row.ts)
+          const agentEdge = sessionAgentEdgeFor(row.agent_id)
+          if (agentEdge) {
+            agentEdgeIds.add(agentEdge.edge_id)
+            addActivity(activities, {
+              edge_id: agentEdge.edge_id,
+              source_id: 'agent_request_events',
+              occurred_at: occurredAt,
+              events: 1,
+              record_id: row.id ? `claudeclaw.agent_memory_usage:${row.id}` : 'claudeclaw.agent_memory_usage',
+              telemetry_kind: 'claudeclaw_agent_memory_usage',
+              identity_confidence: 'high',
+              identity_reason: 'claudeclaw_source_agent_memory_identity_resolved',
+              source_provided_identity: true,
+            })
+          }
+
+          const modelName = String(row.model || '').trim()
+          const modelEdge = modelName ? modelEdgeFor(row.source, modelName) : null
+          if (modelEdge) {
+            modelEdgeIds.add(modelEdge)
+            addActivity(activities, {
+              edge_id: modelEdge,
+              source_id: 'model_request_logs',
+              occurred_at: occurredAt,
+              requests: 1,
+              record_id: row.id ? `claudeclaw.agent_memory_usage:${row.id}` : 'claudeclaw.agent_memory_usage',
+              telemetry_kind: 'claudeclaw_agent_memory_usage_model',
+              identity_confidence: 'high',
+              identity_reason: 'claudeclaw_source_agent_memory_model_resolved',
+              source_provided_identity: true,
+            })
+          }
+
+          const seenToolEdges = new Set<string>()
+          for (const toolName of [row.tool, row.skill].filter((value) => String(value || '').trim())) {
+            for (const edgeId of edgeIdsForToolText(toolName)) {
+              if (seenToolEdges.has(edgeId)) continue
+              seenToolEdges.add(edgeId)
+              for (const sourceId of sourceIdsFromAuditEdge(edgeId)) {
+                rememberSourceEdge(sourceId, edgeId)
+                addActivity(activities, {
+                  edge_id: edgeId,
+                  source_id: sourceId,
+                  occurred_at: occurredAt,
+                  events: 1,
+                  record_id: row.id ? `claudeclaw.agent_memory_usage:${row.id}:${sanitizeTelemetryText(toolName)}` : `claudeclaw.agent_memory_usage:${sanitizeTelemetryText(toolName)}`,
+                  telemetry_kind: 'claudeclaw_agent_memory_usage_tool',
+                  identity_confidence: 'high',
+                  identity_reason: 'claudeclaw_source_agent_memory_tool_resolved',
+                  source_provided_identity: true,
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (tableExists(db, 'knowledge_graph_events')) {
+      const cols = columnsFor(db, 'knowledge_graph_events')
+      if (cols.has('ts')) {
+        const rows = safeLimitRows(() => db!.prepare(`
+          SELECT
+            ${sqlExpr(cols, 'id')},
+            ${sqlExpr(cols, 'ts')},
+            ${sqlExpr(cols, 'kind')},
+            ${sqlExpr(cols, 'source')},
+            ${sqlExpr(cols, 'agent_id')},
+            ${sqlExpr(cols, 'project')}
+          FROM knowledge_graph_events
+          ORDER BY ts DESC
+          LIMIT 240
+        `).all() as Array<Record<string, unknown>>)
+
+        for (const row of rows) {
+          const occurredAt = isoFromUnknownTimestamp(row.ts)
+          const kind = String(row.kind || '').trim().toLowerCase()
+          const source = String(row.source || '').trim().toLowerCase()
+          const project = String(row.project || '').trim().toLowerCase()
+          const alias = resolveTrafficAlias(`${source} ${kind} ${project}`)
+          let edgeId = alias?.source_ids.includes('knowledge_runtime_events') ? alias.edge_id : null
+          if (!edgeId) {
+            if (/obsidian/.test(source)) edgeId = 'highway.knowledge.brain.obsidian'
+            else if (/mem[-_. ]?palace|mempalace|palacio/.test(source)) edgeId = 'highway.knowledge.brain.mempalace'
+            else if (/graphify|graffiti/.test(source)) edgeId = 'highway.knowledge.brain.graphify'
+            else if (/gbrain|g[-_. ]?brain/.test(source)) edgeId = 'highway.knowledge.brain.gbrain'
+            else if (/brain[-_. ]?alignment|brain[-_. ]?sync|sync[-_. ]?start|sync[-_. ]?complete|memory[-_. ]?sync/.test(kind)) edgeId = 'highway.knowledge.brain.sync'
+          }
+
+          if (edgeId) {
+            rememberSourceEdge('knowledge_runtime_events', edgeId)
+            addActivity(activities, {
+              edge_id: edgeId,
+              source_id: 'knowledge_runtime_events',
+              occurred_at: occurredAt,
+              events: 1,
+              record_id: row.id ? `claudeclaw.knowledge_graph_events:${row.id}` : 'claudeclaw.knowledge_graph_events',
+              telemetry_kind: 'claudeclaw_knowledge_graph_event',
+              identity_confidence: 'high',
+              identity_reason: 'claudeclaw_source_knowledge_identity_resolved',
+              source_provided_identity: true,
+            })
+          }
+        }
+      }
+    }
+
     return [
       agentEdgeIds.size
         ? readableSource('agent_request_events', generatedAt, 'claudeclaw_agent_trace_read_only', Array.from(agentEdgeIds))

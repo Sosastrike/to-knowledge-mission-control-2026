@@ -143,6 +143,18 @@ function normalizeTokenRecord(
   }
 }
 
+function modelDisplayName(record: TokenUsageRecord): string {
+  const provider = record.provider || 'unknown'
+  const model = record.model || 'unknown'
+  if (record.source === 'claudeclaw' && (provider === 'unknown' || model === 'unknown')) {
+    return 'ClaudeClaw/Jarvis legacy unattributed'
+  }
+  if (provider !== 'unknown' && model !== 'unknown' && !model.toLowerCase().includes(provider.toLowerCase())) {
+    return `${provider}/${model}`
+  }
+  return model
+}
+
 function dedupeTokenRecords(records: TokenUsageRecord[]): TokenUsageRecord[] {
   const seen = new Set<string>()
   const deduped: TokenUsageRecord[] = []
@@ -372,8 +384,9 @@ export async function GET(request: NextRequest) {
       const overallStats = calculateStats(statsData)
 
       const modelGroups = statsData.reduce((acc, record) => {
-        if (!acc[record.model]) acc[record.model] = []
-        acc[record.model].push(record)
+        const model = modelDisplayName(record)
+        if (!acc[model]) acc[model] = []
+        acc[model].push(record)
         return acc
       }, {} as Record<string, TokenUsageRecord[]>)
 
@@ -441,7 +454,7 @@ export async function GET(request: NextRequest) {
           claudeclaw: 'ClaudeClaw/Jarvis ledger',
           combined: 'Combined observed spend',
           source: 'Source: read-only rollup',
-          unknown_provider_model: 'Unknown provider/model',
+          unknown_provider_model: 'ClaudeClaw/Jarvis legacy unattributed',
         },
       })
     }
@@ -540,8 +553,9 @@ export async function GET(request: NextRequest) {
       const sessionStats: Record<string, TokenStats> = {}
 
       const modelGroups = filteredData.reduce((acc, record) => {
-        if (!acc[record.model]) acc[record.model] = []
-        acc[record.model].push(record)
+        const model = modelDisplayName(record)
+        if (!acc[model]) acc[model] = []
+        acc[model].push(record)
         return acc
       }, {} as Record<string, TokenUsageRecord[]>)
 

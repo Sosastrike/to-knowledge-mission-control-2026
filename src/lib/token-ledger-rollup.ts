@@ -118,10 +118,16 @@ function groupByProviderModel(records: TokenLedgerRecord[]): ExpenseDetailModelG
       const summary = summarize(group)
       const unknownProvider = provider === 'unknown'
       const unknownModel = model === 'unknown'
+      const allClaudeClaw = group.every((record) => record.source === 'claudeclaw')
+      const label = unknownProvider || unknownModel
+        ? allClaudeClaw
+          ? 'ClaudeClaw/Jarvis legacy unattributed'
+          : 'Unknown provider/model'
+        : `${provider}/${model}`
       return {
         provider,
         model,
-        label: unknownProvider || unknownModel ? 'Unknown provider/model' : `${provider}/${model}`,
+        label,
         ...summary,
         unknown_provider: unknownProvider,
         unknown_model: unknownModel,

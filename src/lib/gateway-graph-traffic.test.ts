@@ -183,6 +183,128 @@ describe('gateway graph traffic snapshot', () => {
     rmSync(root, { recursive: true, force: true })
   })
 
+
+  it('reads fresh ClaudeClaw memory and knowledge runtime traffic onto canonical edges', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-claudeclaw-memory-knowledge-'))
+    const dbPath = join(root, 'mission-control.db')
+    const claudeClawDbPath = join(root, 'claudeclaw.db')
+    const db = new Database(dbPath)
+    db.close()
+    const claudeClawDb = new Database(claudeClawDbPath)
+    claudeClawDb.exec(`
+      CREATE TABLE agent_memory_usage (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER NOT NULL,
+        agent_id TEXT,
+        task_id TEXT,
+        project TEXT,
+        source TEXT,
+        tool TEXT,
+        model TEXT,
+        skill TEXT,
+        duration_ms INTEGER,
+        detail TEXT
+      );
+      CREATE TABLE knowledge_graph_events (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER NOT NULL,
+        kind TEXT,
+        source TEXT,
+        agent_id TEXT,
+        task_id TEXT,
+        project TEXT,
+        detail TEXT,
+        meta_json TEXT
+      );
+    `)
+    claudeClawDb.prepare(`
+      INSERT INTO agent_memory_usage (
+        id, ts, agent_id, source, tool, model, skill, duration_ms, detail
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      401,
+      Math.floor(Date.parse('2026-06-09T14:59:50.000Z') / 1000),
+      'zero',
+      'agent',
+      'mcp__filesystem__read_file',
+      'claude-sonnet-4-6',
+      'skill.registry.lookup',
+      120,
+      'agent0 interaction memory event',
+    )
+    claudeClawDb.prepare(`
+      INSERT INTO knowledge_graph_events (
+        id, ts, kind, source, agent_id, detail, meta_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      501,
+      Math.floor(Date.parse('2026-06-09T14:59:52.000Z') / 1000),
+      'brain-alignment',
+      'agent',
+      'zero',
+      'Brain Sync alignment completed',
+      '{}',
+    )
+    claudeClawDb.prepare(`
+      INSERT INTO knowledge_graph_events (
+        id, ts, kind, source, agent_id, detail, meta_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      502,
+      Math.floor(Date.parse('2026-06-09T14:59:54.000Z') / 1000),
+      'file-change',
+      'obsidian',
+      '',
+      'Obsidian vault file changed',
+      '{}',
+    )
+    claudeClawDb.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+      claudeClawDbPath,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'agent_request_events',
+      telemetry_kind: 'claudeclaw_agent_memory_usage',
+      identity_reason: 'claudeclaw_source_agent_memory_identity_resolved',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.claude_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'model_request_logs',
+      telemetry_kind: 'claudeclaw_agent_memory_usage_model',
+      requests_last_60s: 1,
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'connector.mcp_servers_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'connector_readiness_events',
+      telemetry_kind: 'claudeclaw_agent_memory_usage_tool',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'connector.tools_registry_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'connector_readiness_events',
+      telemetry_kind: 'claudeclaw_agent_memory_usage_tool',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.sync')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'knowledge_runtime_events',
+      telemetry_kind: 'claudeclaw_knowledge_graph_event',
+      identity_reason: 'claudeclaw_source_knowledge_identity_resolved',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.obsidian')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'knowledge_runtime_events',
+      telemetry_kind: 'claudeclaw_knowledge_graph_event',
+    })
+    expect(snapshot.summary.active_traffic_edges).toBeGreaterThanOrEqual(6)
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
   it('maps Gateway activity rows to specific agent, model, tool, MCP, and API edges', () => {
     const root = mkdtempSync(join(tmpdir(), 'gateway-traffic-activities-'))
     const dbPath = join(root, 'mission-control.db')

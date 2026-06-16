@@ -132,7 +132,7 @@ describe('read-only ClaudeClaw token ledger rollup', () => {
         unknown_model: model.unknown_model,
       }))).toEqual([
         {
-          label: 'Unknown provider/model',
+          label: 'ClaudeClaw/Jarvis legacy unattributed',
           rows: 1,
           unknown_provider: true,
           unknown_model: true,
@@ -290,7 +290,7 @@ describe('read-only ClaudeClaw token ledger rollup', () => {
         {
           provider: 'unknown',
           model: 'unknown',
-          label: 'Unknown provider/model',
+          label: 'ClaudeClaw/Jarvis legacy unattributed',
           rows: 2,
           input_tokens: 400,
           output_tokens: 100,

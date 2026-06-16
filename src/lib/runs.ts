@@ -9,6 +9,7 @@ import { createHash, randomUUID } from 'crypto'
 import { getDatabase } from '@/lib/db'
 import { eventBus } from '@/lib/event-bus'
 import { logger } from '@/lib/logger'
+import { recordGatewayModelUsage, recordGatewayToolActivity } from '@/lib/gateway-telemetry-producer'
 
 // --- Types (mirrors @agent-run/types) ---
 
@@ -186,8 +187,108 @@ export function createRun(run: AgentRun, workspaceId?: number): AgentRun {
   )
 
   const created = getRun(id, wsId)!
+  recordRunGatewayTelemetry(created, wsId)
   eventBus.broadcast('run.created', created)
   return created
+}
+
+function numericTaskId(value: string | null | undefined): number | null {
+  if (!value) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null
+}
+
+function hasRunModelTelemetry(runId: string, workspaceId: number): boolean {
+  const db = getDatabase()
+  const row = db.prepare(`
+    SELECT 1 as ok
+    FROM token_usage
+    WHERE session_id = ? AND workspace_id = ?
+    LIMIT 1
+  `).get(`run:${runId}`, workspaceId) as { ok: number } | undefined
+  return Boolean(row?.ok)
+}
+
+function hasRunToolTelemetry(runId: string, stepId: string, workspaceId: number): boolean {
+  const db = getDatabase()
+  const row = db.prepare(`
+    SELECT 1 as ok
+    FROM activities
+    WHERE type = 'gateway_tool_activity'
+      AND workspace_id = ?
+      AND data LIKE ?
+      AND data LIKE ?
+    LIMIT 1
+  `).get(
+    workspaceId,
+    `%"run_id":"${runId}"%`,
+    `%"step_id":"${stepId}"%`,
+  ) as { ok: number } | undefined
+  return Boolean(row?.ok)
+}
+
+function toolTelemetryTarget(step: Step): { canonicalEdgeId: string; canonicalNodeId: string } | null {
+  const text = `${step.mcp_server || ''} ${step.tool_name || ''}`.toLowerCase()
+  if (!text.trim()) return null
+  if (text.includes('zapier')) return { canonicalEdgeId: 'highway.zapier.int.zapier', canonicalNodeId: 'int.zapier' }
+  if (text.includes('agentmail')) return { canonicalEdgeId: 'agentmail.gateway_to_agentmail', canonicalNodeId: 'int.agentmail' }
+  if (text.includes('google') || text.includes('gdrive') || text.includes('drive')) return { canonicalEdgeId: 'connector.google_drive_to_gateway', canonicalNodeId: 'int.gdrive' }
+  if (text.includes('onedrive')) return { canonicalEdgeId: 'connector.onedrive_to_gateway', canonicalNodeId: 'int.onedrive' }
+  if (text.includes('firecrawl')) return { canonicalEdgeId: 'connector.firecrawl_to_gateway', canonicalNodeId: 'int.firecrawl' }
+  if (text.includes('heygen')) return { canonicalEdgeId: 'connector.heygen_to_gateway', canonicalNodeId: 'int.heygen' }
+  if (text.includes('report')) return { canonicalEdgeId: 'reports.gateway_to_reports', canonicalNodeId: 'int.reports' }
+  if (text.includes('mcp') || text.includes('ncp')) return { canonicalEdgeId: 'connector.mcp_servers_to_gateway', canonicalNodeId: 'int.mcp' }
+  return { canonicalEdgeId: 'connector.tools_registry_to_gateway', canonicalNodeId: 'int.tools' }
+}
+
+function recordRunGatewayTelemetry(run: AgentRun, workspaceId: number): void {
+  try {
+    if (
+      (run.cost.input_tokens || 0) + (run.cost.output_tokens || 0) > 0
+      && (run.model || run.cost.model)
+      && !hasRunModelTelemetry(run.id, workspaceId)
+    ) {
+      recordGatewayModelUsage({
+        agentName: run.agent_name || run.agent_id,
+        canonicalAgentId: run.agent_id,
+        runId: run.id,
+        provider: run.provider,
+        model: run.cost.model || run.model || 'unknown',
+        sessionId: `run:${run.id}`,
+        inputTokens: run.cost.input_tokens || 0,
+        outputTokens: run.cost.output_tokens || 0,
+        costUsd: run.cost.cost_usd,
+        status: run.status,
+        taskId: numericTaskId(run.task_id),
+        workspaceId,
+        occurredAt: run.ended_at || run.started_at,
+      })
+    }
+
+    for (const step of run.steps || []) {
+      if (step.type !== 'tool_call') continue
+      if (hasRunToolTelemetry(run.id, step.id, workspaceId)) continue
+      const target = toolTelemetryTarget(step)
+      if (!target) continue
+      recordGatewayToolActivity({
+        agentName: run.agent_name || run.agent_id,
+        canonicalAgentId: run.agent_id,
+        runId: run.id,
+        stepId: step.id,
+        canonicalNodeId: target.canonicalNodeId,
+        canonicalEdgeId: target.canonicalEdgeId,
+        toolId: step.tool_name || step.mcp_server || 'tool_call',
+        sourceSystem: step.mcp_server || 'agent_run_tool',
+        actionType: step.type,
+        requestCount: 1,
+        status: step.success === false ? 'failed' : 'success',
+        workspaceId,
+        occurredAt: step.ended_at || step.started_at || run.ended_at || run.started_at,
+      })
+    }
+  } catch (error) {
+    logger.warn({ err: error, run_id: run.id }, 'Failed to record Gateway telemetry for agent run')
+  }
 }
 
 export function updateRun(id: string, updates: Partial<AgentRun>, workspaceId?: number): AgentRun | null {
@@ -221,8 +322,13 @@ export function updateRun(id: string, updates: Partial<AgentRun>, workspaceId?: 
     params.push(JSON.stringify(updates.steps))
   }
   if (updates.cost !== undefined) {
-    setClauses.push('cost_input_tokens = ?, cost_output_tokens = ?, cost_usd = ?')
-    params.push(updates.cost.input_tokens, updates.cost.output_tokens, updates.cost.cost_usd ?? null)
+    setClauses.push('cost_input_tokens = ?, cost_output_tokens = ?, cost_usd = ?, cost_model = ?')
+    params.push(
+      updates.cost.input_tokens,
+      updates.cost.output_tokens,
+      updates.cost.cost_usd ?? null,
+      updates.cost.model ?? null,
+    )
   }
   if (updates.tags !== undefined) {
     setClauses.push('tags = ?')
@@ -240,6 +346,9 @@ export function updateRun(id: string, updates: Partial<AgentRun>, workspaceId?: 
 
   const updated = getRun(id, wsId)
   if (updated) {
+    if (updates.cost !== undefined || updates.steps !== undefined) {
+      recordRunGatewayTelemetry(updated, wsId)
+    }
     const eventType = updated.status === 'completed' || updated.status === 'failed'
       ? 'run.completed' as const
       : 'run.updated' as const

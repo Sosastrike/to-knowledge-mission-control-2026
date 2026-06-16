@@ -9,6 +9,12 @@ import { getDatabase } from '@/lib/db'
 import { calculateTokenCost } from '@/lib/token-pricing'
 import { getProviderSubscriptionFlags } from '@/lib/provider-subscriptions'
 import { buildTaskCostReport, type TaskCostMetadata } from '@/lib/task-costs'
+import {
+  buildExpenseDetailView,
+  buildReadOnlyTokenLedgerRollup,
+  combineReadOnlyTokenLedgerRecords,
+  loadClaudeClawTokenUsageRecords,
+} from '@/lib/token-ledger-rollup'
 
 const DATA_PATH = config.tokensPath
 
@@ -26,6 +32,9 @@ interface TokenUsageRecord {
   taskId?: number | null
   workspaceId?: number
   duration?: number
+  source?: 'mission_control' | 'claudeclaw'
+  sourceRunId?: string | null
+  provider?: string
 }
 
 interface TokenStats {
@@ -61,13 +70,15 @@ interface DbTokenUsageRow {
   task_id?: number | null
   workspace_id?: number
   created_at: number
+  cost_usd?: number | null
+  agent_name?: string | null
 }
 
 function loadTokenDataFromDb(workspaceId: number, providerSubscriptions: Record<string, boolean>): TokenUsageRecord[] {
   try {
     const db = getDatabase()
     const rows = db.prepare(`
-      SELECT id, model, session_id, input_tokens, output_tokens, task_id, workspace_id, created_at
+      SELECT id, model, session_id, input_tokens, output_tokens, task_id, workspace_id, created_at, cost_usd, agent_name
       FROM token_usage
       WHERE workspace_id = ?
       ORDER BY created_at DESC, id DESC
@@ -76,19 +87,25 @@ function loadTokenDataFromDb(workspaceId: number, providerSubscriptions: Record<
 
     return rows.map((row) => {
       const totalTokens = row.input_tokens + row.output_tokens
+      const cost =
+        row.cost_usd != null && Number.isFinite(Number(row.cost_usd))
+          ? Number(row.cost_usd)
+          : calculateTokenCost(row.model, row.input_tokens, row.output_tokens, { providerSubscriptions })
       return {
         id: `db-${row.id}`,
         model: row.model,
         sessionId: row.session_id,
-        agentName: extractAgentName(row.session_id),
+        agentName: row.agent_name || extractAgentName(row.session_id),
         timestamp: row.created_at * 1000,
         inputTokens: row.input_tokens,
         outputTokens: row.output_tokens,
         totalTokens,
-        cost: calculateTokenCost(row.model, row.input_tokens, row.output_tokens, { providerSubscriptions }),
+        cost,
         operation: 'heartbeat',
         taskId: row.task_id ?? null,
         workspaceId: row.workspace_id ?? workspaceId,
+        source: 'mission_control',
+        sourceRunId: `mission-control:${row.id}`,
       }
     })
   } catch (error) {
@@ -120,6 +137,9 @@ function normalizeTokenRecord(
     taskId: record.taskId != null && Number.isFinite(Number(record.taskId)) ? Number(record.taskId) : null,
     workspaceId: record.workspaceId != null && Number.isFinite(Number(record.workspaceId)) ? Number(record.workspaceId) : 1,
     duration: record.duration,
+    source: record.source ?? 'mission_control',
+    sourceRunId: record.sourceRunId ?? null,
+    provider: record.provider,
   }
 }
 
@@ -182,6 +202,14 @@ async function loadTokenData(workspaceId: number): Promise<TokenUsageRecord[]> {
     .sort((a, b) => b.timestamp - a.timestamp)
 }
 
+async function loadMissionControlLedgerData(workspaceId: number): Promise<TokenUsageRecord[]> {
+  const providerSubscriptions = getProviderSubscriptionFlags()
+  const dbRecords = loadTokenDataFromDb(workspaceId, providerSubscriptions)
+  const fileRecords = await loadTokenDataFromFile(workspaceId, providerSubscriptions)
+  return dedupeTokenRecords([...dbRecords, ...fileRecords])
+    .sort((a, b) => b.timestamp - a.timestamp)
+}
+
 /**
  * Derive token usage records from OpenClaw session stores.
  * Each session has totalTokens, inputTokens, outputTokens, model, etc.
@@ -210,6 +238,7 @@ function deriveFromSessions(workspaceId: number, providerSubscriptions: Record<s
       operation: session.chatType || 'chat',
       taskId: null,
       workspaceId,
+      source: 'mission_control',
     })
   }
 
@@ -312,8 +341,23 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format') || 'json'
 
     const workspaceId = auth.user.workspace_id ?? 1
-    const tokenData = await loadTokenData(workspaceId)
+    const missionControlData = await loadTokenData(workspaceId)
+    const missionControlLedgerData = await loadMissionControlLedgerData(workspaceId)
+    const claudeClawData = loadClaudeClawTokenUsageRecords({ workspaceId })
+    const tokenData = combineReadOnlyTokenLedgerRecords({
+      missionControlRecords: missionControlData,
+      claudeClawRecords: claudeClawData,
+    }) as TokenUsageRecord[]
     const filteredData = filterByTimeframe(tokenData, timeframe)
+    const missionControlFilteredData = filterByTimeframe(missionControlLedgerData, timeframe)
+    const observedRollupData = combineReadOnlyTokenLedgerRecords({
+      missionControlRecords: missionControlFilteredData,
+      claudeClawRecords: claudeClawData,
+    }) as TokenUsageRecord[]
+    const sourceRollup = buildReadOnlyTokenLedgerRollup({
+      missionControlRecords: missionControlFilteredData,
+      claudeClawRecords: claudeClawData,
+    })
 
     if (action === 'list') {
       return NextResponse.json({
@@ -324,9 +368,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (action === 'stats') {
-      const overallStats = calculateStats(filteredData)
+      const statsData = observedRollupData
+      const overallStats = calculateStats(statsData)
 
-      const modelGroups = filteredData.reduce((acc, record) => {
+      const modelGroups = statsData.reduce((acc, record) => {
         if (!acc[record.model]) acc[record.model] = []
         acc[record.model].push(record)
         return acc
@@ -337,7 +382,7 @@ export async function GET(request: NextRequest) {
         modelStats[model] = calculateStats(records)
       }
 
-      const sessionGroups = filteredData.reduce((acc, record) => {
+      const sessionGroups = statsData.reduce((acc, record) => {
         if (!acc[record.sessionId]) acc[record.sessionId] = []
         acc[record.sessionId].push(record)
         return acc
@@ -349,7 +394,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Agent aggregation: extract agent name from sessionId (format: "agentName:chatType")
-      const agentGroups = filteredData.reduce((acc, record) => {
+      const agentGroups = statsData.reduce((acc, record) => {
         const agent = record.agentName || extractAgentName(record.sessionId)
         if (!acc[agent]) acc[agent] = []
         acc[agent].push(record)
@@ -367,12 +412,42 @@ export async function GET(request: NextRequest) {
         sessions: sessionStats,
         agents: agentStats,
         timeframe,
-        recordCount: filteredData.length,
+        recordCount: statsData.length,
+        mission_control: sourceRollup.mission_control,
+        claudeclaw: sourceRollup.claudeclaw,
+        combined: sourceRollup.combined,
+        source_mode: sourceRollup.source_mode,
+        double_count_guard: sourceRollup.double_count_guard,
+        source_labels: {
+          mission_control: 'Mission Control ledger',
+          claudeclaw: 'ClaudeClaw/Jarvis ledger',
+          combined: 'Combined observed spend',
+          source: 'Source: read-only rollup',
+        },
+      })
+    }
+
+    if (action === 'expense-detail' || action === 'expense_detail' || action === 'expense-detail-view') {
+      const detail = buildExpenseDetailView({
+        missionControlRecords: missionControlFilteredData,
+        claudeClawRecords: claudeClawData,
+      })
+
+      return NextResponse.json({
+        ...detail,
+        timeframe,
+        source_labels: {
+          mission_control: 'Mission Control ledger',
+          claudeclaw: 'ClaudeClaw/Jarvis ledger',
+          combined: 'Combined observed spend',
+          source: 'Source: read-only rollup',
+          unknown_provider_model: 'Unknown provider/model',
+        },
       })
     }
 
     if (action === 'agent-costs') {
-      const agentGroups = filteredData.reduce((acc, record) => {
+      const agentGroups = observedRollupData.reduce((acc, record) => {
         const agent = record.agentName || extractAgentName(record.sessionId)
         if (!acc[agent]) acc[agent] = []
         acc[agent].push(record)
@@ -422,7 +497,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         agents,
         timeframe,
-        recordCount: filteredData.length,
+        recordCount: observedRollupData.length,
+        mission_control: sourceRollup.mission_control,
+        claudeclaw: sourceRollup.claudeclaw,
+        combined: sourceRollup.combined,
+        source_mode: sourceRollup.source_mode,
+        double_count_guard: sourceRollup.double_count_guard,
       })
     }
 

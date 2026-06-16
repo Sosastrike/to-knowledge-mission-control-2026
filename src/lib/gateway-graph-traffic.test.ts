@@ -1,8 +1,29 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Database from 'better-sqlite3'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+
+type GatewaySessionFixture = {
+  key: string
+  agent: string
+  sessionId: string
+  updatedAt: number
+  chatType: string
+  channel: string
+  model: string
+  totalTokens: number
+  inputTokens: number
+  outputTokens: number
+  contextTokens: number
+  active: boolean
+}
+
+const gatewaySessionStoreMock = vi.hoisted(() => ({
+  getAllGatewaySessions: vi.fn<(_limit?: number, _includeInactive?: boolean) => GatewaySessionFixture[]>(() => []),
+}))
+
+vi.mock('@/lib/sessions', () => gatewaySessionStoreMock)
 
 import { buildGatewayGraphTopology } from '@/lib/gateway-graph-topology'
 import {
@@ -11,6 +32,10 @@ import {
 } from '@/lib/gateway-graph-traffic'
 
 describe('gateway graph traffic snapshot', () => {
+  beforeEach(() => {
+    gatewaySessionStoreMock.getAllGatewaySessions.mockReturnValue([])
+  })
+
   it('returns unavailable traffic without trusted runtime telemetry', () => {
     const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
     const snapshot = buildGatewayGraphTrafficSnapshot({
@@ -485,6 +510,302 @@ describe('gateway graph traffic snapshot', () => {
         candidate_edge_id: null,
       }),
     ]))
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('maps recent Gateway sessions to canonical agent and model traffic', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-session-traffic-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.close()
+
+    gatewaySessionStoreMock.getAllGatewaySessions.mockReturnValue([{
+      key: 'agent:jarvis:telegram',
+      agent: 'jarvis',
+      sessionId: 'session-jarvis',
+      updatedAt: Date.parse('2026-06-09T14:59:50.000Z'),
+      chatType: 'telegram',
+      channel: 'telegram',
+      model: 'gpt-5.4',
+      totalTokens: 168,
+      inputTokens: 123,
+      outputTokens: 45,
+      contextTokens: 0,
+      active: true,
+    }])
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    expect(gatewaySessionStoreMock.getAllGatewaySessions).toHaveBeenCalledWith(Infinity, true)
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'agent_request_events',
+      telemetry_kind: 'gateway_session_agent_activity',
+      identity_reason: 'gateway_session_agent_identity_resolved',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.openai_codex_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'model_request_logs',
+      telemetry_kind: 'gateway_session_model_activity',
+      requests_last_60s: 1,
+      bytes_in_last_60s: 123,
+      bytes_out_last_60s: 45,
+    })
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('reads fresh ClaudeClaw/Jarvis trace traffic without guessing classifier rows onto agents', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-claudeclaw-traffic-'))
+    const dbPath = join(root, 'mission-control.db')
+    const claudeClawDbPath = join(root, 'claudeclaw.db')
+    const db = new Database(dbPath)
+    db.close()
+    const claudeClawDb = new Database(claudeClawDbPath)
+    claudeClawDb.exec(`
+      CREATE TABLE agent_trace (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER,
+        agent TEXT NOT NULL,
+        channel TEXT,
+        runtime TEXT NOT NULL,
+        requested_route TEXT,
+        actual_model TEXT,
+        provider_path TEXT,
+        tools_executed TEXT,
+        skills_used TEXT,
+        start_ts INTEGER NOT NULL,
+        end_ts INTEGER,
+        ok INTEGER,
+        prompt_tokens INTEGER,
+        completion_tokens INTEGER,
+        cost_usd REAL
+      );
+      CREATE TABLE openrouter_requests (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER NOT NULL,
+        agent TEXT NOT NULL,
+        task_type TEXT NOT NULL,
+        requested_route TEXT NOT NULL,
+        actual_model TEXT,
+        prompt_tokens INTEGER,
+        completion_tokens INTEGER,
+        cost_usd REAL,
+        ok INTEGER NOT NULL
+      );
+    `)
+    claudeClawDb.prepare(`
+      INSERT INTO agent_trace (
+        id, ts, agent, channel, runtime, requested_route, actual_model, provider_path,
+        tools_executed, skills_used, start_ts, end_ts, ok, prompt_tokens, completion_tokens, cost_usd
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      101,
+      Math.floor(Date.parse('2026-06-09T14:59:47.000Z') / 1000),
+      'agent-zero',
+      'telegram',
+      'claude_cli_direct',
+      '/api/bridge/agent-zero/test-chat',
+      'sonnet',
+      'mission_control_agent_zero',
+      JSON.stringify([
+        'ToolSearch',
+        'mcp__filesystem__read_file',
+        'zapier: google_drive_upload_file',
+        'firecrawl: scrape',
+        'heygen_create_an_avatar_video_scene',
+      ]),
+      JSON.stringify(['skill.registry.lookup']),
+      Date.parse('2026-06-09T14:59:45.000Z'),
+      Date.parse('2026-06-09T14:59:50.000Z'),
+      1,
+      222,
+      44,
+      0.0123,
+    )
+    claudeClawDb.prepare(`
+      INSERT INTO openrouter_requests (
+        id, ts, agent, task_type, requested_route, actual_model, prompt_tokens, completion_tokens, cost_usd, ok
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      202,
+      Math.floor(Date.parse('2026-06-09T14:59:52.000Z') / 1000),
+      'classifier',
+      'cheap',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      567,
+      290,
+      0,
+      1,
+    )
+    claudeClawDb.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+      claudeClawDbPath,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'active',
+      telemetry_source: 'agent_request_events',
+      source_record_id: 'claudeclaw.agent_trace:101',
+      telemetry_kind: 'claudeclaw_agent_trace',
+      identity_reason: 'claudeclaw_source_agent_identity_resolved',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.claude_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      requests_last_60s: 1,
+      bytes_in_last_60s: 222,
+      bytes_out_last_60s: 44,
+      source_record_id: 'claudeclaw.agent_trace:101',
+      telemetry_kind: 'claudeclaw_agent_trace_model',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.openrouter_to_gateway')).toMatchObject({
+      traffic_status: 'active',
+      requests_last_60s: 1,
+      bytes_in_last_60s: 567,
+      bytes_out_last_60s: 290,
+      source_record_id: 'claudeclaw.openrouter_requests:202',
+      telemetry_kind: 'claudeclaw_openrouter_request',
+    })
+    for (const [edgeId, telemetrySource] of [
+      ['connector.tools_registry_to_gateway', 'connector_readiness_events'],
+      ['connector.mcp_servers_to_gateway', 'connector_readiness_events'],
+      ['connector.zapier_to_gateway', 'zapier_discovery_events'],
+      ['connector.google_drive_to_gateway', 'storage_sync_events'],
+      ['connector.firecrawl_to_gateway', 'connector_readiness_events'],
+      ['connector.heygen_to_gateway', 'connector_readiness_events'],
+    ] as const) {
+      expect(snapshot.edges.find((edge) => edge.edge_id === edgeId), edgeId).toMatchObject({
+        traffic_status: 'active',
+        telemetry_source: telemetrySource,
+        events_last_60s: 1,
+        telemetry_kind: 'claudeclaw_agent_trace_tool',
+        identity_reason: 'claudeclaw_source_tool_identity_resolved',
+      })
+    }
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.paperclip')).not.toMatchObject({
+      traffic_status: 'active',
+    })
+    expect(snapshot.summary.active_traffic_edges).toBeGreaterThanOrEqual(9)
+    expect(JSON.stringify(snapshot)).not.toMatch(
+      /Bearer|Authorization|cookie=|sk-[A-Za-z0-9]{12,}|\bam_[A-Za-z0-9][A-Za-z0-9_-]{24,}\b/i,
+    )
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('keeps old ClaudeClaw activity stale instead of creating a live pulse', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-claudeclaw-stale-'))
+    const dbPath = join(root, 'mission-control.db')
+    const claudeClawDbPath = join(root, 'claudeclaw.db')
+    const db = new Database(dbPath)
+    db.close()
+    const claudeClawDb = new Database(claudeClawDbPath)
+    claudeClawDb.exec(`
+      CREATE TABLE agent_trace (
+        id INTEGER PRIMARY KEY,
+        ts INTEGER,
+        agent TEXT NOT NULL,
+        channel TEXT,
+        runtime TEXT NOT NULL,
+        requested_route TEXT,
+        actual_model TEXT,
+        provider_path TEXT,
+        start_ts INTEGER NOT NULL,
+        end_ts INTEGER,
+        ok INTEGER,
+        prompt_tokens INTEGER,
+        completion_tokens INTEGER
+      );
+    `)
+    claudeClawDb.prepare(`
+      INSERT INTO agent_trace (
+        id, ts, agent, channel, runtime, requested_route, actual_model, provider_path,
+        start_ts, end_ts, ok, prompt_tokens, completion_tokens
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      301,
+      Math.floor(Date.parse('2026-06-09T14:50:00.000Z') / 1000),
+      'agent-zero',
+      'telegram',
+      'claude_cli_direct',
+      '/api/bridge/agent-zero/test-chat',
+      'sonnet',
+      'mission_control_agent_zero',
+      Date.parse('2026-06-09T14:49:50.000Z'),
+      Date.parse('2026-06-09T14:50:00.000Z'),
+      1,
+      100,
+      20,
+    )
+    claudeClawDb.close()
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+      claudeClawDbPath,
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'stale',
+      events_last_60s: 0,
+      source_record_id: 'claudeclaw.agent_trace:301',
+      telemetry_kind: 'claudeclaw_agent_trace',
+    })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'model.claude_to_gateway')).toMatchObject({
+      traffic_status: 'stale',
+      requests_last_60s: 0,
+      bytes_in_last_60s: 0,
+      bytes_out_last_60s: 0,
+      source_record_id: 'claudeclaw.agent_trace:301',
+      telemetry_kind: 'claudeclaw_agent_trace_model',
+    })
+    expect(snapshot.summary.active_traffic_edges).toBe(0)
+    expect(snapshot.summary.stale_telemetry_edges).toBeGreaterThanOrEqual(2)
+
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  it('does not guess owner Tony sessions onto Agent Zero or GBrain', () => {
+    const root = mkdtempSync(join(tmpdir(), 'gateway-session-tony-'))
+    const dbPath = join(root, 'mission-control.db')
+    const db = new Database(dbPath)
+    db.close()
+
+    gatewaySessionStoreMock.getAllGatewaySessions.mockReturnValue([{
+      key: 'agent:tony:main',
+      agent: 'tony',
+      sessionId: 'session-tony',
+      updatedAt: Date.parse('2026-06-09T14:59:50.000Z'),
+      chatType: 'main',
+      channel: 'telegram',
+      model: '',
+      totalTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      contextTokens: 0,
+      active: true,
+    }])
+
+    const snapshot = buildGatewayGraphTrafficFromReadOnlyDatabase({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology: buildGatewayGraphTopology('2026-06-09T15:00:00.000Z'),
+      dbPath,
+    })
+
+    expect(snapshot.summary.active_traffic_edges).toBe(0)
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).not.toMatchObject({ traffic_status: 'active' })
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.gbrain')).not.toMatchObject({ traffic_status: 'active' })
 
     rmSync(root, { recursive: true, force: true })
   })

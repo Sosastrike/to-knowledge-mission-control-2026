@@ -7,6 +7,7 @@ import {
 } from '@/lib/gateway-graph-topology'
 import Database from 'better-sqlite3'
 import { config } from '@/lib/config'
+import { getAllGatewaySessions } from '@/lib/sessions'
 import {
   findCanonicalGatewayTelemetryIdentity,
   normalizeGatewayTelemetryIdentityAlias,
@@ -489,6 +490,8 @@ const RUNTIME_SOURCE_IDS: GatewayGraphTrafficSourceId[] = [
   'agent_request_events',
 ]
 
+export const DEFAULT_CLAUDECLAW_TRAFFIC_DB_PATH = '/home/tony/claudeclaw/store/claudeclaw.db'
+
 function unavailableSource(source_id: GatewayGraphTrafficSourceId, generatedAt: string, reason: string): GatewayGraphTrafficSource {
   return {
     source_id,
@@ -534,6 +537,10 @@ function columnsFor(db: Database.Database, tableName: string): Set<string> {
 
 function safeLimitRows<T>(fn: () => T[]): T[] {
   try { return fn() } catch { return [] }
+}
+
+function sqlExpr(cols: Set<string>, column: string, alias = column): string {
+  return cols.has(column) ? `"${column.replace(/"/g, '""')}"` : `NULL AS "${alias.replace(/"/g, '""')}"`
 }
 
 function addActivity(
@@ -602,6 +609,8 @@ function modelEdgeFor(provider: unknown, model: unknown): string | null {
   for (const [needle, edgeId] of Object.entries(PROVIDER_EDGE_MAP)) {
     if (haystack.includes(needle)) return edgeId
   }
+  if (/\bsonnet\b|\bopus\b|\bhaiku\b/.test(haystack)) return 'model.claude_to_gateway'
+  if (/\bgpt[-_. ]?5|\bgpt[-_. ]?4|\bo3\b|\bo4[-_. ]?mini\b/.test(haystack)) return 'model.openai_codex_to_gateway'
   return null
 }
 
@@ -915,6 +924,50 @@ function edgeForAuditText(text: string): string | null {
   return null
 }
 
+function parseTelemetryStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => typeof item === 'string' || typeof item === 'number')
+      .map(String)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+  if (typeof value !== 'string') return []
+  const text = value.trim()
+  if (!text) return []
+  try {
+    const parsed = JSON.parse(text)
+    return parseTelemetryStringList(parsed)
+  } catch {
+    return text.split(/[,\n]/).map((item) => item.trim()).filter(Boolean)
+  }
+}
+
+function edgeIdsForToolText(value: unknown): string[] {
+  const text = String(value || '').trim()
+  if (!text) return []
+  const lower = text.toLowerCase()
+  const edgeIds = new Set<string>()
+  const alias = resolveTrafficAlias(text)
+  if (alias?.confidence === 'high') edgeIds.add(alias.edge_id)
+
+  if (/\bmcp__|\bmcp\b|\bncp\b/.test(lower)) edgeIds.add('connector.mcp_servers_to_gateway')
+  if (/\btoolsearch\b|\btool[-_. ]?search\b|\btools?\b|\bskills?\b|\btodowrite\b|\bread(ing)?[-_. ]?file\b|\bwriting[-_. ]?file\b|\bediting[-_. ]?file\b|\brunning[-_. ]?command\b|\bbash\b|\bgrep\b|\bglob\b|\btext_editor\b|\bnotebookedit\b/.test(lower)) {
+    edgeIds.add('connector.tools_registry_to_gateway')
+  }
+  if (/\bzapier\b/.test(lower)) edgeIds.add('connector.zapier_to_gateway')
+  if (/\bgoogle[-_. ]?drive(?:\b|_)|\bgdrive(?:\b|_)/.test(lower)) edgeIds.add('connector.google_drive_to_gateway')
+  if (/\bonedrive(?:\b|_)/.test(lower)) edgeIds.add('connector.onedrive_to_gateway')
+  if (/\bexternal[-_. ]?api\b|\bapi[-_. ]?call\b|\bapi[-_. ]?request\b/.test(lower)) edgeIds.add('connector.external_apis_to_gateway')
+  if (/\bfirecrawl\b/.test(lower)) edgeIds.add('connector.firecrawl_to_gateway')
+  if (/\bheygen(?:\b|_)/.test(lower)) edgeIds.add('connector.heygen_to_gateway')
+  if (/\bagentmail\b/.test(lower)) edgeIds.add('agentmail.gateway_to_agentmail')
+  if (/\breport\b|\bpdf\b/.test(lower)) edgeIds.add('reports.gateway_to_reports')
+  if (/\bwebhook\b/.test(lower)) edgeIds.add('webhooks.inbound_to_gateway')
+
+  return Array.from(edgeIds)
+}
+
 function sourceIdsFromAuditEdge(edgeId: string | null): GatewayGraphTrafficSourceId[] {
   if (!edgeId) return []
   if (edgeId === 'connector.zapier_to_gateway') return ['zapier_discovery_events', 'connector_readiness_events']
@@ -1033,6 +1086,11 @@ function parseJsonObject(value: unknown): Record<string, unknown> | null {
   } catch {
     return null
   }
+}
+
+function nonNegativeNumber(value: unknown): number | undefined {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
 }
 
 function detailStringValues(detail: Record<string, unknown> | null, keys: string[]): string[] {
@@ -1551,19 +1609,307 @@ function inspectGatewayActivities(db: Database.Database, generatedAt: string, ac
   const sourceEdgeIds = new Set<string>(['events.event_bus_to_gateway'])
   for (const row of rows) {
     const text = textColumns.map((column) => row[column]).filter((value) => value != null).join(' ')
-    const edgeId = edgeForGatewayActivityTarget(row) || edgeForAuditText(text) || 'events.event_bus_to_gateway'
+    const detail = parseJsonObject(row.data) || parseJsonObject(row.metadata_json) || parseJsonObject(row.metadata)
+    const sourceProvidedEdgeId = typeof detail?.canonical_edge_id === 'string' && detail.canonical_edge_id.trim()
+      ? detail.canonical_edge_id.trim()
+      : null
+    const edgeId = sourceProvidedEdgeId || edgeForGatewayActivityTarget(row) || edgeForAuditText(text) || 'events.event_bus_to_gateway'
     sourceEdgeIds.add(edgeId)
+    const inputTokens = nonNegativeNumber(detail?.input_tokens ?? detail?.inputTokens ?? detail?.bytes_in)
+    const outputTokens = nonNegativeNumber(detail?.output_tokens ?? detail?.outputTokens ?? detail?.bytes_out)
     addActivity(activities, {
       edge_id: edgeId,
       source_id: 'gateway_event_bus',
       occurred_at: isoFromUnknownTimestamp(row.created_at),
       events: edgeId.startsWith('model.') ? 0 : 1,
       requests: edgeId.startsWith('model.') ? 1 : 0,
+      bytes_in: inputTokens,
+      bytes_out: outputTokens,
       record_id: row.id ? `activities:${row.id}` : null,
       telemetry_kind: 'gateway_activity',
     })
   }
   return readableSource('gateway_event_bus', generatedAt, 'activities_table_read_only', Array.from(sourceEdgeIds))
+}
+
+function sessionAgentEdgeFor(agent: unknown): TrafficAliasResolution | null {
+  const normalized = normalizeIdentityAlias(agent)
+  if (!normalized) return null
+  if (['tony', 'owner.tony', 'owner_tony', 'owner-tony'].includes(normalized)) return null
+  const alias = resolveTrafficAlias(`agent.${normalized} ${normalized}`)
+  return alias?.confidence === 'high' ? alias : null
+}
+
+function inspectGatewaySessions(generatedAt: string, activities: GatewayGraphEdgeActivity[]): GatewayGraphTrafficSource[] {
+  let sessions: ReturnType<typeof getAllGatewaySessions> = []
+  try {
+    sessions = getAllGatewaySessions(Infinity, true)
+  } catch {
+    return [
+      unavailableSource('agent_request_events', generatedAt, 'gateway_session_store_unreadable'),
+      unavailableSource('model_request_logs', generatedAt, 'gateway_session_store_unreadable'),
+    ]
+  }
+
+  if (!sessions.length) {
+    return [
+      unavailableSource('agent_request_events', generatedAt, 'gateway_session_store_empty'),
+      unavailableSource('model_request_logs', generatedAt, 'gateway_session_store_empty'),
+    ]
+  }
+
+  const agentEdgeIds = new Set<string>()
+  const modelEdgeIds = new Set<string>()
+
+  for (const session of sessions) {
+    const occurredAt = isoFromUnknownTimestamp(session.updatedAt)
+    const agentEdge = sessionAgentEdgeFor(session.agent)
+    if (agentEdge) {
+      agentEdgeIds.add(agentEdge.edge_id)
+      addActivity(activities, {
+        edge_id: agentEdge.edge_id,
+        source_id: 'agent_request_events',
+        occurred_at: occurredAt,
+        events: 1,
+        record_id: `gateway_session:${session.agent}:${session.key}`,
+        telemetry_kind: 'gateway_session_agent_activity',
+        identity_confidence: 'high',
+        identity_reason: 'gateway_session_agent_identity_resolved',
+        source_provided_identity: true,
+      })
+    }
+
+    const modelEdge = modelEdgeFor('', session.model)
+    if (modelEdge) {
+      modelEdgeIds.add(modelEdge)
+      addActivity(activities, {
+        edge_id: modelEdge,
+        source_id: 'model_request_logs',
+        occurred_at: occurredAt,
+        requests: 1,
+        bytes_in: Math.max(0, Number(session.inputTokens || 0)),
+        bytes_out: Math.max(0, Number(session.outputTokens || 0)),
+        record_id: `gateway_session:${session.agent}:${session.key}`,
+        telemetry_kind: 'gateway_session_model_activity',
+        identity_confidence: 'high',
+        identity_reason: 'gateway_session_model_identity_resolved',
+        source_provided_identity: true,
+      })
+    }
+  }
+
+  return [
+    agentEdgeIds.size
+      ? readableSource('agent_request_events', generatedAt, 'gateway_session_store_read_only', Array.from(agentEdgeIds))
+      : unavailableSource('agent_request_events', generatedAt, 'gateway_session_store_has_no_canonical_agent_activity'),
+    modelEdgeIds.size
+      ? readableSource('model_request_logs', generatedAt, 'gateway_session_store_read_only', Array.from(modelEdgeIds))
+      : unavailableSource('model_request_logs', generatedAt, 'gateway_session_store_has_no_model_activity'),
+  ]
+}
+
+function inspectClaudeClawReadOnlyTraffic(
+  dbPath: string | null | undefined,
+  generatedAt: string,
+  activities: GatewayGraphEdgeActivity[],
+  missing: GatewayGraphMissingTrafficMapping[],
+): GatewayGraphTrafficSource[] {
+  if (!dbPath) {
+    return [
+      unavailableSource('agent_request_events', generatedAt, 'claudeclaw_db_path_missing'),
+      unavailableSource('model_request_logs', generatedAt, 'claudeclaw_db_path_missing'),
+    ]
+  }
+
+  let db: Database.Database | null = null
+  try {
+    db = new Database(dbPath, { readonly: true, fileMustExist: true })
+    const agentEdgeIds = new Set<string>()
+    const modelEdgeIds = new Set<string>()
+    const sourceEdgeIds = new Map<GatewayGraphTrafficSourceId, Set<string>>()
+    const rememberSourceEdge = (sourceId: GatewayGraphTrafficSourceId, edgeId: string) => {
+      const current = sourceEdgeIds.get(sourceId) || new Set<string>()
+      current.add(edgeId)
+      sourceEdgeIds.set(sourceId, current)
+    }
+
+    if (tableExists(db, 'agent_trace')) {
+      const cols = columnsFor(db, 'agent_trace')
+      const rows = safeLimitRows(() => db!.prepare(`
+        SELECT
+          ${sqlExpr(cols, 'id')},
+          ${sqlExpr(cols, 'agent')},
+          ${sqlExpr(cols, 'channel')},
+          ${sqlExpr(cols, 'runtime')},
+          ${sqlExpr(cols, 'requested_route')},
+          ${sqlExpr(cols, 'actual_model')},
+          ${sqlExpr(cols, 'provider_path')},
+          ${sqlExpr(cols, 'tools_executed')},
+          ${sqlExpr(cols, 'skills_used')},
+          ${sqlExpr(cols, 'prompt_tokens')},
+          ${sqlExpr(cols, 'completion_tokens')},
+          ${sqlExpr(cols, 'ok')},
+          ${sqlExpr(cols, 'start_ts')},
+          ${sqlExpr(cols, 'end_ts')},
+          ${sqlExpr(cols, 'ts')}
+        FROM agent_trace
+        ORDER BY COALESCE(end_ts, start_ts, ts) DESC
+        LIMIT 160
+      `).all() as Array<Record<string, unknown>>)
+
+      for (const row of rows) {
+        const occurredAt = isoFromUnknownTimestamp(row.end_ts) || isoFromUnknownTimestamp(row.start_ts) || isoFromUnknownTimestamp(row.ts)
+        const agentEdge = sessionAgentEdgeFor(row.agent)
+        if (agentEdge) {
+          agentEdgeIds.add(agentEdge.edge_id)
+          addActivity(activities, {
+            edge_id: agentEdge.edge_id,
+            source_id: 'agent_request_events',
+            occurred_at: occurredAt,
+            events: 1,
+            record_id: row.id ? `claudeclaw.agent_trace:${row.id}` : 'claudeclaw.agent_trace',
+            telemetry_kind: 'claudeclaw_agent_trace',
+            identity_confidence: 'high',
+            identity_reason: 'claudeclaw_source_agent_identity_resolved',
+            source_provided_identity: true,
+          })
+        }
+
+        const toolNames = [
+          ...parseTelemetryStringList(row.tools_executed),
+          ...parseTelemetryStringList(row.skills_used),
+        ]
+        const seenToolEdges = new Set<string>()
+        for (const toolName of toolNames) {
+          for (const edgeId of edgeIdsForToolText(toolName)) {
+            if (seenToolEdges.has(edgeId)) continue
+            seenToolEdges.add(edgeId)
+            for (const sourceId of sourceIdsFromAuditEdge(edgeId)) {
+              rememberSourceEdge(sourceId, edgeId)
+              addActivity(activities, {
+                edge_id: edgeId,
+                source_id: sourceId,
+                occurred_at: occurredAt,
+                events: 1,
+                record_id: row.id ? `claudeclaw.agent_trace:${row.id}:${sanitizeTelemetryText(toolName)}` : `claudeclaw.agent_trace:${sanitizeTelemetryText(toolName)}`,
+                telemetry_kind: 'claudeclaw_agent_trace_tool',
+                identity_confidence: 'high',
+                identity_reason: 'claudeclaw_source_tool_identity_resolved',
+                source_provided_identity: true,
+              })
+            }
+          }
+        }
+
+        const modelEdge = modelEdgeFor(
+          `${row.provider_path || ''} ${row.runtime || ''} ${row.requested_route || ''}`,
+          row.actual_model,
+        )
+        const inputTokens = nonNegativeNumber(row.prompt_tokens) || 0
+        const outputTokens = nonNegativeNumber(row.completion_tokens) || 0
+        if (modelEdge && (inputTokens > 0 || outputTokens > 0 || row.ok != null)) {
+          modelEdgeIds.add(modelEdge)
+          addActivity(activities, {
+            edge_id: modelEdge,
+            source_id: 'model_request_logs',
+            occurred_at: occurredAt,
+            requests: 1,
+            bytes_in: inputTokens,
+            bytes_out: outputTokens,
+            record_id: row.id ? `claudeclaw.agent_trace:${row.id}` : 'claudeclaw.agent_trace',
+            telemetry_kind: 'claudeclaw_agent_trace_model',
+            identity_confidence: 'high',
+            identity_reason: 'claudeclaw_source_model_identity_resolved',
+            source_provided_identity: true,
+          })
+        }
+        else if (row.actual_model || row.provider_path || row.runtime) {
+          missing.push(missingMapping({
+            source_id: 'model_request_logs',
+            telemetry_kind: 'claudeclaw_agent_trace_model',
+            observed_at: occurredAt,
+            table: 'claudeclaw.agent_trace',
+            provider: String(row.provider_path || row.runtime || row.actual_model || 'unknown'),
+            source_system: 'claudeclaw',
+            text: `${row.provider_path || ''} ${row.runtime || ''} ${row.actual_model || ''}`,
+          }))
+        }
+      }
+    }
+
+    if (tableExists(db, 'openrouter_requests')) {
+      const cols = columnsFor(db, 'openrouter_requests')
+      const rows = safeLimitRows(() => db!.prepare(`
+        SELECT
+          ${sqlExpr(cols, 'id')},
+          ${sqlExpr(cols, 'agent')},
+          ${sqlExpr(cols, 'task_type')},
+          ${sqlExpr(cols, 'requested_route')},
+          ${sqlExpr(cols, 'actual_model')},
+          ${sqlExpr(cols, 'prompt_tokens')},
+          ${sqlExpr(cols, 'completion_tokens')},
+          ${sqlExpr(cols, 'ok')},
+          ${sqlExpr(cols, 'ts')}
+        FROM openrouter_requests
+        ORDER BY ts DESC
+        LIMIT 160
+      `).all() as Array<Record<string, unknown>>)
+
+      for (const row of rows) {
+        const inputTokens = nonNegativeNumber(row.prompt_tokens) || 0
+        const outputTokens = nonNegativeNumber(row.completion_tokens) || 0
+        const ok = Number(row.ok)
+        const modelEdge = modelEdgeFor('openrouter', row.actual_model || row.requested_route)
+        const occurredAt = isoFromUnknownTimestamp(row.ts)
+        if (modelEdge && ok === 1 && (inputTokens > 0 || outputTokens > 0)) {
+          modelEdgeIds.add(modelEdge)
+          addActivity(activities, {
+            edge_id: modelEdge,
+            source_id: 'model_request_logs',
+            occurred_at: occurredAt,
+            requests: 1,
+            bytes_in: inputTokens,
+            bytes_out: outputTokens,
+            record_id: row.id ? `claudeclaw.openrouter_requests:${row.id}` : 'claudeclaw.openrouter_requests',
+            telemetry_kind: 'claudeclaw_openrouter_request',
+            identity_confidence: 'high',
+            identity_reason: 'claudeclaw_source_model_identity_resolved',
+            source_provided_identity: true,
+          })
+        }
+        else if (row.actual_model || row.requested_route) {
+          missing.push(missingMapping({
+            source_id: 'model_request_logs',
+            telemetry_kind: 'claudeclaw_openrouter_request',
+            observed_at: occurredAt,
+            table: 'claudeclaw.openrouter_requests',
+            provider: 'openrouter',
+            source_system: 'claudeclaw',
+            text: `${row.actual_model || ''} ${row.requested_route || ''}`,
+          }))
+        }
+      }
+    }
+
+    return [
+      agentEdgeIds.size
+        ? readableSource('agent_request_events', generatedAt, 'claudeclaw_agent_trace_read_only', Array.from(agentEdgeIds))
+        : unavailableSource('agent_request_events', generatedAt, 'claudeclaw_has_no_canonical_agent_activity'),
+      modelEdgeIds.size
+        ? readableSource('model_request_logs', generatedAt, 'claudeclaw_model_trace_read_only', Array.from(modelEdgeIds))
+        : unavailableSource('model_request_logs', generatedAt, 'claudeclaw_has_no_canonical_model_activity'),
+      ...Array.from(sourceEdgeIds.entries()).map(([sourceId, edgeIds]) => (
+        readableSource(sourceId, generatedAt, 'claudeclaw_tool_trace_read_only', Array.from(edgeIds))
+      )),
+    ]
+  } catch {
+    return [
+      unavailableSource('agent_request_events', generatedAt, 'claudeclaw_db_unreadable'),
+      unavailableSource('model_request_logs', generatedAt, 'claudeclaw_db_unreadable'),
+    ]
+  } finally {
+    try { db?.close() } catch { /* read-only close best effort */ }
+  }
 }
 
 function inspectAuditTables(
@@ -1674,10 +2020,12 @@ export function buildGatewayGraphTrafficFromReadOnlyDatabase({
   generatedAt = new Date().toISOString(),
   topology = buildGatewayGraphTopology(generatedAt),
   dbPath,
+  claudeClawDbPath = null,
 }: {
   generatedAt?: string
   topology?: GatewayGraphTopologyPayload
   dbPath?: string
+  claudeClawDbPath?: string | null
 } = {}) {
   if (!dbPath) {
     return buildGatewayGraphTrafficSnapshot({
@@ -1699,6 +2047,8 @@ export function buildGatewayGraphTrafficFromReadOnlyDatabase({
       inspectWebhookDeliveries(db, generatedAt, activities),
       inspectReports(db, generatedAt, activities),
       inspectGatewayActivities(db, generatedAt, activities),
+      ...inspectGatewaySessions(generatedAt, activities),
+      ...inspectClaudeClawReadOnlyTraffic(claudeClawDbPath, generatedAt, activities, missing),
       ...inspectAuditTables(db, generatedAt, activities, missing, topology),
     ]
     const sourceIds = new Set(sources.map((source) => source.source_id))
@@ -1728,5 +2078,6 @@ export function buildGatewayGraphTrafficFromRuntime(generatedAt = new Date().toI
     generatedAt,
     topology: buildGatewayGraphTopology(generatedAt),
     dbPath: config.dbPath,
+    claudeClawDbPath: DEFAULT_CLAUDECLAW_TRAFFIC_DB_PATH,
   })
 }

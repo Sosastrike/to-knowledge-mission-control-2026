@@ -81,6 +81,7 @@ const PROTECTED_KEYWORDS = [
   'docker',
   'env',
   'execute',
+  'extract',
   'firewall',
   'governance',
   'memory write',
@@ -114,6 +115,7 @@ const CONNECTOR_CREDENTIALS: Record<string, string[]> = {
   openrouter: ['OPENROUTER_API_KEY'],
   openai: ['OPENAI_API_KEY'],
   nvidia: ['NVIDIA_API_KEY', 'NGC_API_KEY', 'NVIDIA_NIM_API_KEY'],
+  gateway_ai_extraction: [],
 }
 
 function normalize(value: unknown): string {
@@ -138,8 +140,8 @@ function classifyTask(input: PreflightRequest): TaskType {
   if (/(credential|secret|\.env|api key|token)/.test(text)) return 'credential_setup'
   if (/(firewall|caddy|cloudflare|docker|restart|deploy|service|migration)/.test(text)) return 'deployment_or_infra'
   if (/(memory|brain sync|obsidian|governance)/.test(text)) return 'memory_or_brain_sync'
-  if (/(zapier|n8n|firecrawl|mcp|connector|send|post|upload|execute|run workflow)/.test(text)) {
-    return includesAny(text, ['send', 'post', 'upload', 'execute', 'write', 'create', 'delete', 'update'])
+  if (/(zapier|n8n|firecrawl|mcp|connector|ocr|ai extraction|extract pdf|extract invoice|extract contract|structured extraction|send|post|upload|execute|run workflow)/.test(text)) {
+    return includesAny(text, ['send', 'post', 'upload', 'execute', 'write', 'create', 'delete', 'update', 'extract'])
       ? 'connector_write'
       : 'connector_read'
   }
@@ -164,6 +166,7 @@ function detectConnector(input: PreflightRequest): string | null {
   }
 
   if (/(heygen|avatar video|talking avatar|create video|generate video)/.test(text)) return 'zapier'
+  if (/(ocr|ai extraction|extract pdf|extract invoice|extract contract|structured extraction|invoice extraction|contract extraction)/.test(text)) return 'gateway_ai_extraction'
   if (text.includes('mcp')) return 'mcp'
   if (text.includes('skills')) return 'skills'
   if (text.includes('hermes')) return 'hermes'
@@ -251,6 +254,14 @@ function buildDecision(input: PreflightRequest, taskType: TaskType, connector: s
 
 function routeFor(agentId: string, taskType: TaskType, connector: string | null) {
   const normalizedAgent = normalize(agentId) || 'agent_zero'
+
+  if (connector === 'gateway_ai_extraction') {
+    return {
+      primary: 'gateway_ai_extraction_proxy_owner_gated',
+      fallback: 'ocr_specialist_planning_packet',
+      notes: ['Call /api/gateway/extraction/ai from the browser, never an AI provider directly.', 'OCR direct-line activation is blocked until Jarvis concurrence and scoped runner wiring exist.'],
+    }
+  }
 
   if (connector === 'zapier') {
     return {

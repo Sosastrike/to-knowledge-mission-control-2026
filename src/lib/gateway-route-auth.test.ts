@@ -50,6 +50,7 @@ describe('Gateway route authentication policy', () => {
     const spaceAgentStatus = await import('@/app/api/bridge/space-agent/status/route')
     const spaceAgentTestChat = await import('@/app/api/bridge/space-agent/test-chat/route')
     const spaceAgentResearch = await import('@/app/api/gateway/space-agent/research/route')
+    const aiExtraction = await import('@/app/api/gateway/extraction/ai/route')
     const spaceAgentJob = await import('@/app/api/gateway/space-agent/jobs/[id]/route')
     const spaceAgentBrowserStatus = await import('@/app/api/gateway/space-agent/browser/status/route')
     const spaceAgentBrowserJobs = await import('@/app/api/gateway/space-agent/browser/jobs/route')
@@ -116,6 +117,11 @@ describe('Gateway route authentication policy', () => {
       spaceAgentResearch.POST(new NextRequest('http://localhost/api/gateway/space-agent/research', {
         method: 'POST',
         body: JSON.stringify({ request: 'Research a public source.' }),
+      })),
+      aiExtraction.GET(new NextRequest('http://localhost/api/gateway/extraction/ai')),
+      aiExtraction.POST(new NextRequest('http://localhost/api/gateway/extraction/ai', {
+        method: 'POST',
+        body: JSON.stringify({ request: 'Extract invoice fields' }),
       })),
       spaceAgentJob.GET(new NextRequest('http://localhost/api/gateway/space-agent/jobs/job-1'), {
         params: Promise.resolve({ id: 'job-1' }),

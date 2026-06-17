@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createGatewayRegistryFromAgentNetwork } from './gateway-model'
 import {
   buildAgentHubAgentAuditPayload,
@@ -218,6 +219,7 @@ describe('Gateway Agent Hub', () => {
       status: 'partial_go',
       live_interface_proven: true,
       interface: {
+        mission_control_surface: '/gateway/agent-hub/paperclip',
         tailnet_url: 'http://100.116.35.95:3100/ECO/dashboard',
         ui_mode: 'tailnet_authenticated',
         tailnet_ui_proven: true,
@@ -227,6 +229,10 @@ describe('Gateway Agent Hub', () => {
       role: 'Independent Specialized Agent',
       status: 'configured',
       called_true_proven: true,
+      interface: {
+        mission_control_surface: '/gateway/agent-hub/spaceagent/config',
+        ui_mode: 'mission_control_proxy',
+      },
       routes: { bridge_status: '/api/bridge/spaceagent/status' },
     })
     expect(payload.gateway_route_cdp_truth.routes).toEqual(expect.arrayContaining([
@@ -243,6 +249,10 @@ describe('Gateway Agent Hub', () => {
       role: 'Full Access Gateway Agent',
       status: 'full_access_delegated',
       called_true_proven: true,
+      interface: {
+        mission_control_surface: '/gateway/agent-hub/pi/config',
+        ui_mode: 'mission_control_proxy',
+      },
       routes: {
         bridge_status: '/api/bridge/pi/status',
       },
@@ -362,7 +372,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('does not render stale Bridge-not-active copy on the live Agent Hub control center', () => {
-    const source = readFileSync(new URL('../components/gateway-agent-hub/AgentHubControlCenter.tsx', import.meta.url), 'utf8')
+    const source = readFileSync(join(process.cwd(), 'src/components/gateway-agent-hub/AgentHubControlCenter.tsx'), 'utf8')
 
     expect(source).toContain('/api/bridge/mission-control/stale-bundle-health')
     expect(source).toContain('Mission Control Runtime Health')
@@ -413,7 +423,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('keeps owner-visible Agent Hub handoff data from overriding Ron live truth', () => {
-    const source = readFileSync(new URL('../../public/design/gateway/shared/agent-data.js', import.meta.url), 'utf8')
+    const source = readFileSync(join(process.cwd(), 'public/design/gateway/shared/agent-data.js'), 'utf8')
     const ronBlock = source.slice(source.indexOf("id: 'hermes'"), source.indexOf("id: 'space-agent'"))
 
     expect(ronBlock).toContain("name: 'Ron Weasley'")
@@ -428,7 +438,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('renders the Agent Hub auto-update control plane on the live Gateway shell rail', () => {
-    const source = readFileSync(new URL('../components/gateway/GatewayShell.tsx', import.meta.url), 'utf8')
+    const source = readFileSync(join(process.cwd(), 'src/components/gateway/GatewayShell.tsx'), 'utf8')
 
     expect(source).toContain('Agent Auto-Update Control Plane')
     expect(source).toContain('/api/bridge/agent-updates/status')

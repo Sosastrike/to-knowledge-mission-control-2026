@@ -1085,18 +1085,75 @@ describe('gateway graph traffic snapshot', () => {
 
     expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
       traffic_status: 'active',
+      traffic_source_label: 'active_trusted_heartbeat',
+      traffic_label: 'Active · trusted heartbeat',
       events_last_60s: 1,
       telemetry_kind: 'claudeclaw_agent_memory_usage',
+      cadence_hold_status: 'heartbeat_recent',
+      active_by: 'trusted_heartbeat',
+      last_trusted_heartbeat_at: '2026-06-09T14:58:05.000Z',
+      heartbeat_age_seconds: 115,
+      active_window_seconds: 180,
+      stale_threshold_seconds: 180,
+      primary_reason: 'active_trusted_heartbeat',
     })
     expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.knowledge.brain.sync')).toMatchObject({
       traffic_status: 'active',
+      traffic_source_label: 'active_trusted_heartbeat',
       events_last_60s: 1,
       telemetry_kind: 'claudeclaw_knowledge_graph_event',
+      cadence_hold_status: 'heartbeat_recent',
+      active_by: 'trusted_heartbeat',
+      last_trusted_heartbeat_at: '2026-06-09T14:58:05.000Z',
+      heartbeat_age_seconds: 115,
+      active_window_seconds: 180,
+      stale_threshold_seconds: 180,
     })
     expect(snapshot.edges.find((edge) => edge.edge_id === 'model.openrouter_to_gateway')).toMatchObject({
       traffic_status: 'ready_no_recent_traffic',
+      traffic_source_label: 'ready_no_recent_traffic',
       requests_last_60s: 0,
       telemetry_kind: 'model_run',
+      cadence_hold_status: 'none',
+      active_by: null,
+      last_trusted_heartbeat_at: null,
+      heartbeat_age_seconds: null,
+      active_window_seconds: 60,
+    })
+  })
+
+  it('expires trusted ClaudeClaw heartbeat dots after the cadence hold window', () => {
+    const topology = buildGatewayGraphTopology('2026-06-09T15:00:00.000Z')
+    const snapshot = buildGatewayGraphTrafficSnapshot({
+      generatedAt: '2026-06-09T15:00:00.000Z',
+      topology,
+      trustedSources: [
+        { source_id: 'agent_request_events', status: 'readable', inspected_at: '2026-06-09T15:00:00.000Z' },
+      ],
+      edgeActivity: [
+        {
+          edge_id: 'highway.inputs.agent.zero',
+          events: 1,
+          occurred_at: '2026-06-09T14:56:59.000Z',
+          source_id: 'agent_request_events',
+          telemetry_kind: 'claudeclaw_agent_memory_usage',
+        },
+      ],
+    })
+
+    expect(snapshot.edges.find((edge) => edge.edge_id === 'highway.inputs.agent.zero')).toMatchObject({
+      traffic_status: 'stale',
+      traffic_source_label: 'stale_telemetry',
+      traffic_label: 'Ready · telemetry stale',
+      events_last_60s: 0,
+      telemetry_kind: 'claudeclaw_agent_memory_usage',
+      cadence_hold_status: 'heartbeat_expired',
+      active_by: null,
+      last_trusted_heartbeat_at: '2026-06-09T14:56:59.000Z',
+      heartbeat_age_seconds: 181,
+      active_window_seconds: 180,
+      stale_threshold_seconds: 180,
+      primary_reason: 'stale_telemetry',
     })
   })
 

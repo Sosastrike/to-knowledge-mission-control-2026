@@ -50,6 +50,17 @@ export type GatewayGraphTrafficClassification =
 
 export type GatewayGraphTrafficType = 'event' | 'request' | 'mixed' | 'none'
 
+export type GatewayGraphTrafficSourceLabel =
+  | 'active_direct_event'
+  | 'active_trusted_heartbeat'
+  | 'ready_no_recent_traffic'
+  | 'stale_telemetry'
+  | 'unavailable_telemetry'
+
+export type GatewayGraphTrafficActiveBy = 'direct_event' | 'trusted_heartbeat' | null
+
+export type GatewayGraphTrafficCadenceHoldStatus = 'none' | 'heartbeat_recent' | 'heartbeat_expired'
+
 export type GatewayGraphMissingTrafficMappingClassification =
   | 'missing_edge_id'
   | 'unknown_source_system'
@@ -123,9 +134,15 @@ export type GatewayGraphTrafficEdge = {
   last_event_at: string | null
   last_request_at: string | null
   traffic_status: GatewayGraphTrafficStatus
+  traffic_source_label: GatewayGraphTrafficSourceLabel
   traffic_classification: GatewayGraphTrafficClassification
   traffic_label: string
   traffic_type: GatewayGraphTrafficType
+  active_by: GatewayGraphTrafficActiveBy
+  active_window_seconds: number
+  last_trusted_heartbeat_at: string | null
+  heartbeat_age_seconds: number | null
+  cadence_hold_status: GatewayGraphTrafficCadenceHoldStatus
   telemetry_source: GatewayGraphTrafficSourceId | null
   source_record_id: string | null
   telemetry_kind: string | null
@@ -193,17 +210,31 @@ const DEFAULT_STALE_THRESHOLD_SECONDS = 300
 const DEFAULT_ACTIVE_TRAFFIC_WINDOW_SECONDS = 60
 const PERIODIC_CLAUDECLAW_ACTIVE_TRAFFIC_WINDOW_SECONDS = 180
 
-function activeTrafficWindowSecondsForActivity(activity: GatewayGraphEdgeActivity | null): number {
+function isTrustedHeartbeatActivity(activity: GatewayGraphEdgeActivity | null): boolean {
   const kind = activity?.telemetry_kind || ''
-  if (
+  return (
     kind === 'claudeclaw_agent_memory_usage' ||
     kind === 'claudeclaw_agent_memory_usage_model' ||
     kind === 'claudeclaw_agent_memory_usage_tool' ||
     kind === 'claudeclaw_knowledge_graph_event'
-  ) {
+  )
+}
+
+function activeTrafficWindowSecondsForActivity(activity: GatewayGraphEdgeActivity | null): number {
+  if (isTrustedHeartbeatActivity(activity)) {
     return PERIODIC_CLAUDECLAW_ACTIVE_TRAFFIC_WINDOW_SECONDS
   }
   return DEFAULT_ACTIVE_TRAFFIC_WINDOW_SECONDS
+}
+
+function staleThresholdSecondsForActivity(
+  activity: GatewayGraphEdgeActivity | null,
+  edge: GatewayGraphTopologyEdge,
+): number {
+  if (isTrustedHeartbeatActivity(activity)) {
+    return activeTrafficWindowSecondsForActivity(activity)
+  }
+  return staleThresholdSecondsForEdge(edge)
 }
 
 function staleThresholdSecondsForEdge(edge: GatewayGraphTopologyEdge): number {
@@ -220,6 +251,29 @@ function unavailableClassificationForEdge(edge: GatewayGraphTopologyEdge): Gatew
     return 'connector_has_no_event_log'
   }
   return 'telemetry_source_not_implemented'
+}
+
+function trafficSourceLabelFor(input: {
+  active: boolean
+  stale: boolean
+  ready: boolean
+  trustedHeartbeat: boolean
+}): GatewayGraphTrafficSourceLabel {
+  if (input.active) return input.trustedHeartbeat ? 'active_trusted_heartbeat' : 'active_direct_event'
+  if (input.stale) return 'stale_telemetry'
+  if (input.ready) return 'ready_no_recent_traffic'
+  return 'unavailable_telemetry'
+}
+
+function trafficLabelForSourceLabel(sourceLabel: GatewayGraphTrafficSourceLabel): string {
+  const labels: Record<GatewayGraphTrafficSourceLabel, string> = {
+    active_direct_event: 'Live traffic',
+    active_trusted_heartbeat: 'Active · trusted heartbeat',
+    ready_no_recent_traffic: 'Ready · no recent traffic',
+    stale_telemetry: 'Ready · telemetry stale',
+    unavailable_telemetry: 'Traffic source unavailable',
+  }
+  return labels[sourceLabel]
 }
 
 function trafficLabelFor(classification: GatewayGraphTrafficClassification): string {
@@ -318,9 +372,15 @@ function trafficEdgeFromTopology(input: {
       last_event_at: null,
       last_request_at: null,
       traffic_status: 'unavailable',
+      traffic_source_label: 'unavailable_telemetry',
       traffic_classification: trafficClassification,
       traffic_label: trafficLabelFor(trafficClassification),
       traffic_type: 'none',
+      active_by: null,
+      active_window_seconds: DEFAULT_ACTIVE_TRAFFIC_WINDOW_SECONDS,
+      last_trusted_heartbeat_at: null,
+      heartbeat_age_seconds: null,
+      cadence_hold_status: 'none',
       telemetry_source: null,
       source_record_id: null,
       telemetry_kind: null,
@@ -337,14 +397,24 @@ function trafficEdgeFromTopology(input: {
     ? sources.find((item) => item.source_id === activity.source_id) || sources[0]
     : sources[0]
   const ageSeconds = activity ? secondsBetween(input.generatedAt, activity.occurred_at) : Number.POSITIVE_INFINITY
-  const staleThresholdSeconds = staleThresholdSecondsForEdge(input.edge)
   const activeTrafficWindowSeconds = activeTrafficWindowSecondsForActivity(activity)
+  const staleThresholdSeconds = staleThresholdSecondsForActivity(activity, input.edge)
   const recent = Boolean(activity && ageSeconds <= activeTrafficWindowSeconds)
   const events = recent ? Math.max(0, activity?.events || 0) : 0
   const requests = recent ? Math.max(0, activity?.requests || 0) : 0
   const active = events + requests > 0
   const stale = Boolean(activity && !active && ageSeconds >= staleThresholdSeconds)
   const ready = READY_STATUSES.includes(input.edge.status)
+  const trustedHeartbeat = isTrustedHeartbeatActivity(activity)
+  const trafficSourceLabel = trafficSourceLabelFor({ active, stale, ready, trustedHeartbeat })
+  const activeBy: GatewayGraphTrafficActiveBy = active ? (trustedHeartbeat ? 'trusted_heartbeat' : 'direct_event') : null
+  const cadenceHoldStatus: GatewayGraphTrafficCadenceHoldStatus = trustedHeartbeat
+    ? active
+      ? 'heartbeat_recent'
+      : 'heartbeat_expired'
+    : 'none'
+  const heartbeatAgeSeconds = trustedHeartbeat && Number.isFinite(ageSeconds) ? ageSeconds : null
+  const lastTrustedHeartbeatAt = trustedHeartbeat ? activity?.occurred_at || null : null
   const trafficClassification: GatewayGraphTrafficClassification = active
     ? 'active_recent_traffic'
     : stale
@@ -371,9 +441,15 @@ function trafficEdgeFromTopology(input: {
         : ready
           ? 'ready_no_recent_traffic'
           : 'unavailable',
+    traffic_source_label: trafficSourceLabel,
     traffic_classification: trafficClassification,
-    traffic_label: trafficLabelFor(trafficClassification),
+    traffic_label: trafficLabelForSourceLabel(trafficSourceLabel),
     traffic_type: trafficTypeFor(activity),
+    active_by: activeBy,
+    active_window_seconds: activeTrafficWindowSeconds,
+    last_trusted_heartbeat_at: lastTrustedHeartbeatAt,
+    heartbeat_age_seconds: heartbeatAgeSeconds,
+    cadence_hold_status: cadenceHoldStatus,
     telemetry_source: source.source_id,
     source_record_id: activity?.record_id || null,
     telemetry_kind: activity?.telemetry_kind || null,
@@ -382,9 +458,9 @@ function trafficEdgeFromTopology(input: {
     stale_threshold_seconds: staleThresholdSeconds,
     recommended_next_action: recommendedNextActionForEdge(input.edge, trafficClassification),
     primary_reason: active
-      ? 'trusted_recent_traffic_observed'
+      ? trafficSourceLabel
       : stale
-        ? 'telemetry_stale'
+        ? 'stale_telemetry'
         : ready
           ? 'ready_no_recent_traffic'
           : 'traffic_data_unavailable',

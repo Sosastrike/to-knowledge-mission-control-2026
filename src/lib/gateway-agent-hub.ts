@@ -580,6 +580,12 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
   },
 ]
 
+function missionControlSurfaceForAgent(definition: AgentHubDefinition): string {
+  if (definition.id === 'paperclip') return '/gateway/agent-hub/paperclip'
+  if (definition.id === 'pi-mono') return '/gateway/agent-hub/pi/config'
+  return `/gateway/agent-hub/${definition.id}/config`
+}
+
 const SUPPORTING_RUNTIME_NODE_IDS = [
   'gateway',
   'paperclip',
@@ -1139,7 +1145,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
         bridge_status: definition.bridgeStatusRoute,
       },
       interface: {
-        mission_control_surface: '/gateway/agent-hub' + (definition.id === 'paperclip' ? '/paperclip' : ''),
+        mission_control_surface: missionControlSurfaceForAgent(definition),
         owner_access: definition.interfaceSummary,
         local_ui_url: definition.localUiUrl,
         tailnet_url: definition.tailnetUrl,

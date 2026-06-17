@@ -158,6 +158,7 @@ const REQUIRED_MODEL_PROVIDERS: Array<{ id: string; name: string; aliases: strin
   { id: 'ollama', name: 'Ollama', aliases: ['ollama'], bestUseCase: 'Local model fallback when configured.' },
   { id: 'nvidia', name: 'NVIDIA', aliases: ['nvidia'], bestUseCase: 'GPU/provider-backed model routes when configured.' },
   { id: 'groq', name: 'Groq', aliases: ['groq'], bestUseCase: 'Low-latency model route when configured.' },
+  { id: 'xai', name: 'xAI Grok', aliases: ['xai', 'grok'], bestUseCase: 'Grok model route when configured.' },
   { id: 'gemini', name: 'Gemini', aliases: ['gemini', 'google'], bestUseCase: 'Google model route when configured.' },
 ]
 

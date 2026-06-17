@@ -7,6 +7,7 @@ import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
 import { evaluateHermesPolicy } from '@/lib/hermes-policy'
 import { executeJarvisAdapter, type JarvisExecutionInput, type JarvisExecutionResult } from '@/lib/jarvis-execution-router'
 import { buildJarvisSystemCommandRegistry } from '@/lib/jarvis-system-command-registry'
+import { buildJarvisProviderModelReadiness } from '@/lib/jarvis-full-go-command-center'
 import { recordJarvisAudit } from '@/lib/jarvis-audit'
 
 type AgentLine = {
@@ -256,6 +257,7 @@ export function buildHermesSystemCommandRegistry() {
 
 export function buildHermesFullAccessStatus() {
   const registry = buildHermesSystemCommandRegistry()
+  const providerModelReadiness = buildJarvisProviderModelReadiness()
   return {
     route: 'bridge.hermes.full-access.status',
     identity: RON_WEASLEY_IDENTITY.canonical_name,
@@ -267,6 +269,8 @@ export function buildHermesFullAccessStatus() {
     mode: 'jarvis_delegated_parity',
     same_visibility_as_jarvis: true,
     same_certified_adapter_surface_as_jarvis: true,
+    same_provider_model_surface_as_jarvis: true,
+    provider_model_access: providerModelReadiness,
     execution_authority: 'jarvis_signed_exact_scope_delegation',
     direct_line_route: '/api/bridge/agent-lines/status',
     command_registry_route: '/api/bridge/hermes/system-command-registry',

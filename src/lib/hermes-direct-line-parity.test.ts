@@ -231,6 +231,15 @@ describe('Hermes full access direct-line parity', () => {
     expect(status.status).toBe('FULL_ACCESS_DELEGATED')
     expect(status.same_visibility_as_jarvis).toBe(true)
     expect(status.same_certified_adapter_surface_as_jarvis).toBe(true)
+    expect(status.same_provider_model_surface_as_jarvis).toBe(true)
+    expect(status.provider_model_access.providers.map((provider) => provider.provider)).toEqual(expect.arrayContaining([
+      'openai',
+      'nvidia',
+      'groq',
+      'xai',
+      'ollama',
+      'openrouter',
+    ]))
     expect(status.execution_authority).toBe('jarvis_signed_exact_scope_delegation')
     expect(status.jarvis_remains_commander).toBe(true)
     expect(status.hermes_replaces_jarvis).toBe(false)

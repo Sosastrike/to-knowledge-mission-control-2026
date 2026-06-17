@@ -102,28 +102,41 @@ export function getEffectiveToolGroups(): Record<string, readonly string[]> {
 
 const COMMON_DENY = ['clawhub', 'cron', 'gateway', 'nodes']
 
-const SONNET_FALLBACKS = [
+const dedupeModelRoutes = (routes: string[]) => Array.from(new Set(routes))
+
+const UNIVERSAL_MODEL_FALLBACKS = [
+  'openrouter/openai/gpt-5.4-mini',
+  'openai/gpt-4.1-mini',
+  'google/gemini-2.5-flash',
+  'groq/llama-3.3-70b-versatile',
+  'xai/grok-3',
+  'nvidia/llama-3.1-nemotron-70b-instruct',
+  'ollama/qwen2.5-coder:14b',
+]
+
+const SONNET_FALLBACKS = dedupeModelRoutes([
   'openrouter/anthropic/claude-sonnet-4',
+  ...UNIVERSAL_MODEL_FALLBACKS,
   'moonshot/kimi-k2-thinking',
   'openrouter/moonshotai/kimi-k2.5',
   'nvidia/moonshotai/kimi-k2-instruct',
   'openai/codex-mini-latest',
-  'ollama/qwen2.5-coder:14b',
-]
+])
 
-const OPUS_FALLBACKS = [
+const OPUS_FALLBACKS = dedupeModelRoutes([
   'anthropic/claude-sonnet-4-20250514',
+  ...UNIVERSAL_MODEL_FALLBACKS,
   'moonshot/kimi-k2-thinking',
   'nvidia/moonshotai/kimi-k2-instruct',
   'openrouter/moonshotai/kimi-k2.5',
   'openai/codex-mini-latest',
-]
+])
 
-const HAIKU_FALLBACKS = [
+const HAIKU_FALLBACKS = dedupeModelRoutes([
   'anthropic/claude-sonnet-4-20250514',
-  'ollama/qwen2.5-coder:14b',
+  ...UNIVERSAL_MODEL_FALLBACKS,
   'openai/codex-mini-latest',
-]
+])
 
 export const AGENT_TEMPLATES: AgentTemplate[] = [
   {

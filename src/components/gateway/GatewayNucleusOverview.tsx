@@ -155,6 +155,34 @@ type GatewayModelsPayload = {
   }
 }
 
+type GatewayTrafficStatus = 'active' | 'ready_no_recent_traffic' | 'stale' | 'unavailable'
+
+type GatewayTrafficEdge = {
+  edge_id: string
+  route_group?: string
+  events_last_60s?: number
+  requests_last_60s?: number
+  last_event_at?: string | null
+  last_request_at?: string | null
+  traffic_status?: GatewayTrafficStatus
+  traffic_label?: string
+  traffic_type?: string
+  telemetry_source?: string | null
+  recommended_next_action?: string
+}
+
+type GatewayTrafficPayload = {
+  generated_at?: string
+  traffic_source?: 'live' | 'partial' | 'unavailable'
+  edges?: GatewayTrafficEdge[]
+  summary?: {
+    active_traffic_edges?: number
+    ready_no_recent_traffic_edges?: number
+    stale_telemetry_edges?: number
+    unavailable_telemetry_edges?: number
+  }
+}
+
 const APIs = {
   status: '/api/gateway/status',
   nodes: '/api/gateway/nodes',
@@ -163,17 +191,40 @@ const APIs = {
   decisions: '/api/gateway/dispatcher-decisions',
   bridgeSessions: '/api/gateway/bridge-sessions',
   models: '/api/gateway/models',
+  traffic: '/api/gateway/graph/traffic',
 } as const
 
-const MODEL_PIPELINE_TARGETS = ['model_gemini', 'model_groq', 'model_xai_grok', 'model_nvidia'] as const
-const MODEL_PROVIDER_BY_TARGET: Record<typeof MODEL_PIPELINE_TARGETS[number], string> = {
-  model_gemini: 'gemini',
-  model_groq: 'groq',
-  model_xai_grok: 'xai_grok',
-  model_nvidia: 'nvidia',
-}
+const GATEWAY_TRAFFIC_REFRESH_MS = 3000
+
+const MODEL_PIPELINE_TARGETS = [
+  { target: 'model_openrouter', providerId: 'openrouter', edgeId: 'model.openrouter_to_gateway', label: 'OpenRouter' },
+  { target: 'model_openai', providerId: 'openai', edgeId: 'model.openai_codex_to_gateway', label: 'OpenAI / Codex' },
+  { target: 'model_claude', providerId: 'anthropic', edgeId: 'model.claude_to_gateway', label: 'Claude account/API' },
+  { target: 'model_ollama', providerId: 'ollama', edgeId: 'model.ollama_to_gateway', label: 'Ollama' },
+  { target: 'model_gemini', providerId: 'gemini', edgeId: 'model.gemini_to_gateway', label: 'Gemini' },
+  { target: 'model_groq', providerId: 'groq', edgeId: 'model.groq_to_gateway', label: 'Groq' },
+  { target: 'model_xai_grok', providerId: 'xai_grok', edgeId: 'model.xai_grok_to_gateway', label: 'xAI Grok' },
+  { target: 'model_nvidia', providerId: 'nvidia', edgeId: 'model.nvidia_to_gateway', label: 'NVIDIA' },
+] as const
+
+const MODEL_PROVIDER_BY_TARGET = Object.fromEntries(
+  MODEL_PIPELINE_TARGETS.map(({ target, providerId }) => [target, providerId]),
+) as Record<string, string>
+
+const INTEGRATION_TRAFFIC_TARGETS = [
+  { edgeId: 'highway.knowledge.brain.sync', label: 'Brain Sync' },
+  { edgeId: 'highway.knowledge.brain.obsidian', label: 'Obsidian' },
+  { edgeId: 'connector.mcp_servers_to_gateway', label: 'MCPs' },
+  { edgeId: 'connector.tools_registry_to_gateway', label: 'Tools / Skills' },
+  { edgeId: 'agentmail.gateway_to_agentmail', label: 'AgentMail' },
+  { edgeId: 'connector.google_drive_to_gateway', label: 'Google Drive' },
+  { edgeId: 'connector.zapier_to_gateway', label: 'Zapier' },
+  { edgeId: 'connector.firecrawl_to_gateway', label: 'FireCrawl' },
+] as const
 
 const XAI_GROK_PERMISSION_BLOCKER = 'xai_grok_permission_or_billing_required'
+const GATEWAY_RUNTIME_MODEL_BLOCKER = 'model_execution_requires_gateway_runtime_bridge_and_cost_governor'
+const MODEL_EXECUTION_BRIDGE_SESSION_BLOCKER_ALIAS = 'model_execution_requires_bridge_session_and_cost_governor'
 const XAI_GROK_CONSOLE_NOTE = 'Check xAI Console: confirm the API key is active, same team, API billing or prepaid credits are active, API permission is enabled, the team/key is not blocked, and mTLS is not required.'
 
 async function loadJson<T>(url: string): Promise<T> {
@@ -193,9 +244,51 @@ function boolFlag(value: boolean | undefined): string {
   return value ? 'yes' : 'no'
 }
 
-function providerForTarget(providers: GatewayModelProvider[], target: typeof MODEL_PIPELINE_TARGETS[number]): GatewayModelProvider | null {
-  const providerId = MODEL_PROVIDER_BY_TARGET[target]
+function providerForTarget(providers: GatewayModelProvider[], providerId: string): GatewayModelProvider | null {
   return providers.find((provider) => provider.id === providerId) || null
+}
+
+function trafficClass(edge: GatewayTrafficEdge | null | undefined): string {
+  if (!edge) return 'unavailable'
+  if (edge.traffic_status === 'active') return 'active'
+  if (edge.traffic_status === 'stale') return 'stale'
+  if (edge.traffic_status === 'ready_no_recent_traffic') return 'idle'
+  return 'unavailable'
+}
+
+function trafficLabel(edge: GatewayTrafficEdge | null | undefined): string {
+  if (!edge) return 'Traffic source unavailable'
+  if (edge.traffic_status === 'active') {
+    const count = (edge.requests_last_60s || 0) + (edge.events_last_60s || 0)
+    return `${edge.traffic_label || 'Live traffic'} · ${count} pulse${count === 1 ? '' : 's'} / 60s`
+  }
+  return edge.traffic_label || 'Ready · no recent traffic'
+}
+
+function lastTrafficSeen(edge: GatewayTrafficEdge | null | undefined): string {
+  if (!edge) return 'no source'
+  return edge.last_request_at || edge.last_event_at || 'no recent event'
+}
+
+function agentTrafficEdgeId(node: GatewayNode): string | null {
+  const id = node.id.replace(/_/g, '.').toLowerCase()
+  if (id === 'agent.zero') return 'highway.inputs.agent.zero'
+  if (id === 'hermes') return 'highway.inputs.agent.hermes'
+  if (id === 'space.agent') return 'highway.inputs.agent.space'
+  if (id === 'pi') return 'highway.inputs.agent.pi'
+  if (id === 'paperclip') return 'highway.inputs.agent.paperclip'
+  if (id === 'brain.sync') return 'highway.knowledge.brain.sync'
+  return null
+}
+
+function TrafficRail({ edge }: { edge: GatewayTrafficEdge | null | undefined }) {
+  return (
+    <div className={`traffic-rail ${trafficClass(edge)}`} aria-label={trafficLabel(edge)} title={`${trafficLabel(edge)} · ${lastTrafficSeen(edge)}`}>
+      <span className="traffic-dot" />
+      <span className="traffic-dot" />
+      <span className="traffic-dot" />
+    </div>
+  )
 }
 
 function normalizedProviderBlocker(provider: GatewayModelProvider | null): string | null {
@@ -227,7 +320,7 @@ function providerBlocker(provider: GatewayModelProvider | null, node: GatewayNod
   if (blocker === 'token_governor_not_proven') {
     return 'read/status connected; token/cost governor proof required before paid execution'
   }
-  return blocker || 'model_execution_requires_gateway_runtime_bridge_and_cost_governor'
+  return blocker || GATEWAY_RUNTIME_MODEL_BLOCKER || MODEL_EXECUTION_BRIDGE_SESSION_BLOCKER_ALIAS
 }
 
 function providerPipelineColor(provider: GatewayModelProvider | null, node: GatewayNode | null): string {
@@ -251,6 +344,7 @@ function useGatewayOverviewData(): ApiState<{
   decisions: GatewayDecisionsPayload
   bridgeSessions: GatewayBridgeSessionsPayload
   models: GatewayModelsPayload
+  traffic: GatewayTrafficPayload
 }> {
   const [state, setState] = useState<ApiState<{
     status: GatewayStatusPayload
@@ -260,28 +354,37 @@ function useGatewayOverviewData(): ApiState<{
     decisions: GatewayDecisionsPayload
     bridgeSessions: GatewayBridgeSessionsPayload
     models: GatewayModelsPayload
+    traffic: GatewayTrafficPayload
   }>>({ loading: true, error: null, data: null })
 
   useEffect(() => {
     let cancelled = false
-    setState({ loading: true, error: null, data: null })
-    Promise.all([
-      loadJson<GatewayStatusPayload>(APIs.status),
-      loadJson<GatewayNodesPayload>(APIs.nodes),
-      loadJson<GatewayRegistryPayload>(APIs.registry),
-      loadJson<MiniAgentPayload>(APIs.miniAgents),
-      loadJson<GatewayDecisionsPayload>(APIs.decisions),
-      loadJson<GatewayBridgeSessionsPayload>(APIs.bridgeSessions),
-      loadJson<GatewayModelsPayload>(APIs.models),
-    ])
-      .then(([status, nodes, registry, miniAgents, decisions, bridgeSessions, models]) => {
-        if (!cancelled) setState({ loading: false, error: null, data: { status, nodes, registry, miniAgents, decisions, bridgeSessions, models } })
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setState({ loading: false, error: error instanceof Error ? error.message : 'backend_required', data: null })
-      })
+
+    const refresh = (initial = false) => {
+      if (initial) setState({ loading: true, error: null, data: null })
+      Promise.all([
+        loadJson<GatewayStatusPayload>(APIs.status),
+        loadJson<GatewayNodesPayload>(APIs.nodes),
+        loadJson<GatewayRegistryPayload>(APIs.registry),
+        loadJson<MiniAgentPayload>(APIs.miniAgents),
+        loadJson<GatewayDecisionsPayload>(APIs.decisions),
+        loadJson<GatewayBridgeSessionsPayload>(APIs.bridgeSessions),
+        loadJson<GatewayModelsPayload>(APIs.models),
+        loadJson<GatewayTrafficPayload>(APIs.traffic),
+      ])
+        .then(([status, nodes, registry, miniAgents, decisions, bridgeSessions, models, traffic]) => {
+          if (!cancelled) setState({ loading: false, error: null, data: { status, nodes, registry, miniAgents, decisions, bridgeSessions, models, traffic } })
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) setState((previous) => ({ loading: false, error: error instanceof Error ? error.message : 'backend_required', data: previous.data }))
+        })
+    }
+
+    refresh(true)
+    const interval = window.setInterval(() => refresh(false), GATEWAY_TRAFFIC_REFRESH_MS)
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 
@@ -303,14 +406,16 @@ export default function GatewayNucleusOverview() {
   const bridgeSessions = state.data?.bridgeSessions.bridge_sessions || []
   const bridgeSummary = state.data?.bridgeSessions.summary
   const modelProviders = state.data?.models.providers || []
+  const trafficEdges = state.data?.traffic.edges || []
+  const trafficByEdgeId = useMemo(() => new Map(trafficEdges.map((edge) => [edge.edge_id, edge])), [trafficEdges])
   const miniAgentCount = (state.data?.miniAgents.mini_agents || state.data?.miniAgents.agents || state.data?.miniAgents.proposals || []).length
   const totals = state.data?.status.totals
   const modelPipelineEdges = useMemo(() => {
     const nodesById = new Map([...registryNodes, ...nodes].map((node) => [node.id, node]))
-    return MODEL_PIPELINE_TARGETS.map((target) => {
-      const edge = registryEdges.find((edge) => edge.source === 'llm_gateway' && edge.target === target)
-      const provider = providerForTarget(modelProviders, target)
-      return { target, edge, node: nodesById.get(target) || null, provider }
+    return MODEL_PIPELINE_TARGETS.map((item) => {
+      const edge = registryEdges.find((edge) => edge.source === 'llm_gateway' && edge.target === item.target)
+      const provider = providerForTarget(modelProviders, item.providerId)
+      return { ...item, edge, node: nodesById.get(item.target) || null, provider }
     }).filter((item) => item.edge || item.node || item.provider)
   }, [modelProviders, nodes, registryEdges, registryNodes])
 
@@ -355,6 +460,20 @@ export default function GatewayNucleusOverview() {
         .gateway-nucleus-overview .decision strong{font-size:12px;color:#f8fafc}
         .gateway-nucleus-overview .decision span{font-size:11px;color:#9aa6b7}
         .gateway-nucleus-overview .pipeline-node{border-color:rgba(109,232,221,.18);background:linear-gradient(180deg,rgba(17,25,35,.98),rgba(10,15,24,.98))}
+        .gateway-nucleus-overview .traffic-rail{position:relative;height:5px;border-radius:999px;overflow:hidden;background:rgba(148,163,184,.12);border:1px solid rgba(255,255,255,.08)}
+        .gateway-nucleus-overview .traffic-rail::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(118,242,227,.28),transparent);opacity:.32}
+        .gateway-nucleus-overview .traffic-rail.active::before{opacity:.75}
+        .gateway-nucleus-overview .traffic-rail.stale::before{background:linear-gradient(90deg,transparent,rgba(245,181,10,.28),transparent);opacity:.42}
+        .gateway-nucleus-overview .traffic-rail.unavailable::before{background:linear-gradient(90deg,transparent,rgba(148,163,184,.14),transparent);opacity:.24}
+        .gateway-nucleus-overview .traffic-dot{position:absolute;top:50%;left:-8px;width:7px;height:7px;border-radius:999px;background:#76f2e3;box-shadow:0 0 12px rgba(118,242,227,.82);opacity:0;transform:translateY(-50%)}
+        .gateway-nucleus-overview .traffic-rail.active .traffic-dot{animation:gatewayTrafficDot 1.9s linear infinite;opacity:1}
+        .gateway-nucleus-overview .traffic-rail.active .traffic-dot:nth-child(2){animation-delay:.55s}
+        .gateway-nucleus-overview .traffic-rail.active .traffic-dot:nth-child(3){animation-delay:1.1s}
+        .gateway-nucleus-overview .traffic-rail.stale .traffic-dot{left:50%;background:#f5b50a;box-shadow:0 0 10px rgba(245,181,10,.45);opacity:.7}
+        .gateway-nucleus-overview .traffic-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#97a4b7;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+        .gateway-nucleus-overview .traffic-meta strong{color:#c8fff7;font-size:11px}
+        @keyframes gatewayTrafficDot{0%{left:-8px;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% + 8px);opacity:0}}
+        @media (prefers-reduced-motion:reduce){.gateway-nucleus-overview .traffic-rail.active .traffic-dot{animation:none;left:50%;opacity:1}}
         .gateway-nucleus-overview .bridge-action{display:inline-flex;align-items:center;width:max-content;border:1px solid rgba(245,181,10,.42);border-radius:7px;background:rgba(124,91,14,.18);color:#ffe28a;text-decoration:none;font-size:11px;font-weight:850;padding:7px 9px}
         .gateway-nucleus-overview .xai-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
         .gateway-nucleus-overview .xai-action{display:inline-flex;align-items:center;width:max-content;border:1px solid rgba(244,63,94,.42);border-radius:7px;background:rgba(127,29,47,.18);color:#ffb5c0;text-decoration:none;font-size:11px;font-weight:850;padding:7px 9px}
@@ -428,6 +547,11 @@ export default function GatewayNucleusOverview() {
                 <div><dt>W</dt><dd>{boolFlag(node.write_enabled)}</dd></div>
                 <div><dt>X</dt><dd>{boolFlag(node.execution_enabled)}</dd></div>
               </dl>
+              <TrafficRail edge={agentTrafficEdgeId(node) ? trafficByEdgeId.get(agentTrafficEdgeId(node) || '') : null} />
+              <div className="traffic-meta">
+                <strong>{trafficLabel(agentTrafficEdgeId(node) ? trafficByEdgeId.get(agentTrafficEdgeId(node) || '') : null)}</strong>
+                <span>{lastTrafficSeen(agentTrafficEdgeId(node) ? trafficByEdgeId.get(agentTrafficEdgeId(node) || '') : null)}</span>
+              </div>
               <p className="blocker">{node.blocked_reason || (node.bridge_required ? 'bridge_session_required' : 'no_blocker')}</p>
               <small>{node.local_ui_url ? `UI: ${node.local_ui_url}` : 'UI: not_configured'} · routes {node.route_count ?? 0} · audit {node.audit_count ?? 0}</small>
             </article>
@@ -443,11 +567,18 @@ export default function GatewayNucleusOverview() {
           <a href="/api/gateway/models">Provider status</a>
         </div>
         <div className="nodes">
-          {modelPipelineEdges.length ? modelPipelineEdges.map(({ target, edge, node, provider }) => (
+          {modelPipelineEdges.length ? modelPipelineEdges.map(({ target, edgeId, edge, node, provider, label }) => {
+            const trafficEdge = trafficByEdgeId.get(edgeId)
+            return (
             <article className="node pipeline-node" key={target}>
               <div className="node-title">
-                <strong>LLM Gateway {'->'} {provider?.display_name || provider?.name || node?.display_name || node?.name || target}</strong>
+                <strong>LLM Gateway {'->'} {provider?.display_name || provider?.name || node?.display_name || node?.name || label}</strong>
                 <span className={`badge ${colorClass(providerPipelineColor(provider, node))}`}>{providerPipelineColor(provider, node)}</span>
+              </div>
+              <TrafficRail edge={trafficEdge} />
+              <div className="traffic-meta">
+                <strong>{trafficLabel(trafficEdge)}</strong>
+                <span>{lastTrafficSeen(trafficEdge)}</span>
               </div>
               <dl>
                 <div><dt>R</dt><dd>{boolFlag(provider ? (provider.reachable || provider.credential_configured) : node?.read_enabled)}</dd></div>
@@ -468,7 +599,7 @@ export default function GatewayNucleusOverview() {
                 </div>
               )}
               <div className="pipeline-meta">
-                <code>{provider?.id || MODEL_PROVIDER_BY_TARGET[target]}</code>
+                <code>{provider?.id || edgeId}</code>
                 <span>credential {boolFlag(provider?.credential_configured)}</span>
                 <span>reachable {boolFlag(provider?.reachable)}</span>
                 <span>models {provider?.model_count ?? 0}</span>
@@ -477,9 +608,41 @@ export default function GatewayNucleusOverview() {
                 <span>gated {boolFlag(edge?.gated || node?.bridge_required || provider?.bridge_required !== false)}</span>
               </div>
             </article>
-          )) : (
+            )
+          }) : (
             <div className="empty">backend_required: no LLM Gateway provider edges returned yet</div>
           )}
+        </div>
+      </section>
+
+      <section>
+        <div className="section-head">
+          <h2>Integration And Brain Traffic</h2>
+          <a href={APIs.traffic}>Live traffic JSON</a>
+        </div>
+        <div className="nodes">
+          {INTEGRATION_TRAFFIC_TARGETS.map(({ edgeId, label }) => {
+            const trafficEdge = trafficByEdgeId.get(edgeId)
+            return (
+              <article className="node pipeline-node" key={edgeId}>
+                <div className="node-title">
+                  <strong>{label}</strong>
+                  <span className={`badge ${colorClass(trafficClass(trafficEdge) === 'active' ? 'green' : trafficClass(trafficEdge) === 'stale' ? 'yellow' : 'gray')}`}>{trafficClass(trafficEdge)}</span>
+                </div>
+                <TrafficRail edge={trafficEdge} />
+                <div className="traffic-meta">
+                  <strong>{trafficLabel(trafficEdge)}</strong>
+                  <span>{lastTrafficSeen(trafficEdge)}</span>
+                </div>
+                <p className="blocker">{trafficEdge?.recommended_next_action || 'Waiting for real Gateway activity; no fake traffic is shown.'}</p>
+                <div className="pipeline-meta">
+                  <code>{edgeId}</code>
+                  <span>source {trafficEdge?.telemetry_source || 'not_connected'}</span>
+                  <span>type {trafficEdge?.traffic_type || 'none'}</span>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </section>
 

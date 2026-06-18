@@ -3,12 +3,14 @@ import { createHash, randomUUID } from 'node:crypto'
 import { db_helpers, getDatabase, logAuditEvent } from '@/lib/db'
 import { mergeTaskMetadataForAgentWorkTicket } from '@/lib/agent-work-tickets'
 import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
+import { SOFIA_DEPUTY_IDENTITY } from '@/lib/sofia-identity'
 import { evaluateOpenCloudAuthority, isOpenCloudIdentity } from '@/lib/opencloud-authority-policy'
 
 export type AgentSystemType =
   | 'commander'
   | 'nuclear_dispatcher'
   | 'advisory_dispatcher'
+  | 'deputy_dispatcher'
   | 'company_workforce_system'
   | 'specialist_agent_system'
   | 'brain_intelligence_system'
@@ -31,6 +33,7 @@ export type AgentRoutingLine = {
   allowed_tools: string[]
   forbidden_intermediaries: string[]
   opencloud_allowed_role: 'supporting_tool_only' | 'not_allowed'
+  openclaw_allowed_role: 'supporting_tool_only' | 'not_allowed'
   direct_line_active: boolean
   normal_chat_bridge_required: boolean
   gateway_tools_visible: boolean
@@ -110,6 +113,7 @@ function line(input: Omit<AgentRoutingLineTemplate,
   | 'rollback_required'
   | 'forbidden_intermediaries'
   | 'opencloud_allowed_role'
+  | 'openclaw_allowed_role'
   | 'normal_chat_bridge_required'
   | 'gateway_tools_visible'
   | 'skills_visible'
@@ -122,6 +126,7 @@ function line(input: Omit<AgentRoutingLineTemplate,
 > & {
   forbidden_intermediaries?: string[]
   opencloud_allowed_role?: AgentRoutingLine['opencloud_allowed_role']
+  openclaw_allowed_role?: AgentRoutingLine['openclaw_allowed_role']
   normal_chat_bridge_required?: boolean
   gateway_tools_visible?: boolean
   skills_visible?: boolean
@@ -136,6 +141,7 @@ function line(input: Omit<AgentRoutingLineTemplate,
     ...input,
     forbidden_intermediaries: input.forbidden_intermediaries || ['opencloud', 'openclaw', 'openclaw_plus', 'claudeclaw'],
     opencloud_allowed_role: input.opencloud_allowed_role || 'supporting_tool_only',
+    openclaw_allowed_role: input.openclaw_allowed_role || input.opencloud_allowed_role || 'supporting_tool_only',
     normal_chat_bridge_required: input.normal_chat_bridge_required ?? false,
     gateway_tools_visible: input.gateway_tools_visible ?? directVisibility,
     skills_visible: input.skills_visible ?? directVisibility,
@@ -175,6 +181,30 @@ const CORE_LINES: AgentRoutingLineTemplate[] = [
     allowed_tools: ['gateway_tools', 'brain_bridge', 'mini_agent_market', 'jarvis_delegated_exact_scope_adapters'],
     direct_line_active: true,
     execution_policy: 'full_visibility_jarvis_delegation_required_for_writes',
+  }),
+  line({
+    agent_id: SOFIA_DEPUTY_IDENTITY.agent_id,
+    display_name: SOFIA_DEPUTY_IDENTITY.display_name,
+    system_type: SOFIA_DEPUTY_IDENTITY.system_type,
+    communication_route: SOFIA_DEPUTY_IDENTITY.direct_line_route,
+    gateway_route: SOFIA_DEPUTY_IDENTITY.gateway_route,
+    conversation_owner: SOFIA_DEPUTY_IDENTITY.conversation_owner,
+    reports_to: SOFIA_DEPUTY_IDENTITY.reports_to,
+    allowed_tools: [
+      'sofia.recommendation',
+      'sofia.ron_review_request',
+      'sofia.jarvis_concurrence_request',
+      'gateway_status',
+      'brain_bridge',
+    ],
+    direct_line_active: true,
+    execution_policy: 'ron_deputy_internal_planning_ron_and_jarvis_concurrence_for_production',
+    allowed_as_tool: true,
+    allowed_as_intermediary: false,
+    allowed_as_commander: false,
+    opencloud_allowed_role: SOFIA_DEPUTY_IDENTITY.opencloud_allowed_role,
+    openclaw_allowed_role: 'supporting_tool_only',
+    blocker: 'production_execution_requires_ron_plus_jarvis_concurrence',
   }),
   line({
     agent_id: 'hermes-webui',
@@ -518,6 +548,10 @@ export function resolveAgentRoutingLine(value: unknown): AgentRoutingLine | null
     'ron-weasley': 'hermes',
     'ron-weasley-nuclear-dispatcher': 'hermes',
     hermans: 'hermes',
+    sofia: 'sofia',
+    'sofia-deputy': 'sofia',
+    'deputy-nuclear-dispatcher': 'sofia',
+    'second-in-command': 'sofia',
     'pi-dispatcher': 'pi',
     'space-agent': 'spaceagent',
     openclaw: 'opencloud',
@@ -575,6 +609,8 @@ function asStringArray(value: unknown): string[] {
 
 export function routeTraceForLine(line: AgentRoutingLine): string[] {
   const base = ['owner', 'mission_control_gateway']
+
+  if (line.agent_id === 'sofia') return ['owner', 'mission-control', 'nuclear-gateway', 'sofia']
 
   if (line.system_type === 'paperclip_company_agent') {
     return [

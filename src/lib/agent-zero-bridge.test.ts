@@ -84,6 +84,17 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(result.writes_enabled).toBe(false)
   })
 
+  it('prioritizes safe exact reply canaries in the Agent Zero prompt', () => {
+    const prompt = buildAgentZeroReadOnlyPrompt(
+      'Reply exactly: AGENT_ZERO_MODEL_OK',
+      buildAgentZeroReadOnlyContext({ providerIds: ['agent_zero'] }),
+    )
+
+    expect(prompt).toContain('This is a deterministic acceptance canary.')
+    expect(prompt).toContain('Reply with exactly this text and nothing else: AGENT_ZERO_MODEL_OK')
+    expect(prompt.indexOf('This is a deterministic acceptance canary.')).toBeLessThan(prompt.indexOf('You are Agent Zero'))
+  })
+
   it('returns correlation and timing metadata for successful read-only Agent Zero messages', async () => {
     const calls: Array<[string, RequestInit]> = []
     const originalFetch = globalThis.fetch

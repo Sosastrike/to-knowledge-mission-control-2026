@@ -2494,6 +2494,13 @@ function pickRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+function extractSafeExactReplyCanary(ownerMessage: string): string | null {
+  const match = ownerMessage.trim().match(/^Reply\s+exactly:\s*([A-Z0-9_ -]{2,80})\s*$/i)
+  if (!match) return null
+  const value = match[1].trim()
+  return /^[A-Z0-9_ -]{2,80}$/.test(value) ? value : null
+}
+
 function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Record<string, unknown> {
   const root = pickRecord(context)
   const agents = pickRecord(root.agents)
@@ -2573,7 +2580,9 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
 export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: AgentZeroReadOnlyContext): string {
   const liveAccess = buildAgentZeroLiveAccessSummary(context)
   const isLiveQueryAcceptance = /live-query\s+Mission\s+Control|can\s+you\s+(?:see|query|live-query).*Mission\s+Control/i.test(ownerMessage)
+  const exactReplyCanary = extractSafeExactReplyCanary(ownerMessage)
   return [
+    exactReplyCanary ? `This is a deterministic acceptance canary. Reply with exactly this text and nothing else: ${exactReplyCanary}` : '',
     'You are Agent Zero, the active Mission Control ecosystem commander, in a Mission Control ecosystem test.',
     'Answer naturally: concise, useful, and human. Do not sound like a terminal log or scripted status report.',
     'Do not use robotic labels such as Status:, Result:, Next:, Tool:, Runtime:, Model:, System:, or Stage: unless the owner explicitly requests a technical report.',

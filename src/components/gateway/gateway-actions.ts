@@ -69,7 +69,7 @@ function ownerUiTarget(text: string): { href: string; targetName?: string } | nu
     return { href: shellHref(PAPERCLIP_WORKSPACE_SELECTOR_ROUTE) }
   }
   if (isRonWeasleySurface(text)) return { href: shellHref('/gateway/agent-hub/ron/webui/app') }
-  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: 'http://100.116.35.95:50080/' }
+  if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: shellHref('/gateway/agent-hub/agent-zero/chat') }
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return { href: 'http://127.0.0.1:18789/' }
   return null
 }
@@ -84,7 +84,9 @@ function actionForOwnerUiTarget(
       kind: 'navigate',
       href: target.href,
       title: 'Opening owner UI',
-      detail,
+      detail: target.href.includes('/agent-zero/chat')
+        ? 'Opening Agent Zero through the authenticated Mission Control shell.'
+        : detail,
     }
   }
   return {
@@ -709,6 +711,38 @@ function buttonContext(doc: Document, button: HTMLButtonElement): GatewayActionC
   }
 }
 
+
+function gatewayAnchorContext(doc: Document, anchor: HTMLAnchorElement): GatewayActionContext {
+  const container = anchor.closest(
+    '.conn,.delegate-row,.detail-head,.detail,.agent-card,.section,.system-row,.tool-row,.scope-row,.ba-tool,.localhost-embed,.node-card,.hero,.az-hero,.h-hero,.pc-hero',
+  )
+  return {
+    label: anchor.textContent || '',
+    pageTitle: doc.title,
+    nearbyText: container?.textContent || anchor.parentElement?.textContent || '',
+  }
+}
+
+function isAgentZeroOwnerUiAnchor(anchor: HTMLAnchorElement, context: GatewayActionContext): boolean {
+  const href = anchor.getAttribute('href') || ''
+  const label = normalized(context.label)
+  const text = `${normalized(context.pageTitle)} ${normalized(context.nearbyText)}`
+  return href.includes('100.116.35.95:50080') || (label === 'open ui' && hasAny(text, 'agent zero', 'agent-zero', ' a0 '))
+}
+
+export function rewriteGatewayOwnerAnchors(doc: Document): void {
+  if (typeof doc.querySelectorAll !== 'function') return
+  doc.querySelectorAll('a').forEach((rawAnchor) => {
+    const anchor = rawAnchor as HTMLAnchorElement
+    const context = gatewayAnchorContext(doc, anchor)
+    if (!isAgentZeroOwnerUiAnchor(anchor, context)) return
+    anchor.href = shellHref('/gateway/agent-hub/agent-zero/chat')
+    anchor.target = '_top'
+    anchor.rel = ''
+    anchor.dataset.ccGatewaySafeHref = 'agent-zero-authenticated-shell'
+  })
+}
+
 async function executeGatewayAction(action: GatewayFrameAction, iframe: HTMLIFrameElement, doc: Document): Promise<void> {
   if (action.kind === 'navigate') {
     showGatewayNotice(doc, action.title, action.detail, 'info')
@@ -781,11 +815,25 @@ export function attachGatewayActionHandler(iframe: HTMLIFrameElement): void {
     const root = doc.documentElement as HTMLElement
     if (root.dataset.ccGatewayActionsWired === '1') return
     root.dataset.ccGatewayActionsWired = '1'
+    rewriteGatewayOwnerAnchors(doc)
     doc.addEventListener(
       'click',
       (event) => {
         const target = event.target as (Element & { closest?: (selectors: string) => Element | null }) | null
         if (!target || typeof target.closest !== 'function') return
+
+        const anchor = target.closest('a') as HTMLAnchorElement | null
+        if (anchor && doc.contains(anchor)) {
+          const context = gatewayAnchorContext(doc, anchor)
+          if (isAgentZeroOwnerUiAnchor(anchor, context)) {
+            event.preventDefault()
+            event.stopPropagation()
+            event.stopImmediatePropagation()
+            void executeGatewayAction(gatewayActionForButton(context), iframe, doc)
+            return
+          }
+        }
+
         const button = target.closest('button') as HTMLButtonElement | null
         if (!button || !doc.contains(button)) return
         if (button.matches('.tab')) return

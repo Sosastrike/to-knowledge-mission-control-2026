@@ -38,7 +38,7 @@ import {
   type HermesWebInterfaceMode,
 } from '@/lib/hermes-web-interface'
 import { ZAPIER_GATEWAY_CARD_COPY } from '@/lib/zapier-approved-action-library'
-import { PAPERCLIP_ECO_DASHBOARD, PAPERCLIP_ECO_WINDOW_NAME, attachGatewayActionHandler } from './gateway-actions'
+import { PAPERCLIP_ECO_DASHBOARD, PAPERCLIP_ECO_WINDOW_NAME, attachGatewayActionHandler, rewriteGatewayOwnerAnchors } from './gateway-actions'
 
 // Mission Control root. Verified target on production 2026-05-11.
 const MISSION_CONTROL_HOME = '/'
@@ -169,6 +169,7 @@ const GATEWAY_TOOLS_ROUTE = '/gateway/tools'
 const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
 const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley local direct-line proof is present; Mission Control proxy certification requires the authenticated browser proof run.'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
+const AGENT_ZERO_MISSION_CONTROL_UI_ROUTE = agentControlRoute('agent-zero', 'chat')
 const paperclipControlRoute = (mode: string): string => agentControlRoute('paperclip', mode)
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
 const AGENT_AUTO_UPDATE_RUN_ROUTE = '/api/bridge/agent-updates/run'
@@ -185,14 +186,14 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
     localBind: '100.116.35.95',
     port: '50080 -> container:80',
     localUrl: null,
-    tailnetUrl: 'http://100.116.35.95:50080/',
+    tailnetUrl: null,
     proxyRoute: '/api/agent-zero/status',
     authRequired: true,
     status: 'operational · exact-scope execution certified',
     blocker: 'owner_hard_stops_only_remaining · Jarvis has an active owner Bridge Session and certified exact-scope execution adapters. Raw secrets, .env edits, public exposure, broad connector execution, and credential injection remain hard stops.',
     nextFix: 'Continue the Jarvis Full GO adapter sprint through exact-scope routes with audit and rollback. Do not mark broad external connectors unlocked until their own adapter proof exists.',
     buttons: {
-      ui: enabled('http://100.116.35.95:50080/'),
+      ui: enabled(AGENT_ZERO_MISSION_CONTROL_UI_ROUTE),
       config: enabled(agentControlRoute('agent-zero', 'config')),
       brain: enabled(GATEWAY_BRAIN_ROUTE),
       chat: enabled(agentControlRoute('agent-zero', 'chat')),
@@ -727,7 +728,7 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     role: 'Commander',
     status: 'operational · exact-scope execution certified',
     endpoint: '/api/agent-zero/status',
-    uiHref: 'http://100.116.35.95:50080/',
+    uiHref: AGENT_ZERO_MISSION_CONTROL_UI_ROUTE,
     blocker: 'owner_hard_stops_only_remaining',
     nextAction: 'Jarvis can execute certified exact-scope adapters through Mission Control now. Remaining blocks are owner-hard-stop categories and connectors that still need credentials or adapter proof.',
     modes: ['config', 'chat'],
@@ -1251,6 +1252,132 @@ function PaperclipWorkspaceSelectorPanel() {
   )
 }
 
+
+type AgentZeroReadOnlyChatPayload = {
+  ok?: boolean
+  status?: number
+  response_text?: string | null
+  blocker?: string | null
+  error?: string | null
+  next_action?: string | null
+  safety?: Record<string, unknown>
+}
+
+function AgentZeroReadOnlyChatPanel() {
+  const [message, setMessage] = useState('Reply exactly: AGENT_ZERO_OK')
+  const [state, setState] = useState<{
+    phase: 'idle' | 'loading' | 'ready' | 'error'
+    status?: number
+    payload?: AgentZeroReadOnlyChatPayload
+    error?: string
+  }>({ phase: 'idle' })
+
+  const submit = async () => {
+    const trimmed = message.trim()
+    if (!trimmed) {
+      setState({ phase: 'error', error: 'message_required' })
+      return
+    }
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 25000)
+    setState({ phase: 'loading' })
+    try {
+      const response = await fetch('/api/bridge/agent-zero/test-chat', {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'include',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed }),
+      })
+      const payload = await response.json().catch(() => null) as AgentZeroReadOnlyChatPayload | null
+      setState({
+        phase: 'ready',
+        status: response.status,
+        payload: payload || { ok: false, error: 'agent_zero_test_chat_unreadable_response' },
+      })
+    } catch (error) {
+      setState({
+        phase: 'error',
+        error: error instanceof Error && error.name === 'AbortError'
+          ? 'agent_zero_test_chat_timeout'
+          : error instanceof Error
+            ? error.message
+            : 'agent_zero_test_chat_failed',
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
+  const payload = state.payload
+  const resultText = payload?.response_text || payload?.error || payload?.blocker || null
+  const isDegraded = state.phase === 'error' || (state.phase === 'ready' && payload?.ok === false)
+
+  return (
+    <section className={`control-status ${isDegraded ? 'warning' : ''}`} data-testid="agent-zero-readonly-chat">
+      <div className="status-head">
+        <strong>Agent Zero read-only test channel</strong>
+        <span>execution disabled · authenticated shell</span>
+      </div>
+      <p style={{ margin: '0 0 10px', color: '#9aa5b5', fontSize: 12, lineHeight: 1.45 }}>
+        Sends a read-only prompt through Mission Control. No protected action, external write, Zapier action, or local file operation is enabled here.
+      </p>
+      <label style={{ display: 'grid', gap: 6, marginBottom: 10, fontSize: 12, color: '#dce6f2' }}>
+        Agent Zero read-only test message
+        <textarea
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          aria-label="Agent Zero read-only test message"
+          rows={3}
+          style={{ borderRadius: 6, border: '1px solid rgba(255,255,255,.14)', background: '#0d131c', color: '#e5edf8', padding: 10, resize: 'vertical' }}
+        />
+      </label>
+      <button
+        type="button"
+        className="control-action"
+        onClick={submit}
+        disabled={state.phase === 'loading'}
+        data-testid="agent-zero-test-send"
+      >
+        {state.phase === 'loading' ? 'Sending...' : 'Send read-only test'}
+      </button>
+      {state.phase === 'loading' && (
+        <div className="control-status muted" data-testid="agent-zero-test-loading" style={{ marginTop: 10 }}>
+          Waiting for Agent Zero read-only response. This request has a bounded timeout.
+        </div>
+      )}
+      {(state.phase === 'ready' || state.phase === 'error') && (
+        <div className={`control-status ${isDegraded ? 'warning' : ''}`} data-testid="agent-zero-test-result" style={{ marginTop: 10 }}>
+          <div className="status-head">
+            <strong>{isDegraded ? 'Agent Zero degraded' : 'Agent Zero response'}</strong>
+            <span>{state.status ? `HTTP ${state.status}` : 'client-side status'}</span>
+          </div>
+          <dl>
+            <div>
+              <dt>Result</dt>
+              <dd>{resultText || state.error || 'No response text returned.'}</dd>
+            </div>
+            <div>
+              <dt>Next action</dt>
+              <dd>{payload?.next_action || (isDegraded ? 'Resolve Agent Zero runtime/provider blocker, then rerun the read-only test.' : 'Review read-only response; execution remains disabled.')}</dd>
+            </div>
+            <div>
+              <dt>Execution</dt>
+              <dd>{String(payload?.safety?.execution_enabled ?? false)}</dd>
+            </div>
+            <div>
+              <dt>Writes</dt>
+              <dd>{String(payload?.safety?.writes_enabled ?? false)}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+    </section>
+  )
+}
+
 function GatewayToolsPanel() {
   const connectors = AGENT_INTERFACE_LINKS.filter((row) => ['Telegram', 'AgentMail', 'Zapier', 'Google Drive', 'OneDrive', 'Firecrawl', 'YouTube', 'Playwright MCP'].includes(row.name))
   return (
@@ -1452,6 +1579,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
   }
   const isPaperclip = slug === 'paperclip'
   const isPi = slug === 'pi'
+  const isAgentZeroChat = slug === 'agent-zero' && mode === 'chat'
   const statusEndpoint = isPaperclip && mode === 'tools'
     ? '/api/bridge/paperclip/gateway-inventory'
     : isPaperclip && ['companies', 'agents', 'issues'].includes(mode)
@@ -1635,6 +1763,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
         </section>
       )}
+      {isAgentZeroChat && <AgentZeroReadOnlyChatPanel />}
       <ReadableStatusPanel endpoint={statusEndpoint} />
     </main>
   )
@@ -1674,6 +1803,12 @@ export default function GatewayShell() {
   const wireIframe = useCallback((iframe: HTMLIFrameElement) => {
     if (!iframeHasGatewayMock(iframe)) return false
     attachBackHandler(iframe)
+    try {
+      const doc = iframe.contentDocument
+      if (doc) rewriteGatewayOwnerAnchors(doc)
+    } catch (_err) {
+      /* cross-origin — ignore; same-origin gateway mocks are sanitized above */
+    }
     attachGatewayActionHandler(iframe)
     return true
   }, [])

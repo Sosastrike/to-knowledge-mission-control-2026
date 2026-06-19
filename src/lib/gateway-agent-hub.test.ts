@@ -54,7 +54,7 @@ describe('Gateway Agent Hub', () => {
     expect(payload.direct_agent_lines.active).toBeGreaterThan(20)
     expect(payload.direct_agent_lines.paperclip_company_agents).toBeGreaterThanOrEqual(7)
     expect(payload.direct_agent_lines.hermes_mini_agents).toBeGreaterThanOrEqual(2)
-    expect(payload.direct_agent_lines.ron_mini_agents).toBeGreaterThanOrEqual(2)
+    expect(payload.direct_agent_lines.ron_mini_agents).toBeGreaterThanOrEqual(0)
     expect(payload.direct_agent_lines.inactive_supporting_runtime).toBeGreaterThanOrEqual(1)
     expect(payload.direct_agent_lines.trace_commands.length).toBe(payload.direct_agent_lines.active)
     expect(payload.direct_agent_lines.trace_commands).toEqual(expect.arrayContaining([
@@ -70,12 +70,12 @@ describe('Gateway Agent Hub', () => {
         local_probe_command: expect.stringContaining('--local-probe'),
       }),
       expect.objectContaining({
-        agent_id: 'ron-mini-agent.workflow-drafter',
-        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent ron-mini-agent.workflow-drafter'),
+        agent_id: 'hermes-mini-agent.workflow-drafter',
+        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent hermes-mini-agent.workflow-drafter'),
       }),
       expect.objectContaining({
-        agent_id: 'brain-bridge',
-        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent brain-bridge'),
+        agent_id: 'brain-sync',
+        command: expect.stringContaining('bash /home/tony/agent-line-trace.sh --agent brain-sync'),
       }),
     ]))
     expect(payload.direct_agent_lines.trace_commands.some((trace) => trace.agent_id === 'openclaw' || trace.agent_id === 'opencloud')).toBe(false)
@@ -103,6 +103,12 @@ describe('Gateway Agent Hub', () => {
       { source: 'nuclear.gateway', target: 'credential.broker', relation: 'brokers' },
     ]))
     expect(payload.nuclear_gateway_graph.direct_line_trace_buttons.some((button) => button.agent_id === 'openclaw')).toBe(false)
+    expect(payload.nuclear_gateway_graph.nodes.map((node) => node.id)).not.toContain('sofia')
+    expect(payload.nuclear_gateway_graph.edges).not.toEqual(expect.arrayContaining([
+      { source: 'nuclear.gateway', target: 'sofia', relation: 'routes_to' },
+      { source: 'sofia', target: 'ron.weasley', relation: 'reports_to' },
+    ]))
+    expect(payload.nuclear_gateway_graph.direct_line_trace_buttons.some((button) => button.agent_id === 'sofia')).toBe(false)
     expect(payload.agent_update_control_plane).toMatchObject({
       route: '/api/bridge/agent-updates/status',
       run_route: '/api/bridge/agent-updates/run',
@@ -166,7 +172,9 @@ describe('Gateway Agent Hub', () => {
       bridge_session_required_for_interactive_actions: true,
     })
     expect(JSON.stringify(payload.gateway_route_cdp_truth)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
-    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'sofia', 'hermes-webui', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'hermes-webui', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).not.toContain('sofia')
+    expect(payload.direct_agent_lines.trace_commands.map((trace) => trace.agent_id)).not.toContain('sofia')
     expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
     const ron = payload.agents.find((agent) => agent.id === 'hermes')
     expect(ron).toMatchObject({
@@ -195,13 +203,6 @@ describe('Gateway Agent Hub', () => {
     expect(JSON.stringify(ron)).toContain('JARVIS CONCURRENCE REQUIRED')
     expect(JSON.stringify(ron)).not.toContain('Ron Wegsley')
     expect(JSON.stringify(ron)).not.toContain('PARTIAL')
-    expect(payload.agents.find((agent) => agent.id === 'sofia')).toMatchObject({
-      name: 'Sofia',
-      role: 'Deputy Nuclear Dispatcher',
-      status: 'configured',
-      called_true_proven: true,
-      routes: { bridge_status: '/api/bridge/sofia/status' },
-    })
     expect(payload.agents.find((agent) => agent.id === 'hermes-webui')).toMatchObject({
       name: 'Ron Weasley WebUI',
       role: 'Ron Weasley Browser Control Surface',
@@ -362,7 +363,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('does not render stale Bridge-not-active copy on the live Agent Hub control center', () => {
-    const source = readFileSync(new URL('../components/gateway-agent-hub/AgentHubControlCenter.tsx', import.meta.url), 'utf8')
+    const source = readFileSync('src/components/gateway-agent-hub/AgentHubControlCenter.tsx', 'utf8')
 
     expect(source).toContain('/api/bridge/mission-control/stale-bundle-health')
     expect(source).toContain('Mission Control Runtime Health')
@@ -413,7 +414,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('keeps owner-visible Agent Hub handoff data from overriding Ron live truth', () => {
-    const source = readFileSync(new URL('../../public/design/gateway/shared/agent-data.js', import.meta.url), 'utf8')
+    const source = readFileSync('public/design/gateway/shared/agent-data.js', 'utf8')
     const ronBlock = source.slice(source.indexOf("id: 'hermes'"), source.indexOf("id: 'space-agent'"))
 
     expect(ronBlock).toContain("name: 'Ron Weasley'")
@@ -428,7 +429,7 @@ describe('Gateway Agent Hub', () => {
   })
 
   it('renders the Agent Hub auto-update control plane on the live Gateway shell rail', () => {
-    const source = readFileSync(new URL('../components/gateway/GatewayShell.tsx', import.meta.url), 'utf8')
+    const source = readFileSync('src/components/gateway/GatewayShell.tsx', 'utf8')
 
     expect(source).toContain('Agent Auto-Update Control Plane')
     expect(source).toContain('/api/bridge/agent-updates/status')

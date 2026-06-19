@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 
 import {
   buildContextStatusSnapshot,
@@ -55,6 +56,17 @@ describe('agent platform recovery contracts', () => {
     expect(registry.summary.credential_values_exposed).toBe(false)
     expect(registry.providers.every((provider) => provider.execution_enabled === false)).toBe(true)
     expect(registry.providers.every((provider) => provider.explicit_model_override_allowed === true)).toBe(true)
+  })
+
+
+  it('keeps Sophia out of software recovery surfaces and does not infer permissions from names', () => {
+    const registry = buildModelCapabilityRegistry()
+    expect(registry.providers.every((provider) => !provider.allowed_agents.includes('sofia'))).toBe(true)
+
+    const source = readFileSync('src/lib/auth.ts', 'utf8') + readFileSync('src/proxy.ts', 'utf8')
+    expect(source).not.toMatch(/display_name\s*={2,3}\s*['"](?:Tony|Luis|Lu|Sophia|Sofia)['"]/i)
+    expect(source).not.toMatch(/username\s*={2,3}\s*['"](?:Tony|Luis|Lu|Sophia|Sofia)['"]/i)
+    expect(source).not.toMatch(/name\s*={2,3}\s*['"](?:owner|creator|Tony|Luis|Lu|Sophia|Sofia)['"]/i)
   })
 
   it('defines proactive context checkpoint behavior without pretending enforcement is complete', () => {

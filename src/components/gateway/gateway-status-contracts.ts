@@ -45,7 +45,7 @@ function agentZeroStatus(): GatewayStatusPayload {
     state: 'OPERATIONAL_GO',
     blocker_class: 'OWNER_HARD_STOPS_ONLY',
     installed: true,
-    tailnet_url: 'http://100.116.35.95:50080/',
+    tailnet_url: null,
     owner_access_blocker: null,
     ...SAFE_READ_ONLY,
     ...SERVICE_CONTROL_BLOCKED,
@@ -470,7 +470,7 @@ function agentLocalInterfaces(): GatewayStatusPayload {
       public_exposure_created: false,
     },
     agents: [
-      { name: 'Agent Zero (Jarvis)', status: 'operational_go_exact_scope_execution_certified', tailnet_url: 'http://100.116.35.95:50080/', mission_control_route: '/api/bridge/agent-zero/status', blocker: 'owner_hard_stops_only_remaining' },
+      { name: 'Agent Zero (Jarvis)', status: 'operational_go_exact_scope_execution_certified', tailnet_url: null, mission_control_route: '/gateway/agent-hub/agent-zero/chat', blocker: 'owner_hard_stops_only_remaining' },
       { name: 'Ron Weasley', status: 'FULL_ACCESS_DELEGATED', local_url: 'http://127.0.0.1:8787/', mission_control_route: '/api/bridge/hermes/webui/status', blocker: 'jarvis_signed_exact_scope_delegation_required; hermes_webui_service_not_running_if_8787_unreachable' },
       { name: 'Pi', status: 'FULL ACCESS / DIRECT GATEWAY PIPELINE', mission_control_route: '/api/bridge/pi/status', blocker: 'production_execution_requires_jarvis_concurrence' },
       { name: 'SpaceAgent', status: 'partial_mission_control_panel_only_youtube_transcript_ready', mission_control_route: '/api/bridge/space-agent/status', blocker: 'no_standalone_spaceagent_ui; firecrawl_credential_required; firecrawl_backend_adapter_not_configured; youtube_transcript_ready_via_/api/youtube/transcript' },

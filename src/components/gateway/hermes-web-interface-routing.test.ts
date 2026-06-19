@@ -86,16 +86,16 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     expect(source).toContain('OpenCloud / OpenClaw intermediary')
   })
 
-  it('uses owner-openable Tailnet/proxy URLs instead of server-local localhost buttons', () => {
+  it('uses authenticated Mission Control routes for Agent Zero owner-facing UI', () => {
     const agentZero = AGENT_INTERFACE_LINKS.find((agent) => agent.name === 'Agent Zero')
     const ron = AGENT_INTERFACE_LINKS.find((agent) => agent.name === 'Ron Weasley')
 
-    expect(agentZero?.tailnetUrl).toBe('http://100.116.35.95:50080/')
+    expect(agentZero?.tailnetUrl).toBeNull()
     expect(agentZero?.buttons.ui).toMatchObject({
       enabled: true,
-      href: 'http://100.116.35.95:50080/',
+      href: '/gateway/agent-hub/agent-zero/chat',
     })
-    expect(JSON.stringify(agentZero?.buttons)).not.toMatch(/localhost|127\.0\.0\.1/)
+    expect(JSON.stringify(agentZero?.buttons)).not.toMatch(/localhost|127\.0\.0\.1|100\.116\.35\.95:50080/)
 
     expect(ron?.localUrl).toBeNull()
     expect(ron?.buttons.ui).toMatchObject({
@@ -104,6 +104,22 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     })
     expect(`${ron?.blocker} ${ron?.nextFix}`).toContain('localhost is server-local')
     expect(JSON.stringify(ron?.buttons)).not.toMatch(/localhost|127\.0\.0\.1/)
+  })
+
+  it('does not let query parameters override the trusted Agent Zero shell destination', () => {
+    expect(controlViewFromPath('/gateway/agent-hub/agent-zero/chat?upstream=http://100.116.35.95:50080', null)).toMatchObject({
+      kind: 'agent',
+      slug: 'agent-zero',
+      mode: 'chat',
+    })
+    expect(gatewayActionForButton({
+      label: 'Open UI',
+      pageTitle: 'Agent Hub · Control Center',
+      nearbyText: 'Agent Zero Commander upstream=http://100.116.35.95:50080',
+    })).toMatchObject({
+      kind: 'navigate',
+      href: '/gateway/agent-hub/agent-zero/chat',
+    })
   })
 
   it('routes Paperclip Open UI to the workspace selector instead of a stuck status panel or one-company shortcut', () => {
@@ -168,8 +184,8 @@ describe('Ron Weasley WebUI Gateway routing', () => {
       pageTitle: 'Agent Hub · Control Center',
       nearbyText: 'Agent Zero Commander',
     })).toMatchObject({
-      kind: 'openExternal',
-      href: 'http://100.116.35.95:50080/',
+      kind: 'navigate',
+      href: '/gateway/agent-hub/agent-zero/chat',
     })
   })
 
@@ -239,7 +255,8 @@ describe('Ron Weasley WebUI Gateway routing', () => {
         stopImmediatePropagation() {},
       })
 
-      expect(opened).toEqual(['http://100.116.35.95:50080/'])
+      expect(opened).toEqual([])
+      expect(ownerWindow.location.href).toBe('/gateway/agent-hub/agent-zero/chat')
     } finally {
       globalWithWindow.window = previousWindow
     }

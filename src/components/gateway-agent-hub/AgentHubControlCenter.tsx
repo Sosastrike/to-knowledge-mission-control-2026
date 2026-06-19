@@ -17,7 +17,7 @@ import type {
 
 export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayload }) {
   const paperclip = status.agents.find((agent) => agent.id === 'paperclip')
-  const primaryAgents = ['agent-zero', 'hermes', 'sofia', 'pi-mono', 'spaceagent', 'paperclip']
+  const primaryAgents = ['agent-zero', 'hermes', 'pi-mono', 'spaceagent', 'paperclip']
     .map((id) => status.agents.find((agent) => agent.id === id))
     .filter((agent): agent is AgentHubAgent => Boolean(agent))
   const readinessSummary = buildReadinessSummary(status)
@@ -52,7 +52,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
         </nav>
 
         <section className='rounded-lg border border-emerald-300/25 bg-emerald-300/8 p-4 text-sm leading-6 text-emerald-100'>
-          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Sofia is Ron’s second-in-command for internal planning and review, Pi is a Full Access Gateway Agent with direct brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
+          <strong>Production truth:</strong> Owner intent enters Mission Control, then Nuclear Gateway, then the target agent direct line. Agent Zero / Jarvis remains commander, Ron Weasley has full delegated access with Jarvis-gated execution, Pi is a Full Access Gateway Agent with direct brokered access to tools, skills, MCPs, providers, Brain, visible tasks, and pipeline requests, Paperclip is the workforce/company plane, SpaceAgent is an independent specialized direct-line agent under Jarvis authority, and OpenCloud / OpenClaw stay supporting runtime tools with no conversation ownership.
         </section>
 
         <MissionControlRuntimeHealthPanel status={status} />
@@ -66,7 +66,7 @@ export function AgentHubControlCenter({ status }: { status: AgentHubStatusPayloa
             <div className='flex flex-wrap items-end justify-between gap-3'>
               <div>
                 <h2 className='text-lg font-semibold text-white'>Operating Chain</h2>
-                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Mission Control, then Nuclear Gateway, then the selected direct agent line. Ron dispatches under Jarvis, Sofia supports Ron as deputy for internal plans and reviews, Pi uses a full-access direct Gateway pipeline, and Paperclip executes scoped workforce work; OpenCloud and OpenClaw are supporting tools only.</p>
+                <p className='mt-1 text-sm text-slate-400'>Owner intent enters Mission Control, then Nuclear Gateway, then the selected direct agent line. Ron dispatches under Jarvis, Pi uses a full-access direct Gateway pipeline, and Paperclip executes scoped workforce work; OpenCloud and OpenClaw are supporting tools only.</p>
               </div>
               <StatusBadge label='policy enforced' status='read_only' />
             </div>
@@ -952,7 +952,6 @@ function buildReadinessSummary(status: AgentHubStatusPayload) {
 function agentTone(agent: AgentHubAgent): 'cyan' | 'green' | 'yellow' | 'blue' | 'red' | 'gray' {
   if (agent.id === 'agent-zero') return 'green'
   if (agent.id === 'hermes') return 'green'
-  if (agent.id === 'sofia') return 'cyan'
   if (agent.id === 'spaceagent') return 'blue'
   if (agent.status === 'gated' || agent.status === 'pending') return 'yellow'
   if (agent.status === 'blocked') return 'red'
@@ -965,7 +964,6 @@ function agentBorderClass(agent: AgentHubAgent) {
   if (agent.id === 'spaceagent') return 'border-sky-300/25'
   if (agent.id === 'paperclip') return 'border-amber-300/25'
   if (agent.id === 'hermes') return 'border-violet-300/25'
-  if (agent.id === 'sofia') return 'border-cyan-300/25'
   if (agent.id === 'pi-mono') return 'border-orange-300/25'
   return 'border-white/10'
 }
@@ -975,7 +973,6 @@ function agentStripeClass(agent: AgentHubAgent) {
   if (agent.id === 'spaceagent') return 'bg-sky-300'
   if (agent.id === 'paperclip') return 'bg-amber-300'
   if (agent.id === 'hermes') return 'bg-violet-300'
-  if (agent.id === 'sofia') return 'bg-cyan-300'
   if (agent.id === 'pi-mono') return 'bg-orange-300'
   return 'bg-slate-500'
 }

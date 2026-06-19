@@ -170,7 +170,7 @@ const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
 const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley local direct-line proof is present; Mission Control proxy certification requires the authenticated browser proof run.'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
 const AGENT_ZERO_MISSION_CONTROL_UI_ROUTE = agentControlRoute('agent-zero', 'chat')
-const AGENT_ZERO_TEST_CHAT_TIMEOUT_MS = 90000
+const AGENT_ZERO_TEST_CHAT_TIMEOUT_MS = 95000
 const paperclipControlRoute = (mode: string): string => agentControlRoute('paperclip', mode)
 const AGENT_AUTO_UPDATE_STATUS_ROUTE = '/api/bridge/agent-updates/status'
 const AGENT_AUTO_UPDATE_RUN_ROUTE = '/api/bridge/agent-updates/run'

@@ -90,7 +90,7 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     const source = readFileSync('src/components/gateway/GatewayShell.tsx', 'utf8')
 
     expect(source).toContain('AGENT_ZERO_TEST_CHAT_TIMEOUT_MS')
-    expect(source).toContain('90000')
+    expect(source).toContain('95000')
     expect(source).not.toContain('setTimeout(() => controller.abort(), 25000)')
   })
 

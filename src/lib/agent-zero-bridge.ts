@@ -707,6 +707,14 @@ export type AgentZeroReadOnlyContext = {
   restrictions: string[]
 }
 
+export type AgentZeroReadOnlyMessageTimings = {
+  request_started_at: string
+  agent_zero_upstream_started_at: string | null
+  agent_zero_headers_at: string | null
+  completed_at: string | null
+  elapsed_ms: number
+}
+
 export type AgentZeroReadOnlyMessageResult = {
   ok: boolean
   status: number
@@ -719,6 +727,55 @@ export type AgentZeroReadOnlyMessageResult = {
   context_id: string | null
   raw_response_shape: string[]
   error: string | null
+  correlation_id: string
+  stage:
+    | 'auth_blocked'
+    | 'agent_zero_upstream_call_started'
+    | 'agent_zero_upstream_waiting_for_response'
+    | 'agent_zero_http_error'
+    | 'agent_zero_response_completed'
+    | 'agent_zero_upstream_call_failed'
+  error_code: string | null
+  retryable: boolean
+  fallback_attempted: false
+  fallback_result: null
+  elapsed_ms: number
+  timings: AgentZeroReadOnlyMessageTimings
+}
+
+function createAgentZeroCorrelationId(): string {
+  return `azr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function buildAgentZeroTimings(input: {
+  requestStartedAt: string
+  startedAtMs: number
+  upstreamStartedAt?: string | null
+  headersAt?: string | null
+  completedAt?: string | null
+}): AgentZeroReadOnlyMessageTimings {
+  return {
+    request_started_at: input.requestStartedAt,
+    agent_zero_upstream_started_at: input.upstreamStartedAt || null,
+    agent_zero_headers_at: input.headersAt || null,
+    completed_at: input.completedAt || null,
+    elapsed_ms: Math.max(0, Date.now() - input.startedAtMs),
+  }
+}
+
+function isAgentZeroTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const record = error as { name?: unknown; message?: unknown }
+  return /^(AbortError|TimeoutError)$/i.test(String(record.name || '')) || /timeout|aborted/i.test(String(record.message || ''))
+}
+
+function sanitizeAgentZeroBridgeError(error: unknown): string {
+  const text = error instanceof Error ? `${error.name}: ${error.message}` : String(error || 'agent_zero_api_call_failed')
+  return text
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/(?:X-API-KEY|API[_-]?KEY|TOKEN|SECRET|COOKIE|PASSWORD)\s*[:=]\s*[^\s,}"']+/gi, 'credential=[redacted]')
+    .replace(/\b(?:sk-|gsk_|nva-|xai-|AQ)[A-Za-z0-9._-]{8,}\b/g, '[redacted]')
+    .slice(0, 500)
 }
 
 const LOCAL_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders|\/a0\/(?:usr|tmp|var))[^\s`'"\])}]*/gi
@@ -1689,6 +1746,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   buildWikiFarmerStatus?: AgentZeroBuildWikiFarmerSummary
   bridgeSessionAvailable?: boolean
   bridgeSession?: AgentZeroBridgeSessionObject
+  jarvisAccessTruth?: unknown
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || [])
     .filter(Boolean)
@@ -2578,42 +2636,65 @@ export async function sendAgentZeroReadOnlyMessage(input: {
   baseUrl?: string
   timeoutMs?: number
 }): Promise<AgentZeroReadOnlyMessageResult> {
+  const requestStartedAt = new Date().toISOString()
+  const startedAtMs = Date.now()
+  const correlationId = createAgentZeroCorrelationId()
+  const baseResult = {
+    mode: 'agent_zero_read_only_test_chat' as const,
+    execution_enabled: false as const,
+    writes_enabled: false as const,
+    correlation_id: correlationId,
+    fallback_attempted: false as const,
+    fallback_result: null,
+  }
   const key = readAgentZeroApiKey(input.env)
   if (!key) {
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, completedAt })
     return {
+      ...baseResult,
       ok: false,
       status: 503,
-      mode: 'agent_zero_read_only_test_chat',
       agent_zero_called: false,
-      execution_enabled: false,
-      writes_enabled: false,
       blocker: 'agent_zero_external_api_key_missing',
       response_text: null,
       context_id: null,
       raw_response_shape: [],
       error: 'Agent Zero external API requires X-API-KEY; configure a Mission Control environment variable, systemd credential, or secret file without exposing the value.',
+      stage: 'auth_blocked',
+      error_code: 'agent_zero_external_api_key_missing',
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   }
 
   const baseUrl = normalizeBaseUrl(input.baseUrl)
   const endpoint = `${baseUrl}/api/api_message`
   const prompt = buildAgentZeroReadOnlyPrompt(input.ownerMessage, input.context)
+  let upstreamStartedAt: string | null = null
 
   try {
+    upstreamStartedAt = new Date().toISOString()
     const response = await fetch(endpoint, {
       method: 'POST',
       cache: 'no-store',
-      signal: AbortSignal.timeout(input.timeoutMs ?? 45000),
+      signal: AbortSignal.timeout(input.timeoutMs ?? 90000),
       headers: {
         'Content-Type': 'application/json',
         'X-API-KEY': key.value,
+        'X-Correlation-ID': correlationId,
       },
       body: JSON.stringify({
         message: prompt,
         lifetime_hours: 2,
+        correlation_id: correlationId,
       }),
     })
+    const headersAt = new Date().toISOString()
     const text = await response.text()
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, upstreamStartedAt, headersAt, completedAt })
     let payload: unknown = null
     try {
       payload = text ? JSON.parse(text) : null
@@ -2632,32 +2713,45 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       ? buildAgentZeroReadOnlyContractReply({ ownerMessage: input.ownerMessage, context: input.context, upstreamText: cleanedText, upstreamReturnedLocalArtifact })
       : null
     const ownerText = contractText || cleanedText
+    const errorCode = response.ok ? null : `agent_zero_api_http_${response.status}`
     return {
+      ...baseResult,
       ok: response.ok,
       status: response.status,
-      mode: 'agent_zero_read_only_test_chat',
       agent_zero_called: true,
-      execution_enabled: false,
-      writes_enabled: false,
-      blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
+      blocker: response.ok ? null : errorCode,
       response_text: ownerText,
       context_id: extracted.contextId,
       raw_response_shape: extracted.shape,
       error: response.ok ? null : (ownerText || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
+      stage: response.ok ? 'agent_zero_response_completed' : 'agent_zero_http_error',
+      error_code: errorCode,
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   } catch (error) {
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, upstreamStartedAt, completedAt })
+    const timedOut = isAgentZeroTimeoutError(error)
+    const errorCode = timedOut ? 'agent_zero_upstream_timeout' : 'agent_zero_api_unreachable'
     return {
+      ...baseResult,
       ok: false,
-      status: 503,
-      mode: 'agent_zero_read_only_test_chat',
+      status: timedOut ? 504 : 503,
       agent_zero_called: true,
-      execution_enabled: false,
-      writes_enabled: false,
-      blocker: 'agent_zero_api_unreachable',
+      blocker: errorCode,
       response_text: null,
       context_id: null,
       raw_response_shape: [],
-      error: error instanceof Error ? error.message : 'agent_zero_api_call_failed',
+      error: timedOut
+        ? `Agent Zero upstream did not return within the bounded ${input.timeoutMs ?? 90000}ms budget.`
+        : sanitizeAgentZeroBridgeError(error),
+      stage: timedOut ? 'agent_zero_upstream_waiting_for_response' : 'agent_zero_upstream_call_failed',
+      error_code: errorCode,
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   }
 }

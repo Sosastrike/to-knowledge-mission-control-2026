@@ -84,6 +84,86 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(result.writes_enabled).toBe(false)
   })
 
+  it('returns correlation and timing metadata for successful read-only Agent Zero messages', async () => {
+    const calls: Array<[string, RequestInit]> = []
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push([String(url), init || {}])
+      return new Response(JSON.stringify({
+        context_id: 'ctx-1',
+        response: 'AGENT_ZERO_MODEL_OK',
+      }), { status: 200 })
+    }) as typeof fetch
+
+    try {
+      const result = await sendAgentZeroReadOnlyMessage({
+        ownerMessage: 'Reply exactly: AGENT_ZERO_MODEL_OK',
+        env: { AGENT_ZERO_API_KEY: 'test-api-key-secret' },
+        baseUrl: 'http://agent-zero.local/',
+        context: buildAgentZeroReadOnlyContext({ providerIds: ['agent_zero'] }),
+      })
+
+      expect(result.ok).toBe(true)
+      expect(result.response_text).toBe('AGENT_ZERO_MODEL_OK')
+      expect(result.correlation_id).toMatch(/^azr_[a-z0-9]+_/)
+      expect(result.stage).toBe('agent_zero_response_completed')
+      expect(result.error_code).toBeNull()
+      expect(result.elapsed_ms).toBeGreaterThanOrEqual(0)
+      expect(result.timings.request_started_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(result.timings.agent_zero_upstream_started_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(result.timings.agent_zero_headers_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(result.timings.completed_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(result.fallback_attempted).toBe(false)
+      expect(JSON.stringify(result)).not.toContain('test-api-key-secret')
+      expect(calls).toHaveLength(1)
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('classifies upstream timeout separately from missing runtime reachability', async () => {
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+      return await new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal
+        if (signal?.aborted) {
+          const error = new Error('The operation was aborted due to timeout')
+          error.name = 'TimeoutError'
+          reject(error)
+          return
+        }
+        signal?.addEventListener('abort', () => {
+          const error = new Error('The operation was aborted due to timeout')
+          error.name = 'TimeoutError'
+          reject(error)
+        }, { once: true })
+      })
+    }) as typeof fetch
+
+    try {
+      const result = await sendAgentZeroReadOnlyMessage({
+        ownerMessage: 'Reply exactly: AGENT_ZERO_MODEL_OK',
+        env: { AGENT_ZERO_API_KEY: 'test-api-key-secret' },
+        baseUrl: 'http://agent-zero.local/',
+        timeoutMs: 5,
+        context: buildAgentZeroReadOnlyContext({ providerIds: ['agent_zero'] }),
+      })
+
+      expect(result.ok).toBe(false)
+      expect(result.status).toBe(504)
+      expect(result.agent_zero_called).toBe(true)
+      expect(result.blocker).toBe('agent_zero_upstream_timeout')
+      expect(result.error_code).toBe('agent_zero_upstream_timeout')
+      expect(result.stage).toBe('agent_zero_upstream_waiting_for_response')
+      expect(result.correlation_id).toMatch(/^azr_[a-z0-9]+_/)
+      expect(result.elapsed_ms).toBeGreaterThanOrEqual(0)
+      expect(result.timings.completed_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(JSON.stringify(result)).not.toContain('test-api-key-secret')
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it('builds a read-only Mission Control context and refuses execution claims', () => {
     const context = buildAgentZeroReadOnlyContext({
       providerIds: ['tony', 'agent_zero', 'zapier'],
@@ -759,7 +839,6 @@ describe('Agent Zero read-only bridge connector', () => {
     expect(reply).not.toContain('/a0/usr/workdir')
     expect(reply).not.toMatch(/^Created /)
   })
-
 
   it('answers mixed capability and brain prompts with the full registry summary', () => {
     const context = buildAgentZeroReadOnlyContext({

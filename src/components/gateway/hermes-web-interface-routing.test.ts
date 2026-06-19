@@ -86,6 +86,14 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     expect(source).toContain('OpenCloud / OpenClaw intermediary')
   })
 
+  it('keeps Agent Zero browser test timeout bounded but longer than the live model route budget', () => {
+    const source = readFileSync('src/components/gateway/GatewayShell.tsx', 'utf8')
+
+    expect(source).toContain('AGENT_ZERO_TEST_CHAT_TIMEOUT_MS')
+    expect(source).toContain('90000')
+    expect(source).not.toContain('setTimeout(() => controller.abort(), 25000)')
+  })
+
   it('uses authenticated Mission Control routes for Agent Zero owner-facing UI', () => {
     const agentZero = AGENT_INTERFACE_LINKS.find((agent) => agent.name === 'Agent Zero')
     const ron = AGENT_INTERFACE_LINKS.find((agent) => agent.name === 'Ron Weasley')

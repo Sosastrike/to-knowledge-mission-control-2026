@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
   const result = await sendAgentZeroReadOnlyMessage({
     ownerMessage: message.slice(0, 4000),
     context,
+    timeoutMs: 90000,
   })
 
   const createReport = Boolean(body.create_report) || shouldCreateAgentZeroReportFromMessage(message)

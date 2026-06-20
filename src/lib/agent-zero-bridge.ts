@@ -1058,6 +1058,25 @@ function readAgentZeroApiKey(env: EnvLike = process.env): KeySource | null {
   return null
 }
 
+export function buildAgentZeroInternalAuthHeaders(env: EnvLike = process.env): { headers: Record<string, string>; key_state: AgentZeroApiKeyState } | null {
+  const key = readAgentZeroApiKey(env)
+  if (!key) return null
+  return {
+    headers: { 'X-API-KEY': key.value },
+    key_state: {
+      required: true,
+      present: true,
+      configured_env_name: key.name,
+      source_type: key.sourceType,
+      source_path: key.sourcePath,
+      accepted_env_names: AGENT_ZERO_API_KEY_ENV_NAMES,
+      accepted_file_env_name: AGENT_ZERO_API_KEY_FILE_ENV_NAME,
+      accepted_systemd_credential_names: AGENT_ZERO_SYSTEMD_CREDENTIAL_NAMES,
+      redacted: `${key.name}=<redacted>`,
+    },
+  }
+}
+
 export function getAgentZeroApiKeyState(env: EnvLike = process.env): AgentZeroApiKeyState {
   const key = readAgentZeroApiKey(env)
   return {

@@ -39,6 +39,7 @@ import {
 } from '@/lib/hermes-web-interface'
 import { ZAPIER_GATEWAY_CARD_COPY } from '@/lib/zapier-approved-action-library'
 import { PAPERCLIP_ECO_DASHBOARD, PAPERCLIP_ECO_WINDOW_NAME, attachGatewayActionHandler, rewriteGatewayOwnerAnchors } from './gateway-actions'
+import { AgentJobWorkspace } from '@/components/agent-platform/AgentJobWorkspace'
 
 // Mission Control root. Verified target on production 2026-05-11.
 const MISSION_CONTROL_HOME = '/'
@@ -707,6 +708,7 @@ type AgentPanelMode = BaseAgentPanelMode | HermesWebInterfaceMode
 type GatewayControlView =
   | { kind: 'tools' }
   | { kind: 'brain' }
+  | { kind: 'platform-job'; agentId: string; jobId?: string }
   | { kind: 'agent'; slug: AgentSlug; mode: AgentPanelMode }
 
 type AgentControlDefinition = {
@@ -860,6 +862,12 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   if (parts[0] !== 'gateway') return null
   if (parts[1] === 'tools') return { kind: 'tools' }
   if (parts[1] === 'brain') return { kind: 'brain' }
+  if (parts[1] === 'agents' && parts[2] && parts[3] === 'jobs') {
+    const agentId = parts[2].toLowerCase().replace(/-/g, '_')
+    if (/^[a-z0-9_]+$/.test(agentId) && !agentId.startsWith('test_agent_')) {
+      return { kind: 'platform-job', agentId, jobId: parts[4] }
+    }
+  }
   if (parts[1] === 'agent-hub' && parts[2] === 'paperclip' && !parts[3]) {
     return { kind: 'agent', slug: 'paperclip', mode: 'ui' }
   }
@@ -1763,7 +1771,7 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
           </article>
         </section>
       )}
-      {isAgentZeroChat && <AgentZeroReadOnlyChatPanel />}
+      {isAgentZeroChat && <AgentJobWorkspace agentId="agent_zero" />}
       <ReadableStatusPanel endpoint={statusEndpoint} />
     </main>
   )
@@ -1772,6 +1780,18 @@ function AgentControlPanel({ slug, mode }: { slug: AgentSlug; mode: AgentPanelMo
 function GatewayControlSurface({ view }: { view: GatewayControlView }) {
   if (view.kind === 'tools') return <GatewayToolsPanel />
   if (view.kind === 'brain') return <BrainControlPanel />
+  if (view.kind === 'platform-job') {
+    return (
+      <main className="control-page" data-testid={`agent-platform-${view.agentId}-jobs`}>
+        <header className="control-hero">
+          <p>Agent Platform</p>
+          <h1>{view.agentId.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')} Jobs</h1>
+          <span>Durable queue, state, events, checkpoints, queue input, steer, and explicit cancel through Mission Control.</span>
+        </header>
+        <AgentJobWorkspace agentId={view.agentId} initialJobId={view.jobId || null} />
+      </main>
+    )
+  }
   return <AgentControlPanel slug={view.slug} mode={view.mode} />
 }
 
@@ -1782,6 +1802,7 @@ function resolveTab(pathname: string | null, q: URLSearchParams | null): Tab {
     const parts = pathname.replace(/^\/+/, '').split(/[\/?#]/)
     if (parts[0] === 'gateway' && parts[1]) {
       if (parts[1] === 'agent-hub' && parts[2] === 'paperclip') return BY_ID.get('paperclip')!
+      if (parts[1] === 'agents') return BY_ID.get('agent-hub')!
       if (BY_SEG.has(parts[1])) return BY_SEG.get(parts[1])!
     }
   }

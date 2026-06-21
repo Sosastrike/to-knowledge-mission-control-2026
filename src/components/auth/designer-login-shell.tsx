@@ -192,25 +192,8 @@ export function DesignerLoginShell({
 
         {/* ── Right panel ────────────────────────────────────────── */}
         <section className={styles.panel}>
-          <div className={styles.tabs} role="tablist" aria-label="Authentication mode">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'login'}
-              className={mode === 'login' ? styles.activeTab : styles.tab}
-              onClick={() => setMode('login')}
-            >
-              Log in
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'request'}
-              className={mode === 'request' ? styles.activeTab : styles.tab}
-              onClick={() => setMode('request')}
-            >
-              Sign up
-            </button>
+          <div className={styles.tabs} aria-label="Authentication">
+            <span className={styles.activeTab}>Log in</span>
           </div>
 
           {mode === 'login' && (
@@ -282,13 +265,6 @@ export function DesignerLoginShell({
                     <input type="checkbox" name="remember" defaultChecked />
                     Remember me for 30 days
                   </label>
-                  <button
-                    type="button"
-                    className={styles.linkInline}
-                    onClick={() => setMode('forgot')}
-                  >
-                    Forgot password?
-                  </button>
                 </div>
 
                 <button
@@ -379,17 +355,6 @@ export function DesignerLoginShell({
                   {!microsoftReady && <span className={styles.ssoBadge}>Requires owner setup</span>}
                 </button>
 
-              </div>
-
-              <div className={styles.bottom}>
-                New to Mission Control?{' '}
-                <button
-                  type="button"
-                  className={styles.linkInline}
-                  onClick={() => setMode('request')}
-                >
-                  Request an invite
-                </button>
               </div>
             </>
           )}

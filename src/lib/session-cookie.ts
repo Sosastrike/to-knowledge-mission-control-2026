@@ -2,10 +2,14 @@ import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 export const MC_SESSION_COOKIE_NAME = '__Host-mc-session'
 export const LEGACY_MC_SESSION_COOKIE_NAME = 'mc-session'
-const MC_SESSION_COOKIE_NAMES = [MC_SESSION_COOKIE_NAME, LEGACY_MC_SESSION_COOKIE_NAME] as const
+export const MC_SESSION_COOKIE_NAMES = [MC_SESSION_COOKIE_NAME, LEGACY_MC_SESSION_COOKIE_NAME] as const
 
 export function getMcSessionCookieName(isSecureRequest: boolean): string {
   return isSecureRequest ? MC_SESSION_COOKIE_NAME : LEGACY_MC_SESSION_COOKIE_NAME
+}
+
+export function getMcSessionCookieNames(): readonly string[] {
+  return MC_SESSION_COOKIE_NAMES
 }
 
 export function isRequestSecure(request: Request): boolean {
@@ -13,15 +17,19 @@ export function isRequestSecure(request: Request): boolean {
     || new URL(request.url).protocol === 'https:'
 }
 
-export function parseMcSessionCookieHeader(cookieHeader: string): string | null {
-  if (!cookieHeader) return null
+export function parseMcSessionCookieValues(cookieHeader: string): string[] {
+  if (!cookieHeader) return []
+  const values: string[] = []
   for (const cookieName of MC_SESSION_COOKIE_NAMES) {
-    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]*)`))
-    if (match) {
-      return decodeURIComponent(match[1])
-    }
+    const escapedName = cookieName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`))
+    if (match) values.push(decodeURIComponent(match[1]))
   }
-  return null
+  return [...new Set(values.filter(Boolean))]
+}
+
+export function parseMcSessionCookieHeader(cookieHeader: string): string | null {
+  return parseMcSessionCookieValues(cookieHeader)[0] || null
 }
 
 function envFlag(name: string): boolean | undefined {

@@ -5,6 +5,7 @@ import { verifyPassword } from '@/lib/password'
 import { getMcSessionCookieName, getMcSessionCookieOptions, isRequestSecure } from '@/lib/session-cookie'
 import { passwordChangeLimiter } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
+import { buildAuthenticatedSessionPayload } from '@/lib/auth-session'
 
 export async function GET(request: Request) {
   const auth = requireRole(request, 'viewer')
@@ -16,19 +17,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  return NextResponse.json({
-    user: {
-      id: user.id,
-      username: user.username,
-      display_name: user.display_name,
-      role: user.role,
-      provider: user.provider || 'local',
-      email: user.email || null,
-      avatar_url: user.avatar_url || null,
-      workspace_id: user.workspace_id ?? 1,
-      tenant_id: user.tenant_id ?? 1,
-    },
-  })
+  return NextResponse.json(buildAuthenticatedSessionPayload(user))
 }
 
 /**

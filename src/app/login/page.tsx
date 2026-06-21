@@ -24,6 +24,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { DesignerLoginShell } from '@/components/auth/designer-login-shell'
+import { getPostLoginTarget } from '@/lib/login-redirect-target'
 
 interface GoogleCredentialResponse {
   credential?: string
@@ -84,6 +85,27 @@ export default function LoginPage() {
   const googleCallbackRef = useRef<((response: GoogleCredentialResponse) => void) | null>(null)
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+
+  const redirectAfterLogin = useCallback(() => {
+    return getPostLoginTarget(window.location.search)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/auth/session', { cache: 'no-store', credentials: 'same-origin' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data?.authenticated) {
+          window.location.replace(redirectAfterLogin())
+        }
+      })
+      .catch(() => {
+        // Login page remains usable when the session endpoint is temporarily unavailable.
+      })
+    return () => {
+      active = false
+    }
+  }, [redirectAfterLogin])
 
   // Check if first-time setup is needed on page load — auto-redirect to /setup
   useEffect(() => {
@@ -154,10 +176,10 @@ export default function LoginPage() {
       // router.push() + refresh() can race and use stale RSC payloads.
       // Owner directive 2026-04-29: land on the official TKMC app root.
       // The root now shows the active Mission Control landing surface.
-      window.location.href = '/designer-mission-control/Mission%20Control.html?page=mission'
+      window.location.href = redirectAfterLogin()
       return true
     },
-    [t],
+    [redirectAfterLogin, t],
   )
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {

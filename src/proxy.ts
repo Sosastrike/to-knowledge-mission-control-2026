@@ -284,9 +284,14 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Redirect to login
+  // Redirect to login and preserve a safe same-origin return target for post-login navigation.
   const loginUrl = request.nextUrl.clone()
+  const intendedTarget = `${request.nextUrl.pathname}${request.nextUrl.search}`
   loginUrl.pathname = '/login'
+  loginUrl.search = ''
+  if (intendedTarget && intendedTarget !== '/login') {
+    loginUrl.searchParams.set('next', intendedTarget)
+  }
   return addSecurityHeaders(NextResponse.redirect(loginUrl), request)
 }
 

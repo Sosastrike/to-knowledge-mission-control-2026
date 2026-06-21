@@ -1,3 +1,4 @@
+import { NextRequest } from 'next/server'
 import { describe, expect, it, vi } from 'vitest'
 
 function setNodeEnv(value: string) {
@@ -78,6 +79,33 @@ describe('proxy host matching', () => {
 
     const response = proxy(request)
     expect(response.status).not.toBe(401)
+  })
+
+
+
+  it('redirects unauthenticated protected pages to login with a safe return target', async () => {
+    vi.resetModules()
+    vi.doMock('node:os', () => ({
+      default: { hostname: () => 'hetzner-jarv' },
+      hostname: () => 'hetzner-jarv',
+    }))
+
+    const { proxy } = await import('./proxy')
+    const request = new NextRequest('https://tkmc.knowledge-vs-ai.com/gateway/agent-hub/agent-zero/chat?panel=jobs', {
+      headers: { host: 'tkmc.knowledge-vs-ai.com' },
+    })
+
+    setNodeEnv('production')
+    process.env.MC_ALLOWED_HOSTS = 'tkmc.knowledge-vs-ai.com'
+    delete process.env.MC_ALLOW_ANY_HOST
+
+    const response = proxy(request)
+    expect(response.status).toBe(307)
+    const location = response.headers.get('location') || ''
+    expect(location).toContain('/login')
+    expect(location).toContain('next=%2Fgateway%2Fagent-hub%2Fagent-zero%2Fchat%3Fpanel%3Djobs')
+    expect(location).not.toContain('100.116.35.95')
+    expect(location).not.toContain('50080')
   })
 
   it('still blocks unauthenticated non-health status API calls', async () => {

@@ -40,6 +40,7 @@ import {
 import { ZAPIER_GATEWAY_CARD_COPY } from '@/lib/zapier-approved-action-library'
 import { PAPERCLIP_ECO_DASHBOARD, PAPERCLIP_ECO_WINDOW_NAME, attachGatewayActionHandler, rewriteGatewayOwnerAnchors } from './gateway-actions'
 import { AgentJobWorkspace } from '@/components/agent-platform/AgentJobWorkspace'
+import { MissionControlSessionMenu } from '@/components/auth/MissionControlSessionMenu'
 
 // Mission Control root. Verified target on production 2026-05-11.
 const MISSION_CONTROL_HOME = '/'
@@ -1858,6 +1859,16 @@ export default function GatewayShell() {
         .gateway-shell .gw-side .sub{font-size:10.5px;color:#6b7280;padding:0 10px;margin-bottom:14px}
         .gateway-shell .gw-side .trace-link{display:inline-flex;margin-top:8px;color:#78f2e2;text-decoration:none;font-weight:700}
         .gateway-shell .gw-side .trace-link:hover{text-decoration:underline}
+        .gateway-shell .mc-session-menu{display:grid;gap:8px;margin:0 0 14px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(255,255,255,.035);color:#d7dde8}
+        .gateway-shell .mc-session-identity{display:grid;gap:2px;min-width:0}
+        .gateway-shell .mc-session-kicker{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#778196;font-weight:700}
+        .gateway-shell .mc-session-identity strong{font-size:12px;font-weight:700;color:#f1f4f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .gateway-shell .mc-session-role{font-size:10px;color:#9aa3b2;text-transform:capitalize}
+        .gateway-shell .mc-session-logout,.gateway-shell .mc-session-login{display:inline-flex;align-items:center;justify-content:center;min-height:30px;border:1px solid rgba(120,242,226,.34);border-radius:6px;background:rgba(120,242,226,.08);color:#a8fff5;font-size:11px;font-weight:800;text-decoration:none;cursor:pointer}
+        .gateway-shell .mc-session-logout:hover,.gateway-shell .mc-session-login:hover{background:rgba(120,242,226,.14)}
+        .gateway-shell .mc-session-logout:disabled{cursor:wait;opacity:.7}
+        .gateway-shell .mc-session-error{font-size:10px;color:#ff9fb6}
+        .gateway-shell .mc-session-warning{border-color:rgba(255,181,71,.35);color:#ffd7a3}
         .gateway-shell .gw-side .gw-tab{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:6px;font-size:12.5px;cursor:pointer;color:#cdd4df;border:1px solid transparent;margin-bottom:2px;background:transparent;width:100%;text-align:left}
         .gateway-shell .gw-side .gw-tab:hover{background:#131923;color:#f1f4f9}
         .gateway-shell .gw-side .gw-tab.active{background:#1a212d;color:#f1f4f9;border-color:rgba(255,255,255,.10)}
@@ -1951,6 +1962,7 @@ export default function GatewayShell() {
             Trace Zapier Wire
           </a>
         </div>
+        <MissionControlSessionMenu />
         {TABS.map((t) => (
           <button
             key={t.id}

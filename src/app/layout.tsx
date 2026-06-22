@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { THEME_IDS } from '@/lib/themes'
+import { MissionControlSessionMenu } from '@/components/auth/MissionControlSessionMenu'
 import { ThemeBackground } from '@/components/ui/theme-background'
 import './globals.css'
 
@@ -115,6 +116,11 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <ThemeBackground />
+            <MissionControlSessionMenu
+              className="mc-global-session-control"
+              hideWhenSignedOut
+              variant="global"
+            />
             <div className="h-screen overflow-hidden bg-background text-foreground">
               {children}
             </div>

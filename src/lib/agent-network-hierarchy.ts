@@ -1,3 +1,5 @@
+import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
+
 export const AGENT_NETWORK_STATUS_STATES = ['connected', 'degraded', 'pending', 'blocked', 'legacy_archived'] as const
 
 export type AgentNetworkStatusState = (typeof AGENT_NETWORK_STATUS_STATES)[number]
@@ -15,7 +17,7 @@ export type CanonicalAgentNetworkRow = {
 }
 
 export type CanonicalAgentNetworkTier = {
-  id: 'commander' | 'lieutenant' | 'runtime' | 'system' | 'archive'
+  id: 'commander' | 'nuclear_dispatcher' | 'runtime' | 'system' | 'archive'
   label: string
   sub: string
 }
@@ -27,7 +29,10 @@ export type HermesHierarchyStatusInput = {
   blocker?: string | null
 }
 
-export const HERMES_LIEUTENANT_CAPABILITIES = [
+export const HERMES_NUCLEAR_DISPATCHER_CAPABILITIES = [
+  'full ecosystem visibility',
+  'Jarvis command registry parity',
+  'delegated exact-scope execution',
   'skills',
   'workflow planning',
   'automation design',
@@ -37,7 +42,7 @@ export const HERMES_LIEUTENANT_CAPABILITIES = [
 
 export const CANONICAL_AGENT_NETWORK_TIERS: CanonicalAgentNetworkTier[] = [
   { id: 'commander', label: 'Commander', sub: 'Agent Zero owns ecosystem command and reports to the Owner' },
-  { id: 'lieutenant', label: 'Lieutenant', sub: 'Hermes supports Agent Zero with skills, workflows, and plans' },
+  { id: 'nuclear_dispatcher', label: 'Nuclear Dispatcher', sub: 'Ron Weasley has a direct Gateway line with Jarvis-delegated exact-scope execution' },
   { id: 'runtime', label: 'Runtime / Skills', sub: 'OpenClaw+ / ClaudeClaw shared runtime and skill layer' },
   { id: 'system', label: 'Bridge / MCP + Brain Systems', sub: 'Tools, models, integrations, MCPs, Obsidian, MemPalace, Graphify, Brain Sync, and Build-Wiki' },
 ]
@@ -46,7 +51,7 @@ export const CANONICAL_AGENT_TIER_OF: Record<string, string> = {
   agent_zero: 'commander',
   'agent-zero': 'commander',
   main: 'commander',
-  hermes: 'lieutenant',
+  hermes: 'nuclear_dispatcher',
   openclaw_plus: 'runtime',
   openclaw: 'runtime',
   claudeclaw: 'runtime',
@@ -77,7 +82,7 @@ export const CANONICAL_AGENT_NETWORK_SEED_IDS = new Set([
 ])
 
 export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
-  version: 'agent_zero_commander_hermes_lieutenant_v1',
+  version: 'agent_zero_commander_hermes_nuclear_dispatcher_v1',
   owner: {
     id: 'owner',
     name: 'Owner',
@@ -93,17 +98,21 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
     execution_enabled: false,
     bridge_session_required: true,
   },
-  lieutenant: {
+  nuclear_dispatcher: {
     id: 'hermes',
-    name: 'Hermes',
-    role: 'Lieutenant / skill-workflow specialist',
+    name: RON_WEASLEY_IDENTITY.canonical_name,
+    canonical_name: RON_WEASLEY_IDENTITY.canonical_name,
+    short_name: RON_WEASLEY_IDENTITY.short_name,
+    full_title: RON_WEASLEY_IDENTITY.full_title,
+    legacy_names: RON_WEASLEY_IDENTITY.legacy_names,
+    role: 'Nuclear Dispatcher / optimization and workflow architect',
     supports: 'agent_zero',
-    status: 'pending' as AgentNetworkStatusState,
+    status: 'connected' as AgentNetworkStatusState,
     status_states: AGENT_NETWORK_STATUS_STATES,
-    capabilities: HERMES_LIEUTENANT_CAPABILITIES,
-    execution_enabled: false,
+    capabilities: HERMES_NUCLEAR_DISPATCHER_CAPABILITIES,
+    execution_enabled: true,
     bridge_session_required: true,
-    blocker: 'hermes_live_chat_adapter_not_proven',
+    blocker: null,
   },
   runtime: {
     id: 'openclaw_plus',
@@ -126,7 +135,8 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
   ],
   edges: [
     { from: 'owner', to: 'agent_zero', relation: 'commands' },
-    { from: 'agent_zero', to: 'hermes', relation: 'supported_by' },
+    { from: 'agent_zero', to: 'hermes', relation: 'delegates_to' },
+    { from: 'hermes', to: 'agent_zero', relation: 'reports_to' },
     { from: 'agent_zero', to: 'openclaw_plus', relation: 'uses_runtime' },
     { from: 'openclaw_plus', to: 'bridge_mcp', relation: 'exposes_access_layer' },
     { from: 'agent_zero', to: 'brain_sync', relation: 'operates_brain_systems' },
@@ -135,7 +145,7 @@ export const CANONICAL_AGENT_NETWORK_HIERARCHY = {
   labels: {
     approval_queue: 'Approval Queue - Agent Zero Bridge Session',
     approval_channel: 'Agent Zero Bridge Session',
-    report_identity: 'Agent Zero commander with Hermes lieutenant support',
+    report_identity: `Agent Zero commander with ${RON_WEASLEY_IDENTITY.full_title} support`,
     skill_owner: 'ecosystem',
   },
   skill_policy: {
@@ -203,13 +213,13 @@ export function getCanonicalAgentNetworkRows(input: HermesHierarchyStatusInput =
     },
     {
       id: 'hermes',
-      name: 'Hermes',
+      name: RON_WEASLEY_IDENTITY.canonical_name,
       status: hermesStatus.state,
-      role: 'Lieutenant / skill-workflow specialist',
-      template: 'execution disabled until Bridge Session',
-      channels: ['Mission Control read-only status', 'Agent Zero support edge'],
-      skills: [...HERMES_LIEUTENANT_CAPABILITIES],
-      support_edge: 'Hermes supports Agent Zero',
+      role: 'Nuclear Dispatcher / optimization and workflow architect',
+      template: 'Jarvis-signed exact-scope delegation required for execution',
+      channels: ['Mission Control Ron Weasley direct line', 'Agent Zero delegation edge', 'Gateway tool registry'],
+      skills: [...HERMES_NUCLEAR_DISPATCHER_CAPABILITIES],
+      support_edge: 'Agent Zero delegates certified exact scopes to Ron Weasley as Nuclear Dispatcher',
       blocker: hermesStatus.blocker,
     },
     {
@@ -220,7 +230,7 @@ export function getCanonicalAgentNetworkRows(input: HermesHierarchyStatusInput =
       template: 'backend runtime retained',
       channels: ['skills registry', 'adapters', 'reports'],
       skills: ['shared skills', 'governance', 'adapters'],
-      support_edge: 'OpenClaw+ runtime serves Agent Zero and Hermes',
+      support_edge: 'OpenClaw+ runtime serves Agent Zero and Ron Weasley',
       blocker: null,
     },
     {
@@ -241,7 +251,7 @@ export function isTonyActiveInHierarchy(hierarchy = CANONICAL_AGENT_NETWORK_HIER
   const activeIds = [
     hierarchy.commander.id,
     ...hierarchy.commander.aliases,
-    hierarchy.lieutenant.id,
+    hierarchy.nuclear_dispatcher.id,
     hierarchy.runtime.id,
     ...hierarchy.systems.map((system) => system.id),
   ]

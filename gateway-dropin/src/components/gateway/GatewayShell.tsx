@@ -82,6 +82,12 @@ const BY_ID = new Map(TABS.map((t) => [t.id, t]))
 const BY_SEG = new Map(TABS.map((t) => [t.seg, t]))
 const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
 
+function gatewayFrameSrcFor(t: Tab, q?: URLSearchParams | null): string {
+  const src = encodeURI(`${BASE}/design/gateway/${t.src}`)
+  if (t.id === 'overview' && q?.get('trace') === 'zapier') return `${src}?trace=zapier`
+  return src
+}
+
 type AgentAccessButton = {
   enabled: boolean
   href: string | null
@@ -108,6 +114,7 @@ type AgentInterfaceLink = {
   authRequired: true
   status: string
   blocker: string
+  guardrail?: string
   nextFix: string
   buttons: AgentAccessButtons
 }
@@ -1121,7 +1128,7 @@ export default function GatewayShell() {
 
 export { TABS as GATEWAY_TABS, resolveTab as activeTabFrom }
 export { gatewayActionForButton } from './gateway-actions'
-export function iframeSrcFor(t: Tab): string { return encodeURI(`${BASE}/design/gateway/${t.src}`) }
+export function iframeSrcFor(t: Tab, q?: URLSearchParams | null): string { return gatewayFrameSrcFor(t, q) }
 export function controlViewFromPath(pathname: string | null, q: URLSearchParams | null): GatewayControlView | null {
   return controlViewFrom(pathname, q)
 }

@@ -171,8 +171,8 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
 
   it('routes delegate open buttons to the matching Gateway pages', () => {
     expect(gatewayActionForButton({ label: 'open', nearbyText: 'Hermes · Nuclear Dispatcher · Jarvis concurrence required' })).toMatchObject({
-      kind: 'navigate',
-      href: '/gateway/agent-hub/ron/webui/app',
+      kind: 'status',
+      endpoint: '/api/bridge/hermes/status',
     })
     expect(gatewayActionForButton({ label: 'open', nearbyText: 'Build-Wiki worker · workflow runner OpenCloud n8n' })).toMatchObject({
       kind: 'frame',
@@ -217,7 +217,7 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       nearbyText: 'Paperclip workforce control plane Tailnet UI reachable',
     })).toMatchObject({
       kind: 'openExternal',
-      href: '/gateway/agent-hub/paperclip/ui',
+      href: '/gateway/agent-hub/paperclip/status',
     })
     expect(gatewayActionForButton({
       label: 'Open localhost',
@@ -225,7 +225,7 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
       nearbyText: 'Owner → Gateway → Agent Zero / Pi / Hermes → Paperclip workforce control plane',
     })).toMatchObject({
       kind: 'openExternal',
-      href: '/gateway/agent-hub/paperclip/ui',
+      href: '/gateway/agent-hub/paperclip/status',
     })
     expect(gatewayActionForButton({
       label: 'Open UI',
@@ -310,7 +310,7 @@ describe('gatewayActionForButton — runtime wiring for designer mock buttons', 
     })
     expect(gatewayActionForButton({
       label: 'Open Recommendations',
-      nearbyText: 'Pi route optimizer Gateway inventory',
+      nearbyText: 'PI Dispatcher route optimizer Gateway inventory',
     })).toMatchObject({
       kind: 'navigate',
       href: '/gateway/agent-hub/pi/recommend',
@@ -340,7 +340,7 @@ describe('controlViewFromPath — Paperclip normalized owner routes', () => {
   })
 
   it('supports the full Paperclip ECO control route map', () => {
-    for (const mode of ['config', 'ui', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help', 'telegram-agent']) {
+    for (const mode of ['config', 'status', 'tools', 'companies', 'agents', 'issues', 'audit', 'help', 'telegram-agent']) {
       expect(controlViewFromPath(`/gateway/agent-hub/paperclip/${mode}`, null)).toMatchObject({
         kind: 'agent',
         slug: 'paperclip',
@@ -353,8 +353,8 @@ describe('controlViewFromPath — Paperclip normalized owner routes', () => {
 describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
   const requiredSurfaces = [
     'Agent Zero',
-    'Ron Weasley',
-    'Pi',
+    'Hermes',
+    'PI Dispatcher',
     'SpaceAgent',
     'Paperclip',
     'OpenClaw+',
@@ -398,12 +398,12 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     })
     expect(byName.get('Agent Zero')?.tailnetUrl).toBe('http://100.116.35.95:50080/')
     expect(byName.get('Agent Zero')?.blocker).toContain('owner_hard_stops_only_remaining')
-    expect(byName.get('Ron Weasley')?.tailnetUrl).toBeNull()
+    expect(byName.get('Hermes')?.tailnetUrl).toBeNull()
     expect(byName.get('Playwright MCP')?.tailnetUrl).toBeNull()
     expect(byName.get('Playwright MCP')?.localUrl).toBe('server-local only: 127.0.0.1:8931')
     expect(byName.get('Paperclip')?.buttons.ui).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/paperclip/ui',
+      href: '/gateway/agent-hub/paperclip/status',
     })
     expect(byName.get('Paperclip')?.buttons.health).toMatchObject({
       enabled: true,
@@ -428,11 +428,11 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
       enabled: true,
       href: '/gateway/agent-hub/agent-zero/config',
     })
-    expect(byName.get('Ron Weasley')?.buttons.config).toMatchObject({
+    expect(byName.get('Hermes')?.buttons.config).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/config',
+      href: '/gateway/agent-hub/hermes/config',
     })
-    expect(byName.get('Pi')?.buttons.config).toMatchObject({
+    expect(byName.get('PI Dispatcher')?.buttons.config).toMatchObject({
       enabled: true,
       href: '/gateway/agent-hub/pi/config',
     })
@@ -459,46 +459,16 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     }
   })
 
-  it('exposes Pi, SpaceAgent, and Paperclip owner localhost/UI surfaces instead of disabled status-only rows', () => {
-    const byName = new Map(AGENT_INTERFACE_LINKS.map((row) => [row.name, row]))
-
-    expect(byName.get('Pi')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
-      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
-      buttons: {
-        ui: { enabled: true, href: '/gateway/agent-hub/pi/config' },
-        chat: { enabled: true, href: '/gateway/agent-hub/pi/recommend' },
-      },
-    })
-
-    expect(byName.get('SpaceAgent')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
-      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
-      buttons: {
-        ui: { enabled: true, href: '/gateway/agent-hub/spaceagent/config' },
-        chat: { enabled: true, href: '/gateway/agent-hub/spaceagent/research' },
-      },
-    })
-
-    expect(byName.get('Paperclip')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
-      tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
-      buttons: {
-        ui: { enabled: true, href: '/gateway/agent-hub/paperclip/ui' },
-      },
-    })
-  })
-
   it('uses the requested owner-facing truth table labels', () => {
     const byName = new Map(AGENT_INTERFACE_LINKS.map((row) => [row.name, row]))
     expect(byName.get('Agent Zero')?.status).toContain('exact-scope execution certified')
     expect(byName.get('Agent Zero')?.blocker).toContain('owner_hard_stops_only_remaining')
-    expect(byName.get('Ron Weasley')?.status).toContain('FULL_ACCESS_DELEGATED')
-    expect(byName.get('Ron Weasley')?.blocker).toContain('standalone_hermes_webui_proxy_required_if_8787_unreachable')
-    expect(byName.get('Pi')?.status).toContain('advisory')
-    expect(byName.get('Pi')?.blocker).toContain('pi_runtime_session_not_proven')
+    expect(byName.get('Hermes')?.status).toContain('Nuclear Dispatcher')
+    expect(byName.get('Hermes')?.blocker).toContain('jarvis_concurrence_required_for_major_changes')
+    expect(byName.get('PI Dispatcher')?.status).toContain('DISPATCHER REGISTERED')
+    expect(byName.get('PI Dispatcher')?.blocker).toContain('pi_runtime_session_not_proven')
     expect(byName.get('SpaceAgent')?.status).toContain('Mission Control panel only')
-    expect(byName.get('SpaceAgent')?.blocker).toContain('interactive_browser_actions_require_bridge_session')
+    expect(byName.get('SpaceAgent')?.blocker).toContain('no_standalone_spaceagent_ui')
     expect(byName.get('Paperclip')?.status).toContain('INSTALLED / READY')
     expect(byName.get('Paperclip')?.blocker).toContain('paperclip_writes_bridge_gated')
     expect(byName.get('OpenClaw+')?.status).toContain('tunnel live')
@@ -509,7 +479,7 @@ describe('AGENT_INTERFACE_LINKS — owner access control center', () => {
     const paperclip = AGENT_INTERFACE_LINKS.find((row) => row.name === 'Paperclip')
     expect(paperclip?.buttons.ui).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/paperclip/ui',
+      href: '/gateway/agent-hub/paperclip/status',
     })
     expect(paperclip?.blocker).toContain('selector-backed')
     expect(GATEWAY_SHELL_SOURCE).toContain('PaperclipWorkspaceSelectorPanel')

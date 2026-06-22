@@ -131,28 +131,17 @@ describe('Sofia deputy dispatcher', () => {
     })
   })
 
-  it('adds Sofia to Agent Hub and Ron policy surfaces', () => {
+  it('keeps legacy Sofia technical routes out of owner-visible Agent Hub software-agent surfaces', () => {
     const registry = createGatewayRegistryFromAgentNetwork({ generatedAt: '2026-05-29T00:00:00.000Z' })
     const payload = buildAgentHubStatusPayload(registry)
 
-    expect(payload.agents.map((agent) => agent.id)).toEqual(expect.arrayContaining(['sofia']))
-    expect(payload.agents.find((agent) => agent.id === 'sofia')).toMatchObject({
-      name: 'Sofia',
-      role: 'Deputy Nuclear Dispatcher',
-      status: 'configured',
-      called_true_proven: true,
-      routes: { bridge_status: '/api/bridge/sofia/status' },
-    })
-    expect(payload.nuclear_gateway_graph.nodes).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'sofia', label: 'Sofia', role: 'Second-in-Command to Ron Weasley', direct_line_owner: true }),
-    ]))
-    expect(payload.nuclear_gateway_graph.edges).toEqual(expect.arrayContaining([
+    expect(payload.agents.map((agent) => agent.id)).not.toContain('sofia')
+    expect(payload.nuclear_gateway_graph.nodes.map((node) => node.id)).not.toContain('sofia')
+    expect(payload.nuclear_gateway_graph.edges).not.toEqual(expect.arrayContaining([
       { source: 'nuclear.gateway', target: 'sofia', relation: 'routes_to' },
       { source: 'sofia', target: 'ron.weasley', relation: 'reports_to' },
     ]))
-    expect(payload.nuclear_gateway_graph.direct_line_trace_buttons).toEqual(expect.arrayContaining([
-      expect.objectContaining({ agent_id: 'sofia', label: 'Sofia' }),
-    ]))
+    expect(payload.nuclear_gateway_graph.direct_line_trace_buttons.map((button) => button.agent_id)).not.toContain('sofia')
 
     expect(buildHermesStatus()).toMatchObject({
       deputy: expect.objectContaining({ agent_id: 'sofia', display_name: 'Sofia', reports_to: 'ron-weasley' }),

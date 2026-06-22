@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { defaultAgentZeroBridgeSessionObject, type AgentZeroBridgeSessionObject } from './agent-zero-bridge-session'
+import { buildJarvisAccessTruth } from '@/lib/jarvis-access-truth'
 import { inferSkillRoleTags, type SkillRoleTag } from '@/lib/skill-role-tags'
 
 export const AGENT_ZERO_DEFAULT_BASE_URL = 'http://100.116.35.95:50080'
@@ -470,6 +471,7 @@ export type AgentZeroLiveRegistry = {
 export type AgentZeroReadOnlyContext = {
   execution_enabled: boolean
   bridge_session_required: boolean
+  jarvis_access_truth?: Record<string, unknown>
   mission_control: {
     visible: true
     status: EcosystemAccessState
@@ -707,6 +709,14 @@ export type AgentZeroReadOnlyContext = {
   restrictions: string[]
 }
 
+export type AgentZeroReadOnlyMessageTimings = {
+  request_started_at: string
+  agent_zero_upstream_started_at: string | null
+  agent_zero_headers_at: string | null
+  completed_at: string | null
+  elapsed_ms: number
+}
+
 export type AgentZeroReadOnlyMessageResult = {
   ok: boolean
   status: number
@@ -717,8 +727,63 @@ export type AgentZeroReadOnlyMessageResult = {
   blocker: string | null
   response_text: string | null
   context_id: string | null
+  conversation_id?: string | null
+  queued_behind_active?: boolean
+  serialized_execution?: boolean
   raw_response_shape: string[]
   error: string | null
+  correlation_id: string
+  stage:
+    | 'auth_blocked'
+    | 'agent_zero_upstream_call_started'
+    | 'agent_zero_upstream_waiting_for_response'
+    | 'agent_zero_http_error'
+    | 'agent_zero_response_completed'
+    | 'agent_zero_upstream_call_failed'
+  error_code: string | null
+  retryable: boolean
+  fallback_attempted: false
+  fallback_result: null
+  elapsed_ms: number
+  timings: AgentZeroReadOnlyMessageTimings
+}
+
+function createAgentZeroCorrelationId(): string {
+  return `azr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function buildAgentZeroTimings(input: {
+  requestStartedAt: string
+  startedAtMs: number
+  upstreamStartedAt?: string | null
+  headersAt?: string | null
+  completedAt?: string | null
+}): AgentZeroReadOnlyMessageTimings {
+  return {
+    request_started_at: input.requestStartedAt,
+    agent_zero_upstream_started_at: input.upstreamStartedAt || null,
+    agent_zero_headers_at: input.headersAt || null,
+    completed_at: input.completedAt || null,
+    elapsed_ms: Math.max(0, Date.now() - input.startedAtMs),
+  }
+}
+
+function isAgentZeroTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const candidate = error as { name?: unknown; code?: unknown; message?: unknown }
+  return candidate.name === 'TimeoutError'
+    || candidate.name === 'AbortError'
+    || candidate.code === 'ABORT_ERR'
+    || /timeout|aborted/i.test(String(candidate.message || ''))
+}
+
+function sanitizeAgentZeroBridgeError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error || 'agent_zero_api_call_failed')
+  return raw
+    .replace(/Bearer\s+[A-Za-z0-9._~+\/=:-]+/gi, 'Bearer [redacted]')
+    .replace(/X-API-KEY\s*[:=]\s*[^\s,;}]+/gi, 'X-API-KEY=[redacted]')
+    .replace(/[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{24,}/g, '[redacted-token]')
+    .slice(0, 500)
 }
 
 const LOCAL_PATH_PATTERN = /(?:\/home\/tony|\/tmp|\/var\/folders|\/a0\/(?:usr|tmp|var))[^\s`'"\])}]*/gi
@@ -873,8 +938,25 @@ function buildCapabilityRegistryReply(context: AgentZeroReadOnlyContext): string
     `MCP includes ${mcpServers.length ? mcpServers.join('; ') : 'no MCP servers visible'}.`,
     `Connected or configured integrations include ${connectedIntegrations.length ? connectedIntegrations.join('; ') : 'none reported as connected'}.`,
     `Blocked integrations include ${blockedIntegrations.length ? blockedIntegrations.join('; ') : 'none reported as blocked'}.`,
-    `Execution is ${context.bridge_session.execution_enabled ? 'available through the active Bridge Session only' : 'disabled until an owner-approved Bridge Session is active'}.`,
+    currentJarvisAccessSentence(context),
   ].join(' ')
+}
+
+function currentJarvisAccessSentence(context: AgentZeroReadOnlyContext): string {
+  const truth = pickRecord(context.jarvis_access_truth)
+  const normalChatDirect =
+    truth.normal_chat_direct_ready === true ||
+    truth.normal_chat_bridge_required === false ||
+    truth.route === 'telegram_gateway_agent_zero'
+  const active = truth.bridge_session_active === true || context.bridge_session.execution_enabled === true
+  const exactScope = truth.exact_scope_execution_enabled === true || context.execution_enabled === true
+  if (active && exactScope) {
+    return 'Normal Jarvis chat is direct through Telegram -> Gateway -> Agent Zero. Certified exact-scope Gateway actions are available under the active scope; broad or uncertified external actions remain blocked.'
+  }
+  if (normalChatDirect) {
+    return 'Normal Jarvis chat is direct through Telegram -> Gateway -> Agent Zero. Jarvis has Gateway registry access for models, tools, skills, MCPs, memory, and connectors. Protected side-effect actions require an exact Gateway scope or owner approval; broad or uncertified external actions remain gated.'
+  }
+  return 'Normal Jarvis chat is direct through Telegram -> Gateway -> Agent Zero and does not require a Bridge Session. Protected side-effect actions require an exact Gateway scope or owner approval; broad or uncertified external actions remain gated.'
 }
 
 function buildSkillRegistryReply(context: AgentZeroReadOnlyContext): string {
@@ -888,8 +970,8 @@ function buildSkillRegistryReply(context: AgentZeroReadOnlyContext): string {
     `Yes, Sir. I can see ${context.skills.total} shared OpenClaw+ skills from the Mission Control registry.`,
     `Sources: ${sources.length ? sources.join('; ') : 'no skill sources visible'}.`,
     `Available examples: ${sample.length ? sample.join('; ') : 'no skills listed'}.`,
-    'They are available to Agent Zero and Hermes; Tony does not own the active skill system.',
-    'Execution-capable skills stay blocked until an owner-approved Bridge Session and registered adapter allow them.',
+    'They are available to Agent Zero and Ron Weasley; Tony does not own the active skill system.',
+    currentJarvisAccessSentence(context),
   ].join(' ')
 }
 
@@ -905,7 +987,7 @@ function buildSkillPlanningReply(context: AgentZeroReadOnlyContext): string {
     `Sir, for a safe report task I would select ${reportSkill.name} from the shared skill registry.`,
     `Status: ${reportSkill.status}${reportSkill.blocked_reason ? `, blocker: ${reportSkill.blocked_reason.replace(/[_-]+/g, ' ')}` : ''}.`,
     `Required tools: ${reportSkill.required_tools.length ? reportSkill.required_tools.join(', ') : 'none listed'}.`,
-    'I did not execute it; report creation or delivery would require the registered report adapter and an owner-approved Bridge Session when a write is needed.',
+    'I did not execute it from this chat route; report creation or delivery must go through the registered exact-scope Gateway adapter with audit, rollback, and owner approval when execution is required.',
   ].join(' ')
 }
 
@@ -924,23 +1006,31 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   if (/\b(is|are)\s+tony\b.*\b(active|commander)|\btony\b.*\b(active|commander)/i.test(input.ownerMessage)) {
     return 'No, Sir. Tony is retired and archived; Agent Zero is the active commander.'
   }
+  if (/(execution-capable|execute|run).*(skill|skills).*(without|no|normal\s+chat|direct\s+chat|chat\s+route)|skill.*(bridge\s+session)|bridge\s+session.*skill/i.test(input.ownerMessage)) {
+    return `Normal chat does not require a Bridge Session. execution_enabled=false for this chat route. ${currentJarvisAccessSentence(input.context)} Skill execution still requires a registered exact-scope Gateway adapter and owner approval when execution is required; no skill execution occurred from this chat route.`
+  }
+  if (/(?:do\s+i\s+have|do\s+you\s+have|full\s+access|bridge\s+session|execution\s+(?:disabled|enabled)|no\s+active\s+bridge|can\s+you\s+fix|ready\s+to\s+go|what\s+access|current\s+access)/i.test(input.ownerMessage)) {
+    return [
+      currentJarvisAccessSentence(input.context),
+      'Current status: GATEWAY_DIRECT_READY for normal chat and Gateway visibility.',
+      'I should use the live Gateway scope registry as the current source of truth for side-effect actions.',
+      'Unrestricted external execution remains gated by exact adapter scope, credentials where required, audit, rollback, and hard-stop policy.',
+    ].join(' ')
+  }
   if (/\bwho\s+is\s+(?:the\s+)?commander|commander\s+now/i.test(input.ownerMessage)) {
-    return 'Agent Zero is commander now. Hermes is lieutenant when health and read-only onboarding prove it; Tony is retired and archived.'
+    return 'Agent Zero is commander now. Ron Weasley is the Nuclear Dispatcher under Jarvis authority; Tony is retired and archived.'
   }
   if (/firecrawl/i.test(input.ownerMessage)) {
     return `${integrationLine(input.context, 'firecrawl', 'Firecrawl')}. I did not execute a crawl.`
   }
   if (/paperclip|workforce|co-?worker|daily task|heartbeat|budget/i.test(input.ownerMessage)) {
-    return `${integrationLine(input.context, 'paperclip', 'Paperclip Workforce Control Plane')}. Agent Zero can route Paperclip task requests only through Gateway. Assignments to Hermes, SpaceAgent, Pi review, or mini-agents and Paperclip issue creation require Bridge Session scope plus a configured Paperclip write adapter; I did not create or assign a task.`
+    return `${integrationLine(input.context, 'paperclip', 'Paperclip Workforce Control Plane')}. Agent Zero can route Paperclip task requests only through Gateway. Paperclip writes require certified exact adapter scope; I did not create or assign a task from this chat route.`
   }
   if (/\b(email|agentmail|send\s+(?:a\s+)?test\s+email)\b/i.test(input.ownerMessage)) {
-    return 'Email send is blocked from read-only chat. It requires an owner-approved Bridge Session and the registered AgentMail adapter; I did not send an email.'
+    return 'Email send is not executed directly from this chat route. Draft/send behavior must use the registered exact-scope AgentMail adapter with owner approval, audit, rollback, and Gateway policy; I did not send an email.'
   }
   if (/(build[-\s]?wiki|farmer|run\s+now)/i.test(input.ownerMessage)) {
-    return 'Build-Wiki Run Now is prepared but not executed. It requires an owner-approved Bridge Session and remains scoped only to opencloud-docs-farmer.service.'
-  }
-  if (/(execution-capable|execute|run).*(skill|skills).*(without|no).*(bridge\s+session)|skill.*(bridge\s+session)|bridge\s+session.*skill/i.test(input.ownerMessage)) {
-    return 'No, Sir. Execution-capable skills cannot run without an owner-approved Bridge Session. The registry keeps skill execution_enabled=false and requires_bridge_session=true; no skill execution occurred.'
+    return 'Build-Wiki Run Now is available only through its certified exact-scope adapter and remains scoped to opencloud-docs-farmer.service. I did not dispatch it from this chat route.'
   }
   if (/(which|what).*(skill).*(report|pdf|document)|skill.*safe\s+report/i.test(input.ownerMessage)) {
     return buildSkillPlanningReply(input.context)
@@ -962,13 +1052,13 @@ export function buildAgentZeroReadOnlyContractReply(input: {
   }
   if (/openclaw\+?|shared\s+skills/i.test(input.ownerMessage)) {
     const sources = input.context.skills.sources.map((source) => `${source.label}: ${source.status}, ${source.total} skills`).join('; ')
-    return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, Tony does not own it, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} Skill execution requires an owner-approved Bridge Session.`
+    return `Yes, Sir. OpenClaw+ is preserved as the shared skills/runtime layer, Tony does not own it, and I can see ${input.context.skills.total} registered skills. ${sources || 'No skill sources are visible.'} ${currentJarvisAccessSentence(input.context)}`
   }
   if (/(create|make|prepare).*(report|pdf|document)|attach.*(?:report|pdf|document)|report.*attach/i.test(input.ownerMessage)) {
     return 'I created the report in Mission Control. Use the Mission Control report link; external delivery and Telegram PDF attachment remain blocked unless their approved adapters are configured.'
   }
   if (upstreamUnsafe) {
-    return 'I can answer from the Mission Control registry, but I will not expose local Agent Zero workspace files. Execution and file writes remain disabled unless an owner-approved Bridge Session allows them.'
+    return `I can answer from the Mission Control registry, but I will not expose local Agent Zero workspace files. ${currentJarvisAccessSentence(input.context)}`
   }
   return null
 }
@@ -1057,6 +1147,7 @@ function readAgentZeroApiKey(env: EnvLike = process.env): KeySource | null {
   }
   return null
 }
+
 
 export function buildAgentZeroInternalAuthHeaders(env: EnvLike = process.env): { headers: Record<string, string>; key_state: AgentZeroApiKeyState } | null {
   const key = readAgentZeroApiKey(env)
@@ -1451,7 +1542,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.modelCatalog.length === 0,
       source: 'mission_control_model_registry',
       endpoint: '/api/bridge/capability-matrix',
-      summary: 'Model catalog and provider status visible through Mission Control. Model execution requires a Bridge Session route.',
+      summary: 'Model catalog and provider status visible through Mission Control. Model execution requires a registered exact-scope Gateway route.',
       counts: { models: input.modelCatalog.length, providers: input.modelProviderRegistry.length },
     }),
     liveRegistryItem({
@@ -1481,7 +1572,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.agents.length === 0,
       source: 'mission_control_agent_registry',
       endpoint: '/api/bridge/providers',
-      summary: 'Agent Zero is the commander; Hermes is lieutenant only when health/read-only tests prove it; Tony is retired/archived.',
+      summary: 'Agent Zero is the commander; Ron Weasley is the Nuclear Dispatcher for optimization, skill drafts, workflow drafts, and internal dispatch plans; Tony is retired/archived.',
       counts: { agents: input.agents.length },
     }),
     liveRegistryItem({
@@ -1495,7 +1586,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.toolRegistry.length === 0,
       source: 'mission_control_tool_registry',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'Tool metadata is live and read-only. Tool execution requires a Bridge Session and registered adapter.',
+      summary: 'Tool metadata is live and read-only. Tool execution requires a registered exact-scope Gateway adapter.',
       counts: { tools: input.toolRegistry.length, connected: connectedToolCount, write_enabled: writeEnabledToolCount, blocked: blockedToolCount },
     }),
     liveRegistryItem({
@@ -1508,7 +1599,7 @@ function buildAgentZeroLiveRegistry(input: {
       blocked: input.skillNames.length === 0 && input.skillRegistry.length === 0,
       source: 'openclaw_plus_shared_skill_runtime',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Hermes. Skill paths, required tools, required credential names, execution requirements, role tags, available_to, and blocked reasons are visible; Tony does not own the skill system.',
+      summary: 'OpenClaw+ is the shared skills/runtime layer for Agent Zero and Ron Weasley. Skill paths, required tools, required credential names, execution requirements, role tags, available_to, and blocked reasons are visible; Tony does not own the skill system.',
       counts: { skills: input.skillNames.length || input.skillRegistry.length },
     }),
     liveRegistryItem({
@@ -1538,7 +1629,7 @@ function buildAgentZeroLiveRegistry(input: {
       requiresBridgeSession: true,
       source: 'mission_control_integration_registry',
       endpoint: '/api/bridge/agent-zero/ecosystem',
-      summary: 'Integrations report connected/configured/blocked state only. External writes require a Bridge Session and adapter.',
+      summary: 'Integrations report connected/configured/blocked state only. External writes require a registered exact-scope Gateway adapter and owner approval when required.',
       counts: { integrations: input.integrationRegistry.length, connected: connectedIntegrationCount, configured: configuredIntegrationCount, write_enabled: writeEnabledIntegrationCount },
     }),
     liveRegistryItem({
@@ -1629,7 +1720,7 @@ function buildAgentZeroLiveRegistry(input: {
       source: 'mission_control_buildwiki_farmer_status',
       endpoint: '/api/bridge/brain-sync/build-wiki/status',
       blockedReason: buildWiki?.run_now?.blocked_reason || null,
-      summary: 'Build-Wiki/Farmer status is visible. Run Now requires a Bridge Session and stays scoped to opencloud-docs-farmer.service.',
+      summary: 'Build-Wiki/Farmer status is visible. Run Now requires an owner-approved exact Gateway scope and stays scoped to opencloud-docs-farmer.service.',
       counts: { timer_active: input.timerActive === true ? 1 : 0 },
     }),
   ]
@@ -1708,6 +1799,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   buildWikiFarmerStatus?: AgentZeroBuildWikiFarmerSummary
   bridgeSessionAvailable?: boolean
   bridgeSession?: AgentZeroBridgeSessionObject
+  jarvisAccessTruth?: Record<string, unknown>
 } = {}): AgentZeroReadOnlyContext {
   const providers = Array.from(new Set((input.providerIds || [])
     .filter(Boolean)
@@ -2075,7 +2167,12 @@ export function buildAgentZeroReadOnlyContext(input: {
     blockers: brainRegistry.length > 0 ? [] : ['brain_index_status_not_visible'],
   } satisfies AgentZeroBrainIndexSummary
   const bridgeSession = input.bridgeSession
-  const bridgeSessionActive = Boolean(bridgeSession?.execution_enabled && bridgeSession.status === 'active')
+  const jarvisAccessTruth = Object.keys(pickRecord(input.jarvisAccessTruth)).length > 0
+    ? pickRecord(input.jarvisAccessTruth)
+    : buildJarvisAccessTruth()
+  const truthBridgeActive = jarvisAccessTruth.bridge_session_active === true
+  const truthExactScopeExecutionEnabled = jarvisAccessTruth.exact_scope_execution_enabled === true
+  const bridgeSessionActive = truthExactScopeExecutionEnabled || Boolean(bridgeSession?.execution_enabled && bridgeSession.status === 'active') || truthBridgeActive
   const generatedAt = new Date().toISOString()
   const liveRegistry = buildAgentZeroLiveRegistry({
     generatedAt,
@@ -2111,6 +2208,7 @@ export function buildAgentZeroReadOnlyContext(input: {
   return {
     execution_enabled: bridgeSessionActive,
     bridge_session_required: !bridgeSessionActive,
+    jarvis_access_truth: jarvisAccessTruth,
     mission_control: {
       visible: true,
       status: 'connected',
@@ -2126,7 +2224,9 @@ export function buildAgentZeroReadOnlyContext(input: {
         '/api/bridge/agent-zero/ecosystem',
         '/api/bridge/agent-zero/execute',
         '/api/bridge/agent-zero/reports',
-        '/api/bridge/hermes/status',
+        '/api/bridge/hermes/full-access/status',
+        '/api/bridge/hermes/system-command-registry',
+        '/api/bridge/hermes/execute',
         '/api/bridge/hermes/test-chat',
         '/api/bridge/agent-zero/google-drive/status',
         '/api/bridge/agent-zero/google-drive/upload-report',
@@ -2197,7 +2297,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         role_tags_visible: true,
         skill_draft_location: 'safe_hermes_skill_draft_area',
         skill_activation_requires: 'agent_zero_bridge_session',
-        skill_review_workflow: 'Hermes proposes; Agent Zero reviews; owner-approved Bridge Session writes/activates.',
+        skill_review_workflow: 'Ron Weasley proposes; Agent Zero reviews; owner-approved Bridge Session writes/activates.',
         paths_visible: skillRegistry.some((skill) => Boolean(skill.path)),
         required_tools_visible: true,
         required_credentials_visible: true,
@@ -2287,7 +2387,7 @@ export function buildAgentZeroReadOnlyContext(input: {
       blocked: false,
       blocked_reason: null,
       read_blocked_reason: null,
-      write_blocked_reason: input.bridgeSessionAvailable ? null : 'buildwiki_write_requires_bridge_session_and_owner_approval',
+      write_blocked_reason: input.bridgeSessionAvailable ? null : 'buildwiki_write_requires_owner_approved_gateway_scope',
       routes: {
         status: { method: 'GET', path: '/api/bridge/brain-sync/build-wiki/status', read_only: true, execution_enabled: false, requires_bridge_session: false },
         run_now_create: { method: 'POST', path: '/api/bridge/brain-sync/build-wiki/run-now', read_only: false, execution_enabled: false, requires_bridge_session: true },
@@ -2361,7 +2461,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         blocker: 'smb_mount_not_verified',
       },
       farmer_execution_enabled: false,
-      note: 'Mission Control exposes Build-Wiki/Farmer status read-only; Run Now requires an owner-approved Bridge Session and is scoped only to opencloud-docs-farmer.service. Fork 2 remains blocked until SMB is mounted and verified.',
+      note: 'Mission Control exposes Build-Wiki/Farmer status read-only; Run Now requires an owner-approved exact Gateway scope and is scoped only to opencloud-docs-farmer.service. Fork 2 remains blocked until SMB is mounted and verified.',
     },
     delivery: {
       report_pdf_delivery_status: 'visible',
@@ -2404,7 +2504,7 @@ export function buildAgentZeroReadOnlyContext(input: {
         allowed_tools: ['all_registered_tools', 'all_registered_execution_adapters', 'read_only.ecosystem_context', 'review.recommendation'],
         allowed_integrations: ['all_registered_integrations', 'mission_control', 'bridge', 'agentmail_if_configured'],
         allowed_brain_access: ['all_registered_brain_adapters', 'brain_sync.status'],
-        note: 'Agent Zero may see ecosystem context and recommend actions. Hermes may plan/design/suggest. Execution remains locked until a separately approved Bridge Session and a scoped adapter exist.',
+        note: 'Agent Zero may see ecosystem context and recommend actions. Ron Weasley may plan/design/suggest. Protected execution remains locked until a registered exact Gateway scope and scoped adapter exist.',
       })),
       available: Boolean(bridgeSession?.session_id || input.bridgeSessionAvailable),
       allowed_scopes: bridgeSessionActive
@@ -2429,7 +2529,7 @@ export function buildAgentZeroReadOnlyContext(input: {
     },
     live_registry: liveRegistry,
     restrictions: [
-      'read-only Mission Control ecosystem context unless a scoped Bridge Session is separately approved',
+      'read-only Mission Control ecosystem context unless a scoped Gateway action is separately approved',
       'no protected action execution from test-chat',
       'no Zapier or HeyGen execution from test-chat',
       'no SMB or farmer execution from test-chat',
@@ -2455,8 +2555,16 @@ function pickRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+function extractSafeExactReplyCanary(ownerMessage: string): string | null {
+  const match = ownerMessage.trim().match(/^Reply\s+exactly:\s*([A-Z0-9_ -]{2,80})\s*$/i)
+  if (!match) return null
+  const value = match[1].trim()
+  return /^[A-Z0-9_ -]{2,80}$/.test(value) ? value : null
+}
+
 function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Record<string, unknown> {
   const root = pickRecord(context)
+  const accessTruth = pickRecord(root.jarvis_access_truth)
   const agents = pickRecord(root.agents)
   const bridge = pickRecord(root.bridge)
   const mcp = pickRecord(root.mcp)
@@ -2468,6 +2576,11 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
   const delivery = pickRecord(root.delivery)
   const bridgeSession = pickRecord(root.bridge_session)
   const liveRegistry = pickRecord(root.live_registry)
+  const truthBridgeActive = accessTruth.bridge_session_active === true
+  const truthExactScopeExecutionEnabled = accessTruth.exact_scope_execution_enabled === true
+  const exactScopeExecutionEnabled = truthExactScopeExecutionEnabled || bridgeSession.execution_enabled === true
+  const normalChatBridgeRequired = accessTruth.normal_chat_bridge_required === true ? true : false
+  const protectedActionScopeRequired = !exactScopeExecutionEnabled
 
   return {
     generated_at: root.generated_at || root.generatedAt || new Date().toISOString(),
@@ -2520,21 +2633,34 @@ function buildAgentZeroLiveAccessSummary(context: AgentZeroReadOnlyContext): Rec
       mission_control: 'live_url_configured',
       bridge: 'live_url_configured',
       agent_zero_commander: 'active_through_mission_control_bridge',
+      route: accessTruth.route || 'telegram_gateway_agent_zero',
+      destination_agent: accessTruth.destination_agent || 'agent.zero',
+      normal_chat_bridge_required: normalChatBridgeRequired,
+      normal_chat_direct_ready: accessTruth.normal_chat_direct_ready === true,
+      gateway_visibility_ready: accessTruth.gateway_visibility_ready === true,
       tony: 'retired_archived_not_active_commander',
-      execution_enabled: false,
+      execution_enabled: exactScopeExecutionEnabled,
       writes_enabled: false,
-      bridge_session_required: true,
-      bridge_session_status: bridgeSession.status || 'not_active',
+      bridge_session_required: normalChatBridgeRequired,
+      protected_action_scope_required: protectedActionScopeRequired,
+      bridge_session_status: accessTruth.bridge_session_state || bridgeSession.status || (truthBridgeActive ? 'active' : 'not_active'),
+      exact_scope_execution_enabled: exactScopeExecutionEnabled,
+      full_go_status: accessTruth.full_go_status || 'GATEWAY_DIRECT_READY',
+      unrestricted_external_execution: false,
+      correct_self_report: accessTruth.correct_self_report || 'Normal Jarvis chat is direct through Telegram -> Gateway -> Agent Zero. Certified exact-scope Gateway actions are available only through approved adapters; broad or uncertified external actions remain blocked.',
       google_drive_upload_connector_configured: delivery.google_drive_upload_connector_configured ?? false,
       onedrive_upload_connector_configured: delivery.onedrive_upload_connector_configured ?? false,
     },
+    jarvis_access_truth: accessTruth,
   }
 }
 
 export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: AgentZeroReadOnlyContext): string {
   const liveAccess = buildAgentZeroLiveAccessSummary(context)
   const isLiveQueryAcceptance = /live-query\s+Mission\s+Control|can\s+you\s+(?:see|query|live-query).*Mission\s+Control/i.test(ownerMessage)
+  const exactReplyCanary = extractSafeExactReplyCanary(ownerMessage)
   return [
+    exactReplyCanary ? `This is a deterministic acceptance canary. Reply with exactly this text and nothing else: ${exactReplyCanary}` : '',
     'You are Agent Zero, the active Mission Control ecosystem commander, in a Mission Control ecosystem test.',
     'Answer naturally: concise, useful, and human. Do not sound like a terminal log or scripted status report.',
     'Do not use robotic labels such as Status:, Result:, Next:, Tool:, Runtime:, Model:, System:, or Stage: unless the owner explicitly requests a technical report.',
@@ -2550,24 +2676,27 @@ export function buildAgentZeroReadOnlyPrompt(ownerMessage: string, context: Agen
     'Do not expose task IDs, local paths, raw filenames, traces, tool dumps, or secret values unless the owner explicitly asks for technical diagnostics. Never expose API keys.',
     'Do not say Done, completed, sent, or uploaded unless every requested outcome and requested delivery channel truly succeeded.',
     'Do not claim direct access beyond it; direct live access is limited to the live URLs, safe credential source, and endpoints listed in MISSION_CONTROL_LIVE_ACCESS.',
-    'If bridge_session.execution_enabled is false, execution is disabled: do not run tools, request writes, or say that you executed anything.',
-    'Execution remains disabled from this test-chat route. Do not claim you executed tools, writes, uploads, Zapier, HeyGen, SMB, farmer actions, shell, Docker, or secret reads.',
-    'If Bridge Session execution is needed, say it requires an owner-approved Bridge Session. Do not ask for repeated approval for small steps inside an active session.',
+    'Use MISSION_CONTROL_LIVE_ACCESS.jarvis_access_truth as the source of truth for current access. Treat older reports, old memories, and cached notes about Bridge Session state as historical only.',
+    'Normal Jarvis chat is direct through Telegram -> Gateway -> Agent Zero. Do not say normal chat requires a Bridge Session.',
+    'Correct current access wording: normal chat is direct and unblocked; protected side-effect actions require registered exact-scope Gateway adapters, owner approval when required, audit, and hard-stop policy.',
+    'This test-chat route is conversational only. That means this route itself does not execute actions; it does not mean Jarvis lacks Gateway visibility or exact-scope action routes.',
+    'If an exact-scope action is not approved or not registered, say it requires an approved Gateway scope. Do not ask for a Bridge Session for ordinary chat.',
+    'If bridge_session.execution_enabled is false, execution is disabled for this chat route; protected execution must go through /api/bridge/agent-zero/execute and registered adapters.',
     'When asked what you can see, distinguish visible, configured, connected, blocked, execution disabled, and direct access versus Mission Control proxy.',
-    'Tony is retired/archived and must not be described as active commander. Hermes is lieutenant only when its live health/read-only onboarding is proven; otherwise mark it pending/degraded.',
-    'For Google Drive or OneDrive upload requests, say blocked unless the delivery connector is configured and a Bridge Session allows the external write. Do not fake delivery.',
+    'Tony is retired/archived and must not be described as active commander. Ron Weasley is the Nuclear Dispatcher under Jarvis authority and must not be described as Agent Zero, OpenClaw, or any legacy role.',
+    'For Google Drive or OneDrive upload requests, say blocked unless the delivery connector is configured and an exact Gateway scope allows the external write. Do not fake delivery.',
     'If a connector, upload, execution, or delivery is blocked, say the exact blocker once and do not pretend completion.',
     'If Mission Control already has a report or file link, do not ask the owner to send it again; refer to the available Mission Control link.',
     'Do not enumerate your internal Agent Zero tools unless they are present in the Mission Control live access summary.',
     'For model questions, use models.provider_registry and the live model registry summary. Do not claim a model/provider is usable when its status is blocked.',
-    'For skill questions, use skills.shared_runtime and skills.registry. OpenClaw+ is the shared skills/runtime layer for both Agent Zero and Hermes; Tony does not own the skill system.',
+    'For skill questions, use skills.shared_runtime and skills.registry. OpenClaw+ is the shared skills/runtime layer for both Agent Zero and Ron Weasley; Tony does not own the skill system.',
     'When describing skills, include visible skill paths, required tools, required credential names, execution requirements, and blocked reasons when available. Never expose credential values.',
     'For integration and tool questions, use integrations.registry and tools.registry. Report connected/configured/blocked exactly as shown.',
     'For Brain, Obsidian, MemPalace, Graphify, vault, index, watcher, read API, or write API questions, use brain.registry and the live brain endpoints.',
     'For report delivery, use delivery.agent_zero_report_create_endpoint and Mission Control links only. Do not expose local paths, raw filenames, or task IDs.',
-    'For Google Drive delivery, use delivery.google_drive_status_endpoint first. Uploads require delivery.google_drive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: Google Drive upload is blocked because the upload connector is not configured.',
-    'For OneDrive delivery, use delivery.onedrive_status_endpoint first. Uploads require delivery.onedrive_upload_connector_configured=true and a separate active Bridge Session; otherwise say exactly: OneDrive upload is blocked because the upload connector is not configured.',
-    'If bridge_session.execution_enabled is true, execute only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for repeated approval for small steps inside the active session.',
+    'For Google Drive delivery, use delivery.google_drive_status_endpoint first. Uploads require delivery.google_drive_upload_connector_configured=true and an approved exact Gateway scope; otherwise say exactly: Google Drive upload is blocked because the upload connector is not configured.',
+    'For OneDrive delivery, use delivery.onedrive_status_endpoint first. Uploads require delivery.onedrive_upload_connector_configured=true and an approved exact Gateway scope; otherwise say exactly: OneDrive upload is blocked because the upload connector is not configured.',
+    'Execute protected actions only through /api/bridge/agent-zero/execute and only for registered adapters. Every adapter action must be audited. Do not ask for a Bridge Session for normal chat.',
     '',
     `MISSION_CONTROL_LIVE_ACCESS=${JSON.stringify(liveAccess)}`,
     `MISSION_CONTROL_READ_ONLY_CONTEXT=${JSON.stringify({ mode: 'live_access_summary', live_access: liveAccess })}`,
@@ -2596,49 +2725,78 @@ export async function sendAgentZeroReadOnlyMessage(input: {
   env?: EnvLike
   baseUrl?: string
   timeoutMs?: number
+  conversationId?: string
 }): Promise<AgentZeroReadOnlyMessageResult> {
+  const requestStartedAt = new Date().toISOString()
+  const startedAtMs = Date.now()
+  const correlationId = createAgentZeroCorrelationId()
+  const baseResult = {
+    mode: 'agent_zero_read_only_test_chat' as const,
+    execution_enabled: false as const,
+    writes_enabled: false as const,
+    conversation_id: input.conversationId || null,
+    queued_behind_active: false,
+    serialized_execution: Boolean(input.conversationId),
+    correlation_id: correlationId,
+    fallback_attempted: false as const,
+    fallback_result: null,
+  }
   const key = readAgentZeroApiKey(input.env)
   if (!key) {
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, completedAt })
     return {
+      ...baseResult,
       ok: false,
       status: 503,
-      mode: 'agent_zero_read_only_test_chat',
       agent_zero_called: false,
-      execution_enabled: false,
-      writes_enabled: false,
       blocker: 'agent_zero_external_api_key_missing',
       response_text: null,
       context_id: null,
       raw_response_shape: [],
       error: 'Agent Zero external API requires X-API-KEY; configure a Mission Control environment variable, systemd credential, or secret file without exposing the value.',
+      stage: 'auth_blocked',
+      error_code: 'agent_zero_external_api_key_missing',
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   }
 
   const baseUrl = normalizeBaseUrl(input.baseUrl)
   const endpoint = `${baseUrl}/api/api_message`
   const prompt = buildAgentZeroReadOnlyPrompt(input.ownerMessage, input.context)
+  let upstreamStartedAt: string | null = null
 
   try {
+    upstreamStartedAt = new Date().toISOString()
     const response = await fetch(endpoint, {
       method: 'POST',
       cache: 'no-store',
-      signal: AbortSignal.timeout(input.timeoutMs ?? 45000),
+      signal: AbortSignal.timeout(input.timeoutMs ?? 90000),
       headers: {
         'Content-Type': 'application/json',
         'X-API-KEY': key.value,
+        'X-Correlation-ID': correlationId,
       },
       body: JSON.stringify({
         message: prompt,
         lifetime_hours: 2,
+        conversation_id: input.conversationId || 'mission_control_agent_zero_owner',
+        correlation_id: correlationId,
       }),
     })
+    const headersAt = new Date().toISOString()
     const text = await response.text()
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, upstreamStartedAt, headersAt, completedAt })
     let payload: unknown = null
     try {
       payload = text ? JSON.parse(text) : null
     } catch {
       payload = null
     }
+    const recordPayload = payload as Record<string, unknown> | null
     const extracted = extractAgentZeroResponse(payload, text)
     const upstreamReturnedLocalArtifact = Boolean(extracted.text && AGENT_ZERO_LOCAL_ARTIFACT_PATTERN.test(extracted.text))
     const cleanedText = sanitizeAgentZeroOwnerReply({
@@ -2651,32 +2809,48 @@ export async function sendAgentZeroReadOnlyMessage(input: {
       ? buildAgentZeroReadOnlyContractReply({ ownerMessage: input.ownerMessage, context: input.context, upstreamText: cleanedText, upstreamReturnedLocalArtifact })
       : null
     const ownerText = contractText || cleanedText
+    const errorCode = response.ok ? null : `agent_zero_api_http_${response.status}`
     return {
+      ...baseResult,
       ok: response.ok,
       status: response.status,
-      mode: 'agent_zero_read_only_test_chat',
       agent_zero_called: true,
-      execution_enabled: false,
-      writes_enabled: false,
-      blocker: response.ok ? null : `agent_zero_api_http_${response.status}`,
+      blocker: response.ok ? null : errorCode,
       response_text: ownerText,
       context_id: extracted.contextId,
+      conversation_id: typeof recordPayload?.conversation_id === 'string' ? recordPayload.conversation_id as string : (input.conversationId || null),
+      queued_behind_active: Boolean(recordPayload?.queued_behind_active),
+      serialized_execution: Boolean(recordPayload?.serialized_execution),
       raw_response_shape: extracted.shape,
       error: response.ok ? null : (ownerText || `Agent Zero API returned HTTP ${response.status}`).slice(0, 500),
+      stage: response.ok ? 'agent_zero_response_completed' : 'agent_zero_http_error',
+      error_code: errorCode,
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   } catch (error) {
+    const completedAt = new Date().toISOString()
+    const timings = buildAgentZeroTimings({ requestStartedAt, startedAtMs, upstreamStartedAt, completedAt })
+    const timedOut = isAgentZeroTimeoutError(error)
+    const errorCode = timedOut ? 'agent_zero_upstream_timeout' : 'agent_zero_api_unreachable'
     return {
+      ...baseResult,
       ok: false,
-      status: 503,
-      mode: 'agent_zero_read_only_test_chat',
+      status: timedOut ? 504 : 503,
       agent_zero_called: true,
-      execution_enabled: false,
-      writes_enabled: false,
-      blocker: 'agent_zero_api_unreachable',
+      blocker: errorCode,
       response_text: null,
       context_id: null,
       raw_response_shape: [],
-      error: error instanceof Error ? error.message : 'agent_zero_api_call_failed',
+      error: timedOut
+        ? `Agent Zero upstream did not return within the bounded ${input.timeoutMs ?? 90000}ms budget.`
+        : sanitizeAgentZeroBridgeError(error),
+      stage: timedOut ? 'agent_zero_upstream_waiting_for_response' : 'agent_zero_upstream_call_failed',
+      error_code: errorCode,
+      retryable: false,
+      elapsed_ms: timings.elapsed_ms,
+      timings,
     }
   }
 }

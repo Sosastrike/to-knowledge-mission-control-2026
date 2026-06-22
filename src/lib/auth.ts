@@ -57,7 +57,7 @@ export interface User {
   id: number
   username: string
   display_name: string
-  role: 'admin' | 'operator' | 'viewer'
+  role: 'admin' | 'mission_control_owner_operator' | 'operator' | 'viewer'
   workspace_id: number
   tenant_id: number
   provider?: 'local' | 'google' | 'azure-ad' | 'proxy'
@@ -69,6 +69,8 @@ export interface User {
   last_login_at: number | null
   /** Agent name when request is made on behalf of a specific agent (via X-Agent-Name header) */
   agent_name?: string | null
+  /** Agent-scoped API key scopes. Human sessions and the global API key leave this unset. */
+  agent_scopes?: string[]
 }
 
 export interface UserSession {
@@ -87,7 +89,7 @@ interface SessionQueryRow {
   id: number
   username: string
   display_name: string
-  role: 'admin' | 'operator' | 'viewer'
+  role: 'admin' | 'mission_control_owner_operator' | 'operator' | 'viewer'
   provider: 'local' | 'google' | 'azure-ad' | null
   email: string | null
   avatar_url: string | null
@@ -104,7 +106,7 @@ interface UserQueryRow {
   id: number
   username: string
   display_name: string
-  role: 'admin' | 'operator' | 'viewer'
+  role: 'admin' | 'mission_control_owner_operator' | 'operator' | 'viewer'
   provider: 'local' | 'google' | 'azure-ad' | null
   email: string | null
   avatar_url: string | null
@@ -419,7 +421,7 @@ function resolveOrProvisionProxyUser(username: string): User | null {
 
     // Auto-provision if MC_PROXY_AUTH_DEFAULT_ROLE is configured
     const defaultRole = (process.env.MC_PROXY_AUTH_DEFAULT_ROLE || '').trim()
-    if (!defaultRole || !(['viewer', 'operator', 'admin'] as const).includes(defaultRole as User['role'])) {
+    if (!defaultRole || !(['viewer', 'operator', 'mission_control_owner_operator', 'admin'] as const).includes(defaultRole as User['role'])) {
       return null
     }
 
@@ -524,7 +526,7 @@ export function getUserFromRequest(request: Request): User | null {
           .get(row.agent_id, row.workspace_id) as { id: number; name: string } | undefined
 
         if (agent) {
-          if (agentName && agentName !== agent.name && !scopes.has('admin')) {
+          if (agentName && !agentScopedNameMatches(agentName, agent.name) && !scopes.has('admin')) {
             return null
           }
 
@@ -541,6 +543,7 @@ export function getUserFromRequest(request: Request): User | null {
             updated_at: now,
             last_login_at: now,
             agent_name: agent.name,
+            agent_scopes: Array.from(scopes),
           }
         }
       }
@@ -556,6 +559,20 @@ export function getUserFromRequest(request: Request): User | null {
   }
 
   return null
+}
+
+function normalizeAgentScopedName(value: string | null | undefined): string {
+  return String(value || '').trim().toLowerCase().replace(/[@]/g, '').replace(/[_\s]+/g, '-')
+}
+
+function agentScopedNameMatches(requestedName: string, storedName: string): boolean {
+  const requested = normalizeAgentScopedName(requestedName)
+  const stored = normalizeAgentScopedName(storedName)
+  if (requested === stored) return true
+  if (stored === 'hermes') {
+    return ['ron', 'ron-weasley', 'ron-weasley-nuclear-dispatcher', 'hermes', 'hermans'].includes(requested)
+  }
+  return false
 }
 
 /**
@@ -616,11 +633,21 @@ function deriveRoleFromScopes(scopes: Set<string>): User['role'] {
   return 'viewer'
 }
 
+export function userHasAgentScope(user: User, scope: string): boolean {
+  if (user.role === 'admin' || user.role === 'mission_control_owner_operator') return true
+  return Boolean(user.agent_scopes?.includes(scope))
+}
+
+export function userHasAnyAgentScope(user: User, scopes: string[]): boolean {
+  if (user.role === 'admin' || user.role === 'mission_control_owner_operator') return true
+  return scopes.some((scope) => userHasAgentScope(user, scope))
+}
+
 /**
  * Role hierarchy levels for access control.
- * viewer < operator < admin
+ * viewer < operator < mission_control_owner_operator < admin
  */
-const ROLE_LEVELS: Record<string, number> = { viewer: 0, operator: 1, admin: 2 }
+const ROLE_LEVELS: Record<string, number> = { viewer: 0, operator: 1, mission_control_owner_operator: 2, admin: 3 }
 
 /**
  * Check if a user meets the minimum role requirement.
@@ -638,4 +665,18 @@ export function requireRole(
     return { error: `Requires ${minRole} role or higher`, status: 403 }
   }
   return { user }
+}
+
+export function requireRoleOrAgentScope(
+  request: Request,
+  minRole: User['role'],
+  scopes: string[]
+): { user: User; error?: never; status?: never } | { user?: never; error: string; status: 401 | 403 } {
+  const roleAuth = requireRole(request, minRole)
+  if (!('error' in roleAuth)) return roleAuth
+
+  const scopedUser = getUserFromRequest(request)
+  if (scopedUser && userHasAnyAgentScope(scopedUser, scopes)) return { user: scopedUser }
+
+  return roleAuth
 }

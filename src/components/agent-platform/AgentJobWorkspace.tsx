@@ -75,6 +75,48 @@ function containsInternalOrigin(value: string): boolean {
   return /100\.116\.35\.95|127\.0\.0\.1|localhost|:50080/.test(value)
 }
 
+function randomHex(byteCount = 12): string {
+  const cryptoApi = globalThis.crypto
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(byteCount)
+    cryptoApi.getRandomValues(bytes)
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  }
+  return Array.from({ length: byteCount }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('')
+}
+
+function newSubmissionId(agentId: string): string {
+  const normalized = agentId.replace(/[^a-z0-9_]/gi, '_').toLowerCase()
+  return `mc_${normalized}_submission_${randomHex(12)}`
+}
+
+function jobFromAcceptedPayload(payload: Record<string, unknown>, agentId: string): Job | null {
+  if (typeof payload.job_id !== 'string' || typeof payload.task_id !== 'string') return null
+  return {
+    platform_job_id: typeof payload.platform_job_id === 'string' ? payload.platform_job_id : null,
+    job_id: payload.job_id,
+    task_id: payload.task_id,
+    target_agent_id: typeof payload.target_agent_id === 'string' ? payload.target_agent_id : agentId,
+    state: typeof payload.state === 'string' ? payload.state : 'QUEUED',
+    queue_reason: typeof payload.queue_reason === 'string' ? payload.queue_reason : null,
+    worker_id: typeof payload.worker_id === 'string' ? payload.worker_id : null,
+    last_heartbeat_at: typeof payload.last_heartbeat_at === 'number' ? payload.last_heartbeat_at : null,
+    lease_expires_at: typeof payload.lease_expires_at === 'number' ? payload.lease_expires_at : null,
+    checkpoint_id: typeof payload.checkpoint_id === 'string' ? payload.checkpoint_id : null,
+    current_model: typeof payload.current_model === 'string' ? payload.current_model : null,
+    previous_models: Array.isArray(payload.previous_models) ? payload.previous_models.filter((item): item is string => typeof item === 'string') : [],
+    cancellation_requested: payload.cancellation_requested === true,
+    error_code: typeof payload.error_code === 'string' ? payload.error_code : null,
+    correlation_id: typeof payload.correlation_id === 'string' ? payload.correlation_id : null,
+  }
+}
+
+function mergeAcceptedJob(jobs: Job[], acceptedJob: Job | null): Job[] {
+  if (!acceptedJob) return jobs
+  if (jobs.some((job) => job.job_id === acceptedJob.job_id)) return jobs
+  return [acceptedJob, ...jobs]
+}
+
 function defaultMessageForAgent(agentId: string): string {
   if (agentId === 'hermes') return 'Reply exactly: HERMES_UI_OK'
   return 'Reply exactly: AGENT_ZERO_UI_OK'
@@ -93,10 +135,12 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
   const [phase, setPhase] = useState<'idle' | 'loading' | 'submitting' | 'ready' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [lastSubmit, setLastSubmit] = useState<Record<string, unknown> | null>(null)
+  const [lastAcceptedJob, setLastAcceptedJob] = useState<Job | null>(null)
   const submitInFlight = useRef(false)
 
-  const activeJobCount = useMemo(() => jobs.filter((job) => ACTIVE_STATES.has(job.state)).length, [jobs])
-  const selectedJob = useMemo(() => jobs.find((job) => job.job_id === selectedJobId) || detail?.job || null, [jobs, selectedJobId, detail])
+  const visibleJobs = useMemo(() => mergeAcceptedJob(jobs, lastAcceptedJob), [jobs, lastAcceptedJob])
+  const activeJobCount = useMemo(() => visibleJobs.filter((job) => ACTIVE_STATES.has(job.state)).length, [visibleJobs])
+  const selectedJob = useMemo(() => visibleJobs.find((job) => job.job_id === selectedJobId) || detail?.job || null, [visibleJobs, selectedJobId, detail])
   const selectedResultText = resultText(detail?.result)
   const payloadText = JSON.stringify({ agents, jobs, detail })
   const unsafeInternalValueVisible = containsInternalOrigin(payloadText)
@@ -176,9 +220,15 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
     setPhase('submitting')
     setError(null)
     try {
-      const payload = await postJson(`/api/agent-platform/agents/${encodeURIComponent(agentId)}/jobs`, { message: trimmed })
+      const idempotencyKey = newSubmissionId(agentId)
+      const payload = await postJson(`/api/agent-platform/agents/${encodeURIComponent(agentId)}/jobs`, { message: trimmed, idempotency_key: idempotencyKey })
       setLastSubmit(payload)
-      if (typeof payload.job_id === 'string') setSelectedJobId(payload.job_id)
+      const acceptedJob = jobFromAcceptedPayload(payload, agentId)
+      if (acceptedJob) {
+        setLastAcceptedJob(acceptedJob)
+        setSelectedJobId(acceptedJob.job_id)
+        setDetail((current) => current?.job?.job_id === acceptedJob.job_id ? current : { ok: true, job: acceptedJob, events: [], result: null })
+      }
       await loadJobs()
       setPhase('ready')
     } catch (err) {
@@ -218,7 +268,7 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
     <section className="control-status" data-testid="agent-job-workspace">
       <div className="status-head">
         <strong>Agent Platform Jobs</strong>
-        <span>{activeJobCount} active · {jobs.length} visible</span>
+        <span>{activeJobCount} active · {visibleJobs.length} visible</span>
       </div>
 
       <div className="control-grid" style={{ gridTemplateColumns: 'minmax(0, 1.15fr) minmax(280px, .85fr)', marginBottom: 12 }}>
@@ -234,6 +284,7 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
           <button type="button" className="control-action" onClick={() => void submitNewJob()} disabled={phase === 'submitting'} data-testid="agent-job-submit">
             {phase === 'submitting' ? 'Submitting...' : 'Queue Job'}
           </button>
+          {Boolean(lastSubmit?.platform_job_id) && <small data-testid="last-submit-platform-job">platform_job_id: {String(lastSubmit?.platform_job_id)}</small>}
           {Boolean(lastSubmit?.job_id) && <small data-testid="last-submit-job">job_id: {String(lastSubmit?.job_id)}</small>}
           {Boolean(lastSubmit?.task_id) && <small data-testid="last-submit-task">task_id: {String(lastSubmit?.task_id)}</small>}
         </article>
@@ -252,7 +303,7 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
       <div className="control-grid" style={{ gridTemplateColumns: 'minmax(280px, .8fr) minmax(0, 1.2fr)', marginBottom: 12 }}>
         <article className="control-card" data-testid="agent-job-list" style={{ alignContent: 'start' }}>
           <strong>Jobs</strong>
-          {jobs.length === 0 ? <span>No durable jobs are visible for this agent.</span> : jobs.map((job) => (
+          {visibleJobs.length === 0 ? <span>No durable jobs are visible for this agent.</span> : visibleJobs.map((job) => (
             <button
               key={job.job_id}
               type="button"

@@ -170,6 +170,7 @@ export function buildAgentPlatformSubmissionBody(input: {
   targetAgentId: string
   message: string
   inputMode?: AgentPlatformInputMode
+  idempotencyKey?: string | null
   jobId?: string | null
   taskId?: string | null
   conversationId?: string | null
@@ -190,6 +191,7 @@ export function buildAgentPlatformSubmissionBody(input: {
     message: input.message.trim().slice(0, 8000),
     input_mode: mode,
     mode,
+    idempotency_key: input.idempotencyKey || undefined,
     job_id: input.jobId || undefined,
     task_id: input.taskId || undefined,
     conversation_id: input.conversationId || undefined,

@@ -50,6 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     targetAgentId: agentId,
     message,
     inputMode: 'QUEUE',
+    idempotencyKey: typeof body.idempotency_key === 'string' ? body.idempotency_key : undefined,
     conversationId: typeof body.conversation_id === 'string' ? body.conversation_id : undefined,
     taskId: typeof body.task_id === 'string' ? body.task_id : undefined,
   })

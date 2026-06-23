@@ -60,6 +60,27 @@ describe('agent platform bridge', () => {
     expect(body).not.toHaveProperty('execution_mode')
   })
 
+  it('preserves explicit idempotency and safe exact-response canaries while still redacting secrets', () => {
+    const body = buildAgentPlatformSubmissionBody({
+      user,
+      targetAgentId: 'hermes',
+      message: 'Reply exactly: ZXQ7_CANARY|8F3C-42',
+      idempotencyKey: 'mc_hermes_submission_0123456789abcdef01234567',
+    })
+
+    expect(body.idempotency_key).toBe('mc_hermes_submission_0123456789abcdef01234567')
+    const sanitized = sanitizeAgentPlatformPayload({
+      result: 'ZXQ7_CANARY|8F3C-42',
+      token: 'SYNTHETIC_FAKE_TOKEN_SECRET',
+      authorization: 'Bearer synthetic-secret-value-1234567890',
+    })
+    const text = JSON.stringify(sanitized)
+    expect(text).toContain('ZXQ7_CANARY|8F3C-42')
+    expect(text).not.toContain('[PERSON_NAME]')
+    expect(text).not.toContain('SYNTHETIC_FAKE_TOKEN_SECRET')
+    expect(text).not.toContain('synthetic-secret-value-1234567890')
+  })
+
   it('normalizes diagnostics into production agents and safe Mission Control URLs', () => {
     const diagnostics = normalizeAgentPlatformDiagnostics({
       schema_version: 'agent_platform_execution.v1',

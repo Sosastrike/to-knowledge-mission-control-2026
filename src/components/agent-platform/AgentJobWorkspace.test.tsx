@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AgentJobWorkspace } from './AgentJobWorkspace'
 
@@ -95,11 +95,13 @@ describe('AgentJobWorkspace', () => {
 
   it('submits Hermes jobs through the shared platform without invoking legacy Ron endpoints', async () => {
     const legacyCalls: string[] = []
+    const postBodies: Record<string, unknown>[] = []
     vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
       const url = String(input)
       if (url.includes('/api/chat/start') || url.includes('/api/chat/stream')) legacyCalls.push(url)
       if (url === '/api/agent-platform/agents/hermes/jobs' && init?.method === 'POST') {
         const body = JSON.parse(String(init.body || '{}'))
+        postBodies.push(body)
         expect(body.message).toContain('HERMES_UI_OK')
         return jsonResponse({ accepted: true, job_id: 'job_hermes', task_id: 'task_hermes', target_agent_id: 'hermes', runtime_adapter: 'hermes', state: 'QUEUED', input_mode: 'QUEUE' }, 202)
       }
@@ -124,6 +126,64 @@ describe('AgentJobWorkspace', () => {
     await waitFor(() => expect(screen.getByTestId('last-submit-job')).toHaveTextContent('job_hermes'))
     expect(legacyCalls).toEqual([])
     expect(screen.getByTestId('last-submit-task')).toHaveTextContent('task_hermes')
+    expect(postBodies[0]?.idempotency_key).toMatch(/^mc_hermes_submission_[a-f0-9]{24}$/)
+  })
+
+  it('keeps accepted Hermes metadata visible when the diagnostics list has not caught up yet', async () => {
+    const detailCalls: string[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = String(input)
+      if (url === '/api/agent-platform/agents/hermes/jobs' && init?.method === 'POST') {
+        return jsonResponse({
+          accepted: true,
+          platform_job_id: 'pjob_first_visible',
+          job_id: 'job_first_visible',
+          task_id: 'task_first_visible',
+          target_agent_id: 'hermes',
+          runtime_adapter: 'hermes',
+          state: 'QUEUED',
+          input_mode: 'QUEUE',
+          status_url: '/api/agents/hermes/jobs/job_first_visible',
+          correlation_id: 'corr_first_visible',
+        }, 202)
+      }
+      if (url.startsWith('/api/agent-platform/agents/hermes/jobs')) {
+        return jsonResponse({
+          agents: [{ agent_id: 'hermes', display_name: 'Hermes', durable_submission_enabled: true, durable_worker_enabled: true }],
+          jobs: [],
+          events: [],
+          results: {},
+        })
+      }
+      if (url.startsWith('/api/agent-platform/jobs/job_first_visible')) {
+        detailCalls.push(url)
+        return jsonResponse({
+          ok: true,
+          job: {
+            platform_job_id: 'pjob_first_visible',
+            job_id: 'job_first_visible',
+            task_id: 'task_first_visible',
+            target_agent_id: 'hermes',
+            runtime_adapter: 'hermes',
+            state: 'QUEUED',
+            correlation_id: 'corr_first_visible',
+          },
+          events: [],
+          result: null,
+        })
+      }
+      return jsonResponse({ error: 'unexpected_url', url }, 500)
+    })
+
+    render(<AgentJobWorkspace agentId="hermes" />)
+    fireEvent.change(await screen.findByLabelText('Agent job message'), { target: { value: 'Reply exactly: ZXQ7_CANARY|8F3C-42' } })
+    fireEvent.click(await screen.findByTestId('agent-job-submit'))
+
+    await waitFor(() => expect(screen.getByTestId('last-submit-platform-job')).toHaveTextContent('pjob_first_visible'))
+    expect(screen.getByTestId('last-submit-job')).toHaveTextContent('job_first_visible')
+    expect(screen.getByTestId('last-submit-task')).toHaveTextContent('task_first_visible')
+    expect(within(screen.getByTestId('agent-job-detail')).getByText('task_id: task_first_visible')).toBeInTheDocument()
+    expect(detailCalls).toEqual(expect.arrayContaining([expect.stringMatching(/^\/api\/agent-platform\/jobs\/job_first_visible\?agent_id=hermes/)]))
   })
 
   it('prevents double-click duplicate Hermes submissions while one accepted request is pending', async () => {
@@ -157,6 +217,34 @@ describe('AgentJobWorkspace', () => {
     expect(postCount).toBe(1)
     releasePost()
     await waitFor(() => expect(screen.getByTestId('last-submit-job')).toHaveTextContent('job_once'))
+  })
+
+  it('renders safe exact-response canary results without local person-name replacement', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const url = String(input)
+      if (url.startsWith('/api/agent-platform/agents/hermes/jobs')) {
+        return jsonResponse({
+          agents: [{ agent_id: 'hermes', display_name: 'Hermes', durable_submission_enabled: true, durable_worker_enabled: true }],
+          jobs: [{ job_id: 'job_exact', task_id: 'task_exact', target_agent_id: 'hermes', runtime_adapter: 'hermes', state: 'SUCCEEDED' }],
+          events: [],
+          results: { job_exact: { result: 'ZXQ7_CANARY|8F3C-42' } },
+        })
+      }
+      if (url.startsWith('/api/agent-platform/jobs/job_exact')) {
+        return jsonResponse({
+          ok: true,
+          job: { job_id: 'job_exact', task_id: 'task_exact', target_agent_id: 'hermes', runtime_adapter: 'hermes', state: 'SUCCEEDED' },
+          events: [],
+          result: { result: 'ZXQ7_CANARY|8F3C-42' },
+        })
+      }
+      return jsonResponse({ error: 'unexpected_url', url }, 500)
+    })
+
+    render(<AgentJobWorkspace agentId="hermes" initialJobId="job_exact" />)
+
+    expect(await screen.findByTestId('agent-job-result')).toHaveTextContent('ZXQ7_CANARY|8F3C-42')
+    expect(screen.getByTestId('agent-job-result')).not.toHaveTextContent('[PERSON_NAME]')
   })
 
   it('persists Hermes follow-up input as default QUEUE without cancelling the active job', async () => {

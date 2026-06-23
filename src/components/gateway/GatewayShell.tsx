@@ -27,7 +27,7 @@ import type { SyntheticEvent } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   HERMES_COMMAND_CENTER_ROUTE,
-  HERMES_STANDALONE_PROXY_ROUTE,
+  HERMES_SHARED_WORKSPACE_ROUTE,
   HERMES_WEB_INTERFACE_ACTIONS,
   HERMES_WEB_INTERFACE_BASE,
   HERMES_WEB_INTERFACE_MODES,
@@ -169,7 +169,6 @@ const enabled = (href: string): AgentAccessButton => ({ enabled: true, href, blo
 const disabled = (blocker: string): AgentAccessButton => ({ enabled: false, href: null, blocker })
 const GATEWAY_TOOLS_ROUTE = '/gateway/tools'
 const GATEWAY_BRAIN_ROUTE = '/gateway/brain'
-const HERMES_DIRECT_LINE_CHAT_PROOF = 'Ron Weasley local direct-line proof is present; Mission Control proxy certification requires the authenticated browser proof run.'
 const agentControlRoute = (slug: string, mode: string): string => `/gateway/agent-hub/${slug}/${mode}`
 const AGENT_ZERO_MISSION_CONTROL_UI_ROUTE = agentControlRoute('agent-zero', 'chat')
 const AGENT_ZERO_TEST_CHAT_TIMEOUT_MS = 95000
@@ -206,21 +205,21 @@ export const AGENT_INTERFACE_LINKS: ReadonlyArray<AgentInterfaceLink> = [
   },
   {
     name: 'Ron Weasley',
-    service: 'Mission Control Ron Weasley WebUI + optional loopback standalone',
-    localBind: 'server-local 127.0.0.1',
-    port: '8787 · server-local loopback only',
+    service: 'Mission Control Hermes shared Agent Platform workspace with legacy Ron rollback surface',
+    localBind: 'Mission Control authenticated shared route',
+    port: 'Gateway-brokered durable jobs',
     localUrl: null,
     tailnetUrl: null,
     proxyRoute: '/api/bridge/hermes/webui/status',
     authRequired: true,
-    status: 'FULL_ACCESS_DELEGATED · direct Nuclear Gateway line',
-    blocker: 'standalone_hermes_webui_proxy_required_if_8787_unreachable · localhost is server-local; owner browser access must use the Mission Control authenticated proxy. Writes/executions still require Jarvis delegation. OpenClaw and ClaudeClaw are not in the path.',
-    nextFix: 'Use /gateway/agent-hub/ron/webui/app for the actual Ron Weasley WebUI app and /gateway/agent-hub/ron/config for the Mission Control command center. Legacy /gateway/agent-hub/hermes routes remain aliases. Direct-line chat is available through the Ron WebUI proxy; protected writes and execution still require Jarvis concurrence.',
+    status: 'HERMES LIVE CERTIFIED · shared durable execution active',
+    blocker: 'ron_control_surface_only · Hermes executes through the shared Agent Platform. Ron/Hermes-WebUI remains a control surface and cannot own jobs, credentials, or permissions.',
+    nextFix: 'Use /gateway/agents/hermes/jobs for Hermes durable jobs and /gateway/agent-hub/ron/config for the Mission Control command center. Legacy Ron submission remains available only through backend-managed rollback controls.',
     buttons: {
-      ui: enabled(HERMES_STANDALONE_PROXY_ROUTE),
+      ui: enabled(HERMES_SHARED_WORKSPACE_ROUTE),
       config: enabled(HERMES_COMMAND_CENTER_ROUTE),
       brain: enabled(`${HERMES_WEB_INTERFACE_BASE}/brain-map`),
-      chat: enabled(HERMES_STANDALONE_PROXY_ROUTE),
+      chat: enabled(HERMES_SHARED_WORKSPACE_ROUTE),
       tools: enabled(`${HERMES_WEB_INTERFACE_BASE}/tool-map`),
       health: enabled(`${HERMES_WEB_INTERFACE_BASE}/status`),
     },
@@ -532,10 +531,10 @@ export function agentControlLinksFor(slug: string): AgentAccessButtons {
 
   if (normalized === 'hermes') {
     return {
-      ui: enabled(HERMES_STANDALONE_PROXY_ROUTE),
+      ui: enabled(HERMES_SHARED_WORKSPACE_ROUTE),
       config: enabled(HERMES_COMMAND_CENTER_ROUTE),
       brain: enabled(`${HERMES_WEB_INTERFACE_BASE}/brain-map`),
-      chat: enabled(HERMES_STANDALONE_PROXY_ROUTE),
+      chat: enabled(HERMES_SHARED_WORKSPACE_ROUTE),
       tools: enabled(`${HERMES_WEB_INTERFACE_BASE}/tool-map`),
       health: enabled(`${HERMES_WEB_INTERFACE_BASE}/status`),
     }
@@ -743,9 +742,9 @@ const AGENT_CONTROL_DEFS: Record<AgentSlug, AgentControlDefinition> = {
     role: 'Nuclear Dispatcher · optimization and workflow architect',
     status: 'FULL_ACCESS_DELEGATED · direct Nuclear Gateway line',
     endpoint: '/api/bridge/hermes/webui/status',
-    uiHref: HERMES_STANDALONE_PROXY_ROUTE,
-    blocker: 'jarvis_signed_exact_scope_delegation_required · hermes_webui_proxy_or_service_required',
-    nextAction: 'Use Open UI for the actual Ron Weasley WebUI app through the authenticated Mission Control proxy. Use Open Command Center for the internal Mission Control Ron Weasley control page. Direct-line chat is disabled until the real Ron Weasley chat adapter is installed.',
+    uiHref: HERMES_SHARED_WORKSPACE_ROUTE,
+    blocker: 'ron_control_surface_only · backend authorization and Agent Platform durable jobs are authoritative',
+    nextAction: 'Use Open UI for the shared Hermes durable job workspace. Ron/Hermes-WebUI is a control surface, not a separate agent, and legacy submission is retained only for rollback.',
     modes: [...HERMES_WEB_INTERFACE_MODES],
   },
   pi: {
@@ -872,6 +871,9 @@ function controlViewFrom(pathname: string | null, q: URLSearchParams | null): Ga
   }
   if (parts[1] === 'agent-hub' && parts[2] === 'paperclip' && !parts[3]) {
     return { kind: 'agent', slug: 'paperclip', mode: 'ui' }
+  }
+  if (parts[1] === 'agent-hub' && (parts[2] === 'hermes' || parts[2] === 'ron') && (parts[3] === 'webui' || parts[3] === 'chat')) {
+    return { kind: 'platform-job', agentId: 'hermes', jobId: parts[4] === 'app' ? undefined : parts[4] }
   }
   if (parts[1] === 'agent-hub' && (parts[2] === 'hermes' || parts[2] === 'ron') && !parts[3]) {
     return { kind: 'agent', slug: 'hermes', mode: 'overview' }
@@ -1444,22 +1446,22 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
     return (
       <main className="control-page hermes-command-center" data-testid="agent-control-hermes-chat">
         <header className="control-hero">
-          <p>Ron Weasley · Direct-Line Chat</p>
-          <h1>Ron Weasley Direct-Line Chat Installed</h1>
+          <p>Hermes · Shared Durable Jobs</p>
+          <h1>Hermes Shared Job Workspace Installed</h1>
           <span>
-            Text direct-line proof passed through the Mission Control Ron WebUI proxy. Required path remains:
-            Owner → Mission Control → Nuclear Gateway → Ron Weasley, with OpenCloud hidden intermediary false.
+            Ron/Hermes-WebUI is now a control surface for Hermes. Owner messages route through Mission Control,
+            the shared Agent Platform, and the Hermes adapter with durable job IDs and no hidden intermediary.
           </span>
         </header>
         <section className="control-actions-row" aria-label="Ron Weasley chat blocked actions">
-          <ControlLink href={HERMES_STANDALONE_PROXY_ROUTE}>Open UI</ControlLink>
+          <ControlLink href={HERMES_SHARED_WORKSPACE_ROUTE}>Open UI</ControlLink>
           <ControlLink href={HERMES_COMMAND_CENTER_ROUTE}>Open Command Center</ControlLink>
           <ControlLink href={`${HERMES_WEB_INTERFACE_BASE}/routes`}>Trace Routes</ControlLink>
         </section>
         <section className="control-grid">
           <article className="control-card">
             <strong>Status</strong>
-            <span>{HERMES_DIRECT_LINE_CHAT_PROOF}</span>
+            <span>Hermes backend is live-certified through shared durable execution. Ron remains a control surface only.</span>
           </article>
           <article className="control-card">
             <strong>Direct line requirement</strong>
@@ -1467,7 +1469,7 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
           </article>
           <article className="control-card">
             <strong>Next safe action</strong>
-            <span>Use the Ron WebUI proxy for direct-line chat. Keep production-impacting writes behind Jarvis concurrence and exact-scope audit.</span>
+            <span>Use the shared Hermes job workspace for durable backend execution. Keep production-impacting writes behind backend authorization, approval, and audit.</span>
           </article>
         </section>
       </main>
@@ -1504,8 +1506,8 @@ function HermesCommandCenterPanel({ mode }: { mode: AgentPanelMode }) {
           <span>Ron Weasley can recommend, dispatch, draft, optimize, and plan. Production-impacting work requires Jarvis concurrence.</span>
         </article>
         <article className="control-card">
-          <strong>Standalone WebUI</strong>
-          <span>Owner access uses /gateway/agent-hub/ron/webui/app. The backing 127.0.0.1:8787 service is server-local; localhost is server-local.</span>
+          <strong>Control surface</strong>
+          <span>Owner access uses /gateway/agents/hermes/jobs. Legacy Ron submission is rollback-only and cannot be enabled by browser input.</span>
         </article>
       </section>
       {(hermesMode === 'status' || hermesMode === 'config' || hermesMode === 'overview') && <RonProxyProofControl />}

@@ -5,7 +5,7 @@ import { AGENT_INTERFACE_LINKS, agentControlLinksFor, controlViewFromPath, gatew
 import { attachGatewayActionHandler } from './gateway-actions'
 
 describe('Ron Weasley WebUI Gateway routing', () => {
-  it('resolves every required Ron Weasley Mission Control page to the legacy Hermes control surface', () => {
+  it('resolves every required Ron Weasley Mission Control page to the Hermes control surface', () => {
     for (const [path, mode] of [
       ['/gateway/agent-hub/hermes', 'overview'],
       ['/gateway/agent-hub/ron', 'overview'],
@@ -32,9 +32,25 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     }
   })
 
+  it('cuts the owner-facing Ron WebUI app route over to the shared Hermes durable job workspace', () => {
+    expect(controlViewFromPath('/gateway/agent-hub/ron/webui/app', null)).toMatchObject({
+      kind: 'platform-job',
+      agentId: 'hermes',
+    })
+    expect(controlViewFromPath('/gateway/agent-hub/hermes/webui/app', null)).toMatchObject({
+      kind: 'platform-job',
+      agentId: 'hermes',
+    })
+    expect(controlViewFromPath('/gateway/agents/hermes/jobs/job_123', null)).toMatchObject({
+      kind: 'platform-job',
+      agentId: 'hermes',
+      jobId: 'job_123',
+    })
+  })
+
   it('routes Ron Weasley buttons to real Mission Control pages instead of raw JSON or fake handlers', () => {
     for (const [label, href] of [
-      ['Open UI', '/gateway/agent-hub/ron/webui/app'],
+      ['Open UI', '/gateway/agents/hermes/jobs'],
       ['Open command center', '/gateway/agent-hub/ron/config'],
       ['Status', '/gateway/agent-hub/ron/status'],
       ['Brain Map', '/gateway/agent-hub/ron/brain-map'],
@@ -62,7 +78,7 @@ describe('Ron Weasley WebUI Gateway routing', () => {
 
     expect(buttons.ui).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
     expect(buttons.ui.href).not.toBe('/gateway/agent-hub/hermes/config')
     expect(buttons.config).toMatchObject({
@@ -71,7 +87,7 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     })
     expect(buttons.chat).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
   })
 
@@ -100,9 +116,9 @@ describe('Ron Weasley WebUI Gateway routing', () => {
     expect(ron?.localUrl).toBeNull()
     expect(ron?.buttons.ui).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
-    expect(`${ron?.blocker} ${ron?.nextFix}`).toContain('localhost is server-local')
+    expect(`${ron?.localBind} ${ron?.port} ${ron?.blocker} ${ron?.nextFix}`).not.toMatch(/localhost|127\.0\.0\.1|100\.116\.35\.95:50080/)
     expect(JSON.stringify(ron?.buttons)).not.toMatch(/localhost|127\.0\.0\.1/)
   })
 
@@ -176,7 +192,7 @@ describe('Ron Weasley WebUI Gateway routing', () => {
       nearbyText: 'Ron Weasley Nuclear Dispatcher Skill and Workflow Builder',
     })).toMatchObject({
       kind: 'navigate',
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
 
     expect(gatewayActionForButton({

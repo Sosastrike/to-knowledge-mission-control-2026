@@ -11,12 +11,25 @@ import type { MissionControlRuntimeHealth } from './mission-control-runtime-heal
 import { AGENT_UPDATE_COMPONENTS } from './agent-update-coordinator'
 import { buildAgentRoutingLinesStatus } from './agent-routing-lines'
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
+import { HERMES_SHARED_WORKSPACE_ROUTE } from './hermes-web-interface'
 import { buildMissionControlRuntimeHealth } from './mission-control-runtime-health'
 import { getLatestRonMissionControlProxyProof } from './ron-proxy-proof'
 
-export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'hermes-webui' | 'spaceagent' | 'pi-mono'
+export type AgentHubAgentId = 'paperclip' | 'agent-zero' | 'hermes' | 'spaceagent' | 'pi-mono'
 
 export type AgentHubAgentState = 'partial_go' | 'full_access_delegated' | 'gated' | 'pending' | 'blocked' | 'read_only' | 'configured'
+
+export type AgentHubControlSurface = {
+  component_type: 'control_surface'
+  component_id: string
+  display_name: string
+  target_agent_id: 'hermes'
+  route: string
+  legacy_route: string
+  durable_job_owner: false
+  execution_authority: false
+  credential_authority: false
+}
 
 export type AgentHubRuntimeSystem = {
   id: string
@@ -239,6 +252,7 @@ export type AgentHubAgent = {
     no_fake_done: true
   }
   proof_panel?: AgentHubRonProofPanel
+  control_surfaces?: AgentHubControlSurface[]
 }
 
 export type AgentHubStatusPayload = {
@@ -421,6 +435,7 @@ type AgentHubDefinition = {
   uiMode: AgentHubAgent['interface']['ui_mode']
   bridgeStatusRoute: string | null
   extraBlockers: string[]
+  controlSurfaces?: AgentHubControlSurface[]
 }
 
 const RON_DIRECT_LINE_CHAT_PROOF = 'TRACE-MC-RON-20260529T005215Z-LEGACY-ALIAS' as const
@@ -494,36 +509,32 @@ const AGENT_HUB_DEFINITIONS: AgentHubDefinition[] = [
   {
     id: 'hermes',
     registryNodeId: 'hermes',
-    name: RON_WEASLEY_IDENTITY.canonical_name,
-    role: 'Nuclear Dispatcher / Skill + Workflow Architect',
+    name: 'Hermes',
+    role: 'Software Agent',
     layer: 'planning_and_skill_design',
-    productionTruth: 'Ron Weasley has FULL ACCESS DELEGATED under Agent Zero / Jarvis. Protected writes and execution use JARVIS-GATED EXECUTION and require Jarvis concurrence; Ron is not unrestricted and does not outrank Agent Zero. Local direct-line proof is present; Mission Control proxy send/receive certification is pending the authenticated browser proof run.',
+    productionTruth: 'Hermes is a software agent certified on the shared durable Agent Platform backend. Ron/Hermes-WebUI is a control surface for Hermes, not a separate agent identity, credential holder, durable-job owner, or authorization source.',
     status: 'full_access_delegated',
     liveInterfaceProven: true,
     calledTrueProven: true,
-    interfaceSummary: 'Mission Control Ron Weasley routes and WebUI proxy are responding; protected writes and execution require Jarvis concurrence.',
-    localUiUrl: 'http://127.0.0.1:8787/',
+    interfaceSummary: 'Open Hermes through the shared durable Agent Platform workspace. Ron/Hermes-WebUI remains attached as a control surface and legacy rollback surface only.',
+    localUiUrl: null,
     tailnetUrl: null,
-    uiMode: 'local_ui',
+    uiMode: 'mission_control_proxy',
     bridgeStatusRoute: '/api/bridge/hermes/webui/status',
-    extraBlockers: ['jarvis_signed_exact_scope_delegation_required_for_protected_execution'],
-  },
-  {
-    id: 'hermes-webui',
-    registryNodeId: 'hermes_webui',
-    name: 'Ron Weasley WebUI',
-    role: 'Ron Weasley Browser Control Surface',
-    layer: 'direct_line_browser_interface',
-    productionTruth: 'Ron Weasley WebUI is a loopback/Tailnet-only browser surface for Ron Weasley — Nuclear Dispatcher. It is not a second brain, and OpenClaw/OpenCloud is not in the owner-to-Ron path.',
-    status: 'configured',
-    liveInterfaceProven: true,
-    calledTrueProven: true,
-    interfaceSummary: 'Standalone WebUI link, canonical preflight/status/identity/routes, and Mission Control Ron Weasley control-plane routes are visible. Production-impacting actions still require Jarvis concurrence.',
-    localUiUrl: 'http://127.0.0.1:8787/',
-    tailnetUrl: null,
-    uiMode: 'local_ui',
-    bridgeStatusRoute: '/api/bridge/hermes-webui/status',
-    extraBlockers: ['hermes_agent_checkout_or_config_required_for_full_agent_features'],
+    extraBlockers: ['protected_writes_require_backend_authorization_and_approval'],
+    controlSurfaces: [
+      {
+        component_type: 'control_surface',
+        component_id: 'ron-hermes-webui',
+        display_name: 'Ron/Hermes-WebUI',
+        target_agent_id: 'hermes',
+        route: HERMES_SHARED_WORKSPACE_ROUTE,
+        legacy_route: '/gateway/agent-hub/ron/webui/app',
+        durable_job_owner: false,
+        execution_authority: false,
+        credential_authority: false,
+      },
+    ],
   },
   {
     id: 'spaceagent',
@@ -640,7 +651,7 @@ export function normalizeAgentHubAgentId(value: string): AgentHubAgentId | null 
   if (normalized === 'paperclip') return 'paperclip'
   if (normalized === 'agent-zero' || normalized === 'agentzero') return 'agent-zero'
   if (normalized === 'hermes') return 'hermes'
-  if (normalized === 'hermes-webui' || normalized === 'hermeswebui') return 'hermes-webui'
+  if (normalized === 'hermes-webui' || normalized === 'hermeswebui' || normalized === 'ron') return 'hermes'
   if (normalized === 'space-agent' || normalized === 'spaceagent') return 'spaceagent'
   if (normalized === 'pi' || normalized === 'pi-mono' || normalized === 'pimono') return 'pi-mono'
   return null
@@ -1135,6 +1146,7 @@ function buildAgentHubAgents(registry: GatewayRegistry): AgentHubAgent[] {
 	        no_fake_done: true,
 	      },
 	      ...(definition.id === 'hermes' ? { proof_panel: buildRonWeasleyProofPanel() } : {}),
+      ...(definition.controlSurfaces?.length ? { control_surfaces: definition.controlSurfaces } : {}),
 	    }
 	  })
 	}

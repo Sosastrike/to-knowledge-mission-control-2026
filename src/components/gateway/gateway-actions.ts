@@ -16,6 +16,7 @@ const BASE = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PAT
 export const PAPERCLIP_ECO_DASHBOARD = 'http://100.116.35.95:3100/ECO/dashboard'
 export const PAPERCLIP_ECO_WINDOW_NAME = 'tkmc_paperclip_eco'
 export const PAPERCLIP_WORKSPACE_SELECTOR_ROUTE = '/gateway/agent-hub/paperclip/ui'
+export const HERMES_SHARED_WORKSPACE_ROUTE = '/gateway/agents/hermes/jobs'
 
 function normalized(value: string | undefined): string {
   return (value || '').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -68,7 +69,7 @@ function ownerUiTarget(text: string): { href: string; targetName?: string } | nu
   if (hasAny(text, 'paperclip', 'workforce control plane')) {
     return { href: shellHref(PAPERCLIP_WORKSPACE_SELECTOR_ROUTE) }
   }
-  if (isRonWeasleySurface(text)) return { href: shellHref('/gateway/agent-hub/ron/webui/app') }
+  if (isRonWeasleySurface(text)) return { href: shellHref(HERMES_SHARED_WORKSPACE_ROUTE) }
   if (hasAny(text, 'agent zero', 'agent-zero', ' a0 ')) return { href: shellHref('/gateway/agent-hub/agent-zero/chat') }
   if (hasAny(text, 'openclaw+', 'openclaw plus', 'owner tunnel')) return { href: 'http://127.0.0.1:18789/' }
   return null
@@ -125,7 +126,8 @@ function agentControlHref(
     return slug === 'paperclip' ? shellHref(`/gateway/agent-hub/paperclip/${mode}`) : null
   }
   if (mode === 'chat') {
-    if (slug === 'agent-zero' || slug === 'hermes') return shellHref(`/gateway/agent-hub/${slug}/chat`)
+    if (slug === 'agent-zero') return shellHref('/gateway/agent-hub/agent-zero/chat')
+    if (slug === 'hermes') return shellHref(HERMES_SHARED_WORKSPACE_ROUTE)
     if (slug === 'pi') return shellHref('/gateway/agent-hub/pi/recommend')
     if (slug === 'spaceagent') return shellHref('/gateway/agent-hub/spaceagent/research')
     return shellHref(`/gateway/agent-hub/${slug}/config`)
@@ -168,12 +170,12 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
 
   if (isRonWeasleySurface(text) && !paperclipSurfaceTakesPriority(text)) {
     const hermesRoutes: Record<string, string> = {
-      'open ui': '/gateway/agent-hub/ron/webui/app',
-      'open ron weasley webui': '/gateway/agent-hub/ron/webui/app',
-      'open hermes webui': '/gateway/agent-hub/ron/webui/app',
-      'open standalone webui': '/gateway/agent-hub/ron/webui/app',
-      'standalone webui': '/gateway/agent-hub/ron/webui/app',
-      'webui': '/gateway/agent-hub/ron/webui/app',
+      'open ui': HERMES_SHARED_WORKSPACE_ROUTE,
+      'open ron weasley webui': HERMES_SHARED_WORKSPACE_ROUTE,
+      'open hermes webui': HERMES_SHARED_WORKSPACE_ROUTE,
+      'open standalone webui': HERMES_SHARED_WORKSPACE_ROUTE,
+      'standalone webui': HERMES_SHARED_WORKSPACE_ROUTE,
+      'webui': HERMES_SHARED_WORKSPACE_ROUTE,
       'open command center': '/gateway/agent-hub/ron/config',
       'command center': '/gateway/agent-hub/ron/config',
       'status': '/gateway/agent-hub/ron/status',
@@ -200,7 +202,7 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
           ? 'Opening Ron Weasley WebUI'
           : 'Opening Ron Weasley command center',
         detail: label.includes('webui') || label === 'open ui'
-          ? 'Opening the actual Ron Weasley WebUI app through the Mission Control authenticated proxy. OpenCloud is not an intermediary.'
+          ? 'Opening the shared Hermes durable job workspace through the authenticated Mission Control shell. Ron/Hermes-WebUI remains a control surface only.'
           : 'Opening the Mission Control Ron Weasley command center. OpenCloud is not an intermediary.',
       }
     }
@@ -401,9 +403,9 @@ export function gatewayActionForButton(context: GatewayActionContext): GatewayFr
     if (isRonWeasleySurface(text)) {
       return {
         kind: 'navigate',
-        href: shellHref('/gateway/agent-hub/ron/webui/app'),
-        title: 'Opening Ron Weasley WebUI',
-        detail: 'Opening the actual Ron Weasley WebUI app through the Mission Control authenticated proxy.',
+        href: shellHref(HERMES_SHARED_WORKSPACE_ROUTE),
+        title: 'Opening Hermes durable job workspace',
+        detail: 'Opening the shared Hermes durable job workspace through Mission Control.',
       }
     }
     if (hasAny(text, 'build-wiki', 'farmer', 'opencloud', 'n8n')) {

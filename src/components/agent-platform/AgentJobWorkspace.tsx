@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type Job = {
   platform_job_id?: string | null
@@ -75,19 +75,25 @@ function containsInternalOrigin(value: string): boolean {
   return /100\.116\.35\.95|127\.0\.0\.1|localhost|:50080/.test(value)
 }
 
+function defaultMessageForAgent(agentId: string): string {
+  if (agentId === 'hermes') return 'Reply exactly: HERMES_UI_OK'
+  return 'Reply exactly: AGENT_ZERO_UI_OK'
+}
+
 export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null }: { agentId?: string; initialJobId?: string | null }) {
   const [agents, setAgents] = useState<Agent[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [events, setEvents] = useState<EventRow[]>([])
   const [selectedJobId, setSelectedJobId] = useState<string | null>(() => initialJobId)
   const [detail, setDetail] = useState<JobDetailPayload | null>(null)
-  const [message, setMessage] = useState(`Reply exactly: AGENT_ZERO_UI_OK`)
+  const [message, setMessage] = useState(() => defaultMessageForAgent(agentId))
   const [followUp, setFollowUp] = useState('')
   const [steer, setSteer] = useState('')
   const [cancelReason, setCancelReason] = useState('Owner requested cancellation from Mission Control.')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'submitting' | 'ready' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [lastSubmit, setLastSubmit] = useState<Record<string, unknown> | null>(null)
+  const submitInFlight = useRef(false)
 
   const activeJobCount = useMemo(() => jobs.filter((job) => ACTIVE_STATES.has(job.state)).length, [jobs])
   const selectedJob = useMemo(() => jobs.find((job) => job.job_id === selectedJobId) || detail?.job || null, [jobs, selectedJobId, detail])
@@ -165,7 +171,8 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
 
   async function submitNewJob() {
     const trimmed = message.trim()
-    if (!trimmed) return
+    if (!trimmed || submitInFlight.current) return
+    submitInFlight.current = true
     setPhase('submitting')
     setError(null)
     try {
@@ -177,6 +184,8 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
     } catch (err) {
       setPhase('error')
       setError(err instanceof Error ? err.message : 'agent_platform_submit_failed')
+    } finally {
+      submitInFlight.current = false
     }
   }
 
@@ -226,6 +235,7 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
             {phase === 'submitting' ? 'Submitting...' : 'Queue Job'}
           </button>
           {Boolean(lastSubmit?.job_id) && <small data-testid="last-submit-job">job_id: {String(lastSubmit?.job_id)}</small>}
+          {Boolean(lastSubmit?.task_id) && <small data-testid="last-submit-task">task_id: {String(lastSubmit?.task_id)}</small>}
         </article>
 
         <article className="control-card">

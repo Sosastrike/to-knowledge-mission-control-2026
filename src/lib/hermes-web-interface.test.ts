@@ -4,6 +4,7 @@ import {
   HERMES_COMMAND_CENTER_ROUTE,
   HERMES_LEGACY_WEB_INTERFACE_BASE,
   HERMES_STANDALONE_PROXY_ROUTE,
+  HERMES_SHARED_WORKSPACE_ROUTE,
   HERMES_WEB_INTERFACE_ACTIONS,
   HERMES_WEB_INTERFACE_BASE,
   HERMES_WEB_INTERFACE_PAGES,
@@ -85,7 +86,7 @@ describe('Ron Weasley Web Interface Mission Control contract', () => {
   it('proves buttons are real Mission Control routes and OpenCloud is not Ron Weasley', () => {
     expect(HERMES_WEB_INTERFACE_ACTIONS.every((action) => action.href.trim().length > 0)).toBe(true)
     expect(HERMES_WEB_INTERFACE_ACTIONS).toEqual(expect.arrayContaining([
-      expect.objectContaining({ label: 'Open Ron Weasley WebUI', href: HERMES_STANDALONE_PROXY_ROUTE }),
+      expect.objectContaining({ label: 'Open Ron Weasley WebUI', href: HERMES_SHARED_WORKSPACE_ROUTE }),
       expect.objectContaining({ label: 'Open command center', href: HERMES_COMMAND_CENTER_ROUTE }),
     ]))
     expect(HERMES_WEB_INTERFACE_ACTIONS.find((action) => action.label === 'Open Ron Weasley WebUI')?.href).not.toBe(HERMES_COMMAND_CENTER_ROUTE)
@@ -100,8 +101,9 @@ describe('Ron Weasley Web Interface Mission Control contract', () => {
     expect(proof.identity.opencloud_intermediary).toBe(false)
     expect(proof.status).toBe('HERMES_WEBUI_MISSION_CONTROL_SURFACE_READY')
     expect(proof.final_status_target).toBe('HERMES_WEBUI_MISSION_CONTROL_READY')
-    expect(proof.standalone_webui.status).toBe('PROTECTED_LOOPBACK_PROXY_REQUIRED_FOR_STANDALONE_READY')
-    expect(proof.standalone_webui.proxy_route).toBe(HERMES_STANDALONE_PROXY_ROUTE)
+    expect(proof.standalone_webui.status).toBe('SHARED_AGENT_PLATFORM_WORKSPACE_READY_LEGACY_PROXY_RETAINED_FOR_ROLLBACK')
+    expect(proof.standalone_webui.proxy_route).toBe(HERMES_SHARED_WORKSPACE_ROUTE)
+    expect(proof.standalone_webui.legacy_proxy_route).toBe(HERMES_STANDALONE_PROXY_ROUTE)
     expect(proof.standalone_webui.health_route).toBe('/api/bridge/hermes-webui/health')
     expect(proof.standalone_webui.mission_control_command_center_is_primary).toBe(true)
   })

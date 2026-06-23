@@ -84,4 +84,37 @@ describe('agent platform bridge', () => {
     expect(diagnostics.jobs[0]?.status_url).toBe('/api/agent-platform/jobs/job_1')
     expect(JSON.stringify(diagnostics)).not.toContain('test_agent_alpha')
   })
+
+  it('normalizes Hermes as a production agent while keeping Ron WebUI as a control surface', () => {
+    const diagnostics = normalizeAgentPlatformDiagnostics({
+      platform_schema_version: 'agent_platform_durable_jobs.v2',
+      controls: {
+        durable_message_submission_enabled: true,
+        durable_worker_enabled: true,
+        hermes_durable_submission_enabled: true,
+        hermes_shared_worker_enabled: true,
+      },
+      registered_agents: ['agent_zero', 'hermes', 'ron', 'hermes-webui', 'test_agent_beta'],
+      registered_agent_details: {
+        hermes: {
+          display_name: 'Hermes',
+          runtime_adapter: 'hermes',
+          control_surfaces: [{ component_type: 'control_surface', target_agent_id: 'hermes', durable_job_owner: false }],
+        },
+      },
+    })
+
+    expect(diagnostics.registered_agents).toEqual(['agent_zero', 'hermes'])
+    expect(diagnostics.agents.find((agent) => agent.agent_id === 'hermes')).toMatchObject({
+      display_name: 'Hermes',
+      runtime_adapter: 'hermes',
+      owner_route: '/gateway/agents/hermes/jobs',
+      durable_submission_enabled: true,
+      durable_worker_enabled: true,
+      test_fixture: false,
+    })
+    expect(diagnostics.agents.some((agent) => agent.agent_id === 'ron' || agent.agent_id === 'hermes_webui')).toBe(false)
+    expect(JSON.stringify(diagnostics)).not.toContain('test_agent_beta')
+  })
+
 })

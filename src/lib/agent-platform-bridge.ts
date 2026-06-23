@@ -7,6 +7,7 @@ import {
 } from '@/lib/agent-zero-bridge'
 
 export type AgentPlatformInputMode = 'QUEUE' | 'STEER' | 'CANCEL'
+export type AgentPlatformAgentId = string
 
 export type AgentPlatformAgentSummary = {
   agent_id: string
@@ -266,6 +267,7 @@ function arrayOfStrings(value: unknown): string[] {
 
 function titleFromAgentId(agentId: string): string {
   if (agentId === 'agent_zero') return 'Agent Zero'
+  if (agentId === 'hermes') return 'Hermes'
   return agentId.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
 }
 
@@ -273,6 +275,35 @@ function agentOwnerRoute(agentId: string): string {
   return agentId === 'agent_zero'
     ? '/gateway/agent-hub/agent-zero/chat'
     : `/gateway/agents/${encodeURIComponent(agentId)}/jobs`
+}
+
+function isControlSurfaceAgentId(agentId: string): boolean {
+  return agentId === 'ron' || agentId === 'hermes_webui'
+}
+
+function agentDetails(record: Record<string, unknown>, agentId: string): Record<string, unknown> {
+  const details = isRecord(record.registered_agent_details) ? record.registered_agent_details : {}
+  const detail = details[agentId]
+  return isRecord(detail) ? detail : {}
+}
+
+function runtimeAdapterFor(agentId: string, detail: Record<string, unknown>): string | null {
+  if (typeof detail.runtime_adapter === 'string') return detail.runtime_adapter
+  if (agentId === 'agent_zero') return 'agent_zero'
+  if (agentId === 'hermes') return 'hermes'
+  return null
+}
+
+function durableSubmissionEnabled(agentId: string, controls: Record<string, unknown>): boolean {
+  const globalEnabled = controls.durable_message_submission_enabled === true
+  if (agentId === 'hermes') return globalEnabled && controls.hermes_durable_submission_enabled === true
+  return globalEnabled
+}
+
+function durableWorkerEnabled(agentId: string, controls: Record<string, unknown>): boolean {
+  const globalEnabled = controls.durable_worker_enabled === true
+  if (agentId === 'hermes') return globalEnabled && controls.hermes_shared_worker_enabled === true
+  return globalEnabled
 }
 
 function normalizeJob(value: unknown): AgentPlatformJobSummary | null {
@@ -324,20 +355,23 @@ export function normalizeAgentPlatformDiagnostics(payload: unknown): AgentPlatfo
   const record = isRecord(payload) ? payload : {}
   const controls = isRecord(record.controls) ? record.controls : {}
   const rawRegistered = Array.isArray(record.registered_agents) ? record.registered_agents : ['agent_zero']
-  const registeredAgents = rawRegistered
+  const registeredAgents = Array.from(new Set(rawRegistered
     .map((item) => normalizeAgentPlatformAgentId(typeof item === 'string' ? item : null))
-    .filter((item): item is string => Boolean(item))
-  const agents = registeredAgents.map((agentId) => ({
-    agent_id: agentId,
-    display_name: titleFromAgentId(agentId),
-    status: 'active' as const,
-    runtime_adapter: agentId === 'agent_zero' ? 'agent_zero' : null,
-    owner_route: agentOwnerRoute(agentId),
-    registered_for_production: true,
-    durable_submission_enabled: controls.durable_message_submission_enabled === true,
-    durable_worker_enabled: controls.durable_worker_enabled === true,
-    test_fixture: false as const,
-  }))
+    .filter((item): item is AgentPlatformAgentId => Boolean(item) && !isControlSurfaceAgentId(item as AgentPlatformAgentId))))
+  const agents = registeredAgents.map((agentId) => {
+    const detail = agentDetails(record, agentId)
+    return {
+      agent_id: agentId,
+      display_name: typeof detail.display_name === 'string' ? detail.display_name : titleFromAgentId(agentId),
+      status: 'active' as const,
+      runtime_adapter: runtimeAdapterFor(agentId, detail),
+      owner_route: agentOwnerRoute(agentId),
+      registered_for_production: true,
+      durable_submission_enabled: durableSubmissionEnabled(agentId, controls),
+      durable_worker_enabled: durableWorkerEnabled(agentId, controls),
+      test_fixture: false as const,
+    }
+  })
   const jobs = Array.isArray(record.jobs)
     ? record.jobs.map(normalizeJob).filter((job): job is AgentPlatformJobSummary => Boolean(job))
     : []

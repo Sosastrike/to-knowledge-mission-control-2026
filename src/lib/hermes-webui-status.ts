@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { RON_WEASLEY_IDENTITY } from './hermes-boundaries'
-import { HERMES_COMMAND_CENTER_ROUTE, HERMES_LEGACY_WEB_INTERFACE_BASE, HERMES_STANDALONE_PROXY_ROUTE, HERMES_WEB_INTERFACE_BASE } from './hermes-web-interface'
+import { HERMES_COMMAND_CENTER_ROUTE, HERMES_LEGACY_WEB_INTERFACE_BASE, HERMES_SHARED_WORKSPACE_ROUTE, HERMES_STANDALONE_PROXY_ROUTE, HERMES_WEB_INTERFACE_BASE } from './hermes-web-interface'
 
 type HermesWebUiState = 'READY' | 'SERVICE_UNREACHABLE' | 'BACKEND_REQUIRED'
 
@@ -205,7 +205,7 @@ export function getHermesWebUiUrl() {
 }
 
 export function getHermesWebUiBrowserUrl() {
-  return HERMES_STANDALONE_PROXY_ROUTE
+  return HERMES_SHARED_WORKSPACE_ROUTE
 }
 
 export async function buildHermesWebUiPreflight() {
@@ -473,11 +473,13 @@ function buildHermesWebUiButtonContract(options: HermesWebUiRoutesOptions = {}) 
   return [
     {
       label: 'Open Ron Weasley WebUI',
-      href: standaloneReachable ? HERMES_STANDALONE_PROXY_ROUTE : null,
+      href: HERMES_SHARED_WORKSPACE_ROUTE,
+      legacy_href: standaloneReachable ? HERMES_STANDALONE_PROXY_ROUTE : null,
       api_route: '/api/bridge/hermes-webui/health',
-      disabled_reason: standaloneReachable
-        ? null
-        : `${standaloneBlocker}; use the Mission Control Ron Weasley Command Center until the loopback WebUI health route is proven.`,
+      disabled_reason: null,
+      rollback_reason: standaloneReachable
+        ? 'legacy_ron_proxy_available_for_backend_managed_rollback'
+        : `${standaloneBlocker}; legacy Ron proxy unavailable, shared Hermes workspace remains primary.`,
     },
     { label: 'Open Ron Weasley Command Center', href: HERMES_COMMAND_CENTER_ROUTE, api_route: '/api/bridge/hermes/status', disabled_reason: null },
     { label: 'Status', href: `${HERMES_WEB_INTERFACE_BASE}/status`, api_route: '/api/bridge/hermes-webui/status', disabled_reason: null },
@@ -567,8 +569,8 @@ export async function buildHermesWebUiStatus() {
     }),
     exact_blocker: probe.reachable ? null : probe.exact_blocker,
     next_action: probe.reachable
-      ? 'Open Ron Weasley WebUI through the Mission Control authenticated proxy; the backing service remains loopback-only.'
-      : 'Start Ron Weasley WebUI on 127.0.0.1:8787 from the To-Knowledge-hermes-webui repo or set HERMES_WEBUI_URL to another loopback URL.',
+      ? 'Open the Hermes shared durable job workspace through Mission Control; the legacy Ron proxy remains available only as a backend-managed rollback surface.'
+      : 'Use the Hermes shared durable job workspace through Mission Control; the legacy Ron proxy is unavailable and remains rollback-only.',
     rollback_command: 'Remove the Ron Weasley WebUI link/status registration; no external state, credentials, public exposure, or production writes were created.',
   }
 }

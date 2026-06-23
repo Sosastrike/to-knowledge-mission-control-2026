@@ -172,14 +172,15 @@ describe('Gateway Agent Hub', () => {
       bridge_session_required_for_interactive_actions: true,
     })
     expect(JSON.stringify(payload.gateway_route_cdp_truth)).not.toMatch(/Bearer\s+[A-Za-z0-9._-]+|sk-[A-Za-z0-9]/i)
-    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'hermes-webui', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).toEqual(['paperclip', 'agent-zero', 'hermes', 'spaceagent', 'pi-mono'])
+    expect(payload.agents.map((agent) => agent.id)).not.toContain('hermes-webui')
     expect(payload.agents.map((agent) => agent.id)).not.toContain('sofia')
     expect(payload.direct_agent_lines.trace_commands.map((trace) => trace.agent_id)).not.toContain('sofia')
     expect(payload.agents.find((agent) => agent.id === 'agent-zero')).toMatchObject({ role: 'Commander', status: 'partial_go', called_true_proven: true })
     const ron = payload.agents.find((agent) => agent.id === 'hermes')
     expect(ron).toMatchObject({
-      name: 'Ron Weasley',
-      role: 'Nuclear Dispatcher / Skill + Workflow Architect',
+      name: 'Hermes',
+      role: 'Software Agent',
       status: 'full_access_delegated',
       called_true_proven: true,
       proof_panel: {
@@ -198,21 +199,30 @@ describe('Gateway Agent Hub', () => {
         opencloud_intermediary: false,
       },
     })
-    expect(ron?.blocked_reason).toBe('jarvis_signed_exact_scope_delegation_required_for_protected_execution')
-    expect(JSON.stringify(ron)).toContain('JARVIS-GATED EXECUTION')
-    expect(JSON.stringify(ron)).toContain('JARVIS CONCURRENCE REQUIRED')
+    expect(ron?.blocked_reason).toBe('protected_writes_require_backend_authorization_and_approval')
+    expect(JSON.stringify(ron)).toContain('Ron/Hermes-WebUI')
+    expect(JSON.stringify(ron)).toContain('durable_job_owner')
     expect(JSON.stringify(ron)).not.toContain('Ron Wegsley')
     expect(JSON.stringify(ron)).not.toContain('PARTIAL')
-    expect(payload.agents.find((agent) => agent.id === 'hermes-webui')).toMatchObject({
-      name: 'Ron Weasley WebUI',
-      role: 'Ron Weasley Browser Control Surface',
-      status: 'configured',
-      routes: {
-        bridge_status: '/api/bridge/hermes-webui/status',
-      },
+    expect(ron).toMatchObject({
+      name: 'Hermes',
+      role: 'Software Agent',
       interface: {
-        local_ui_url: 'http://127.0.0.1:8787/',
+        local_ui_url: null,
+        ui_mode: 'mission_control_proxy',
       },
+      control_surfaces: [
+        expect.objectContaining({
+          component_type: 'control_surface',
+          component_id: 'ron-hermes-webui',
+          target_agent_id: 'hermes',
+          route: '/gateway/agents/hermes/jobs',
+          legacy_route: '/gateway/agent-hub/ron/webui/app',
+          durable_job_owner: false,
+          execution_authority: false,
+          credential_authority: false,
+        }),
+      ],
     })
     expect(payload.agents.find((agent) => agent.id === 'paperclip')).toMatchObject({
       role: 'Workforce Control Plane',
@@ -255,9 +265,7 @@ describe('Gateway Agent Hub', () => {
       expect(agent.interface.auth_required).toBe(true)
       expect(agent.interface.iframe_allowed).toBe(false)
       expect(agent.interface.public_exposure).toBe(false)
-      if (agent.id !== 'hermes' && agent.id !== 'hermes-webui') {
-        expect(agent.interface.local_ui_url).toBeNull()
-      }
+      expect(agent.interface.local_ui_url).toBeNull()
       if (agent.id === 'paperclip') {
         expect(agent.interface.tailnet_url).toBe('http://100.116.35.95:3100/ECO/dashboard')
       } else {
@@ -293,7 +301,7 @@ describe('Gateway Agent Hub', () => {
 
     expect(normalizeAgentHubAgentId('pi')).toBe('pi-mono')
     expect(normalizeAgentHubAgentId('space_agent')).toBe('spaceagent')
-    expect(normalizeAgentHubAgentId('hermes_webui')).toBe('hermes-webui')
+    expect(normalizeAgentHubAgentId('hermes_webui')).toBe('hermes')
     expect(health).toMatchObject({ agent_id: 'pi-mono', status: 'full_access_delegated', execution_enabled: false, writes_enabled: false })
     expect(routes?.registered_flows.length).toBeGreaterThan(0)
     expect(routes?.trace_direct_line).toMatchObject({

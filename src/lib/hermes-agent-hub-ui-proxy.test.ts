@@ -5,13 +5,13 @@ import { AGENT_INTERFACE_LINKS, agentControlLinksFor } from '@/components/gatewa
 import { gatewayActionForButton } from '@/components/gateway/gateway-actions'
 
 describe('Ron Weasley Agent Hub UI proxy', () => {
-  it('exposes Ron Weasley Open UI through the authenticated Mission Control WebUI proxy', () => {
+  it('exposes Ron Weasley Open UI through the authenticated Mission Control shared durable workspace', () => {
     const ron = AGENT_INTERFACE_LINKS.find((agent) => agent.name === 'Ron Weasley')
 
     expect(ron).toBeDefined()
     expect(ron?.buttons.ui).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
     expect(ron?.buttons.config).toMatchObject({
       enabled: true,
@@ -27,13 +27,13 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
     })
     expect(ron?.buttons.chat).toMatchObject({
       enabled: true,
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
     expect(ron?.proxyRoute).toContain('/api/bridge/hermes/webui/status')
-    expect(ron?.nextFix).toContain('/gateway/agent-hub/ron/webui')
+    expect(ron?.nextFix).toContain('/gateway/agents/hermes/jobs')
   })
 
-  it('routes design-surface Ron Weasley Open UI clicks to the WebUI proxy surface', () => {
+  it('routes design-surface Ron Weasley Open UI clicks to the shared durable workspace', () => {
     const action = gatewayActionForButton({
       label: 'Open UI',
       pageTitle: 'Agent Hub',
@@ -42,26 +42,26 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
 
     expect(action).toMatchObject({
       kind: 'navigate',
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
     })
   })
 
   it('keeps Ron Weasley WebUI, command-center, and blocked-chat buttons distinct on legacy Hermes routes', () => {
     const links = agentControlLinksFor('hermes')
 
-    expect(links.ui).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/webui/app' })
+    expect(links.ui).toMatchObject({ enabled: true, href: '/gateway/agents/hermes/jobs' })
     expect(links.config).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/config' })
     expect(links.brain).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/brain-map' })
-    expect(links.chat).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/webui/app' })
+    expect(links.chat).toMatchObject({ enabled: true, href: '/gateway/agents/hermes/jobs' })
     expect(links.tools).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/tool-map' })
     expect(links.health).toMatchObject({ enabled: true, href: '/gateway/agent-hub/ron/status' })
   })
 
-  it('describes Ron Weasley chat as the authenticated WebUI proxy without fake test-chat copy', () => {
+  it('describes Ron Weasley chat as the authenticated shared durable workspace without fake test-chat copy', () => {
     const source = readFileSync(join(process.cwd(), 'src/components/gateway/GatewayShell.tsx'), 'utf8')
 
     expect(source).toContain('Ron Weasley WebUI')
-    expect(source).toContain('/gateway/agent-hub/ron/webui/app')
+    expect(source).toContain('/gateway/agents/hermes/jobs')
     expect(source.toLowerCase()).not.toContain('fake test chat')
   })
 
@@ -69,8 +69,8 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
     const byName = new Map(AGENT_INTERFACE_LINKS.map((agent) => [agent.name, agent]))
 
     expect(byName.get('Pi')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/pi/config',
-      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/pi/config',
+      localUrl: null,
+      tailnetUrl: null,
       buttons: {
         ui: { enabled: true, href: '/gateway/agent-hub/pi/config' },
         chat: { enabled: true, href: '/gateway/agent-hub/pi/recommend' },
@@ -78,8 +78,8 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
     })
 
     expect(byName.get('SpaceAgent')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/spaceagent/config',
-      tailnetUrl: 'http://100.116.35.95:3337/gateway/agent-hub/spaceagent/config',
+      localUrl: null,
+      tailnetUrl: null,
       buttons: {
         ui: { enabled: true, href: '/gateway/agent-hub/spaceagent/config' },
         chat: { enabled: true, href: '/gateway/agent-hub/spaceagent/research' },
@@ -87,7 +87,7 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
     })
 
     expect(byName.get('Paperclip')).toMatchObject({
-      localUrl: 'http://127.0.0.1:3337/gateway/agent-hub/paperclip/ui',
+      localUrl: null,
       tailnetUrl: 'http://100.116.35.95:3100/ECO/dashboard',
       buttons: {
         ui: { enabled: true, href: '/gateway/agent-hub/paperclip/ui' },
@@ -101,8 +101,8 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
       pageTitle: 'Agent Hub',
       nearbyText: 'Pi route optimizer Gateway inventory',
     })).toMatchObject({
-      kind: 'navigate',
-      href: '/gateway/agent-hub/pi/config',
+      kind: 'status',
+      endpoint: '/api/bridge/pi/status',
     })
 
     expect(gatewayActionForButton({
@@ -110,8 +110,8 @@ describe('Ron Weasley Agent Hub UI proxy', () => {
       pageTitle: 'Agent Hub',
       nearbyText: 'SpaceAgent browser research direct line',
     })).toMatchObject({
-      kind: 'navigate',
-      href: '/gateway/agent-hub/spaceagent/config',
+      kind: 'status',
+      endpoint: '/api/bridge/space-agent/status',
     })
 
     expect(gatewayActionForButton({

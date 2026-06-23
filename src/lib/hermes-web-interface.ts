@@ -3,8 +3,8 @@ import { RON_WEASLEY_IDENTITY } from '@/lib/hermes-boundaries'
 export const HERMES_LEGACY_WEB_INTERFACE_BASE = '/gateway/agent-hub/hermes'
 export const HERMES_WEB_INTERFACE_BASE = '/gateway/agent-hub/ron'
 export const HERMES_COMMAND_CENTER_ROUTE = `${HERMES_WEB_INTERFACE_BASE}/config`
-export const HERMES_STANDALONE_LOOPBACK_URL = 'http://127.0.0.1:8787/'
 export const HERMES_STANDALONE_PROXY_ROUTE = `${HERMES_WEB_INTERFACE_BASE}/webui/app`
+export const HERMES_SHARED_WORKSPACE_ROUTE = '/gateway/agents/hermes/jobs'
 
 export const HERMES_WEB_INTERFACE_MODES = [
   'overview',
@@ -70,7 +70,7 @@ export const HERMES_WEB_INTERFACE_PAGES: readonly HermesWebInterfacePage[] = [
 ]
 
 export const HERMES_WEB_INTERFACE_ACTIONS = [
-  { label: 'Open Ron Weasley WebUI', href: HERMES_STANDALONE_PROXY_ROUTE },
+  { label: 'Open Ron Weasley WebUI', href: HERMES_SHARED_WORKSPACE_ROUTE },
   { label: 'Open command center', href: HERMES_COMMAND_CENTER_ROUTE },
   { label: 'Status', href: `${HERMES_WEB_INTERFACE_BASE}/status` },
   { label: 'Brain Map', href: `${HERMES_WEB_INTERFACE_BASE}/brain-map` },
@@ -129,10 +129,11 @@ export function buildHermesWebInterfaceProof() {
     sections: HERMES_WEB_INTERFACE_SECTIONS,
     no_fake_buttons: HERMES_WEB_INTERFACE_ACTIONS.every((action) => Boolean(action.href)),
     standalone_webui: {
-      url: HERMES_STANDALONE_LOOPBACK_URL,
-      proxy_route: HERMES_STANDALONE_PROXY_ROUTE,
-      scope: 'mission_control_authenticated_proxy_to_loopback_only_surface',
-      status: 'PROTECTED_LOOPBACK_PROXY_REQUIRED_FOR_STANDALONE_READY',
+      url: 'server-local legacy surface hidden from browser',
+      proxy_route: HERMES_SHARED_WORKSPACE_ROUTE,
+      legacy_proxy_route: HERMES_STANDALONE_PROXY_ROUTE,
+      scope: 'mission_control_authenticated_shared_agent_platform_surface',
+      status: 'SHARED_AGENT_PLATFORM_WORKSPACE_READY_LEGACY_PROXY_RETAINED_FOR_ROLLBACK',
       health_route: '/api/bridge/hermes-webui/health',
       mission_control_command_center_is_primary: true,
     },

@@ -71,7 +71,7 @@ describe('Ron Weasley WebUI status', () => {
       public_exposure_created: false,
       writes_enabled: false,
     })
-    expect(status.browser_url).toBe('/gateway/agent-hub/ron/webui/app')
+    expect(status.browser_url).toBe('/gateway/agents/hermes/jobs')
   })
 
   it('rejects non-loopback WebUI URLs instead of probing arbitrary hosts', async () => {
@@ -84,7 +84,7 @@ describe('Ron Weasley WebUI status', () => {
       exact_blocker: 'hermes_webui_url_must_be_loopback',
       health_reachable: false,
     })
-    expect(getHermesWebUiBrowserUrl()).toBe('/gateway/agent-hub/ron/webui/app')
+    expect(getHermesWebUiBrowserUrl()).toBe('/gateway/agents/hermes/jobs')
     expect(fetch).not.toHaveBeenCalled()
   })
 
@@ -175,11 +175,14 @@ describe('Ron Weasley WebUI status', () => {
     expect(routes.button_contract.every((button) => button.href || button.disabled_reason)).toBe(true)
     expect(routes.button_contract.filter((button) => button.href?.startsWith('/api/'))).toEqual([])
     expect(routes.button_contract.find((button) => button.label === 'Open Ron Weasley WebUI')).toMatchObject({
-      href: null,
-      disabled_reason: expect.stringContaining('hermes_webui_health_not_proven'),
+      href: '/gateway/agents/hermes/jobs',
+      disabled_reason: null,
+      legacy_href: null,
+      rollback_reason: expect.stringContaining('shared Hermes workspace remains primary'),
     })
     expect(buildHermesWebUiRoutes({ standaloneReachable: true }).button_contract.find((button) => button.label === 'Open Ron Weasley WebUI')).toMatchObject({
-      href: '/gateway/agent-hub/ron/webui/app',
+      href: '/gateway/agents/hermes/jobs',
+      legacy_href: '/gateway/agent-hub/ron/webui/app',
       disabled_reason: null,
     })
     expect(routes.button_contract).toEqual(expect.arrayContaining([

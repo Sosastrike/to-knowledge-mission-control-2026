@@ -53,6 +53,12 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     idempotencyKey: typeof body.idempotency_key === 'string' ? body.idempotency_key : undefined,
     conversationId: typeof body.conversation_id === 'string' ? body.conversation_id : undefined,
     taskId: typeof body.task_id === 'string' ? body.task_id : undefined,
+    requestedRouteId: typeof body.requested_route_id === 'string' ? body.requested_route_id : undefined,
+    selectionScope: typeof body.selection_scope === 'string' ? body.selection_scope as any : undefined,
+    fallbackPolicy: typeof body.fallback_policy === 'string' ? body.fallback_policy as any : undefined,
+    providerLock: typeof body.provider_lock === 'string' ? body.provider_lock : undefined,
+    deploymentLock: typeof body.deployment_lock === 'string' ? body.deployment_lock : undefined,
+    noOpenAI: body.no_openai === true,
   })
   const upstream = await callAgentZeroPlatformApi('/api/api_message', upstreamBody, 15000)
   return NextResponse.json(upstream.payload, {

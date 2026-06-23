@@ -138,4 +138,55 @@ describe('agent platform bridge', () => {
     expect(JSON.stringify(diagnostics)).not.toContain('test_agent_beta')
   })
 
+
+  it('includes canonical model route selection fields without changing the target agent', () => {
+    const body = buildAgentPlatformSubmissionBody({
+      user,
+      targetAgentId: 'hermes',
+      message: 'hello',
+      requestedRouteId: 'google_direct/gemini-2.5-pro',
+      selectionScope: 'THIS_JOB',
+      fallbackPolicy: 'STRICT',
+      providerLock: 'google_direct',
+      deploymentLock: null,
+    })
+
+    expect(body.target_agent_id).toBe('hermes')
+    expect(body.requested_route_id).toBe('google_direct/gemini-2.5-pro')
+    expect(body.selection_scope).toBe('THIS_JOB')
+    expect(body.fallback_policy).toBe('STRICT')
+    expect(body.provider_lock).toBe('google_direct')
+    expect(body).not.toHaveProperty('target_agent_override')
+  })
+
+  it('normalizes requested and effective route metadata from backend diagnostics', () => {
+    const diagnostics = normalizeAgentPlatformDiagnostics({
+      controls: { durable_message_submission_enabled: true, durable_worker_enabled: true },
+      registered_agents: ['hermes'],
+      jobs: [{
+        job_id: 'job_route',
+        task_id: 'task_route',
+        target_agent_id: 'hermes',
+        runtime_adapter: 'hermes',
+        state: 'RUNNING',
+        requested_route_id: 'google_direct/gemini-2.5-pro',
+        requested_provider_id: 'google_direct',
+        requested_model_id: 'gemini-2.5-pro',
+        effective_route_id: 'openrouter/openai/gpt-4o',
+        effective_provider_id: 'openrouter',
+        effective_model_id: 'openai/gpt-4o',
+        fallback_policy: 'AUTO_FALLBACK',
+        fallback_reason: 'provider_timeout',
+        route_state: 'ROUTE_SELECTED',
+      }],
+    })
+
+    expect(diagnostics.jobs[0]).toMatchObject({
+      requested_route_id: 'google_direct/gemini-2.5-pro',
+      effective_route_id: 'openrouter/openai/gpt-4o',
+      fallback_policy: 'AUTO_FALLBACK',
+      fallback_reason: 'provider_timeout',
+    })
+  })
+
 })

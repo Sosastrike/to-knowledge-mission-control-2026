@@ -8,6 +8,8 @@ import {
 
 export type AgentPlatformInputMode = 'QUEUE' | 'STEER' | 'CANCEL'
 export type AgentPlatformAgentId = string
+export type ModelSelectionScope = 'THIS_TURN' | 'THIS_JOB' | 'THIS_SESSION' | 'AGENT_DEFAULT'
+export type FallbackPolicy = 'STRICT' | 'ASK_BEFORE_FALLBACK' | 'AUTO_FALLBACK'
 
 export type AgentPlatformAgentSummary = {
   agent_id: string
@@ -36,6 +38,21 @@ export type AgentPlatformJobSummary = {
   checkpoint_id: string | null
   current_model: string | null
   previous_models: string[]
+  requested_route_id: string | null
+  requested_provider_id: string | null
+  requested_model_id: string | null
+  selection_scope: ModelSelectionScope | null
+  fallback_policy: FallbackPolicy | null
+  provider_lock: string | null
+  deployment_lock: string | null
+  effective_route_id: string | null
+  effective_provider_id: string | null
+  effective_model_id: string | null
+  route_selected_at: number | null
+  route_state: string | null
+  fallback_reason: string | null
+  fallback_approved_by: string | null
+  transition_history: Record<string, unknown>[]
   cancellation_requested: boolean
   error_code: string | null
   correlation_id: string | null
@@ -177,6 +194,12 @@ export function buildAgentPlatformSubmissionBody(input: {
   reason?: string
   priority?: number
   requiredPermission?: 'agent:message' | 'agent:cancel'
+  requestedRouteId?: string | null
+  selectionScope?: ModelSelectionScope | null
+  fallbackPolicy?: FallbackPolicy | null
+  providerLock?: string | null
+  deploymentLock?: string | null
+  noOpenAI?: boolean
 }): Record<string, unknown> {
   const mode = input.inputMode || 'QUEUE'
   const actor = buildMissionControlActorContext({
@@ -197,6 +220,12 @@ export function buildAgentPlatformSubmissionBody(input: {
     conversation_id: input.conversationId || undefined,
     priority: input.priority ?? 100,
     reason: input.reason || (mode === 'QUEUE' ? 'mission_control_queue_message' : mode === 'STEER' ? 'mission_control_steer' : 'mission_control_cancel'),
+    requested_route_id: input.requestedRouteId || undefined,
+    selection_scope: input.selectionScope || undefined,
+    fallback_policy: input.fallbackPolicy || undefined,
+    provider_lock: input.providerLock || undefined,
+    deployment_lock: input.deploymentLock || undefined,
+    no_openai: input.noOpenAI === true || undefined,
   }
 }
 
@@ -329,6 +358,21 @@ function normalizeJob(value: unknown): AgentPlatformJobSummary | null {
     checkpoint_id: typeof value.checkpoint_id === 'string' ? value.checkpoint_id : null,
     current_model: typeof value.current_model === 'string' ? value.current_model : null,
     previous_models: arrayOfStrings(value.previous_models),
+    requested_route_id: typeof value.requested_route_id === 'string' ? value.requested_route_id : null,
+    requested_provider_id: typeof value.requested_provider_id === 'string' ? value.requested_provider_id : typeof value.requested_provider === 'string' ? value.requested_provider : null,
+    requested_model_id: typeof value.requested_model_id === 'string' ? value.requested_model_id : typeof value.requested_model === 'string' ? value.requested_model : null,
+    selection_scope: typeof value.selection_scope === 'string' ? value.selection_scope as ModelSelectionScope : null,
+    fallback_policy: typeof value.fallback_policy === 'string' ? value.fallback_policy as FallbackPolicy : null,
+    provider_lock: typeof value.provider_lock === 'string' ? value.provider_lock : null,
+    deployment_lock: typeof value.deployment_lock === 'string' ? value.deployment_lock : null,
+    effective_route_id: typeof value.effective_route_id === 'string' ? value.effective_route_id : null,
+    effective_provider_id: typeof value.effective_provider_id === 'string' ? value.effective_provider_id : typeof value.effective_provider === 'string' ? value.effective_provider : null,
+    effective_model_id: typeof value.effective_model_id === 'string' ? value.effective_model_id : typeof value.effective_model === 'string' ? value.effective_model : null,
+    route_selected_at: asNumberOrNull(value.route_selected_at),
+    route_state: typeof value.route_state === 'string' ? value.route_state : null,
+    fallback_reason: typeof value.fallback_reason === 'string' ? value.fallback_reason : null,
+    fallback_approved_by: typeof value.fallback_approved_by === 'string' ? value.fallback_approved_by : null,
+    transition_history: Array.isArray(value.transition_history) ? value.transition_history.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object' && !Array.isArray(item))) : [],
     cancellation_requested: asBool(value.cancellation_requested),
     error_code: typeof value.error_code === 'string' ? value.error_code : null,
     correlation_id: typeof value.correlation_id === 'string' ? value.correlation_id : null,

@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AgentModelRoutePicker } from './AgentModelRoutePicker'
+import type { AgentModelRouteState, FallbackPolicy, ModelSelectionScope } from '@/lib/agent-platform-model-routes'
 
-type Job = {
+type Job = AgentModelRouteState & {
   platform_job_id?: string | null
   job_id: string
   task_id: string
@@ -105,6 +107,21 @@ function jobFromAcceptedPayload(payload: Record<string, unknown>, agentId: strin
     checkpoint_id: typeof payload.checkpoint_id === 'string' ? payload.checkpoint_id : null,
     current_model: typeof payload.current_model === 'string' ? payload.current_model : null,
     previous_models: Array.isArray(payload.previous_models) ? payload.previous_models.filter((item): item is string => typeof item === 'string') : [],
+    requested_route_id: typeof payload.requested_route_id === 'string' ? payload.requested_route_id : null,
+    requested_provider_id: typeof payload.requested_provider_id === 'string' ? payload.requested_provider_id : null,
+    requested_model_id: typeof payload.requested_model_id === 'string' ? payload.requested_model_id : null,
+    selection_scope: typeof payload.selection_scope === 'string' ? payload.selection_scope as ModelSelectionScope : null,
+    fallback_policy: typeof payload.fallback_policy === 'string' ? payload.fallback_policy as FallbackPolicy : null,
+    provider_lock: typeof payload.provider_lock === 'string' ? payload.provider_lock : null,
+    deployment_lock: typeof payload.deployment_lock === 'string' ? payload.deployment_lock : null,
+    effective_route_id: typeof payload.effective_route_id === 'string' ? payload.effective_route_id : null,
+    effective_provider_id: typeof payload.effective_provider_id === 'string' ? payload.effective_provider_id : null,
+    effective_model_id: typeof payload.effective_model_id === 'string' ? payload.effective_model_id : null,
+    route_selected_at: typeof payload.route_selected_at === 'number' || typeof payload.route_selected_at === 'string' ? payload.route_selected_at : null,
+    route_state: typeof payload.route_state === 'string' ? payload.route_state : null,
+    fallback_reason: typeof payload.fallback_reason === 'string' ? payload.fallback_reason : null,
+    fallback_approved_by: typeof payload.fallback_approved_by === 'string' ? payload.fallback_approved_by : null,
+    transition_history: Array.isArray(payload.transition_history) ? payload.transition_history.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object' && !Array.isArray(item))) : [],
     cancellation_requested: payload.cancellation_requested === true,
     error_code: typeof payload.error_code === 'string' ? payload.error_code : null,
     correlation_id: typeof payload.correlation_id === 'string' ? payload.correlation_id : null,
@@ -136,6 +153,13 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
   const [error, setError] = useState<string | null>(null)
   const [lastSubmit, setLastSubmit] = useState<Record<string, unknown> | null>(null)
   const [lastAcceptedJob, setLastAcceptedJob] = useState<Job | null>(null)
+  const [routeDraft, setRouteDraft] = useState<{ requested_route_id: string | null; selection_scope: ModelSelectionScope; fallback_policy: FallbackPolicy; provider_lock: string | null; deployment_lock: string | null }>({
+    requested_route_id: null,
+    selection_scope: 'THIS_JOB',
+    fallback_policy: 'STRICT',
+    provider_lock: null,
+    deployment_lock: null,
+  })
   const submitInFlight = useRef(false)
 
   const visibleJobs = useMemo(() => mergeAcceptedJob(jobs, lastAcceptedJob), [jobs, lastAcceptedJob])
@@ -221,7 +245,14 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
     setError(null)
     try {
       const idempotencyKey = newSubmissionId(agentId)
-      const payload = await postJson(`/api/agent-platform/agents/${encodeURIComponent(agentId)}/jobs`, { message: trimmed, idempotency_key: idempotencyKey })
+      const routePayload = routeDraft.requested_route_id ? {
+        requested_route_id: routeDraft.requested_route_id,
+        selection_scope: routeDraft.selection_scope,
+        fallback_policy: routeDraft.fallback_policy,
+        provider_lock: routeDraft.provider_lock,
+        deployment_lock: routeDraft.deployment_lock,
+      } : {}
+      const payload = await postJson(`/api/agent-platform/agents/${encodeURIComponent(agentId)}/jobs`, { message: trimmed, idempotency_key: idempotencyKey, ...routePayload })
       setLastSubmit(payload)
       const acceptedJob = jobFromAcceptedPayload(payload, agentId)
       if (acceptedJob) {
@@ -298,6 +329,18 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
         </article>
       </div>
 
+      <AgentModelRoutePicker
+        agentId={agentId}
+        jobId={selectedJob?.job_id || null}
+        routeState={selectedJob || lastAcceptedJob || undefined}
+        onDraftChange={setRouteDraft}
+        onSelection={(payload) => {
+          setLastSubmit(payload)
+          void loadJobs()
+          if (selectedJobId) void loadDetail(selectedJobId)
+        }}
+      />
+
       {error && <div className="control-status warning" data-testid="agent-job-error">{error}</div>}
 
       <div className="control-grid" style={{ gridTemplateColumns: 'minmax(280px, .8fr) minmax(0, 1.2fr)', marginBottom: 12 }}>
@@ -325,7 +368,11 @@ export function AgentJobWorkspace({ agentId = 'agent_zero', initialJobId = null 
               <span>task_id: {selectedJob.task_id}</span>
               <small>state: {selectedJob.state}</small>
               <small>checkpoint: {selectedJob.checkpoint_id || 'none'}</small>
-              <small>model: {selectedJob.current_model || 'not reported'}</small>
+              <small>model: {selectedJob.current_model || selectedJob.effective_model_id || 'not reported'}</small>
+              <small>requested route: {selectedJob.requested_route_id || 'none'}</small>
+              <small>actual route: {selectedJob.effective_route_id || 'Awaiting backend route selection'}</small>
+              <small>fallback policy: {selectedJob.fallback_policy || 'STRICT'}</small>
+              <small>route state: {selectedJob.route_state || 'not reported'}</small>
               <small>queue: {selectedJob.queue_reason || 'none'}</small>
               <small>correlation: {selectedJob.correlation_id || 'not reported'}</small>
               {selectedResultText && <pre data-testid="agent-job-result" style={{ margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', color: '#dbeafe', fontSize: 12 }}>{selectedResultText}</pre>}

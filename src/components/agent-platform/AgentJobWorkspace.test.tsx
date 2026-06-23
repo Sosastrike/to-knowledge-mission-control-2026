@@ -7,6 +7,8 @@ import { AgentJobWorkspace } from './AgentJobWorkspace'
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+
+
 })
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -280,6 +282,64 @@ describe('AgentJobWorkspace', () => {
       message: 'Reply exactly: HERMES_QUEUED_AFTER_A_OK',
       target_agent_id: 'hermes',
     })
+  })
+
+
+  it('shows canonical model routes and posts selection without changing the agent', async () => {
+    const modelRoutePosts: Record<string, unknown>[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = String(input)
+      if (url.startsWith('/api/agent-platform/agents/hermes/model-routes')) {
+        return jsonResponse({
+          ok: true,
+          catalog_version: 'model_route_catalog.v1',
+          target_agent_id: 'hermes',
+          routes: [
+            { route_id: 'google_direct/gemini-2.5-pro', provider_id: 'google_direct', provider_display_name: 'Google Direct', provider_model_id: 'gemini-2.5-pro', model_display_name: 'Gemini 2.5 Pro', access_path: 'direct', deployment_type: 'cloud', data_destination: 'cloud:google', capabilities: ['text', 'tools'], context_limit: 100, output_limit: 10, streaming_support: true, tool_support: true, structured_output_support: true, image_support: false, reasoning_support: true, cost_class: 'standard', latency_class: 'interactive', health_state: 'healthy', circuit_state: 'closed', enabled: true, available: true, selectable_scopes: ['THIS_JOB'], fallback_support: ['STRICT', 'ASK_BEFORE_FALLBACK'] },
+            { route_id: 'openrouter/openai/gpt-4o', provider_id: 'openrouter', provider_display_name: 'OpenRouter', provider_model_id: 'openai/gpt-4o', model_display_name: 'GPT-4o via OpenRouter', access_path: 'aggregator', deployment_type: 'cloud', data_destination: 'cloud:openrouter', capabilities: ['text'], context_limit: 100, output_limit: 10, streaming_support: true, tool_support: false, structured_output_support: false, image_support: false, reasoning_support: true, cost_class: 'standard', latency_class: 'interactive', health_state: 'healthy', circuit_state: 'closed', enabled: true, available: true, selectable_scopes: ['THIS_JOB'], fallback_support: ['STRICT'] },
+            { route_id: 'local_vllm/qwen3', provider_id: 'local_vllm', provider_display_name: 'Local vLLM', provider_model_id: 'qwen3', model_display_name: 'Qwen3', access_path: 'local', deployment_type: 'local', data_destination: 'local:self-hosted', capabilities: ['text'], context_limit: 100, output_limit: 10, streaming_support: true, tool_support: false, structured_output_support: false, image_support: false, reasoning_support: true, cost_class: 'fixed', latency_class: 'local', health_state: 'healthy', circuit_state: 'closed', enabled: true, available: true, selectable_scopes: ['THIS_JOB'], fallback_support: ['STRICT'] },
+            { route_id: 'google_direct/gemini-disabled', provider_id: 'google_direct', provider_display_name: 'Google Direct', provider_model_id: 'gemini-disabled', model_display_name: 'Gemini disabled', access_path: 'direct', deployment_type: 'cloud', data_destination: 'cloud:google', capabilities: [], context_limit: 0, output_limit: 0, streaming_support: false, tool_support: false, structured_output_support: false, image_support: false, reasoning_support: false, cost_class: 'unknown', latency_class: 'unknown', health_state: 'disabled', circuit_state: 'closed', enabled: false, available: false, disabled_reason: 'credential unavailable', selectable_scopes: [], fallback_support: ['STRICT'] },
+          ],
+        })
+      }
+      if (url.startsWith('/api/agent-platform/jobs/job_route/model-route') && init?.method === 'POST') {
+        modelRoutePosts.push(JSON.parse(String(init.body || '{}')))
+        return jsonResponse({ ok: true, job_id: 'job_route', task_id: 'task_route', target_agent_id: 'hermes', requested_route_id: 'local_vllm/qwen3', requested_provider_id: 'local_vllm', requested_model_id: 'qwen3', selection_scope: 'THIS_JOB', fallback_policy: 'STRICT', route_state: 'AWAITING_BACKEND_SELECTION' }, 202)
+      }
+      if (url.startsWith('/api/agent-platform/agents/hermes/jobs')) {
+        return jsonResponse({
+          agents: [{ agent_id: 'hermes', display_name: 'Hermes', durable_submission_enabled: true, durable_worker_enabled: true }],
+          jobs: [{ job_id: 'job_route', task_id: 'task_route', target_agent_id: 'hermes', state: 'RUNNING', requested_route_id: 'google_direct/gemini-2.5-pro', requested_provider_id: 'google_direct', requested_model_id: 'gemini-2.5-pro', effective_route_id: null, effective_provider_id: null, effective_model_id: null, route_state: 'AWAITING_BACKEND_SELECTION', fallback_policy: 'STRICT' }],
+          events: [],
+          results: {},
+        })
+      }
+      if (url.startsWith('/api/agent-platform/jobs/job_route')) {
+        return jsonResponse({ ok: true, job: { job_id: 'job_route', task_id: 'task_route', target_agent_id: 'hermes', state: 'RUNNING', requested_route_id: 'google_direct/gemini-2.5-pro', requested_provider_id: 'google_direct', requested_model_id: 'gemini-2.5-pro', effective_route_id: null, route_state: 'AWAITING_BACKEND_SELECTION', fallback_policy: 'STRICT' }, events: [], result: null })
+      }
+      return jsonResponse({ error: 'unexpected_url', url }, 500)
+    })
+
+    render(<AgentJobWorkspace agentId="hermes" initialJobId="job_route" />)
+
+    expect(await screen.findByText('Google Gemini Direct')).toBeInTheDocument()
+    expect(await screen.findByText('OpenRouter')).toBeInTheDocument()
+    expect(await screen.findByText('Local / Self-hosted')).toBeInTheDocument()
+    expect(screen.getByText(/Unavailable: credential unavailable/)).toBeInTheDocument()
+    expect(screen.getByTestId('model-route-requested-actual')).toHaveTextContent('Awaiting backend route selection')
+    fireEvent.click(screen.getByRole('radio', { name: /Local vLLM \/ qwen3/ }))
+    fireEvent.click(screen.getByTestId('model-route-apply'))
+
+    await waitFor(() => expect(modelRoutePosts).toHaveLength(1))
+    expect(modelRoutePosts[0]).toMatchObject({
+      requested_route_id: 'local_vllm/qwen3',
+      selection_scope: 'THIS_JOB',
+      fallback_policy: 'STRICT',
+      provider_lock: 'local_vllm',
+      deployment_lock: 'local',
+    })
+    expect(await screen.findByText(/agent: Hermes/)).toBeInTheDocument()
+    expect(JSON.stringify(modelRoutePosts[0])).not.toContain('agent_zero')
   })
 
 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { callModelRouteApi, modelRouteTargetAgent, normalizeModelRouteRequest } from '@/lib/agent-platform-model-route-api'
+import { callModelRouteApi, modelRouteFeatureDisabledResponse, modelRouteTargetAgent, normalizeModelRouteRequest } from '@/lib/agent-platform-model-route-api'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,6 +26,6 @@ export async function POST(request: NextRequest, { params }: { params: Params })
   const body = await request.json().catch(() => ({})) as Record<string, unknown>
   const selection = normalizeModelRouteRequest(body)
   if (!selection.requested_route_id) return NextResponse.json({ ok: false, error: 'requested_route_id_required' }, { status: 400 })
-  const result = await callModelRouteApi({ user: auth.user, targetAgentId: agentId, action: 'select_job_model_route', payload: { job_id: jobId, ...selection, idempotency_key: typeof body.idempotency_key === 'string' ? body.idempotency_key : undefined } })
+  const result = modelRouteFeatureDisabledResponse('model_route_selection_not_active')
   return NextResponse.json(result.payload, { status: result.status, headers: { 'Cache-Control': 'no-store' } })
 }

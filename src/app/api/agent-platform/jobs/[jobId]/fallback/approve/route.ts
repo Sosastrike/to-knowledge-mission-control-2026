@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { callModelRouteApi, modelRouteTargetAgent } from '@/lib/agent-platform-model-route-api'
+import { callModelRouteApi, modelRouteFeatureDisabledResponse, modelRouteTargetAgent } from '@/lib/agent-platform-model-route-api'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,6 +16,6 @@ export async function POST(request: NextRequest, { params }: { params: Params })
   const body = await request.json().catch(() => ({})) as Record<string, unknown>
   const fallbackRouteId = typeof body.fallback_route_id === 'string' ? body.fallback_route_id : ''
   if (!fallbackRouteId) return NextResponse.json({ ok: false, error: 'fallback_route_id_required' }, { status: 400 })
-  const result = await callModelRouteApi({ user: auth.user, targetAgentId: agentId, action: 'approve_fallback', payload: { job_id: jobId, fallback_route_id: fallbackRouteId } })
+  const result = modelRouteFeatureDisabledResponse('fallback_approval_not_active')
   return NextResponse.json(result.payload, { status: result.status, headers: { 'Cache-Control': 'no-store' } })
 }

@@ -34,6 +34,39 @@ const MODEL_PERMISSIONS: Record<User['role'], string[]> = {
   viewer: ['models.view'],
 }
 
+
+export type ModelRouteDarkFeature =
+  | 'model_route_selection_not_active'
+  | 'model_switch_not_active'
+  | 'fallback_approval_not_active'
+  | 'agent_handoff_not_active'
+
+const DARK_FEATURE_MESSAGES: Record<ModelRouteDarkFeature, string> = {
+  model_route_selection_not_active: 'Model selection is not yet activated for production jobs.',
+  model_switch_not_active: 'Model switching is not yet activated for production jobs.',
+  fallback_approval_not_active: 'Fallback approval is not yet activated for production jobs.',
+  agent_handoff_not_active: 'Agent handoff is not yet activated for production jobs.',
+}
+
+export function modelRouteFeatureDisabled(feature: ModelRouteDarkFeature) {
+  return {
+    ok: false,
+    status_code: 409,
+    error: 'feature_disabled',
+    feature_disabled: feature,
+    reason: feature,
+    message: DARK_FEATURE_MESSAGES[feature],
+    route_mutated: false,
+    provider_request_made: false,
+    credential_values_exposed: false,
+    raw_provider_error_exposed: false,
+  }
+}
+
+export function modelRouteFeatureDisabledResponse(feature: ModelRouteDarkFeature) {
+  return { payload: modelRouteFeatureDisabled(feature), status: 409 }
+}
+
 export function buildModelRouteActorContext(user: User, targetAgentId: string, extraPermissions: string[] = []) {
   const base = buildMissionControlActorContext({ user, targetAgentId, requiredPermission: 'agent:diagnostics' })
   const permissions = Array.from(new Set([...(base.effective_permissions as string[]), ...MODEL_PERMISSIONS[user.role], ...extraPermissions]))
